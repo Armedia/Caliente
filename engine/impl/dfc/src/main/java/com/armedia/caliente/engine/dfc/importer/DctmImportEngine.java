@@ -59,7 +59,7 @@ public class DctmImportEngine extends
 	};
 
 	public DctmImportEngine(DctmImportEngineFactory factory, Logger output, WarningTracker warningTracker,
-		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
+		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
@@ -72,7 +72,7 @@ public class DctmImportEngine extends
 
 	@Override
 	protected DctmImportContextFactory newContextFactory(IDfSession session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> streamStore, Transformer transformer, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		return new DctmImportContextFactory(this, cfg, session, objectStore, streamStore, transformer, output,
 			warningTracker);

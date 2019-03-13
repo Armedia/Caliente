@@ -90,7 +90,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
 		T object, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> ret = new ArrayList<>();
-		ret.add(this.factory.newExportDelegate(object.getType()));
+		ret.add(this.factory.newExportDelegate(session, object.getType()));
 		return ret;
 	}
 
@@ -197,7 +197,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	@Override
 	protected final List<CmfContentStream> storeContent(DctmExportContext ctx,
 		CmfAttributeTranslator<IDfValue> translator, CmfObject<IDfValue> marshaled, ExportTarget referrent,
-		CmfContentStore<?, ?, ?> streamStore, boolean includeRenditions) {
+		CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
 		try {
 			return doStoreContent(ctx, translator, marshaled, referrent, castObject(this.object), streamStore,
 				includeRenditions);
@@ -208,7 +208,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	protected List<CmfContentStream> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
-		CmfObject<IDfValue> marshaled, ExportTarget referrent, T object, CmfContentStore<?, ?, ?> streamStore,
+		CmfObject<IDfValue> marshaled, ExportTarget referrent, T object, CmfContentStore<?, ?> streamStore,
 		boolean includeRenditions) throws DfException {
 		return new ArrayList<>();
 	}

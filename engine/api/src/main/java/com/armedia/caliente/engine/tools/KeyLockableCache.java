@@ -6,7 +6,6 @@ import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -22,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.LockDispenser;
+import com.armedia.commons.utilities.concurrent.ReadWriteMap;
 import com.armedia.commons.utilities.function.CheckedSupplier;
 
 public class KeyLockableCache<K extends Serializable, V> {
@@ -199,7 +199,7 @@ public class KeyLockableCache<K extends Serializable, V> {
 	public KeyLockableCache(int maxCount, TimeUnit maxAgeUnit, long maxAge) {
 		this.cacheId = String.format("%016x", KeyLockableCache.CACHE_ID.getAndIncrement());
 		final Map<K, CacheItem> cache = new LRUMap<>(Math.max(KeyLockableCache.MIN_LIMIT, maxCount));
-		this.cache = Collections.synchronizedMap(cache);
+		this.cache = new ReadWriteMap<>(cache);
 		if (maxAgeUnit == null) {
 			this.maxAgeUnit = KeyLockableCache.DEFAULT_MAX_AGE_UNIT;
 			this.maxAge = KeyLockableCache.DEFAULT_MAX_AGE;
@@ -239,7 +239,7 @@ public class KeyLockableCache<K extends Serializable, V> {
 		}
 	}
 
-	public final V createIfAbsent(K key, CheckedSupplier<V> initializer) throws Exception {
+	public final <EX extends Throwable> V createIfAbsent(K key, CheckedSupplier<V, EX> initializer) throws EX {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		Objects.requireNonNull(initializer, "Must provide a non-null initializer");
 		final Lock l = getExclusiveLock(key);

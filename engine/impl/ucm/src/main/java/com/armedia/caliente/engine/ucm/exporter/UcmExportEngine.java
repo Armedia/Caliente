@@ -47,7 +47,7 @@ public class UcmExportEngine extends
 		Pattern.CASE_INSENSITIVE);
 
 	public UcmExportEngine(UcmExportEngineFactory factory, Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, true);
 	}
 
@@ -149,7 +149,7 @@ public class UcmExportEngine extends
 
 	@Override
 	protected UcmExportContextFactory newContextFactory(UcmSession session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> streamStore, Transformer transformer, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		return new UcmExportContextFactory(this, session, cfg, objectStore, streamStore, output, warningTracker);
 	}
@@ -184,7 +184,7 @@ public class UcmExportEngine extends
 	public static List<String> decodePathList(String paths) {
 		if (StringUtils.isEmpty(paths)) { return Collections.emptyList(); }
 		List<String> ret = new ArrayList<>();
-		for (String str : Tools.splitCSVEscaped(paths)) {
+		for (String str : Tools.splitEscaped(',', paths)) {
 			if (!StringUtils.isEmpty(str)) {
 				ret.add(str);
 			}

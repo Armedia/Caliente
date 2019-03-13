@@ -5,8 +5,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -27,12 +27,13 @@ import org.slf4j.LoggerFactory;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.dslocator.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSource.t", propOrder = {
 	"url", "driver", "user", "password", "settings",
 })
-public class MetadataSource {
+public class MetadataSource implements ReadWriteLockable {
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -60,6 +61,11 @@ public class MetadataSource {
 
 	@XmlTransient
 	private DataSource dataSource = null;
+
+	@Override
+	public ReadWriteLock getMainLock() {
+		return this.rwLock;
+	}
 
 	public String getUrl() {
 		return this.url;
@@ -128,9 +134,7 @@ public class MetadataSource {
 	}
 
 	public void initialize() throws Exception {
-		final Lock lock = this.rwLock.writeLock();
-		lock.lock();
-		try {
+		readLockedUpgradable(() -> this.dataSource, Objects::isNull, (e) -> {
 			if (this.dataSource != null) { return; }
 			Map<String, String> settingsMap = getSettingsMap();
 
@@ -150,7 +154,7 @@ public class MetadataSource {
 				final DataSourceDescriptor<?> ds;
 				try {
 					ds = locator.locateDataSource(cfg);
-				} catch (Exception e) {
+				} catch (Exception ex) {
 					// This one failed...try the next one
 					continue;
 				}
@@ -162,33 +166,22 @@ public class MetadataSource {
 				return;
 			}
 			throw new Exception("Failed to initialize this metadata source - no datasources located!");
-		} finally {
-			lock.unlock();
-		}
+		});
 	}
 
 	public Connection getConnection() throws SQLException {
-		final Lock lock = this.rwLock.readLock();
-		lock.lock();
-		try {
+		return readLocked(() -> {
 			if (this.dataSource == null) {
 				throw new IllegalStateException(String.format("The datasource [%s] is not yet initialized", this.name));
 			}
 			return this.dataSource.getConnection();
-		} finally {
-			lock.unlock();
-		}
+		});
 	}
 
 	public void close() {
-		final Lock lock = this.rwLock.writeLock();
-		lock.lock();
-		try {
-			if (this.dataSource == null) { return; }
+		readLockedUpgradable(() -> this.dataSource, Objects::nonNull, (e) -> {
 			// TODO: is there any uninitialization we should be doing here?
 			this.dataSource = null;
-		} finally {
-			lock.unlock();
-		}
+		});
 	}
 }

@@ -372,7 +372,7 @@ public abstract class ImportEngine<//
 	}
 
 	protected ImportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, ImportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
 			"import");
 	}
@@ -512,7 +512,7 @@ public abstract class ImportEngine<//
 		}
 	}
 
-	private final void renameObjectsWithMap(final Logger output, Properties p, CmfObjectStore<?, ?> objectStore,
+	private final void renameObjectsWithMap(final Logger output, Properties p, CmfObjectStore<?> objectStore,
 		final String verb) throws ImportException, CmfStorageException {
 		// Things happen differently here... since we have a limited scope in which
 		// objects require fixing, we don't sweep the whole table, but instead submit
@@ -585,7 +585,7 @@ public abstract class ImportEngine<//
 		final Transformer transformer, final ObjectFilter filter) throws ImportException, CmfStorageException {
 		final UUID jobId = importState.jobId;
 		final Logger output = importState.output;
-		final CmfObjectStore<?, ?> objectStore = importState.objectStore;
+		final CmfObjectStore<?> objectStore = importState.objectStore;
 		final CfgTools settings = importState.cfg;
 
 		final int threadCount;

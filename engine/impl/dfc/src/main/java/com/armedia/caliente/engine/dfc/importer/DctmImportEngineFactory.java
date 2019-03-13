@@ -25,7 +25,7 @@ public class DctmImportEngineFactory extends
 
 	@Override
 	public DctmImportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
 		throws ImportException {
 		return new DctmImportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}

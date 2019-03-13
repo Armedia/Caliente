@@ -2,7 +2,7 @@ package com.armedia.caliente.store;
 
 import java.util.Collection;
 
-public abstract class CmfContentStoreFactory<S extends CmfContentStore<?, ?, ?>> extends CmfStoreFactory<S> {
+public abstract class CmfContentStoreFactory<STORE extends CmfContentStore<?, ?>> extends CmfStoreFactory<STORE> {
 
 	protected CmfContentStoreFactory(String... aliases) {
 		super(aliases);

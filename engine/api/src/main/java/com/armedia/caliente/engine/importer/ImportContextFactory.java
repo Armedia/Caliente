@@ -33,8 +33,8 @@ public abstract class ImportContextFactory< //
 	private final String rootPathStr;
 	private final int pathTrunc;
 
-	protected ImportContextFactory(ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output, WarningTracker tracker)
+	protected ImportContextFactory(ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?> objectStore,
+		CmfContentStore<?, ?> contentStore, Transformer transformer, Logger output, WarningTracker tracker)
 		throws Exception {
 		super(engine, settings, session, objectStore, contentStore, transformer, output, tracker);
 		String rootPath = settings.getString(ImportSetting.TARGET_LOCATION);
@@ -96,7 +96,7 @@ public abstract class ImportContextFactory< //
 	}
 
 	@Override
-	protected void calculateExcludes(CmfObjectStore<?, ?> objectStore, Set<CmfObject.Archetype> excludes)
+	protected void calculateExcludes(CmfObjectStore<?> objectStore, Set<CmfObject.Archetype> excludes)
 		throws CmfStorageException {
 		Map<CmfObject.Archetype, Long> summary = objectStore.getStoredObjectTypes();
 		if ((summary != null) && !summary.isEmpty()) {

@@ -10,13 +10,13 @@ public class CalienteState {
 	private final File baseDataLocation;
 
 	private final File objectStoreLocation;
-	private final CmfObjectStore<?, ?> objectStore;
+	private final CmfObjectStore<?> objectStore;
 
 	private final File contentStoreLocation;
-	private final CmfContentStore<?, ?, ?> contentStore;
+	private final CmfContentStore<?, ?> contentStore;
 
-	public CalienteState(File baseDataLocation, File objectStoreLocation, CmfObjectStore<?, ?> objectStore,
-		File contentStoreLocation, CmfContentStore<?, ?, ?> contentStore) {
+	public CalienteState(File baseDataLocation, File objectStoreLocation, CmfObjectStore<?> objectStore,
+		File contentStoreLocation, CmfContentStore<?, ?> contentStore) {
 		this.baseDataLocation = baseDataLocation;
 		this.objectStoreLocation = objectStoreLocation;
 		this.objectStore = objectStore;
@@ -32,7 +32,7 @@ public class CalienteState {
 		return this.objectStoreLocation;
 	}
 
-	public CmfObjectStore<?, ?> getObjectStore() {
+	public CmfObjectStore<?> getObjectStore() {
 		return this.objectStore;
 	}
 
@@ -40,7 +40,7 @@ public class CalienteState {
 		return this.contentStoreLocation;
 	}
 
-	public CmfContentStore<?, ?, ?> getContentStore() {
+	public CmfContentStore<?, ?> getContentStore() {
 		return this.contentStore;
 	}
 }

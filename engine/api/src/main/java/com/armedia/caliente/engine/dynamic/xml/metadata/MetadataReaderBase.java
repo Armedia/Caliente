@@ -11,11 +11,12 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
@@ -37,9 +38,11 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
+import com.armedia.commons.utilities.function.CheckedConsumer;
 
 @XmlTransient
-public abstract class MetadataReaderBase implements AttributeValuesLoader {
+public abstract class MetadataReaderBase implements AttributeValuesLoader, ReadWriteLockable {
 
 	@XmlElement(name = "query", required = true)
 	protected ParameterizedQuery query;
@@ -73,6 +76,11 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 
 	@XmlTransient
 	protected Boolean columnNamesCaseSensitive = false;
+
+	@Override
+	public ReadWriteLock getMainLock() {
+		return this.rwLock;
+	}
 
 	@Override
 	public final String getDataSource() {
@@ -172,14 +180,8 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 
 	@Override
 	public final void initialize(Connection c) throws Exception {
-		final Lock lock = this.rwLock.writeLock();
-		lock.lock();
-		try {
-			if (this.finalSql != null) { return; }
-			doInitialize(c);
-		} finally {
-			lock.unlock();
-		}
+		CheckedConsumer<String, Exception> consumer = (e) -> doInitialize(c);
+		readLockedUpgradable(() -> this.finalSql, Objects::isNull, consumer);
 	}
 
 	protected final <V> Object evaluateExpression(Expression expression, final CmfObject<V> object,
@@ -349,15 +351,8 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 
 	@Override
 	public final void close() {
-		final Lock lock = this.rwLock.writeLock();
-		lock.lock();
-		try {
-			if (this.finalSql != null) {
-				doClose();
-			}
-		} finally {
-			lock.unlock();
-		}
+		Consumer<String> consumer = (e) -> doClose();
+		readLockedUpgradable(() -> this.finalSql, Objects::nonNull, consumer);
 	}
 
 }

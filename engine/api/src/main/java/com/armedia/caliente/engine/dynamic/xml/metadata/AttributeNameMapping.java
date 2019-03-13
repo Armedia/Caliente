@@ -2,7 +2,7 @@ package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
+import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
@@ -18,12 +18,13 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataTransformNames.t", propOrder = {
 	"mappings", "defaultTransform"
 })
-public class AttributeNameMapping {
+public class AttributeNameMapping implements ReadWriteLockable {
 
 	private static final boolean DEFAULT_CASE_SENSITIVE = true;
 
@@ -55,6 +56,11 @@ public class AttributeNameMapping {
 	@XmlTransient
 	protected Boolean caseSensitive = null;
 
+	@Override
+	public final ReadWriteLock getMainLock() {
+		return this.rwLock;
+	}
+
 	public List<MetadataNameMapping> getMappings() {
 		if (this.mappings == null) {
 			this.mappings = new ArrayList<>();
@@ -63,10 +69,7 @@ public class AttributeNameMapping {
 	}
 
 	public void initialize(Boolean caseSensitive) {
-		final Lock l = this.rwLock.writeLock();
-		l.lock();
-		try {
-			if (this.matchers != null) { return; }
+		readLockedUpgradable(() -> this.matchers, Objects::isNull, (e) -> {
 			this.caseSensitive = Tools.coalesce(caseSensitive, AttributeNameMapping.DEFAULT_CASE_SENSITIVE);
 			this.activeDefault = this.defaultTransform;
 			List<NameMatcher> matchers = new ArrayList<>();
@@ -77,47 +80,27 @@ public class AttributeNameMapping {
 				}
 			}
 			this.matchers = Tools.freezeList(matchers);
-		} finally {
-			l.unlock();
-		}
+		});
 	}
 
 	public boolean isCaseSensitive() {
-		final Lock l = this.rwLock.readLock();
-		l.lock();
-		try {
-			return this.caseSensitive;
-		} finally {
-			l.unlock();
-		}
+		return readLocked(() -> this.caseSensitive);
 	}
 
 	public Expression getDefaultTransform() {
-		final Lock l = this.rwLock.readLock();
-		l.lock();
-		try {
-			return this.defaultTransform;
-		} finally {
-			l.unlock();
-		}
+		return readLocked(() -> this.defaultTransform);
 	}
 
 	public void setDefaultTransform(Expression value) {
-		final Lock l = this.rwLock.writeLock();
-		l.lock();
-		try {
+		writeLocked(() -> {
 			this.defaultTransform = value;
 			close();
 			initialize(this.caseSensitive);
-		} finally {
-			l.unlock();
-		}
+		});
 	}
 
 	public String transformName(final String sqlName) throws ScriptException {
-		final Lock l = this.rwLock.readLock();
-		l.lock();
-		try {
+		return readLocked(() -> {
 			boolean hasGroups = false;
 			String regex = null;
 			Expression repl = null;
@@ -150,21 +133,15 @@ public class AttributeNameMapping {
 			// We have a regular expression, a replacement, and the regex has capturing groups, so
 			// we have to do a replacement
 			return sqlName.replaceAll(regex, value);
-		} finally {
-			l.unlock();
-		}
+		});
 	}
 
 	public void close() {
-		final Lock l = this.rwLock.writeLock();
-		l.lock();
-		try {
+		writeLocked(() -> {
 			if (this.matchers == null) { return; }
 			this.activeDefault = null;
 			this.caseSensitive = null;
 			this.matchers = null;
-		} finally {
-			l.unlock();
-		}
+		});
 	}
 }

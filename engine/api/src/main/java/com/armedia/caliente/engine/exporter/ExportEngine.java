@@ -14,6 +14,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -132,7 +133,7 @@ public abstract class ExportEngine<//
 	}
 
 	protected ExportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings,
 		boolean supportsMultipleSources, SearchType... searchTypes) {
 		super(factory, ExportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
 			"export");
@@ -268,8 +269,8 @@ public abstract class ExportEngine<//
 				ctx.pushReferrent(referrentTarget);
 				pushed = true;
 			}
-			final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
-			final CmfContentStore<?, ?, ?> streamStore = exportState.streamStore;
+			final CmfObjectStore<?> objectStore = exportState.objectStore;
+			final CmfContentStore<?, ?> streamStore = exportState.streamStore;
 
 			final CmfObject.Archetype type = target.getType();
 			final String id = target.getId();
@@ -639,7 +640,7 @@ public abstract class ExportEngine<//
 		final TransferContextFactory<SESSION, VALUE, CONTEXT, ?> contextFactory, final DELEGATE_FACTORY delegateFactory,
 		final Transformer transformer, final ObjectFilter filter) throws ExportException, CmfStorageException {
 		final Logger output = exportState.output;
-		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
+		final CmfObjectStore<?> objectStore = exportState.objectStore;
 		final CfgTools settings = exportState.cfg;
 		final int threadCount;
 		// Ensure nobody changes this under our feet
@@ -781,10 +782,11 @@ public abstract class ExportEngine<//
 			listener.exportStarted(exportState);
 			worker.start(logic, threadCount, "Exporter", true);
 			try {
-				output.info("Retrieving the results");
 				final int reportCount = 1000;
-				final AtomicLong targetCounter = new AtomicLong(0);
-				boolean ok = false;
+				final AtomicReference<String> currentSource = new AtomicReference<>(null);
+				final AtomicLong sourceCounter = new AtomicLong(0);
+				final AtomicLong totalCounter = new AtomicLong(0);
+				final AtomicReference<Exception> thrown = new AtomicReference<>(null);
 				try {
 
 					final Consumer<ExportTarget> submitter = (target) -> {
@@ -793,8 +795,11 @@ public abstract class ExportEngine<//
 							ExportEngine.this.log.warn("Skipping a null target: {}", target);
 							return;
 						}
-						if ((targetCounter.incrementAndGet() % reportCount) == 0) {
-							output.info("Retrieved {} object references for export", targetCounter.get());
+
+						final long cTotal = totalCounter.incrementAndGet();
+						final long cSource = sourceCounter.incrementAndGet();
+						if ((cSource % reportCount) == 0) {
+							listener.sourceSearchMilestone(currentSource.get(), cSource, cTotal);
 						}
 						try {
 							worker.addWorkItem(target);
@@ -817,24 +822,58 @@ public abstract class ExportEngine<//
 						}
 
 						scanner.iterator(sources).forEachRemaining((line) -> {
+							sourceCounter.set(0);
+							currentSource.set(line);
+							listener.sourceSearchStarted(line);
 							try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
 								s.forEach(submitter);
 							} catch (Exception e) {
-								this.log.warn("Failed to find the export target(s) as per [{}]", line, e);
+								thrown.set(e);
+							} finally {
+								try {
+									if (thrown.get() == null) {
+										listener.sourceSearchCompleted(line, sourceCounter.get(), totalCounter.get());
+									} else {
+										listener.sourceSearchFailed(line, sourceCounter.get(), totalCounter.get(),
+											thrown.get());
+									}
+								} finally {
+									thrown.set(null);
+								}
 							}
 						});
 					} else {
-						try (Stream<ExportTarget> s = getExportTargets(session, sources.iterator().next(),
-							delegateFactory)) {
+						final String line = sources.iterator().next();
+						sourceCounter.set(0);
+						currentSource.set(line);
+						listener.sourceSearchStarted(line);
+						try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
 							s.forEach(submitter);
+						} catch (final Exception e) {
+							thrown.set(e);
+							throw e;
+						} finally {
+							try {
+								if (thrown.get() == null) {
+									listener.sourceSearchCompleted(line, sourceCounter.get(), totalCounter.get());
+								} else {
+									listener.sourceSearchFailed(line, sourceCounter.get(), totalCounter.get(),
+										thrown.get());
+								}
+							} finally {
+								thrown.set(null);
+							}
 						}
 					}
-					ok = true;
 				} catch (Exception e) {
+					thrown.set(e);
 					throw new ExportException("Failed to retrieve the objects to export", e);
 				} finally {
-					output.info("Retrieved a total of {} objects{}", targetCounter.get(),
-						ok ? "" : " (the load was incomplete)");
+					if (thrown.get() == null) {
+						listener.searchCompleted(totalCounter.get());
+					} else {
+						listener.searchFailed(totalCounter.get(), thrown.get());
+					}
 				}
 			} finally {
 				List<ExportTarget> l = worker.waitForCompletion();
@@ -864,7 +903,7 @@ public abstract class ExportEngine<//
 	protected void initContext(CONTEXT ctx) {
 	}
 
-	protected void setExportProperties(CmfObjectStore<?, ?> store) {
+	protected void setExportProperties(CmfObjectStore<?> store) {
 	}
 
 	protected void validateEngine(SESSION session) throws ExportException {

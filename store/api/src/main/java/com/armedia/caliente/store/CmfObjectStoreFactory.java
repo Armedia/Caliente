@@ -2,7 +2,7 @@ package com.armedia.caliente.store;
 
 import java.util.Collection;
 
-public abstract class CmfObjectStoreFactory<CONNECTION, OPERATION extends CmfStoreOperation<CONNECTION>, STORE extends CmfObjectStore<CONNECTION, OPERATION>>
+public abstract class CmfObjectStoreFactory<OPERATION extends CmfStoreOperation<?>, STORE extends CmfObjectStore<OPERATION>>
 	extends CmfStoreFactory<STORE> {
 
 	protected CmfObjectStoreFactory(String... aliases) {

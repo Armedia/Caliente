@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -18,9 +18,10 @@ import javax.xml.bind.annotation.XmlValue;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
 
 @XmlTransient
-public abstract class AttributeNamesSource implements Iterable<String> {
+public abstract class AttributeNamesSource implements Iterable<String>, ReadWriteLockable {
 
 	public static final Character DEFAULT_SEPARATOR = Character.valueOf(',');
 
@@ -38,6 +39,11 @@ public abstract class AttributeNamesSource implements Iterable<String> {
 
 	@XmlTransient
 	private Map<String, String> values = null;
+
+	@Override
+	public ReadWriteLock getMainLock() {
+		return this.rwLock;
+	}
 
 	public String getValue() {
 		return this.value;
@@ -63,10 +69,7 @@ public abstract class AttributeNamesSource implements Iterable<String> {
 	protected abstract Set<String> getValues(Connection c) throws Exception;
 
 	public final void initialize(Connection c) throws Exception {
-		Lock lock = this.rwLock.writeLock();
-		lock.lock();
-		try {
-			if (this.values != null) { return; }
+		readLockedUpgradable(() -> this.values, Objects::isNull, (e) -> {
 			this.activeCaseSensitive = isCaseSensitive();
 			Set<String> values = getValues(c);
 			if (values == null) {
@@ -77,53 +80,35 @@ public abstract class AttributeNamesSource implements Iterable<String> {
 				m.put(canonicalize(s), s);
 			}
 			this.values = Tools.freezeMap(m);
-		} finally {
-			lock.unlock();
-		}
+		});
 	}
 
 	public final int size() {
-		Lock lock = this.rwLock.readLock();
-		lock.lock();
-		try {
+		return readLocked(() -> {
 			if (this.values == null) { return 0; }
 			return this.values.size();
-		} finally {
-			lock.unlock();
-		}
+		});
 	}
 
 	public final Set<String> getValues() {
-		Lock lock = this.rwLock.readLock();
-		lock.lock();
-		try {
+		return readLocked(() -> {
 			if (this.values == null) { return Collections.emptySet(); }
 			return Tools.freezeSet(new LinkedHashSet<>(this.values.values()));
-		} finally {
-			lock.unlock();
-		}
+		});
 	}
 
 	public final Set<String> getCanonicalizedValues() {
-		Lock lock = this.rwLock.readLock();
-		lock.lock();
-		try {
+		return readLocked(() -> {
 			if (this.values == null) { return Collections.emptySet(); }
 			return Tools.freezeSet(new LinkedHashSet<>(this.values.keySet()));
-		} finally {
-			lock.unlock();
-		}
+		});
 	}
 
 	public final boolean contains(String str) {
-		Lock lock = this.rwLock.readLock();
-		lock.lock();
-		try {
+		return readLocked(() -> {
 			if (this.values == null) { return false; }
 			return this.values.containsKey(canonicalize(str));
-		} finally {
-			lock.unlock();
-		}
+		});
 	}
 
 	@Override
@@ -132,14 +117,9 @@ public abstract class AttributeNamesSource implements Iterable<String> {
 	}
 
 	public final void close() {
-		Lock lock = this.rwLock.writeLock();
-		lock.lock();
-		try {
-			if (this.values == null) { return; }
+		readLockedUpgradable(() -> this.values, Objects::nonNull, (e) -> {
 			this.values = null;
 			this.activeCaseSensitive = null;
-		} finally {
-			lock.unlock();
-		}
+		});
 	}
 }

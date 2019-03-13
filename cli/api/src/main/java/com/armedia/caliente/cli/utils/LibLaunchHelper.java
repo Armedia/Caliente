@@ -2,6 +2,7 @@ package com.armedia.caliente.cli.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.DirectoryStream;
@@ -9,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -22,6 +24,7 @@ import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.Options;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
+import com.armedia.commons.utilities.Tools;
 
 public final class LibLaunchHelper extends Options implements LaunchClasspathHelper {
 
@@ -29,10 +32,10 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 		.setShortOpt('l') //
 		.setLongOpt("lib") //
 		.setMinArguments(1) //
-		.setMaxArguments(1) //
-		.setArgumentName("directory") //
+		.setMaxArguments(-1) //
+		.setArgumentName("directory-or-file") //
 		.setDescription(
-			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
+			"A JAR/ZIP library file, or a directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
 	;
 
 	private static final DirectoryStream.Filter<Path> LIB_FILTER = (path) -> {
@@ -45,7 +48,7 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 	public static final String LIB_ENV_VAR = "CALIENTE_LIB";
 
 	private final String defaultLib;
-	private final String libEnvVar;
+	private final String envVarName;
 
 	private final OptionGroupImpl group;
 
@@ -59,54 +62,102 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 
 	public LibLaunchHelper(String defaultLib, String libEnvVar) {
 		this.defaultLib = defaultLib;
-		this.libEnvVar = libEnvVar;
+		this.envVarName = libEnvVar;
 		this.group = new OptionGroupImpl("Classpath Extender") //
 			.add(LibLaunchHelper.LIB) //
 		;
 	}
 
-	@Override
-	public Collection<URL> getClasspathPatchesPre(OptionValues cli) {
-		List<URL> ret = new ArrayList<>();
-		try {
-			// First...use the command-line option given, and apply any defaults
-			// we may be configured for
-			String var = cli.getString(LibLaunchHelper.LIB, this.defaultLib);
-			if (var == null) {
-				// No command-line option given...if we have an environment variable configured,
-				// given, we use that
-				if (this.libEnvVar != null) {
-					var = System.getenv(this.libEnvVar);
-				}
+	public final String getDefault() {
+		return this.defaultLib;
+	}
+
+	public final String getEnvVarName() {
+		return this.envVarName;
+	}
+
+	protected boolean isViableLibrary(Path path) {
+		if (!Files.isRegularFile(path)) { return false; }
+		// TODO: Do we want to perform additional validation? I.e. check the contents to
+		// see if it's really a JAR file
+		/*
+		try (ZipFile zf = new ZipFile(path.toFile())) {
+			zf.size();
+		} catch (ZipException e) {
+			return false;
+		}
+		*/
+		return true;
+	}
+
+	protected void collectEntries(String path, List<URL> ret) throws IOException {
+		if (StringUtils.isEmpty(path)) { return; }
+		File f = CliUtils.newFileObject(path);
+		if (!f.exists()) { return; }
+		if (!f.canRead()) { return; }
+
+		if (f.isFile()) {
+			if (isViableLibrary(f.toPath())) {
+				ret.add(f.toURI().toURL());
+			}
+			return;
+		}
+
+		if (f.isDirectory()) {
+			// Ok so we have the directory...does "classes" exist?
+			File classesDir = CliUtils.newFileObject(f, "classes");
+			if (classesDir.exists() && classesDir.isDirectory() && classesDir.canRead()) {
+				ret.add(classesDir.toURI().toURL());
 			}
 
-			// If we had no lib option, nor an environment variable to fall back upon, there's
-			// nothing else to be done
-			if (var == null) { return null; }
-
-			// We got something!! Inspect it...
-			// Next, is it a directory?
-			File f = CliUtils.newFileObject(var);
-			if (f.isDirectory() && f.canRead()) {
-				// Ok so we have the directory...does "classes" exist?
-				File classesDir = CliUtils.newFileObject(f, "classes");
-				if (classesDir.exists() && classesDir.isDirectory() && classesDir.canRead()) {
-					ret.add(classesDir.toURI().toURL());
-				}
-
-				// Make sure they're sorted by name
-				Map<String, URL> urls = new TreeMap<>();
-				Files.newDirectoryStream(f.toPath(), LibLaunchHelper.LIB_FILTER).forEach((jar) -> {
+			// Make sure they're sorted by name
+			Map<String, URL> urls = new TreeMap<>();
+			Files.newDirectoryStream(f.toPath(), LibLaunchHelper.LIB_FILTER).forEach((jar) -> {
+				if (isViableLibrary(jar)) {
 					try {
 						urls.put(jar.getFileName().toString(), jar.toUri().toURL());
 					} catch (MalformedURLException e) {
 						throw new RuntimeException(String.format("Failed to convert the path [%s] to a URL", jar), e);
 					}
-				});
-				urls.values().stream().forEach(ret::add);
+				}
+			});
+			urls.values().stream().forEach(ret::add);
+		}
+	}
+
+	@Override
+	public Collection<URL> getClasspathPatchesPre(OptionValues cli) {
+		List<URL> ret = new ArrayList<>();
+		String currentPath = null;
+		try {
+			if (!cli.isPresent(LibLaunchHelper.LIB)) {
+				// No option given, use the default or environment variable
+				Collection<String> paths = Collections.emptyList();
+				if (this.envVarName != null) {
+					// Use the environment variable
+					String str = System.getenv(this.envVarName);
+					if (str != null) {
+						paths = Tools.splitEscaped(File.pathSeparatorChar, str);
+					}
+				} else if (this.defaultLib != null) {
+					// Use the configured default
+					paths = Collections.singleton(this.defaultLib);
+				}
+
+				if (paths != null) {
+					for (String path : paths) {
+						collectEntries(currentPath = path, ret);
+					}
+				}
+				return ret;
+			}
+
+			for (String path : cli.getStrings(LibLaunchHelper.LIB)) {
+				collectEntries(currentPath = path, ret);
 			}
 		} catch (IOException e) {
-			throw new RuntimeException(String.format("Failed to configure the dynamic library classpath for %s"), e);
+			throw new UncheckedIOException(
+				String.format("Failed to configure the dynamic library classpath from [%s]", currentPath), e);
 		}
 		return ret;
 	}
@@ -118,7 +169,7 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 
 	@Override
 	public String toString() {
-		return String.format("LibLaunchHelper [defaultLib=%s, libEnvVar=%s]", this.defaultLib, this.libEnvVar);
+		return String.format("LibLaunchHelper [defaultLib=%s, libEnvVar=%s]", this.defaultLib, this.envVarName);
 	}
 
 	@Override

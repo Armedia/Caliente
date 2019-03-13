@@ -188,7 +188,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 
 	@Override
 	protected List<CmfContentStream> storeContent(UcmExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
 		boolean includeRenditions) {
 		List<CmfContentStream> contents = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
 			includeRenditions);
@@ -229,7 +229,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			info.setProperty("description", rendition.getDescription());
 
 			contents.add(info);
-			CmfContentStore<?, ?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshalled, info);
+			CmfContentStore<?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshalled, info);
 			if (!skipContent) {
 				// Doesn't support file-level, so we (sadly) use stream-level transfers
 				try (InputStream in = this.object.getInputStream(ctx.getSession(), rendition.getType())) {

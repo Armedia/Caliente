@@ -35,7 +35,8 @@ public class CLIGroup {
 
 	public static final OptionGroup IMPORT_EXPORT_COMMON = new OptionGroupImpl("Common Export/Import") //
 		.add(CLIParam.error_count) //
-		.add(CLIParam.exclude_types) //
+		.add(CLIParam.except_types) //
+		.add(CLIParam.only_types) //
 		.add(CLIParam.external_metadata) //
 		.add(CLIParam.filter) //
 		.add(CLIParam.manifest_types) //

@@ -52,7 +52,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	protected ContentStream getContentStream(CmisImportContext ctx) throws ImportException {
-		CmfContentStore<?, ?, ?> store = ctx.getContentStore();
+		CmfContentStore<?, ?> store = ctx.getContentStore();
 		List<CmfContentStream> info = null;
 		try {
 			info = ctx.getContentStreams(this.cmfObject);
@@ -62,7 +62,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		}
 		if ((info == null) || info.isEmpty()) { return null; }
 		CmfContentStream content = info.get(0);
-		CmfContentStore<?, ?, ?>.Handle h = store.getHandle(this.factory.getEngine().getTranslator(), this.cmfObject,
+		CmfContentStore<?, ?>.Handle h = store.getHandle(this.factory.getEngine().getTranslator(), this.cmfObject,
 			content);
 
 		String fileName = content.getFileName();

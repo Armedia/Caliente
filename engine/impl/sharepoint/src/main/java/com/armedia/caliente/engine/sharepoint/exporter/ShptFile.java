@@ -379,14 +379,14 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 	@Override
 	protected List<CmfContentStream> storeContent(ShptExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
+		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
 		boolean includeRenditions) {
 		final ShptSession session = ctx.getSession();
 		CmfContentStream info = new CmfContentStream(0);
 		final String name = this.object.getName();
 		info.setFileName(name);
 		info.setExtension(FilenameUtils.getExtension(name));
-		CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshaled, info);
+		CmfContentStore<?, ?>.Handle h = streamStore.getHandle(translator, marshaled, info);
 		// TODO: sadly, this is not memory efficient for larger files...
 		BinaryMemoryBuffer buf = new BinaryMemoryBuffer(10240);
 		try (InputStream in = (this.version == null) ? session.getFileStream(this.object.getServerRelativeUrl())

@@ -80,8 +80,8 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 		Map<String, Object> settings = new HashMap<>();
 		initialize(state, settings);
 
-		final CmfObjectStore<?, ?> objectStore = state.getObjectStore();
-		final CmfContentStore<?, ?, ?> contentStore = state.getContentStore();
+		final CmfObjectStore<?> objectStore = state.getObjectStore();
+		final CmfContentStore<?, ?> contentStore = state.getContentStore();
 		final Date start;
 		final Date end;
 		String exceptionReport = null;

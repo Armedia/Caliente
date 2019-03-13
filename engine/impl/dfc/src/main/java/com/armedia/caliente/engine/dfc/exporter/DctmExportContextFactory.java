@@ -27,7 +27,7 @@ public class DctmExportContextFactory
 	private final DctmSpecialValues specialValues;
 
 	DctmExportContextFactory(DctmExportEngine engine, CfgTools settings, IDfSession session,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Logger output,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		super(engine, settings, session, objectStore, contentStore, output, warningTracker);
 		this.specialValues = new DctmSpecialValues(settings);

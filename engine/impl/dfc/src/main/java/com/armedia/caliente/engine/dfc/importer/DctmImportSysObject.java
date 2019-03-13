@@ -80,8 +80,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		AUTO_PERMITS = Collections.unmodifiableSet(s);
 	}
 
-	private static Set<String> getSupportedExtendedPermits(IDfSysObject sysObject) throws DfException {
-		final IDfSession session = sysObject.getSession();
+	private static Set<String> getSupportedExtendedPermits(IDfSession session, IDfSysObject sysObject)
+		throws DfException {
 		final Set<String> ret = new HashSet<>();
 
 		DfException e = DfUtils.runRetryable(session,
@@ -100,15 +100,16 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		private final Set<String> newXPermit;
 		private final Set<String> autoRemove;
 
-		public TemporaryPermission(IDfSysObject object, int newPermission, String... newXPermits) throws DfException {
-			this(object, newPermission,
+		public TemporaryPermission(IDfSession session, IDfSysObject object, int newPermission, String... newXPermits)
+			throws DfException {
+			this(session, object, newPermission,
 				(newXPermits == null ? DctmImportSysObject.NO_PERMITS : Arrays.asList(newXPermits)));
 		}
 
-		public TemporaryPermission(IDfSysObject object, int newPermission, Collection<String> newXPermits)
-			throws DfException {
+		public TemporaryPermission(IDfSession session, IDfSysObject object, int newPermission,
+			Collection<String> newXPermits) throws DfException {
 			this.objectId = object.getObjectId().getId();
-			final String userName = object.getSession().getLoginUserName();
+			final String userName = session.getLoginUserName();
 
 			// Does it have the required access permission?
 			object.fetch(null);
@@ -131,7 +132,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				this.newPermit = null;
 			}
 
-			Set<String> s = DctmImportSysObject.getSupportedExtendedPermits(object);
+			Set<String> s = DctmImportSysObject.getSupportedExtendedPermits(session, object);
 			Set<String> autoRemove = new HashSet<>();
 			for (String x : DctmImportSysObject.AUTO_PERMITS) {
 				if (!s.contains(x)) {
@@ -249,11 +250,11 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		private final boolean link;
 		private boolean locked = false;
 
-		protected ParentFolderAction(IDfSysObject parent, boolean link) throws DfException {
+		protected ParentFolderAction(IDfSession session, IDfSysObject parent, boolean link) throws DfException {
 			this.parent = parent;
 			this.parentId = parent.getObjectId().getId();
 			this.link = link;
-			this.TemporaryPermission = new TemporaryPermission(parent, IDfACL.DF_PERMIT_DELETE,
+			this.TemporaryPermission = new TemporaryPermission(session, parent, IDfACL.DF_PERMIT_DELETE,
 				IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
 		}
 
@@ -421,7 +422,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		throws DfException, ImportException {
 
 		if (!isTransitoryObject(sysObject)) {
-			this.existingTemporaryPermission = new TemporaryPermission(sysObject, IDfACL.DF_PERMIT_DELETE);
+			this.existingTemporaryPermission = new TemporaryPermission(context.getSession(), sysObject,
+				IDfACL.DF_PERMIT_DELETE);
 			if (this.existingTemporaryPermission.grant(sysObject)) {
 				sysObject.save();
 			}
@@ -758,7 +760,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			return null;
 		}
 
-		final IDfSession session = sysObject.getSession();
+		final IDfSession session = ctx.getSession();
 
 		// prepare sql to be executed
 		// Important: REPLACE QUOTES!!
@@ -1081,7 +1083,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected final boolean linkToParents(T sysObject, DctmImportContext ctx) throws DfException, ImportException {
-		final IDfSession session = sysObject.getSession();
+		final IDfSession session = ctx.getSession();
 
 		// First, get the list of the current parents, and reverse its order.
 		// The reverse order will accelerate the unlinking process later on
@@ -1129,7 +1131,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		this.parentLinkActions = new ArrayList<>(lockingOrder.size());
 		for (String parentId : oldParents) {
 			IDfSysObject parent = parentCache.get(parentId);
-			ParentFolderAction action = new ParentFolderAction(parent, false);
+			ParentFolderAction action = new ParentFolderAction(ctx.getSession(), parent, false);
 			this.log.debug("Applying {}", action);
 			action.apply(sysObject);
 			this.log.debug("Applied {}", action);
@@ -1138,7 +1140,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		for (String parentId : newParents) {
 			IDfSysObject parent = parentCache.get(parentId);
-			ParentFolderAction action = new ParentFolderAction(parent, true);
+			ParentFolderAction action = new ParentFolderAction(ctx.getSession(), parent, true);
 			this.log.debug("Applying {}", action);
 			action.apply(sysObject);
 			this.log.debug("Applied {}", action);
@@ -1250,7 +1252,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if (!isAttributeEquals(object, DctmAttributes.ACL_NAME)) { return false; }
 		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.ACL_DOMAIN);
 		if ((att == null) || !att.hasValues()) { return false; }
-		String aclDomain = DctmMappingUtils.resolveMappableUser(object, att.getValue().asString());
+		String aclDomain = DctmMappingUtils.resolveMappableUser(ctx.getSession(), att.getValue().asString());
 		if (!StringUtils.equals(aclDomain, object.getACLDomain())) { return false; }
 
 		// Same owner?

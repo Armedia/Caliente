@@ -143,13 +143,13 @@ public abstract class TransferEngine< //
 	protected final Logger output;
 	protected final WarningTracker warningTracker;
 	protected final Path baseData;
-	protected final CmfObjectStore<?, ?> objectStore;
-	protected final CmfContentStore<?, ?, ?> contentStore;
+	protected final CmfObjectStore<?> objectStore;
+	protected final CmfContentStore<?, ?> contentStore;
 	protected final CfgTools settings;
 
 	protected TransferEngine(ENGINE_FACTORY factory, Class<RESULT> resultClass, final Logger output,
-		final WarningTracker warningTracker, final File baseData, final CmfObjectStore<?, ?> objectStore,
-		final CmfContentStore<?, ?, ?> contentStore, CfgTools settings, String cfgNamePrefix) {
+		final WarningTracker warningTracker, final File baseData, final CmfObjectStore<?> objectStore,
+		final CmfContentStore<?, ?> contentStore, CfgTools settings, String cfgNamePrefix) {
 		this.factory = Objects.requireNonNull(factory,
 			"Must provide a handle to the factory that created this instance");
 		this.resultClass = Objects.requireNonNull(resultClass, "Must provide a valid RESULT class");
@@ -218,9 +218,9 @@ public abstract class TransferEngine< //
 		}
 	}
 
-	protected abstract CONTEXT_FACTORY newContextFactory(SESSION session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
-		WarningTracker warningTracker) throws Exception;
+	protected abstract CONTEXT_FACTORY newContextFactory(SESSION session, CfgTools cfg, CmfObjectStore<?> objectStore,
+		CmfContentStore<?, ?> streamStore, Transformer transformer, Logger output, WarningTracker warningTracker)
+		throws Exception;
 
 	protected abstract DELEGATE_FACTORY newDelegateFactory(SESSION session, CfgTools cfg) throws Exception;
 
@@ -287,11 +287,11 @@ public abstract class TransferEngine< //
 		return this.baseData;
 	}
 
-	public final CmfObjectStore<?, ?> getObjectStore() {
+	public final CmfObjectStore<?> getObjectStore() {
 		return this.objectStore;
 	}
 
-	public final CmfContentStore<?, ?, ?> getContentStore() {
+	public final CmfContentStore<?, ?> getContentStore() {
 		return this.contentStore;
 	}
 

@@ -55,7 +55,7 @@ import com.armedia.commons.utilities.XmlTools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOperation> {
+public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation> {
 
 	private static final String SCHEME_RAW = "raw";
 	private static final String SCHEME_FIXED = "fixed";

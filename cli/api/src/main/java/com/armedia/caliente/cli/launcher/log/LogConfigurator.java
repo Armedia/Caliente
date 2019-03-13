@@ -50,16 +50,14 @@ public abstract class LogConfigurator {
 				try {
 					Class<?> c = Class.forName(configurator);
 					if (c.isAssignableFrom(LogConfigurator.class)) {
-						@SuppressWarnings("unchecked")
-						Class<LogConfigurator> i = (Class<LogConfigurator>) c;
-						return i.newInstance();
+						return LogConfigurator.class.cast(c.newInstance());
 					}
 				} catch (Exception e) {
 					throw new RuntimeException(
 						String.format("Failed to configure the boot log using [%s]", configurator), e);
 				}
 			} catch (ClassNotFoundException e) {
-				// No this one, move on...
+				// Not this one, move on...
 			}
 		}
 

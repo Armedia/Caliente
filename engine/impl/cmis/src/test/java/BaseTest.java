@@ -31,11 +31,11 @@ public class BaseTest {
 		settings.put(ExportSetting.FROM.getLabel(), "/Shared");
 		settings.put(CmisSetting.EXPORT_PAGE_SIZE.getLabel(), "5");
 
-		CmfObjectStore<?, ?> objectStore = CmfStores.getObjectStore("default");
+		CmfObjectStore<?> objectStore = CmfStores.getObjectStore("default");
 		objectStore.clearProperties();
 		objectStore.clearAllObjects();
 		objectStore.clearAttributeMappings();
-		CmfContentStore<?, ?, ?> contentStore = CmfStores.getContentStore("default");
+		CmfContentStore<?, ?> contentStore = CmfStores.getContentStore("default");
 		contentStore.clearProperties();
 		contentStore.clearAllStreams();
 

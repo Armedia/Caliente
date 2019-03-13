@@ -40,6 +40,29 @@ public class DefaultExportEngineListener extends DefaultExportListener implement
 	}
 
 	protected void exportFinishedImpl(UUID jobId, Map<CmfObject.Archetype, Long> summary) {
-		// Do whatever...
+	}
+
+	@Override
+	public void sourceSearchStarted(String source) {
+	}
+
+	@Override
+	public void sourceSearchMilestone(String source, long sourceCount, long totalCount) {
+	}
+
+	@Override
+	public void sourceSearchCompleted(String source, long sourceCount, long totalCount) {
+	}
+
+	@Override
+	public void sourceSearchFailed(String source, long sourceCount, long totalCount, Exception thrown) {
+	}
+
+	@Override
+	public void searchCompleted(long totalCount) {
+	}
+
+	@Override
+	public void searchFailed(long totalCount, Exception thrown) {
 	}
 }

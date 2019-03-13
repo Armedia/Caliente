@@ -5,8 +5,8 @@ import com.armedia.caliente.store.CmfObjectStore;
 
 public interface StorageClient {
 
-	public CmfObjectStore<?, ?> getObjectStore();
+	public CmfObjectStore<?> getObjectStore();
 
-	public CmfContentStore<?, ?, ?> getContentStore();
+	public CmfContentStore<?, ?> getContentStore();
 
 }

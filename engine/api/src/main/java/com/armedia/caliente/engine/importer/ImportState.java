@@ -11,7 +11,7 @@ import com.armedia.commons.utilities.CfgTools;
 
 public final class ImportState extends TransferState {
 
-	ImportState(Logger output, Path baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore,
+	ImportState(Logger output, Path baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> streamStore,
 		CfgTools settings) {
 		super(output, baseData, objectStore, streamStore, settings);
 	}

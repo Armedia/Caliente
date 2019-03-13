@@ -58,7 +58,7 @@ public class UcmExportContextFactory
 	}
 
 	UcmExportContextFactory(UcmExportEngine engine, UcmSession session, CfgTools settings,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Logger output,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		super(engine, settings, session, objectStore, contentStore, output, warningTracker);
 		UcmExportContextFactory.initializeConnectionData(this, session);

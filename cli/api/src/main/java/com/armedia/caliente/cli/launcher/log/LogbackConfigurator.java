@@ -20,11 +20,11 @@ class LogbackConfigurator extends LogConfigurator {
 		}
 
 		// assume SLF4J is bound to logback in the current environment
-		LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-
+		LoggerContext context = LoggerContext.class.cast(LoggerFactory.getILoggerFactory());
 		try {
 			JoranConfigurator configurator = new JoranConfigurator();
 			configurator.setContext(context);
+
 			// Call context.reset() to clear any previous configuration, e.g. default
 			// configuration. For multi-step configuration, omit calling context.reset().
 			context.reset();
@@ -33,6 +33,7 @@ class LogbackConfigurator extends LogConfigurator {
 		} catch (JoranException je) {
 			// StatusPrinter will handle this
 		}
+
 		StatusPrinter.printInCaseOfErrorsOrWarnings(context);
 		return getDefaultLogger();
 	}

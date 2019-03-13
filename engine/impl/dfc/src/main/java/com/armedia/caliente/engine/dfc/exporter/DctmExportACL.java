@@ -64,7 +64,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 		properties.add(property);
 
 		final String aclId = acl.getObjectId().getId();
-		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
+		IDfCollection resultCol = DfUtils.executeQuery(ctx.getSession(),
 			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
 		try {
 			property = new CmfProperty<>(IntermediateProperty.USERS_WITH_DEFAULT_ACL,
@@ -85,7 +85,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			DctmDataType.DF_INTEGER.getStoredType(), true);
 		CmfProperty<IDfValue> permitValues = new CmfProperty<>(DctmACL.PERMIT_VALUES,
 			DctmDataType.DF_STRING.getStoredType(), true);
-		final IDfSession session = acl.getSession();
+		final IDfSession session = ctx.getSession();
 		Set<String> missingAccessors = new HashSet<>();
 		for (IDfPermit p : DfUtils.getPermissionsWithFallback(session, acl)) {
 			// First, validate the accessor
@@ -142,7 +142,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 		throws DfException, ExportException {
 		if (!super.getDataProperties(ctx, properties, acl)) { return false; }
 		getDataPropertiesForDocumentum(ctx, properties, acl);
-		DctmCmisACLTools.calculateCmisActions(acl, properties);
+		DctmCmisACLTools.calculateCmisActions(ctx.getSession(), acl, properties);
 		return true;
 	}
 
@@ -180,7 +180,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 					acl.getObjectName(), (group ? "group" : "user"), name);
 				continue;
 			}
-			ret.add(this.factory.newExportDelegate(obj));
+			ret.add(this.factory.newExportDelegate(session, obj));
 		}
 
 		// Do the owner
@@ -194,7 +194,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 					String.format("Missing dependency for ACL [%s:%s] - user [%s] not found (as ACL domain)", owner,
 						acl.getObjectName(), owner));
 			}
-			ret.add(this.factory.newExportDelegate(user));
+			ret.add(this.factory.newExportDelegate(session, user));
 		}
 		return ret;
 	}

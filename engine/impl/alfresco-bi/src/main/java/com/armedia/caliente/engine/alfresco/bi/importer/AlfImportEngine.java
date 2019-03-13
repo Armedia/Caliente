@@ -313,7 +313,7 @@ public class AlfImportEngine extends
 	private final Map<String, AlfrescoType> defaultTypes;
 
 	public AlfImportEngine(AlfImportEngineFactory factory, Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
 		throws ImportException, IOException, JAXBException {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 		addListener(this.listener);
@@ -430,8 +430,8 @@ public class AlfImportEngine extends
 	}
 
 	@Override
-	protected AlfImportContextFactory newContextFactory(AlfRoot session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output, WarningTracker warningTracker)
+	protected AlfImportContextFactory newContextFactory(AlfRoot session, CfgTools cfg, CmfObjectStore<?> objectStore,
+		CmfContentStore<?, ?> streamStore, Transformer transformer, Logger output, WarningTracker warningTracker)
 		throws Exception {
 		return new AlfImportContextFactory(this, cfg, session, objectStore, streamStore, transformer, output,
 			warningTracker);

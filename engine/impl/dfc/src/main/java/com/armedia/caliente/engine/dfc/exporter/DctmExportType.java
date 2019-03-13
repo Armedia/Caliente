@@ -60,7 +60,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 
 	@Override
 	protected int calculateDependencyTier(IDfSession session, IDfType type) throws Exception {
-		return calculateDepth(type.getSession(), type);
+		return calculateDepth(session, type);
 	}
 
 	private int calculateDepth(IDfSession session, IDfType type) throws DfException {
@@ -149,7 +149,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 		IDfType type) throws DfException, ExportException {
 		if (!super.getDataProperties(ctx, properties, type)) { return false; }
 		String typeName = type.getString(DctmAttributes.NAME);
-		IDfType dfType = type.getSession().getType(typeName);
+		IDfType dfType = ctx.getSession().getType(typeName);
 		// If there's no dfType, then we clearly have an issue
 		if (dfType == null) {
 			throw new ExportException(String.format(
@@ -195,7 +195,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 				this.log.warn("Will not export special type [{}] (supertype of [{}])", superType.getName(),
 					type.getName());
 			} else {
-				ret.add(this.factory.newExportDelegate(superType));
+				ret.add(this.factory.newExportDelegate(session, superType));
 			}
 		}
 		return ret;
