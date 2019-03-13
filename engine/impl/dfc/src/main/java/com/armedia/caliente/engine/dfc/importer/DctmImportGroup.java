@@ -100,11 +100,16 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 		final IDfSession session = context.getSession();
 		CmfAttribute<IDfValue> usersNames = this.cmfObject.getAttribute(DctmAttributes.USERS_NAMES);
 		// Keep track of missing users so we don't look for them again.
-		Set<String> missingUsers = new HashSet<>();
 		if (usersNames != null) {
 			group.removeAllUsers();
+			Set<String> missingUsers = new HashSet<>();
+			Set<String> processedUsers = new HashSet<>();
 			for (IDfValue v : usersNames) {
 				final String actualUser = DctmMappingUtils.resolveMappableUser(session, v.asString());
+				// Avoid duplicate searches
+				if (!processedUsers.add(actualUser)) {
+					continue;
+				}
 				final IDfUser user;
 				try {
 					user = DctmImportUser.locateExistingUser(context, actualUser);
@@ -124,7 +129,12 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 					this.log.warn(msg);
 					continue;
 				}
-				group.addUser(user.getUserName());
+				final String finalName = user.getUserName();
+				if (!processedUsers.add(finalName)) {
+					// Avoid duplicates
+					continue;
+				}
+				group.addUser(finalName);
 			}
 		}
 
@@ -172,8 +182,12 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 		CmfAttribute<IDfValue> groupsNames = this.cmfObject.getAttribute(DctmAttributes.GROUPS_NAMES);
 		if (groupsNames != null) {
 			group.removeAllGroups();
+			Set<String> processedGroups = new HashSet<>();
 			for (IDfValue v : groupsNames) {
 				final String actualGroup = v.asString();
+				if (!processedGroups.add(actualGroup)) {
+					continue;
+				}
 				final IDfGroup other = session.getGroup(actualGroup);
 				if (other == null) {
 					try {
@@ -184,7 +198,11 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 							actualGroup, groupName.asString(), e);
 					}
 				} else {
-					group.addGroup(other.getGroupName());
+					final String finalName = other.getGroupName();
+					if (!processedGroups.add(finalName)) {
+						continue;
+					}
+					group.addGroup(finalName);
 				}
 			}
 		}
