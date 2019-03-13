@@ -107,7 +107,7 @@ public enum CLIParam implements Supplier<Option> {
 			.setDescription("The number of errors to accept before aborting an import") //
 	), //
 
-	exclude_types( //
+	except_types( //
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
 			.setValueSep(',') //
@@ -319,6 +319,15 @@ public enum CLIParam implements Supplier<Option> {
 	non_recursive( //
 		new OptionImpl() //
 			.setDescription("Turn off counter recursion (i.e. to count a single folder without descending)") //
+	), //
+
+	only_types( //
+		new OptionImpl() //
+			.setArgumentLimits(1, -1) //
+			.setValueSep(',') //
+			.setArgumentName("object-type") //
+			.setValueFilter(new EnumValueFilter<>(false, CmfObject.Archetype.class)) //
+			.setDescription("Object types to include in processing") //
 	), //
 
 	organizer( //

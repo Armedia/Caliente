@@ -4,7 +4,8 @@ import com.armedia.caliente.store.CmfValue;
 
 public enum TransferSetting implements TransferEngineSetting {
 	//
-	EXCLUDE_TYPES(CmfValue.Type.BOOLEAN),
+	EXCEPT_TYPES(CmfValue.Type.STRING),
+	ONLY_TYPES(CmfValue.Type.STRING),
 	IGNORE_CONTENT(CmfValue.Type.BOOLEAN, false),
 	THREAD_COUNT(CmfValue.Type.INTEGER),
 	BACKLOG_SIZE(CmfValue.Type.INTEGER),

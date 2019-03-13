@@ -3,6 +3,7 @@ package com.armedia.caliente.engine;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.ConfigurationSetting;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
 
@@ -60,13 +62,28 @@ public abstract class TransferContextFactory< //
 		}
 		this.engine = engine;
 		this.settings = Tools.coalesce(settings, CfgTools.EMPTY);
-		Set<CmfObject.Archetype> excludes = EnumSet.noneOf(CmfObject.Archetype.class);
-		for (Object o : settings.getObjects(TransferSetting.EXCLUDE_TYPES)) {
-			CmfObject.Archetype t = TransferContextFactory.decodeObjectType(o);
-			if (t != null) {
-				excludes.add(t);
+		ConfigurationSetting excludeSetting = null;
+		Set<CmfObject.Archetype> excludes = null;
+		Consumer<CmfObject.Archetype> consumer = null;
+
+		if (settings.hasValue(TransferSetting.ONLY_TYPES)) {
+			excludeSetting = TransferSetting.ONLY_TYPES;
+			excludes = EnumSet.allOf(CmfObject.Archetype.class);
+			consumer = excludes::remove;
+		} else if (settings.hasValue(TransferSetting.EXCEPT_TYPES)) {
+			excludeSetting = TransferSetting.EXCEPT_TYPES;
+			excludes = EnumSet.noneOf(CmfObject.Archetype.class);
+			consumer = excludes::add;
+		}
+
+		if ((excludeSetting != null) && (consumer != null)) {
+			for (CmfObject.Archetype t : settings.getEnums(excludeSetting, CmfObject.Archetype.class, (o, e) -> null)) {
+				if (t != null) {
+					consumer.accept(t);
+				}
 			}
 		}
+
 		if (this.log.isDebugEnabled()) {
 			this.log.debug("Excluded types for this context factory instance ({}): {}", getClass().getSimpleName(),
 				excludes);
