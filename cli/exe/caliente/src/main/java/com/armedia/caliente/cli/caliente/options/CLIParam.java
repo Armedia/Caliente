@@ -113,7 +113,7 @@ public enum CLIParam implements Supplier<Option> {
 			.setValueSep(',') //
 			.setArgumentName("object-type") //
 			.setValueFilter(new EnumValueFilter<>(false, CmfObject.Archetype.class)) //
-			.setDescription("Object types to exclude from processing") //
+			.setDescription("Object types to exclude from processing (ignored when --only-types is given)") //
 	), //
 
 	external_metadata( //
@@ -327,7 +327,7 @@ public enum CLIParam implements Supplier<Option> {
 			.setValueSep(',') //
 			.setArgumentName("object-type") //
 			.setValueFilter(new EnumValueFilter<>(false, CmfObject.Archetype.class)) //
-			.setDescription("Object types to include in processing") //
+			.setDescription("Object types to include in processing (when specified, --except-types is ignored)") //
 	), //
 
 	organizer( //
