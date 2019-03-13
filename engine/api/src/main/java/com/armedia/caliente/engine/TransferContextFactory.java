@@ -25,19 +25,6 @@ public abstract class TransferContextFactory< //
 	ENGINE extends TransferEngine<?, ?, ?, SESSION, VALUE, CONTEXT, ?, ?, ?> //
 > extends BaseReadWriteLockable {
 
-	private static CmfObject.Archetype decodeObjectType(Object o) {
-		if (o == null) { return null; }
-		if (o instanceof CmfObject.Archetype) { return CmfObject.Archetype.class.cast(o); }
-		if (o instanceof String) {
-			try {
-				return CmfObject.Archetype.valueOf(String.valueOf(o));
-			} catch (IllegalArgumentException e) {
-				// Do nothing...
-			}
-		}
-		return null;
-	}
-
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private boolean open = true;
@@ -74,6 +61,8 @@ public abstract class TransferContextFactory< //
 			excludeSetting = TransferSetting.EXCEPT_TYPES;
 			excludes = EnumSet.noneOf(CmfObject.Archetype.class);
 			consumer = excludes::add;
+		} else {
+			excludes = EnumSet.noneOf(CmfObject.Archetype.class);
 		}
 
 		if ((excludeSetting != null) && (consumer != null)) {
