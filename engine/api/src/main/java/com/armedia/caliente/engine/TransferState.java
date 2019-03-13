@@ -18,8 +18,8 @@ public abstract class TransferState {
 	public final UUID jobId = UUID.randomUUID();
 	public final Logger output;
 	public final File baseData;
-	public final CmfObjectStore<?, ?> objectStore;
-	public final CmfContentStore<?, ?, ?> streamStore;
+	public final CmfObjectStore<?> objectStore;
+	public final CmfContentStore<?, ?> streamStore;
 	public final CfgTools cfg;
 
 	private final Map<String, Object> properties = new HashMap<>();
@@ -30,8 +30,8 @@ public abstract class TransferState {
 	 * @param streamStore
 	 * @param settings
 	 */
-	protected TransferState(Logger output, Path baseData, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, CfgTools settings) {
+	protected TransferState(Logger output, Path baseData, CmfObjectStore<?> objectStore,
+		CmfContentStore<?, ?> streamStore, CfgTools settings) {
 		this.output = output;
 		this.baseData = baseData.toFile();
 		this.objectStore = objectStore;

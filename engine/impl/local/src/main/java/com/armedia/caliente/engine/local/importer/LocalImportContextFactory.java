@@ -19,7 +19,7 @@ public class LocalImportContextFactory extends
 	ImportContextFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportEngine, File> {
 
 	protected LocalImportContextFactory(LocalImportEngine engine, CfgTools settings, LocalRoot root,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, Transformer transformer, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		super(engine, settings, root, objectStore, contentStore, transformer, output, warningTracker);
 	}

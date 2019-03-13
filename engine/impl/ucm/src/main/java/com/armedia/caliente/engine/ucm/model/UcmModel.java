@@ -196,7 +196,7 @@ public class UcmModel {
 	}
 
 	protected <K extends Serializable, V> V createIfAbsentInCache(KeyLockableCache<K, V> cache, K key,
-		CheckedSupplier<V> initializer) {
+		CheckedSupplier<V, Exception> initializer) {
 		try {
 			return cache.createIfAbsent(key, initializer);
 		} catch (Exception e) {

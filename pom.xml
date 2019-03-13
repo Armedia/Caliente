@@ -77,25 +77,25 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>utilities</artifactId>
-				<version>0.6.0</version>
+				<version>0.6.2</version>
 			</dependency>
 
 			<dependency> 
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>dfc-session-pool</artifactId>
-				<version>1.2.7</version>
+				<version>1.2.9</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-api</artifactId>
-				<version>1.2.6</version>
+				<version>1.2.8</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-pooled</artifactId>
-				<version>1.2.6</version>
+				<version>1.2.8</version>
 			</dependency>
 
 			<dependency>
@@ -288,15 +288,9 @@
 			</dependency>
 
 			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>4.12</version>
-			</dependency>
-
-			<dependency>
-				<groupId>ru.yandex.qatools.embed</groupId>
-				<artifactId>postgresql-embedded</artifactId>
-				<version>1.23</version>
+				<groupId>org.junit.vintage</groupId>
+				<artifactId>junit-vintage-engine</artifactId>
+				<version>5.4.0</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

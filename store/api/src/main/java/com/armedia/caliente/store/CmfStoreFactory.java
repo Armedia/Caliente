@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class CmfStoreFactory<STORE extends CmfStore<?, ?>> {
+public abstract class CmfStoreFactory<STORE extends CmfStore<?>> {
 
 	public static final String CFG_CLEAN_DATA = "clean.data";
 

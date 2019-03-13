@@ -796,7 +796,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		// dctmObj.getIntSingleAttrValue(DctmAttributes.I_VSTAMP)));
 
 		return String.format(sql, objType,
-			DfUtils.generateSqlDateClause(modifyDate.asTime().getDate(), object.getSession()), vstampFlag,
+			DfUtils.generateSqlDateClause(modifyDate.asTime().getDate(), ctx.getSession()), vstampFlag,
 			DfUtils.quoteStringForSql(object.getObjectId().getId()));
 	}
 
@@ -812,7 +812,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		DctmImportContext ctx) throws DfException {
 		final String sqlStr = generateSystemAttributesSQL(stored, object, ctx);
 		if (sqlStr == null) { return true; }
-		return runExecSQL(object.getSession(), sqlStr);
+		return runExecSQL(ctx.getSession(), sqlStr);
 	}
 
 	/**

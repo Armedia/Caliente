@@ -26,7 +26,7 @@ public class LocalImportEngine extends
 	ImportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportContextFactory, LocalImportDelegateFactory, LocalImportEngineFactory> {
 
 	public LocalImportEngine(LocalImportEngineFactory factory, Logger output, WarningTracker warningTracker,
-		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
+		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
@@ -128,7 +128,7 @@ public class LocalImportEngine extends
 
 	@Override
 	protected LocalImportContextFactory newContextFactory(LocalRoot session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> streamStore, Transformer transformer, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		return new LocalImportContextFactory(this, cfg, session, objectStore, streamStore, transformer, output,
 			warningTracker);

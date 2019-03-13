@@ -1,8 +1,5 @@
 package com.armedia.caliente.engine;
 
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.apache.commons.pool2.PooledObjectFactory;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
@@ -11,8 +8,10 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
 
-public abstract class SessionFactory<SESSION> implements PooledObjectFactory<SESSION>, AutoCloseable {
+public abstract class SessionFactory<SESSION> extends BaseReadWriteLockable
+	implements PooledObjectFactory<SESSION>, AutoCloseable {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -20,7 +19,6 @@ public abstract class SessionFactory<SESSION> implements PooledObjectFactory<SES
 
 	private boolean open = true;
 
-	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 	protected final CmfCrypt crypto;
 
 	protected static <SESSION> GenericObjectPoolConfig<SESSION> getDefaultPoolConfig(CfgTools settings) {
@@ -45,15 +43,14 @@ public abstract class SessionFactory<SESSION> implements PooledObjectFactory<SES
 	}
 
 	public final SessionWrapper<SESSION> acquireSession() throws SessionFactoryException {
-		this.lock.readLock().lock();
-		if (!this.open) { throw new IllegalStateException("This session factory is not open"); }
-		try {
-			return newWrapper(this.pool.borrowObject());
-		} catch (Exception e) {
-			throw new SessionFactoryException("Failed to borrow an object from the pool", e);
-		} finally {
-			this.lock.readLock().unlock();
-		}
+		return readLocked(() -> {
+			if (!this.open) { throw new IllegalStateException("This session factory is not open"); }
+			try {
+				return newWrapper(this.pool.borrowObject());
+			} catch (Exception e) {
+				throw new SessionFactoryException("Failed to borrow an object from the pool", e);
+			}
+		});
 	}
 
 	final void releaseSession(SESSION session) {
@@ -70,21 +67,20 @@ public abstract class SessionFactory<SESSION> implements PooledObjectFactory<SES
 
 	@Override
 	public final void close() {
-		this.lock.writeLock().lock();
-		try {
-			if (!this.open) { return; }
-			this.pool.close();
-			doClose();
-		} catch (Exception e) {
-			if (this.log.isDebugEnabled()) {
-				this.log.error("Exception caught closing this factory", e);
-			} else {
-				this.log.error("Exception caught closing this factory: {}", e.getMessage());
+		readLockedUpgradable(() -> this.open, () -> {
+			try {
+				this.pool.close();
+				doClose();
+			} catch (Exception e) {
+				if (this.log.isDebugEnabled()) {
+					this.log.error("Exception caught closing this factory", e);
+				} else {
+					this.log.error("Exception caught closing this factory: {}", e.getMessage());
+				}
+			} finally {
+				this.open = false;
 			}
-		} finally {
-			this.open = false;
-			this.lock.writeLock().unlock();
-		}
+		});
 	}
 
 	protected GenericObjectPoolConfig<SESSION> getPoolConfig(CfgTools settings) {

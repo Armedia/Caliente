@@ -25,7 +25,7 @@ public class LocalExportEngineFactory extends
 
 	@Override
 	public LocalExportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
 		throws ExportException {
 		return new LocalExportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}

@@ -17,8 +17,8 @@ public abstract class ExportContextFactory< //
 	ENGINE extends ExportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?, ?> //
 > extends TransferContextFactory<SESSION, VALUE, CONTEXT, ENGINE> {
 
-	protected ExportContextFactory(ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> contentStore, Logger output, WarningTracker tracker) throws Exception {
+	protected ExportContextFactory(ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?> objectStore,
+		CmfContentStore<?, ?> contentStore, Logger output, WarningTracker tracker) throws Exception {
 		super(engine, settings, session, objectStore, contentStore, null, output, tracker);
 	}
 

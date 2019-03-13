@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
+import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -23,12 +23,13 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSet.t", propOrder = {
 	"loaders"
 })
-public class MetadataSet {
+public class MetadataSet implements ReadWriteLockable {
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -56,6 +57,11 @@ public class MetadataSet {
 
 	@XmlTransient
 	private Map<String, MetadataSource> dataSources;
+
+	@Override
+	public ReadWriteLock getMainLock() {
+		return this.rwLock;
+	}
 
 	public List<AttributeValuesLoader> getLoaders() {
 		if (this.loaders == null) {
@@ -89,9 +95,7 @@ public class MetadataSet {
 	}
 
 	public void initialize(Map<String, MetadataSource> ds) throws Exception {
-		final Lock lock = this.rwLock.writeLock();
-		lock.lock();
-		try {
+		readLockedUpgradable(() -> this.initializedLoaders, Objects::isNull, (e) -> {
 			if (this.initializedLoaders != null) { return; }
 			List<AttributeValuesLoader> initializedLoaders = new ArrayList<>();
 			Map<String, MetadataSource> dataSources = new HashMap<>();
@@ -131,15 +135,11 @@ public class MetadataSet {
 			}
 			this.initializedLoaders = Tools.freezeList(initializedLoaders);
 			this.dataSources = Tools.freezeMap(dataSources);
-		} finally {
-			lock.unlock();
-		}
+		});
 	}
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws Exception {
-		final Lock lock = this.rwLock.readLock();
-		lock.lock();
-		try {
+		return readLocked(() -> {
 			// If there are no loades initialized, this is a problem...
 			if (this.initializedLoaders == null) { throw new Exception("This metadata source is not yet initialized"); }
 
@@ -183,15 +183,11 @@ public class MetadataSet {
 				finalAttributes = null;
 			}
 			return finalAttributes;
-		} finally {
-			lock.unlock();
-		}
+		});
 	}
 
 	public void close() {
-		final Lock lock = this.rwLock.writeLock();
-		lock.lock();
-		try {
+		readLockedUpgradable(() -> this.initializedLoaders, Objects::nonNull, (e) -> {
 			if (this.initializedLoaders == null) { return; }
 			for (AttributeValuesLoader loader : this.initializedLoaders) {
 				try {
@@ -202,8 +198,6 @@ public class MetadataSet {
 				}
 			}
 			this.initializedLoaders = null;
-		} finally {
-			lock.unlock();
-		}
+		});
 	}
 }

@@ -29,7 +29,7 @@ public class DctmImportContextFactory extends
 	private final DctmSpecialValues specialValues;
 
 	DctmImportContextFactory(DctmImportEngine engine, CfgTools cfg, IDfSession session,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, Transformer transformer, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		super(engine, cfg, session, objectStore, contentStore, transformer, output, warningTracker);
 		this.specialValues = new DctmSpecialValues(cfg);

@@ -85,8 +85,8 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 		Map<String, Object> settings = new TreeMap<>();
 		initialize(state, settings);
 
-		final CmfObjectStore<?, ?> objectStore = state.getObjectStore();
-		final CmfContentStore<?, ?, ?> contentStore = state.getContentStore();
+		final CmfObjectStore<?> objectStore = state.getObjectStore();
+		final CmfContentStore<?, ?> contentStore = state.getContentStore();
 
 		final Date start;
 		final Date end;

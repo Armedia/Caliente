@@ -53,7 +53,7 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 			if (dep == null) {
 				continue;
 			}
-			DctmExportDelegate<?> delegate = this.factory.newExportDelegate(dep);
+			DctmExportDelegate<?> delegate = this.factory.newExportDelegate(session, dep);
 			if (delegate != null) {
 				ret.add(delegate);
 			}

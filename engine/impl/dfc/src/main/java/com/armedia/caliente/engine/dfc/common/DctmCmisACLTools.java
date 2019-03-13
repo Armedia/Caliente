@@ -288,10 +288,9 @@ public class DctmCmisACLTools implements DctmACL {
 		return ret;
 	}
 
-	public static void calculateCmisActions(final IDfACL acl, Collection<CmfProperty<IDfValue>> properties)
-		throws DfException {
+	public static void calculateCmisActions(final IDfSession session, final IDfACL acl,
+		Collection<CmfProperty<IDfValue>> properties) throws DfException {
 		if (acl == null) { return; }
-		final IDfSession session = acl.getSession();
 
 		Set<String> missingAccessors = new HashSet<>();
 

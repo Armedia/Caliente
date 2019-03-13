@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +62,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.concurrent.ReadWriteSet;
 
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
@@ -184,7 +184,7 @@ public class AlfImportDelegateFactory
 	private final AtomicBoolean manifestSerialized = new AtomicBoolean(false);
 	private final AtomicReference<Boolean> initializedVdocs = new AtomicReference<>(null);
 
-	private final Set<String> artificialFolders = Collections.synchronizedSet(new LinkedHashSet<String>());
+	private final Set<String> artificialFolders = new ReadWriteSet<>(new LinkedHashSet<>());
 
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
 		throws IOException, JAXBException, XMLStreamException, DynamicElementException {

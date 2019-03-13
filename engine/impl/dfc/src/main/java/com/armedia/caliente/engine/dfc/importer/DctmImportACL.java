@@ -156,7 +156,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 
 		Set<Permit> existing = new HashSet<>();
 		Set<Permit> incoming = new HashSet<>();
-		IDfSession session = acl.getSession();
+		IDfSession session = ctx.getSession();
 		int i = 0;
 		for (IDfPermit p : existingPermits) {
 			existing.add(new Permit(session, p));
@@ -192,7 +192,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 				}
 			}
 
-			user = DctmMappingUtils.resolveMappableUser(acl.getSession(), user);
+			user = DctmMappingUtils.resolveMappableUser(context.getSession(), user);
 			IDfUser u = DctmImportUser.locateExistingUser(context, user);
 			if (u == null) {
 				throw new ImportException(

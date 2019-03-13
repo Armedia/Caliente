@@ -36,7 +36,7 @@ public class SecondarySubtypeAdd extends ConditionalAction {
 		String secondary = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (StringUtils.isEmpty(secondary)) { return; }
 
-		for (String s : Tools.splitCSVEscaped(secondary)) {
+		for (String s : Tools.splitEscaped(',', secondary)) {
 			s = StringUtils.strip(s);
 			if (!StringUtils.isEmpty(s)) {
 				ctx.getDynamicObject().getSecondarySubtypes().add(s);

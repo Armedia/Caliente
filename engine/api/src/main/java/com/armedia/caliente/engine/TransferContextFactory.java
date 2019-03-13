@@ -3,8 +3,7 @@ package com.armedia.caliente.engine;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,33 +14,20 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.ConfigurationSetting;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
 
 public abstract class TransferContextFactory< //
 	SESSION, //
 	VALUE, //
 	CONTEXT extends TransferContext<SESSION, VALUE, ?>, //
 	ENGINE extends TransferEngine<?, ?, ?, SESSION, VALUE, CONTEXT, ?, ?, ?> //
-> {
-
-	private static CmfObject.Archetype decodeObjectType(Object o) {
-		if (o == null) { return null; }
-		if (o instanceof CmfObject.Archetype) { return CmfObject.Archetype.class.cast(o); }
-		if (o instanceof String) {
-			try {
-				return CmfObject.Archetype.valueOf(String.valueOf(o));
-			} catch (IllegalArgumentException e) {
-				// Do nothing...
-			}
-		}
-		return null;
-	}
+> extends BaseReadWriteLockable {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private boolean open = true;
-
-	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
 	private final AtomicLong contextId = new AtomicLong(0);
 	private CfgTools settings = CfgTools.EMPTY;
@@ -49,27 +35,44 @@ public abstract class TransferContextFactory< //
 	private final Set<CmfObject.Archetype> excludes;
 	private final String productName;
 	private final String productVersion;
-	private final CmfContentStore<?, ?, ?> contentStore;
-	private final CmfObjectStore<?, ?> objectStore;
+	private final CmfContentStore<?, ?> contentStore;
+	private final CmfObjectStore<?> objectStore;
 	private final Transformer transformer;
 	private final Logger output;
 	private final WarningTracker warningTracker;
 
-	protected TransferContextFactory(ENGINE engine, CfgTools settings, SESSION session,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output,
-		WarningTracker tracker) throws Exception {
+	protected TransferContextFactory(ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?> objectStore,
+		CmfContentStore<?, ?> contentStore, Transformer transformer, Logger output, WarningTracker tracker)
+		throws Exception {
 		if (engine == null) {
 			throw new IllegalArgumentException("Must provide an engine to which this factory is tied");
 		}
 		this.engine = engine;
 		this.settings = Tools.coalesce(settings, CfgTools.EMPTY);
-		Set<CmfObject.Archetype> excludes = EnumSet.noneOf(CmfObject.Archetype.class);
-		for (Object o : settings.getObjects(TransferSetting.EXCLUDE_TYPES)) {
-			CmfObject.Archetype t = TransferContextFactory.decodeObjectType(o);
-			if (t != null) {
-				excludes.add(t);
+		ConfigurationSetting excludeSetting = null;
+		Set<CmfObject.Archetype> excludes = null;
+		Consumer<CmfObject.Archetype> consumer = null;
+
+		if (settings.hasValue(TransferSetting.ONLY_TYPES)) {
+			excludeSetting = TransferSetting.ONLY_TYPES;
+			excludes = EnumSet.allOf(CmfObject.Archetype.class);
+			consumer = excludes::remove;
+		} else if (settings.hasValue(TransferSetting.EXCEPT_TYPES)) {
+			excludeSetting = TransferSetting.EXCEPT_TYPES;
+			excludes = EnumSet.noneOf(CmfObject.Archetype.class);
+			consumer = excludes::add;
+		} else {
+			excludes = EnumSet.noneOf(CmfObject.Archetype.class);
+		}
+
+		if ((excludeSetting != null) && (consumer != null)) {
+			for (CmfObject.Archetype t : settings.getEnums(excludeSetting, CmfObject.Archetype.class, (o, e) -> null)) {
+				if (t != null) {
+					consumer.accept(t);
+				}
 			}
 		}
+
 		if (this.log.isDebugEnabled()) {
 			this.log.debug("Excluded types for this context factory instance ({}): {}", getClass().getSimpleName(),
 				excludes);
@@ -87,16 +90,16 @@ public abstract class TransferContextFactory< //
 		this.warningTracker = tracker;
 	}
 
-	protected void calculateExcludes(CmfObjectStore<?, ?> objectStore, Set<CmfObject.Archetype> excludes)
+	protected void calculateExcludes(CmfObjectStore<?> objectStore, Set<CmfObject.Archetype> excludes)
 		throws CmfStorageException {
 		// do nothing
 	}
 
-	protected final CmfObjectStore<?, ?> getObjectStore() {
+	protected final CmfObjectStore<?> getObjectStore() {
 		return this.objectStore;
 	}
 
-	protected final CmfContentStore<?, ?, ?> getContentStore() {
+	protected final CmfContentStore<?, ?> getContentStore() {
 		return this.contentStore;
 	}
 
@@ -129,20 +132,20 @@ public abstract class TransferContextFactory< //
 	}
 
 	public final void close() {
-		this.lock.writeLock().lock();
-		try {
-			if (!this.open) { return; }
-			doClose();
-		} catch (Exception e) {
-			if (this.log.isDebugEnabled()) {
-				this.log.error("Exception caught closing this a factory", e);
-			} else {
-				this.log.error("Exception caught closing this a factory: {}", e.getMessage());
+		writeLocked(() -> {
+			try {
+				if (!this.open) { return; }
+				doClose();
+			} catch (Exception e) {
+				if (this.log.isDebugEnabled()) {
+					this.log.error("Exception caught closing this a factory", e);
+				} else {
+					this.log.error("Exception caught closing this a factory: {}", e.getMessage());
+				}
+			} finally {
+				this.open = false;
 			}
-		} finally {
-			this.open = false;
-			this.lock.writeLock().unlock();
-		}
+		});
 	}
 
 	protected abstract String calculateProductName(SESSION session) throws Exception;
@@ -158,13 +161,10 @@ public abstract class TransferContextFactory< //
 	}
 
 	public final CONTEXT newContext(String rootId, CmfObject.Archetype rootType, SESSION session, int batchPosition) {
-		this.lock.readLock().lock();
-		try {
+		return readLocked(() -> {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
 			return constructContext(rootId, rootType, session, batchPosition);
-		} finally {
-			this.lock.readLock().unlock();
-		}
+		});
 	}
 
 	protected abstract CONTEXT constructContext(String rootId, CmfObject.Archetype rootType, SESSION session,

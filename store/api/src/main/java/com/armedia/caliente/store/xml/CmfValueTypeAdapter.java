@@ -1,24 +1,10 @@
 package com.armedia.caliente.store.xml;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.commons.utilities.XmlEnumAdapter;
 
-public class CmfValueTypeAdapter extends XmlAdapter<String, CmfValue.Type> {
-
-	@Override
-	public CmfValue.Type unmarshal(String v) throws Exception {
-		if (v == null) { return null; }
-		v = StringUtils.strip(v).toUpperCase();
-		return CmfValue.Type.valueOf(v);
+public class CmfValueTypeAdapter extends XmlEnumAdapter<CmfValue.Type> {
+	public CmfValueTypeAdapter() {
+		super(CmfValue.Type.class);
 	}
-
-	@Override
-	public String marshal(CmfValue.Type v) throws Exception {
-		if (v == null) { return null; }
-		return v.name();
-	}
-
 }

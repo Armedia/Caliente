@@ -33,7 +33,7 @@ public class CmisImportContextFactory
 	private final RepositoryInfo repositoryInfo;
 
 	CmisImportContextFactory(CmisImportEngine engine, Session session, CfgTools settings,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, Transformer transformer, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		super(engine, settings, session, objectStore, contentStore, transformer, output, warningTracker);
 		this.repositoryInfo = session.getRepositoryInfo();

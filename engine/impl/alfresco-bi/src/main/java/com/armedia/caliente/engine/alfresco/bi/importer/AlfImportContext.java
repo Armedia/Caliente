@@ -23,8 +23,8 @@ public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImport
 
 	public AlfImportContext(AlfImportContextFactory factory, CfgTools settings, String rootId,
 		CmfObject.Archetype rootType, AlfRoot session, Logger output, WarningTracker tracker, Transformer transformer,
-		CmfAttributeTranslator<CmfValue> translator, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
+		CmfAttributeTranslator<CmfValue> translator, CmfObjectStore<?> objectStore,
+		CmfContentStore<?, ?> streamStore, int batchPosition) {
 		super(factory, settings, rootId, rootType, session, output, tracker, transformer, translator, objectStore,
 			streamStore, batchPosition);
 	}

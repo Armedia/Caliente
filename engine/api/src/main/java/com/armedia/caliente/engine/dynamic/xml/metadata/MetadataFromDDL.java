@@ -21,7 +21,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.function.LazySupplier;
+import com.armedia.commons.utilities.function.CheckedLazySupplier;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataFromDDL.t", propOrder = {
@@ -44,7 +44,7 @@ public class MetadataFromDDL extends MetadataReaderBase {
 	protected SeparatedValuesNamesSource ignore;
 
 	@XmlTransient
-	private final LazySupplier<Map<String, ColumnStructure>> structure = new LazySupplier<>();
+	private final CheckedLazySupplier<Map<String, ColumnStructure>, Exception> structure = new CheckedLazySupplier<>();
 
 	public SeparatedValuesNamesSource getIgnore() {
 		return this.ignore;

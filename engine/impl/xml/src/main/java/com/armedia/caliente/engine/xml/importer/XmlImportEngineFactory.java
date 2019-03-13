@@ -25,7 +25,7 @@ public class XmlImportEngineFactory extends
 
 	@Override
 	public XmlImportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
 		throws ImportException {
 		return new XmlImportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}

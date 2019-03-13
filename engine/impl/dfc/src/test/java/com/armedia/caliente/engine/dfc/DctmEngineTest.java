@@ -12,8 +12,8 @@ import com.armedia.commons.utilities.Tools;
 
 public class DctmEngineTest {
 
-	protected final CmfObjectStore<?, ?> cmfObjectStore = CmfStores.getObjectStore("default");
-	protected final CmfContentStore<?, ?, ?> streamStore = CmfStores.getContentStore("default");
+	protected final CmfObjectStore<?> cmfObjectStore = CmfStores.getObjectStore("default");
+	protected final CmfContentStore<?, ?> streamStore = CmfStores.getContentStore("default");
 	protected final File baseData = Tools.coalesce(this.cmfObjectStore.getStoreLocation(),
 		this.streamStore.getStoreLocation());
 	protected final Logger output = LoggerFactory.getLogger("console");

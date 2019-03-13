@@ -50,8 +50,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		this(factory, session, DctmExportDelegate.staticCast(IDfGroup.class, group));
 	}
 
-	private int calculateDepth(IDfGroup group, Set<String> visited) throws DfException {
-		final IDfSession session = group.getSession();
+	private int calculateDepth(IDfSession session, IDfGroup group, Set<String> visited) throws DfException {
 		// If the group has already been visited, we have a loop...so let's explode loudly
 		final IDfId groupId = group.getObjectId();
 		if (visited.contains(groupId.getId())) {
@@ -82,7 +81,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 				if (nextGroup == null) {
 					continue;
 				}
-				depth = Math.max(depth, calculateDepth(nextGroup, visited) + 1);
+				depth = Math.max(depth, calculateDepth(session, nextGroup, visited) + 1);
 			}
 			return depth;
 		} finally {
@@ -94,7 +93,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 	protected int calculateDependencyTier(IDfSession session, IDfGroup group) throws Exception {
 		// Calculate the maximum depth that this group resides in, from the other groups
 		// it references.
-		return calculateDepth(group, new LinkedHashSet<String>());
+		return calculateDepth(session, group, new LinkedHashSet<String>());
 	}
 
 	@Override
@@ -109,7 +108,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		// CmfStore all the users that have this group as their default group
 		CmfProperty<IDfValue> property = new CmfProperty<>(IntermediateProperty.USERS_WITH_DEFAULT_GROUP,
 			DctmDataType.DF_STRING.getStoredType());
-		IDfCollection resultCol = DfUtils.executeQuery(group.getSession(),
+		IDfCollection resultCol = DfUtils.executeQuery(ctx.getSession(),
 			String.format(DctmExportGroup.DQL_FIND_USERS_WITH_DEFAULT_GROUP, group.getObjectId().getId()),
 			IDfQuery.DF_EXECREAD_QUERY);
 		try {
@@ -142,7 +141,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 					String.format("Missing dependency for group [%s] - user [%s] not found (as group owner)",
 						group.getGroupName(), groupOwner));
 			}
-			ret.add(this.factory.newExportDelegate(owner));
+			ret.add(this.factory.newExportDelegate(session, owner));
 		} else {
 			this.log.warn("Skipping export of special user [{}] as the owner of group [{}]", groupOwner,
 				group.getGroupName());
@@ -156,7 +155,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 					String.format("Missing dependency for group [%s] - user [%s] not found (as group admin)",
 						group.getGroupName(), groupAdmin));
 			}
-			ret.add(this.factory.newExportDelegate(admin));
+			ret.add(this.factory.newExportDelegate(session, admin));
 		} else {
 			this.log.warn("Skipping export of special user [{}] as the admin of group [{}]", groupAdmin,
 				group.getGroupName());
@@ -189,7 +188,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 					this.log.warn(msg);
 					ctx.printf(msg);
 				}
-				ret.add(this.factory.newExportDelegate(member));
+				ret.add(this.factory.newExportDelegate(session, member));
 			}
 		}
 
@@ -205,7 +204,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 
 				IDfGroup member = session.getGroup(groupName);
 				if (member != null) {
-					ret.add(this.factory.newExportDelegate(member));
+					ret.add(this.factory.newExportDelegate(session, member));
 					continue;
 				}
 				if (!DctmMappingUtils.SPECIAL_NAMES.contains(groupName)) {

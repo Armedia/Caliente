@@ -353,9 +353,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 
 	private IDfSysObject createSuccessorVersion(IDfSysObject antecedentVersion, CmfProperty<IDfValue> rVersionLabel,
 		DctmImportContext context) throws ImportException, DfException {
-		final IDfSession session = antecedentVersion.getSession();
+		final IDfSession session = context.getSession();
 		antecedentVersion.fetch(null);
-		this.antecedentTemporaryPermission = new TemporaryPermission(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
+		this.antecedentTemporaryPermission = new TemporaryPermission(context.getSession(), antecedentVersion,
+			IDfACL.DF_PERMIT_DELETE);
 		if (this.antecedentTemporaryPermission.grant(antecedentVersion)) {
 			antecedentVersion.save();
 		}
@@ -383,7 +384,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			IDfId branchID = antecedentVersion.branch(antecedentVersionImplicitVersionLabel);
 			antecedentVersion = castObject(session.getObject(branchID));
 			setVirtualDocumentFlag(antecedentVersion);
-			this.branchTemporaryPermission = new TemporaryPermission(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
+			this.branchTemporaryPermission = new TemporaryPermission(context.getSession(), antecedentVersion,
+				IDfACL.DF_PERMIT_DELETE);
 			this.branchTemporaryPermission.grant(antecedentVersion);
 		} else {
 			// checkout
@@ -443,7 +445,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		final boolean root = (((p != null) && p.hasValues() && p.getValue().asBoolean()) || (sourceChronicleId == null)
 			|| Tools.equals(this.cmfObject.getId(), sourceChronicleId));
 		if (!root && !newObject) {
-			this.antecedentTemporaryPermission = new TemporaryPermission(document, IDfACL.DF_PERMIT_VERSION);
+			this.antecedentTemporaryPermission = new TemporaryPermission(context.getSession(), document,
+				IDfACL.DF_PERMIT_VERSION);
 			if (this.antecedentTemporaryPermission.grant(document)) {
 				// Not sure this is OK...
 				if (!document.isCheckedOut()) {
@@ -454,7 +457,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 	}
 
 	protected void saveContentStream(DctmImportContext context, IDfSysObject document, CmfContentStream info,
-		CmfContentStore<?, ?, ?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
+		CmfContentStore<?, ?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
 		int renditionNumber, String pageModifier, int currentContent, int totalContentCount)
 		throws DfException, ImportException {
 		// Step one: what's the content's path in the filesystem?
@@ -700,7 +703,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			throw new ImportException(String.format("Failed to load the content info for %s [%s](%s)",
 				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
-		CmfContentStore<?, ?, ?> contentStore = context.getContentStore();
+		CmfContentStore<?, ?> contentStore = context.getContentStore();
 		int i = 0;
 		final CmfAttributeTranslator<IDfValue> translator = this.factory.getEngine().getTranslator();
 		String contentType = null;
@@ -711,7 +714,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				// Skip the non-default rendition
 				continue;
 			}
-			CmfContentStore<?, ?, ?>.Handle h = contentStore.getHandle(translator, this.cmfObject, info);
+			CmfContentStore<?, ?>.Handle h = contentStore.getHandle(translator, this.cmfObject, info);
 			CfgTools cfg = info.getCfgTools();
 
 			if (fromDctm == null) {
@@ -771,7 +774,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 	protected void handleVirtualDocumentMembers(final IDfSysObject document, final DctmImportContext context)
 		throws DfException, ImportException {
 		final boolean addVdocMembers;
-		if (document.isVirtualDocument()) {
+		if (document.isVirtualDocument() || (document.getLinkCount() > 0)) {
 			addVdocMembers = true;
 		} else {
 			CmfAttribute<IDfValue> b = this.cmfObject.getAttribute(DctmAttributes.R_LINK_CNT);
@@ -857,7 +860,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 	@Override
 	protected boolean cleanupAfterSave(IDfSysObject document, boolean newObject, DctmImportContext context)
 		throws DfException, ImportException {
-		final IDfSession session = document.getSession();
+		final IDfSession session = context.getSession();
 
 		cleanUpParents(session);
 		cleanUpTemporaryPermissions(session);

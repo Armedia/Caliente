@@ -2,10 +2,11 @@ package com.armedia.caliente.engine.xml.importer.jaxb;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlTransient;
+
+import com.armedia.commons.utilities.concurrent.ReadWriteList;
 
 @XmlTransient
 public class AggregatorBase<T> {
@@ -20,7 +21,7 @@ public class AggregatorBase<T> {
 
 	protected final synchronized List<T> getItems() {
 		if (this.items == null) {
-			this.items = Collections.synchronizedList(new ArrayList<T>());
+			this.items = new ReadWriteList<>(new ArrayList<T>());
 		}
 		return this.items;
 	}

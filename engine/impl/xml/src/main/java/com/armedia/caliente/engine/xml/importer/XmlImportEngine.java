@@ -141,7 +141,7 @@ public class XmlImportEngine extends
 	};
 
 	public XmlImportEngine(XmlImportEngineFactory factory, Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
@@ -185,8 +185,8 @@ public class XmlImportEngine extends
 	}
 
 	@Override
-	protected XmlImportContextFactory newContextFactory(XmlRoot session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output, WarningTracker warningTracker)
+	protected XmlImportContextFactory newContextFactory(XmlRoot session, CfgTools cfg, CmfObjectStore<?> objectStore,
+		CmfContentStore<?, ?> streamStore, Transformer transformer, Logger output, WarningTracker warningTracker)
 		throws Exception {
 		return new XmlImportContextFactory(this, cfg, session, objectStore, streamStore, transformer, output,
 			warningTracker);

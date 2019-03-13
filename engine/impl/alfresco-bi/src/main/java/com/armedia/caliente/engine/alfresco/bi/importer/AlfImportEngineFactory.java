@@ -33,7 +33,7 @@ public class AlfImportEngineFactory extends
 
 	@Override
 	public AlfImportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
 		throws ImportException {
 		try {
 			return new AlfImportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);

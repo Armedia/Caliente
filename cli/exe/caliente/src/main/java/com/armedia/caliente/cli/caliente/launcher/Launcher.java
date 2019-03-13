@@ -99,10 +99,10 @@ public class Launcher extends AbstractLauncher {
 	private File baseDataLocation = null;
 
 	private File objectStoreLocation = null;
-	private CmfObjectStore<?, ?> objectStore = null;
+	private CmfObjectStore<?> objectStore = null;
 
 	private File contentStoreLocation = null;
-	private CmfContentStore<?, ?, ?> contentStore = null;
+	private CmfContentStore<?, ?> contentStore = null;
 
 	private File logLocation = null;
 
@@ -568,7 +568,7 @@ public class Launcher extends AbstractLauncher {
 
 			final String engineName = this.engineInterface.getName();
 			final Logger log = LoggerFactory.getLogger(getClass());
-			final CmfObjectStore<?, ?> objectStore = state.getObjectStore();
+			final CmfObjectStore<?> objectStore = state.getObjectStore();
 			final boolean writeProperties = (objectStore != null);
 			final String format = String.format("caliente.%s.%s.%%s", engineName.toLowerCase(),
 				this.command.getDescriptor().getTitle().toLowerCase());

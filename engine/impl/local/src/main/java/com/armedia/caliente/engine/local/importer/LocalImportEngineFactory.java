@@ -25,7 +25,7 @@ public class LocalImportEngineFactory extends
 
 	@Override
 	public LocalImportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
 		throws ImportException {
 		return new LocalImportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}

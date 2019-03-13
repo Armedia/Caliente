@@ -160,7 +160,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 		throws DfException {
 
 		CmfAttribute<IDfValue> loginDomain = this.cmfObject.getAttribute(DctmAttributes.USER_LOGIN_DOMAIN);
-		IDfTypedObject serverConfig = user.getSession().getServerConfig();
+		IDfTypedObject serverConfig = context.getSession().getServerConfig();
 		String serverVersion = serverConfig.getString(DctmAttributes.R_SERVER_VERSION);
 		CmfAttribute<IDfValue> userSourceAtt = this.cmfObject.getAttribute(DctmAttributes.USER_SOURCE);
 		String userSource = (userSourceAtt != null ? userSourceAtt.getValue().asString() : null);
