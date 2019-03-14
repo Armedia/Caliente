@@ -14,13 +14,18 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
+import javax.xml.bind.Marshaller;
+
+import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndex;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
 import com.armedia.commons.utilities.ResourceLoader;
+import com.armedia.commons.utilities.XmlTools;
 
 class BulkImportManagerTest {
 
@@ -168,15 +173,18 @@ class BulkImportManagerTest {
 	}
 
 	@Test
-	void testScanItems() throws Exception {
+	void testScanAndMarshal() throws Exception {
 
 		// Find the XML file(s)
+		Marshaller m = XmlTools.getMarshaller(null, ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class);
+		NullOutputStream nullOut = new NullOutputStream();
 		URL url = ResourceLoader.getResourceOrFile("classpath:/alfresco-bulk-import/scan.folders.xml");
 		File f = new File(url.toURI());
 		final Path root = f.getParentFile().getParentFile().toPath();
 		final BulkImportManager bim = new BulkImportManager(root);
 		final Path biRoot = bim.getBulkImportRoot();
 		AtomicLong counter = new AtomicLong(0);
+		ScanIndex index = new ScanIndex();
 		try (Stream<ScanIndexItem> items = bim.scanItems(true)) {
 			items.forEach((item) -> {
 				Assertions.assertTrue(item.isDirectory());
@@ -195,12 +203,21 @@ class BulkImportManagerTest {
 					Assertions.assertNotNull(v.getMetadata());
 					Assertions.assertTrue(StringUtils.isNotBlank(v.getMetadata()));
 				}
+				index.getItems().add(item);
+				try {
+					m.marshal(item, nullOut);
+				} catch (Exception e) {
+					Assertions.fail("Failed to marshal an index item");
+				}
 				counter.incrementAndGet();
 			});
 		}
 		Assertions.assertNotEquals(0, counter.get());
+		m.marshal(index, nullOut);
+
 		counter.set(0);
 		Set<BigDecimal> versionNumbers = new HashSet<>();
+		index.getItems().clear();
 		try (Stream<ScanIndexItem> items = bim.scanItems(false)) {
 			items.forEach((item) -> {
 				Assertions.assertFalse(item.isDirectory());
@@ -230,10 +247,17 @@ class BulkImportManagerTest {
 					}
 
 				}
+				index.getItems().add(item);
+				try {
+					m.marshal(item, nullOut);
+				} catch (Exception e) {
+					Assertions.fail("Failed to marshal an index item");
+				}
 				counter.incrementAndGet();
 			});
 		}
 		Assertions.assertNotEquals(0, counter.get());
+		m.marshal(index, nullOut);
 	}
 
 }
