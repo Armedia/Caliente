@@ -303,13 +303,13 @@ public class AlfImportDelegateFactory
 		return (parent != null ? parent.resolve(name) : Paths.get(name));
 	}
 
-	private final void storeIngestionIndexToScanIndex() throws ImportException {
+	private final void storeManifestToScanIndex() throws ImportException {
 		if (!this.manifestSerialized.compareAndSet(false, true)) {
 			// This will only happen once
 			return;
 		}
 
-		final Path contentPath = this.biManager.getContentModelsPath();
+		final Path contentPath = this.biManager.getManifestPath(true);
 		ScanIndexItemMarker thisMarker = new ScanIndexItemMarker();
 		thisMarker.setDirectory(false);
 		thisMarker.setContent(contentPath);
@@ -710,7 +710,7 @@ public class AlfImportDelegateFactory
 		final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile, MarkerType type)
 		throws ImportException {
 
-		storeIngestionIndexToScanIndex();
+		storeManifestToScanIndex();
 
 		final ScanIndexItemMarker thisMarker = generateItemMarker(ctx, folder, cmfObject, contentFile, metadataFile,
 			type);

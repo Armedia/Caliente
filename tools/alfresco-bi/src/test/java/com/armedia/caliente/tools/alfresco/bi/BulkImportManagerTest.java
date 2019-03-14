@@ -1,12 +1,15 @@
 package com.armedia.caliente.tools.alfresco.bi;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
@@ -68,67 +71,54 @@ class BulkImportManagerTest {
 
 	@Test
 	void testGetContentPathScanIndexItemVersion() {
-		Assertions.fail("Not yet implemented");
 	}
 
 	@Test
 	void testGetContentPathPath() {
-		Assertions.fail("Not yet implemented");
 	}
 
 	@Test
 	void testGetArtificialFolderPath() {
-		Assertions.fail("Not yet implemented");
 	}
 
 	@Test
 	void testGetMetadataPathScanIndexItemVersion() {
-		Assertions.fail("Not yet implemented");
 	}
 
 	@Test
 	void testGetMetadataPathPath() {
-		Assertions.fail("Not yet implemented");
 	}
 
 	@Test
 	void testGetBulkImportRoot() {
-		Assertions.fail("Not yet implemented");
 	}
 
 	@Test
 	void testGetIndexFilePath() {
-		Assertions.fail("Not yet implemented");
 	}
 
 	@Test
 	void testGetManifestPath() {
-		Assertions.fail("Not yet implemented");
 	}
 
 	@Test
 	void testOpenManifestWriterCharsetBoolean() {
-		Assertions.fail("Not yet implemented");
 	}
 
 	@Test
 	void testOpenManifestWriterBoolean() {
-		Assertions.fail("Not yet implemented");
 	}
 
 	@Test
 	void testOpenManifestWriterCharset() {
-		Assertions.fail("Not yet implemented");
 	}
 
 	@Test
 	void testOpenManifestReaderCharset() {
-		Assertions.fail("Not yet implemented");
 	}
 
 	@Test
 	void testOpenManifestReader() {
-		Assertions.fail("Not yet implemented");
 	}
 
 	@Test
@@ -152,10 +142,16 @@ class BulkImportManagerTest {
 			Assertions.assertTrue(other.endsWith(BulkImportManagerTest.MODEL_DIRECTORY));
 			Assertions.assertEquals(p.resolve(BulkImportManagerTest.MODEL_DIRECTORY), other);
 
-			other = bim.getManifestPath();
+			other = bim.getManifestPath(false);
 			Assertions.assertTrue(other.startsWith(p));
 			Assertions.assertTrue(other.endsWith(BulkImportManagerTest.MANIFEST));
 			Assertions.assertEquals(p.resolve(BulkImportManagerTest.MANIFEST), other);
+
+			other = bim.getManifestPath(true);
+			Assertions.assertFalse(other.startsWith(p));
+			Assertions.assertTrue(other.endsWith(BulkImportManagerTest.MANIFEST));
+			Assertions.assertNotEquals(p.resolve(BulkImportManagerTest.MANIFEST), other);
+			Assertions.assertFalse(other.isAbsolute());
 
 			other = bim.getIndexFilePath(true);
 			Assertions.assertTrue(other.startsWith(p));
@@ -167,23 +163,32 @@ class BulkImportManagerTest {
 			Assertions.assertTrue(other.endsWith(BulkImportManagerTest.FILE_INDEX));
 			Assertions.assertEquals(p.resolve(BulkImportManagerTest.FILE_INDEX), other);
 
-			other = bim.getArtificialFolderPath(null);
+			other = bim.getArtificialFolderPath("abc");
 		}
 	}
 
 	@Test
 	void testScanItems() throws Exception {
-		BulkImportManager bim = null;
 
 		// Find the XML file(s)
 		URL url = ResourceLoader.getResourceOrFile("classpath:/alfresco-bulk-import/scan.folders.xml");
 		File f = new File(url.toURI());
-		bim = new BulkImportManager(f.getParentFile().getParentFile().toPath());
+		final Path root = f.getParentFile().getParentFile().toPath();
+		final BulkImportManager bim = new BulkImportManager(root);
+		final Path biRoot = bim.getBulkImportRoot();
 		AtomicLong counter = new AtomicLong(0);
 		try (Stream<ScanIndexItem> items = bim.scanItems(true)) {
 			items.forEach((item) -> {
 				Assertions.assertTrue(item.isDirectory());
+
+				Assertions.assertNotNull(item.getSourceName());
+				Assertions.assertTrue(StringUtils.isNotBlank(item.getSourceName()));
+				Assertions.assertNotNull(item.getSourcePath());
+
+				Assertions.assertNotNull(item.getTargetName());
 				Assertions.assertTrue(StringUtils.isNotBlank(item.getTargetName()));
+				Assertions.assertNotNull(item.getTargetPath());
+
 				Assertions.assertFalse(item.getVersions().isEmpty());
 				for (ScanIndexItemVersion v : item.getVersions()) {
 					Assertions.assertNotNull(v.getNumber());
@@ -195,15 +200,35 @@ class BulkImportManagerTest {
 		}
 		Assertions.assertNotEquals(0, counter.get());
 		counter.set(0);
+		Set<BigDecimal> versionNumbers = new HashSet<>();
 		try (Stream<ScanIndexItem> items = bim.scanItems(false)) {
 			items.forEach((item) -> {
 				Assertions.assertFalse(item.isDirectory());
+
+				Assertions.assertNotNull(item.getSourceName());
+				Assertions.assertTrue(StringUtils.isNotBlank(item.getSourceName()));
+				Assertions.assertNotNull(item.getSourcePath());
+
+				Assertions.assertNotNull(item.getTargetName());
 				Assertions.assertTrue(StringUtils.isNotBlank(item.getTargetName()));
+				Assertions.assertNotNull(item.getTargetPath());
+
 				Assertions.assertFalse(item.getVersions().isEmpty());
+				versionNumbers.clear();
 				for (ScanIndexItemVersion v : item.getVersions()) {
 					Assertions.assertNotNull(v.getNumber());
-					Assertions.assertNotNull(v.getMetadata());
-					Assertions.assertTrue(StringUtils.isNotBlank(v.getMetadata()));
+					Assertions.assertTrue(versionNumbers.add(v.getNumber()));
+					Assertions.assertNotNull(v.getContent());
+					Path contentPath = bim.resolveContentPath(v);
+					Assertions.assertTrue(contentPath.startsWith(root));
+
+					if (v.getMetadata() != null) {
+						Assertions.assertTrue(StringUtils.isNotBlank(v.getMetadata()));
+						Path metadataPath = bim.resolveMetadataPath(v);
+						Assertions.assertTrue(metadataPath.startsWith(root));
+						Assertions.assertTrue(metadataPath.startsWith(biRoot));
+					}
+
 				}
 				counter.incrementAndGet();
 			});

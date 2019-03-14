@@ -44,20 +44,6 @@
   </item>
   <item>
     <directory>true</directory>
-    <sourceName>000000000000003f.00000000</sourceName>
-    <sourcePath>alfresco-bulk-import/00/00/00/00/00/00/00</sourcePath>
-    <targetName>ACCESS</targetName>
-    <targetPath>LigeroTests</targetPath>
-    <versions>
-      <version>
-        <number>9223372036854775807</number>
-        <content>streams/00/00/00/00/00/00/00/000000000000003f.00000000</content>
-        <metadata>alfresco-bulk-import/00/00/00/00/00/00/00/000000000000003f.00000000.xml</metadata>
-      </version>
-    </versions>
-  </item>
-  <item>
-    <directory>true</directory>
     <sourceName>0000000000000040.00000000</sourceName>
     <sourcePath>alfresco-bulk-import/00/00/00/00/00/00/00</sourcePath>
     <targetName>FILES</targetName>
@@ -81,6 +67,20 @@
         <number>9223372036854775807</number>
         <content>streams/00/00/00/00/00/00/00/000000000000006a.00000000</content>
         <metadata>alfresco-bulk-import/00/00/00/00/00/00/00/000000000000006a.00000000.xml</metadata>
+      </version>
+    </versions>
+  </item>
+  <item>
+    <directory>true</directory>
+    <sourceName>000000000000003f.00000000</sourceName>
+    <sourcePath>alfresco-bulk-import/00/00/00/00/00/00/00</sourcePath>
+    <targetName>ACCESS</targetName>
+    <targetPath>LigeroTests</targetPath>
+    <versions>
+      <version>
+        <number>9223372036854775807</number>
+        <content>streams/00/00/00/00/00/00/00/000000000000003f.00000000</content>
+        <metadata>alfresco-bulk-import/00/00/00/00/00/00/00/000000000000003f.00000000.xml</metadata>
       </version>
     </versions>
   </item>

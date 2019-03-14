@@ -150,8 +150,9 @@ public final class BulkImportManager {
 		return (directoryMode ? this.folderIndexes : this.fileIndexes).get(0);
 	}
 
-	public Path getManifestPath() {
-		return this.manifest;
+	public Path getManifestPath(boolean relative) {
+		if (!relative) { return this.manifest; }
+		return this.basePath.relativize(this.manifest);
 	}
 
 	public Path getUnfiledPath() {
@@ -191,7 +192,7 @@ public final class BulkImportManager {
 	}
 
 	public Writer openManifestWriter(Charset encoding, boolean createDirectories) throws IOException {
-		Path manifest = getManifestPath();
+		Path manifest = getManifestPath(false);
 		File f = manifest.toFile();
 		if (createDirectories) {
 			FileUtils.forceMkdir(f.getParentFile());
