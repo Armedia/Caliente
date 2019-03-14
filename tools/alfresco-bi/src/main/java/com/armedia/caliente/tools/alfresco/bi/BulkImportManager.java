@@ -66,7 +66,8 @@ public class BulkImportManager {
 	}
 
 	public static final Path getBulkImportRoot(final Path baseDirectory) {
-		return (baseDirectory != null ? baseDirectory.resolve(BulkImportManager.METADATA_ROOT) : BulkImportManager.METADATA_ROOT);
+		return (baseDirectory != null ? baseDirectory.resolve(BulkImportManager.METADATA_ROOT)
+			: BulkImportManager.METADATA_ROOT);
 	}
 
 	public static final Path getIndexFilePath(final Path baseDirectory, boolean directoryMode) {
