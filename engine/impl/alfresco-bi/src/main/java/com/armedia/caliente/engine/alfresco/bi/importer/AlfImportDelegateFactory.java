@@ -583,10 +583,10 @@ public class AlfImportDelegateFactory
 	final File generateMetadataFile(final Properties p, final CmfObject<CmfValue> cmfObject, final File main)
 		throws ImportException {
 		Path target = this.biManager.calculateMetadataPath(main.toPath());
-		String targetName = String.format("%s%s", target.getFileName(), AlfImportDelegateFactory.METADATA_SUFFIX);
-		target = target.getParent();
+		target = target
+			.resolveSibling(String.format("%s%s", target.getFileName(), AlfImportDelegateFactory.METADATA_SUFFIX));
 
-		final File meta = target.resolve(targetName).toFile();
+		final File meta = target.toFile();
 		if (p == null) { return meta; }
 
 		try {
