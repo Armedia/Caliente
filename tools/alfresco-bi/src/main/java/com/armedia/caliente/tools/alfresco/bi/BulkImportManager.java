@@ -17,7 +17,9 @@ import java.nio.charset.Charset;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Spliterator;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.xml.bind.JAXBContext;
@@ -30,12 +32,14 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.tools.Closer;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.StreamTools;
+import com.armedia.commons.utilities.Tools;
 
 public class BulkImportManager {
 
@@ -63,6 +67,27 @@ public class BulkImportManager {
 		if (!f.canRead()) { throw new AccessDeniedException(f.getAbsolutePath()); }
 
 		return f;
+	}
+
+	private static final Path resolve(final Path baseDirectory, String childPath) {
+		if (StringUtils.isEmpty(childPath)) { return baseDirectory; }
+		// Split by forward slashes... this may be running on Windows!
+		Path path = baseDirectory;
+		for (String s : Tools.splitEscapedStream('/', childPath).collect(Collectors.toCollection(ArrayList::new))) {
+			if (path == null) {
+				path = Paths.get(s);
+			}
+			path = path.resolve(s);
+		}
+		return path;
+	}
+
+	public static final Path getContentPath(final Path baseDirectory, final ScanIndexItemVersion version) {
+		return BulkImportManager.resolve(baseDirectory, version.getContent());
+	}
+
+	public static final Path getMetadataPath(final Path baseDirectory, final ScanIndexItemVersion version) {
+		return BulkImportManager.resolve(baseDirectory, version.getMetadata());
 	}
 
 	public static final Path getBulkImportRoot(final Path baseDirectory) {
