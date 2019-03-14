@@ -22,7 +22,6 @@ import java.util.Spliterator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -35,11 +34,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.tools.Closer;
+import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndex;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.StreamTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.XmlTools;
 
 public final class BulkImportManager {
 
@@ -220,7 +221,7 @@ public final class BulkImportManager {
 		return openManifestReader(null);
 	}
 
-	public Stream<ScanIndexItem> scanItems(boolean directoryMode)
+	public Stream<ScanIndexItem> scanItems(final boolean directoryMode)
 		throws IOException, JAXBException, XMLStreamException {
 		File xmlFile = null;
 		for (Path p : (directoryMode ? this.folderIndexes : this.fileIndexes)) {
@@ -243,23 +244,28 @@ public final class BulkImportManager {
 			}
 		}
 
-		final Unmarshaller u = JAXBContext.newInstance(ScanIndexItem.class, ScanIndexItemVersion.class)
-			.createUnmarshaller();
+		final Unmarshaller u = XmlTools.getUnmarshaller(null, ScanIndex.class, ScanIndexItem.class,
+			ScanIndexItemVersion.class);
 
 		CloseableIterator<ScanIndexItem> it = new CloseableIterator<ScanIndexItem>() {
 			@Override
 			protected CloseableIterator<ScanIndexItem>.Result findNext() throws Exception {
-				while (xml.nextTag() == XMLStreamConstants.START_ELEMENT) {
+				nextTag: while (xml.nextTag() == XMLStreamConstants.START_ELEMENT) {
 					final String elementName = xml.getLocalName();
 					if (!elementName.equals("item")) {
 						// Bad element...skip it!
 						continue;
 					}
-
 					JAXBElement<ScanIndexItem> xmlItem = u.unmarshal(xml, ScanIndexItem.class);
 					if (xmlItem != null) {
 						final ScanIndexItem item = xmlItem.getValue();
-						if (item != null) { return found(item); }
+						if (item != null) {
+							if (item.isDirectory() != directoryMode) {
+								// Only return items of the type we're interested in
+								continue nextTag;
+							}
+							return found(item);
+						}
 					}
 				}
 				return null;

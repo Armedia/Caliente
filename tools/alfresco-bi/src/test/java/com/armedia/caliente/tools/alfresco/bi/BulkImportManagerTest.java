@@ -1,14 +1,23 @@
 package com.armedia.caliente.tools.alfresco.bi;
 
+import java.io.File;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
+import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
+import com.armedia.commons.utilities.ResourceLoader;
 
 class BulkImportManagerTest {
 
@@ -163,8 +172,43 @@ class BulkImportManagerTest {
 	}
 
 	@Test
-	void testScanItems() {
-		Assertions.fail("Not yet implemented");
+	void testScanItems() throws Exception {
+		BulkImportManager bim = null;
+
+		// Find the XML file(s)
+		URL url = ResourceLoader.getResourceOrFile("classpath:/alfresco-bulk-import/scan.folders.xml");
+		File f = new File(url.toURI());
+		bim = new BulkImportManager(f.getParentFile().getParentFile().toPath());
+		AtomicLong counter = new AtomicLong(0);
+		try (Stream<ScanIndexItem> items = bim.scanItems(true)) {
+			items.forEach((item) -> {
+				Assertions.assertTrue(item.isDirectory());
+				Assertions.assertTrue(StringUtils.isNotBlank(item.getTargetName()));
+				Assertions.assertFalse(item.getVersions().isEmpty());
+				for (ScanIndexItemVersion v : item.getVersions()) {
+					Assertions.assertNotNull(v.getNumber());
+					Assertions.assertNotNull(v.getMetadata());
+					Assertions.assertTrue(StringUtils.isNotBlank(v.getMetadata()));
+				}
+				counter.incrementAndGet();
+			});
+		}
+		Assertions.assertNotEquals(0, counter.get());
+		counter.set(0);
+		try (Stream<ScanIndexItem> items = bim.scanItems(false)) {
+			items.forEach((item) -> {
+				Assertions.assertFalse(item.isDirectory());
+				Assertions.assertTrue(StringUtils.isNotBlank(item.getTargetName()));
+				Assertions.assertFalse(item.getVersions().isEmpty());
+				for (ScanIndexItemVersion v : item.getVersions()) {
+					Assertions.assertNotNull(v.getNumber());
+					Assertions.assertNotNull(v.getMetadata());
+					Assertions.assertTrue(StringUtils.isNotBlank(v.getMetadata()));
+				}
+				counter.incrementAndGet();
+			});
+		}
+		Assertions.assertNotEquals(0, counter.get());
 	}
 
 }

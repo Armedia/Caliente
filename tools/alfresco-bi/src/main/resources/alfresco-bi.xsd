@@ -56,10 +56,10 @@
 	<xsd:complexType name="item.t">
 		<xsd:sequence>
 			<xsd:element name="directory" type="xsd:boolean" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="sourcePath" type="tns:empty_trimmed_string.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="sourceName" type="tns:trimmed_string.t" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="targetPath" type="tns:empty_trimmed_string.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="sourcePath" type="tns:empty_trimmed_string.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="targetName" type="tns:trimmed_string.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="targetPath" type="tns:empty_trimmed_string.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="versions" type="tns:versions.t" minOccurs="1" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
