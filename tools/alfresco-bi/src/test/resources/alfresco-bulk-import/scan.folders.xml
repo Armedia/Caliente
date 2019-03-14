@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scan>
+	<item>
+		<directory>true</directory>
+		<name>name</name>
+		<fsRelativePath>fsRelativePathInTheFS</fsRelativePath>
+		<relativePath>relativePathOnTheCMS</relativePath>
+		<versions>
+			<version>
+				<number>1.0</number>
+				<content>contentFile</content>
+				<metadata>metadataFile</metadata>
+			</version>
+			<!-- version... -->
+		</versions>
+	</item>
+	<item>
+		<directory>false</directory>
+		<name>name</name>
+		<fsRelativePath>fsRelativePathInTheFS</fsRelativePath>
+		<relativePath>relativePathOnTheCMS</relativePath>
+		<versions>
+			<version>
+				<number>1.0</number>
+				<content>contentFile</content>
+				<metadata>metadataFile</metadata>
+			</version>
+			<!-- version... -->
+		</versions>
+	</item>
+	<item>
+		<directory>true</directory>
+		<name>name</name>
+		<fsRelativePath>fsRelativePathInTheFS</fsRelativePath>
+		<relativePath>relativePathOnTheCMS</relativePath>
+		<versions>
+			<version>
+				<number>1.0</number>
+				<content>contentFile</content>
+				<metadata>metadataFile</metadata>
+			</version>
+			<!-- version... -->
+		</versions>
+	</item>
+	<item>
+		<directory>false</directory>
+		<name>name</name>
+		<fsRelativePath>fsRelativePathInTheFS</fsRelativePath>
+		<relativePath>relativePathOnTheCMS</relativePath>
+		<versions>
+			<version>
+				<number>1.0</number>
+				<content>contentFile</content>
+				<metadata>metadataFile</metadata>
+			</version>
+			<!-- version... -->
+		</versions>
+	</item>
+</scan>

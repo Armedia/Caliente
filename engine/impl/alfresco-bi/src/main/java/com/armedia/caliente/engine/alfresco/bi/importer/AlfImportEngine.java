@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.WarningTracker;
-import com.armedia.caliente.engine.alfresco.bi.AlfCommon;
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionFactory;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
@@ -52,14 +51,13 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.caliente.tools.alfresco.bi.IndexManager;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
 
 public class AlfImportEngine extends
 	ImportEngine<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportContextFactory, AlfImportDelegateFactory, AlfImportEngineFactory> {
-
-	static final String MANIFEST_NAME = "CALIENTE_INGESTION_INDEX.txt";
 
 	private final class NameFixer implements CmfNameFixer<CmfValue> {
 
@@ -227,20 +225,13 @@ public class AlfImportEngine extends
 			File rootLocation = importState.baseData;
 			if (rootLocation != null) {
 				// Initialize the manifest for this job
-				File biRoot = new File(rootLocation, AlfCommon.METADATA_ROOT);
-				File manifest = new File(biRoot, AlfImportEngine.MANIFEST_NAME);
 				try {
-					manifest = manifest.getCanonicalFile();
-				} catch (IOException e) {
-					// Do nothing, stick with the old one
-				}
-				try {
-					FileUtils.forceMkdir(biRoot);
-					this.writers.put(importState.jobId, new PrintWriter(manifest));
+					this.writers.put(importState.jobId,
+						new PrintWriter(IndexManager.openManifestWriter(AlfImportEngine.this.baseData, true)));
 				} catch (IOException e) {
 					// Log a warning
-					this.log.error("Failed to initialize the output manifest for job {} at [{}]",
-						importState.jobId.toString(), manifest.getAbsolutePath(), e);
+					this.log.error("Failed to initialize the output manifest for job {}", importState.jobId.toString(),
+						e);
 				}
 			}
 		}
@@ -292,8 +283,6 @@ public class AlfImportEngine extends
 
 	private static final String SCHEMA_NAME = "alfresco-model.xsd";
 
-	private static final String MODEL_DIR_NAME = "content-models";
-
 	static final Schema SCHEMA;
 
 	static {
@@ -326,8 +315,8 @@ public class AlfImportEngine extends
 		FileUtils.forceMkdir(contentFile);
 		this.contentPath = contentFile.toPath();
 
-		this.biRootPath = this.baseData.resolve(AlfCommon.METADATA_ROOT);
-		final File modelDir = this.biRootPath.resolve(AlfImportEngine.MODEL_DIR_NAME).toFile();
+		this.biRootPath = IndexManager.getBulkImportRoot(this.baseData);
+		final File modelDir = IndexManager.getContentModelsPath(this.baseData).toFile();
 		FileUtils.forceMkdir(modelDir);
 
 		List<String> contentModels = settings.getStrings(AlfSetting.CONTENT_MODEL);

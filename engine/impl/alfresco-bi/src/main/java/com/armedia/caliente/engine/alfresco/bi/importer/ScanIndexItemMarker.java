@@ -1,10 +1,13 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index;
+package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+
+import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
+import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
 
 public class ScanIndexItemMarker implements Cloneable {
 	public static enum MarkerType {

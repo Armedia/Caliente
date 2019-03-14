@@ -39,11 +39,7 @@ import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
 import com.armedia.caliente.engine.alfresco.bi.AlfXmlIndex;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndex;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItem;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker.MarkerType;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemVersion;
+import com.armedia.caliente.engine.alfresco.bi.importer.ScanIndexItemMarker.MarkerType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
@@ -57,6 +53,10 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.alfresco.bi.IndexManager;
+import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndex;
+import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
+import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
@@ -144,16 +144,11 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	private final static String FILE_CACHE_FILE = "scan.files.xml";
-	private final static String FOLDER_CACHE_FILE = "scan.folders.xml";
-
 	private static final Pattern VERSION_SUFFIX = Pattern.compile("^.*(\\.v(\\d+(?:\\.\\d+)?))$");
 
 	private static final BigDecimal LAST_INDEX = new BigDecimal(Long.MAX_VALUE);
 
 	private static final String SCHEMA_NAME = "alfresco-model.xsd";
-
-	private static final String MODEL_DIR_NAME = "content-models";
 
 	static final Schema SCHEMA;
 
@@ -198,16 +193,14 @@ public class AlfImportDelegateFactory
 
 		FileUtils.forceMkdir(this.contentPath.toFile());
 
-		final File modelDir = this.biRootPath.resolve(AlfImportDelegateFactory.MODEL_DIR_NAME).toFile();
+		final File modelDir = IndexManager.getContentModelsPath(this.baseData).toFile();
 		FileUtils.forceMkdir(modelDir);
 
 		Class<?>[] idxClasses = {
 			ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class
 		};
-		this.fileIndex = new AlfXmlIndex(this.biRootPath.resolve(AlfImportDelegateFactory.FILE_CACHE_FILE).toFile(),
-			idxClasses);
-		this.folderIndex = new AlfXmlIndex(this.biRootPath.resolve(AlfImportDelegateFactory.FOLDER_CACHE_FILE).toFile(),
-			idxClasses);
+		this.fileIndex = new AlfXmlIndex(IndexManager.getIndexFilePath(this.baseData, false).toFile(), idxClasses);
+		this.folderIndex = new AlfXmlIndex(IndexManager.getIndexFilePath(this.baseData, true).toFile(), idxClasses);
 
 		if (!configuration.hasValue(AlfSetting.CONTENT_MODEL)) {
 			throw new IllegalStateException("Must provide a valid set of content model XML files");
@@ -320,9 +313,7 @@ public class AlfImportDelegateFactory
 			return;
 		}
 
-		final String name = AlfImportEngine.MANIFEST_NAME;
-		final Path contentPath = this.baseData.relativize(this.biRootPath.resolve(name));
-
+		final Path contentPath = IndexManager.getContentModelsPath(null);
 		ScanIndexItemMarker thisMarker = new ScanIndexItemMarker();
 		thisMarker.setDirectory(false);
 		thisMarker.setContent(contentPath);
