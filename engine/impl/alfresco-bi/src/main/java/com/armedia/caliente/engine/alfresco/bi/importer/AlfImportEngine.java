@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -227,7 +226,7 @@ public class AlfImportEngine extends
 				// Initialize the manifest for this job
 				try {
 					this.writers.put(importState.jobId,
-						new PrintWriter(BulkImportManager.openManifestWriter(AlfImportEngine.this.baseData, true)));
+						new PrintWriter(AlfImportEngine.this.biManager.openManifestWriter(true)));
 				} catch (IOException e) {
 					// Log a warning
 					this.log.error("Failed to initialize the output manifest for job {}", importState.jobId.toString(),
@@ -294,9 +293,7 @@ public class AlfImportEngine extends
 		}
 	}
 
-	private final Path contentPath;
-	private final Path biRootPath;
-	private final String unfiledPath;
+	private final BulkImportManager biManager;
 
 	protected final AlfrescoSchema schema;
 	private final Map<String, AlfrescoType> defaultTypes;
@@ -313,10 +310,13 @@ public class AlfImportEngine extends
 		}
 		File contentFile = Tools.canonicalize(new File(content));
 		FileUtils.forceMkdir(contentFile);
-		this.contentPath = contentFile.toPath();
 
-		this.biRootPath = BulkImportManager.getBulkImportRoot(this.baseData);
-		final File modelDir = BulkImportManager.getContentModelsPath(this.baseData).toFile();
+		String unfiledPath = settings.getString(AlfSetting.UNFILED_PATH);
+		unfiledPath = FilenameUtils.separatorsToUnix(unfiledPath);
+		unfiledPath = FilenameUtils.normalizeNoEndSeparator(unfiledPath, true);
+
+		this.biManager = new BulkImportManager(this.baseData, contentFile.toPath(), unfiledPath.replaceAll("^/+", ""));
+		final File modelDir = this.biManager.getContentModelsPath().toFile();
 		FileUtils.forceMkdir(modelDir);
 
 		List<String> contentModels = settings.getStrings(AlfSetting.CONTENT_MODEL);
@@ -346,23 +346,10 @@ public class AlfImportEngine extends
 			m.put(t, this.schema.buildType(t));
 		}
 		this.defaultTypes = Tools.freezeMap(new LinkedHashMap<>(m));
-
-		String unfiledPath = settings.getString(AlfSetting.UNFILED_PATH);
-		unfiledPath = FilenameUtils.separatorsToUnix(unfiledPath);
-		unfiledPath = FilenameUtils.normalizeNoEndSeparator(unfiledPath, true);
-		this.unfiledPath = unfiledPath.replaceAll("^/+", "");
 	}
 
-	public final Path getContentPath() {
-		return this.contentPath;
-	}
-
-	public final Path getBiRootPath() {
-		return this.biRootPath;
-	}
-
-	public final String getUnfiledPath() {
-		return this.unfiledPath;
+	public final BulkImportManager getBulkImportManager() {
+		return this.biManager;
 	}
 
 	public final AlfrescoSchema getSchema() {

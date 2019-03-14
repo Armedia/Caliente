@@ -162,9 +162,7 @@ public class AlfImportDelegateFactory
 	}
 
 	private final Path baseData;
-	private final Path contentPath;
-	private final Path biRootPath;
-	private final String unfiledPath;
+	private final BulkImportManager biManager;
 
 	private final Properties userLoginMap = new Properties();
 
@@ -185,22 +183,20 @@ public class AlfImportDelegateFactory
 		throws IOException, JAXBException, XMLStreamException, DynamicElementException {
 		super(engine, configuration);
 		this.baseData = engine.getBaseData();
-		this.biRootPath = engine.getBiRootPath();
-		this.contentPath = engine.getContentPath();
-		this.unfiledPath = engine.getUnfiledPath();
+		this.biManager = engine.getBulkImportManager();
 		this.schema = engine.getSchema();
 		this.defaultTypes = engine.getDefaultTypes();
 
-		FileUtils.forceMkdir(this.contentPath.toFile());
+		FileUtils.forceMkdir(this.biManager.getContentPath().toFile());
 
-		final File modelDir = BulkImportManager.getContentModelsPath(this.baseData).toFile();
+		final File modelDir = this.biManager.getContentModelsPath().toFile();
 		FileUtils.forceMkdir(modelDir);
 
 		Class<?>[] idxClasses = {
 			ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class
 		};
-		this.fileIndex = new AlfXmlIndex(BulkImportManager.getIndexFilePath(this.baseData, false).toFile(), idxClasses);
-		this.folderIndex = new AlfXmlIndex(BulkImportManager.getIndexFilePath(this.baseData, true).toFile(), idxClasses);
+		this.fileIndex = new AlfXmlIndex(this.biManager.getIndexFilePath(false).toFile(), idxClasses);
+		this.folderIndex = new AlfXmlIndex(this.biManager.getIndexFilePath(true).toFile(), idxClasses);
 
 		if (!configuration.hasValue(AlfSetting.CONTENT_MODEL)) {
 			throw new IllegalStateException("Must provide a valid set of content model XML files");
@@ -313,7 +309,7 @@ public class AlfImportDelegateFactory
 			return;
 		}
 
-		final Path contentPath = BulkImportManager.getContentModelsPath(null);
+		final Path contentPath = this.biManager.getContentModelsPath();
 		ScanIndexItemMarker thisMarker = new ScanIndexItemMarker();
 		thisMarker.setDirectory(false);
 		thisMarker.setContent(contentPath);
@@ -496,7 +492,7 @@ public class AlfImportDelegateFactory
 					}
 				}
 			} else {
-				paths.add(this.unfiledPath);
+				this.biManager.getUnfiledPath().forEach((p) -> paths.add(p.toString()));
 				PathTools.addNumericPaths(paths, cmfObject.getNumber());
 			}
 			targetPath = Tools.joinEscaped('/', paths);
@@ -586,9 +582,7 @@ public class AlfImportDelegateFactory
 
 	final File generateMetadataFile(final Properties p, final CmfObject<CmfValue> cmfObject, final File main)
 		throws ImportException {
-		Path relativePath = this.contentPath.relativize(main.toPath());
-
-		Path target = this.biRootPath.resolve(relativePath);
+		Path target = this.biManager.calculateMetadataPath(main.toPath());
 		String targetName = String.format("%s%s", target.getFileName(), AlfImportDelegateFactory.METADATA_SUFFIX);
 		target = target.getParent();
 
@@ -629,7 +623,6 @@ public class AlfImportDelegateFactory
 		final AtomicLong number = new AtomicLong(0);
 		// Make sure we order them so they are sorted hierarchically
 		for (final String mf : new TreeSet<>(this.artificialFolders)) {
-			// Already processed - move along!
 			final File baseFile;
 			{
 				List<String> paths = new ArrayList<>();
@@ -638,7 +631,7 @@ public class AlfImportDelegateFactory
 				// Concatenate them into a path
 				String path = FileNameTools.reconstitute(paths, false, false);
 				// Now, create a file for them
-				Path basePath = this.biRootPath.resolve(path);
+				Path basePath = this.biManager.getArtificialFolderPath(path);
 				baseFile = AlfImportDelegateFactory.normalizeAbsolute(basePath.resolve(name).toFile());
 			}
 
@@ -688,7 +681,7 @@ public class AlfImportDelegateFactory
 		// for whatever reason they need to be employed
 		contentFile = AlfImportDelegateFactory.normalizeAbsolute(contentFile);
 		// basePath is the base path within which the entire import resides
-		final Path relativeContentPath = this.biRootPath.relativize(contentFile.toPath());
+		final Path relativeContentPath = this.biManager.calculateContentPath(contentFile.toPath());
 		final Path relativeContentParent = (relativeContentPath != null ? relativeContentPath.getParent() : null);
 
 		ScanIndexItemMarker thisMarker = new ScanIndexItemMarker();

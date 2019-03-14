@@ -377,6 +377,10 @@ public final class CmfValue {
 		return this.nullValue;
 	}
 
+	public boolean isNotNull() {
+		return !isNull();
+	}
+
 	public String serialize() throws ParseException {
 		return this.type.getSerializer().serialize(this);
 	}

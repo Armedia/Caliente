@@ -1,15 +1,12 @@
 package com.armedia.caliente.tools.alfresco.bi.xml;
 
 import java.math.BigDecimal;
-import java.nio.file.Path;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-
-import com.armedia.caliente.tools.alfresco.bi.BulkImportManager;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "version.t", propOrder = {
@@ -50,20 +47,12 @@ public class ScanIndexItemVersion implements Cloneable {
 		return this.content;
 	}
 
-	public Path getContent(Path basePath) {
-		return BulkImportManager.getContentPath(basePath, this);
-	}
-
 	public void setContent(String content) {
 		this.content = content;
 	}
 
 	public String getMetadata() {
 		return this.metadata;
-	}
-
-	public Path getMetadata(Path basePath) {
-		return BulkImportManager.getMetadataPath(basePath, this);
 	}
 
 	public void setMetadata(String metadata) {
