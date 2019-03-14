@@ -51,7 +51,7 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
-import com.armedia.caliente.tools.alfresco.bi.IndexManager;
+import com.armedia.caliente.tools.alfresco.bi.BulkImportManager;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
@@ -227,7 +227,7 @@ public class AlfImportEngine extends
 				// Initialize the manifest for this job
 				try {
 					this.writers.put(importState.jobId,
-						new PrintWriter(IndexManager.openManifestWriter(AlfImportEngine.this.baseData, true)));
+						new PrintWriter(BulkImportManager.openManifestWriter(AlfImportEngine.this.baseData, true)));
 				} catch (IOException e) {
 					// Log a warning
 					this.log.error("Failed to initialize the output manifest for job {}", importState.jobId.toString(),
@@ -315,8 +315,8 @@ public class AlfImportEngine extends
 		FileUtils.forceMkdir(contentFile);
 		this.contentPath = contentFile.toPath();
 
-		this.biRootPath = IndexManager.getBulkImportRoot(this.baseData);
-		final File modelDir = IndexManager.getContentModelsPath(this.baseData).toFile();
+		this.biRootPath = BulkImportManager.getBulkImportRoot(this.baseData);
+		final File modelDir = BulkImportManager.getContentModelsPath(this.baseData).toFile();
 		FileUtils.forceMkdir(modelDir);
 
 		List<String> contentModels = settings.getStrings(AlfSetting.CONTENT_MODEL);

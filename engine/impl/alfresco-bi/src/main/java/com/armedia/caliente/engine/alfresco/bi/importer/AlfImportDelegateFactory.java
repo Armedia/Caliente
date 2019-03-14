@@ -53,7 +53,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.tools.alfresco.bi.IndexManager;
+import com.armedia.caliente.tools.alfresco.bi.BulkImportManager;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndex;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
@@ -193,14 +193,14 @@ public class AlfImportDelegateFactory
 
 		FileUtils.forceMkdir(this.contentPath.toFile());
 
-		final File modelDir = IndexManager.getContentModelsPath(this.baseData).toFile();
+		final File modelDir = BulkImportManager.getContentModelsPath(this.baseData).toFile();
 		FileUtils.forceMkdir(modelDir);
 
 		Class<?>[] idxClasses = {
 			ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class
 		};
-		this.fileIndex = new AlfXmlIndex(IndexManager.getIndexFilePath(this.baseData, false).toFile(), idxClasses);
-		this.folderIndex = new AlfXmlIndex(IndexManager.getIndexFilePath(this.baseData, true).toFile(), idxClasses);
+		this.fileIndex = new AlfXmlIndex(BulkImportManager.getIndexFilePath(this.baseData, false).toFile(), idxClasses);
+		this.folderIndex = new AlfXmlIndex(BulkImportManager.getIndexFilePath(this.baseData, true).toFile(), idxClasses);
 
 		if (!configuration.hasValue(AlfSetting.CONTENT_MODEL)) {
 			throw new IllegalStateException("Must provide a valid set of content model XML files");
@@ -313,7 +313,7 @@ public class AlfImportDelegateFactory
 			return;
 		}
 
-		final Path contentPath = IndexManager.getContentModelsPath(null);
+		final Path contentPath = BulkImportManager.getContentModelsPath(null);
 		ScanIndexItemMarker thisMarker = new ScanIndexItemMarker();
 		thisMarker.setDirectory(false);
 		thisMarker.setContent(contentPath);

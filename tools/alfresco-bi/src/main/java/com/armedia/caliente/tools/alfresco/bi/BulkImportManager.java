@@ -37,13 +37,13 @@ import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.StreamTools;
 
-public class IndexManager {
+public class BulkImportManager {
 
 	private static final Path METADATA_ROOT = Paths.get("alfresco-bulk-import");
-	private static final Path MODEL_DIRECTORY = IndexManager.METADATA_ROOT.resolve("content-models");
-	private static final Path MANIFEST = IndexManager.METADATA_ROOT.resolve("CALIENTE_INGESTION_INDEX.txt");
-	private static final Path FILE_INDEX = IndexManager.METADATA_ROOT.resolve("scan.files.xml");
-	private static final Path FOLDER_INDEX = IndexManager.METADATA_ROOT.resolve("scan.folders.xml");
+	private static final Path MODEL_DIRECTORY = BulkImportManager.METADATA_ROOT.resolve("content-models");
+	private static final Path MANIFEST = BulkImportManager.METADATA_ROOT.resolve("CALIENTE_INGESTION_INDEX.txt");
+	private static final Path FILE_INDEX = BulkImportManager.METADATA_ROOT.resolve("scan.files.xml");
+	private static final Path FOLDER_INDEX = BulkImportManager.METADATA_ROOT.resolve("scan.folders.xml");
 
 	private static final File getIndexFile(Path rootDir, Path indexFile) throws IOException {
 		final Path p = rootDir.resolve(indexFile);
@@ -66,22 +66,22 @@ public class IndexManager {
 	}
 
 	public static final Path getBulkImportRoot(final Path baseDirectory) {
-		return (baseDirectory != null ? baseDirectory.resolve(IndexManager.METADATA_ROOT) : IndexManager.METADATA_ROOT);
+		return (baseDirectory != null ? baseDirectory.resolve(BulkImportManager.METADATA_ROOT) : BulkImportManager.METADATA_ROOT);
 	}
 
 	public static final Path getIndexFilePath(final Path baseDirectory, boolean directoryMode) {
-		Path biRoot = IndexManager.getBulkImportRoot(baseDirectory);
-		return biRoot.resolve(directoryMode ? IndexManager.FILE_INDEX : IndexManager.FOLDER_INDEX);
+		Path biRoot = BulkImportManager.getBulkImportRoot(baseDirectory);
+		return biRoot.resolve(directoryMode ? BulkImportManager.FILE_INDEX : BulkImportManager.FOLDER_INDEX);
 	}
 
 	public static final Path getManifestPath(final Path baseDirectory) {
-		return (baseDirectory != null ? baseDirectory.resolve(IndexManager.MANIFEST) : IndexManager.MANIFEST);
+		return (baseDirectory != null ? baseDirectory.resolve(BulkImportManager.MANIFEST) : BulkImportManager.MANIFEST);
 	}
 
 	public static final Writer openManifestWriter(final Path baseDirectory, Charset encoding, boolean createDirectories)
 		throws IOException {
-		Path biRoot = IndexManager.getBulkImportRoot(baseDirectory);
-		Path manifest = biRoot.resolve(IndexManager.MANIFEST);
+		Path biRoot = BulkImportManager.getBulkImportRoot(baseDirectory);
+		Path manifest = biRoot.resolve(BulkImportManager.MANIFEST);
 		File f = manifest.toFile();
 		if (createDirectories) {
 			FileUtils.forceMkdir(biRoot.toFile());
@@ -93,16 +93,16 @@ public class IndexManager {
 
 	public static final Writer openManifestWriter(final Path baseDirectory, boolean createDirectories)
 		throws IOException {
-		return IndexManager.openManifestWriter(baseDirectory, null, createDirectories);
+		return BulkImportManager.openManifestWriter(baseDirectory, null, createDirectories);
 	}
 
 	public static final Writer openManifestWriter(final Path baseDirectory, Charset charset) throws IOException {
-		return IndexManager.openManifestWriter(baseDirectory, charset, false);
+		return BulkImportManager.openManifestWriter(baseDirectory, charset, false);
 	}
 
 	public static final Reader openManifestReader(final Path baseDirectory, Charset encoding) throws IOException {
-		Path biRoot = IndexManager.getBulkImportRoot(baseDirectory);
-		Path manifest = biRoot.resolve(IndexManager.MANIFEST);
+		Path biRoot = BulkImportManager.getBulkImportRoot(baseDirectory);
+		Path manifest = biRoot.resolve(BulkImportManager.MANIFEST);
 		File f = manifest.toFile();
 		if (encoding == null) { return new FileReader(f); }
 		InputStream fos = new FileInputStream(f);
@@ -110,20 +110,20 @@ public class IndexManager {
 	}
 
 	public static final Reader openManifestReader(final Path baseDirectory) throws IOException {
-		return IndexManager.openManifestReader(baseDirectory, null);
+		return BulkImportManager.openManifestReader(baseDirectory, null);
 	}
 
 	public static final Path getContentModelsPath(final Path baseDirectory) {
-		Path biRoot = IndexManager.getBulkImportRoot(baseDirectory);
-		return biRoot.resolve(IndexManager.MODEL_DIRECTORY);
+		Path biRoot = BulkImportManager.getBulkImportRoot(baseDirectory);
+		return biRoot.resolve(BulkImportManager.MODEL_DIRECTORY);
 	}
 
 	public static final Stream<ScanIndexItem> scanItems(final Path rootDirectory, boolean directoryMode)
 		throws IOException, JAXBException, XMLStreamException {
-		final Path cachePath = (directoryMode ? IndexManager.FILE_INDEX : IndexManager.FOLDER_INDEX);
-		File xmlFile = IndexManager.getIndexFile(rootDirectory, cachePath);
+		final Path cachePath = (directoryMode ? BulkImportManager.FILE_INDEX : BulkImportManager.FOLDER_INDEX);
+		File xmlFile = BulkImportManager.getIndexFile(rootDirectory, cachePath);
 		if (xmlFile == null) {
-			xmlFile = IndexManager.getIndexFile(rootDirectory, cachePath.getFileName());
+			xmlFile = BulkImportManager.getIndexFile(rootDirectory, cachePath.getFileName());
 			if (xmlFile == null) { return Stream.empty(); }
 		}
 
