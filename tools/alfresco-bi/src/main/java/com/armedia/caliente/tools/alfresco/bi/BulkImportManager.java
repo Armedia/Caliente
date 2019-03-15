@@ -235,7 +235,7 @@ public final class BulkImportManager {
 
 		final InputStream in = new FileInputStream(xmlFile);
 		final XMLStreamReader xml = XMLInputFactory.newInstance().createXMLStreamReader(in);
-		if (xml.nextTag() != XMLStreamConstants.START_ELEMENT) {
+		if ((xml.nextTag() != XMLStreamConstants.START_ELEMENT) || !StringUtils.equals("scan", xml.getLocalName())) {
 			// Empty document or no proper root tag?!?!?
 			try {
 				return Stream.empty();
