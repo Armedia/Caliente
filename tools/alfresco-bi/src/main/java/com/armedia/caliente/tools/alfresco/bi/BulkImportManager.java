@@ -272,7 +272,7 @@ public final class BulkImportManager {
 					final String elementName = xml.getLocalName();
 					if (!elementName.equals("item")) {
 						// This is garbage that can't be parsed, so skip it!
-						skipBranch(xml);
+						XmlTools.skipBranch(xml);
 						continue;
 					}
 					JAXBElement<ScanIndexItem> xmlItem = u.unmarshal(xml, ScanIndexItem.class);
@@ -298,21 +298,5 @@ public final class BulkImportManager {
 			}
 		};
 		return StreamTools.of(it, Spliterator.IMMUTABLE | Spliterator.NONNULL).onClose(it::close);
-	}
-
-	private void skipBranch(XMLStreamReader xml) throws XMLStreamException {
-		long depth = 1;
-		while ((depth > 0) && xml.hasNext()) {
-			switch (xml.nextTag()) {
-				case XMLStreamConstants.START_DOCUMENT:
-				case XMLStreamConstants.START_ELEMENT:
-					depth++;
-					break;
-				case XMLStreamConstants.END_DOCUMENT:
-				case XMLStreamConstants.END_ELEMENT:
-					depth--;
-					break;
-			}
-		}
 	}
 }
