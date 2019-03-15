@@ -8,6 +8,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.commons.utilities.Tools;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "version.t", propOrder = {
 	"number", "content", "metadata"
@@ -57,6 +59,21 @@ public class ScanIndexItemVersion implements Cloneable {
 
 	public void setMetadata(String metadata) {
 		this.metadata = metadata;
+	}
+
+	@Override
+	public int hashCode() {
+		return Tools.hashTool(this, null, this.number, this.content, this.metadata);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!Tools.baseEquals(this, obj)) { return false; }
+		ScanIndexItemVersion other = ScanIndexItemVersion.class.cast(obj);
+		if (!Tools.equals(this.number, other.number)) { return false; }
+		if (!Tools.equals(this.content, other.content)) { return false; }
+		if (!Tools.equals(this.metadata, other.metadata)) { return false; }
+		return true;
 	}
 
 	@Override

@@ -10,6 +10,8 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.commons.utilities.Tools;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "item.t", propOrder = {
 	"directory", "sourceName", "sourcePath", "targetName", "targetPath", "versions"
@@ -80,6 +82,26 @@ public class ScanIndexItem {
 			this.versions = new ArrayList<>();
 		}
 		return this.versions;
+	}
+
+	@Override
+	public int hashCode() {
+		return Tools.hashTool(this, null, this.directory, this.sourceName, this.sourcePath, this.targetName,
+			this.targetPath, this.versions.hashCode());
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!Tools.baseEquals(this, obj)) { return false; }
+		ScanIndexItem other = ScanIndexItem.class.cast(obj);
+		if (this.directory != other.directory) { return false; }
+		if (!Tools.equals(this.sourceName, other.sourceName)) { return false; }
+		if (!Tools.equals(this.sourcePath, other.sourcePath)) { return false; }
+		if (!Tools.equals(this.targetName, other.targetName)) { return false; }
+		if (!Tools.equals(this.targetPath, other.targetPath)) { return false; }
+		if (!Tools.equals(this.versions.size(), other.versions.size())) { return false; }
+		if (!Tools.equals(this.versions, other.versions)) { return false; }
+		return true;
 	}
 
 	@Override

@@ -9,6 +9,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.commons.utilities.Tools;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "scan.t", propOrder = {
 	"items"
@@ -23,6 +25,20 @@ public class ScanIndex {
 			this.items = new ArrayList<>();
 		}
 		return this.items;
+	}
+
+	@Override
+	public int hashCode() {
+		return Tools.hashTool(this, null, this.items);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!Tools.baseEquals(this, obj)) { return false; }
+		ScanIndex other = ScanIndex.class.cast(obj);
+		if (!Tools.equals(this.items.size(), other.items.size())) { return false; }
+		if (!Tools.equals(this.items, other.items)) { return false; }
+		return true;
 	}
 
 	@Override
