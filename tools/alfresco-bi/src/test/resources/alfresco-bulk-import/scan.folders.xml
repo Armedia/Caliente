@@ -14,6 +14,16 @@
       </version>
     </versions>
   </item>
+  <garbage>
+  	<this>
+  		<should>
+  			<be>
+  				<ignored/>
+  				<another-empty-tag/>
+  			</be>
+  		</should>
+  	</this>
+  </garbage>
   <item>
     <directory>true</directory>
     <sourceName>0000000000000064.00000000</sourceName>

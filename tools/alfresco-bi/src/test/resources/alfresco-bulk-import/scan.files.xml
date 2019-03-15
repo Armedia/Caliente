@@ -13,6 +13,16 @@
       </version>
     </versions>
   </item>
+  <garbage>
+  	<this>
+  		<should>
+  			<be>
+  				<ignored/>
+  				<another-empty-tag/>
+  			</be>
+  		</should>
+  	</this>
+  </garbage>
   <item>
     <directory>false</directory>
     <sourceName>0000000000000046.00000000</sourceName>

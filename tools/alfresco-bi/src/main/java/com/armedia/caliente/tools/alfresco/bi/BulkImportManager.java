@@ -268,22 +268,21 @@ public final class BulkImportManager {
 		CloseableIterator<ScanIndexItem> it = new CloseableIterator<ScanIndexItem>() {
 			@Override
 			protected CloseableIterator<ScanIndexItem>.Result findNext() throws Exception {
-				nextTag: while (xml.nextTag() == XMLStreamConstants.START_ELEMENT) {
+				while (xml.nextTag() == XMLStreamConstants.START_ELEMENT) {
 					final String elementName = xml.getLocalName();
 					if (!elementName.equals("item")) {
-						// Bad element...skip it!
+						// This is garbage that can't be parsed, so skip it!
+						skipBranch(xml);
 						continue;
 					}
 					JAXBElement<ScanIndexItem> xmlItem = u.unmarshal(xml, ScanIndexItem.class);
 					if (xmlItem != null) {
 						final ScanIndexItem item = xmlItem.getValue();
-						if (item != null) {
-							if (item.isDirectory() != directoryMode) {
-								// Only return items of the type we're interested in
-								continue nextTag;
-							}
-							return found(item);
+						if (item.isDirectory() != directoryMode) {
+							// Only return items of the type we're interested in
+							continue;
 						}
+						return found(item);
 					}
 				}
 				return null;
@@ -299,5 +298,21 @@ public final class BulkImportManager {
 			}
 		};
 		return StreamTools.of(it, Spliterator.IMMUTABLE | Spliterator.NONNULL).onClose(it::close);
+	}
+
+	private void skipBranch(XMLStreamReader xml) throws XMLStreamException {
+		long depth = 1;
+		while ((depth > 0) && xml.hasNext()) {
+			switch (xml.nextTag()) {
+				case XMLStreamConstants.START_DOCUMENT:
+				case XMLStreamConstants.START_ELEMENT:
+					depth++;
+					break;
+				case XMLStreamConstants.END_DOCUMENT:
+				case XMLStreamConstants.END_ELEMENT:
+					depth--;
+					break;
+			}
+		}
 	}
 }
