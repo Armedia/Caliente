@@ -1,6 +1,8 @@
 package com.armedia.caliente.tools.alfresco.bi;
 
 import java.io.File;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.file.Path;
@@ -15,8 +17,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 
-import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -176,8 +178,9 @@ class BulkImportManagerTest {
 	void testScanAndMarshal() throws Exception {
 
 		// Find the XML file(s)
+		Unmarshaller u = XmlTools.getUnmarshaller(null, ScanIndex.class, ScanIndexItem.class,
+			ScanIndexItemVersion.class);
 		Marshaller m = XmlTools.getMarshaller(null, ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class);
-		NullOutputStream nullOut = new NullOutputStream();
 		URL url = ResourceLoader.getResourceOrFile("classpath:/alfresco-bulk-import/scan.folders.xml");
 		File f = new File(url.toURI());
 		final Path root = f.getParentFile().getParentFile().toPath();
@@ -205,7 +208,11 @@ class BulkImportManagerTest {
 				}
 				index.getItems().add(item);
 				try {
-					m.marshal(item, nullOut);
+					StringWriter w = new StringWriter();
+					m.marshal(item, w);
+					Object item2 = u.unmarshal(new StringReader(w.toString()));
+					Assertions.assertNotNull(item2);
+					Assertions.assertEquals(item, item2);
 				} catch (Exception e) {
 					Assertions.fail("Failed to marshal an index item");
 				}
@@ -213,7 +220,13 @@ class BulkImportManagerTest {
 			});
 		}
 		Assertions.assertNotEquals(0, counter.get());
-		m.marshal(index, nullOut);
+		{
+			StringWriter w = new StringWriter();
+			m.marshal(index, w);
+			Object index2 = u.unmarshal(new StringReader(w.toString()));
+			Assertions.assertNotNull(index2);
+			Assertions.assertEquals(index, index2);
+		}
 
 		counter.set(0);
 		Set<BigDecimal> versionNumbers = new HashSet<>();
@@ -249,7 +262,11 @@ class BulkImportManagerTest {
 				}
 				index.getItems().add(item);
 				try {
-					m.marshal(item, nullOut);
+					StringWriter w = new StringWriter();
+					m.marshal(item, w);
+					Object item2 = u.unmarshal(new StringReader(w.toString()));
+					Assertions.assertNotNull(item2);
+					Assertions.assertEquals(item, item2);
 				} catch (Exception e) {
 					Assertions.fail("Failed to marshal an index item");
 				}
@@ -257,7 +274,13 @@ class BulkImportManagerTest {
 			});
 		}
 		Assertions.assertNotEquals(0, counter.get());
-		m.marshal(index, nullOut);
+		{
+			StringWriter w = new StringWriter();
+			m.marshal(index, w);
+			Object index2 = u.unmarshal(new StringReader(w.toString()));
+			Assertions.assertNotNull(index2);
+			Assertions.assertEquals(index, index2);
+		}
 	}
 
 }
