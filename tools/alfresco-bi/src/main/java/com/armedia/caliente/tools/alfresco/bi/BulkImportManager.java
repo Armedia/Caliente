@@ -51,6 +51,8 @@ public final class BulkImportManager {
 	private static Path FILE_INDEX = BulkImportManager.BULK_IMPORT_ROOT.resolve("scan.files.xml");
 	private static Path FOLDER_INDEX = BulkImportManager.BULK_IMPORT_ROOT.resolve("scan.folders.xml");
 
+	private static final String METADATA_SUFFIX = ".xml";
+
 	private final Path basePath;
 	private final Path contentPath;
 	private final Path unfiledPath;
@@ -186,9 +188,24 @@ public final class BulkImportManager {
 			throw new IllegalStateException("No content path was set at manager creation");
 		}
 		// Calculate the path relative to the content root
-		Path relativePath = this.contentPath.relativize(fullContentPath);
+		Path[] candidates = {
+			this.contentPath, this.bulkImportRoot
+		};
+		Path metadataPath = null;
+		for (Path p : candidates) {
+			if (fullContentPath.startsWith(p)) {
+				metadataPath = p.relativize(fullContentPath);
+				break;
+			}
+		}
 		// resolve this relative path relative to biRoot
-		return this.bulkImportRoot.resolve(relativePath);
+		if (metadataPath != null) {
+			metadataPath = this.bulkImportRoot.resolve(metadataPath);
+		} else {
+			metadataPath = fullContentPath;
+		}
+		return metadataPath
+			.resolveSibling(String.format("%s%s", metadataPath.getFileName(), BulkImportManager.METADATA_SUFFIX));
 	}
 
 	public Writer openManifestWriter(Charset encoding, boolean createDirectories) throws IOException {

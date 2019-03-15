@@ -67,8 +67,6 @@ import com.armedia.commons.utilities.concurrent.ReadWriteSet;
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
 
-	static final String METADATA_SUFFIX = ".xml";
-
 	private final class VirtualDocument {
 		private final String historyId;
 		private ScanIndexItemMarker root = null;
@@ -583,8 +581,6 @@ public class AlfImportDelegateFactory
 	final File generateMetadataFile(final Properties p, final CmfObject<CmfValue> cmfObject, final File main)
 		throws ImportException {
 		Path target = this.biManager.calculateMetadataPath(main.toPath());
-		target = target
-			.resolveSibling(String.format("%s%s", target.getFileName(), AlfImportDelegateFactory.METADATA_SUFFIX));
 
 		final File meta = target.toFile();
 		if (p == null) { return meta; }

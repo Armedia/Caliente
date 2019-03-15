@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndex;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
+import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.ResourceLoader;
 import com.armedia.commons.utilities.XmlTools;
 
@@ -184,7 +186,7 @@ class BulkImportManagerTest {
 		URL url = ResourceLoader.getResourceOrFile("classpath:/alfresco-bulk-import/scan.folders.xml");
 		File f = new File(url.toURI());
 		final Path root = f.getParentFile().getParentFile().toPath();
-		final BulkImportManager bim = new BulkImportManager(root);
+		final BulkImportManager bim = new BulkImportManager(root, root.resolve("streams"));
 		final Path biRoot = bim.getBulkImportRoot();
 		AtomicLong counter = new AtomicLong(0);
 		ScanIndex index = new ScanIndex();
@@ -201,10 +203,27 @@ class BulkImportManagerTest {
 				Assertions.assertNotNull(item.getTargetPath());
 
 				Assertions.assertFalse(item.getVersions().isEmpty());
+				Assertions.assertEquals(1, item.getVersions().size());
 				for (ScanIndexItemVersion v : item.getVersions()) {
 					Assertions.assertNotNull(v.getNumber());
-					Assertions.assertNotNull(v.getMetadata());
+					Assertions.assertNotNull(v.getContent());
+					Path contentPath = bim.resolveContentPath(v);
+					Assertions.assertTrue(contentPath.startsWith(root));
+					Assertions.assertEquals(v.getContent(),
+						FilenameUtils.separatorsToUnix(root.relativize(contentPath).toString()));
+
 					Assertions.assertTrue(StringUtils.isNotBlank(v.getMetadata()));
+					Path metadataPath = bim.resolveMetadataPath(v);
+					Assertions.assertTrue(metadataPath.startsWith(root));
+					Assertions.assertTrue(metadataPath.startsWith(biRoot));
+					Path absolute = bim.calculateMetadataPath(contentPath);
+					Path relative = bim.getBasePath().relativize(absolute);
+					Assertions.assertTrue(metadataPath.endsWith(relative),
+						LazyFormatter.lazyFormat("[%s] vs. [%s]", metadataPath, relative));
+					Assertions.assertTrue(metadataPath.startsWith(bim.getBasePath()),
+						LazyFormatter.lazyFormat("[%s] vs. [%s]", metadataPath, bim.getBasePath()));
+					Assertions.assertEquals(bim.getBasePath().resolve(relative), metadataPath);
+					Assertions.assertEquals(v.getMetadata(), FilenameUtils.separatorsToUnix(relative.toString()));
 				}
 				index.getItems().add(item);
 				try {
@@ -251,14 +270,23 @@ class BulkImportManagerTest {
 					Assertions.assertNotNull(v.getContent());
 					Path contentPath = bim.resolveContentPath(v);
 					Assertions.assertTrue(contentPath.startsWith(root));
+					Assertions.assertEquals(v.getContent(),
+						FilenameUtils.separatorsToUnix(root.relativize(contentPath).toString()));
 
 					if (v.getMetadata() != null) {
 						Assertions.assertTrue(StringUtils.isNotBlank(v.getMetadata()));
 						Path metadataPath = bim.resolveMetadataPath(v);
 						Assertions.assertTrue(metadataPath.startsWith(root));
 						Assertions.assertTrue(metadataPath.startsWith(biRoot));
+						Path absolute = bim.calculateMetadataPath(contentPath);
+						Path relative = bim.getBasePath().relativize(absolute);
+						Assertions.assertTrue(metadataPath.endsWith(relative),
+							LazyFormatter.lazyFormat("[%s] vs. [%s]", metadataPath, relative));
+						Assertions.assertTrue(metadataPath.startsWith(bim.getBasePath()),
+							LazyFormatter.lazyFormat("[%s] vs. [%s]", metadataPath, bim.getBasePath()));
+						Assertions.assertEquals(bim.getBasePath().resolve(relative), metadataPath);
+						Assertions.assertEquals(v.getMetadata(), FilenameUtils.separatorsToUnix(relative.toString()));
 					}
-
 				}
 				index.getItems().add(item);
 				try {
