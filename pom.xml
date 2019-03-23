@@ -42,7 +42,7 @@
 		<dfc.version>6.7-SP1</dfc.version>
 		<!-- Can't use a newer OpenCMIS because it'll cause JAXB collisions with the DFC -->
 		<opencmis.version>0.13.0</opencmis.version>
-		<h2.version>1.4.198-20190114.git-a092ef8bba8ee54411f7dfeac56f0a4e70b9f4e1</h2.version>
+		<h2.version>1.4.199</h2.version>
 		<ridc.version>11.1.1.0</ridc.version>
 		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
 		<dfc.jar>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</dfc.jar>
