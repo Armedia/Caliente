@@ -12,20 +12,32 @@ public enum CLIParam implements Supplier<Option> {
 			.setDescription("Enable increased logging for debugging") //
 	), //
 
+	from( //
+		new OptionImpl() //
+			.setRequired(true) //
+			.setArgumentLimits(1, -1) //
+			.setArgumentName("source-spec") //
+			.setDescription(
+				"The source specifications identifying which content to extract (%objectId, @fileref, /path, or a DQL predicate)") //
+	), //
+
+	rendition_filter(
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("filter-expression") //
+			.setDescription(
+				"A JEXL 3 expression that will be boiled down to TRUE (non-0 number, non-null result, etc) or FALSE (null result, 0-number) which will be used to select which rendition(s) are included in the analysis. The following variables can be used in the script: number, page, format, modifier") //
+	),
+	//
+
 	target(
 		new OptionImpl() //
-			.setArgumentLimits(1, 1) //
+			.setRequired(true) //
+			.setArgumentLimits(1) //
 			.setArgumentName("target-file") //
 			.setDescription("The file to which output will be written") //
 	), //
 
-	renditions(
-		new OptionImpl() //
-			.setArgumentLimits(1, -1) //
-			.setArgumentName("rendition-number") //
-			.setDescription(
-				"Exclude the folder in the count (defaults to ALL except these, may be specified multiple times) - path or object ID is valid") //
-	)
 	//
 	;
 
