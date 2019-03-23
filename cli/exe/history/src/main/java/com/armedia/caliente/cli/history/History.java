@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -102,112 +101,106 @@ public class History {
 			final List<Future<String>> futures = new ArrayList<>(chronicleIds.size());
 			final ExecutorService executors = Executors.newFixedThreadPool(Math.max(1, threads));
 			for (final String id : chronicleIds) {
-				futures.add(executors.submit(new Callable<String>() {
-					@Override
-					public String call() throws HistoryException {
-						final IDfSession session;
+				futures.add(executors.submit(() -> {
+					final IDfSession session;
+					try {
+						session = pool.acquireSession();
+					} catch (Exception e) {
+						throw new HistoryException(id,
+							String.format("Failed to acquire a Documentum session to read the chronicle [%s]", id), e);
+					}
+
+					try {
+						boolean ok = false;
+						final IDfLocalTransaction tx;
 						try {
-							session = pool.acquireSession();
-						} catch (Exception e) {
-							throw new HistoryException(id,
-								String.format("Failed to acquire a Documentum session to read the chronicle [%s]", id),
-								e);
+							tx = DfUtils.openTransaction(session);
+						} catch (DfException e) {
+							throw new HistoryException(id, String.format(
+								"DFC reported an error while starting the read-only transaction for chronicle [%s]: %s",
+								id, e.getMessage()), e);
 						}
 
 						try {
-							boolean ok = false;
-							final IDfLocalTransaction tx;
 							try {
-								tx = DfUtils.openTransaction(session);
-							} catch (DfException e) {
-								throw new HistoryException(id, String.format(
-									"DFC reported an error while starting the read-only transaction for chronicle [%s]: %s",
-									id, e.getMessage()), e);
-							}
-
-							try {
-								try {
-									IDfId chronicleId = null;
-									IDfPersistentObject obj = null;
-									if (!History.ID_SCANNER.matcher(id).matches()) {
-										// It's a path...
-										obj = session.getObjectByPath(id);
-										if (obj == null) {
-											// No match...skip this one!
-											throw new HistoryException(id,
-												String.format("No object found at path [%s]", id));
-										}
-									} else {
-										// Must be an ID...
-										chronicleId = new DfId(id);
-										try {
-											obj = session.getObject(chronicleId);
-										} catch (DfIdNotFoundException e) {
-											// It's not an object ID, so assume it's a chronicle
-											// ID...
-										}
+								IDfId chronicleId = null;
+								IDfPersistentObject obj = null;
+								if (!History.ID_SCANNER.matcher(id).matches()) {
+									// It's a path...
+									obj = session.getObjectByPath(id);
+									if (obj == null) {
+										// No match...skip this one!
+										throw new HistoryException(id,
+											String.format("No object found at path [%s]", id));
 									}
-
-									if (IDfSysObject.class.isInstance(obj)) {
-										chronicleId = IDfSysObject.class.cast(obj).getChronicleId();
-									} else {
-										throw new HistoryException(id, String
-											.format("The given object for search spec [%s] is not a dm_sysobject", id));
-									}
-
-									History.this.log.info("Scanning history with ID [{}] (from search spec [{}])...",
-										chronicleId, id);
-									DctmVersionHistory<IDfSysObject> history = new DctmVersionHistory<>(session,
-										chronicleId);
-									History.this.log.info("History with ID [{}] scanned successfully!", chronicleId);
-
-									StringWriter w = new StringWriter();
-									PrintWriter pw = new PrintWriter(w);
-
-									pw.printf("HISTORY ID: [%s]%n", history.getChronicleId());
-									pw.printf("\tTOTAL VERSIONS: %d%n", history.size());
-									pw.printf("\tROOT VERSION  : %s%n", formatVersion(history.getRootVersion()));
-									pw.printf("\tHEAD VERSION  : %s%n", formatVersion(history.getCurrentVersion()));
-									String fmt = String.format("\t\t%%s [%%0%dd]: %%s%n",
-										String.valueOf(history.size()).length());
-									int i = 0;
-									for (DctmVersion<IDfSysObject> v : history) {
-										pw.printf(fmt, v == history.getCurrentVersion() ? "*" : " ", ++i,
-											formatVersion(v));
-									}
-									pw.flush();
-									w.flush();
-									ok = true;
-									return w.toString();
-								} catch (DfException e) {
-									throw new HistoryException(id,
-										String.format("DFC reported an error while retrieving the history for [%s]: %s",
-											id, e.getMessage()),
-										e);
-								} catch (DctmException e) {
-									throw new HistoryException(id,
-										String.format("The history for [%s] is inconsistent: %s", id, e.getMessage()),
-										e);
-								} finally {
-									if (!ok) {
-										History.this.log
-											.error("An error was encountered while processing chronicle [{}]", id);
+								} else {
+									// Must be an ID...
+									chronicleId = new DfId(id);
+									try {
+										obj = session.getObject(chronicleId);
+									} catch (DfIdNotFoundException e) {
+										// It's not an object ID, so assume it's a chronicle
+										// ID...
 									}
 								}
+
+								if (IDfSysObject.class.isInstance(obj)) {
+									chronicleId = IDfSysObject.class.cast(obj).getChronicleId();
+								} else {
+									throw new HistoryException(id, String
+										.format("The given object for search spec [%s] is not a dm_sysobject", id));
+								}
+
+								History.this.log.info("Scanning history with ID [{}] (from search spec [{}])...",
+									chronicleId, id);
+								DctmVersionHistory<IDfSysObject> history = new DctmVersionHistory<>(session,
+									chronicleId);
+								History.this.log.info("History with ID [{}] scanned successfully!", chronicleId);
+
+								StringWriter w = new StringWriter();
+								PrintWriter pw = new PrintWriter(w);
+
+								pw.printf("HISTORY ID: [%s]%n", history.getChronicleId());
+								pw.printf("\tTOTAL VERSIONS: %d%n", history.size());
+								pw.printf("\tROOT VERSION  : %s%n", formatVersion(history.getRootVersion()));
+								pw.printf("\tHEAD VERSION  : %s%n", formatVersion(history.getCurrentVersion()));
+								String fmt = String.format("\t\t%%s [%%0%dd]: %%s%n",
+									String.valueOf(history.size()).length());
+								int i = 0;
+								for (DctmVersion<IDfSysObject> v : history) {
+									pw.printf(fmt, v == history.getCurrentVersion() ? "*" : " ", ++i, formatVersion(v));
+								}
+								pw.flush();
+								w.flush();
+								ok = true;
+								return w.toString();
+							} catch (DfException e) {
+								throw new HistoryException(id,
+									String.format("DFC reported an error while retrieving the history for [%s]: %s", id,
+										e.getMessage()),
+									e);
+							} catch (DctmException e) {
+								throw new HistoryException(id,
+									String.format("The history for [%s] is inconsistent: %s", id, e.getMessage()), e);
 							} finally {
-								try {
-									DfUtils.abortTransaction(session, tx);
-								} catch (DfException e) {
-									// Here we don't raise an exception since we don't want to blot
-									// out any that are already being raised...
-									History.this.log.error(
-										"DFC reported an error while rolling back the read-only transaction for chronicle [{}]",
-										id, e);
+								if (!ok) {
+									History.this.log.error("An error was encountered while processing chronicle [{}]",
+										id);
 								}
 							}
 						} finally {
-							pool.releaseSession(session);
+							try {
+								DfUtils.abortTransaction(session, tx);
+							} catch (DfException e) {
+								// Here we don't raise an exception since we don't want to blot
+								// out any that are already being raised...
+								History.this.log.error(
+									"DFC reported an error while rolling back the read-only transaction for chronicle [{}]",
+									id, e);
+							}
 						}
+					} finally {
+						pool.releaseSession(session);
 					}
 				}));
 			}
