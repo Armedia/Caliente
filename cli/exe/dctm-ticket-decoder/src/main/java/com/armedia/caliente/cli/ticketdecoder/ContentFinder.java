@@ -19,6 +19,7 @@ import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -88,7 +89,14 @@ public abstract class ContentFinder implements Callable<Collection<Content>> {
 	}
 
 	private String getObjectPath(IDfSession session, IDfSysObject document) throws DfException {
-		return null;
+		if (document.getHasFolder()) {
+			IDfId parentId = document.getFolderId(0);
+			IDfFolder parent = session.getFolderBySpecification(parentId.getId());
+			String path = (parent != null ? parent.getFolderPath(0) : String.format("<parent-%s-not-found>", parentId));
+			return String.format("%s/%s", path, document.getObjectName());
+		} else {
+			return String.format("(unfiled)/%s", document.getObjectName());
+		}
 	}
 
 	public String getExtension(IDfSession session, IDfId format) throws DfException {
