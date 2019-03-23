@@ -1,7 +1,6 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
@@ -92,8 +91,7 @@ public class DctmTicketDecoder {
 		m.marshal(record, w);
 	}
 
-	private XMLStreamWriter startResults(File target) throws XMLStreamException, FileNotFoundException {
-		OutputStream out = new FileOutputStream(target);
+	private XMLStreamWriter startXml(OutputStream out) throws XMLStreamException {
 		XMLOutputFactory factory = DctmTicketDecoder.OUTPUT_FACTORY.get();
 		XMLStreamWriter writer = factory.createXMLStreamWriter(out);
 		XMLStreamWriter xml = new IndentingXMLStreamWriter(writer) {
@@ -109,7 +107,7 @@ public class DctmTicketDecoder {
 		return xml;
 	}
 
-	private void endResults(XMLStreamWriter writer) throws XMLStreamException {
+	private void endXml(XMLStreamWriter writer) throws XMLStreamException {
 		writer.flush();
 		writer.writeEndDocument();
 		writer.close();
@@ -153,32 +151,35 @@ public class DctmTicketDecoder {
 
 			int ret = 0;
 			this.log.info("Retrieving data from the background workers...");
-			XMLStreamWriter writer = startResults(target);
 			Marshaller m = XmlTools.getMarshaller(null);
-			try {
-				for (Future<Collection<Content>> f : futures) {
-					try {
-						for (Content c : f.get()) {
-							formatResults(writer, m, c);
-						}
-					} catch (ExecutionException e) {
-						Throwable cause = e.getCause();
-						if (DctmTicketDecoderException.class.isInstance(cause)) {
-							DctmTicketDecoderException he = DctmTicketDecoderException.class.cast(cause);
-							if (debug) {
-								this.log.error(he.getMessage(), he.getCause());
-							} else {
-								this.log.error("{} (use --debug for more information)", he.getMessage());
+			try (OutputStream out = new FileOutputStream(target)) {
+				XMLStreamWriter writer = startXml(out);
+				try {
+					for (Future<Collection<Content>> f : futures) {
+						try {
+							for (Content c : f.get()) {
+								formatResults(writer, m, c);
 							}
-						} else {
-							this.log.error("An unexpected exception was raised while reading a chronicle", cause);
+						} catch (ExecutionException e) {
+							Throwable cause = e.getCause();
+							if (DctmTicketDecoderException.class.isInstance(cause)) {
+								DctmTicketDecoderException he = DctmTicketDecoderException.class.cast(cause);
+								if (debug) {
+									this.log.error(he.getMessage(), he.getCause());
+								} else {
+									this.log.error("{} (use --debug for more information)", he.getMessage());
+								}
+							} else {
+								this.log.error("An unexpected exception was raised while reading a chronicle", cause);
+							}
+							ret = 1;
 						}
-						ret = 1;
 					}
+					return ret;
+				} finally {
+					endXml(writer);
+					out.flush();
 				}
-				return ret;
-			} finally {
-				endResults(writer);
 			}
 		} finally {
 			pool.close();
