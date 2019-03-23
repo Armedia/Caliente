@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
@@ -276,7 +277,29 @@ public class OptionParser {
 		final char optionValueSplitter, Collection<String> args)
 		throws CommandLineSyntaxException, HelpRequestedException {
 
+		final CommandScheme commandScheme = CommandScheme.castAs(baseScheme);
+
 		if ((args == null) || args.isEmpty()) {
+			// Check for missing required command
+			if ((commandScheme != null) && commandScheme.isCommandRequired()) {
+				raiseExceptionWithHelp(false, helpOption, baseScheme, null,
+					new MissingRequiredCommandException(commandScheme));
+			}
+
+			// Check for missing required parameters
+			Collection<Option> missing = baseScheme.getOptions().stream().filter(Option::isRequired)
+				.collect(Collectors.toCollection(ArrayList::new));
+			if (!missing.isEmpty()) {
+				raiseExceptionWithHelp(false, helpOption, baseScheme, null,
+					new MissingRequiredOptionsException(baseScheme, missing, null, null));
+			}
+
+			// Check for missing minimum positionals
+			if (baseScheme.getMinArguments() > 0) {
+				raiseExceptionWithHelp(false, helpOption, baseScheme, null,
+					new InsufficientPositionalValuesException(baseScheme));
+			}
+
 			return new OptionParseResult(new OptionValues(), null, null, OptionParser.NO_POSITIONALS);
 		}
 
@@ -295,7 +318,6 @@ public class OptionParser {
 
 		final OptionValues baseValues = new OptionValues();
 		final List<Token> positionals = new ArrayList<>();
-		final CommandScheme commandScheme = CommandScheme.castAs(baseScheme);
 
 		final boolean extensible = (extensionSupport != null);
 
