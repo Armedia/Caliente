@@ -577,6 +577,7 @@
 		<module>cli/exe/history</module>
 		<module>cli/exe/user-mapper</module>
 		<module>cli/exe/validator</module>
+		<module>cli/exe/dctm-ticket-decoder</module>
 
 		<!-- Some general-use tools -->
 		<module>tools/common</module>
