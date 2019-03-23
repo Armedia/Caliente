@@ -12,6 +12,13 @@ public enum CLIParam implements Supplier<Option> {
 			.setDescription("Enable increased logging for debugging") //
 	), //
 
+	target(
+		new OptionImpl() //
+			.setArgumentLimits(1, 1) //
+			.setArgumentName("target-file") //
+			.setDescription("The file to which output will be written") //
+	), //
+
 	renditions(
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
