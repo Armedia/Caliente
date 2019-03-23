@@ -12,15 +12,6 @@ public enum CLIParam implements Supplier<Option> {
 			.setDescription("Enable increased logging for debugging") //
 	), //
 
-	from( //
-		new OptionImpl() //
-			.setRequired(true) //
-			.setArgumentLimits(1, -1) //
-			.setArgumentName("source-spec") //
-			.setDescription(
-				"The source specifications identifying which content to extract (%objectId, @fileref, /path, or a DQL predicate)") //
-	), //
-
 	rendition_filter(
 		new OptionImpl() //
 			.setArgumentLimits(1) //
