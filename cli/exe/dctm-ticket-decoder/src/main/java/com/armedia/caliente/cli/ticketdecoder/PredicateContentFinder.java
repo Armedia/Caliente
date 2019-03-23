@@ -13,9 +13,9 @@ import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 
-public class PredicateTicketDecoder extends TicketDecoder {
+public class PredicateContentFinder extends ContentFinder {
 
-	public PredicateTicketDecoder(DfcSessionPool pool, Set<String> scannedIds, String source) {
+	public PredicateContentFinder(DfcSessionPool pool, Set<String> scannedIds, String source) {
 		super(pool, scannedIds, source);
 	}
 

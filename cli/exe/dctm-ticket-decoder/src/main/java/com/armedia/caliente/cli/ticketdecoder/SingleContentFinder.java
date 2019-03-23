@@ -11,9 +11,9 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
 
-public class SingleTicketDecoder extends TicketDecoder {
+public class SingleContentFinder extends ContentFinder {
 
-	public SingleTicketDecoder(DfcSessionPool pool, Set<String> scannedIds, String source) {
+	public SingleContentFinder(DfcSessionPool pool, Set<String> scannedIds, String source) {
 		super(pool, scannedIds, source);
 	}
 

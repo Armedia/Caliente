@@ -36,10 +36,10 @@ public class DctmTicketDecoder {
 		this.threadHelper = threadHelper;
 	}
 
-	private TicketDecoder buildTicketDecoder(DfcSessionPool pool, Set<String> scannedIds, String source) {
-		if (source.startsWith("%")) { return new SingleTicketDecoder(pool, scannedIds, source); }
-		if (source.startsWith("/")) { return new PathTicketDecoder(pool, scannedIds, source); }
-		return new PredicateTicketDecoder(pool, scannedIds, source);
+	private ContentFinder buildTicketDecoder(DfcSessionPool pool, Set<String> scannedIds, String source) {
+		if (source.startsWith("%")) { return new SingleContentFinder(pool, scannedIds, source); }
+		if (source.startsWith("/")) { return new PathContentFinder(pool, scannedIds, source); }
+		return new PredicateContentFinder(pool, scannedIds, source);
 	}
 
 	private void formatResults(Content record) {
@@ -73,7 +73,7 @@ public class DctmTicketDecoder {
 			sourceStream //
 				.filter((source) -> submittedSources.add(source)) //
 				.forEach((source) -> {
-					TicketDecoder decoder = buildTicketDecoder(pool, scannedIds, source);
+					ContentFinder decoder = buildTicketDecoder(pool, scannedIds, source);
 					futures.add(executors.submit(decoder));
 				}) //
 			;

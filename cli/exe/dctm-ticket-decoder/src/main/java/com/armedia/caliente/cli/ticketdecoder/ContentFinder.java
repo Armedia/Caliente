@@ -29,7 +29,7 @@ import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 
-public abstract class TicketDecoder implements Callable<Collection<Content>> {
+public abstract class ContentFinder implements Callable<Collection<Content>> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -40,7 +40,7 @@ public abstract class TicketDecoder implements Callable<Collection<Content>> {
 	/**
 	 * @param pool
 	 */
-	public TicketDecoder(DfcSessionPool pool, Set<String> scannedIds, String source) {
+	public ContentFinder(DfcSessionPool pool, Set<String> scannedIds, String source) {
 		this.scannedIds = scannedIds;
 		this.pool = pool;
 		this.source = source;

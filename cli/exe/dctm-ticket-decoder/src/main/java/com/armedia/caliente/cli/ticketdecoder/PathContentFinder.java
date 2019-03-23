@@ -10,9 +10,9 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 
-public class PathTicketDecoder extends PredicateTicketDecoder {
+public class PathContentFinder extends PredicateContentFinder {
 
-	public PathTicketDecoder(DfcSessionPool pool, Set<String> scannedIds, String source) {
+	public PathContentFinder(DfcSessionPool pool, Set<String> scannedIds, String source) {
 		super(pool, scannedIds, source);
 	}
 
