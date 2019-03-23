@@ -90,8 +90,8 @@ public class DctmTicketDecoder {
 					f.get().forEach(this::formatResults);
 				} catch (ExecutionException e) {
 					Throwable cause = e.getCause();
-					if (DctmDicketDecoderException.class.isInstance(cause)) {
-						DctmDicketDecoderException he = DctmDicketDecoderException.class.cast(cause);
+					if (DctmTicketDecoderException.class.isInstance(cause)) {
+						DctmTicketDecoderException he = DctmTicketDecoderException.class.cast(cause);
 						if (debug) {
 							this.log.error(he.getMessage(), he.getCause());
 						} else {
