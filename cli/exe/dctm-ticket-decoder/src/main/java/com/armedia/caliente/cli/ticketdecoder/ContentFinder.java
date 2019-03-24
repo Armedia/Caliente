@@ -16,7 +16,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 
-public abstract class ContentFinder implements Callable<String> {
+public abstract class ContentFinder implements Callable<Void> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -36,7 +36,7 @@ public abstract class ContentFinder implements Callable<String> {
 	}
 
 	@Override
-	public final String call() throws Exception {
+	public final Void call() throws Exception {
 		final IDfSession session = this.pool.acquireSession();
 		final IDfLocalTransaction tx = DfUtils.openTransaction(session);
 		try {
@@ -46,7 +46,7 @@ public abstract class ContentFinder implements Callable<String> {
 				.filter((id) -> this.scannedIds.add(id.getId())) //
 				.forEach(this.consumer) //
 			;
-			return this.source;
+			return null;
 		} finally {
 			try {
 				// No matter what...roll back!

@@ -8,14 +8,8 @@ import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -134,7 +128,7 @@ public class DctmTicketDecoder {
 	}
 
 	protected int run(OptionValues cli, Collection<String> sources) throws Exception {
-		final boolean debug = cli.isPresent(CLIParam.debug);
+		// final boolean debug = cli.isPresent(CLIParam.debug);
 		final File target = Tools.canonicalize(new File(cli.getString(CLIParam.target)));
 		final String docbase = this.dfcLaunchHelper.getDfcDocbase(cli);
 		final String user = this.dfcLaunchHelper.getDfcUser(cli);
@@ -186,8 +180,6 @@ public class DctmTicketDecoder {
 				this.log.info("Starting the background searches...");
 				extractors.start(extractorLogic, Math.max(1, threads), "Extractor", true);
 				try {
-					final ExecutorService executors = Executors.newFixedThreadPool(4);
-
 					xmlThread = new Thread(() -> {
 						while (true) {
 							final Content c;
@@ -215,47 +207,30 @@ public class DctmTicketDecoder {
 					running.set(true);
 					xmlThread.start();
 
-					final List<Future<String>> futures = new LinkedList<>();
 					sourceStream //
 						.filter((source) -> submittedSources.add(source)) //
 						.forEach((source) -> {
-							ContentFinder finder = buildContentFinder(pool, scannedIds, source, (id) -> {
-								try {
-									this.log.debug("Submitting {}", id);
-									extractors.addWorkItem(id);
-									submittedCounter.incrementAndGet();
-								} catch (InterruptedException e) {
-									submitFailedCounter.incrementAndGet();
-									this.log.error("Failed to add ID [{}] to the work queue", id, e);
-								}
-							});
-							futures.add(executors.submit(finder));
+							try {
+								buildContentFinder(pool, scannedIds, source, (id) -> {
+									try {
+										this.log.debug("Submitting {}", id);
+										extractors.addWorkItem(id);
+										submittedCounter.incrementAndGet();
+									} catch (InterruptedException e) {
+										submitFailedCounter.incrementAndGet();
+										this.log.error("Failed to add ID [{}] to the work queue", id, e);
+									}
+								}).call();
+							} catch (Exception e) {
+								this.log.error("Failed to search for elements from the source [{}]", source, e);
+							}
 						}) //
 					;
-
-					this.log.info("Submitted {} history search{}...", submittedSources.size(),
-						submittedSources.size() > 1 ? "es" : "");
-					executors.shutdown();
-					for (Future<String> f : futures) {
-						try {
-							this.log.info("Finished searching from source [{}]", f.get());
-						} catch (ExecutionException e) {
-							Throwable cause = e.getCause();
-							if (DctmTicketDecoderException.class.isInstance(cause)) {
-								DctmTicketDecoderException he = DctmTicketDecoderException.class.cast(cause);
-								if (debug) {
-									this.log.error(he.getMessage(), he.getCause());
-								} else {
-									this.log.error("{} (use --debug for more information)", he.getMessage());
-								}
-							} else {
-								this.log.error("An unexpected exception was raised while reading a chronicle", cause);
-							}
-						}
-					}
+					this.log.info("Finished searching from {} source{}...", submittedSources.size(),
+						submittedSources.size() > 1 ? "s" : "");
 					this.log.info(
-						"Submitted a total of {} work items for extraction from ({} failed) {} source(s), waiting for generation to conclude...",
-						submittedCounter.get(), submitFailedCounter.get(), futures.size());
+						"Submitted a total of {} work items for extraction from ({} failed), waiting for generation to conclude...",
+						submittedCounter.get(), submitFailedCounter.get());
 				} finally {
 					extractors.waitForCompletion();
 					this.log.info("Object retrieval is complete, waiting for XML generation to finish...");
