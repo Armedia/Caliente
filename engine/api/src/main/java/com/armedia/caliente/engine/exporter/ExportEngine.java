@@ -660,7 +660,7 @@ public abstract class ExportEngine<//
 		final ExportEngineListener listener = listenerDelegator.getListenerProxy();
 		final ConcurrentMap<ExportTarget, ExportOperation> statusMap = new ConcurrentHashMap<>();
 
-		final PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget> logic = new PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget>() {
+		final PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget, Exception> logic = new PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget, Exception>() {
 
 			@Override
 			public SessionWrapper<SESSION> initialize() throws Exception {

@@ -26,7 +26,7 @@ import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 
-public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId> {
+public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exception> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 

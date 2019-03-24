@@ -244,7 +244,7 @@ public class DctmTicketDecoder {
 		int ret = 1;
 		try (Stream<String> sourceStream = sourceIterator.stream()) {
 			final PooledWorkers<IDfSession, IDfId> extractors = new PooledWorkers<>();
-			final PooledWorkersLogic<IDfSession, IDfId> extractorLogic = new ExtractorLogic(pool, (c) -> {
+			final PooledWorkersLogic<IDfSession, IDfId, Exception> extractorLogic = new ExtractorLogic(pool, (c) -> {
 				try {
 					this.log.debug("Queueing {}", c);
 					contents.put(c);
