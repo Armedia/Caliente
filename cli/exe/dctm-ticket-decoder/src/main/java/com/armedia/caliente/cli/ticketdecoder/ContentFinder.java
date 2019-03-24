@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -38,6 +39,7 @@ public abstract class ContentFinder implements Callable<Void> {
 	private final DfcSessionPool pool;
 	protected final String source;
 	private final Consumer<Content> consumer;
+	private Predicate<Rendition> renditionPredicate = null;
 
 	/**
 	 * @param pool
@@ -47,6 +49,15 @@ public abstract class ContentFinder implements Callable<Void> {
 		this.pool = pool;
 		this.source = source;
 		this.consumer = consumer;
+	}
+
+	public Predicate<Rendition> getRenditionPredicate() {
+		return this.renditionPredicate;
+	}
+
+	public ContentFinder setRenditionPredicate(Predicate<Rendition> renditionPredicate) {
+		this.renditionPredicate = renditionPredicate;
+		return this;
 	}
 
 	@Override
@@ -143,6 +154,7 @@ public abstract class ContentFinder implements Callable<Void> {
 
 			final String prefix = DfUtils.getDocbasePrefix(session);
 			final Collection<Rendition> renditions = new LinkedList<>();
+			final Predicate<Rendition> predicate = this.renditionPredicate;
 			while (results.next()) {
 				final IDfId contentId = results.getId("r_object_id");
 				final int idx = (index++);
@@ -163,14 +175,17 @@ public abstract class ContentFinder implements Callable<Void> {
 				}
 
 				final String pathPrefix = getFileStoreLocation(session, content);
-				renditions.add(new Rendition() //
+				final Rendition rendition = new Rendition() //
 					.setNumber(content.getRendition()) //
 					.setPage(content.getInt("page")) //
 					.setLength(content.getContentSize()) //
 					.setHash(content.getContentHash()) //
 					.setModifier(Tools.coalesce(content.getString("page_modifier"), "")) //
 					.setFormat(content.getString("full_format")) //
-					.setPath(String.format("%s/%s%s", pathPrefix.replace('\\', '/'), streamPath, extension)));
+					.setPath(String.format("%s/%s%s", pathPrefix.replace('\\', '/'), streamPath, extension));
+				if ((predicate != null) && predicate.test(rendition)) {
+					renditions.add(rendition);
+				}
 			}
 			return renditions;
 		} finally {

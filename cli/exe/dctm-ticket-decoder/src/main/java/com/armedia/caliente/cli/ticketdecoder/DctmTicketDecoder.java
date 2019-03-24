@@ -19,6 +19,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.xml.bind.JAXBException;
@@ -123,6 +124,10 @@ public class DctmTicketDecoder {
 		writer.close();
 	}
 
+	private Predicate<Rendition> compilePredicate(String expression) {
+		return null;
+	}
+
 	protected int run(OptionValues cli, Collection<String> sources) throws Exception {
 		final boolean debug = cli.isPresent(CLIParam.debug);
 		final File target = Tools.canonicalize(new File(cli.getString(CLIParam.target)));
@@ -130,6 +135,8 @@ public class DctmTicketDecoder {
 		final String user = this.dfcLaunchHelper.getDfcUser(cli);
 		final String password = this.dfcLaunchHelper.getDfcPassword(cli);
 		final int threads = this.threadHelper.getThreads(cli);
+
+		final Predicate<Rendition> renditionPredicate = compilePredicate(cli.getString(CLIParam.rendition_filter));
 
 		final CloseableIterator<String> sourceIterator = new LineScanner().iterator(sources);
 
@@ -188,6 +195,7 @@ public class DctmTicketDecoder {
 								this.log.error("Interrupted while trying to queue up a content object: {}", c, e);
 							}
 						});
+						decoder.setRenditionPredicate(renditionPredicate);
 						futures.add(executors.submit(decoder));
 					}) //
 				;
