@@ -72,6 +72,6 @@ public class Content {
 
 	@Override
 	public String toString() {
-		return String.format("RenditionInfo [id=%s, path=[%s], renditions=%s]", this.id, this.path, this.renditions);
+		return String.format("Content [id=%s, path=[%s], renditions=%s]", this.id, this.path, this.renditions);
 	}
 }
