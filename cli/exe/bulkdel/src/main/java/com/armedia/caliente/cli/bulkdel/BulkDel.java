@@ -167,7 +167,7 @@ public class BulkDel {
 				final IDfSession mainSession;
 				try {
 					mainSession = pool.acquireSession();
-				} catch (Exception e) {
+				} catch (DfException e) {
 					String msg = String.format("Failed to open a session to docbase [%s] as user [%s]", docbase, user);
 					if (debug) {
 						this.log.error(msg, e);

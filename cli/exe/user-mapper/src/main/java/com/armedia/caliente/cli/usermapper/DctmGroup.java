@@ -69,7 +69,7 @@ public class DctmGroup extends DctmPrincipal {
 		return new Callable<Map<String, DctmGroup>>() {
 
 			@Override
-			public Map<String, DctmGroup> call() throws Exception {
+			public Map<String, DctmGroup> call() throws DfException {
 				final IDfSession session = pool.acquireSession();
 				try {
 					IDfLocalTransaction tx = null;

@@ -105,7 +105,7 @@ public class History {
 					final IDfSession session;
 					try {
 						session = pool.acquireSession();
-					} catch (Exception e) {
+					} catch (DfException e) {
 						throw new HistoryException(id,
 							String.format("Failed to acquire a Documentum session to read the chronicle [%s]", id), e);
 					}

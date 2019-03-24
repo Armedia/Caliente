@@ -18,7 +18,7 @@ import com.documentum.operations.IDfOperationStep;
 
 public class DctmRecursiveDelete {
 
-	public void test() throws Exception {
+	public void test() throws DfException {
 		final DfcSessionPool pool = new DfcSessionPool("dctmvm01", "dctmadmin", "123");
 		final IDfSession session = pool.acquireSession();
 		try {

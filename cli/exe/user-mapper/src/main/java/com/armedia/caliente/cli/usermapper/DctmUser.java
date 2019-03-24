@@ -70,7 +70,7 @@ public class DctmUser extends DctmPrincipal {
 		return new Callable<Map<String, DctmUser>>() {
 
 			@Override
-			public Map<String, DctmUser> call() throws Exception {
+			public Map<String, DctmUser> call() throws DfException {
 				final IDfSession session = pool.acquireSession();
 				try {
 					IDfLocalTransaction tx = null;

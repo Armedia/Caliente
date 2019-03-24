@@ -44,7 +44,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 	}
 
 	@Override
-	public IDfSession initialize() throws Exception {
+	public IDfSession initialize() throws DfException {
 		return this.pool.acquireSession();
 	}
 

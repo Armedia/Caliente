@@ -36,7 +36,7 @@ public abstract class ContentFinder implements Callable<Void> {
 	}
 
 	@Override
-	public final Void call() throws Exception {
+	public final Void call() throws DfException {
 		final IDfSession session = this.pool.acquireSession();
 		final IDfLocalTransaction tx = DfUtils.openTransaction(session);
 		try {
