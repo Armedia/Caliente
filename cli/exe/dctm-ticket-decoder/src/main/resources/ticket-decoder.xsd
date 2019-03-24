@@ -39,6 +39,12 @@
 		</xsd:restriction>
 	</xsd:simpleType>
 
+	<xsd:complexType name="paths.t">
+		<xsd:sequence>
+			<xsd:element name="path" type="tns:trimmed_string.t" minOccurs="1" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+
 	<xsd:complexType name="rendition.t">
 		<xsd:simpleContent>
 			<xsd:extension base="xsd:string">
@@ -52,10 +58,16 @@
 		</xsd:simpleContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="renditions.t">
+		<xsd:sequence>
+			<xsd:element name="rendition" type="tns:rendition.t" minOccurs="1" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+
 	<xsd:complexType name="content.t">
 		<xsd:sequence>
-			<xsd:element name="path" type="tns:trimmed_string.t" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="renditions" type="tns:rendition.t" minOccurs="1" maxOccurs="unbounded" />
+			<xsd:element name="paths" type="tns:paths.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="renditions" type="tns:renditions.t" minOccurs="1" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
 
@@ -65,7 +77,6 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:element name="rendition" type="tns:rendition.t" />
-	<xsd:element name="content" type="tns:content.t" />
 	<xsd:element name="contents" type="tns:contents.t" />
+	<xsd:element name="content" type="tns:content.t" />
 </xsd:schema>

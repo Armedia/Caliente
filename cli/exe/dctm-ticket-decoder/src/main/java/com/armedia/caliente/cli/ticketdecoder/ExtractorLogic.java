@@ -1,7 +1,5 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -85,14 +83,28 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId> {
 
 	}
 
-	private String getObjectPath(IDfSession session, IDfSysObject document) throws DfException {
+	private void findObjectPaths(IDfSession session, IDfSysObject document, Consumer<String> target)
+		throws DfException {
+		String objectName = document.getObjectName();
+		if (StringUtils.isBlank(objectName)) {
+			objectName = String.format("(blank-object-name-%s)", document.getObjectId().getId());
+		}
 		if (document.getHasFolder()) {
-			IDfId parentId = document.getFolderId(0);
-			IDfFolder parent = session.getFolderBySpecification(parentId.getId());
-			String path = (parent != null ? parent.getFolderPath(0) : String.format("<parent-%s-not-found>", parentId));
-			return String.format("%s/%s", path, document.getObjectName());
+			final int pathCount = document.getFolderIdCount();
+			for (int i = 0; i < pathCount; i++) {
+				IDfId parentId = document.getFolderId(i);
+				IDfFolder parent = session.getFolderBySpecification(parentId.getId());
+				if (parent != null) {
+					final int parentPathCount = parent.getFolderPathCount();
+					for (int j = 0; j < parentPathCount; j++) {
+						target.accept(String.format("%s/%s", parent.getFolderPath(j), document.getObjectName()));
+					}
+				} else {
+					target.accept(String.format("<parent-%s-not-found>/%s", parentId, objectName));
+				}
+			}
 		} else {
-			return String.format("(unfiled)/%s", document.getObjectName());
+			target.accept(String.format("(unfiled)/%s", objectName));
 		}
 	}
 
@@ -119,7 +131,8 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId> {
 		}
 	}
 
-	private Collection<Rendition> getRenditions(IDfSession session, IDfSysObject document) throws DfException {
+	private void findRenditions(IDfSession session, IDfSysObject document, Consumer<Rendition> target)
+		throws DfException {
 		// Calculate both the path and the ticket location
 		final String dql = "" //
 			+ "select dcs.r_object_id " //
@@ -135,7 +148,6 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId> {
 		try {
 
 			final String prefix = DfUtils.getDocbasePrefix(session);
-			final Collection<Rendition> renditions = new LinkedList<>();
 			while (results.next()) {
 				final IDfId contentId = results.getId("r_object_id");
 				final int idx = (index++);
@@ -165,10 +177,9 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId> {
 					.setFormat(content.getString("full_format")) //
 					.setPath(String.format("%s/%s%s", pathPrefix.replace('\\', '/'), streamPath, extension));
 				if ((this.renditionPredicate == null) || this.renditionPredicate.test(rendition)) {
-					renditions.add(rendition);
+					target.accept(rendition);
 				}
 			}
-			return renditions;
 		} finally {
 			DfUtils.closeQuietly(results);
 		}
@@ -177,12 +188,11 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId> {
 	protected final Content getContent(IDfSession session, IDfId id) throws DfException {
 		IDfSysObject document = getSysObject(session, id);
 		if (document == null) { return null; }
-		String path = getObjectPath(session, document);
 		Content c = new Content() //
-			.setPath(path) //
 			.setId(id.getId()) //
 		;
-		c.getRenditions().addAll(getRenditions(session, document));
+		findObjectPaths(session, document, c.getPaths()::add);
+		findRenditions(session, document, c.getRenditions()::add);
 		return c;
 	}
 
