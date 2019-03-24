@@ -111,6 +111,21 @@ public abstract class ContentFinder implements Callable<Void> {
 		return f.getDOSExtension();
 	}
 
+	public String getFileStoreLocation(IDfSession session, IDfContent content) throws DfException {
+		try {
+			IDfPersistentObject obj = session.getObject(content.getStorageId());
+			String root = obj.getString("root");
+			if (!StringUtils.isBlank(root)) {
+				obj = session.getObjectByQualification(
+					String.format("dm_location where object_name = %s", DfUtils.quoteString(root)));
+				if ((obj != null) && obj.hasAttr("file_system_path")) { return obj.getString("file_system_path"); }
+			}
+			return String.format("(no-path-for-store-%s)", content.getStorageId());
+		} catch (DfIdNotFoundException e) {
+			return String.format("(store-%s-not-found)", content.getStorageId());
+		}
+	}
+
 	private Collection<Rendition> getRenditions(IDfSession session, IDfSysObject document) throws DfException {
 		// Calculate both the path and the ticket location
 		final String dql = "" //
@@ -139,7 +154,7 @@ public abstract class ContentFinder implements Callable<Void> {
 						contentId, id, e);
 					continue;
 				}
-				String relativePortion = DfUtils.decodeDataTicket(prefix, content.getDataTicket());
+				String streamPath = DfUtils.decodeDataTicket(prefix, content.getDataTicket(), '/');
 				String extension = getExtension(session, content.getFormatId());
 				if (StringUtils.isBlank(extension)) {
 					extension = StringUtils.EMPTY;
@@ -147,12 +162,13 @@ public abstract class ContentFinder implements Callable<Void> {
 					extension = String.format(".%s", extension);
 				}
 
+				final String pathPrefix = getFileStoreLocation(session, content);
 				renditions.add(new Rendition() //
 					.setNumber(content.getRendition()) //
 					.setPage(content.getInt("page")) //
 					.setModifier(Tools.coalesce(content.getString("page_modifier"), "")) //
 					.setFormat(content.getString("full_format")) //
-					.setPath(String.format("%s%s", relativePortion, extension)));
+					.setPath(String.format("%s/%s%s", pathPrefix.replace('\\', '/'), streamPath, extension)));
 			}
 			return renditions;
 		} finally {
