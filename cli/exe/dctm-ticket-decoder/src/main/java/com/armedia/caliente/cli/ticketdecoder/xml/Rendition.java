@@ -28,6 +28,12 @@ public class Rendition {
 	@XmlAttribute(name = "format", required = true)
 	protected String format;
 
+	@XmlAttribute(name = "length", required = true)
+	protected long length;
+
+	@XmlAttribute(name = "hash", required = false)
+	protected String hash;
+
 	@XmlValue
 	protected String path;
 
@@ -76,26 +82,47 @@ public class Rendition {
 		return this;
 	}
 
+	public long getLength() {
+		return this.length;
+	}
+
+	public Rendition setLength(long length) {
+		this.length = length;
+		return this;
+	}
+
+	public String getHash() {
+		return this.hash;
+	}
+
+	public Rendition setHash(String hash) {
+		this.hash = hash;
+		return this;
+	}
+
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.number, this.modifier, this.page, this.format, this.path);
+		return Tools.hashTool(this, null, this.number, this.modifier, this.page, this.format, this.length, this.hash,
+			this.path);
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		Rendition other = Rendition.class.cast(obj);
-		if (!Tools.equals(this.number, other.number)) { return false; }
+		if (this.number != other.number) { return false; }
+		if (this.page != other.page) { return false; }
+		if (this.length != other.length) { return false; }
 		if (!Tools.equals(this.modifier, other.modifier)) { return false; }
-		if (!Tools.equals(this.page, other.page)) { return false; }
 		if (!Tools.equals(this.format, other.format)) { return false; }
+		if (!Tools.equals(this.hash, other.hash)) { return false; }
 		if (!Tools.equals(this.path, other.path)) { return false; }
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("Rendition [number=%s, modifier=%s, page=%s, format=%s, path=[%s]]", this.number,
-			this.modifier, this.page, this.format, this.path);
+		return String.format("Rendition [number=%d, page=%d, length=%d, modifier=%s, format=%s, hash=%s, path=[%s]]",
+			this.number, this.page, this.length, this.modifier, this.format, this.length, this.hash, this.path);
 	}
 }

@@ -166,6 +166,8 @@ public abstract class ContentFinder implements Callable<Void> {
 				renditions.add(new Rendition() //
 					.setNumber(content.getRendition()) //
 					.setPage(content.getInt("page")) //
+					.setLength(content.getContentSize()) //
+					.setHash(content.getContentHash()) //
 					.setModifier(Tools.coalesce(content.getString("page_modifier"), "")) //
 					.setFormat(content.getString("full_format")) //
 					.setPath(String.format("%s/%s%s", pathPrefix.replace('\\', '/'), streamPath, extension)));
