@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -30,36 +30,39 @@ import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 
-public abstract class ContentFinder implements Callable<Collection<Content>> {
+public abstract class ContentFinder implements Callable<Void> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final Set<String> scannedIds;
 	private final DfcSessionPool pool;
 	protected final String source;
+	private final Consumer<Content> consumer;
 
 	/**
 	 * @param pool
 	 */
-	public ContentFinder(DfcSessionPool pool, Set<String> scannedIds, String source) {
+	public ContentFinder(DfcSessionPool pool, Set<String> scannedIds, String source, Consumer<Content> consumer) {
 		this.scannedIds = scannedIds;
 		this.pool = pool;
 		this.source = source;
+		this.consumer = consumer;
 	}
 
 	@Override
-	public final Collection<Content> call() throws Exception {
+	public final Void call() throws Exception {
 		final IDfSession session = this.pool.acquireSession();
 		final IDfLocalTransaction tx = DfUtils.openTransaction(session);
 		try {
-			return getIds(session) //
+			getIds(session) //
 				.filter(Objects::nonNull) //
 				.filter(IDfId::isObjectId) //
 				.filter((id) -> this.scannedIds.add(id.getId())) //
 				.map((id) -> getContent(session, id)) //
 				.filter(Objects::nonNull) //
-				.collect(Collectors.toCollection(LinkedList::new)) //
+				.forEach(this.consumer) //
 			;
+			return null;
 		} finally {
 			try {
 				// No matter what...roll back!
@@ -86,6 +89,7 @@ public abstract class ContentFinder implements Callable<Collection<Content>> {
 		if (!object.isInstanceOf("dm_sysobject")) { return null; }
 
 		return IDfSysObject.class.cast(object);
+
 	}
 
 	private String getObjectPath(IDfSession session, IDfSysObject document) throws DfException {
@@ -160,6 +164,7 @@ public abstract class ContentFinder implements Callable<Collection<Content>> {
 
 		try {
 			IDfSysObject document = getSysObject(session, id);
+			if (document == null) { return null; }
 			String path = getObjectPath(session, document);
 			Content c = new Content() //
 				.setPath(path) //

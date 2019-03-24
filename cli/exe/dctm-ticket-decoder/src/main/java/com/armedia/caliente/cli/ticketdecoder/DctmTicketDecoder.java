@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import javax.xml.bind.JAXBException;
@@ -80,15 +81,11 @@ public class DctmTicketDecoder {
 		this.threadHelper = threadHelper;
 	}
 
-	private ContentFinder buildTicketDecoder(DfcSessionPool pool, Set<String> scannedIds, String source) {
-		if (source.startsWith("%")) { return new SingleContentFinder(pool, scannedIds, source); }
-		if (source.startsWith("/")) { return new PathContentFinder(pool, scannedIds, source); }
-		return new PredicateContentFinder(pool, scannedIds, source);
-	}
-
-	private void formatResults(XMLStreamWriter w, Marshaller m, Content record) throws JAXBException {
-		this.log.info("{}", record);
-		m.marshal(record, w);
+	private ContentFinder buildTicketDecoder(DfcSessionPool pool, Set<String> scannedIds, String source,
+		Consumer<Content> consumer) {
+		if (source.startsWith("%")) { return new SingleContentFinder(pool, scannedIds, source, consumer); }
+		if (source.startsWith("/")) { return new PathContentFinder(pool, scannedIds, source, consumer); }
+		return new PredicateContentFinder(pool, scannedIds, source, consumer);
 	}
 
 	private XMLStreamWriter startXml(OutputStream out) throws XMLStreamException {
@@ -104,6 +101,7 @@ public class DctmTicketDecoder {
 		String rootElement = "contents";
 		xml.writeDTD(String.format("<!DOCTYPE %s>", rootElement));
 		xml.writeStartElement(rootElement);
+		writer.flush();
 		return xml;
 	}
 
@@ -134,32 +132,39 @@ public class DctmTicketDecoder {
 		final Set<String> scannedIds = new ReadWriteSet<>(new HashSet<>());
 
 		try (Stream<String> sourceStream = sourceIterator.stream()) {
-			final List<Future<Collection<Content>>> futures = new LinkedList<>();
+			final List<Future<Void>> futures = new LinkedList<>();
 			final ExecutorService executors = Executors.newFixedThreadPool(Math.max(1, threads));
 			final Set<String> submittedSources = new HashSet<>();
-			sourceStream //
-				.filter((source) -> submittedSources.add(source)) //
-				.forEach((source) -> {
-					ContentFinder decoder = buildTicketDecoder(pool, scannedIds, source);
-					futures.add(executors.submit(decoder));
-				}) //
-			;
-
-			this.log.info("Submitted {} history search{}...", submittedSources.size(),
-				submittedSources.size() > 1 ? "es" : "");
-			executors.shutdown();
 
 			int ret = 0;
 			this.log.info("Retrieving data from the background workers...");
-			Marshaller m = XmlTools.getMarshaller(null);
+			Marshaller marshaller = XmlTools.getMarshaller(null);
 			try (OutputStream out = new FileOutputStream(target)) {
-				XMLStreamWriter writer = startXml(out);
-				try {
-					for (Future<Collection<Content>> f : futures) {
-						try {
-							for (Content c : f.get()) {
-								formatResults(writer, m, c);
+				XMLStreamWriter xmlWriter = startXml(out);
+				sourceStream //
+					.filter((source) -> submittedSources.add(source)) //
+					.forEach((source) -> {
+						ContentFinder decoder = buildTicketDecoder(pool, scannedIds, source, (c) -> {
+							this.log.info("{}", c);
+							synchronized (xmlWriter) {
+								try {
+									marshaller.marshal(c, xmlWriter);
+								} catch (JAXBException e) {
+									this.log.error("Failed to marshal the content object {}", c, e);
+								}
 							}
+						});
+						futures.add(executors.submit(decoder));
+					}) //
+				;
+
+				this.log.info("Submitted {} history search{}...", submittedSources.size(),
+					submittedSources.size() > 1 ? "es" : "");
+				executors.shutdown();
+				try {
+					for (Future<Void> f : futures) {
+						try {
+							f.get();
 						} catch (ExecutionException e) {
 							Throwable cause = e.getCause();
 							if (DctmTicketDecoderException.class.isInstance(cause)) {
@@ -177,7 +182,7 @@ public class DctmTicketDecoder {
 					}
 					return ret;
 				} finally {
-					endXml(writer);
+					endXml(xmlWriter);
 					out.flush();
 				}
 			}

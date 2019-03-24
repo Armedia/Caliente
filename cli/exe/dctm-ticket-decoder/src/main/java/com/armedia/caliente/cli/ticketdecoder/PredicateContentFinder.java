@@ -1,8 +1,10 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.dfc.util.DctmCollectionStream;
 import com.armedia.commons.dfc.util.DfUtils;
@@ -15,8 +17,9 @@ import com.documentum.fc.common.IDfId;
 
 public class PredicateContentFinder extends ContentFinder {
 
-	public PredicateContentFinder(DfcSessionPool pool, Set<String> scannedIds, String source) {
-		super(pool, scannedIds, source);
+	public PredicateContentFinder(DfcSessionPool pool, Set<String> scannedIds, String source,
+		Consumer<Content> consumer) {
+		super(pool, scannedIds, source, consumer);
 	}
 
 	@Override
