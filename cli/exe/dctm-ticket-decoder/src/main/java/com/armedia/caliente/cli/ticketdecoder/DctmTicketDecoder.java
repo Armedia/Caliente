@@ -211,8 +211,9 @@ public class DctmTicketDecoder {
 		return p;
 	}
 
-	protected int run(OptionValues cli, Collection<String> sources) throws Exception {
+	protected int run(OptionValues cli) throws Exception {
 		// final boolean debug = cli.isPresent(CLIParam.debug);
+		final Collection<String> sources = cli.getStrings(CLIParam.from);
 		final File target = Tools.canonicalize(new File(cli.getString(CLIParam.target)));
 		final String docbase = this.dfcLaunchHelper.getDfcDocbase(cli);
 		final String user = this.dfcLaunchHelper.getDfcUser(cli);

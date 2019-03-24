@@ -21,6 +21,15 @@ public enum CLIParam implements Supplier<Option> {
 	),
 	//
 
+	from( //
+		new OptionImpl() //
+			.setRequired(true) //
+			.setArgumentLimits(1, -1) //
+			.setArgumentName("source-spec") //
+			.setDescription(
+				"The source specifications identifying which content to extract (%searchKey, @fileref, /path, or query string)") //
+	), //
+
 	rendition_filter(
 		new OptionImpl() //
 			.setArgumentLimits(1) //

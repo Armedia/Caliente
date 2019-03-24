@@ -40,7 +40,6 @@ public class Launcher extends AbstractLauncher {
 			.addFrom( //
 				Option.unwrap(CLIParam.values()) //
 			) //
-			.setMinArguments(1) //
 		;
 	}
 
@@ -58,6 +57,6 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		return new DctmTicketDecoder(this.dfcLaunchHelper, this.threadsLaunchHelper).run(baseValues, positionals);
+		return new DctmTicketDecoder(this.dfcLaunchHelper, this.threadsLaunchHelper).run(baseValues);
 	}
 }
