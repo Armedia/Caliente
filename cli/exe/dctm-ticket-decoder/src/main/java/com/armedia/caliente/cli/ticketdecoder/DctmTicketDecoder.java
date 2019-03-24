@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -41,6 +42,8 @@ import com.armedia.caliente.tools.dfc.DctmCrypto;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.CloseableIterator;
+import com.armedia.commons.utilities.PooledWorkers;
+import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
 import com.armedia.commons.utilities.concurrent.ReadWriteSet;
@@ -48,7 +51,9 @@ import com.armedia.commons.utilities.function.CheckedLazySupplier;
 import com.armedia.commons.utilities.line.LineScanner;
 import com.ctc.wstx.api.WstxOutputProperties;
 import com.ctc.wstx.stax.WstxOutputFactory;
+import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfId;
 
 import javanet.staxutils.IndentingXMLStreamWriter;
 
@@ -86,8 +91,8 @@ public class DctmTicketDecoder {
 		this.threadHelper = threadHelper;
 	}
 
-	private ContentFinder buildTicketDecoder(DfcSessionPool pool, Set<String> scannedIds, String source,
-		Consumer<Content> consumer) {
+	private ContentFinder buildContentFinder(DfcSessionPool pool, Set<String> scannedIds, String source,
+		Consumer<IDfId> consumer) {
 		if (source.startsWith("%")) { return new SingleContentFinder(pool, scannedIds, source, consumer); }
 		if (source.startsWith("/")) { return new PathContentFinder(pool, scannedIds, source, consumer); }
 		return new PredicateContentFinder(pool, scannedIds, source, consumer);
@@ -124,7 +129,7 @@ public class DctmTicketDecoder {
 		writer.close();
 	}
 
-	private Predicate<Rendition> compilePredicate(String expression) {
+	private <T> Predicate<T> compilePredicate(Class<T> klazz, String expression) {
 		return null;
 	}
 
@@ -136,7 +141,10 @@ public class DctmTicketDecoder {
 		final String password = this.dfcLaunchHelper.getDfcPassword(cli);
 		final int threads = this.threadHelper.getThreads(cli);
 
-		final Predicate<Rendition> renditionPredicate = compilePredicate(cli.getString(CLIParam.rendition_filter));
+		final Predicate<Content> contentPredicate = compilePredicate(Content.class,
+			cli.getString(CLIParam.content_filter));
+		final Predicate<Rendition> renditionPredicate = compilePredicate(Rendition.class,
+			cli.getString(CLIParam.rendition_filter));
 
 		final CloseableIterator<String> sourceIterator = new LineScanner().iterator(sources);
 
@@ -154,59 +162,83 @@ public class DctmTicketDecoder {
 
 		final Set<String> scannedIds = new ReadWriteSet<>(new HashSet<>());
 
+		int ret = 1;
 		try (Stream<String> sourceStream = sourceIterator.stream()) {
-			final List<Future<Void>> futures = new LinkedList<>();
-			final ExecutorService executors = Executors.newFixedThreadPool(Math.max(1, threads));
-			final Set<String> submittedSources = new HashSet<>();
+			final PooledWorkers<IDfSession, IDfId> extractors = new PooledWorkers<>();
+			final PooledWorkersLogic<IDfSession, IDfId> extractorLogic = new ExtractorLogic(pool, (c) -> {
+				try {
+					this.log.debug("Queueing {}", c);
+					contents.put(c);
+				} catch (InterruptedException e) {
+					this.log.error("Failed to queue Content object {}", c, e);
+				}
+			}, contentPredicate, renditionPredicate);
 
-			int ret = 0;
-			this.log.info("Retrieving data from the background workers...");
 			Marshaller marshaller = getMarshaller();
+			final AtomicLong submittedCounter = new AtomicLong(0);
+			final AtomicLong submitFailedCounter = new AtomicLong(0);
+			final AtomicLong renderedCounter = new AtomicLong(0);
+			final AtomicLong renderFailedCounter = new AtomicLong(0);
 			try (OutputStream out = new FileOutputStream(target)) {
 				XMLStreamWriter xmlWriter = startXml(out);
 
-				xmlThread = new Thread(() -> {
-					while (running.get()) {
-						final Content c;
-						try {
-							c = contents.take();
-						} catch (InterruptedException e) {
-							continue;
-						}
-						this.log.info("{}", c);
-						try {
-							marshaller.marshal(c, xmlWriter);
-						} catch (JAXBException e) {
-							this.log.error("Failed to marshal the content object {}", c, e);
-						}
-					}
-				});
-				xmlThread.setDaemon(true);
-				running.set(true);
-				xmlThread.start();
-
-				sourceStream //
-					.filter((source) -> submittedSources.add(source)) //
-					.forEach((source) -> {
-						ContentFinder decoder = buildTicketDecoder(pool, scannedIds, source, (c) -> {
-							try {
-								contents.put(c);
-							} catch (InterruptedException e) {
-								this.log.error("Interrupted while trying to queue up a content object: {}", c, e);
-							}
-						});
-						decoder.setRenditionPredicate(renditionPredicate);
-						futures.add(executors.submit(decoder));
-					}) //
-				;
-
-				this.log.info("Submitted {} history search{}...", submittedSources.size(),
-					submittedSources.size() > 1 ? "es" : "");
-				executors.shutdown();
+				final Set<String> submittedSources = new HashSet<>();
+				this.log.info("Starting the background searches...");
+				extractors.start(extractorLogic, Math.max(1, threads), "Extractor", true);
 				try {
-					for (Future<Void> f : futures) {
+					final ExecutorService executors = Executors.newFixedThreadPool(4);
+
+					xmlThread = new Thread(() -> {
+						while (true) {
+							final Content c;
+							try {
+								if (running.get()) {
+									c = contents.take();
+								} else {
+									c = contents.poll();
+								}
+								if (c == null) { return; }
+							} catch (InterruptedException e) {
+								continue;
+							}
+							this.log.info("{}", c);
+							try {
+								marshaller.marshal(c, xmlWriter);
+								renderedCounter.incrementAndGet();
+							} catch (JAXBException e) {
+								renderFailedCounter.incrementAndGet();
+								this.log.error("Failed to marshal the content object {}", c, e);
+							}
+						}
+					});
+					xmlThread.setDaemon(true);
+					running.set(true);
+					xmlThread.start();
+
+					final List<Future<String>> futures = new LinkedList<>();
+					sourceStream //
+						.filter((source) -> submittedSources.add(source)) //
+						.forEach((source) -> {
+							ContentFinder finder = buildContentFinder(pool, scannedIds, source, (id) -> {
+								try {
+									this.log.debug("Submitting {}", id);
+									extractors.addWorkItem(id);
+									submittedCounter.incrementAndGet();
+								} catch (InterruptedException e) {
+									submitFailedCounter.incrementAndGet();
+									this.log.error("Failed to add ID [{}] to the work queue", id, e);
+								}
+							});
+							futures.add(executors.submit(finder));
+						}) //
+					;
+
+					this.log.info("Submitted {} history search{}...", submittedSources.size(),
+						submittedSources.size() > 1 ? "es" : "");
+					executors.shutdown();
+					for (Future<String> f : futures) {
 						try {
-							f.get();
+							this.log.info("Finished searching from source [{}]", f.get());
 						} catch (ExecutionException e) {
 							Throwable cause = e.getCause();
 							if (DctmTicketDecoderException.class.isInstance(cause)) {
@@ -219,21 +251,29 @@ public class DctmTicketDecoder {
 							} else {
 								this.log.error("An unexpected exception was raised while reading a chronicle", cause);
 							}
-							ret = 1;
 						}
 					}
-					return ret;
+					this.log.info(
+						"Submitted a total of {} work items for extraction from ({} failed) {} source(s), waiting for generation to conclude...",
+						submittedCounter.get(), submitFailedCounter.get(), futures.size());
 				} finally {
+					extractors.waitForCompletion();
+					this.log.info("Object retrieval is complete, waiting for XML generation to finish...");
+					if (xmlThread != null) {
+						running.set(false);
+						xmlThread.interrupt();
+					}
+					xmlThread.join();
+					this.log.info("Generated a total of {} content elements ({} failed) from the {} submitted",
+						renderedCounter.get(), renderFailedCounter.get(), submittedCounter.get());
 					endXml(xmlWriter);
 					out.flush();
 				}
 			}
+			ret = 0;
 		} finally {
-			if (xmlThread != null) {
-				running.set(false);
-				xmlThread.interrupt();
-			}
 			pool.close();
 		}
+		return ret;
 	}
 }

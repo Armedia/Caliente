@@ -4,7 +4,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -14,7 +13,7 @@ import com.documentum.fc.common.IDfId;
 
 public class PathContentFinder extends PredicateContentFinder {
 
-	public PathContentFinder(DfcSessionPool pool, Set<String> scannedIds, String source, Consumer<Content> consumer) {
+	public PathContentFinder(DfcSessionPool pool, Set<String> scannedIds, String source, Consumer<IDfId> consumer) {
 		super(pool, scannedIds, source, consumer);
 	}
 

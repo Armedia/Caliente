@@ -12,12 +12,21 @@ public enum CLIParam implements Supplier<Option> {
 			.setDescription("Enable increased logging for debugging") //
 	), //
 
+	content_filter(
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("filter-expression") //
+			.setDescription(
+				"A JEXL 3 expression that will be boiled down to TRUE (non-0 number, non-null result, etc) or FALSE (null result, 0-number) which will be used to select which object(s) are included in the output. The following variables can be used in the script: id, path, renditions") //
+	),
+	//
+
 	rendition_filter(
 		new OptionImpl() //
 			.setArgumentLimits(1) //
 			.setArgumentName("filter-expression") //
 			.setDescription(
-				"A JEXL 3 expression that will be boiled down to TRUE (non-0 number, non-null result, etc) or FALSE (null result, 0-number) which will be used to select which rendition(s) are included in the analysis. The following variables can be used in the script: number, page, format, modifier") //
+				"A JEXL 3 expression that will be boiled down to TRUE (non-0 number, non-null result, etc) or FALSE (null result, 0-number) which will be used to select which rendition(s) are included in the output. The following variables can be used in the script: number, page, format, modifier") //
 	),
 	//
 

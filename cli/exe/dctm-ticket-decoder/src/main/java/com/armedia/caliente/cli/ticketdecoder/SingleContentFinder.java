@@ -6,7 +6,6 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -15,7 +14,7 @@ import com.documentum.fc.common.IDfId;
 
 public class SingleContentFinder extends ContentFinder {
 
-	public SingleContentFinder(DfcSessionPool pool, Set<String> scannedIds, String source, Consumer<Content> consumer) {
+	public SingleContentFinder(DfcSessionPool pool, Set<String> scannedIds, String source, Consumer<IDfId> consumer) {
 		super(pool, scannedIds, source, consumer);
 	}
 
