@@ -182,7 +182,7 @@ class BulkImportManagerTest {
 		// Find the XML file(s)
 		Unmarshaller u = XmlTools.getUnmarshaller(null, ScanIndex.class, ScanIndexItem.class,
 			ScanIndexItemVersion.class);
-		Marshaller m = XmlTools.getMarshaller(null, ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class);
+		Marshaller m = XmlTools.getMarshaller(ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class);
 		URL url = ResourceLoader.getResourceOrFile("classpath:/alfresco-bulk-import/scan.folders.xml");
 		File f = new File(url.toURI());
 		final Path root = f.getParentFile().getParentFile().toPath();

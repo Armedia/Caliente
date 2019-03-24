@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
+import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
@@ -108,6 +109,14 @@ public class DctmTicketDecoder {
 		return xml;
 	}
 
+	private Marshaller getMarshaller() throws JAXBException {
+		Marshaller m = XmlTools.getMarshaller(Content.class, Rendition.class);
+		m.setProperty(Marshaller.JAXB_ENCODING, Charset.defaultCharset().name());
+		m.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+		return m;
+	}
+
 	private void endXml(XMLStreamWriter writer) throws XMLStreamException {
 		writer.flush();
 		writer.writeEndDocument();
@@ -145,7 +154,7 @@ public class DctmTicketDecoder {
 
 			int ret = 0;
 			this.log.info("Retrieving data from the background workers...");
-			Marshaller marshaller = XmlTools.getMarshaller(null);
+			Marshaller marshaller = getMarshaller();
 			try (OutputStream out = new FileOutputStream(target)) {
 				XMLStreamWriter xmlWriter = startXml(out);
 
