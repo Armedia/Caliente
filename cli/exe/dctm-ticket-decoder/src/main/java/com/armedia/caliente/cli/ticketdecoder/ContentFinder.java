@@ -40,12 +40,15 @@ public abstract class ContentFinder implements Callable<Void> {
 		final IDfSession session = this.pool.acquireSession();
 		final IDfLocalTransaction tx = DfUtils.openTransaction(session);
 		try {
-			getIds(session) //
-				.filter(Objects::nonNull) //
-				.filter(IDfId::isObjectId) //
-				.filter((id) -> this.scannedIds.add(id.getId())) //
-				.forEach(this.consumer) //
-			;
+			Stream<IDfId> ids = getIds(session);
+			if (ids != null) {
+				ids //
+					.filter(Objects::nonNull) //
+					.filter(IDfId::isObjectId) //
+					.filter((id) -> this.scannedIds.add(id.getId())) //
+					.forEach(this.consumer) //
+				;
+			}
 			return null;
 		} finally {
 			try {

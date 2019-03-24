@@ -20,11 +20,11 @@ public class SingleContentFinder extends ContentFinder {
 
 	@Override
 	protected Stream<IDfId> getIds(IDfSession session) throws DfException {
-		if (StringUtils.isBlank(this.source)) { return Stream.empty(); }
-		if (!this.source.startsWith("%")) { return Stream.empty(); }
+		if (StringUtils.isBlank(this.source)) { return null; }
+		if (!this.source.startsWith("%")) { return null; }
 		IDfId id = new DfId(this.source.substring(1));
-		if (id.isNull()) { return Stream.empty(); }
-		if (!id.isObjectId()) { return Stream.empty(); }
+		if (id.isNull()) { return null; }
+		if (!id.isObjectId()) { return null; }
 		return Stream.of(id);
 	}
 

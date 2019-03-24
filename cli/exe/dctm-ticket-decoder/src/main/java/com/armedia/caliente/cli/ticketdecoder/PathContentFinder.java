@@ -21,7 +21,7 @@ public class PathContentFinder extends PredicateContentFinder {
 	protected Stream<IDfId> getIds(IDfSession session) throws DfException {
 		// Source is a path to either a folder or a document
 		IDfPersistentObject obj = session.getObjectByPath(this.source);
-		if (obj == null) { return Stream.empty(); }
+		if (obj == null) { return null; }
 
 		final IDfId id = obj.getObjectId();
 		if (!obj.isInstanceOf("dm_folder")) {
