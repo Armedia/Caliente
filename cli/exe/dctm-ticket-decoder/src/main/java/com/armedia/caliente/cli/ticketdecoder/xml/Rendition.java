@@ -7,6 +7,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -19,9 +21,6 @@ public class Rendition {
 	@XmlAttribute(name = "number", required = true)
 	protected long number;
 
-	@XmlAttribute(name = "modifier", required = true)
-	protected String modifier;
-
 	@XmlAttribute(name = "page", required = true)
 	protected long page;
 
@@ -30,6 +29,9 @@ public class Rendition {
 
 	@XmlAttribute(name = "length", required = true)
 	protected long length;
+
+	@XmlAttribute(name = "modifier", required = false)
+	protected String modifier;
 
 	@XmlAttribute(name = "hash", required = false)
 	protected String hash;
@@ -51,6 +53,9 @@ public class Rendition {
 	}
 
 	public Rendition setModifier(String modifier) {
+		if (StringUtils.isBlank(modifier)) {
+			modifier = null;
+		}
 		this.modifier = modifier;
 		return this;
 	}
@@ -96,6 +101,9 @@ public class Rendition {
 	}
 
 	public Rendition setHash(String hash) {
+		if (StringUtils.isBlank(hash)) {
+			hash = null;
+		}
 		this.hash = hash;
 		return this;
 	}
@@ -123,6 +131,6 @@ public class Rendition {
 	@Override
 	public String toString() {
 		return String.format("Rendition [number=%d, page=%d, length=%d, modifier=%s, format=%s, hash=%s, path=[%s]]",
-			this.number, this.page, this.length, this.modifier, this.format, this.length, this.hash, this.path);
+			this.number, this.page, this.length, this.modifier, this.format, this.hash, this.path);
 	}
 }

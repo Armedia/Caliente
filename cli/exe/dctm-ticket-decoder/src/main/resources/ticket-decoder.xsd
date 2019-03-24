@@ -45,9 +45,9 @@
 				<xsd:attribute name="number" type="tns:number.t" use="required" />
 				<xsd:attribute name="page" type="tns:number.t" use="required" />
 				<xsd:attribute name="length" type="tns:number.t" use="required" />
-				<xsd:attribute name="modifier" type="tns:trimmed_string.t" use="required" />
 				<xsd:attribute name="format" type="tns:trimmed_string.t" use="required" />
-				<xsd:attribute name="hash" type="tns:trimmed_string.t" use="required" />
+				<xsd:attribute name="modifier" type="tns:trimmed_string.t" use="optional" />
+				<xsd:attribute name="hash" type="tns:trimmed_string.t" use="optional" />
 			</xsd:extension>
 		</xsd:simpleContent>
 	</xsd:complexType>
