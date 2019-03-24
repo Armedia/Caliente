@@ -25,7 +25,7 @@ public class PredicateContentFinder extends ContentFinder {
 	}
 
 	protected Stream<IDfId> getIds(IDfSession session, String predicate) throws DfException {
-		String dqlQuery = String.format("select r_object_id %s", predicate);
+		String dqlQuery = String.format("select r_object_id from %s", predicate);
 		IDfCollection c = DfUtils.executeQuery(session, dqlQuery, IDfQuery.DF_EXECREAD_QUERY);
 		return DctmCollectionStream.get(c).map(this::extractObjectId);
 	}
