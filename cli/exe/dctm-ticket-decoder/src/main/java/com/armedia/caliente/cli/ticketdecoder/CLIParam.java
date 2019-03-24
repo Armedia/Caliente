@@ -17,7 +17,7 @@ public enum CLIParam implements Supplier<Option> {
 			.setArgumentLimits(1) //
 			.setArgumentName("filter-expression") //
 			.setDescription(
-				"A JEXL 3 expression that will be boiled down to TRUE (non-0 number, non-null result, etc) or FALSE (null result, 0-number) which will be used to select which object(s) are included in the output. The following variables can be used in the script: id, path, renditions") //
+				"A JEXL 3 expression that will be boiled down to TRUE (non-0 number, non-null result, etc) or FALSE (null result, 0-number) which will be used to select which object(s) are included in the output. The content object can be referenced as 'content'") //
 	),
 	//
 
@@ -26,7 +26,7 @@ public enum CLIParam implements Supplier<Option> {
 			.setArgumentLimits(1) //
 			.setArgumentName("filter-expression") //
 			.setDescription(
-				"A JEXL 3 expression that will be boiled down to TRUE (non-0 number, non-null result, etc) or FALSE (null result, 0-number) which will be used to select which rendition(s) are included in the output. The following variables can be used in the script: number, page, format, modifier") //
+				"A JEXL 3 expression that will be boiled down to TRUE (non-0 number, non-null result, etc) or FALSE (null result, 0-number) which will be used to select which rendition(s) are included in the output. The rendition object can be referenced as 'rendition'") //
 	),
 	//
 

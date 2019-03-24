@@ -5,6 +5,8 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashSet;
@@ -17,6 +19,13 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import javax.script.Bindings;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import javax.script.SimpleBindings;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.namespace.NamespaceContext;
@@ -24,6 +33,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +52,7 @@ import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
 import com.armedia.commons.utilities.concurrent.ReadWriteSet;
 import com.armedia.commons.utilities.function.CheckedLazySupplier;
+import com.armedia.commons.utilities.function.CheckedPredicate;
 import com.armedia.commons.utilities.line.LineScanner;
 import com.ctc.wstx.api.WstxOutputProperties;
 import com.ctc.wstx.stax.WstxOutputFactory;
@@ -52,6 +63,8 @@ import com.documentum.fc.common.IDfId;
 import javanet.staxutils.IndentingXMLStreamWriter;
 
 public class DctmTicketDecoder {
+
+	private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
 
 	private static final CheckedLazySupplier<XMLOutputFactory, XMLStreamException> OUTPUT_FACTORY = new CheckedLazySupplier<>(
 		() -> {
@@ -123,8 +136,79 @@ public class DctmTicketDecoder {
 		writer.close();
 	}
 
-	private <T> Predicate<T> compilePredicate(Class<T> klazz, String expression) {
-		return null;
+	private boolean isNaturalNumber(Number n) {
+		if (Byte.class.isInstance(n)) { return true; }
+		if (Short.class.isInstance(n)) { return true; }
+		if (Integer.class.isInstance(n)) { return true; }
+		if (Long.class.isInstance(n)) { return true; }
+		if (BigInteger.class.isInstance(n)) { return true; }
+		return false;
+	}
+
+	private boolean coerceBooleanResult(Object o) {
+		// If it's a null, then it's a false right away
+		if (o == null) { return false; }
+
+		// Is it a boolean? Sweet!
+		if (Boolean.class.isInstance(o)) { return Boolean.class.cast(o); }
+
+		// Is it a number? 0 == false, non-0 == true
+		if (Number.class.isInstance(o)) {
+			Number n = Number.class.cast(o);
+			if (isNaturalNumber(n)) {
+				if (BigInteger.class.isInstance(n)) {
+					return !BigInteger.class.cast(n).equals(BigInteger.ZERO);
+				} else {
+					return (n.longValue() == 0);
+				}
+			} else {
+				if (BigDecimal.class.isInstance(n)) {
+					return !BigDecimal.class.cast(n).equals(BigDecimal.ZERO);
+				} else {
+					double v = n.doubleValue();
+					return (Double.max(v, 0.0) != Double.min(v, 0.0));
+				}
+			}
+		}
+
+		// Neither a boolean nor a number...must be a string...
+		String str = Tools.toString(o);
+		if (StringUtils.equalsIgnoreCase(Boolean.FALSE.toString(), str)) { return false; }
+		if (StringUtils.equalsIgnoreCase(Boolean.TRUE.toString(), str)) { return true; }
+
+		// Not-null == true...
+		return true;
+	}
+
+	private <T> CheckedPredicate<T, ScriptException> compilePredicate(Class<T> klazz, final String expression)
+		throws ScriptException {
+		CheckedPredicate<T, ScriptException> p = klazz::isInstance;
+		if (expression != null) {
+			// Compile the script
+			ScriptEngine engine = DctmTicketDecoder.ENGINE_MANAGER.getEngineByName("jexl");
+			if (engine != null) {
+				CheckedPredicate<T, ScriptException> scriptPredicate = null;
+				final String varName = klazz.getSimpleName().toLowerCase();
+				if (Compilable.class.isInstance(engine)) {
+					// Compile, for speed
+					Compilable compiler = Compilable.class.cast(engine);
+					CompiledScript script = compiler.compile(expression);
+					scriptPredicate = (obj) -> {
+						final Bindings b = new SimpleBindings();
+						b.put(varName, obj);
+						return coerceBooleanResult(script.eval(b));
+					};
+				} else {
+					scriptPredicate = (obj) -> {
+						final Bindings b = new SimpleBindings();
+						b.put(varName, obj);
+						return coerceBooleanResult(engine.eval(expression, b));
+					};
+				}
+				p = p.and(scriptPredicate);
+			}
+		}
+		return p;
 	}
 
 	protected int run(OptionValues cli, Collection<String> sources) throws Exception {
