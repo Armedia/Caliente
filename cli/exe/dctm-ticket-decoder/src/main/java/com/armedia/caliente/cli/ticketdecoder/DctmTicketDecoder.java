@@ -145,7 +145,7 @@ public class DctmTicketDecoder {
 				}) //
 			;
 
-			this.log.info("Submitted {} history search%s...", submittedSources.size(),
+			this.log.info("Submitted {} history search{}...", submittedSources.size(),
 				submittedSources.size() > 1 ? "es" : "");
 			executors.shutdown();
 
