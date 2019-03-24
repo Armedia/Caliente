@@ -11,10 +11,13 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -129,6 +132,10 @@ public class DctmTicketDecoder {
 			return 1;
 		}
 
+		final BlockingQueue<Content> contents = new LinkedBlockingQueue<>();
+		final AtomicBoolean running = new AtomicBoolean(true);
+		Thread xmlThread = null;
+
 		final Set<String> scannedIds = new ReadWriteSet<>(new HashSet<>());
 
 		try (Stream<String> sourceStream = sourceIterator.stream()) {
@@ -141,17 +148,35 @@ public class DctmTicketDecoder {
 			Marshaller marshaller = XmlTools.getMarshaller(null);
 			try (OutputStream out = new FileOutputStream(target)) {
 				XMLStreamWriter xmlWriter = startXml(out);
+
+				xmlThread = new Thread(() -> {
+					while (running.get()) {
+						final Content c;
+						try {
+							c = contents.take();
+						} catch (InterruptedException e) {
+							continue;
+						}
+						this.log.info("{}", c);
+						try {
+							marshaller.marshal(c, xmlWriter);
+						} catch (JAXBException e) {
+							this.log.error("Failed to marshal the content object {}", c, e);
+						}
+					}
+				});
+				xmlThread.setDaemon(true);
+				running.set(true);
+				xmlThread.start();
+
 				sourceStream //
 					.filter((source) -> submittedSources.add(source)) //
 					.forEach((source) -> {
 						ContentFinder decoder = buildTicketDecoder(pool, scannedIds, source, (c) -> {
-							this.log.info("{}", c);
-							synchronized (xmlWriter) {
-								try {
-									marshaller.marshal(c, xmlWriter);
-								} catch (JAXBException e) {
-									this.log.error("Failed to marshal the content object {}", c, e);
-								}
+							try {
+								contents.put(c);
+							} catch (InterruptedException e) {
+								this.log.error("Interrupted while trying to queue up a content object: {}", c, e);
 							}
 						});
 						futures.add(executors.submit(decoder));
@@ -187,6 +212,10 @@ public class DctmTicketDecoder {
 				}
 			}
 		} finally {
+			if (xmlThread != null) {
+				running.set(false);
+				xmlThread.interrupt();
+			}
 			pool.close();
 		}
 	}
