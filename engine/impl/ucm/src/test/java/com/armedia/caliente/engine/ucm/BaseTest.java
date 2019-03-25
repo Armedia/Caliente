@@ -9,11 +9,12 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import com.armedia.caliente.engine.SessionWrapper;
-import com.armedia.caliente.engine.ucm.UcmSession.RequestPreparation;
 import com.armedia.caliente.engine.ucm.model.UcmAttributes;
+import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.function.CheckedConsumer;
 
 import oracle.stellent.ridc.model.DataBinder;
 import oracle.stellent.ridc.model.DataObject;
@@ -45,7 +46,8 @@ public class BaseTest {
 		return callService(service, null);
 	}
 
-	public ServiceResponse callService(String service, RequestPreparation prep) throws Exception {
+	public ServiceResponse callService(String service, CheckedConsumer<DataBinder, UcmServiceException> prep)
+		throws Exception {
 		final SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
 			ServiceResponse r = w.get().callService(service, prep);
@@ -151,7 +153,7 @@ public class BaseTest {
 	public void test() throws Exception {
 		final ExportEngine<?, ?, ?, ?, ?, ?> engine = UcmExportEngine.getExportEngine();
 		Logger output = LoggerFactory.getLogger("console");
-
+	
 		Map<String, String> settings = new TreeMap<>();
 		settings.put(UcmSessionSetting.ATOMPUB_URL.getLabel(),
 			"http://armedia-vm.rivera.prv/alfresco/api/-default-/public/cmis/versions/1.0/atom");
@@ -161,7 +163,7 @@ public class BaseTest {
 		// settings.put(CmisSetting.EXPORT_QUERY.getLabel(), "SELECT * FROM cmis:document");
 		settings.put(CmisSetting.EXPORT_PATH.getLabel(), "/Shared");
 		settings.put(CmisSetting.EXPORT_PAGE_SIZE.getLabel(), "5");
-
+	
 		CmfObjectStore<?> objectStore = CmfStores.getObjectStore("default");
 		objectStore.clearProperties();
 		objectStore.clearAllObjects();
