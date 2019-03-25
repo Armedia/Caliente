@@ -4,6 +4,7 @@ import java.io.File;
 
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 
+@FunctionalInterface
 public interface ContentPersistor extends AutoCloseable {
 
 	public default void initialize(File target) throws Exception {
