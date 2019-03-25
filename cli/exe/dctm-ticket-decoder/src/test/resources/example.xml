@@ -1,0 +1,712 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!DOCTYPE contents>
+<contents>
+  <content id="0900270f800752d4">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/req_engage_incl.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="6143">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/6d.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752d6">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/searchResults.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="5472">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/68.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075340">
+    <path>/Dctm Import/CMSMFTests/Specials/</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="2">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/d6</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752d9">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/fradcti_print.css</path>
+    <renditions>
+      <rendition number="0" page="0" format="css" length="1202">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/89.css</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075345">
+    <path>/Dctm Import/CMSMFTests/Documentum Export Clarification Document.docx</path>
+    <renditions>
+      <rendition number="0" page="0" format="msw12" length="24172">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/ac.docx</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075349">
+    <path>/Dctm Import/CMSMFTests/1605_RLL_Unblockables.htm</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="3163">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/af.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752dc">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/searchTips.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="5905">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/98.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007533a">
+    <path>/Dctm Import/CMSMFTests/Specials/case-insensitive-collision.bin</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="16">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/d0</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752d3">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/search.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="2444">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/5d.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007534c">
+    <path>/Dctm Import/CMSMFTests/Specials/Weird Characters in Title.bin</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="29">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/d8</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007535d">
+    <path>/Dctm Import/CMSMFTests/Blueprint_for_multiple_documentum_installations_within_same_environment_v0 1.docx</path>
+    <renditions>
+      <rendition number="0" page="0" format="msw12" length="3335498">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/c1.docx</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752da">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/index.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="5040">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/82.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752d1">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/faq.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="17393">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/55.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752dd">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/what_is_fradcti.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="5274">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/92.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752d2">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/req_engage_matrix.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="10533">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/5b.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752d8">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/askFRADCTI.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="2865">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/7c.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007532f">
+    <path>/Dctm Import/CMSMFTests/Specials/VDoc with renditions.bin</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="16">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/c8</rendition>
+      <rendition number="2" page="0" format="binary" length="32" modifier="alt2">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/ca</rendition>
+      <rendition number="2" page="0" format="binary" length="33" modifier="alt1">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/cb</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752d5">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/news.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="4029">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/64.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075341">
+    <path>/Dctm Import/CMSMFTests/Specials/</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="3">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/d5</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752db">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/how_to_use_site.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="4807">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/8d.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752e0">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/news_archive.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="12885">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/96.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007531a">
+    <path>/Dctm Import/CMSMFTests/Specials/Filename that ends with a dot.</path>
+    <renditions>
+      <rendition number="0" page="0" format="text" length="28">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/b1.txt</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075328">
+    <path>/Dctm Import/CMSMFTests/Specials/Document with multiple page 0's on the main rendition.txt</path>
+    <renditions>
+      <rendition number="0" page="0" format="text" length="57">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/bc.txt</rendition>
+      <rendition number="2" page="0" format="text" length="9" modifier="pagemod-1">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/c0.txt</rendition>
+      <rendition number="2" page="0" format="text" length="9" modifier="pagemod-2">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/bf.txt</rendition>
+      <rendition number="2" page="0" format="text" length="9" modifier="pagemod-4">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/bd.txt</rendition>
+      <rendition number="2" page="0" format="text" length="9" modifier="pagemod-3">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/be.txt</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752d7">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/fradcti.css</path>
+    <renditions>
+      <rendition number="0" page="0" format="css" length="5705">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/71.css</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075343">
+    <path>/Dctm Import/CMSMFTests/Specials/SimpleVersions/viewone_pro_details.pdf</path>
+    <renditions>
+      <rendition number="0" page="0" format="pdf" length="193041">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/ab.pdf</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007533f">
+    <path>/Dctm Import/CMSMFTests/Specials/</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="1">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/d3</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075339">
+    <path>/Dctm Import/CMSMFTests/Specials/CASE-INSENSITIVE-COLLISION.BIN</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="16">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/cc</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075318">
+    <path>/Dctm Import/CMSMFTests/Specials/File With Weird Characters / \ &lt; > : ? | *.txt</path>
+    <renditions>
+      <rendition number="0" page="0" format="text" length="28">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/9b.txt</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800753a1">
+    <path>/Dctm Import/CMSMFTests/Specials/Broken History.txt</path>
+    <renditions>
+      <rendition number="0" page="0" format="text" length="28">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/f1.txt</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075326">
+    <path>/Dctm Import/CMSMFTests/Specials/Document with multipage renditions.txt</path>
+    <renditions>
+      <rendition number="0" page="0" format="text" length="93">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/b8.txt</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007532c">
+    <path>/Dctm Import/CMSMFTests/Specials/Colliding-file-with-filename-at-exactly-255-7e4c7218-598c-4901-8008-f71fbf7270874bdc297a-3070-49a8-9361-57acd08344f230bc27dc-9d46-4cb2-8f30-0e58d1d9c0be72cc988e-234d-4f43-8cfc-fd7feaef3eac535435d3-e55a-4024-b3f3-5065648e006ab0de7b20-5fdb-4ee2-b42b-6ff.txt</path>
+    <renditions>
+      <rendition number="0" page="0" format="text" length="16">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/c5.txt</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007532e">
+    <path>/Dctm Import/CMSMFTests/Specials/Colliding-file-with-filename-at-exactly-255-7e4c7218-598c-4901-8008-f71fbf7270874bdc297a-3070-49a8-9361-57acd08344f230bc27dc-9d46-4cb2-8f30-0e58d1d9c0be72cc988e-234d-4f43-8cfc-fd7feaef3eac535435d3-e55a-4024-b3f3-5065648e006ab0de7b20-5fdb-4ee2-b42b-6ff.txt</path>
+    <renditions>
+      <rendition number="0" page="0" format="text" length="16">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/c7.txt</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075383">
+    <path>/Dctm Import/CMSMFTests/Specials/file-that-changes-name-10.txt</path>
+    <renditions>
+      <rendition number="0" page="0" format="text" length="29">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/e1.txt</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075338">
+    <path>/Dctm Import/CMSMFTests/Specials/CaSe-InSeNsItIvE-CoLlIsIoN.bin</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="16">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/cf</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800753af">
+    <path>/Dctm Import/CMSMFTests/Specials/VDoc with root streams.bin</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="16384">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/f9</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800753bf">
+    <path>/Dctm Import/CMSMFTests/Specials/VDoc that changes name #09.bin</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="30">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/ce/01</rendition>
+    </renditions>
+  </content>
+  <content id="0800270f80075260">
+    <path>/Dctm Import/CMSMFTests/Specials/SysObject Child Test.bin</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="24">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cc/f6</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752b1">
+    <path>/Dctm Import/CMSMFTests/ACCESS/BROWSABLE/readable.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/2c.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752bb">
+    <path>/Dctm Import/CMSMFTests/ACCESS/SPECIAL/ligeroTest2.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="1269">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/42.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075299">
+    <path>/Dctm Import/CMSMFTests/FILES/file1.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="1269">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/1f.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752ba">
+    <path>/Dctm Import/CMSMFTests/ACCESS/SPECIAL/ligeroTest.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/39.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075298">
+    <path>/Dctm Import/CMSMFTests/FILES/file3.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/1c.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075297">
+    <path>/Dctm Import/CMSMFTests/FILES/file2.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/16.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752b4">
+    <path>/Dctm Import/CMSMFTests/ACCESS/BROWSABLE/none.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="1269">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/2f.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752b5">
+    <path>/Dctm Import/CMSMFTests/ACCESS/BROWSABLE/browsable.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/34.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007529a">
+    <path>/Dctm Import/CMSMFTests/FILES/file4.txt</path>
+    <renditions>
+      <rendition number="0" page="0" format="text" length="15308">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/19.txt</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752b2">
+    <path>/Dctm Import/CMSMFTests/ACCESS/NONE/none.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="1269">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/2b.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752b3">
+    <path>/Dctm Import/CMSMFTests/ACCESS/NONE/browsable.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/2e.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752b0">
+    <path>/Dctm Import/CMSMFTests/ACCESS/NONE/readable.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/33.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007529b">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/GOOD/exec.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="440">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/17.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007529d">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/GOOD/declare_set_subst_destroy.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="3789">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/21.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007529c">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/GOOD/macro_options.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="173">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/1a.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752a0">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/include-bad-1.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="14">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/20.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752b7">
+    <path>/Dctm Import/CMSMFTests/ACCESS/READABLE/none.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="1269">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/37.png</rendition>
+    </renditions>
+  </content>
+  <content id="0800270f80075261">
+    <path>/Dctm Import/CMSMFTests/Specials/SysObject Grandchild Test.bin</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="29">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cc/f4</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752b6">
+    <path>/Dctm Import/CMSMFTests/ACCESS/READABLE/readable.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/32.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007529e">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/GOOD/include.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="1028">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/1d.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752b9">
+    <path>/Dctm Import/CMSMFTests/ACCESS/READABLE/browsable.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/3f.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007529f">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/GOOD/repeat.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="1393">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/25.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752a5">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/repeat-bad-3.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="106">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/28.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752a2">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/include-bad-3.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="60">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/26.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752a1">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/include-bad-2.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="26">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/23.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752a4">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/include-bad-4.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="46">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/2a.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752a3">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/repeat-bad-1.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="26">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/31.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752a7">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/repeat-bad-4.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="64">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/2d.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752a6">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/repeat-bad-2.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="41">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/35.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752a9">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/subst-bad-3.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="143">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/4c.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752ae">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/subst-bad-4.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="87">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/6b.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752ab">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/include-bad-5.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="56">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/5a.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752aa">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/subst-bad-1.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="12">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/3a.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752ad">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/include-bad-7.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="119">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/63.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752ac">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/include-bad-6.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="200">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/53.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752af">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/repeat-bad-5.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="137">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/5c.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752a8">
+    <path>/Dctm Import/CMSMFTests/POSTPROC/BAD/subst-bad-2.html</path>
+    <renditions>
+      <rendition number="0" page="0" format="html" length="71">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/43.htm</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752eb">
+    <path>/Dctm Import/CMSMFTests/Specials/SimpleVersions/Lorem Ipsum.docx</path>
+    <renditions>
+      <rendition number="0" page="0" format="msw12" length="91477">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/78.docx</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752ed">
+    <path>/Dctm Import/CMSMFTests/Specials/SimpleVersions/Lorem Ipsum3.doc</path>
+    <renditions>
+      <rendition number="0" page="0" format="msw8" length="122368">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/85.doc</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752e1">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/images/FLASH4.swf</path>
+    <renditions>
+      <rendition number="0" page="0" format="swf" length="9920">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/65.swf</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007533e">
+    <path>/Dctm Import/CMSMFTests/Specials/Economic Effects..Measures of Effectiveness/Economic Effects..Measures of Effectiveness</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="16">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/b5</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752df">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/acronym/acronym.css</path>
+    <renditions>
+      <rendition number="0" page="0" format="css" length="299">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/5e.css</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752de">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/images/FLASH3.swf</path>
+    <renditions>
+      <rendition number="0" page="0" format="swf" length="9527">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/60.swf</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752f7">
+    <path>/Dctm Import/CMSMFTests/Specials/SimpleVersions/Empty.docx</path>
+    <renditions>
+      <rendition number="0" page="0" format="msw12" length="13684">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/77.docx</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752ef">
+    <path>/Dctm Import/CMSMFTests/Specials/SimpleVersions/viewone_pro.pdf</path>
+    <renditions>
+      <rendition number="0" page="0" format="pdf" length="193041">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/8a.pdf</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007533d">
+    <path>/Dctm Import/CMSMFTests/Specials/Stuff/viewone_pro_details #2.pdf</path>
+    <renditions>
+      <rendition number="0" page="0" format="pdf" length="193041">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/b6.pdf</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007533b">
+    <path>/Dctm Import/CMSMFTests/Specials/Folder With Weird Characters \ &lt; > : ? | */test.pdf</path>
+    <renditions>
+      <rendition number="0" page="0" format="pdf" length="193041">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/b3.pdf</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075313">
+    <path>/Dctm Import/CMSMFTests/Specials/SimpleVersions/Lorem Ipsum.doc</path>
+    <renditions>
+      <rendition number="0" page="0" format="msw8" length="121344">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/8f.doc</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752c8">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/READ_BROWSE/primary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/4f.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752c7">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/READ_BROWSE/secondary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/47.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752bc">
+    <path>/Dctm Import/CMSMFTests/LANDING/CONTENT/BOTH/primary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/44.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f80075321">
+    <path>/Dctm Import/CMSMFTests/Specials/SimpleVersions/Lorem Ipsum2.doc</path>
+    <renditions>
+      <rendition number="0" page="0" format="msw8" length="121856">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/a2.doc</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752b8">
+    <path>/Dctm Import/CMSMFTests/LANDING/CONTENT/BOTH/secondary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/38.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752c0">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/NONE_NONE/primary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/41.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752c3">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/READ_READ/primary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/46.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752bf">
+    <path>/Dctm Import/CMSMFTests/LANDING/CONTENT/ONLY_PRIMARY/primary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/3d.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007531f">
+    <path>/Dctm Import/CMSMFTests/Armedia Custom Typed Folder/Armedia Custom Typed Document.bin</path>
+    <renditions>
+      <rendition number="0" page="0" format="binary" length="16384">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/a7</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752be">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/NONE_NONE/secondary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/3e.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752c6">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/READ_READ/secondary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/4b.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752c2">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/NONE_BROWSE/primary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/48.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752c5">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/BROWSE_READ/primary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/50.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752c1">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/NONE_BROWSE/secondary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/40.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752c4">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/BROWSE_READ/secondary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/49.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752cb">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/BROWSE_NONE/secondary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/4d.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752d0">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/READ_NONE/primary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/51.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752ce">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/BROWSE_BROWSE/primary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/52.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752cd">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/BROWSE_BROWSE/secondary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/58.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752cc">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/BROWSE_NONE/primary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/56.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752bd">
+    <path>/Dctm Import/CMSMFTests/LANDING/CONTENT/ONLY_SECONDARY/secondary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/3b.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752ca">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/NONE_READ/secondary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/57.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752e3">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/archive/RAD/fradcti_rad.css</path>
+    <renditions>
+      <rendition number="0" page="0" format="css" length="2928">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/5f.css</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752cf">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/READ_NONE/secondary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5127">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/59.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752c9">
+    <path>/Dctm Import/CMSMFTests/LANDING/ACCESS/NONE_READ/primary.png</path>
+    <renditions>
+      <rendition number="0" page="0" format="png" length="5400">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/4e.png</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752e4">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/archive/RAD/images/FLASH4.swf</path>
+    <renditions>
+      <rendition number="0" page="0" format="swf" length="9920">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/61.swf</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752e5">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/archive/Images/FLASH2b.swf</path>
+    <renditions>
+      <rendition number="0" page="0" format="swf" length="18184">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/66.swf</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752e6">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/archive/Images/FLASH1b.swf</path>
+    <renditions>
+      <rendition number="0" page="0" format="swf" length="11575">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/6a.swf</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752e9">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/archive/Basic/fradcti_basic.css</path>
+    <renditions>
+      <rendition number="0" page="0" format="css" length="2927">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/6e.css</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752e2">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/archive/Images/FLASH3.swf</path>
+    <renditions>
+      <rendition number="0" page="0" format="swf" length="9527">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/62.swf</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f8007533c">
+    <path>/Dctm Import/CMSMFTests/Specials/Folder With Weird Characters \ &lt; > : ? | */SubFolder/test.pdf</path>
+    <renditions>
+      <rendition number="0" page="0" format="pdf" length="193041">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/b4.pdf</rendition>
+    </renditions>
+  </content>
+  <content id="0900270f800752e8">
+    <path>/Dctm Import/CMSMFTests/FRADCTI/archive/Basic/images/FLASH4.swf</path>
+    <renditions>
+      <rendition number="0" page="0" format="swf" length="9920">/opt/dctm/documentum/data/dctmvm01/content_storage_01/0000270f/80/05/cd/67.swf</rendition>
+    </renditions>
+  </content>
+</contents>
