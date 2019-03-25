@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.cli.filter.EnumValueFilter;
 import com.armedia.commons.utilities.Tools;
 
 public final class OptionValues implements Iterable<OptionValue>, Cloneable {
@@ -340,6 +341,12 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		}
 		String value = getString(param);
 		if (value == null) { return null; }
+		OptionValueFilter filter = param.getValueFilter();
+		if (EnumValueFilter.class.isInstance(filter)) {
+			EnumValueFilter<?> enumFilter = EnumValueFilter.class.cast(filter);
+			Object o = enumFilter.decode(value);
+			if (o != null) { return enumClass.cast(o); }
+		}
 		try {
 			return Enum.valueOf(enumClass, value);
 		} catch (final IllegalArgumentException e) {
