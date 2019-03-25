@@ -1,13 +1,8 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,12 +21,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.namespace.NamespaceContext;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -43,50 +32,21 @@ import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
-import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.XmlTools;
 import com.armedia.commons.utilities.concurrent.ReadWriteSet;
-import com.armedia.commons.utilities.function.CheckedLazySupplier;
 import com.armedia.commons.utilities.function.CheckedPredicate;
 import com.armedia.commons.utilities.line.LineScanner;
-import com.ctc.wstx.api.WstxOutputProperties;
-import com.ctc.wstx.stax.WstxOutputFactory;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 
-import javanet.staxutils.IndentingXMLStreamWriter;
-
 public class DctmTicketDecoder {
 
 	private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
-
-	private static final CheckedLazySupplier<XMLOutputFactory, XMLStreamException> OUTPUT_FACTORY = new CheckedLazySupplier<>(
-		() -> {
-			WstxOutputFactory factory = new WstxOutputFactory();
-			try {
-				// This is only supported after 5.0
-				Field f = WstxOutputProperties.class.getDeclaredField("P_USE_DOUBLE_QUOTES_IN_XML_DECL");
-				if (Modifier.isStatic(f.getModifiers()) && String.class.isAssignableFrom(f.getType())) {
-					Object v = f.get(null);
-					if (v != null) {
-						factory.setProperty(v.toString(), true);
-					}
-				}
-			} catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException e) {
-				// It's ok...we're using an older version, so we simply won't have double quotes on
-				// the XML declaration
-			}
-			factory.setProperty(WstxOutputProperties.P_OUTPUT_VALIDATE_NAMES, true);
-			factory.setProperty(WstxOutputProperties.P_ADD_SPACE_AFTER_EMPTY_ELEM, true);
-			factory.setProperty(WstxOutputProperties.P_OUTPUT_VALIDATE_ATTR, true);
-			return factory;
-		});
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -103,37 +63,6 @@ public class DctmTicketDecoder {
 		if (source.startsWith("%")) { return new SingleContentFinder(pool, scannedIds, source, consumer); }
 		if (source.startsWith("/")) { return new PathContentFinder(pool, scannedIds, source, consumer); }
 		return new PredicateContentFinder(pool, scannedIds, source, consumer);
-	}
-
-	private XMLStreamWriter startXml(OutputStream out) throws XMLStreamException {
-		XMLOutputFactory factory = DctmTicketDecoder.OUTPUT_FACTORY.get();
-		XMLStreamWriter writer = factory.createXMLStreamWriter(out);
-		XMLStreamWriter xml = new IndentingXMLStreamWriter(writer) {
-			@Override
-			public NamespaceContext getNamespaceContext() {
-				return XmlProperties.NO_NAMESPACES;
-			}
-		};
-		xml.writeStartDocument(Charset.defaultCharset().name(), "1.1");
-		String rootElement = "contents";
-		xml.writeDTD(String.format("<!DOCTYPE %s>", rootElement));
-		xml.writeStartElement(rootElement);
-		writer.flush();
-		return xml;
-	}
-
-	private Marshaller getMarshaller() throws JAXBException {
-		Marshaller m = XmlTools.getMarshaller(Content.class, Rendition.class);
-		m.setProperty(Marshaller.JAXB_ENCODING, Charset.defaultCharset().name());
-		m.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
-		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		return m;
-	}
-
-	private void endXml(XMLStreamWriter writer) throws XMLStreamException {
-		writer.flush();
-		writer.writeEndDocument();
-		writer.close();
 	}
 
 	private boolean isNaturalNumber(Number n) {
@@ -237,7 +166,7 @@ public class DctmTicketDecoder {
 
 		final BlockingQueue<Content> contents = new LinkedBlockingQueue<>();
 		final AtomicBoolean running = new AtomicBoolean(true);
-		Thread xmlThread = null;
+		Thread persistenceThread = null;
 
 		final Set<String> scannedIds = new ReadWriteSet<>(new HashSet<>());
 
@@ -253,19 +182,19 @@ public class DctmTicketDecoder {
 				}
 			}, contentPredicate, renditionPredicate);
 
-			Marshaller marshaller = getMarshaller();
+			;
 			final AtomicLong submittedCounter = new AtomicLong(0);
 			final AtomicLong submitFailedCounter = new AtomicLong(0);
 			final AtomicLong renderedCounter = new AtomicLong(0);
 			final AtomicLong renderFailedCounter = new AtomicLong(0);
-			try (OutputStream out = new FileOutputStream(target)) {
-				XMLStreamWriter xmlWriter = startXml(out);
+			try (ContentPersistor persistor = new XmlContentPersistor()) {
+				persistor.initialize(target);
 
 				final Set<String> submittedSources = new HashSet<>();
 				this.log.info("Starting the background searches...");
 				extractors.start(extractorLogic, Math.max(1, threads), "Extractor", true);
 				try {
-					xmlThread = new Thread(() -> {
+					persistenceThread = new Thread(() -> {
 						while (true) {
 							final Content c;
 							try {
@@ -280,17 +209,17 @@ public class DctmTicketDecoder {
 							}
 							this.log.info("{}", c);
 							try {
-								marshaller.marshal(c, xmlWriter);
+								persistor.persist(c);
 								renderedCounter.incrementAndGet();
-							} catch (JAXBException e) {
+							} catch (Exception e) {
 								renderFailedCounter.incrementAndGet();
 								this.log.error("Failed to marshal the content object {}", c, e);
 							}
 						}
 					});
-					xmlThread.setDaemon(true);
+					persistenceThread.setDaemon(true);
 					running.set(true);
-					xmlThread.start();
+					persistenceThread.start();
 
 					sourceStream //
 						.filter((source) -> submittedSources.add(source)) //
@@ -319,15 +248,13 @@ public class DctmTicketDecoder {
 				} finally {
 					extractors.waitForCompletion();
 					this.log.info("Object retrieval is complete, waiting for XML generation to finish...");
-					if (xmlThread != null) {
+					if (persistenceThread != null) {
 						running.set(false);
-						xmlThread.interrupt();
+						persistenceThread.interrupt();
 					}
-					xmlThread.join();
+					persistenceThread.join();
 					this.log.info("Generated a total of {} content elements ({} failed) from the {} submitted",
 						renderedCounter.get(), renderFailedCounter.get(), submittedCounter.get());
-					endXml(xmlWriter);
-					out.flush();
 				}
 			}
 			ret = 0;
