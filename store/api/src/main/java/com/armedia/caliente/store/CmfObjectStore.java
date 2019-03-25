@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.store.tools.CollectionObjectHandler;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.TriConsumer;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -580,7 +581,8 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	protected abstract int fixObjectNames(OPERATION operation, CmfNameFixer<CmfValue> nameFixer,
 		CmfObject.Archetype type, Set<String> ids) throws CmfStorageException;
 
-	public final void scanObjectTree(final CmfTreeScanner scanner) throws CmfStorageException {
+	public final void scanObjectTree(final TriConsumer<CmfObjectRef, CmfObjectRef, String> scanner)
+		throws CmfStorageException {
 		if (scanner == null) { throw new IllegalArgumentException("Must provide scanner to process the object tree"); }
 		runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
@@ -598,8 +600,8 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		});
 	}
 
-	protected abstract void scanObjectTree(final OPERATION operation, final CmfTreeScanner scanner)
-		throws CmfStorageException;
+	protected abstract void scanObjectTree(final OPERATION operation,
+		final TriConsumer<CmfObjectRef, CmfObjectRef, String> scanner) throws CmfStorageException;
 
 	private Mapping createMapping(CmfObject.Archetype type, String name, String source, String target)
 		throws CmfStorageException {
