@@ -28,6 +28,7 @@ import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.CheckedFunction;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.IDfCollection;
@@ -56,11 +57,6 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDelegate<T> implements DctmSysObject {
 
-	@FunctionalInterface
-	protected interface RecursionCalculator {
-		public String getValue(IDfSysObject o) throws DfException;
-	}
-
 	private static final String CTX_VERSION_HISTORY = "VERSION_HISTORY_%S";
 
 	private static final String HISTORY_PATH_IDS = "HISTORY_PATH_IDS_%S";
@@ -85,7 +81,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	private final List<List<String>> calculateRecursions(final IDfSysObject f, Set<String> visited,
-		final RecursionCalculator calc) throws DfException {
+		final CheckedFunction<IDfSysObject, String, DfException> calc) throws DfException {
 		final String oid = f.getObjectId().getId();
 		if (visited == null) {
 			visited = new LinkedHashSet<>();
@@ -121,7 +117,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 			// Recurse upwards!
 			for (List<String> l : calculateRecursions(parent, visited, calc)) {
-				l.add(calc.getValue(parent));
+				l.add(calc.apply(parent));
 				all.add(l);
 			}
 		}
@@ -135,15 +131,13 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		return all;
 	}
 
-	protected final List<List<String>> calculateRecursions(final IDfSysObject f, final RecursionCalculator calc)
-		throws DfException {
+	protected final List<List<String>> calculateRecursions(final IDfSysObject f,
+		final CheckedFunction<IDfSysObject, String, DfException> calc) throws DfException {
 		return calculateRecursions(f, calc);
 	}
 
 	protected final List<List<String>> calculateAllPaths(IDfSession session, IDfSysObject f) throws DfException {
-		return calculateRecursions(f, null, (o) -> {
-			return o.getObjectName();
-		});
+		return calculateRecursions(f, null, (o) -> o.getObjectName());
 
 		/*
 		final String oid = f.getObjectId().getId();
@@ -151,13 +145,13 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		List<List<String>> ret = new ArrayList<>();
 		for (int i = 0; i < parentCount; i++) {
 			final IDfId parentId = f.getFolderId(i);
-
+		
 			// Validate that it's a valid ID...
 			if (parentId.isNull() || !parentId.isObjectId()) {
 				this.log.warn("Invalid parent ID [{}] read from object [{}]: [{}]", parentId.toString(), oid);
 				continue;
 			}
-
+		
 			// Retrieve the parent...
 			final IDfFolder parent;
 			try {
@@ -168,10 +162,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 					String.format("DFC NPE Bug triggered by folder with ID [%s], which is a parent of object [%s]",
 						parentId.toString(), oid));
 			}
-
+		
 			// Parent not found...?!?!?!
 			if (parent == null) { throw new DfIdNotFoundException(parentId); }
-
+		
 			final int pathCount = parent.getFolderPathCount();
 			for (int j = 0; j < pathCount; j++) {
 				ret.add(FileNameTools.tokenize(parent.getFolderPath(j), '/'));
@@ -182,9 +176,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	protected final List<List<String>> calculateAllParentIds(IDfSysObject f) throws DfException {
-		return calculateRecursions(f, null, (o) -> {
-			return o.getChronicleId().getId();
-		});
+		return calculateRecursions(f, null, (o) -> o.getChronicleId().getId());
 	}
 
 	protected final boolean isSameACL(T object, IDfTypedObject other) throws DfException {
