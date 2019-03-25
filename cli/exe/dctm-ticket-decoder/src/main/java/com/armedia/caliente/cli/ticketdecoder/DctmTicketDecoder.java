@@ -143,6 +143,7 @@ public class DctmTicketDecoder {
 	protected int run(OptionValues cli) throws Exception {
 		// final boolean debug = cli.isPresent(CLIParam.debug);
 		final Collection<String> sources = cli.getStrings(CLIParam.from);
+		final PersistenceFormat format = cli.getEnum(PersistenceFormat.class, CLIParam.format);
 		final File target = Tools.canonicalize(new File(cli.getString(CLIParam.target)));
 		final String docbase = this.dfcLaunchHelper.getDfcDocbase(cli);
 		final String user = this.dfcLaunchHelper.getDfcUser(cli);
@@ -187,7 +188,7 @@ public class DctmTicketDecoder {
 			final AtomicLong submitFailedCounter = new AtomicLong(0);
 			final AtomicLong renderedCounter = new AtomicLong(0);
 			final AtomicLong renderFailedCounter = new AtomicLong(0);
-			try (ContentPersistor persistor = new XmlContentPersistor()) {
+			try (ContentPersistor persistor = format.newPersistor()) {
 				persistor.initialize(target);
 
 				final Set<String> submittedSources = new HashSet<>();

@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.filter.EnumValueFilter;
 
 public enum CLIParam implements Supplier<Option> {
 	//
@@ -20,6 +21,15 @@ public enum CLIParam implements Supplier<Option> {
 				"A JEXL 3 expression that will be boiled down to TRUE (non-0 number, non-null result, etc) or FALSE (null result, 0-number) which will be used to select which object(s) are included in the output. The content object can be referenced as 'content'") //
 	),
 	//
+
+	format( //
+		new OptionImpl() //
+			.setRequired(true) //
+			.setArgumentLimits(1) //
+			.setArgumentName("format") //
+			.setDescription("The output format") //
+			.setValueFilter(new EnumValueFilter<>(false, PersistenceFormat.class)) //
+	), //
 
 	from( //
 		new OptionImpl() //
