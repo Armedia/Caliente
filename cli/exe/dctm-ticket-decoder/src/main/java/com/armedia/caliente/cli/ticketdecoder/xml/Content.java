@@ -15,7 +15,7 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "content.t", propOrder = {
-	"paths", "renditions"
+	"path", "renditions"
 })
 @XmlRootElement(name = "content")
 public class Content {
@@ -23,9 +23,8 @@ public class Content {
 	@XmlAttribute(name = "id", required = true)
 	protected String id;
 
-	@XmlElementWrapper(name = "paths", required = true)
 	@XmlElement(name = "path", required = true)
-	protected List<String> paths;
+	protected String path;
 
 	@XmlElementWrapper(name = "renditions", required = true)
 	@XmlElement(name = "rendition", required = true)
@@ -40,11 +39,13 @@ public class Content {
 		return this;
 	}
 
-	public List<String> getPaths() {
-		if (this.paths == null) {
-			this.paths = new ArrayList<>();
-		}
-		return this.paths;
+	public String getPath() {
+		return this.path;
+	}
+
+	public Content setPath(String path) {
+		this.path = path;
+		return this;
 	}
 
 	public List<Rendition> getRenditions() {
@@ -56,7 +57,7 @@ public class Content {
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.id, this.paths, this.renditions);
+		return Tools.hashTool(this, null, this.id, this.path, this.renditions);
 	}
 
 	@Override
@@ -64,13 +65,13 @@ public class Content {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		Content other = Content.class.cast(obj);
 		if (!Tools.equals(this.id, other.id)) { return false; }
-		if (!Tools.equals(this.paths, other.paths)) { return false; }
+		if (!Tools.equals(this.path, other.path)) { return false; }
 		if (!Tools.equals(this.renditions, other.renditions)) { return false; }
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("Content [id=%s, paths=%s, renditions=%s]", this.id, this.paths, this.renditions);
+		return String.format("Content [id=%s, path=[%s], renditions=%s]", this.id, this.path, this.renditions);
 	}
 }
