@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.FilenameCollisionResolver;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
@@ -320,25 +319,22 @@ class FilenameMapper {
 					resolverMap.put("fixChar",
 						Tools.coalesce(fixer != null ? fixer.getFixChar() : null, FilenameMapper.DEFAULT_FIX_CHAR)
 							.toString());
-					long fixes = deduplicator.fixConflicts(new FilenameCollisionResolver() {
-						@Override
-						public String generateUniqueName(CmfObjectRef entryId, String currentName, long count) {
-							// Empty names get modified into their object IDs...
-							if (StringUtils.isEmpty(currentName)) {
-								currentName = entryId.getId();
-							}
-							resolverMap.put("typeName", entryId.getType().name());
-							resolverMap.put("typeOrdinal", entryId.getType().ordinal());
-							resolverMap.put("id", entryId.getId());
-							resolverMap.put("name", currentName);
-							resolverMap.put("count", count);
-							String newName = StringSubstitutor.replace(resolverPattern, resolverMap);
-							if (fixer != null) {
-								// Make sure we use a clean name...
-								newName = fixer.fixName(newName);
-							}
-							return newName;
+					long fixes = deduplicator.fixConflicts((CmfObjectRef entryId, String currentName, long count) -> {
+						// Empty names get modified into their object IDs...
+						if (StringUtils.isEmpty(currentName)) {
+							currentName = entryId.getId();
 						}
+						resolverMap.put("typeName", entryId.getType().name());
+						resolverMap.put("typeOrdinal", entryId.getType().ordinal());
+						resolverMap.put("id", entryId.getId());
+						resolverMap.put("name", currentName);
+						resolverMap.put("count", count);
+						String newName = StringSubstitutor.replace(resolverPattern, resolverMap);
+						if (fixer != null) {
+							// Make sure we use a clean name...
+							newName = fixer.fixName(newName);
+						}
+						return newName;
 					});
 					this.log.info("Conflicts fixed: {}", fixes);
 					deduplicator.processRenamedEntries((entryId, entryName) -> {
