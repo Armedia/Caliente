@@ -17,13 +17,13 @@ import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServi
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.TypeDeclaration;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DfUtils;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
+import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 
@@ -47,19 +47,13 @@ public class DctmSchemaService implements SchemaService {
 	}
 
 	protected Collection<String> getTypeNames(Triple<String, String, String> dql) throws SchemaServiceException {
-		IDfCollection c = null;
-		try {
-			c = DfUtils.executeQuery(this.session, dql.getMiddle(), IDfQuery.DF_READ_QUERY);
+		try (DctmQuery query = new DctmQuery(this.session, dql.getMiddle(), DctmQuery.Type.DF_READ_QUERY)) {
 			Set<String> names = new TreeSet<>();
-			while (c.next()) {
-				names.add(c.getString(dql.getRight()));
-			}
+			query.forEachRemaining((c) -> names.add(c.getString(dql.getRight())));
 			return names;
 		} catch (DfException e) {
 			throw new SchemaServiceException(String.format("Failed to enumerate the existing %s types", dql.getLeft()),
 				e);
-		} finally {
-			DfUtils.closeQuietly(c);
 		}
 	}
 
@@ -104,13 +98,10 @@ public class DctmSchemaService implements SchemaService {
 
 	@Override
 	public TypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName) throws SchemaServiceException {
-		IDfCollection c = null;
-		try {
-			String dql = String.format(DctmSchemaService.ASPECT_TABLE_DQL, DfUtils.quoteString(secondaryTypeName));
-			c = DfUtils.executeQuery(this.session, dql, IDfQuery.DF_READ_QUERY);
-			if (!c.next()) { return null; }
-
-			final String attrDef = c.getString(DctmAttributes.I_ATTR_DEF);
+		String dql = String.format(DctmSchemaService.ASPECT_TABLE_DQL, DfUtils.quoteString(secondaryTypeName));
+		try (DctmQuery query = new DctmQuery(this.session, dql, DctmQuery.Type.DF_READ_QUERY)) {
+			if (!query.hasNext()) { return null; }
+			final String attrDef = query.next().getString(DctmAttributes.I_ATTR_DEF);
 
 			final Map<String, AttributeDeclaration> attributes = new TreeMap<>();
 			if (!StringUtils.isBlank(attrDef)) {
@@ -119,8 +110,31 @@ public class DctmSchemaService implements SchemaService {
 					try {
 						dql = String.format(DctmSchemaService.ASPECT_ATTR_DQL,
 							String.format("%s_%s", attrDef, repeating ? "r" : "s"));
-						try {
-							c = DfUtils.executeQuery(this.session, dql, IDfQuery.DF_READ_QUERY);
+						try (DctmQuery query2 = new DctmQuery(this.session, dql, DctmQuery.Type.DF_READ_QUERY)) {
+							if (!query.hasNext()) {
+								continue;
+							}
+							// Now, introspect the column names/types
+							IDfTypedObject c = query2.next();
+							final int count = c.getAttrCount();
+							for (int i = 0; i < count; i++) {
+								IDfAttr attr = c.getAttr(i);
+
+								// Skip the object ID...we're not interested
+								if (StringUtils.equalsIgnoreCase(DctmAttributes.R_OBJECT_ID, attr.getName())) {
+									continue;
+								}
+
+								// If this is a repeating attribute, ignore the position
+								if (repeating
+									&& StringUtils.equalsIgnoreCase(DctmAttributes.I_POSITION, attr.getName())) {
+									continue;
+								}
+
+								DctmDataType type = DctmDataType.fromAttribute(attr);
+								attributes.put(attr.getName(),
+									new AttributeDeclaration(attr.getName(), type.getStoredType(), false, repeating));
+							}
 						} catch (final DfException e) {
 							if (StringUtils.equalsIgnoreCase("DM_QUERY2_E_TABLE_NOT_FOUND", e.getMessageId())) {
 								// No data for that aspect's attribtue attributes
@@ -128,26 +142,6 @@ public class DctmSchemaService implements SchemaService {
 							}
 							// Rethrow, so the outer catch clause processes it
 							throw e;
-						}
-
-						// Now, introspect the column names/types
-						final int count = c.getAttrCount();
-						for (int i = 0; i < count; i++) {
-							IDfAttr attr = c.getAttr(i);
-
-							// Skip the object ID...we're not interested
-							if (StringUtils.equalsIgnoreCase(DctmAttributes.R_OBJECT_ID, attr.getName())) {
-								continue;
-							}
-
-							// If this is a repeating attribute, ignore the position
-							if (repeating && StringUtils.equalsIgnoreCase(DctmAttributes.I_POSITION, attr.getName())) {
-								continue;
-							}
-
-							DctmDataType type = DctmDataType.fromAttribute(attr);
-							attributes.put(attr.getName(),
-								new AttributeDeclaration(attr.getName(), type.getStoredType(), false, repeating));
 						}
 					} finally {
 						DfUtils.abortTransaction(this.session, tx);
@@ -160,10 +154,6 @@ public class DctmSchemaService implements SchemaService {
 		} catch (DfException e) {
 			throw new SchemaServiceException(
 				String.format("Failed to build the secondary type declaration for [%s]", secondaryTypeName), e);
-		} finally {
-			if (c != null) {
-				DfUtils.closeQuietly(c);
-			}
 		}
 	}
 

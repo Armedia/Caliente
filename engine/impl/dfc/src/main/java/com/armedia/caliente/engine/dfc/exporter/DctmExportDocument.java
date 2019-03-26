@@ -35,16 +35,14 @@ import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.tools.MimeTools;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DctmVersion;
 import com.armedia.commons.dfc.util.DctmVersionHistory;
 import com.armedia.commons.dfc.util.DctmVersionNumber;
-import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfVirtualDocument;
@@ -266,11 +264,10 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		final boolean ignoreContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		Collection<Supplier<CmfContentStream>> suppliers = new ArrayList<>(pageCount);
 		for (int i = 0; i < pageCount; i++) {
-			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
-				IDfQuery.DF_EXECREAD_QUERY);
-			try {
-				while (results.next()) {
-					final IDfId contentId = results.getId(DctmAttributes.R_OBJECT_ID);
+			try (DctmQuery query = new DctmQuery(session, String.format(dql, parentId, i),
+				DctmQuery.Type.DF_EXECREAD_QUERY)) {
+				while (query.hasNext()) {
+					final IDfId contentId = query.next().getId(DctmAttributes.R_OBJECT_ID);
 					if (!processed.add(contentId.getId())) {
 						ctx.trackWarning(marshaled,
 							"Duplicate content node detected for %s [%s](%s) - content ID [%s] is a duplicate",
@@ -291,8 +288,6 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 					suppliers.add(() -> storeContentStream(session, translator, marshaled, document, content, contentId,
 						idx, streamStore, ignoreContent));
 				}
-			} finally {
-				DfUtils.closeQuietly(results);
 			}
 			// If we're not including renditions, we're also not including multiple pages, so we
 			// only do the first page.

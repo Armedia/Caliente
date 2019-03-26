@@ -16,15 +16,14 @@ import com.armedia.caliente.engine.dfc.common.DctmCmisACLTools;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
@@ -64,17 +63,12 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 		properties.add(property);
 
 		final String aclId = acl.getObjectId().getId();
-		IDfCollection resultCol = DfUtils.executeQuery(ctx.getSession(),
-			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
-		try {
-			property = new CmfProperty<>(IntermediateProperty.USERS_WITH_DEFAULT_ACL,
+		try (DctmQuery query = new DctmQuery(ctx.getSession(),
+			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), DctmQuery.Type.DF_EXECREAD_QUERY)) {
+			CmfProperty<IDfValue> p = new CmfProperty<>(IntermediateProperty.USERS_WITH_DEFAULT_ACL,
 				DctmDataType.DF_STRING.getStoredType());
-			while (resultCol.next()) {
-				property.addValue(resultCol.getValueAt(0));
-			}
-			properties.add(property);
-		} finally {
-			DfUtils.closeQuietly(resultCol);
+			query.forEachRemaining((o) -> p.addValue(o.getValueAt(0)));
+			properties.add(p);
 		}
 
 		CmfProperty<IDfValue> accessors = new CmfProperty<>(DctmACL.ACCESSORS, DctmDataType.DF_STRING.getStoredType(),

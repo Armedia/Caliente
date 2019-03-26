@@ -30,15 +30,15 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfDocument;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
+import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.client.aspect.IDfAspects;
 import com.documentum.fc.client.aspect.IDfAttachAspectCallback;
 import com.documentum.fc.client.aspect.IDfDetachAspectCallback;
@@ -790,13 +790,12 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	 *             Signals that Dctm Server error has occurred.
 	 */
 	protected final boolean runExecSQL(IDfSession session, String sql) throws DfException {
-		IDfCollection resultCol = DfUtils.executeQuery(session, String.format("EXECUTE exec_sql WITH query='%s'", sql),
-			IDfQuery.DF_QUERY);
 		boolean ok = false;
-		try {
-			if (resultCol.next()) {
+		try (DctmQuery query = new DctmQuery(session, String.format("EXECUTE exec_sql WITH query='%s'", sql),
+			DctmQuery.Type.DF_QUERY)) {
+			if (query.hasNext()) {
+				IDfTypedObject resultCol = query.next();
 				final IDfValue ret = resultCol.getValueAt(0);
-				DfUtils.closeQuietly(resultCol);
 				final String outcome;
 				if (ret.toString().equalsIgnoreCase("F")) {
 					ok = false;
@@ -805,12 +804,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 					ok = true;
 					outcome = "commit";
 				}
-				resultCol = DfUtils.executeQuery(session, String.format("EXECUTE exec_sql with query='%s';", outcome),
-					IDfQuery.DF_QUERY);
+				try (DctmQuery query2 = new DctmQuery(session,
+					String.format("EXECUTE exec_sql with query='%s';", outcome), DctmQuery.Type.DF_QUERY)) {
+				}
 			}
 			return ok;
-		} finally {
-			DfUtils.closeQuietly(resultCol);
 		}
 	}
 

@@ -11,16 +11,15 @@ import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.ticketdecoder.xml.Page;
 import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.content.IDfContent;
@@ -147,14 +146,13 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		int index = 0;
 		final IDfId id = document.getObjectId();
 		Long maxRendition = null;
-		IDfCollection results = DfUtils.executeQuery(session, String.format(dql, DfUtils.quoteString(id.getId())),
-			IDfQuery.DF_EXECREAD_QUERY);
-		try {
+		try (DctmQuery query = new DctmQuery(session, String.format(dql, DfUtils.quoteString(id.getId())),
+			DctmQuery.Type.DF_EXECREAD_QUERY)) {
 
 			final String prefix = DfUtils.getDocbasePrefix(session);
 			Rendition rendition = null;
-			while (results.next()) {
-				final IDfId contentId = results.getId("r_object_id");
+			while (query.hasNext()) {
+				final IDfId contentId = query.next().getId("r_object_id");
 				final int idx = (index++);
 				final IDfContent content;
 				try {
@@ -198,8 +196,6 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 				target.accept(rendition);
 			}
 			return maxRendition;
-		} finally {
-			DfUtils.closeQuietly(results);
 		}
 	}
 

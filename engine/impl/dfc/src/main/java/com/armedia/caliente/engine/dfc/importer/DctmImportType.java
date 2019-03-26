@@ -22,13 +22,12 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.IDfACL;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.content.IDfStore;
@@ -89,7 +88,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 
 		final String aclDql = String.format("ALTER TYPE %s SET DEFAULT ACL %s IN %s", type.getName(),
 			DfUtils.quoteString(acl.getObjectName()), DfUtils.quoteString(acl.getDomain()));
-		DfUtils.closeQuietly(DfUtils.executeQuery(session, aclDql));
+		DctmQuery.run(session, aclDql);
 	}
 
 	protected void setDefaultAspects(DctmImportContext ctx, IDfType type) throws DfException {
@@ -108,7 +107,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			}
 			final String aclDql = String.format("ALTER TYPE %s ADD DEFAULT ASPECT %s", type.getName(), v.asString());
 			// TODO: Should the aspect name be quoted? The docs don't say so...
-			DfUtils.closeQuietly(DfUtils.executeQuery(session, aclDql));
+			DctmQuery.run(session, aclDql);
 		}
 	}
 
@@ -127,7 +126,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			return;
 		}
 		final String aclDql = String.format("ALTER TYPE %s SET DEFAULT STORAGE %s", type.getName(), store.getName());
-		DfUtils.closeQuietly(DfUtils.executeQuery(session, aclDql));
+		DctmQuery.run(session, aclDql);
 	}
 
 	@Override
@@ -213,10 +212,9 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			this.log.info("Creating new type [{}] with DQL:{}{}{}{}", typeName, Tools.NL, Tools.NL, dql, Tools.NL);
 		}
 
-		IDfCollection resultCol = DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_QUERY);
-		try {
-			while (resultCol.next()) {
-				IDfType type = castObject(session.getObject(resultCol.getId(DctmAttributes.NEW_OBJECT_ID)));
+		try (DctmQuery query = new DctmQuery(session, dql.toString(), DctmQuery.Type.DF_QUERY)) {
+			while (query.hasNext()) {
+				IDfType type = castObject(session.getObject(query.next().getId(DctmAttributes.NEW_OBJECT_ID)));
 				setDefaultACL(ctx, type);
 				setDefaultAspects(ctx, type);
 				setDefaultStorage(ctx, type);
@@ -230,8 +228,6 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			}
 			// Nothing was created... we should explode
 			throw new DfException(String.format("Failed to create the type [%s] with DQL: %s", typeName, dql));
-		} finally {
-			DfUtils.closeQuietly(resultCol);
 		}
 	}
 
@@ -256,8 +252,8 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 				DctmDataType dataType = DctmDataType.fromAttribute(att);
 				final String dec = dataType.getDeclaration(att);
 				try {
-					DfUtils.executeQuery(session, String.format(template, typeName, att.getName(), dec),
-						IDfQuery.DF_QUERY);
+					DctmQuery.run(session, String.format(template, typeName, att.getName(), dec),
+						DctmQuery.Type.DF_QUERY);
 				} catch (Exception e) {
 					ok = false;
 					errors.add(Pair.of(att, e));
@@ -326,8 +322,8 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 				DctmDataType dataType = DctmDataType.fromAttribute(srcAtt);
 				final String dec = dataType.getDeclaration(srcAtt);
 				try {
-					DfUtils.executeQuery(session, String.format(template, typeName, srcAtt.getName(), dec),
-						IDfQuery.DF_QUERY);
+					DctmQuery.run(session, String.format(template, typeName, srcAtt.getName(), dec),
+						DctmQuery.Type.DF_QUERY);
 					context.trackWarning(this.cmfObject, "Modified DM_TYPE [%s] attribute [%s] to match [%s]", typeName,
 						tgtAtt, srcAtt);
 				} catch (Exception ex) {

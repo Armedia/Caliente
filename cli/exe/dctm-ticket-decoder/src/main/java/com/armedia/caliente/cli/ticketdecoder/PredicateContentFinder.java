@@ -5,10 +5,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import com.armedia.commons.dfc.pool.DfcSessionPool;
-import com.armedia.commons.dfc.util.DctmCollectionStream;
-import com.armedia.commons.dfc.util.DfUtils;
-import com.documentum.fc.client.IDfCollection;
-import com.documentum.fc.client.IDfQuery;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
@@ -28,8 +25,9 @@ public class PredicateContentFinder extends ContentFinder {
 
 	protected Stream<IDfId> getIds(IDfSession session, String predicate) throws DfException {
 		String dqlQuery = String.format("select r_object_id from %s", predicate);
-		IDfCollection c = DfUtils.executeQuery(session, dqlQuery, IDfQuery.DF_EXECREAD_QUERY);
-		return DctmCollectionStream.get(c).map(this::extractObjectId);
+		@SuppressWarnings("resource")
+		DctmQuery query = new DctmQuery(session, dqlQuery, DctmQuery.Type.DF_EXECREAD_QUERY);
+		return query.stream().map(this::extractObjectId);
 	}
 
 	protected IDfId extractObjectId(IDfTypedObject o) {

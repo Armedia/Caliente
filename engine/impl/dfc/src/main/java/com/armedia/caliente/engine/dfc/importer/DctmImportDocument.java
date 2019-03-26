@@ -33,17 +33,16 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DctmVersionNumber;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfVirtualDocument;
@@ -620,27 +619,18 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		if (extension != null) {
 			// We have an extension, so try to identify it based on mime type +
 			// extension...though this may hardly be unique...
-
 			String dql = "select distinct name from dm_format where mime_type = %s and dos_extension = %s";
-			IDfCollection result = null;
-			try {
-				result = DfUtils.executeQuery(session,
-					String.format(dql, DfUtils.quoteString(aContentType), DfUtils.quoteString(extension)),
-					IDfQuery.DF_EXECREAD_QUERY);
-				if (result.next()) { return result.getString("name"); }
-			} finally {
-				DfUtils.closeQuietly(result);
+			try (DctmQuery query = new DctmQuery(session,
+				String.format(dql, DfUtils.quoteString(aContentType), DfUtils.quoteString(extension)),
+				DctmQuery.Type.DF_EXECREAD_QUERY)) {
+				if (query.hasNext()) { return query.next().getString("name"); }
 			}
 		}
 
 		String dql = "select distinct name from dm_format where mime_type = %s";
-		IDfCollection result = null;
-		try {
-			result = DfUtils.executeQuery(session, String.format(dql, DfUtils.quoteString(aContentType)),
-				IDfQuery.DF_EXECREAD_QUERY);
-			if (result.next()) { return result.getString("name"); }
-		} finally {
-			DfUtils.closeQuietly(result);
+		try (DctmQuery query = new DctmQuery(session, String.format(dql, DfUtils.quoteString(aContentType)),
+			DctmQuery.Type.DF_EXECREAD_QUERY)) {
+			if (query.hasNext()) { return query.next().getString("name"); }
 		}
 
 		return null;
@@ -680,13 +670,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		// extension, so now we fall back to the extension if that's all we have
 		if (extension != null) {
 			String dql = "select distinct name from dm_format where dos_extension = %s";
-			IDfCollection result = null;
-			try {
-				result = DfUtils.executeQuery(session, String.format(dql, DfUtils.quoteString(extension)),
-					IDfQuery.DF_EXECREAD_QUERY);
-				if (result.next()) { return result.getString("name"); }
-			} finally {
-				DfUtils.closeQuietly(result);
+			try (DctmQuery query = new DctmQuery(session, String.format(dql, DfUtils.quoteString(extension)),
+				DctmQuery.Type.DF_EXECREAD_QUERY)) {
+				if (query.hasNext()) { return query.next().getString("name"); }
 			}
 		}
 

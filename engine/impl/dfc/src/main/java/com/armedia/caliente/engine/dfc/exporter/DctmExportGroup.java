@@ -18,12 +18,12 @@ import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
@@ -108,22 +108,19 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		// CmfStore all the users that have this group as their default group
 		CmfProperty<IDfValue> property = new CmfProperty<>(IntermediateProperty.USERS_WITH_DEFAULT_GROUP,
 			DctmDataType.DF_STRING.getStoredType());
-		IDfCollection resultCol = DfUtils.executeQuery(ctx.getSession(),
+		try (DctmQuery query = new DctmQuery(ctx.getSession(),
 			String.format(DctmExportGroup.DQL_FIND_USERS_WITH_DEFAULT_GROUP, group.getObjectId().getId()),
-			IDfQuery.DF_EXECREAD_QUERY);
-		try {
-			while (resultCol.next()) {
+			DctmQuery.Type.DF_EXECREAD_QUERY)) {
+			query.forEachRemaining((resultCol) -> {
 				IDfValue v = resultCol.getValueAt(0);
 				String mapped = DctmMappingUtils.substituteMappableUsers(ctx.getSession(), v.asString());
 				if (DctmMappingUtils.isSubstitutionForMappableUser(mapped) || ctx.isSpecialUser(v.asString())) {
 					// Special users don't get their default groups modified
-					continue;
+					return;
 				}
 				property.addValue(DfValueFactory.newStringValue(mapped));
-			}
+			});
 			properties.add(property);
-		} finally {
-			DfUtils.closeQuietly(resultCol);
 		}
 		return true;
 	}

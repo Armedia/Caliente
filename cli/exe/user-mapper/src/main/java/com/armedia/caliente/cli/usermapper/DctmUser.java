@@ -6,11 +6,9 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import com.armedia.commons.dfc.pool.DfcSessionPool;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
@@ -81,12 +79,12 @@ public class DctmUser extends DctmPrincipal {
 					}
 					try {
 						// Only pull users that aren't groups
-						final IDfCollection c = DfUtils.executeQuery(session,
-							"select * from dm_user where r_is_group = 0 order by 1", IDfQuery.DF_READ_QUERY);
 						int i = 0;
-						try {
+						try (DctmQuery query = new DctmQuery(session,
+							"select * from dm_user where r_is_group = 0 order by 1", DctmQuery.Type.DF_READ_QUERY)) {
 							Map<String, DctmUser> users = new LinkedHashMap<>();
-							while (c.next()) {
+							while (query.hasNext()) {
+								IDfTypedObject c = query.next();
 								String name = c.getString("user_name");
 								String source = c.getString("user_source");
 								String guid = c.getString("user_global_unique_id");
@@ -99,8 +97,6 @@ public class DctmUser extends DctmPrincipal {
 							}
 							DctmPrincipal.LOG.info("Finished loading {} Documentum Users", users.size());
 							return Tools.freezeMap(users);
-						} finally {
-							DfUtils.closeQuietly(c);
 						}
 					} finally {
 						if (tx != null) {

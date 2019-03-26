@@ -18,11 +18,11 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.calienteng.EventRegistration;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfLocalTransaction;
@@ -31,6 +31,7 @@ import com.documentum.fc.client.IDfQueueItem;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfType;
+import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.IDfId;
@@ -69,7 +70,7 @@ public class TestLoop {
 		case CREATE:
 			addWatcher(obj);
 			break;
-
+	
 		case UPDATE:
 			boolean updateRecord = true;
 			Record existing = getExistingRecord(obj);
@@ -89,7 +90,7 @@ public class TestLoop {
 				}
 			}
 			break;
-
+	
 		case DELETE:
 			removeWatcher(obj);
 			break;
@@ -237,20 +238,16 @@ public class TestLoop {
 			boolean unregister = false;
 			Map<String, String> parameters = new HashMap<>();
 			parameters.put("objectId", DfUtils.quoteString(id.getId()));
-			IDfCollection result = DfUtils.executeQuery(session,
-				StringSubstitutor.replace(TestLoop.GET_STATUS_DQL, parameters));
-			try {
-				if (!result.next()) {
+			try (DctmQuery query = new DctmQuery(session,
+				StringSubstitutor.replace(TestLoop.GET_STATUS_DQL, parameters))) {
+				if (!query.hasNext()) {
 					// No chronicle...can't delete the watch!
-				}
-				if (result.next()) {
-					int deleted = result.getInt("rows_deleted");
+				} else {
+					int deleted = query.next().getInt("rows_deleted");
 					if (deleted == 1) {
 						unregister = true;
 					}
 				}
-			} finally {
-				DfUtils.closeQuietly(result);
 			}
 			if (unregister) {
 				for (Event e : Event.values()) {
@@ -319,11 +316,10 @@ public class TestLoop {
 			parameters.put("name", DfUtils.quoteString(so.getObjectName()));
 			parameters.put("mtime", DfUtils.quoteString(modifiedStr));
 			parameters.put("depth", String.valueOf(depth));
-			IDfCollection insertResult = DfUtils.executeQuery(session,
-				StringSubstitutor.replace(TestLoop.INSERT_STATUS_DQL, parameters));
-			try {
-				if (insertResult.next()) {
-					int inserted = insertResult.getInt("rows_inserted");
+			try (DctmQuery query = new DctmQuery(session,
+				StringSubstitutor.replace(TestLoop.INSERT_STATUS_DQL, parameters))) {
+				if (query.hasNext()) {
+					int inserted = query.next().getInt("rows_inserted");
 					if (inserted == 1) {
 						register = true;
 					} else {
@@ -332,15 +328,12 @@ public class TestLoop {
 							parameters);
 					}
 				}
-			} finally {
-				DfUtils.closeQuietly(insertResult);
 			}
 
-			insertResult = DfUtils.executeQuery(session,
-				StringSubstitutor.replace(TestLoop.INSERT_VERSION_DQL, parameters));
-			try {
-				if (insertResult.next()) {
-					int inserted = insertResult.getInt("rows_inserted");
+			try (DctmQuery query = new DctmQuery(session,
+				StringSubstitutor.replace(TestLoop.INSERT_VERSION_DQL, parameters))) {
+				if (query.hasNext()) {
+					int inserted = query.next().getInt("rows_inserted");
 					if (inserted == 1) {
 						register = true;
 					} else {
@@ -349,8 +342,6 @@ public class TestLoop {
 							parameters);
 					}
 				}
-			} finally {
-				DfUtils.closeQuietly(insertResult);
 			}
 
 			if (register) {
@@ -382,8 +373,7 @@ public class TestLoop {
 		boolean ok = false;
 		final IDfLocalTransaction tx = session.beginTransEx();
 		try {
-			final IDfCollection c = DfUtils.executeQuery(session, dql);
-			try {
+			try (DctmQuery query = new DctmQuery(session, dql)) {
 				String[] types = {
 					"dm_folder", "dm_document"
 				};
@@ -393,15 +383,14 @@ public class TestLoop {
 					addTypeWatch(type);
 				}
 
-				while (c.next()) {
+				while (query.hasNext()) {
+					IDfTypedObject c = query.next();
 					final IDfId id = c.getId("r_object_id");
 					final IDfSysObject so = IDfSysObject.class.cast(session.getObject(id));
 					addObjectWatch(so);
 				}
 				session.commitTransEx(tx);
 				ok = true;
-			} finally {
-				DfUtils.closeQuietly(c);
 			}
 		} finally {
 			if (!ok) {
@@ -432,14 +421,13 @@ public class TestLoop {
 			long current = 0;
 			forever: for (;;) {
 				payloads.clear();
-				IDfCollection c = DfUtils.executeQuery(session,
-					String.format("select r_object_id from dmi_queue_item where delete_flag != 1 and message = %s",
-						DfUtils.quoteString(TestLoop.CALIENTE_STR)));
 
 				this.log.info("Checking for events...");
-				try {
-					item: while (c.next()) {
-						IDfId id = c.getId("r_object_id");
+				try (DctmQuery query = new DctmQuery(session,
+					String.format("select r_object_id from dmi_queue_item where delete_flag != 1 and message = %s",
+						DfUtils.quoteString(TestLoop.CALIENTE_STR)))) {
+					item: while (query.hasNext()) {
+						IDfId id = query.next().getId("r_object_id");
 						final IDfQueueItem i;
 						try {
 							i = IDfQueueItem.class.cast(session.getObject(id));
@@ -512,7 +500,7 @@ public class TestLoop {
 						final IDfSysObject so = payload.object;
 						if (so == null) {
 							// Object must be deleted
-							DfUtils.executeQuery(session,
+							new DctmQuery(session,
 								String.format("delete from dm_dbo.caliente_status where r_object_id = %s",
 									DfUtils.quoteString(payload.objectId.getId())));
 						} else {
@@ -555,21 +543,16 @@ public class TestLoop {
 								parameters.put("mtime", DfUtils.quoteString(dateStr));
 								parameters.put("depth", String.valueOf(StringUtils.countMatches(path, "/")));
 								parameters.put("chronicleId", DfUtils.quoteString(so.getChronicleId().getId()));
-								IDfCollection updateResult = DfUtils.executeQuery(session,
-									StringSubstitutor.replace(TestLoop.UPDATE_STATUS_SQL, parameters));
-								try {
-									while (updateResult.next()) {
-										String dump = updateResult.getTypedObject().dump();
+								try (DctmQuery updateResult = new DctmQuery(session,
+									StringSubstitutor.replace(TestLoop.UPDATE_STATUS_SQL, parameters))) {
+									updateResult.forEachRemaining((o) -> {
+										String dump = o.dump();
 										dump.hashCode();
-									}
-								} finally {
-									DfUtils.closeQuietly(updateResult);
+									});
 								}
 							}
 						}
 					}
-				} finally {
-					DfUtils.closeQuietly(c);
 				}
 			}
 
