@@ -27,7 +27,13 @@
 	</xsd:simpleType>
 
 	<xsd:simpleType name="number.t">
-		<xsd:restriction base="xsd:integer">
+		<xsd:restriction base="xsd:int">
+			<xsd:minInclusive value="0" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="longNumber.t">
+		<xsd:restriction base="xsd:long">
 			<xsd:minInclusive value="0" />
 		</xsd:restriction>
 	</xsd:simpleType>
@@ -42,8 +48,8 @@
 	<xsd:complexType name="page.t">
 		<xsd:simpleContent>
 			<xsd:extension base="xsd:string">
-				<xsd:attribute name="number" type="tns:number.t" use="required" />
-				<xsd:attribute name="length" type="tns:number.t" use="required" />
+				<xsd:attribute name="number" type="tns:longNumber.t" use="required" />
+				<xsd:attribute name="length" type="tns:longNumber.t" use="required" />
 				<xsd:attribute name="hash" type="tns:trimmed_string.t" use="optional" />
 			</xsd:extension>
 		</xsd:simpleContent>
@@ -56,7 +62,7 @@
 		<xsd:attribute name="type" type="tns:number.t" use="required" />
 		<xsd:attribute name="format" type="tns:trimmed_string.t" use="required" />
 		<xsd:attribute name="modifier" type="tns:trimmed_string.t" use="optional" />
-		<xsd:attribute name="pageCount" type="tns:number.t" use="required" />
+		<xsd:attribute name="pageCount" type="tns:longNumber.t" use="required" />
 	</xsd:complexType>
 
 	<xsd:complexType name="renditions.t">
@@ -80,5 +86,6 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
+	<xsd:element name="content" type="tns:content.t" />
 	<xsd:element name="contents" type="tns:contents.t" />
 </xsd:schema>

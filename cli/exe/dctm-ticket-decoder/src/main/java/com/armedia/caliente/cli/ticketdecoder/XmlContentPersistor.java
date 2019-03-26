@@ -74,7 +74,7 @@ public class XmlContentPersistor extends BaseReadWriteLockable implements Conten
 			this.xml.writeStartElement(rootElement);
 			writer.flush();
 
-			this.marshaller = XmlTools.getMarshaller(Content.class, Rendition.class);
+			this.marshaller = XmlTools.getMarshaller("ticket-decoder.xsd", Content.class, Rendition.class);
 			this.marshaller.setProperty(Marshaller.JAXB_ENCODING, Charset.defaultCharset().name());
 			this.marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 			this.marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
