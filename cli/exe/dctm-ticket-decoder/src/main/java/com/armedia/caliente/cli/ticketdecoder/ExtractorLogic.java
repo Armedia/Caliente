@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
+import com.armedia.caliente.cli.ticketdecoder.xml.Page;
 import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.dfc.util.DfUtils;
@@ -133,7 +134,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		}
 	}
 
-	private void findRenditions(IDfSession session, IDfSysObject document, Consumer<Rendition> target)
+	private Long findRenditions(IDfSession session, IDfSysObject document, Consumer<Rendition> target)
 		throws DfException {
 		// Calculate both the path and the ticket location
 		final String dql = "" //
@@ -141,15 +142,17 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 			+ "  from dmr_content_r dcr, dmr_content_s dcs " //
 			+ " where dcr.r_object_id = dcs.r_object_id " //
 			+ "   and dcr.parent_id = %s " //
-			+ " order by dcs.rendition, dcr.page ";
+			+ " order by dcs.rendition, dcs.full_format, dcr.page_modifier, dcr.page ";
 
 		int index = 0;
 		final IDfId id = document.getObjectId();
+		Long maxRendition = null;
 		IDfCollection results = DfUtils.executeQuery(session, String.format(dql, DfUtils.quoteString(id.getId())),
 			IDfQuery.DF_EXECREAD_QUERY);
 		try {
 
 			final String prefix = DfUtils.getDocbasePrefix(session);
+			Rendition rendition = null;
 			while (results.next()) {
 				final IDfId contentId = results.getId("r_object_id");
 				final int idx = (index++);
@@ -170,18 +173,31 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 				}
 
 				final String pathPrefix = getFileStoreLocation(session, content);
-				final Rendition rendition = new Rendition() //
-					.setNumber(content.getRendition()) //
-					.setPage(content.getInt("page")) //
+
+				if ((rendition == null) || !rendition.matches(content)) {
+					if ((rendition != null)
+						&& ((this.renditionPredicate == null) || this.renditionPredicate.test(rendition))) {
+						rendition.setPageCount(rendition.getPages().size());
+						target.accept(rendition);
+					}
+					rendition = new Rendition() //
+						.setType(content.getRendition()) //
+						.setFormat(content.getString("full_format")) //
+						.setModifier(Tools.coalesce(content.getString("page_modifier"), "")) //
+					;
+				}
+
+				rendition.getPages().add(new Page() //
+					.setNumber(content.getInt("page")) //
 					.setLength(content.getContentSize()) //
 					.setHash(content.getContentHash()) //
-					.setModifier(Tools.coalesce(content.getString("page_modifier"), "")) //
-					.setFormat(content.getString("full_format")) //
-					.setPath(String.format("%s/%s%s", pathPrefix.replace('\\', '/'), streamPath, extension));
-				if ((this.renditionPredicate == null) || this.renditionPredicate.test(rendition)) {
-					target.accept(rendition);
-				}
+					.setPath(String.format("%s/%s%s", pathPrefix.replace('\\', '/'), streamPath, extension)));
 			}
+			if ((rendition != null) && ((this.renditionPredicate == null) || this.renditionPredicate.test(rendition))) {
+				rendition.setPageCount(rendition.getPages().size());
+				target.accept(rendition);
+			}
+			return maxRendition;
 		} finally {
 			DfUtils.closeQuietly(results);
 		}

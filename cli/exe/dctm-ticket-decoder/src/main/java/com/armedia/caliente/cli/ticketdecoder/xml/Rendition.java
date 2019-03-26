@@ -1,50 +1,60 @@
 package com.armedia.caliente.cli.ticketdecoder.xml;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.content.IDfContent;
+import com.documentum.fc.common.DfException;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "rendition.t", propOrder = {
-	"path"
+	"pages"
 })
 @XmlRootElement(name = "rendition")
 public class Rendition {
 
-	@XmlAttribute(name = "number", required = true)
-	protected long number;
-
-	@XmlAttribute(name = "page", required = true)
-	protected long page;
+	@XmlAttribute(name = "type", required = true)
+	protected int type;
 
 	@XmlAttribute(name = "format", required = true)
 	protected String format;
 
-	@XmlAttribute(name = "length", required = true)
-	protected long length;
-
-	@XmlAttribute(name = "modifier", required = false)
+	@XmlAttribute(name = "modifier", required = true)
 	protected String modifier;
 
-	@XmlAttribute(name = "hash", required = false)
-	protected String hash;
+	@XmlAttribute(name = "pageCount", required = false)
+	protected long pageCount;
 
-	@XmlValue
-	protected String path;
+	@XmlElementWrapper(name = "pages", required = true)
+	@XmlElement(name = "page", required = true)
+	protected List<Page> pages;
 
-	public long getNumber() {
-		return this.number;
+	public int getType() {
+		return this.type;
 	}
 
-	public Rendition setNumber(long number) {
-		this.number = number;
+	public Rendition setType(int type) {
+		this.type = type;
+		return this;
+	}
+
+	public String getFormat() {
+		return this.format;
+	}
+
+	public Rendition setFormat(String format) {
+		this.format = format;
 		return this;
 	}
 
@@ -60,77 +70,51 @@ public class Rendition {
 		return this;
 	}
 
-	public long getPage() {
-		return this.page;
+	public long getPageCount() {
+		return this.pageCount;
 	}
 
-	public Rendition setPage(long page) {
-		this.page = page;
+	public Rendition setPageCount(long pageCount) {
+		this.pageCount = pageCount;
 		return this;
 	}
 
-	public String getFormat() {
-		return this.format;
-	}
-
-	public Rendition setFormat(String format) {
-		this.format = format;
-		return this;
-	}
-
-	public String getPath() {
-		return this.path;
-	}
-
-	public Rendition setPath(String path) {
-		this.path = path;
-		return this;
-	}
-
-	public long getLength() {
-		return this.length;
-	}
-
-	public Rendition setLength(long length) {
-		this.length = length;
-		return this;
-	}
-
-	public String getHash() {
-		return this.hash;
-	}
-
-	public Rendition setHash(String hash) {
-		if (StringUtils.isBlank(hash)) {
-			hash = null;
+	public List<Page> getPages() {
+		if (this.pages == null) {
+			this.pages = new ArrayList<>();
 		}
-		this.hash = hash;
-		return this;
+		return this.pages;
+	}
+
+	public boolean matches(IDfContent c) throws DfException {
+		if (c == null) { return false; }
+		if (this.type != c.getRendition()) { return false; }
+		if (!Tools.equals(this.format, c.getFullFormat())) { return false; }
+		String mod = Tools.coalesce(c.getString("page_modifier"), "");
+		if (!Tools.equals(this.modifier, mod)) { return false; }
+		return true;
 	}
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.number, this.modifier, this.page, this.format, this.length, this.hash,
-			this.path);
+		return Tools.hashTool(this, null, this.type, this.format, this.pageCount);
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		Rendition other = Rendition.class.cast(obj);
-		if (this.number != other.number) { return false; }
-		if (this.page != other.page) { return false; }
-		if (this.length != other.length) { return false; }
-		if (!Tools.equals(this.modifier, other.modifier)) { return false; }
+		if (this.type != other.type) { return false; }
+		if (this.pageCount != other.pageCount) { return false; }
 		if (!Tools.equals(this.format, other.format)) { return false; }
-		if (!Tools.equals(this.hash, other.hash)) { return false; }
-		if (!Tools.equals(this.path, other.path)) { return false; }
+		if (!Tools.equals(this.modifier, other.modifier)) { return false; }
+		if (!Tools.equals(this.pages, other.pages)) { return false; }
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("Rendition [number=%d, page=%d, length=%d, modifier=%s, format=%s, hash=%s, path=[%s]]",
-			this.number, this.page, this.length, this.modifier, this.format, this.hash, this.path);
+		return String.format("Rendition [type=%d, format=%s, modifier=%s, pageCount=%d, pages=%s]", this.type,
+			this.format, this.modifier, this.pageCount, this.pages);
 	}
 }

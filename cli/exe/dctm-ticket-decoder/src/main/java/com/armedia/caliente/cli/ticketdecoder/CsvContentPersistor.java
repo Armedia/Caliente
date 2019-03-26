@@ -15,7 +15,7 @@ public class CsvContentPersistor extends BaseReadWriteLockable implements Conten
 
 	private PrintWriter out = null;
 
-	private static final Rendition NULL_RENDITION = new Rendition().setLength(0).setPath("").setFormat("").setNumber(0);
+	private static final Rendition NULL_RENDITION = new Rendition();
 
 	@Override
 	public void initialize(final File target) throws Exception {
@@ -40,9 +40,7 @@ public class CsvContentPersistor extends BaseReadWriteLockable implements Conten
 			this.out.printf("%s,%s,%d,%s,%s%n", //
 				StringEscapeUtils.escapeCsv(content.getId()), //
 				StringEscapeUtils.escapeCsv(content.getPath()), //
-				rendition.getLength(), //
-				StringEscapeUtils.escapeCsv(rendition.getFormat()), //
-				StringEscapeUtils.escapeCsv(rendition.getPath()) //
+				StringEscapeUtils.escapeCsv(rendition.getFormat()) //
 			);
 		});
 	}
