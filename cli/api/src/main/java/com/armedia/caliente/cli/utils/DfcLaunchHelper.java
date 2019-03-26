@@ -131,7 +131,7 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 	public String getDfcPassword(OptionValues cli) {
 		if (!this.includesConnectionInfo) { return null; }
 
-		String dctmUser = getDfcDocbase(cli);
+		String dctmUser = getDfcUser(cli);
 		String docbase = getDfcDocbase(cli);
 		return CliValuePrompt.getPasswordString(cli, this.paramPassword,
 			"Please enter the Password for user [%s] in Docbase %s: ", Tools.coalesce(dctmUser, ""), docbase);
