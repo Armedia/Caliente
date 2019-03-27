@@ -52,7 +52,7 @@ import com.documentum.fc.common.IDfId;
 public class DctmTicketDecoder {
 
 	private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
-	private static final Pattern PRIORITY_PARSER = Pattern.compile("^(?:(\\d+):)?([^@:]+)(?:@(.+))?$");
+	private static final Pattern PRIORITY_PARSER = Pattern.compile("^(?:([0-3]):)?([^:]+)(?::(.+))?$");
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -169,7 +169,7 @@ public class DctmTicketDecoder {
 		return p;
 	}
 
-	private Function<Rendition, Integer> compilePrioritizer(Collection<String> strings) {
+	private Function<Rendition, Integer> compileRenditionPrioritizer(Collection<String> strings) {
 		if (strings.isEmpty()) { return null; }
 		final Collection<Predicate<Rendition>> predicates = new ArrayList<>(strings.size());
 		strings.stream()//
@@ -207,7 +207,7 @@ public class DctmTicketDecoder {
 			cli.getString(CLIParam.content_filter));
 		final Predicate<Rendition> renditionPredicate = compilePredicate(Rendition.class,
 			cli.getString(CLIParam.rendition_filter));
-		final Function<Rendition, Integer> renditionPrioritizer = compilePrioritizer(
+		final Function<Rendition, Integer> renditionPrioritizer = compileRenditionPrioritizer(
 			cli.getStrings(CLIParam.rendition_preference));
 
 		final CloseableIterator<String> sourceIterator = new LineScanner().iterator(sources);
