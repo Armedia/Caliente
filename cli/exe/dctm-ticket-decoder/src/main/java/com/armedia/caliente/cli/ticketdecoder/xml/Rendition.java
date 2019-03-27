@@ -1,6 +1,7 @@
 package com.armedia.caliente.cli.ticketdecoder.xml;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -35,6 +36,9 @@ public class Rendition {
 
 	@XmlElement(name = "page", required = true)
 	protected List<Page> pages;
+
+	@XmlAttribute(name = "date", required = true)
+	protected Date date;
 
 	public int getType() {
 		return this.type;
@@ -72,6 +76,15 @@ public class Rendition {
 
 	public Rendition setPageCount(long pageCount) {
 		this.pageCount = pageCount;
+		return this;
+	}
+
+	public Date getDate() {
+		return this.date;
+	}
+
+	public Rendition setDate(Date date) {
+		this.date = date;
 		return this;
 	}
 

@@ -52,7 +52,8 @@ public enum CLIParam implements Supplier<Option> {
 	rendition_preference(
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
-			.setArgumentName("format[:modifier]") //
+			.setArgumentName("[type:]format[:modifier]") //
+			.setValueSep(',') //
 			.setDescription(
 				"A (set of) text representations of the rendition to select.  Only the first rendition matching the given format and modifier will be selected, or the default stream if none matches") //
 	), //

@@ -52,7 +52,11 @@ import com.documentum.fc.common.IDfId;
 public class DctmTicketDecoder {
 
 	private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
-	private static final Pattern PRIORITY_PARSER = Pattern.compile("^(?:([0-3]):)?([^:]+)(?::(.+))?$");
+	private static final Pattern SIMPLE_PRIORITY_PARSER = Pattern
+		.compile("^(?:([0-3]):)?([^\\[@]+)(?:\\[(.+)\\]|@(oldest|youngest))?$");
+
+	private static final String OLDEST = "oldest";
+	private static final String YOUNGEST = "youngest";
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -147,10 +151,15 @@ public class DctmTicketDecoder {
 	}
 
 	private Predicate<Rendition> compilePriorityPredicate(String priority) {
-		Matcher m = DctmTicketDecoder.PRIORITY_PARSER.matcher(priority);
+		Matcher m = DctmTicketDecoder.SIMPLE_PRIORITY_PARSER.matcher(priority);
 		if (!m.matches()) { return null; }
 		Predicate<Rendition> p = Objects::nonNull;
 		final String type = m.group(1);
+		final String format = m.group(2);
+		final String modifier = m.group(3);
+		final String age = m.group(4);
+
+		// If a rendition type is specified, add it
 		if (type != null) {
 			try {
 				final int t = Integer.parseInt(type);
@@ -160,11 +169,23 @@ public class DctmTicketDecoder {
 				return null;
 			}
 		}
-		final String format = m.group(2);
+
+		// Add the format, this always happens
 		p = p.and((r) -> Tools.equals(r.getFormat(), format));
-		final String modifier = m.group(3);
+
+		// If a modifier is specified, add it
 		if (modifier != null) {
 			p = p.and((r) -> Tools.equals(r.getModifier(), modifier));
+		}
+
+		// If an age modifier is specified, add it
+		if (age != null) {
+			switch (StringUtils.lowerCase(age)) {
+				case OLDEST:
+				case YOUNGEST:
+					// TODO: How?!?
+					break;
+			}
 		}
 		return p;
 	}

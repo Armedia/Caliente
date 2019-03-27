@@ -63,6 +63,7 @@
 		<xsd:attribute name="format" type="tns:trimmed_string.t" use="required" />
 		<xsd:attribute name="modifier" type="tns:trimmed_string.t" use="optional" />
 		<xsd:attribute name="pageCount" type="tns:longNumber.t" use="required" />
+		<xsd:attribute name="date" type="xsd:dateTime" use="required" />
 	</xsd:complexType>
 
 	<xsd:complexType name="renditions.t">

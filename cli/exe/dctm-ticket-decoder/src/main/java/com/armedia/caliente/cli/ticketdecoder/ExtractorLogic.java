@@ -212,6 +212,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 						.setType(content.getRendition()) //
 						.setFormat(content.getString("full_format")) //
 						.setModifier(Tools.coalesce(content.getString("page_modifier"), "")) //
+						.setDate(content.getSetTime().getDate()) //
 					;
 				}
 
