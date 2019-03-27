@@ -255,7 +255,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			// primary content stream.
 			+ (includeRenditions ? "" : "   and dcs.rendition = 0 ") //
 			+ "   and dcr.page = %d " //
-			+ " order by dcs.rendition, dcr.page ";
+			+ " order by dcs.rendition, dcs.full_format, dcr.page_modifier, dcr.page ";
 		final IDfSession session = ctx.getSession();
 		final String parentId = document.getObjectId().getId();
 		final int pageCount = document.getPageCount();

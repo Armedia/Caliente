@@ -336,11 +336,10 @@ public class EventRegistration implements Comparable<EventRegistration> {
 		}
 		String dql = "select * from dmi_registry where registered_id = %s and user_name = %s order by event";
 		dql = String.format(dql, DfUtils.quoteString(object.getObjectId().getId()), DfUtils.quoteString(user));
-		try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_EXECREAD_QUERY)) {
-			Set<EventRegistration> ret = new TreeSet<>();
-			query.forEachRemaining((o) -> ret.add(EventRegistration.loadRegistration(o)));
-			return ret;
-		}
+		Set<EventRegistration> ret = new TreeSet<>();
+		DctmQuery.run(session, dql, DctmQuery.Type.DF_EXECREAD_QUERY,
+			(o) -> ret.add(EventRegistration.loadRegistration(o)));
+		return ret;
 	}
 
 	/**

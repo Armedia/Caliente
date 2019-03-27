@@ -47,14 +47,15 @@ public class DctmSchemaService implements SchemaService {
 	}
 
 	protected Collection<String> getTypeNames(Triple<String, String, String> dql) throws SchemaServiceException {
-		try (DctmQuery query = new DctmQuery(this.session, dql.getMiddle(), DctmQuery.Type.DF_READ_QUERY)) {
-			Set<String> names = new TreeSet<>();
-			query.forEachRemaining((c) -> names.add(c.getString(dql.getRight())));
-			return names;
+		Set<String> names = new TreeSet<>();
+		try {
+			DctmQuery.run(this.session, dql.getMiddle(), DctmQuery.Type.DF_READ_QUERY,
+				(c) -> names.add(c.getString(dql.getRight())));
 		} catch (DfException e) {
 			throw new SchemaServiceException(String.format("Failed to enumerate the existing %s types", dql.getLeft()),
 				e);
 		}
+		return names;
 	}
 
 	@Override
