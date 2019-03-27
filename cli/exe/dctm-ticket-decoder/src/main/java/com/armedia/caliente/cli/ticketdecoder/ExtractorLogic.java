@@ -83,13 +83,12 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 
 	}
 
-	private void findObjectPaths(IDfSession session, IDfSysObject document, final int limit, Consumer<String> target)
+	private void findObjectPaths(IDfSession session, IDfSysObject document, Consumer<String> target)
 		throws DfException {
 		String objectName = document.getObjectName();
 		if (StringUtils.isBlank(objectName)) {
 			objectName = String.format("(blank-object-name-%s)", document.getObjectId().getId());
 		}
-		int count = 0;
 		if (document.getHasFolder()) {
 			final int pathCount = document.getFolderIdCount();
 			for (int i = 0; i < pathCount; i++) {
@@ -99,7 +98,6 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 					final int parentPathCount = parent.getFolderPathCount();
 					for (int j = 0; j < parentPathCount; j++) {
 						target.accept(String.format("%s/%s", parent.getFolderPath(j), document.getObjectName()));
-						if ((limit > 0) && (++count == limit)) { return; }
 					}
 				} else {
 					target.accept(String.format("<parent-%s-not-found>/%s", parentId, objectName));
@@ -205,7 +203,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		Content c = new Content() //
 			.setId(id.getId()) //
 		;
-		findObjectPaths(session, document, 1, c::setPath);
+		findObjectPaths(session, document, c.getPaths()::add);
 		findRenditions(session, document, c.getRenditions()::add);
 		return c;
 	}

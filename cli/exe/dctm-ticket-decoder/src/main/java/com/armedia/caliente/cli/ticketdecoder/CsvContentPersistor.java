@@ -44,10 +44,16 @@ public class CsvContentPersistor extends BaseReadWriteLockable implements Conten
 		} else {
 			page = CsvContentPersistor.NULL_PAGE;
 		}
+		final String path;
+		if (!content.getPaths().isEmpty()) {
+			path = content.getPaths().get(0);
+		} else {
+			path = "";
+		}
 		writeLocked(() -> {
 			this.out.printf("%s,%s,%d,%s,%s%n", //
 				StringEscapeUtils.escapeCsv(content.getId()), //
-				StringEscapeUtils.escapeCsv(content.getPath()), //
+				StringEscapeUtils.escapeCsv(path), //
 				page.getLength(), //
 				StringEscapeUtils.escapeCsv(rendition.getFormat()), //
 				StringEscapeUtils.escapeCsv(page.getPath()) //
