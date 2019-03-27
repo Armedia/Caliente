@@ -156,7 +156,6 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 			if (thisPriority != null) {
 				// Only keep the winner so far
 				currentPriority.set(thisPriority);
-				rendition.getPages().clear();
 			} else if (this.renditionPrioritizer != null) {
 				// If we have a prioritizer but this rendition got no priority, then
 				// it's not a desirable rendition so we skip it
@@ -235,7 +234,13 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 			.setId(id.getId()) //
 		;
 		findObjectPaths(session, document, c.getPaths()::add);
-		findRenditions(session, document, renditionPrioritizer, c.getRenditions()::add);
+		findRenditions(session, document, renditionPrioritizer, (r) -> {
+			if (r == null) { return; }
+			if (this.renditionPrioritizer != null) {
+				c.getRenditions().clear();
+			}
+			c.getRenditions().add(r);
+		});
 		return c;
 	}
 
