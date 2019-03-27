@@ -1,6 +1,8 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
@@ -34,11 +36,13 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 	private final Predicate<Content> contentPredicate;
 	private final Predicate<Rendition> renditionPredicate;
 	private final Consumer<Content> contentConsumer;
+	private final Function<Rendition, Integer> renditionPrioritizer;
 
 	public ExtractorLogic(DfcSessionPool pool, Consumer<Content> contentConsumer, Predicate<Content> contentPredicate,
-		Predicate<Rendition> renditionPredicate) {
+		Predicate<Rendition> renditionPredicate, Function<Rendition, Integer> renditionPrioritizer) {
 		this.contentPredicate = contentPredicate;
 		this.renditionPredicate = renditionPredicate;
+		this.renditionPrioritizer = renditionPrioritizer;
 		this.pool = pool;
 		this.contentConsumer = contentConsumer;
 	}
@@ -53,7 +57,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		if (id == null) { return; }
 		final IDfLocalTransaction tx = DfUtils.openTransaction(session);
 		try {
-			Content c = getContent(session, id);
+			Content c = getContent(session, id, this.renditionPrioritizer);
 			if (c == null) { return; }
 			if ((this.contentPredicate == null) || this.contentPredicate.test(c)) {
 				this.contentConsumer.accept(c);
@@ -131,8 +135,40 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		}
 	}
 
-	private Long findRenditions(IDfSession session, IDfSysObject document, Consumer<Rendition> target)
-		throws DfException {
+	private boolean acceptRendition(Rendition rendition) {
+		if (this.renditionPredicate == null) { return true; }
+		return this.renditionPredicate.test(rendition);
+	}
+
+	private Integer calculatePriority(Rendition rendition) {
+		if (this.renditionPrioritizer == null) { return null; }
+		return this.renditionPrioritizer.apply(rendition);
+	}
+
+	private void saveRendition(Consumer<Rendition> target, Rendition rendition,
+		AtomicReference<Integer> currentPriority) {
+		if (rendition == null) { return; }
+		if (!acceptRendition(rendition)) { return; }
+		final Integer thisPriority = calculatePriority(rendition);
+		final Integer oldPriority = currentPriority.get();
+		if ((thisPriority == null) || (oldPriority == null) || (thisPriority < oldPriority)) {
+			// We either have a winner, or priority is not taken into account
+			if (thisPriority != null) {
+				// Only keep the winner so far
+				currentPriority.set(thisPriority);
+				rendition.getPages().clear();
+			} else if (this.renditionPrioritizer != null) {
+				// If we have a prioritizer but this rendition got no priority, then
+				// it's not a desirable rendition so we skip it
+				return;
+			}
+			rendition.setPageCount(rendition.getPages().size());
+			target.accept(rendition);
+		}
+	}
+
+	private Long findRenditions(IDfSession session, IDfSysObject document, Function<Rendition, Integer> prioritizer,
+		Consumer<Rendition> target) throws DfException {
 		// Calculate both the path and the ticket location
 		final String dql = "" //
 			+ "select dcs.r_object_id " //
@@ -149,6 +185,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 
 			final String prefix = DfUtils.getDocbasePrefix(session);
 			Rendition rendition = null;
+			final AtomicReference<Integer> currentPriority = new AtomicReference<>(null);
 			while (query.hasNext()) {
 				final IDfId contentId = query.next().getId("r_object_id");
 				final int idx = (index++);
@@ -171,11 +208,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 				final String pathPrefix = getFileStoreLocation(session, content);
 
 				if ((rendition == null) || !rendition.matches(content)) {
-					if ((rendition != null)
-						&& ((this.renditionPredicate == null) || this.renditionPredicate.test(rendition))) {
-						rendition.setPageCount(rendition.getPages().size());
-						target.accept(rendition);
-					}
+					saveRendition(target, rendition, currentPriority);
 					rendition = new Rendition() //
 						.setType(content.getRendition()) //
 						.setFormat(content.getString("full_format")) //
@@ -189,22 +222,20 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 					.setHash(content.getContentHash()) //
 					.setPath(String.format("%s/%s%s", pathPrefix.replace('\\', '/'), streamPath, extension)));
 			}
-			if ((rendition != null) && ((this.renditionPredicate == null) || this.renditionPredicate.test(rendition))) {
-				rendition.setPageCount(rendition.getPages().size());
-				target.accept(rendition);
-			}
+			saveRendition(target, rendition, currentPriority);
 			return maxRendition;
 		}
 	}
 
-	protected final Content getContent(IDfSession session, IDfId id) throws DfException {
+	protected final Content getContent(IDfSession session, IDfId id, Function<Rendition, Integer> renditionPrioritizer)
+		throws DfException {
 		IDfSysObject document = getSysObject(session, id);
 		if (document == null) { return null; }
 		Content c = new Content() //
 			.setId(id.getId()) //
 		;
 		findObjectPaths(session, document, c.getPaths()::add);
-		findRenditions(session, document, c.getRenditions()::add);
+		findRenditions(session, document, renditionPrioritizer, c.getRenditions()::add);
 		return c;
 	}
 

@@ -3,15 +3,20 @@ package com.armedia.caliente.cli.ticketdecoder;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import javax.script.Bindings;
@@ -47,6 +52,7 @@ import com.documentum.fc.common.IDfId;
 public class DctmTicketDecoder {
 
 	private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
+	private static final Pattern PRIORITY_PARSER = Pattern.compile("^(?:(\\d+):)?([^@:]+)(?:@(.+))?$");
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -140,6 +146,53 @@ public class DctmTicketDecoder {
 		return p;
 	}
 
+	private Predicate<Rendition> compilePriorityPredicate(String priority) {
+		Matcher m = DctmTicketDecoder.PRIORITY_PARSER.matcher(priority);
+		if (!m.matches()) { return null; }
+		Predicate<Rendition> p = Objects::nonNull;
+		final String type = m.group(1);
+		if (type != null) {
+			try {
+				final int t = Integer.parseInt(type);
+				p = p.and((r) -> r.getType() == t);
+			} catch (NumberFormatException e) {
+				// Invalid integer...
+				return null;
+			}
+		}
+		final String format = m.group(2);
+		p = p.and((r) -> Tools.equals(r.getFormat(), format));
+		final String modifier = m.group(3);
+		if (modifier != null) {
+			p = p.and((r) -> Tools.equals(r.getModifier(), modifier));
+		}
+		return p;
+	}
+
+	private Function<Rendition, Integer> compilePrioritizer(Collection<String> strings) {
+		if (strings.isEmpty()) { return null; }
+		final Collection<Predicate<Rendition>> predicates = new ArrayList<>(strings.size());
+		strings.stream()//
+			.filter(StringUtils::isNotBlank)//
+			.map(this::compilePriorityPredicate)//
+			.filter(Objects::nonNull)//
+			.forEach(predicates::add) //
+		;
+
+		if (predicates.isEmpty()) { return null; }
+
+		return (rendition) -> {
+			int pos = 0;
+			for (Predicate<Rendition> p : predicates) {
+				if (p.test(rendition)) { return pos; }
+				pos++;
+			}
+			// We have predicates but none matched, so only output the primary
+			if (rendition.getType() == 0) { return Integer.MAX_VALUE; }
+			return null;
+		};
+	}
+
 	protected int run(OptionValues cli) throws Exception {
 		// final boolean debug = cli.isPresent(CLIParam.debug);
 		final Collection<String> sources = cli.getStrings(CLIParam.from);
@@ -154,6 +207,8 @@ public class DctmTicketDecoder {
 			cli.getString(CLIParam.content_filter));
 		final Predicate<Rendition> renditionPredicate = compilePredicate(Rendition.class,
 			cli.getString(CLIParam.rendition_filter));
+		final Function<Rendition, Integer> renditionPrioritizer = compilePrioritizer(
+			cli.getStrings(CLIParam.rendition_preference));
 
 		final CloseableIterator<String> sourceIterator = new LineScanner().iterator(sources);
 
@@ -181,7 +236,7 @@ public class DctmTicketDecoder {
 				} catch (InterruptedException e) {
 					this.log.error("Failed to queue Content object {}", c, e);
 				}
-			}, contentPredicate, renditionPredicate);
+			}, contentPredicate, renditionPredicate, renditionPrioritizer);
 
 			;
 			final AtomicLong submittedCounter = new AtomicLong(0);
