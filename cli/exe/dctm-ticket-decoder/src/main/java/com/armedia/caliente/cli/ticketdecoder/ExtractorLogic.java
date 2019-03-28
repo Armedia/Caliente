@@ -67,7 +67,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 	// Documentum trims spaces so let's use that "feature"
 	private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
 	private static final Pattern SIMPLE_PRIORITY_PARSER = Pattern
-		.compile("^(?:([0-3]{1,4}):)?(?:([*]|[^*:@%]+)(?:%(.*?))?)?(?:@(old|new)(?:est)?)?$");
+		.compile("^(?:([0-3]{1,4}):)?(?:([*]|[^*:@%]+)(?:%(.*?))?)?(?:@(old|new)(?:est)?)?$", Pattern.CASE_INSENSITIVE);
 	private static final String TYPE_CANDIDATES = "0123";
 	private static final String FORMAT_WILDCARD = "*";
 	private static final BiPredicate<Rendition, RenditionIndexGroup> NON_NULL = (r, m) -> (r != null);
@@ -261,22 +261,10 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 			// If a modifier is specified, add it
 			if (modifier != null) {
 				if (ExtractorLogic.LEAST.equals(modifier) || ExtractorLogic.MOST.equals(modifier)) {
-					final RenditionIndexType indexType = RenditionIndexType.MODIFIER;
-					final Function<SortedSet<Rendition>, Rendition> extractor;
-					switch (modifier) {
-						case LEAST:
-							// Is this the oldest rendition for its format group?
-							extractor = SortedSet::first;
-							break;
-
-						case MOST:
-						default:
-							// TODO: How?!? We need something to compare this rendition's date to...
-							extractor = SortedSet::last;
-							break;
-					}
+					final Function<SortedSet<Rendition>, Rendition> extractor = //
+						(ExtractorLogic.LEAST.equals(modifier) ? SortedSet::first : SortedSet::last);
 					p = p.and((rendition, idx) -> {
-						SortedSet<Rendition> peers = idx.get(indexType, format);
+						SortedSet<Rendition> peers = idx.get(RenditionIndexType.MODIFIER, format);
 						if ((peers == null) || peers.isEmpty()) { return true; }
 						return Tools.equals(rendition, extractor.apply(peers));
 					});
@@ -287,23 +275,12 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		}
 
 		// If an age modifier is specified, add it
-		if (age != null) {
-			final RenditionIndexType indexType = RenditionIndexType.DATE;
-			final Function<SortedSet<Rendition>, Rendition> extractor;
-			switch (StringUtils.lowerCase(age)) {
-				case OLDEST:
-					// Is this the oldest rendition for its format group?
-					extractor = SortedSet::first;
-					break;
-
-				case NEWEST:
-				default:
-					// TODO: How?!? We need something to compare this rendition's date to...
-					extractor = SortedSet::last;
-					break;
-			}
+		if ((age != null)
+			&& (ExtractorLogic.OLDEST.equalsIgnoreCase(age) || ExtractorLogic.NEWEST.equalsIgnoreCase(age))) {
+			final Function<SortedSet<Rendition>, Rendition> extractor = //
+				(ExtractorLogic.OLDEST.equalsIgnoreCase(modifier) ? SortedSet::first : SortedSet::last);
 			p = p.and((rendition, index) -> {
-				SortedSet<Rendition> peers = index.get(indexType, format);
+				SortedSet<Rendition> peers = index.get(RenditionIndexType.DATE, format);
 				if ((peers == null) || peers.isEmpty()) { return true; }
 				return Tools.equals(rendition, extractor.apply(peers));
 			});
