@@ -421,7 +421,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		return this.renditionPrioritizer.apply(rendition, indexer);
 	}
 
-	private Rendition selectRendition(Collection<Rendition> renditions) {
+	private Rendition selectBestRendition(Collection<Rendition> renditions) {
 		// If there's no selection to be made, then we make none
 		if ((this.renditionFilter == null) && (this.renditionPrioritizer == null)) { return null; }
 
@@ -529,7 +529,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		findObjectPaths(session, document, c.getPaths()::add);
 		findRenditions(session, document, c.getRenditions()::add);
 
-		Rendition r = selectRendition(c.getRenditions());
+		Rendition r = selectBestRendition(c.getRenditions());
 		if (r != null) {
 			// If a single rendition was selected, then keep only it
 			c.getRenditions().clear();
