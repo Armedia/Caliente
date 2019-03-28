@@ -45,8 +45,18 @@ public enum CLIParam implements Supplier<Option> {
 			.setArgumentLimits(1, -1) //
 			.setArgumentName("[type:]format[:modifier]") //
 			.setValueSep(',') //
-			.setDescription(
-				"A (set of) text representations of the rendition to select.  Only the first rendition matching the given format and modifier will be selected, or the default stream if none matches") //
+			.setDescription( //
+				"A (set of) text representations of rendition preference.  Only the first " + //
+					"rendition matching the given preference specifier will be selected, " + //
+					"or the default stream if there are no better matches.  The syntax is " + //
+					"[type:][format%modifier][@age] where type is any combination of the " + //
+					"digits [0123] and matches Documentum's rendition types, format can be " + //
+					"any format name or the * to indicate that any format may do, %modifier " + //
+					"is any modifier string or the special values - and + indicating the " + //
+					"lowest and highest values (sorted alphabetically), and @age can be " + //
+					"@old/@oldest or @new/@newest to indicate the oldest or newest value judged by the " + //
+					"rendition's set_time attribute." //
+			) //
 	), //
 
 	rendition_filter(
