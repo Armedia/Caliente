@@ -40,6 +40,22 @@ public enum CLIParam implements Supplier<Option> {
 				"The source specifications identifying which content to extract (%searchKey, @fileref, /path, or query string)") //
 	), //
 
+	log( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("log-name-template") //
+			.setDefault(CLIConst.DEFAULT_LOG_FORMAT) //
+			.setDescription("The base name of the log file to use (${logName}).") //
+	), //
+
+	log_config( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("configuration") //
+			.setDescription(
+				"The Log4j configuration (XML format) to use instead of the default (can reference ${logName} from --log)") //
+	), //
+
 	prefer_rendition(
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
