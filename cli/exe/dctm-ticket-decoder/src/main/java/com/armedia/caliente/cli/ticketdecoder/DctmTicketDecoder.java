@@ -206,7 +206,7 @@ public class DctmTicketDecoder {
 
 	private BiFunction<Rendition, SortedSet<Rendition>, Integer> compileRenditionPrioritizer(
 		Collection<String> strings) {
-		if (strings.isEmpty()) { return null; }
+		if ((strings == null) || strings.isEmpty()) { return null; }
 		final Collection<BiPredicate<Rendition, SortedSet<Rendition>>> predicates = new ArrayList<>(strings.size());
 		strings.stream()//
 			.filter(StringUtils::isNotBlank)//
@@ -243,7 +243,7 @@ public class DctmTicketDecoder {
 		final Predicate<Rendition> renditionFilter = compileFilter(Rendition.class,
 			cli.getString(CLIParam.rendition_filter));
 		final BiFunction<Rendition, SortedSet<Rendition>, Integer> renditionPrioritizer = compileRenditionPrioritizer(
-			cli.getStrings(CLIParam.rendition_preference));
+			cli.getStrings(CLIParam.prefer_rendition));
 
 		final CloseableIterator<String> sourceIterator = new LineScanner().iterator(sources);
 
