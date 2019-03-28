@@ -4,6 +4,7 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -57,10 +58,12 @@ public class DctmTicketDecoder {
 
 	private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
 	private static final Pattern SIMPLE_PRIORITY_PARSER = Pattern
-		.compile("^(?:([0-3]{1,4}):)?([^@%]+)?(?:@(oldest|youngest))?(?::(.+))?$");
+		.compile("^(?:([0-3]{1,4}):)?(?:([*]|[^*:@%]+)(?:%(.*?))?)?(?:@(old|new)(?:est)?)?$");
+	private static final String TYPE_CANDIDATES = "0123";
+	private static final String FORMAT_WILDCARD = "*";
 
-	private static final String OLDEST = "oldest";
-	private static final String YOUNGEST = "youngest";
+	private static final String OLDEST = "old";
+	private static final String NEWEST = "new";
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -165,19 +168,30 @@ public class DctmTicketDecoder {
 
 		// If a rendition type is specified, add it
 		if (type != null) {
-			try {
-				final int t = Integer.parseInt(type);
-				p = p.and((rendition, peers) -> rendition.getType() == t);
-			} catch (NumberFormatException e) {
-				// Invalid integer...
-				return null;
+			final boolean[] types = new boolean[DctmTicketDecoder.TYPE_CANDIDATES.length()];
+			Arrays.fill(types, false); // Make sure...
+			for (int i = 0; i < type.length(); i++) {
+				try {
+					final int t = Integer.parseInt(type.substring(i, i + 1));
+					if ((t < 0) || (t > types.length)) {
+						continue;
+					}
+					types[t] = true;
+				} catch (NumberFormatException e) {
+					continue;
+				}
 			}
+			p = p.and((rendition, peers) -> types[rendition.getType() % types.length]);
 		}
 
+		boolean formatLimited = false;
 		// Add the format
 		if (format != null) {
-			p = p.and((rendition, peers) -> Tools.equals(rendition.getFormat(), format));
-
+			// If we're not using a format wildcard...
+			if (!StringUtils.equals(DctmTicketDecoder.FORMAT_WILDCARD, format)) {
+				p = p.and((rendition, peers) -> Tools.equals(rendition.getFormat(), format));
+				formatLimited = true;
+			}
 			// If a modifier is specified, add it
 			if (modifier != null) {
 				p = p.and((rendition, peers) -> Tools.equals(rendition.getModifier(), modifier));
@@ -187,7 +201,7 @@ public class DctmTicketDecoder {
 		// If an age modifier is specified, add it
 		if (age != null) {
 			final Function<Map<String, SortedSet<Rendition>>, SortedSet<Rendition>> candidateSelector;
-			if (format != null) {
+			if (formatLimited) {
 				candidateSelector = (map) -> map.get(format);
 			} else {
 				candidateSelector = (map) -> map.get(ExtractorLogic.ALL_MARKER);
@@ -199,7 +213,7 @@ public class DctmTicketDecoder {
 					extractor = SortedSet::last;
 					break;
 
-				case YOUNGEST:
+				case NEWEST:
 				default:
 					// TODO: How?!? We need something to compare this rendition's date to...
 					extractor = SortedSet::first;
@@ -212,6 +226,7 @@ public class DctmTicketDecoder {
 				return Tools.equals(rendition, other);
 			});
 		}
+
 		return p;
 	}
 
