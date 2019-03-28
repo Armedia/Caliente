@@ -3,7 +3,7 @@ package com.armedia.caliente.cli.ticketdecoder;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -65,6 +65,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		.compile("^(?:([0-3]{1,4}):)?(?:([*]|[^*:@%]+)(?:%(.*?))?)?(?:@(old|new)(?:est)?)?$");
 	private static final String TYPE_CANDIDATES = "0123";
 	private static final String FORMAT_WILDCARD = "*";
+	private static final BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> NON_NULL = (r, m) -> (r != null);
 
 	private static final String OLDEST = "old";
 	private static final String NEWEST = "new";
@@ -147,7 +148,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 	private static BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> compilePrioritizer(String priority) {
 		Matcher m = ExtractorLogic.SIMPLE_PRIORITY_PARSER.matcher(priority);
 		if (!m.matches()) { return null; }
-		BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> p = (rendition, peers) -> (rendition != null);
+		BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> p = ExtractorLogic.NON_NULL;
 		final String type = m.group(1);
 		final String format = m.group(2);
 		final String modifier = m.group(3);
@@ -155,20 +156,16 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 
 		// If a rendition type is specified, add it
 		if (type != null) {
-			final boolean[] types = new boolean[ExtractorLogic.TYPE_CANDIDATES.length()];
-			Arrays.fill(types, false); // Make sure...
+			final BitSet bs = new BitSet(ExtractorLogic.TYPE_CANDIDATES.length());
+			bs.clear();
 			for (int i = 0; i < type.length(); i++) {
 				try {
-					final int t = Integer.parseInt(type.substring(i, i + 1));
-					if ((t < 0) || (t > types.length)) {
-						continue;
-					}
-					types[t] = true;
+					bs.set(Integer.parseInt(type.substring(i, i + 1)));
 				} catch (NumberFormatException e) {
 					continue;
 				}
 			}
-			p = p.and((rendition, peers) -> types[rendition.getType() % types.length]);
+			p = p.and((rendition, peers) -> bs.get(rendition.getType()));
 		}
 
 		boolean formatLimited = false;
