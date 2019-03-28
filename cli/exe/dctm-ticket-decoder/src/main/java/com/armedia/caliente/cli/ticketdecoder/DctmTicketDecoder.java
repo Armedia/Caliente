@@ -1,69 +1,35 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
 import java.io.File;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import javax.script.Bindings;
-import javax.script.Compilable;
-import javax.script.CompiledScript;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import javax.script.SimpleBindings;
-
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
-import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.PooledWorkers;
-import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.ReadWriteSet;
-import com.armedia.commons.utilities.function.CheckedPredicate;
 import com.armedia.commons.utilities.line.LineScanner;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 
 public class DctmTicketDecoder {
-
-	private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
-	private static final Pattern SIMPLE_PRIORITY_PARSER = Pattern
-		.compile("^(?:([0-3]{1,4}):)?(?:([*]|[^*:@%]+)(?:%(.*?))?)?(?:@(old|new)(?:est)?)?$");
-	private static final String TYPE_CANDIDATES = "0123";
-	private static final String FORMAT_WILDCARD = "*";
-
-	private static final String OLDEST = "old";
-	private static final String NEWEST = "new";
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -82,180 +48,6 @@ public class DctmTicketDecoder {
 		return new PredicateContentFinder(pool, scannedIds, source, consumer);
 	}
 
-	private boolean isNaturalNumber(Number n) {
-		if (Byte.class.isInstance(n)) { return true; }
-		if (Short.class.isInstance(n)) { return true; }
-		if (Integer.class.isInstance(n)) { return true; }
-		if (Long.class.isInstance(n)) { return true; }
-		if (BigInteger.class.isInstance(n)) { return true; }
-		return false;
-	}
-
-	private boolean coerceBooleanResult(Object o) {
-		// If it's a null, then it's a false right away
-		if (o == null) { return false; }
-
-		// Is it a boolean? Sweet!
-		if (Boolean.class.isInstance(o)) { return Boolean.class.cast(o); }
-
-		// Is it a number? 0 == false, non-0 == true
-		if (Number.class.isInstance(o)) {
-			Number n = Number.class.cast(o);
-			if (isNaturalNumber(n)) {
-				if (BigInteger.class.isInstance(n)) {
-					return !BigInteger.class.cast(n).equals(BigInteger.ZERO);
-				} else {
-					return (n.longValue() == 0);
-				}
-			} else {
-				if (BigDecimal.class.isInstance(n)) {
-					return !BigDecimal.class.cast(n).equals(BigDecimal.ZERO);
-				} else {
-					double v = n.doubleValue();
-					return (Double.max(v, 0.0) != Double.min(v, 0.0));
-				}
-			}
-		}
-
-		// Neither a boolean nor a number...must be a string...
-		String str = Tools.toString(o);
-		if (StringUtils.equalsIgnoreCase(Boolean.FALSE.toString(), str)) { return false; }
-		if (StringUtils.equalsIgnoreCase(Boolean.TRUE.toString(), str)) { return true; }
-
-		// Not-null == true...
-		return true;
-	}
-
-	private <T> CheckedPredicate<T, ScriptException> compileFilter(Class<T> klazz, final String expression)
-		throws ScriptException {
-		CheckedPredicate<T, ScriptException> p = klazz::isInstance;
-		if (expression != null) {
-			// Compile the script
-			ScriptEngine engine = DctmTicketDecoder.ENGINE_MANAGER.getEngineByName("jexl");
-			if (engine != null) {
-				CheckedPredicate<T, ScriptException> scriptPredicate = null;
-				final String varName = klazz.getSimpleName().toLowerCase();
-				if (Compilable.class.isInstance(engine)) {
-					// Compile, for speed
-					Compilable compiler = Compilable.class.cast(engine);
-					CompiledScript script = compiler.compile(expression);
-					scriptPredicate = (obj) -> {
-						final Bindings b = new SimpleBindings();
-						b.put(varName, obj);
-						return coerceBooleanResult(script.eval(b));
-					};
-				} else {
-					scriptPredicate = (obj) -> {
-						final Bindings b = new SimpleBindings();
-						b.put(varName, obj);
-						return coerceBooleanResult(engine.eval(expression, b));
-					};
-				}
-				p = p.and(scriptPredicate);
-			}
-		}
-		return p;
-	}
-
-	private BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> compilePrioritizer(String priority) {
-		Matcher m = DctmTicketDecoder.SIMPLE_PRIORITY_PARSER.matcher(priority);
-		if (!m.matches()) { return null; }
-		BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> p = (rendition, peers) -> (rendition != null);
-		final String type = m.group(1);
-		final String format = m.group(2);
-		final String modifier = m.group(3);
-		final String age = m.group(4);
-
-		// If a rendition type is specified, add it
-		if (type != null) {
-			final boolean[] types = new boolean[DctmTicketDecoder.TYPE_CANDIDATES.length()];
-			Arrays.fill(types, false); // Make sure...
-			for (int i = 0; i < type.length(); i++) {
-				try {
-					final int t = Integer.parseInt(type.substring(i, i + 1));
-					if ((t < 0) || (t > types.length)) {
-						continue;
-					}
-					types[t] = true;
-				} catch (NumberFormatException e) {
-					continue;
-				}
-			}
-			p = p.and((rendition, peers) -> types[rendition.getType() % types.length]);
-		}
-
-		boolean formatLimited = false;
-		// Add the format
-		if (format != null) {
-			// If we're not using a format wildcard...
-			if (!StringUtils.equals(DctmTicketDecoder.FORMAT_WILDCARD, format)) {
-				p = p.and((rendition, peers) -> Tools.equals(rendition.getFormat(), format));
-				formatLimited = true;
-			}
-			// If a modifier is specified, add it
-			if (modifier != null) {
-				p = p.and((rendition, peers) -> Tools.equals(rendition.getModifier(), modifier));
-			}
-		}
-
-		// If an age modifier is specified, add it
-		if (age != null) {
-			final Function<Map<String, SortedSet<Rendition>>, SortedSet<Rendition>> candidateSelector;
-			if (formatLimited) {
-				candidateSelector = (map) -> map.get(format);
-			} else {
-				candidateSelector = (map) -> map.get(ExtractorLogic.ALL_MARKER);
-			}
-			final Function<SortedSet<Rendition>, Rendition> extractor;
-			switch (StringUtils.lowerCase(age)) {
-				case OLDEST:
-					// Is this the oldest rendition for its format group?
-					extractor = SortedSet::first;
-					break;
-
-				case NEWEST:
-				default:
-					// TODO: How?!? We need something to compare this rendition's date to...
-					extractor = SortedSet::last;
-					break;
-			}
-			p = p.and((rendition, map) -> {
-				SortedSet<Rendition> peers = candidateSelector.apply(map);
-				if ((peers == null) || peers.isEmpty()) { return false; }
-				Rendition other = extractor.apply(peers);
-				return Tools.equals(rendition, other);
-			});
-		}
-
-		return p;
-	}
-
-	private BiFunction<Rendition, Map<String, SortedSet<Rendition>>, Integer> compileRenditionPrioritizer(
-		Collection<String> strings) {
-		if ((strings == null) || strings.isEmpty()) { return null; }
-		final Collection<BiPredicate<Rendition, Map<String, SortedSet<Rendition>>>> predicates = new ArrayList<>(
-			strings.size());
-		strings.stream()//
-			.filter(StringUtils::isNotBlank)//
-			.map(this::compilePrioritizer)//
-			.filter(Objects::nonNull)//
-			.forEach(predicates::add) //
-		;
-
-		if (predicates.isEmpty()) { return null; }
-
-		return (rendition, peers) -> {
-			int pos = 0;
-			for (BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> p : predicates) {
-				if (p.test(rendition, peers)) { return pos; }
-				pos++;
-			}
-			// We have predicates but none matched, so only output the primary
-			if (rendition.getType() == 0) { return Integer.MAX_VALUE; }
-			return null;
-		};
-	}
-
 	protected int run(OptionValues cli) throws Exception {
 		// final boolean debug = cli.isPresent(CLIParam.debug);
 		final Collection<String> sources = cli.getStrings(CLIParam.from);
@@ -265,12 +57,6 @@ public class DctmTicketDecoder {
 		final String user = this.dfcLaunchHelper.getDfcUser(cli);
 		final String password = this.dfcLaunchHelper.getDfcPassword(cli);
 		final int threads = this.threadHelper.getThreads(cli);
-
-		final Predicate<Content> contentFilter = compileFilter(Content.class, cli.getString(CLIParam.content_filter));
-		final Predicate<Rendition> renditionFilter = compileFilter(Rendition.class,
-			cli.getString(CLIParam.rendition_filter));
-		final BiFunction<Rendition, Map<String, SortedSet<Rendition>>, Integer> renditionPrioritizer = compileRenditionPrioritizer(
-			cli.getStrings(CLIParam.prefer_rendition));
 
 		final CloseableIterator<String> sourceIterator = new LineScanner().iterator(sources);
 
@@ -291,14 +77,20 @@ public class DctmTicketDecoder {
 		int ret = 1;
 		try (Stream<String> sourceStream = sourceIterator.stream()) {
 			final PooledWorkers<IDfSession, IDfId> extractors = new PooledWorkers<>();
-			final PooledWorkersLogic<IDfSession, IDfId, Exception> extractorLogic = new ExtractorLogic(pool, (c) -> {
+			final Consumer<Content> queueConsumer = (c) -> {
 				try {
 					this.log.debug("Queueing {}", c);
 					contents.put(c);
 				} catch (InterruptedException e) {
 					this.log.error("Failed to queue Content object {}", c, e);
 				}
-			}, contentFilter, renditionFilter, renditionPrioritizer);
+			};
+			final ExtractorLogic extractorLogic = new ExtractorLogic(pool //
+				, queueConsumer //
+				, cli.getString(CLIParam.content_filter) //
+				, cli.getString(CLIParam.rendition_filter) //
+				, cli.getStrings(CLIParam.prefer_rendition) //
+			);
 
 			;
 			final AtomicLong submittedCounter = new AtomicLong(0);
