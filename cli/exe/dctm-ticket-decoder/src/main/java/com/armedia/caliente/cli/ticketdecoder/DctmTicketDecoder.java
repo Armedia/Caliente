@@ -3,6 +3,7 @@ package com.armedia.caliente.cli.ticketdecoder;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -11,6 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +25,7 @@ import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ReadWriteCollection;
 import com.armedia.commons.utilities.concurrent.ReadWriteSet;
 import com.armedia.commons.utilities.line.LineScanner;
 import com.documentum.fc.client.IDfSession;
@@ -31,6 +34,7 @@ import com.documentum.fc.common.IDfId;
 
 public class DctmTicketDecoder {
 
+	private final Logger console = LoggerFactory.getLogger("console");
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final DfcLaunchHelper dfcLaunchHelper;
@@ -94,14 +98,14 @@ public class DctmTicketDecoder {
 
 			;
 			final AtomicLong submittedCounter = new AtomicLong(0);
-			final AtomicLong submitFailedCounter = new AtomicLong(0);
-			final AtomicLong renderedCounter = new AtomicLong(0);
-			final AtomicLong renderFailedCounter = new AtomicLong(0);
+			final AtomicLong outputCounter = new AtomicLong(0);
+			final Collection<Pair<IDfId, Exception>> failedSubmissions = new ReadWriteCollection<>(new LinkedList<>());
+			final Collection<Pair<Content, Exception>> failedOutput = new ReadWriteCollection<>(new LinkedList<>());
 			try (ContentPersistor persistor = format.newPersistor()) {
 				persistor.initialize(target);
 
 				final Set<String> submittedSources = new HashSet<>();
-				this.log.info("Starting the background searches...");
+				this.console.info("Starting the background searches...");
 				extractors.start(extractorLogic, Math.max(1, threads), "Extractor", true);
 				try {
 					persistenceThread = new Thread(() -> {
@@ -117,13 +121,13 @@ public class DctmTicketDecoder {
 							} catch (InterruptedException e) {
 								continue;
 							}
-							this.log.info("{}", c);
+							this.console.info("{}", c);
 							try {
 								persistor.persist(c);
-								renderedCounter.incrementAndGet();
+								outputCounter.incrementAndGet();
 							} catch (Exception e) {
-								renderFailedCounter.incrementAndGet();
-								this.log.error("Failed to marshal the content object {}", c, e);
+								failedOutput.add(Pair.of(c, e));
+								this.log.error("Failed to output the content object {}", c, e);
 							}
 						}
 					});
@@ -141,7 +145,7 @@ public class DctmTicketDecoder {
 										extractors.addWorkItem(id);
 										submittedCounter.incrementAndGet();
 									} catch (InterruptedException e) {
-										submitFailedCounter.incrementAndGet();
+										failedSubmissions.add(Pair.of(id, e));
 										this.log.error("Failed to add ID [{}] to the work queue", id, e);
 									}
 								}).call();
@@ -150,21 +154,40 @@ public class DctmTicketDecoder {
 							}
 						}) //
 					;
-					this.log.info("Finished searching from {} source{}...", submittedSources.size(),
+					this.console.info("Finished searching from {} source{}...", submittedSources.size(),
 						submittedSources.size() > 1 ? "s" : "");
-					this.log.info(
+					this.console.info(
 						"Submitted a total of {} work items for extraction from ({} failed), waiting for generation to conclude...",
-						submittedCounter.get(), submitFailedCounter.get());
+						submittedCounter.get(), failedSubmissions.size());
 				} finally {
 					extractors.waitForCompletion();
-					this.log.info("Object retrieval is complete, waiting for XML generation to finish...");
+					this.console.info("Object retrieval is complete, waiting for XML generation to finish...");
 					if (persistenceThread != null) {
 						running.set(false);
 						persistenceThread.interrupt();
 					}
 					persistenceThread.join();
-					this.log.info("Generated a total of {} content elements ({} failed) from the {} submitted",
-						renderedCounter.get(), renderFailedCounter.get(), submittedCounter.get());
+
+					this.console.info("Generated a total of {} content elements ({} failed) from the {} submitted",
+						outputCounter.get(), failedOutput.size(), submittedCounter.get());
+					try {
+						if (!failedSubmissions.isEmpty()) {
+							this.log.error("SUBMISSION ERRORS:");
+							failedSubmissions.forEach(
+								(p) -> this.log.error("Failed to submit the ID {}", p.getLeft(), p.getRight()));
+						}
+					} catch (Exception e) {
+						this.log.error("UNABLE TO LOG {} SUBMISSION ERRORS", failedSubmissions.size());
+					}
+					try {
+						if (!failedOutput.isEmpty()) {
+							this.log.error("OUTPUT ERRORS:");
+							failedOutput.forEach(
+								(p) -> this.log.error("Failed to output content {}", p.getLeft(), p.getRight()));
+						}
+					} catch (Exception e) {
+						this.log.error("UNABLE TO LOG {} OUTPUT ERRORS", failedSubmissions.size());
+					}
 				}
 			}
 			ret = 0;
