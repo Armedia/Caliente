@@ -8,10 +8,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -119,7 +122,7 @@ public class DctmTicketDecoder {
 		return true;
 	}
 
-	private <T> CheckedPredicate<T, ScriptException> compilePredicate(Class<T> klazz, final String expression)
+	private <T> CheckedPredicate<T, ScriptException> compileFilter(Class<T> klazz, final String expression)
 		throws ScriptException {
 		CheckedPredicate<T, ScriptException> p = klazz::isInstance;
 		if (expression != null) {
@@ -150,10 +153,10 @@ public class DctmTicketDecoder {
 		return p;
 	}
 
-	private Predicate<Rendition> compilePriorityPredicate(String priority) {
+	private BiPredicate<Rendition, SortedSet<Rendition>> compilePrioritizer(String priority) {
 		Matcher m = DctmTicketDecoder.SIMPLE_PRIORITY_PARSER.matcher(priority);
 		if (!m.matches()) { return null; }
-		Predicate<Rendition> p = Objects::nonNull;
+		BiPredicate<Rendition, SortedSet<Rendition>> p = (rendition, peers) -> (rendition != null);
 		final String type = m.group(1);
 		final String format = m.group(2);
 		final String modifier = m.group(3);
@@ -163,7 +166,7 @@ public class DctmTicketDecoder {
 		if (type != null) {
 			try {
 				final int t = Integer.parseInt(type);
-				p = p.and((r) -> r.getType() == t);
+				p = p.and((rendition, peers) -> rendition.getType() == t);
 			} catch (NumberFormatException e) {
 				// Invalid integer...
 				return null;
@@ -171,41 +174,53 @@ public class DctmTicketDecoder {
 		}
 
 		// Add the format, this always happens
-		p = p.and((r) -> Tools.equals(r.getFormat(), format));
+		p = p.and((rendition, peers) -> Tools.equals(rendition.getFormat(), format));
 
 		// If a modifier is specified, add it
 		if (modifier != null) {
-			p = p.and((r) -> Tools.equals(r.getModifier(), modifier));
+			p = p.and((rendition, peers) -> Tools.equals(rendition.getModifier(), modifier));
 		}
 
 		// If an age modifier is specified, add it
 		if (age != null) {
+			final Function<SortedSet<Rendition>, Rendition> extractor;
 			switch (StringUtils.lowerCase(age)) {
 				case OLDEST:
+					// Is this the oldest rendition for its format group?
+					extractor = SortedSet::last;
+					break;
+
 				case YOUNGEST:
-					// TODO: How?!?
+				default:
+					// TODO: How?!? We need something to compare this rendition's date to...
+					extractor = SortedSet::first;
 					break;
 			}
+			p = p.and((rendition, peers) -> {
+				Rendition other = extractor.apply(peers);
+				return Tools.equals(rendition, other);
+			});
 		}
 		return p;
 	}
 
-	private Function<Rendition, Integer> compileRenditionPrioritizer(Collection<String> strings) {
+	private BiFunction<Rendition, SortedSet<Rendition>, Integer> compileRenditionPrioritizer(
+		Collection<String> strings) {
 		if (strings.isEmpty()) { return null; }
-		final Collection<Predicate<Rendition>> predicates = new ArrayList<>(strings.size());
+		final Collection<BiPredicate<Rendition, SortedSet<Rendition>>> predicates = new ArrayList<>(strings.size());
 		strings.stream()//
 			.filter(StringUtils::isNotBlank)//
-			.map(this::compilePriorityPredicate)//
+			.map(this::compilePrioritizer)//
 			.filter(Objects::nonNull)//
 			.forEach(predicates::add) //
 		;
 
 		if (predicates.isEmpty()) { return null; }
 
-		return (rendition) -> {
+		return (rendition, peers) -> {
 			int pos = 0;
-			for (Predicate<Rendition> p : predicates) {
-				if (p.test(rendition)) { return pos; }
+			for (BiPredicate<Rendition, SortedSet<Rendition>> p : predicates) {
+				if (p.test(rendition, peers)) { return pos; }
 				pos++;
 			}
 			// We have predicates but none matched, so only output the primary
@@ -224,11 +239,10 @@ public class DctmTicketDecoder {
 		final String password = this.dfcLaunchHelper.getDfcPassword(cli);
 		final int threads = this.threadHelper.getThreads(cli);
 
-		final Predicate<Content> contentPredicate = compilePredicate(Content.class,
-			cli.getString(CLIParam.content_filter));
-		final Predicate<Rendition> renditionPredicate = compilePredicate(Rendition.class,
+		final Predicate<Content> contentFilter = compileFilter(Content.class, cli.getString(CLIParam.content_filter));
+		final Predicate<Rendition> renditionFilter = compileFilter(Rendition.class,
 			cli.getString(CLIParam.rendition_filter));
-		final Function<Rendition, Integer> renditionPrioritizer = compileRenditionPrioritizer(
+		final BiFunction<Rendition, SortedSet<Rendition>, Integer> renditionPrioritizer = compileRenditionPrioritizer(
 			cli.getStrings(CLIParam.rendition_preference));
 
 		final CloseableIterator<String> sourceIterator = new LineScanner().iterator(sources);
@@ -257,7 +271,7 @@ public class DctmTicketDecoder {
 				} catch (InterruptedException e) {
 					this.log.error("Failed to queue Content object {}", c, e);
 				}
-			}, contentPredicate, renditionPredicate, renditionPrioritizer);
+			}, contentFilter, renditionFilter, renditionPrioritizer);
 
 			;
 			final AtomicLong submittedCounter = new AtomicLong(0);

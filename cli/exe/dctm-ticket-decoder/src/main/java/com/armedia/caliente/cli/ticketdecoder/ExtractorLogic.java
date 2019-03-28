@@ -1,11 +1,16 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,15 +38,16 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final DfcSessionPool pool;
-	private final Predicate<Content> contentPredicate;
-	private final Predicate<Rendition> renditionPredicate;
+	private final Predicate<Content> contentFilter;
+	private final Predicate<Rendition> renditionFilter;
 	private final Consumer<Content> contentConsumer;
-	private final Function<Rendition, Integer> renditionPrioritizer;
+	private final BiFunction<Rendition, SortedSet<Rendition>, Integer> renditionPrioritizer;
 
-	public ExtractorLogic(DfcSessionPool pool, Consumer<Content> contentConsumer, Predicate<Content> contentPredicate,
-		Predicate<Rendition> renditionPredicate, Function<Rendition, Integer> renditionPrioritizer) {
-		this.contentPredicate = contentPredicate;
-		this.renditionPredicate = renditionPredicate;
+	public ExtractorLogic(DfcSessionPool pool, Consumer<Content> contentConsumer, Predicate<Content> contentFilter,
+		Predicate<Rendition> renditionFilter,
+		BiFunction<Rendition, SortedSet<Rendition>, Integer> renditionPrioritizer) {
+		this.contentFilter = contentFilter;
+		this.renditionFilter = renditionFilter;
 		this.renditionPrioritizer = renditionPrioritizer;
 		this.pool = pool;
 		this.contentConsumer = contentConsumer;
@@ -57,9 +63,9 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		if (id == null) { return; }
 		final IDfLocalTransaction tx = DfUtils.openTransaction(session);
 		try {
-			Content c = getContent(session, id, this.renditionPrioritizer);
+			Content c = getContent(session, id);
 			if (c == null) { return; }
-			if ((this.contentPredicate == null) || this.contentPredicate.test(c)) {
+			if ((this.contentFilter == null) || this.contentFilter.test(c)) {
 				this.contentConsumer.accept(c);
 			}
 		} finally {
@@ -135,39 +141,60 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		}
 	}
 
-	private boolean acceptRendition(Rendition rendition) {
-		if (this.renditionPredicate == null) { return true; }
-		return this.renditionPredicate.test(rendition);
-	}
-
-	private Integer calculatePriority(Rendition rendition) {
+	private Integer calculatePriority(Rendition rendition, SortedSet<Rendition> peers) {
 		if (this.renditionPrioritizer == null) { return null; }
-		return this.renditionPrioritizer.apply(rendition);
+		return this.renditionPrioritizer.apply(rendition, peers);
 	}
 
-	private void saveRendition(Consumer<Rendition> target, Rendition rendition,
-		AtomicReference<Integer> currentPriority) {
-		if (rendition == null) { return; }
-		if (!acceptRendition(rendition)) { return; }
-		final Integer thisPriority = calculatePriority(rendition);
-		final Integer oldPriority = currentPriority.get();
-		if ((thisPriority == null) || (oldPriority == null) || (thisPriority < oldPriority)) {
-			// We either have a winner, or priority is not taken into account
-			if (thisPriority != null) {
-				// Only keep the winner so far
-				currentPriority.set(thisPriority);
-			} else if (this.renditionPrioritizer != null) {
-				// If we have a prioritizer but this rendition got no priority, then
-				// it's not a desirable rendition so we skip it
-				return;
-			}
-			rendition.setPageCount(rendition.getPages().size());
-			target.accept(rendition);
+	private Rendition selectRendition(Collection<Rendition> renditions) {
+		// If there's no selection to be made, then we make none
+		if ((this.renditionFilter == null) && (this.renditionPrioritizer == null)) { return null; }
+
+		// Remove renditions that have been explicitly filtered out
+		if (this.renditionFilter != null) {
+			renditions.removeIf(this.renditionFilter.negate());
 		}
+
+		if (this.renditionPrioritizer != null) {
+			// Calculate the preferred rendition
+			Map<String, SortedSet<Rendition>> byFormatAndDate = new HashMap<>();
+			for (Rendition r : renditions) {
+				SortedSet<Rendition> s = byFormatAndDate.get(r.getFormat());
+				if (s == null) {
+					s = new TreeSet<>((a, b) -> a.getDate().compareTo(b.getDate()));
+					byFormatAndDate.put(r.getFormat(), s);
+				}
+				s.add(r);
+			}
+			Pair<Integer, Rendition> best = null;
+			for (Rendition r : renditions) {
+				Integer newPriority = calculatePriority(r, byFormatAndDate.get(r.getFormat()));
+				if (newPriority == null) {
+					// We're not interested in this rendition
+					continue;
+				}
+				if ((best == null) || (newPriority < best.getLeft())) {
+					// This is either the first rendition that qualifies, or the best one so far
+					best = Pair.of(newPriority, r);
+				}
+			}
+
+			// Did we find a winner?
+			if (best != null) { return best.getRight(); }
+		}
+
+		// No winner, so keep whatever's left after applying the filter
+		return null;
 	}
 
-	private Long findRenditions(IDfSession session, IDfSysObject document, Function<Rendition, Integer> prioritizer,
-		Consumer<Rendition> target) throws DfException {
+	private void saveRendition(Consumer<Rendition> target, Rendition rendition) {
+		if (rendition == null) { return; }
+		rendition.setPageCount(rendition.getPages().size());
+		target.accept(rendition);
+	}
+
+	private Long findRenditions(IDfSession session, IDfSysObject document, Consumer<Rendition> target)
+		throws DfException {
 		// Calculate both the path and the ticket location
 		final String dql = "" //
 			+ "select dcs.r_object_id " //
@@ -184,7 +211,6 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 
 			final String prefix = DfUtils.getDocbasePrefix(session);
 			Rendition rendition = null;
-			final AtomicReference<Integer> currentPriority = new AtomicReference<>(null);
 			while (query.hasNext()) {
 				final IDfId contentId = query.next().getId("r_object_id");
 				final int idx = (index++);
@@ -207,7 +233,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 				final String pathPrefix = getFileStoreLocation(session, content);
 
 				if ((rendition == null) || !rendition.matches(content)) {
-					saveRendition(target, rendition, currentPriority);
+					saveRendition(target, rendition);
 					rendition = new Rendition() //
 						.setType(content.getRendition()) //
 						.setFormat(content.getString("full_format")) //
@@ -222,27 +248,28 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 					.setHash(content.getContentHash()) //
 					.setPath(String.format("%s/%s%s", pathPrefix.replace('\\', '/'), streamPath, extension)));
 			}
-			saveRendition(target, rendition, currentPriority);
+			saveRendition(target, rendition);
 			return maxRendition;
 		}
 	}
 
-	protected final Content getContent(IDfSession session, IDfId id, Function<Rendition, Integer> renditionPrioritizer)
-		throws DfException {
+	protected final Content getContent(IDfSession session, IDfId id) throws DfException {
 		IDfSysObject document = getSysObject(session, id);
 		if (document == null) { return null; }
 		Content c = new Content() //
 			.setId(id.getId()) //
 		;
 		findObjectPaths(session, document, c.getPaths()::add);
-		findRenditions(session, document, renditionPrioritizer, (r) -> {
-			if (r == null) { return; }
-			if (this.renditionPrioritizer != null) {
-				c.getRenditions().clear();
-			}
+		findRenditions(session, document, c.getRenditions()::add);
+
+		Rendition r = selectRendition(c.getRenditions());
+		if (r != null) {
+			// If a single rendition was selected, then keep only it
+			c.getRenditions().clear();
 			c.getRenditions().add(r);
-		});
+		}
 		return c;
+
 	}
 
 	@Override
