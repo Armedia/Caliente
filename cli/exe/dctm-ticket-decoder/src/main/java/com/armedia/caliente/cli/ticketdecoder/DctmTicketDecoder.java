@@ -57,7 +57,7 @@ public class DctmTicketDecoder {
 
 	private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
 	private static final Pattern SIMPLE_PRIORITY_PARSER = Pattern
-		.compile("^(?:([0-3]):)?([^\\[@]+)(?:\\[(.+)\\]|@(oldest|youngest))?$");
+		.compile("^(?:([0-3]{1,4}):)?([^@%]+)?(?:@(oldest|youngest))?(?::(.+))?$");
 
 	private static final String OLDEST = "oldest";
 	private static final String YOUNGEST = "youngest";
