@@ -3,15 +3,17 @@ package com.armedia.caliente.cli.ticketdecoder;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -57,18 +59,100 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private static final Comparator<Rendition> RENDITION_BY_DATE_OLD_TO_NEW = (a, b) -> a.getDate()
-		.compareTo(b.getDate());
-	private static final String ALL_MARKER = (UUID.randomUUID().toString() + UUID.randomUUID().toString());
+	private static final Comparator<Rendition> RENDITION_BY_DATE_ASC = (a, b) -> Tools.compare(a.getDate(),
+		b.getDate());
+	private static final Comparator<Rendition> RENDITION_BY_MODIFIER_ASC = (a, b) -> Tools.compare(a.getModifier(),
+		b.getModifier());
+
+	// Documentum trims spaces so let's use that "feature"
 	private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
 	private static final Pattern SIMPLE_PRIORITY_PARSER = Pattern
 		.compile("^(?:([0-3]{1,4}):)?(?:([*]|[^*:@%]+)(?:%(.*?))?)?(?:@(old|new)(?:est)?)?$");
 	private static final String TYPE_CANDIDATES = "0123";
 	private static final String FORMAT_WILDCARD = "*";
-	private static final BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> NON_NULL = (r, m) -> (r != null);
+	private static final BiPredicate<Rendition, RenditionIndexGroup> NON_NULL = (r, m) -> (r != null);
 
+	private static final String LEAST = "-";
+	private static final String MOST = "+";
 	private static final String OLDEST = "old";
 	private static final String NEWEST = "new";
+
+	private enum RenditionIndexType {
+		//
+		DATE(ExtractorLogic.RENDITION_BY_DATE_ASC), //
+		MODIFIER(ExtractorLogic.RENDITION_BY_MODIFIER_ASC), //
+		//
+		;
+
+		private final Comparator<Rendition> comparator;
+
+		private RenditionIndexType(Comparator<Rendition> comparator) {
+			this.comparator = Objects.requireNonNull(comparator,
+				String.format("The value %s has a null comparator", name()));
+		}
+	}
+
+	private class RenditionIndex {
+		private final RenditionIndexType type;
+		private final Map<String, SortedSet<Rendition>> index = new HashMap<>();
+		private final SortedSet<Rendition> all;
+
+		public RenditionIndex(RenditionIndexType type) {
+			this.type = Objects.requireNonNull(type);
+			this.all = new TreeSet<>(this.type.comparator);
+		}
+
+		public void add(Rendition r) {
+			if (r == null) { return; }
+			SortedSet<Rendition> set = this.index.get(r.getFormat());
+			if (set == null) {
+				set = new TreeSet<>(this.type.comparator);
+				this.index.put(r.getFormat(), set);
+			}
+			set.add(r);
+			this.all.add(r);
+		}
+
+		public SortedSet<Rendition> get(String format) {
+			if ((format == null) || ExtractorLogic.FORMAT_WILDCARD.equals(format)) { return this.all; }
+			if (!this.index.containsKey(format)) { return Collections.emptySortedSet(); }
+			return this.index.get(format);
+		}
+	}
+
+	private class RenditionIndexGroup {
+		private final Map<RenditionIndexType, RenditionIndex> indexes;
+
+		private RenditionIndexGroup(Iterable<Rendition> renditions, RenditionIndexType... types) {
+			this(renditions, (types != null) && (types.length > 0) ? Arrays.asList(types) : null);
+		}
+
+		private RenditionIndexGroup(Iterable<Rendition> renditions, Iterable<RenditionIndexType> types) {
+			Map<RenditionIndexType, RenditionIndex> indexes = new EnumMap<>(RenditionIndexType.class);
+			if ((types != null) && (renditions != null)) {
+				Consumer<Rendition> c = null;
+				for (RenditionIndexType type : types) {
+					if (type == null) {
+						continue;
+					}
+					RenditionIndex idx = new RenditionIndex(type);
+					indexes.put(type, idx);
+					if (c != null) {
+						c = c.andThen(idx::add);
+					} else {
+						c = idx::add;
+					}
+				}
+				renditions.forEach(c);
+			}
+			this.indexes = Tools.freezeMap(indexes);
+		}
+
+		public SortedSet<Rendition> get(RenditionIndexType type, String format) {
+			if ((type == null) || !this.indexes.containsKey(type)) { return Collections.emptySortedSet(); }
+			return this.indexes.get(type).get(format);
+		}
+	}
 
 	private static boolean isNaturalNumber(Number n) {
 		if (Byte.class.isInstance(n)) { return true; }
@@ -145,10 +229,10 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		return p;
 	}
 
-	private static BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> compilePrioritizer(String priority) {
+	private static BiPredicate<Rendition, RenditionIndexGroup> compilePrioritizer(String priority) {
 		Matcher m = ExtractorLogic.SIMPLE_PRIORITY_PARSER.matcher(priority);
 		if (!m.matches()) { return null; }
-		BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> p = ExtractorLogic.NON_NULL;
+		BiPredicate<Rendition, RenditionIndexGroup> p = ExtractorLogic.NON_NULL;
 		final String type = m.group(1);
 		final String format = m.group(2);
 		final String modifier = m.group(3);
@@ -168,28 +252,43 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 			p = p.and((rendition, peers) -> bs.get(rendition.getType()));
 		}
 
-		boolean formatLimited = false;
 		// Add the format
 		if (format != null) {
 			// If we're not using a format wildcard...
 			if (!StringUtils.equals(ExtractorLogic.FORMAT_WILDCARD, format)) {
 				p = p.and((rendition, peers) -> Tools.equals(rendition.getFormat(), format));
-				formatLimited = true;
 			}
 			// If a modifier is specified, add it
 			if (modifier != null) {
-				p = p.and((rendition, peers) -> Tools.equals(rendition.getModifier(), modifier));
+				if (ExtractorLogic.LEAST.equals(modifier) || ExtractorLogic.MOST.equals(modifier)) {
+					final RenditionIndexType indexType = RenditionIndexType.MODIFIER;
+					final Function<SortedSet<Rendition>, Rendition> extractor;
+					switch (modifier) {
+						case LEAST:
+							// Is this the oldest rendition for its format group?
+							extractor = SortedSet::first;
+							break;
+
+						case MOST:
+						default:
+							// TODO: How?!? We need something to compare this rendition's date to...
+							extractor = SortedSet::last;
+							break;
+					}
+					p = p.and((rendition, idx) -> {
+						SortedSet<Rendition> peers = idx.get(indexType, format);
+						if ((peers == null) || peers.isEmpty()) { return true; }
+						return Tools.equals(rendition, extractor.apply(peers));
+					});
+				} else {
+					p = p.and((rendition, peers) -> Tools.equals(rendition.getModifier(), modifier));
+				}
 			}
 		}
 
 		// If an age modifier is specified, add it
 		if (age != null) {
-			final Function<Map<String, SortedSet<Rendition>>, SortedSet<Rendition>> candidateSelector;
-			if (formatLimited) {
-				candidateSelector = (map) -> map.get(format);
-			} else {
-				candidateSelector = (map) -> map.get(ExtractorLogic.ALL_MARKER);
-			}
+			final RenditionIndexType indexType = RenditionIndexType.DATE;
 			final Function<SortedSet<Rendition>, Rendition> extractor;
 			switch (StringUtils.lowerCase(age)) {
 				case OLDEST:
@@ -203,22 +302,19 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 					extractor = SortedSet::last;
 					break;
 			}
-			p = p.and((rendition, map) -> {
-				SortedSet<Rendition> peers = candidateSelector.apply(map);
+			p = p.and((rendition, index) -> {
+				SortedSet<Rendition> peers = index.get(indexType, format);
 				if ((peers == null) || peers.isEmpty()) { return true; }
-				Rendition other = extractor.apply(peers);
-				return Tools.equals(rendition, other);
+				return Tools.equals(rendition, extractor.apply(peers));
 			});
 		}
 
 		return p;
 	}
 
-	static BiFunction<Rendition, Map<String, SortedSet<Rendition>>, Integer> compileRenditionPrioritizer(
-		Collection<String> strings) {
+	static BiFunction<Rendition, RenditionIndexGroup, Integer> compileRenditionPrioritizer(Collection<String> strings) {
 		if ((strings == null) || strings.isEmpty()) { return null; }
-		final Collection<BiPredicate<Rendition, Map<String, SortedSet<Rendition>>>> predicates = new ArrayList<>(
-			strings.size());
+		final Collection<BiPredicate<Rendition, RenditionIndexGroup>> predicates = new ArrayList<>(strings.size());
 		strings.stream()//
 			.filter(StringUtils::isNotBlank)//
 			.map(ExtractorLogic::compilePrioritizer)//
@@ -230,7 +326,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 
 		return (rendition, peers) -> {
 			int pos = 0;
-			for (BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> p : predicates) {
+			for (BiPredicate<Rendition, RenditionIndexGroup> p : predicates) {
 				if (p.test(rendition, peers)) { return pos; }
 				pos++;
 			}
@@ -244,7 +340,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 	private final Predicate<Content> contentFilter;
 	private final Predicate<Rendition> renditionFilter;
 	private final Consumer<Content> contentConsumer;
-	private final BiFunction<Rendition, Map<String, SortedSet<Rendition>>, Integer> renditionPrioritizer;
+	private final BiFunction<Rendition, RenditionIndexGroup, Integer> renditionPrioritizer;
 
 	public ExtractorLogic(DfcSessionPool pool, Consumer<Content> contentConsumer, String contentFilter,
 		String renditionFilter, Collection<String> renditionPrioritizer) throws ScriptException {
@@ -343,9 +439,9 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		}
 	}
 
-	private Integer calculatePriority(Rendition rendition, Map<String, SortedSet<Rendition>> peers) {
+	private Integer calculatePriority(Rendition rendition, RenditionIndexGroup indexer) {
 		if (this.renditionPrioritizer == null) { return null; }
-		return this.renditionPrioritizer.apply(rendition, peers);
+		return this.renditionPrioritizer.apply(rendition, indexer);
 	}
 
 	private Rendition selectRendition(Collection<Rendition> renditions) {
@@ -359,21 +455,10 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 
 		if (this.renditionPrioritizer != null) {
 			// Calculate the preferred rendition
-			Map<String, SortedSet<Rendition>> byFormatAndDate = new HashMap<>();
-			SortedSet<Rendition> all = new TreeSet<>(ExtractorLogic.RENDITION_BY_DATE_OLD_TO_NEW);
-			byFormatAndDate.put(ExtractorLogic.ALL_MARKER, all);
-			for (Rendition r : renditions) {
-				SortedSet<Rendition> s = byFormatAndDate.get(r.getFormat());
-				if (s == null) {
-					s = new TreeSet<>(ExtractorLogic.RENDITION_BY_DATE_OLD_TO_NEW);
-					byFormatAndDate.put(r.getFormat(), s);
-				}
-				all.add(r);
-				s.add(r);
-			}
+			RenditionIndexGroup indexer = new RenditionIndexGroup(renditions, RenditionIndexType.values());
 			Pair<Integer, Rendition> best = null;
 			for (Rendition r : renditions) {
-				Integer newPriority = calculatePriority(r, byFormatAndDate);
+				Integer newPriority = calculatePriority(r, indexer);
 				if (newPriority == null) {
 					// We're not interested in this rendition
 					continue;
