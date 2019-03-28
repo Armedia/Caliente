@@ -1,10 +1,12 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -37,15 +39,18 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
+	protected static final Comparator<Rendition> RENDITION_BY_DATE = (a, b) -> a.getDate().compareTo(b.getDate());
+	static final String ALL_MARKER = (UUID.randomUUID().toString() + UUID.randomUUID().toString());
+
 	private final DfcSessionPool pool;
 	private final Predicate<Content> contentFilter;
 	private final Predicate<Rendition> renditionFilter;
 	private final Consumer<Content> contentConsumer;
-	private final BiFunction<Rendition, SortedSet<Rendition>, Integer> renditionPrioritizer;
+	private final BiFunction<Rendition, Map<String, SortedSet<Rendition>>, Integer> renditionPrioritizer;
 
 	public ExtractorLogic(DfcSessionPool pool, Consumer<Content> contentConsumer, Predicate<Content> contentFilter,
 		Predicate<Rendition> renditionFilter,
-		BiFunction<Rendition, SortedSet<Rendition>, Integer> renditionPrioritizer) {
+		BiFunction<Rendition, Map<String, SortedSet<Rendition>>, Integer> renditionPrioritizer) {
 		this.contentFilter = contentFilter;
 		this.renditionFilter = renditionFilter;
 		this.renditionPrioritizer = renditionPrioritizer;
@@ -141,7 +146,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		}
 	}
 
-	private Integer calculatePriority(Rendition rendition, SortedSet<Rendition> peers) {
+	private Integer calculatePriority(Rendition rendition, Map<String, SortedSet<Rendition>> peers) {
 		if (this.renditionPrioritizer == null) { return null; }
 		return this.renditionPrioritizer.apply(rendition, peers);
 	}
@@ -158,17 +163,20 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		if (this.renditionPrioritizer != null) {
 			// Calculate the preferred rendition
 			Map<String, SortedSet<Rendition>> byFormatAndDate = new HashMap<>();
+			SortedSet<Rendition> all = new TreeSet<>(ExtractorLogic.RENDITION_BY_DATE);
+			byFormatAndDate.put(ExtractorLogic.ALL_MARKER, all);
 			for (Rendition r : renditions) {
 				SortedSet<Rendition> s = byFormatAndDate.get(r.getFormat());
 				if (s == null) {
-					s = new TreeSet<>((a, b) -> a.getDate().compareTo(b.getDate()));
+					s = new TreeSet<>(ExtractorLogic.RENDITION_BY_DATE);
 					byFormatAndDate.put(r.getFormat(), s);
 				}
+				all.add(r);
 				s.add(r);
 			}
 			Pair<Integer, Rendition> best = null;
 			for (Rendition r : renditions) {
-				Integer newPriority = calculatePriority(r, byFormatAndDate.get(r.getFormat()));
+				Integer newPriority = calculatePriority(r, byFormatAndDate);
 				if (newPriority == null) {
 					// We're not interested in this rendition
 					continue;

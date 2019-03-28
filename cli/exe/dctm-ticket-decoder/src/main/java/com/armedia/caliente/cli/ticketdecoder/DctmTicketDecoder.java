@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
@@ -153,10 +154,10 @@ public class DctmTicketDecoder {
 		return p;
 	}
 
-	private BiPredicate<Rendition, SortedSet<Rendition>> compilePrioritizer(String priority) {
+	private BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> compilePrioritizer(String priority) {
 		Matcher m = DctmTicketDecoder.SIMPLE_PRIORITY_PARSER.matcher(priority);
 		if (!m.matches()) { return null; }
-		BiPredicate<Rendition, SortedSet<Rendition>> p = (rendition, peers) -> (rendition != null);
+		BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> p = (rendition, peers) -> (rendition != null);
 		final String type = m.group(1);
 		final String format = m.group(2);
 		final String modifier = m.group(3);
@@ -173,16 +174,24 @@ public class DctmTicketDecoder {
 			}
 		}
 
-		// Add the format, this always happens
-		p = p.and((rendition, peers) -> Tools.equals(rendition.getFormat(), format));
+		// Add the format
+		if (format != null) {
+			p = p.and((rendition, peers) -> Tools.equals(rendition.getFormat(), format));
 
-		// If a modifier is specified, add it
-		if (modifier != null) {
-			p = p.and((rendition, peers) -> Tools.equals(rendition.getModifier(), modifier));
+			// If a modifier is specified, add it
+			if (modifier != null) {
+				p = p.and((rendition, peers) -> Tools.equals(rendition.getModifier(), modifier));
+			}
 		}
 
 		// If an age modifier is specified, add it
 		if (age != null) {
+			final Function<Map<String, SortedSet<Rendition>>, SortedSet<Rendition>> candidateSelector;
+			if (format != null) {
+				candidateSelector = (map) -> map.get(format);
+			} else {
+				candidateSelector = (map) -> map.get(ExtractorLogic.ALL_MARKER);
+			}
 			final Function<SortedSet<Rendition>, Rendition> extractor;
 			switch (StringUtils.lowerCase(age)) {
 				case OLDEST:
@@ -196,7 +205,9 @@ public class DctmTicketDecoder {
 					extractor = SortedSet::first;
 					break;
 			}
-			p = p.and((rendition, peers) -> {
+			p = p.and((rendition, map) -> {
+				SortedSet<Rendition> peers = candidateSelector.apply(map);
+				if ((peers == null) || peers.isEmpty()) { return false; }
 				Rendition other = extractor.apply(peers);
 				return Tools.equals(rendition, other);
 			});
@@ -204,10 +215,11 @@ public class DctmTicketDecoder {
 		return p;
 	}
 
-	private BiFunction<Rendition, SortedSet<Rendition>, Integer> compileRenditionPrioritizer(
+	private BiFunction<Rendition, Map<String, SortedSet<Rendition>>, Integer> compileRenditionPrioritizer(
 		Collection<String> strings) {
 		if ((strings == null) || strings.isEmpty()) { return null; }
-		final Collection<BiPredicate<Rendition, SortedSet<Rendition>>> predicates = new ArrayList<>(strings.size());
+		final Collection<BiPredicate<Rendition, Map<String, SortedSet<Rendition>>>> predicates = new ArrayList<>(
+			strings.size());
 		strings.stream()//
 			.filter(StringUtils::isNotBlank)//
 			.map(this::compilePrioritizer)//
@@ -219,7 +231,7 @@ public class DctmTicketDecoder {
 
 		return (rendition, peers) -> {
 			int pos = 0;
-			for (BiPredicate<Rendition, SortedSet<Rendition>> p : predicates) {
+			for (BiPredicate<Rendition, Map<String, SortedSet<Rendition>>> p : predicates) {
 				if (p.test(rendition, peers)) { return pos; }
 				pos++;
 			}
@@ -242,7 +254,7 @@ public class DctmTicketDecoder {
 		final Predicate<Content> contentFilter = compileFilter(Content.class, cli.getString(CLIParam.content_filter));
 		final Predicate<Rendition> renditionFilter = compileFilter(Rendition.class,
 			cli.getString(CLIParam.rendition_filter));
-		final BiFunction<Rendition, SortedSet<Rendition>, Integer> renditionPrioritizer = compileRenditionPrioritizer(
+		final BiFunction<Rendition, Map<String, SortedSet<Rendition>>, Integer> renditionPrioritizer = compileRenditionPrioritizer(
 			cli.getStrings(CLIParam.prefer_rendition));
 
 		final CloseableIterator<String> sourceIterator = new LineScanner().iterator(sources);
