@@ -208,7 +208,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 			}
 			p = p.and((rendition, map) -> {
 				SortedSet<Rendition> peers = candidateSelector.apply(map);
-				if ((peers == null) || peers.isEmpty()) { return false; }
+				if ((peers == null) || peers.isEmpty()) { return true; }
 				Rendition other = extractor.apply(peers);
 				return Tools.equals(rendition, other);
 			});
