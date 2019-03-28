@@ -210,13 +210,13 @@ public class DctmTicketDecoder {
 			switch (StringUtils.lowerCase(age)) {
 				case OLDEST:
 					// Is this the oldest rendition for its format group?
-					extractor = SortedSet::last;
+					extractor = SortedSet::first;
 					break;
 
 				case NEWEST:
 				default:
 					// TODO: How?!? We need something to compare this rendition's date to...
-					extractor = SortedSet::first;
+					extractor = SortedSet::last;
 					break;
 			}
 			p = p.and((rendition, map) -> {

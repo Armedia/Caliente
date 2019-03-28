@@ -39,7 +39,8 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	protected static final Comparator<Rendition> RENDITION_BY_DATE = (a, b) -> a.getDate().compareTo(b.getDate());
+	protected static final Comparator<Rendition> RENDITION_BY_DATE_OLD_TO_NEW = (a, b) -> a.getDate()
+		.compareTo(b.getDate());
 	static final String ALL_MARKER = (UUID.randomUUID().toString() + UUID.randomUUID().toString());
 
 	private final DfcSessionPool pool;
@@ -163,12 +164,12 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		if (this.renditionPrioritizer != null) {
 			// Calculate the preferred rendition
 			Map<String, SortedSet<Rendition>> byFormatAndDate = new HashMap<>();
-			SortedSet<Rendition> all = new TreeSet<>(ExtractorLogic.RENDITION_BY_DATE);
+			SortedSet<Rendition> all = new TreeSet<>(ExtractorLogic.RENDITION_BY_DATE_OLD_TO_NEW);
 			byFormatAndDate.put(ExtractorLogic.ALL_MARKER, all);
 			for (Rendition r : renditions) {
 				SortedSet<Rendition> s = byFormatAndDate.get(r.getFormat());
 				if (s == null) {
-					s = new TreeSet<>(ExtractorLogic.RENDITION_BY_DATE);
+					s = new TreeSet<>(ExtractorLogic.RENDITION_BY_DATE_OLD_TO_NEW);
 					byFormatAndDate.put(r.getFormat(), s);
 				}
 				all.add(r);
