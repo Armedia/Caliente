@@ -190,17 +190,14 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	}
 
 	public final boolean init(Map<String, String> settings) throws CmfStorageException {
-		getWriteLock().lock();
-		try {
+		return mutexLocked(() -> {
 			// Do nothing - this is for subclasses to override
 			if (this.open) { return false; }
 			doInit(settings);
 			this.open = true;
 			this.objectFilterActive.set(false);
 			return this.open;
-		} finally {
-			getWriteLock().unlock();
-		}
+		});
 	}
 
 	protected void doInit(Map<String, String> settings) throws CmfStorageException {

@@ -297,17 +297,14 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		if (locator == null) { throw new IllegalArgumentException("Must provide a locator string"); }
 		// Short-cut, no need to luck if we won't do anything
 		if (!isSupportsFileAccess()) { return null; }
-		getReadLock().lock();
-		assertOpen();
-		try {
+		return shareLocked(() -> {
+			assertOpen();
 			File f = doGetFile(locator);
 			if (f == null) {
 				throw new IllegalStateException("doGetFile() returned null - did you forget to override the method?");
 			}
 			return f.getCanonicalFile();
-		} finally {
-			getReadLock().unlock();
-		}
+		});
 	}
 
 	private void ensureParentExists(File f) throws IOException {
