@@ -10,9 +10,9 @@ import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.ticketdecoder.xml.Page;
 import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
-public class CsvContentPersistor extends BaseReadWriteLockable implements ContentPersistor {
+public class CsvContentPersistor extends BaseShareableLockable implements ContentPersistor {
 
 	private PrintWriter out = null;
 
@@ -22,7 +22,7 @@ public class CsvContentPersistor extends BaseReadWriteLockable implements Conten
 	@Override
 	public void initialize(final File target) throws Exception {
 		final File finalTarget = Tools.canonicalize(target);
-		writeLocked(() -> {
+		mutexLocked(() -> {
 			this.out = new PrintWriter(new FileWriter(finalTarget));
 			this.out.printf("R_OBJECT_ID,DOCUMENTUM_PATH,LENGTH,FORMAT,CONTENT_STORE_PATH%n");
 			this.out.flush();
@@ -50,7 +50,7 @@ public class CsvContentPersistor extends BaseReadWriteLockable implements Conten
 		} else {
 			path = "";
 		}
-		writeLocked(() -> {
+		mutexLocked(() -> {
 			this.out.printf("%s,%s,%d,%s,%s%n", //
 				StringEscapeUtils.escapeCsv(content.getId()), //
 				StringEscapeUtils.escapeCsv(path), //
@@ -63,7 +63,7 @@ public class CsvContentPersistor extends BaseReadWriteLockable implements Conten
 
 	@Override
 	public void close() throws Exception {
-		writeLocked(() -> {
+		mutexLocked(() -> {
 			this.out.flush();
 			this.out.close();
 		});

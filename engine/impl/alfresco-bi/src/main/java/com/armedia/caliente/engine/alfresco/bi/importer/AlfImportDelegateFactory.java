@@ -62,7 +62,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
-import com.armedia.commons.utilities.concurrent.ReadWriteSet;
+import com.armedia.commons.utilities.concurrent.ShareableSet;
 
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
@@ -175,7 +175,7 @@ public class AlfImportDelegateFactory
 	private final AtomicBoolean manifestSerialized = new AtomicBoolean(false);
 	private final AtomicReference<Boolean> initializedVdocs = new AtomicReference<>(null);
 
-	private final Set<String> artificialFolders = new ReadWriteSet<>(new LinkedHashSet<>());
+	private final Set<String> artificialFolders = new ShareableSet<>(new LinkedHashSet<>());
 
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
 		throws IOException, JAXBException, XMLStreamException, DynamicElementException {

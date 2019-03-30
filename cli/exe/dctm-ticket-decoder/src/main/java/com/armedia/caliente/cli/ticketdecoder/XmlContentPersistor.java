@@ -18,14 +18,14 @@ import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
-import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.function.CheckedLazySupplier;
 import com.ctc.wstx.api.WstxOutputProperties;
 import com.ctc.wstx.stax.WstxOutputFactory;
 
 import javanet.staxutils.IndentingXMLStreamWriter;
 
-public class XmlContentPersistor extends BaseReadWriteLockable implements ContentPersistor {
+public class XmlContentPersistor extends BaseShareableLockable implements ContentPersistor {
 
 	private static final CheckedLazySupplier<XMLOutputFactory, XMLStreamException> OUTPUT_FACTORY = new CheckedLazySupplier<>(
 		() -> {
@@ -56,7 +56,7 @@ public class XmlContentPersistor extends BaseReadWriteLockable implements Conten
 	@Override
 	public void initialize(final File target) throws Exception {
 		final File finalTarget = Tools.canonicalize(target);
-		writeLocked(() -> {
+		mutexLocked(() -> {
 
 			this.out = new FileOutputStream(finalTarget);
 
@@ -84,13 +84,13 @@ public class XmlContentPersistor extends BaseReadWriteLockable implements Conten
 	@Override
 	public void persist(Content content) throws Exception {
 		if (content != null) {
-			writeLocked(() -> this.marshaller.marshal(content, this.xml));
+			mutexLocked(() -> this.marshaller.marshal(content, this.xml));
 		}
 	}
 
 	@Override
 	public void close() throws Exception {
-		writeLocked(() -> {
+		mutexLocked(() -> {
 			this.xml.flush();
 			this.xml.writeEndDocument();
 			this.xml.close();

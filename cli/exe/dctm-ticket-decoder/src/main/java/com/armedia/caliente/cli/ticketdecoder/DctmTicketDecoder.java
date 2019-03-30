@@ -25,8 +25,8 @@ import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.ReadWriteCollection;
-import com.armedia.commons.utilities.concurrent.ReadWriteSet;
+import com.armedia.commons.utilities.concurrent.ShareableCollection;
+import com.armedia.commons.utilities.concurrent.ShareableSet;
 import com.armedia.commons.utilities.line.LineScanner;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -76,7 +76,7 @@ public class DctmTicketDecoder {
 		final AtomicBoolean running = new AtomicBoolean(true);
 		Thread persistenceThread = null;
 
-		final Set<String> scannedIds = new ReadWriteSet<>(new HashSet<>());
+		final Set<String> scannedIds = new ShareableSet<>(new HashSet<>());
 
 		int ret = 1;
 		try (Stream<String> sourceStream = sourceIterator.stream()) {
@@ -99,8 +99,8 @@ public class DctmTicketDecoder {
 			;
 			final AtomicLong submittedCounter = new AtomicLong(0);
 			final AtomicLong outputCounter = new AtomicLong(0);
-			final Collection<Pair<IDfId, Exception>> failedSubmissions = new ReadWriteCollection<>(new LinkedList<>());
-			final Collection<Pair<Content, Exception>> failedOutput = new ReadWriteCollection<>(new LinkedList<>());
+			final Collection<Pair<IDfId, Exception>> failedSubmissions = new ShareableCollection<>(new LinkedList<>());
+			final Collection<Pair<Content, Exception>> failedOutput = new ShareableCollection<>(new LinkedList<>());
 			try (ContentPersistor persistor = format.newPersistor()) {
 				persistor.initialize(target);
 

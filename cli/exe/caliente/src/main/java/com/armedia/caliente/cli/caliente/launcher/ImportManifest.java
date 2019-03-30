@@ -21,7 +21,7 @@ import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.ReadWriteList;
+import com.armedia.commons.utilities.concurrent.ShareableList;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -151,7 +151,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 			// themselves are serialized (like for Folders or Types)
 			return;
 		}
-		this.openBatches.put(historyId, new ReadWriteList<>(new ArrayList<>(count)));
+		this.openBatches.put(historyId, new ShareableList<>(new ArrayList<>(count)));
 	}
 
 	@Override

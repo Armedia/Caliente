@@ -14,9 +14,9 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectRef;
-import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
-public class CalienteWarningTracker extends BaseReadWriteLockable implements WarningTracker {
+public class CalienteWarningTracker extends BaseShareableLockable implements WarningTracker {
 
 	public static enum WarningType {
 		//
@@ -103,7 +103,7 @@ public class CalienteWarningTracker extends BaseReadWriteLockable implements War
 
 	private boolean persistWarning(Warning w) {
 		if (this.warnings == null) { return false; }
-		return writeLocked(() -> {
+		return mutexLocked(() -> {
 			this.warnings.add(w);
 			return true;
 		});
@@ -126,7 +126,7 @@ public class CalienteWarningTracker extends BaseReadWriteLockable implements War
 	public String generateReport() {
 		if (!hasWarnings()) { return null; }
 
-		return readLocked(() -> {
+		return shareLocked(() -> {
 			Map<WarningType, Long> m = this.objectCounter.getCummulative();
 			final Long zero = Long.valueOf(0);
 			StringBuilder report = new StringBuilder();
@@ -153,7 +153,7 @@ public class CalienteWarningTracker extends BaseReadWriteLockable implements War
 	public void generateReport(Logger output) {
 		if (!hasWarnings()) { return; }
 
-		readLocked(() -> {
+		shareLocked(() -> {
 			Map<WarningType, Long> m = this.objectCounter.getCummulative();
 			final Long zero = Long.valueOf(0);
 			output.warn("Tracked Warnings Summary:");

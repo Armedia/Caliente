@@ -50,9 +50,9 @@ import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.BinaryEncoding;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
-public class Validator extends BaseReadWriteLockable {
+public class Validator extends BaseShareableLockable {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Validator.class);
 
@@ -909,7 +909,7 @@ public class Validator extends BaseReadWriteLockable {
 	}
 
 	public void validate(final Path sourcePath) {
-		readLocked(() -> {
+		shareLocked(() -> {
 			if (this.closed.get()) { throw new IllegalStateException("This validator has been closed, but not reset"); }
 			// Validate the source file against the target...
 			final Path relativePath = this.sourceRoot.relativize(sourcePath);
@@ -977,7 +977,7 @@ public class Validator extends BaseReadWriteLockable {
 	}
 
 	public void writeAndClear() throws IOException {
-		writeLocked(() -> {
+		mutexLocked(() -> {
 			try {
 				for (ValidationErrorType t : this.errors.keySet()) {
 					closeQuietly(this.errors.get(t));

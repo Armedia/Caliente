@@ -21,9 +21,9 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
-public class ObjectFilter extends BaseReadWriteLockable {
+public class ObjectFilter extends BaseShareableLockable {
 
 	private static final XmlInstances<Filters> INSTANCES = new XmlInstances<>(Filters.class);
 
@@ -66,7 +66,7 @@ public class ObjectFilter extends BaseReadWriteLockable {
 
 	public Boolean accept(CmfObject<CmfValue> cmfObject, CmfValueMapper mapper) throws ObjectFilterException {
 		Objects.requireNonNull(cmfObject, "Must provide an object to filter");
-		return readLocked(() -> {
+		return shareLocked(() -> {
 			if (this.closed) { throw new ObjectFilterException("This object filter is already closed"); }
 			DynamicElementContext ctx = new DynamicElementContext(cmfObject, new DefaultDynamicObject(cmfObject),
 				mapper, null);
@@ -107,7 +107,7 @@ public class ObjectFilter extends BaseReadWriteLockable {
 	}
 
 	public void close() {
-		writeLocked(() -> {
+		mutexLocked(() -> {
 			try {
 				if (this.closed) { return; }
 				this.activeFilters.clear();

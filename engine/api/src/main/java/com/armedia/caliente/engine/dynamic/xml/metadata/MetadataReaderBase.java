@@ -38,11 +38,11 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.ShareableLockable;
 import com.armedia.commons.utilities.function.CheckedConsumer;
 
 @XmlTransient
-public abstract class MetadataReaderBase implements AttributeValuesLoader, ReadWriteLockable {
+public abstract class MetadataReaderBase implements AttributeValuesLoader, ShareableLockable {
 
 	@XmlElement(name = "query", required = true)
 	protected ParameterizedQuery query;
@@ -78,7 +78,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader, ReadW
 	protected Boolean columnNamesCaseSensitive = false;
 
 	@Override
-	public ReadWriteLock getMainLock() {
+	public ReadWriteLock getShareableLock() {
 		return this.rwLock;
 	}
 
@@ -181,7 +181,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader, ReadW
 	@Override
 	public final void initialize(Connection c) throws Exception {
 		CheckedConsumer<String, Exception> consumer = (e) -> doInitialize(c);
-		readLockedUpgradable(() -> this.finalSql, Objects::isNull, consumer);
+		shareLockedUpgradable(() -> this.finalSql, Objects::isNull, consumer);
 	}
 
 	protected final <V> Object evaluateExpression(Expression expression, final CmfObject<V> object,
@@ -352,7 +352,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader, ReadW
 	@Override
 	public final void close() {
 		Consumer<String> consumer = (e) -> doClose();
-		readLockedUpgradable(() -> this.finalSql, Objects::nonNull, consumer);
+		shareLockedUpgradable(() -> this.finalSql, Objects::nonNull, consumer);
 	}
 
 }

@@ -21,9 +21,9 @@ import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
-public class ExternalMetadataLoader extends BaseReadWriteLockable {
+public class ExternalMetadataLoader extends BaseShareableLockable {
 
 	private static final Collection<String> ALL_SOURCES = null;
 
@@ -81,7 +81,7 @@ public class ExternalMetadataLoader extends BaseReadWriteLockable {
 	}
 
 	private void initialize(final Lock r) throws ExternalMetadataException {
-		final Lock w = getWriteLock();
+		final Lock w = getMutexLock();
 		if (r != null) {
 			r.unlock();
 		}
@@ -151,7 +151,7 @@ public class ExternalMetadataLoader extends BaseReadWriteLockable {
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, Collection<String> sourceNames)
 		throws ExternalMetadataException {
 		Objects.requireNonNull(object, "Must provide a CmfObject instance to retrieve extra metadata for");
-		final Lock l = getReadLock();
+		final Lock l = getSharedLock();
 		l.lock();
 		try {
 			initialize(l);
@@ -227,7 +227,7 @@ public class ExternalMetadataLoader extends BaseReadWriteLockable {
 	}
 
 	public void close() {
-		writeLocked(() -> {
+		mutexLocked(() -> {
 			if (!this.initialized) { return; }
 			try {
 				closeSources();
