@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.cli.filter.EnumValueFilter;
 import com.armedia.commons.utilities.Tools;
 
 public final class OptionValues implements Iterable<OptionValue>, Cloneable {
@@ -340,6 +341,12 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		}
 		String value = getString(param);
 		if (value == null) { return null; }
+		OptionValueFilter filter = param.getValueFilter();
+		if (EnumValueFilter.class.isInstance(filter)) {
+			EnumValueFilter<?> enumFilter = EnumValueFilter.class.cast(filter);
+			Object o = enumFilter.decode(value);
+			if (o != null) { return enumClass.cast(o); }
+		}
 		try {
 			return Enum.valueOf(enumClass, value);
 		} catch (final IllegalArgumentException e) {
@@ -361,6 +368,12 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		}
 		String value = getString(param, null);
 		if (value == null) { return def; }
+		OptionValueFilter filter = param.getValueFilter();
+		if (EnumValueFilter.class.isInstance(filter)) {
+			EnumValueFilter<?> enumFilter = EnumValueFilter.class.cast(filter);
+			Object o = enumFilter.decode(value);
+			if (o != null) { return enumClass.cast(o); }
+		}
 		try {
 			return Enum.valueOf(enumClass, value);
 		} catch (final IllegalArgumentException e) {
@@ -391,8 +404,20 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		}
 		if (v == null) { return null; }
 		Set<E> ret = EnumSet.noneOf(enumClass);
+		OptionValueFilter filter = param.getValueFilter();
+		EnumValueFilter<?> enumFilter = null;
+		if (EnumValueFilter.class.isInstance(filter)) {
+			enumFilter = EnumValueFilter.class.cast(filter);
+		}
 		for (String s : v) {
 			if (StringUtils.equalsIgnoreCase(allString, s)) { return EnumSet.allOf(enumClass); }
+			if (enumFilter != null) {
+				Object o = enumFilter.decode(s);
+				if (o != null) {
+					ret.add(enumClass.cast(o));
+					continue;
+				}
+			}
 			try {
 				ret.add(Enum.valueOf(enumClass, s));
 			} catch (final IllegalArgumentException e) {
@@ -425,8 +450,20 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		List<String> v = getStrings(param, null);
 		if (v == null) { return def; }
 		Set<E> ret = EnumSet.noneOf(enumClass);
+		OptionValueFilter filter = param.getValueFilter();
+		EnumValueFilter<?> enumFilter = null;
+		if (EnumValueFilter.class.isInstance(filter)) {
+			enumFilter = EnumValueFilter.class.cast(filter);
+		}
 		for (String s : v) {
 			if (StringUtils.equalsIgnoreCase(allString, s)) { return EnumSet.allOf(enumClass); }
+			if (enumFilter != null) {
+				Object o = enumFilter.decode(s);
+				if (o != null) {
+					ret.add(enumClass.cast(o));
+					continue;
+				}
+			}
 			try {
 				ret.add(Enum.valueOf(enumClass, s));
 			} catch (final IllegalArgumentException e) {

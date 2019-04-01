@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.armedia.commons.utilities.concurrent.ReadWriteList;
+import com.armedia.commons.utilities.concurrent.ShareableList;
 
 @XmlTransient
 public class AggregatorBase<T> {
@@ -21,7 +21,7 @@ public class AggregatorBase<T> {
 
 	protected final synchronized List<T> getItems() {
 		if (this.items == null) {
-			this.items = new ReadWriteList<>(new ArrayList<T>());
+			this.items = new ShareableList<>(new ArrayList<T>());
 		}
 		return this.items;
 	}

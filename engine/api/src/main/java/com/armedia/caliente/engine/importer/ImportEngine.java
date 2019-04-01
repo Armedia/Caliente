@@ -54,7 +54,6 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.Closer;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.StreamTools;
 import com.armedia.commons.utilities.SynchronizedCounter;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.line.LineIterator;
@@ -400,8 +399,7 @@ public abstract class ImportEngine<//
 		if ((source == null) || source.isEmpty()) { return null; }
 
 		LineIterator it = new LineScanner().iterator(source);
-		return StreamTools.of(it).filter(StringUtils::isNotEmpty).map(ImportRestriction::parseQuiet)
-			.filter(Objects::nonNull);
+		return it.stream().filter(StringUtils::isNotEmpty).map(ImportRestriction::parseQuiet).filter(Objects::nonNull);
 	}
 
 	@Override

@@ -16,14 +16,14 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.ConfigurationSetting;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
 public abstract class TransferContextFactory< //
 	SESSION, //
 	VALUE, //
 	CONTEXT extends TransferContext<SESSION, VALUE, ?>, //
 	ENGINE extends TransferEngine<?, ?, ?, SESSION, VALUE, CONTEXT, ?, ?, ?> //
-> extends BaseReadWriteLockable {
+> extends BaseShareableLockable {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -132,7 +132,7 @@ public abstract class TransferContextFactory< //
 	}
 
 	public final void close() {
-		writeLocked(() -> {
+		mutexLocked(() -> {
 			try {
 				if (!this.open) { return; }
 				doClose();
@@ -161,7 +161,7 @@ public abstract class TransferContextFactory< //
 	}
 
 	public final CONTEXT newContext(String rootId, CmfObject.Archetype rootType, SESSION session, int batchPosition) {
-		return readLocked(() -> {
+		return shareLocked(() -> {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
 			return constructContext(rootId, rootType, session, batchPosition);
 		});

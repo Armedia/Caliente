@@ -19,11 +19,10 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.IDfCollection;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.client.IDfUser;
@@ -78,10 +77,10 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 		if (ret == null) {
 			// Still no match? try by just login name, any domain
 			String dql = String.format(DctmImportUser.FIND_USER_BY_LOGIN_DQL, DfUtils.quoteString(loginName));
-			IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
-			try {
+			try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_EXECREAD_QUERY)) {
 				List<String> candidates = null;
-				while (c.next()) {
+				while (query.hasNext()) {
+					IDfTypedObject c = query.next();
 					if (ret != null) {
 						// If we've found more than one candidate, we list them all...
 						if (candidates == null) {
@@ -99,8 +98,6 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 					throw new MultipleUserMatchesException(String
 						.format("Found multiple candidate matches for login name [%s]: %s", loginName, candidates));
 				}
-			} finally {
-				DfUtils.closeQuietly(c);
 			}
 		}
 		return ret;

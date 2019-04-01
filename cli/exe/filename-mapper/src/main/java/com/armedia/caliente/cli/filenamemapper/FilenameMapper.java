@@ -17,17 +17,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.FilenameCollisionResolver;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
@@ -228,7 +227,6 @@ class FilenameMapper {
 			final long memPre;
 			try {
 				IDfLocalTransaction tx = null;
-				IDfCollection collection = null;
 				try {
 					if (session.isTransactionActive()) {
 						tx = session.beginTransEx();
@@ -237,66 +235,68 @@ class FilenameMapper {
 					}
 
 					this.log.info("Executing the main query");
-					collection = DfUtils.executeQuery(session, FilenameMapper.ALL_DQL);
-					long count = 0;
-					final long start = System.currentTimeMillis();
-					this.log.info("Query ready, iterating over the results");
-					memPre = runtime.maxMemory() - runtime.freeMemory();
-					final boolean folderIdRepeating = collection.isAttrRepeating("i_folder_id");
-					while (collection.next()) {
-						String entryId = collection.getString("r_object_id");
-						String name = collection.getString("object_name");
+					try (DctmQuery query = new DctmQuery(session, FilenameMapper.ALL_DQL)) {
+						long count = 0;
+						final long start = System.currentTimeMillis();
+						this.log.info("Query ready, iterating over the results");
+						memPre = runtime.maxMemory() - runtime.freeMemory();
+						while (query.hasNext()) {
+							IDfTypedObject o = query.next();
+							final boolean folderIdRepeating = o.isAttrRepeating("i_folder_id");
+							String entryId = o.getString("r_object_id");
+							String name = o.getString("object_name");
 
-						// First things first: make sure the filename is fixed
-						if (fixer != null) {
-							final String oldName = name;
-							// Empty names get modified into their object IDs...
-							if (StringUtils.isEmpty(name)) {
-								name = entryId;
-							}
-							name = fixer.fixName(name);
-							if (name == null) {
-								name = oldName;
-							}
-							if (!Tools.equals(name, oldName)) {
-								// If it was renamed, then the mapping is output, conflict
-								// or no conflict. If the same entry later has a conflict,
-								// it will be overwritten anyway...
-								String key = generateKey(newObjectRef(entryId));
-								if (key != null) {
-									finalMap.setProperty(key, name);
+							// First things first: make sure the filename is fixed
+							if (fixer != null) {
+								final String oldName = name;
+								// Empty names get modified into their object IDs...
+								if (StringUtils.isEmpty(name)) {
+									name = entryId;
+								}
+								name = fixer.fixName(name);
+								if (name == null) {
+									name = oldName;
+								}
+								if (!Tools.equals(name, oldName)) {
+									// If it was renamed, then the mapping is output, conflict
+									// or no conflict. If the same entry later has a conflict,
+									// it will be overwritten anyway...
+									String key = generateKey(newObjectRef(entryId));
+									if (key != null) {
+										finalMap.setProperty(key, name);
+									}
 								}
 							}
-						}
 
-						if (dedupEnabled) {
-							CmfObjectRef entryRef = newObjectRef(entryId);
-							if (folderIdRepeating) {
-								final int c = collection.getValueCount("i_folder_id");
-								for (int i = 0; i < c; i++) {
-									String containerId = collection.getRepeatingString("i_folder_id", i);
+							if (dedupEnabled) {
+								CmfObjectRef entryRef = newObjectRef(entryId);
+								if (folderIdRepeating) {
+									final int c = o.getValueCount("i_folder_id");
+									for (int i = 0; i < c; i++) {
+										String containerId = o.getRepeatingString("i_folder_id", i);
+										CmfObjectRef containerRef = newObjectRef(CmfObject.Archetype.FOLDER,
+											containerId);
+										if ((containerRef != null) && (entryRef != null)) {
+											deduplicator.addEntry(containerRef, entryRef, name);
+										}
+									}
+								} else {
+									String containerId = o.getString("i_folder_id");
 									CmfObjectRef containerRef = newObjectRef(CmfObject.Archetype.FOLDER, containerId);
 									if ((containerRef != null) && (entryRef != null)) {
 										deduplicator.addEntry(containerRef, entryRef, name);
 									}
 								}
-							} else {
-								String containerId = collection.getString("i_folder_id");
-								CmfObjectRef containerRef = newObjectRef(CmfObject.Archetype.FOLDER, containerId);
-								if ((containerRef != null) && (entryRef != null)) {
-									deduplicator.addEntry(containerRef, entryRef, name);
-								}
 							}
-						}
 
-						if ((++count % 1000) == 0) {
-							double duration = (System.currentTimeMillis() - start);
-							double metric = ((count * 1000) / duration);
-							this.log.info("Loaded {} entries (~{}/s)", count, (long) metric);
+							if ((++count % 1000) == 0) {
+								double duration = (System.currentTimeMillis() - start);
+								double metric = ((count * 1000) / duration);
+								this.log.info("Loaded {} entries (~{}/s)", count, (long) metric);
+							}
 						}
 					}
 				} finally {
-					DfUtils.closeQuietly(collection);
 					try {
 						if (tx != null) {
 							session.abortTransEx(tx);
@@ -320,25 +320,22 @@ class FilenameMapper {
 					resolverMap.put("fixChar",
 						Tools.coalesce(fixer != null ? fixer.getFixChar() : null, FilenameMapper.DEFAULT_FIX_CHAR)
 							.toString());
-					long fixes = deduplicator.fixConflicts(new FilenameCollisionResolver() {
-						@Override
-						public String generateUniqueName(CmfObjectRef entryId, String currentName, long count) {
-							// Empty names get modified into their object IDs...
-							if (StringUtils.isEmpty(currentName)) {
-								currentName = entryId.getId();
-							}
-							resolverMap.put("typeName", entryId.getType().name());
-							resolverMap.put("typeOrdinal", entryId.getType().ordinal());
-							resolverMap.put("id", entryId.getId());
-							resolverMap.put("name", currentName);
-							resolverMap.put("count", count);
-							String newName = StringSubstitutor.replace(resolverPattern, resolverMap);
-							if (fixer != null) {
-								// Make sure we use a clean name...
-								newName = fixer.fixName(newName);
-							}
-							return newName;
+					long fixes = deduplicator.fixConflicts((CmfObjectRef entryId, String currentName, long count) -> {
+						// Empty names get modified into their object IDs...
+						if (StringUtils.isEmpty(currentName)) {
+							currentName = entryId.getId();
 						}
+						resolverMap.put("typeName", entryId.getType().name());
+						resolverMap.put("typeOrdinal", entryId.getType().ordinal());
+						resolverMap.put("id", entryId.getId());
+						resolverMap.put("name", currentName);
+						resolverMap.put("count", count);
+						String newName = StringSubstitutor.replace(resolverPattern, resolverMap);
+						if (fixer != null) {
+							// Make sure we use a clean name...
+							newName = fixer.fixName(newName);
+						}
+						return newName;
 					});
 					this.log.info("Conflicts fixed: {}", fixes);
 					deduplicator.processRenamedEntries((entryId, entryName) -> {

@@ -42,7 +42,7 @@
 		<dfc.version>6.7-SP1</dfc.version>
 		<!-- Can't use a newer OpenCMIS because it'll cause JAXB collisions with the DFC -->
 		<opencmis.version>0.13.0</opencmis.version>
-		<h2.version>1.4.198-20190114.git-a092ef8bba8ee54411f7dfeac56f0a4e70b9f4e1</h2.version>
+		<h2.version>1.4.199</h2.version>
 		<ridc.version>11.1.1.0</ridc.version>
 		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
 		<dfc.jar>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</dfc.jar>
@@ -77,25 +77,25 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>utilities</artifactId>
-				<version>0.6.2</version>
+				<version>0.7.0</version>
 			</dependency>
 
 			<dependency> 
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>dfc-session-pool</artifactId>
-				<version>1.2.9</version>
+				<version>1.2.12</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-api</artifactId>
-				<version>1.2.8</version>
+				<version>1.2.11</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-pooled</artifactId>
-				<version>1.2.8</version>
+				<version>1.2.11</version>
 			</dependency>
 
 			<dependency>
@@ -290,6 +290,12 @@
 			<dependency>
 				<groupId>org.junit.vintage</groupId>
 				<artifactId>junit-vintage-engine</artifactId>
+				<version>5.4.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter-engine</artifactId>
 				<version>5.4.0</version>
 			</dependency>
 		</dependencies>
@@ -571,12 +577,14 @@
 		<module>cli/exe/history</module>
 		<module>cli/exe/user-mapper</module>
 		<module>cli/exe/validator</module>
+		<module>cli/exe/dctm-ticket-decoder</module>
 
 		<!-- The Web-based GUI -->
 		<module>gui</module>
 
 		<!-- Some general-use tools -->
 		<module>tools/common</module>
+		<module>tools/alfresco-bi</module>
 		<module>tools/dfc</module>
 		<module>tools/scratchpad</module>
 	</modules>

@@ -31,6 +31,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.armedia.caliente.tools</groupId>
+			<artifactId>caliente-tools-alfresco-bi</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-collections4</artifactId>
 			<scope>compile</scope>

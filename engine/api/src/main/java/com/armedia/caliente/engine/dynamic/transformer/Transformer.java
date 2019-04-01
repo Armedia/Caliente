@@ -16,9 +16,9 @@ import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
-import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
-public class Transformer extends BaseReadWriteLockable {
+public class Transformer extends BaseShareableLockable {
 
 	private static final XmlInstances<Transformations> INSTANCES = new XmlInstances<>(Transformations.class);
 
@@ -68,7 +68,7 @@ public class Transformer extends BaseReadWriteLockable {
 
 	public CmfObject<CmfValue> transform(CmfValueMapper mapper, final CmfAttributeNameMapper nameMapper,
 		SchemaService schemaService, CmfObject<CmfValue> object) throws TransformerException {
-		return readLocked(() -> {
+		return shareLocked(() -> {
 			if (this.closed) { throw new TransformerException("This transformer instance is already closed"); }
 			if (this.transformations == null) { return object; }
 			DynamicElementContext ctx = createContext(mapper, object);
@@ -108,7 +108,7 @@ public class Transformer extends BaseReadWriteLockable {
 	}
 
 	public void close() {
-		writeLocked(() -> {
+		mutexLocked(() -> {
 			try {
 				if (this.closed) { return; }
 				if (this.metadataLoader != null) {

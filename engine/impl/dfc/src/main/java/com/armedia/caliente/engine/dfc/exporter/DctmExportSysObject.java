@@ -23,18 +23,18 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.commons.dfc.util.DctmException;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DctmVersionHistory;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.CheckedFunction;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.DfObjectNotFoundException;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfGroup;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfType;
@@ -55,11 +55,6 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDelegate<T> implements DctmSysObject {
-
-	@FunctionalInterface
-	protected interface RecursionCalculator {
-		public String getValue(IDfSysObject o) throws DfException;
-	}
 
 	private static final String CTX_VERSION_HISTORY = "VERSION_HISTORY_%S";
 
@@ -85,7 +80,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	private final List<List<String>> calculateRecursions(final IDfSysObject f, Set<String> visited,
-		final RecursionCalculator calc) throws DfException {
+		final CheckedFunction<IDfSysObject, String, DfException> calc) throws DfException {
 		final String oid = f.getObjectId().getId();
 		if (visited == null) {
 			visited = new LinkedHashSet<>();
@@ -121,7 +116,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 			// Recurse upwards!
 			for (List<String> l : calculateRecursions(parent, visited, calc)) {
-				l.add(calc.getValue(parent));
+				l.add(calc.apply(parent));
 				all.add(l);
 			}
 		}
@@ -135,15 +130,13 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		return all;
 	}
 
-	protected final List<List<String>> calculateRecursions(final IDfSysObject f, final RecursionCalculator calc)
-		throws DfException {
+	protected final List<List<String>> calculateRecursions(final IDfSysObject f,
+		final CheckedFunction<IDfSysObject, String, DfException> calc) throws DfException {
 		return calculateRecursions(f, calc);
 	}
 
 	protected final List<List<String>> calculateAllPaths(IDfSession session, IDfSysObject f) throws DfException {
-		return calculateRecursions(f, null, (o) -> {
-			return o.getObjectName();
-		});
+		return calculateRecursions(f, null, (o) -> o.getObjectName());
 
 		/*
 		final String oid = f.getObjectId().getId();
@@ -182,9 +175,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	protected final List<List<String>> calculateAllParentIds(IDfSysObject f) throws DfException {
-		return calculateRecursions(f, null, (o) -> {
-			return o.getChronicleId().getId();
-		});
+		return calculateRecursions(f, null, (o) -> o.getChronicleId().getId());
 	}
 
 	protected final boolean isSameACL(T object, IDfTypedObject other) throws DfException {
@@ -282,21 +273,17 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			IDfType type = object.getType();
 			// Need to scale up the type hierarchy...
 			while (type != null) {
-				IDfCollection c = null;
-				try {
-					String dql = String.format("select acl_domain, acl_name from dmi_type_info where r_type_id = %s",
-						DfUtils.quoteString(type.getObjectId().getId()));
-					c = DfUtils.executeQuery(session, dql);
-					if (c.next()) {
-						if (isSameACL(object, c)) {
+				String dql = String.format("select acl_domain, acl_name from dmi_type_info where r_type_id = %s",
+					DfUtils.quoteString(type.getObjectId().getId()));
+				try (DctmQuery query = new DctmQuery(session, dql)) {
+					if (query.hasNext()) {
+						if (isSameACL(object, query.next())) {
 							aclInheritedProp
 								.setValue(DfValueFactory.newStringValue(String.format("TYPE[%s]", type.getName())));
 							aclInheritedSet = true;
 							break;
 						}
 					}
-				} finally {
-					DfUtils.closeQuietly(c);
 				}
 				type = type.getSuperType();
 			}
@@ -351,13 +338,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		final String dql = String.format(
 			"select distinct r_object_id from dm_acl where owner_name = %s and object_name = %s",
 			DfUtils.quoteString(aclDomain), DfUtils.quoteString(aclName));
-		IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_READ_QUERY);
-		try {
-			if (c.next()) {
-				aclId = c.getId(DctmAttributes.R_OBJECT_ID);
+		try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_READ_QUERY)) {
+			if (query.hasNext()) {
+				aclId = query.next().getId(DctmAttributes.R_OBJECT_ID);
 			}
-		} finally {
-			DfUtils.closeQuietly(c);
 		}
 		aclIdProp.setValue(DfValueFactory.newIdValue(aclId));
 		return true;
@@ -406,16 +390,12 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		marker = String.format(DctmExportSysObject.HISTORY_VDOC_STATUS, chronicleId);
 		Boolean vdocMarker = ctx.getObject(marker);
 		if (vdocMarker == null) {
-			IDfCollection c = null;
-			try {
-				String dql = String.format(
-					"select count(*) as vdocs from dm_document (ALL) where i_chronicle_id = %s and ((r_is_virtual_doc = 1) or (r_link_cnt > 0))",
-					DfUtils.quoteString(chronicleId));
-				c = DfUtils.executeQuery(ctx.getSession(), dql);
-				vdocMarker = c.next() && (c.getInt("vdocs") > 0);
+			String dql = String.format(
+				"select count(*) as vdocs from dm_document (ALL) where i_chronicle_id = %s and ((r_is_virtual_doc = 1) or (r_link_cnt > 0))",
+				DfUtils.quoteString(chronicleId));
+			try (DctmQuery query = new DctmQuery(ctx.getSession(), dql)) {
+				vdocMarker = query.hasNext() && (query.next().getInt("vdocs") > 0);
 				ctx.setObject(marker, vdocMarker);
-			} finally {
-				DfUtils.closeQuietly(c);
 			}
 		}
 		prop = new CmfProperty<>(IntermediateProperty.VDOC_HISTORY, DctmDataType.DF_BOOLEAN.getStoredType(), false);
@@ -534,13 +514,12 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			final IDfSession session = object.getSession();
 			final String dql = "select distinct r_object_id from dm_sysobject (ALL) where i_chronicle_id = %s and (r_is_virtual_doc = 1 or r_link_cnt > 0) order by 1 ";
 			final IDfId chronicleId = object.getChronicleId();
-			IDfCollection c = DfUtils.executeQuery(session,
-				String.format(dql, DfUtils.quoteString(chronicleId.getId())));
 			Integer depth = null;
-			try {
+			try (DctmQuery query = new DctmQuery(session,
+				String.format(dql, DfUtils.quoteString(chronicleId.getId())))) {
 				// Now iterate over all the virtual document entries so we can cascade
-				while (c.next()) {
-					IDfId id = c.getId("r_object_id");
+				while (query.hasNext()) {
+					IDfId id = query.next().getId("r_object_id");
 					try {
 						IDfSysObject o = IDfSysObject.class.cast(session.getObject(id));
 
@@ -564,8 +543,6 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 							id.getId(), chronicleId.getId()), e);
 					}
 				}
-			} finally {
-				DfUtils.closeQuietly(c);
 			}
 			// if we're not virtual documents, our default depth is 0... if we are or were at any
 			// point in our history, in then our depth is the deepest depth of any of our referenced
@@ -682,16 +659,12 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 	protected IDfReference getReferenceFor(T object) throws DfException {
 		if ((object == null) || !object.isReference()) { return null; }
-		IDfCollection c = null;
 		final IDfSession s = object.getSession();
-		try {
-			c = DfUtils.executeQuery(s,
-				String.format("select r_object_id from dm_reference_s where r_mirror_object_id = %s",
-					DfUtils.quoteString(object.getObjectId().getId())));
-			if (!c.next()) { return null; }
-			return IDfReference.class.cast(s.getObject(c.getId("r_object_id")));
-		} finally {
-			DfUtils.closeQuietly(c);
+		try (DctmQuery query = new DctmQuery(s,
+			String.format("select r_object_id from dm_reference_s where r_mirror_object_id = %s",
+				DfUtils.quoteString(object.getObjectId().getId())))) {
+			if (!query.hasNext()) { return null; }
+			return IDfReference.class.cast(s.getObject(query.next().getId("r_object_id")));
 		}
 	}
 

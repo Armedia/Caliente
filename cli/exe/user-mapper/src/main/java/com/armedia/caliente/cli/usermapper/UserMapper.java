@@ -423,7 +423,7 @@ public class UserMapper {
 		}
 	}
 
-	private Set<String> getMappingAttributes(OptionValues cli, DfcSessionPool pool) throws Exception {
+	private Set<String> getMappingAttributes(OptionValues cli, DfcSessionPool pool) throws DfException {
 		List<String> attributes = cli.getStrings(CLIParam.dctm_sam, UserMapper.DEFAULT_DCTM_SAM_ATTRIBUTES);
 		// Shortcut - if there's nothing to validate, don't bother validating...
 		if (attributes.isEmpty()) { return Collections.emptySet(); }
@@ -435,7 +435,7 @@ public class UserMapper {
 			// Who is the current user? Use that as a validation point...
 			IDfUser user = session.getUser(session.getLoginUserName());
 			if (user == null) {
-				throw new Exception(String.format("Failed to locate the current session's user object [%s]",
+				throw new DfException(String.format("Failed to locate the current session's user object [%s]",
 					session.getLoginUserName()));
 			}
 			for (String attributeName : candidates) {

@@ -17,12 +17,13 @@ import com.armedia.caliente.engine.ucm.model.UcmFolder;
 import com.armedia.caliente.engine.ucm.model.UcmFolderNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
-import com.armedia.caliente.engine.ucm.model.UcmModel.URIHandler;
 import com.armedia.caliente.engine.ucm.model.UcmObjectNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmRenditionInfo;
 import com.armedia.caliente.engine.ucm.model.UcmRenditionNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmRevision;
 import com.armedia.caliente.engine.ucm.model.UcmServiceException;
+import com.armedia.commons.utilities.function.CheckedConsumer;
+import com.armedia.commons.utilities.function.CheckedTriConsumer;
 
 import oracle.stellent.ridc.IdcClientConfig;
 import oracle.stellent.ridc.IdcClientException;
@@ -34,11 +35,6 @@ import oracle.stellent.ridc.protocol.ServiceResponse;
 import oracle.stellent.ridc.protocol.intradoc.IntradocClient;
 
 public class UcmSession implements TrackedUse {
-
-	@FunctionalInterface
-	public static interface RequestPreparation {
-		public void prepareRequest(DataBinder request) throws UcmServiceException;
-	}
 
 	private final IntradocClient client;
 	private final IdcContext userContext;
@@ -120,13 +116,14 @@ public class UcmSession implements TrackedUse {
 		return callService(service, null);
 	}
 
-	public ServiceResponse callService(String service, RequestPreparation prep) throws UcmServiceException {
+	public ServiceResponse callService(String service, CheckedConsumer<DataBinder, UcmServiceException> prep)
+		throws UcmServiceException {
 		if (StringUtils.isEmpty(service)) {
 			throw new IllegalArgumentException(String.format("Illegal service name [%s]", service));
 		}
 		DataBinder binder = createBinder();
 		if (prep != null) {
-			prep.prepareRequest(binder);
+			prep.accept(binder);
 		}
 		// Do this last to override anything that prep might do
 		binder.putLocal("IdcService", service.toUpperCase());
@@ -205,11 +202,13 @@ public class UcmSession implements TrackedUse {
 		return this.model.getURISearchResults(this, query, pageSize);
 	}
 
-	public long iterateURISearchResults(String query, URIHandler handler) throws UcmServiceException {
+	public long iterateURISearchResults(String query,
+		CheckedTriConsumer<UcmSession, Long, URI, UcmServiceException> handler) throws UcmServiceException {
 		return this.model.iterateURISearchResults(this, query, handler);
 	}
 
-	public long iterateURISearchResults(String query, int pageSize, URIHandler handler) throws UcmServiceException {
+	public long iterateURISearchResults(String query, int pageSize,
+		CheckedTriConsumer<UcmSession, Long, URI, UcmServiceException> handler) throws UcmServiceException {
 		return this.model.iterateURISearchResults(this, query, pageSize, handler);
 	}
 

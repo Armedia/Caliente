@@ -17,13 +17,13 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.ShareableLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataAttributeTypes.t", propOrder = {
 	"mappings", "defaultType"
 })
-public class AttributeTypeMapping implements ReadWriteLockable {
+public class AttributeTypeMapping implements ShareableLockable {
 
 	private static final boolean DEFAULT_CASE_SENSITIVE = true;
 
@@ -57,7 +57,7 @@ public class AttributeTypeMapping implements ReadWriteLockable {
 	protected Boolean caseSensitive = null;
 
 	@Override
-	public ReadWriteLock getMainLock() {
+	public ReadWriteLock getShareableLock() {
 		return this.rwLock;
 	}
 
@@ -69,7 +69,7 @@ public class AttributeTypeMapping implements ReadWriteLockable {
 	}
 
 	public void initialize(Boolean caseSensitive) {
-		readLockedUpgradable(() -> this.matchers, Objects::isNull, (e) -> {
+		shareLockedUpgradable(() -> this.matchers, Objects::isNull, (e) -> {
 			this.caseSensitive = Tools.coalesce(caseSensitive, AttributeTypeMapping.DEFAULT_CASE_SENSITIVE);
 
 			this.activeDefault = this.defaultType;
@@ -86,15 +86,15 @@ public class AttributeTypeMapping implements ReadWriteLockable {
 	}
 
 	public boolean isCaseSensitive() {
-		return readLocked(() -> this.caseSensitive);
+		return shareLocked(() -> this.caseSensitive);
 	}
 
 	public CmfValue.Type getDefaultType() {
-		return readLocked(() -> this.defaultType);
+		return shareLocked(() -> this.defaultType);
 	}
 
 	public void setDefaultType(CmfValue.Type value) {
-		writeLocked(() -> {
+		mutexLocked(() -> {
 			this.defaultType = value;
 			close();
 			initialize(this.caseSensitive);
@@ -102,7 +102,7 @@ public class AttributeTypeMapping implements ReadWriteLockable {
 	}
 
 	public CmfValue.Type getMappedType(final String sqlName) {
-		return readLocked(() -> {
+		return shareLocked(() -> {
 			for (TypeMatcher tm : this.matchers) {
 				if (tm.pattern.matcher(sqlName).matches()) { return tm.type; }
 			}
@@ -111,7 +111,7 @@ public class AttributeTypeMapping implements ReadWriteLockable {
 	}
 
 	public void close() {
-		readLockedUpgradable(() -> this.matchers, Objects::nonNull, (e) -> {
+		shareLockedUpgradable(() -> this.matchers, Objects::nonNull, (e) -> {
 			this.activeDefault = null;
 			this.caseSensitive = null;
 			this.matchers = null;

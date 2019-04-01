@@ -12,12 +12,10 @@ import com.armedia.caliente.engine.dfc.DctmMappingUtils;
 import com.armedia.caliente.engine.dfc.common.DctmFolder;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.utilities.FileNameTools;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
@@ -78,47 +76,43 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		super.getDataProperties(ctx, properties, folder);
 		final String folderId = folder.getObjectId().getId();
 
-		IDfCollection resultCol = DfUtils.executeQuery(ctx.getSession(),
-			String.format(DctmExportFolder.DQL_FIND_USERS_WITH_DEFAULT_FOLDER, folderId), IDfQuery.DF_EXECREAD_QUERY);
-		try {
+		try (DctmQuery query = new DctmQuery(ctx.getSession(),
+			String.format(DctmExportFolder.DQL_FIND_USERS_WITH_DEFAULT_FOLDER, folderId),
+			DctmQuery.Type.DF_EXECREAD_QUERY)) {
 			CmfProperty<IDfValue> usersWithDefaultFolder = new CmfProperty<>(
 				IntermediateProperty.USERS_WITH_DEFAULT_FOLDER, DctmDataType.DF_STRING.getStoredType());
 			CmfProperty<IDfValue> usersDefaultFolderPaths = new CmfProperty<>(
 				IntermediateProperty.USERS_DEFAULT_FOLDER_PATHS, DctmDataType.DF_STRING.getStoredType());
-			while (resultCol.next()) {
+			query.forEachRemaining((resultCol) -> {
 				IDfValue v = resultCol.getValueAt(0);
 				if (DctmMappingUtils.isMappableUser(ctx.getSession(), v.asString())
 					|| ctx.isSpecialUser(v.asString())) {
 					// We don't modify the home directory for mappable users or special users...
-					continue;
+					return;
 				}
 
 				usersWithDefaultFolder.addValue(DctmMappingUtils.substituteMappableUsers(folder, v));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
-			}
+			});
 			properties.add(usersWithDefaultFolder);
 			properties.add(usersDefaultFolderPaths);
-		} finally {
-			DfUtils.closeQuietly(resultCol);
 		}
 
-		resultCol = DfUtils.executeQuery(ctx.getSession(),
-			String.format(DctmExportFolder.DQL_FIND_GROUPS_WITH_DEFAULT_FOLDER, folderId), IDfQuery.DF_EXECREAD_QUERY);
-		try {
+		try (DctmQuery query = new DctmQuery(ctx.getSession(),
+			String.format(DctmExportFolder.DQL_FIND_GROUPS_WITH_DEFAULT_FOLDER, folderId),
+			DctmQuery.Type.DF_EXECREAD_QUERY)) {
 			CmfProperty<IDfValue> groupsWithDefaultFolder = new CmfProperty<>(
 				IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER, DctmDataType.DF_STRING.getStoredType());
-			while (resultCol.next()) {
+			query.forEachRemaining((resultCol) -> {
 				IDfValue v = resultCol.getValueAt(0);
 				if (ctx.isSpecialGroup(v.asString())) {
 					// We don't modify the home directory for special groups...
-					continue;
+					return;
 				}
 
 				groupsWithDefaultFolder.addValue(v);
-			}
+			});
 			properties.add(groupsWithDefaultFolder);
-		} finally {
-			DfUtils.closeQuietly(resultCol);
 		}
 		return true;
 	}

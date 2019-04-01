@@ -48,13 +48,13 @@ import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfTreeScanner;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.TriConsumer;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -782,7 +782,8 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 	}
 
 	@Override
-	protected void scanObjectTree(JdbcOperation operation, final CmfTreeScanner scanner) throws CmfStorageException {
+	protected void scanObjectTree(JdbcOperation operation,
+		final TriConsumer<CmfObjectRef, CmfObjectRef, String> scanner) throws CmfStorageException {
 		try {
 			JdbcTools.getQueryRunner().query(operation.getConnection(),
 				translateQuery(JdbcDialect.Query.SCAN_OBJECT_TREE), (rs) -> {
@@ -802,7 +803,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 						CmfObjectRef parent = JdbcTools.decodeDatabaseId(parentId);
 						CmfObjectRef child = JdbcTools.decodeDatabaseId(objectId);
 						try {
-							scanner.scanNode(parent, child, name);
+							scanner.accept(parent, child, name);
 						} catch (Exception e) {
 							throw new SQLException("Failed to scan through the object tree due to a scanner exception",
 								e);

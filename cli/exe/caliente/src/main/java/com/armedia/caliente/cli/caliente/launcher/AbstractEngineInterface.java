@@ -28,12 +28,12 @@ import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
-import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.ShareableLockable;
 
 public abstract class AbstractEngineInterface {
 
-	private static final ReadWriteLockable INTERFACES_LOCK = new BaseReadWriteLockable();
+	private static final ShareableLockable INTERFACES_LOCK = new BaseShareableLockable();
 	private static final AtomicBoolean INTERFACES_INITIALIZED = new AtomicBoolean(false);
 	private static Map<String, String> ENGINE_ALIASES = null;
 	private static Map<String, AbstractEngineInterface> INTERFACES = null;
@@ -47,7 +47,7 @@ public abstract class AbstractEngineInterface {
 
 	private static void initializeInterfaces(final Logger log) {
 		AbstractEngineInterface.INTERFACES_LOCK
-			.readLockedUpgradable(() -> !AbstractEngineInterface.INTERFACES_INITIALIZED.get(), () -> {
+			.shareLockedUpgradable(() -> !AbstractEngineInterface.INTERFACES_INITIALIZED.get(), () -> {
 				final PluggableServiceLocator<AbstractEngineInterface> abstractEngineInterfaces = new PluggableServiceLocator<>(
 					AbstractEngineInterface.class);
 				abstractEngineInterfaces.setHideErrors(log == null);

@@ -26,13 +26,12 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
-import com.armedia.commons.dfc.util.DctmCollectionStream;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfId;
@@ -113,8 +112,9 @@ public class DctmExportEngine extends
 
 		final int batchSize = configuration.getInteger(Setting.EXPORT_BATCH_SIZE);
 
-		return DctmCollectionStream.get(session, query, IDfQuery.DF_EXECREAD_QUERY, batchSize)
-			.map(this::getExportTarget);
+		@SuppressWarnings("resource")
+		DctmQuery dctmQuery = new DctmQuery(session, query, DctmQuery.Type.DF_EXECREAD_QUERY, batchSize);
+		return dctmQuery.stream().map(this::getExportTarget);
 	}
 
 	private ExportTarget getExportTarget(IDfTypedObject t) {

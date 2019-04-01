@@ -39,11 +39,7 @@ import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
 import com.armedia.caliente.engine.alfresco.bi.AlfXmlIndex;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndex;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItem;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker.MarkerType;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemVersion;
+import com.armedia.caliente.engine.alfresco.bi.importer.ScanIndexItemMarker.MarkerType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
@@ -57,17 +53,19 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.alfresco.bi.BulkImportManager;
+import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndex;
+import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
+import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
-import com.armedia.commons.utilities.concurrent.ReadWriteSet;
+import com.armedia.commons.utilities.concurrent.ShareableSet;
 
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
-
-	static final String METADATA_SUFFIX = ".xml";
 
 	private final class VirtualDocument {
 		private final String historyId;
@@ -144,16 +142,11 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	private final static String FILE_CACHE_FILE = "scan.files.xml";
-	private final static String FOLDER_CACHE_FILE = "scan.folders.xml";
-
 	private static final Pattern VERSION_SUFFIX = Pattern.compile("^.*(\\.v(\\d+(?:\\.\\d+)?))$");
 
 	private static final BigDecimal LAST_INDEX = new BigDecimal(Long.MAX_VALUE);
 
 	private static final String SCHEMA_NAME = "alfresco-model.xsd";
-
-	private static final String MODEL_DIR_NAME = "content-models";
 
 	static final Schema SCHEMA;
 
@@ -167,9 +160,7 @@ public class AlfImportDelegateFactory
 	}
 
 	private final Path baseData;
-	private final Path contentPath;
-	private final Path biRootPath;
-	private final String unfiledPath;
+	private final BulkImportManager biManager;
 
 	private final Properties userLoginMap = new Properties();
 
@@ -184,30 +175,26 @@ public class AlfImportDelegateFactory
 	private final AtomicBoolean manifestSerialized = new AtomicBoolean(false);
 	private final AtomicReference<Boolean> initializedVdocs = new AtomicReference<>(null);
 
-	private final Set<String> artificialFolders = new ReadWriteSet<>(new LinkedHashSet<>());
+	private final Set<String> artificialFolders = new ShareableSet<>(new LinkedHashSet<>());
 
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
 		throws IOException, JAXBException, XMLStreamException, DynamicElementException {
 		super(engine, configuration);
 		this.baseData = engine.getBaseData();
-		this.biRootPath = engine.getBiRootPath();
-		this.contentPath = engine.getContentPath();
-		this.unfiledPath = engine.getUnfiledPath();
+		this.biManager = engine.getBulkImportManager();
 		this.schema = engine.getSchema();
 		this.defaultTypes = engine.getDefaultTypes();
 
-		FileUtils.forceMkdir(this.contentPath.toFile());
+		FileUtils.forceMkdir(this.biManager.getContentPath().toFile());
 
-		final File modelDir = this.biRootPath.resolve(AlfImportDelegateFactory.MODEL_DIR_NAME).toFile();
+		final File modelDir = this.biManager.getContentModelsPath().toFile();
 		FileUtils.forceMkdir(modelDir);
 
 		Class<?>[] idxClasses = {
 			ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class
 		};
-		this.fileIndex = new AlfXmlIndex(this.biRootPath.resolve(AlfImportDelegateFactory.FILE_CACHE_FILE).toFile(),
-			idxClasses);
-		this.folderIndex = new AlfXmlIndex(this.biRootPath.resolve(AlfImportDelegateFactory.FOLDER_CACHE_FILE).toFile(),
-			idxClasses);
+		this.fileIndex = new AlfXmlIndex(this.biManager.getIndexFilePath(false).toFile(), idxClasses);
+		this.folderIndex = new AlfXmlIndex(this.biManager.getIndexFilePath(true).toFile(), idxClasses);
 
 		if (!configuration.hasValue(AlfSetting.CONTENT_MODEL)) {
 			throw new IllegalStateException("Must provide a valid set of content model XML files");
@@ -314,15 +301,13 @@ public class AlfImportDelegateFactory
 		return (parent != null ? parent.resolve(name) : Paths.get(name));
 	}
 
-	private final void storeIngestionIndexToScanIndex() throws ImportException {
+	private final void storeManifestToScanIndex() throws ImportException {
 		if (!this.manifestSerialized.compareAndSet(false, true)) {
 			// This will only happen once
 			return;
 		}
 
-		final String name = AlfImportEngine.MANIFEST_NAME;
-		final Path contentPath = this.baseData.relativize(this.biRootPath.resolve(name));
-
+		final Path contentPath = this.biManager.getManifestPath(true);
 		ScanIndexItemMarker thisMarker = new ScanIndexItemMarker();
 		thisMarker.setDirectory(false);
 		thisMarker.setContent(contentPath);
@@ -505,7 +490,7 @@ public class AlfImportDelegateFactory
 					}
 				}
 			} else {
-				paths.add(this.unfiledPath);
+				this.biManager.getUnfiledPath().forEach((p) -> paths.add(p.toString()));
 				PathTools.addNumericPaths(paths, cmfObject.getNumber());
 			}
 			targetPath = Tools.joinEscaped('/', paths);
@@ -595,13 +580,9 @@ public class AlfImportDelegateFactory
 
 	final File generateMetadataFile(final Properties p, final CmfObject<CmfValue> cmfObject, final File main)
 		throws ImportException {
-		Path relativePath = this.contentPath.relativize(main.toPath());
+		Path target = this.biManager.calculateMetadataPath(main.toPath());
 
-		Path target = this.biRootPath.resolve(relativePath);
-		String targetName = String.format("%s%s", target.getFileName(), AlfImportDelegateFactory.METADATA_SUFFIX);
-		target = target.getParent();
-
-		final File meta = target.resolve(targetName).toFile();
+		final File meta = target.toFile();
 		if (p == null) { return meta; }
 
 		try {
@@ -638,7 +619,6 @@ public class AlfImportDelegateFactory
 		final AtomicLong number = new AtomicLong(0);
 		// Make sure we order them so they are sorted hierarchically
 		for (final String mf : new TreeSet<>(this.artificialFolders)) {
-			// Already processed - move along!
 			final File baseFile;
 			{
 				List<String> paths = new ArrayList<>();
@@ -647,7 +627,7 @@ public class AlfImportDelegateFactory
 				// Concatenate them into a path
 				String path = FileNameTools.reconstitute(paths, false, false);
 				// Now, create a file for them
-				Path basePath = this.biRootPath.resolve(path);
+				Path basePath = this.biManager.getArtificialFolderPath(path);
 				baseFile = AlfImportDelegateFactory.normalizeAbsolute(basePath.resolve(name).toFile());
 			}
 
@@ -697,7 +677,7 @@ public class AlfImportDelegateFactory
 		// for whatever reason they need to be employed
 		contentFile = AlfImportDelegateFactory.normalizeAbsolute(contentFile);
 		// basePath is the base path within which the entire import resides
-		final Path relativeContentPath = this.biRootPath.relativize(contentFile.toPath());
+		final Path relativeContentPath = this.biManager.calculateContentPath(contentFile.toPath());
 		final Path relativeContentParent = (relativeContentPath != null ? relativeContentPath.getParent() : null);
 
 		ScanIndexItemMarker thisMarker = new ScanIndexItemMarker();
@@ -726,7 +706,7 @@ public class AlfImportDelegateFactory
 		final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile, MarkerType type)
 		throws ImportException {
 
-		storeIngestionIndexToScanIndex();
+		storeManifestToScanIndex();
 
 		final ScanIndexItemMarker thisMarker = generateItemMarker(ctx, folder, cmfObject, contentFile, metadataFile,
 			type);
