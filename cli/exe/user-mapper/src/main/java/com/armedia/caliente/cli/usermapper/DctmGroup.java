@@ -7,13 +7,14 @@ import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
 import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfLocalTransaction;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
 
 public class DctmGroup extends DctmPrincipal {
@@ -69,7 +70,7 @@ public class DctmGroup extends DctmPrincipal {
 		return new Callable<Map<String, DctmGroup>>() {
 
 			@Override
-			public Map<String, DctmGroup> call() throws Exception {
+			public Map<String, DctmGroup> call() throws DfException {
 				final IDfSession session = pool.acquireSession();
 				try {
 					IDfLocalTransaction tx = null;
@@ -79,13 +80,13 @@ public class DctmGroup extends DctmPrincipal {
 						session.beginTrans();
 					}
 					try {
-						IDfCollection c = DfUtils.executeQuery(session,
+						try (DctmQuery query = new DctmQuery(session,
 							"select group_name, group_source, group_global_unique_id from dm_group order by 2, 1",
-							IDfQuery.DF_READ_QUERY);
-						try {
+							DctmQuery.Type.DF_READ_QUERY)) {
 							Map<String, DctmGroup> allGroups = new LinkedHashMap<>();
 							int i = 0;
-							while (c.next()) {
+							while (query.hasNext()) {
+								IDfTypedObject c = query.next();
 								String name = c.getString("group_name");
 								String source = c.getString("group_source");
 								String guid = c.getString("group_global_unique_id");
@@ -98,8 +99,6 @@ public class DctmGroup extends DctmPrincipal {
 							}
 							DctmPrincipal.LOG.info("Finished loading {} Documentum Groups", allGroups.size());
 							return Tools.freezeMap(allGroups);
-						} finally {
-							DfUtils.closeQuietly(c);
 						}
 					} finally {
 						if (tx != null) {

@@ -58,7 +58,7 @@ public class CliValuePrompt {
 
 	public static final String getUsername(OptionValues cli, Option param, String prompt, Object... promptParams) {
 		return CliValuePrompt
-			.getString(CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(false, prompt, promptParams)));
+			.getString(CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(true, prompt, promptParams)));
 	}
 
 	public static final String getPasswordString(OptionValues cli, Supplier<Option> param, String prompt,
@@ -77,7 +77,7 @@ public class CliValuePrompt {
 	}
 
 	public static final char[] getPassword(OptionValues cli, Option param, String prompt, Object... promptParams) {
-		return CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(true, prompt, promptParams));
+		return CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(false, prompt, promptParams));
 	}
 
 	public static final char[] getPromptableValue(OptionValues cli, Supplier<Option> param,

@@ -29,8 +29,6 @@ import com.armedia.caliente.engine.ucm.model.UcmFSObject;
 import com.armedia.caliente.engine.ucm.model.UcmFolder;
 import com.armedia.caliente.engine.ucm.model.UcmFolderNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmModel;
-import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
-import com.armedia.caliente.engine.ucm.model.UcmModel.URIHandler;
 import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
@@ -58,13 +56,8 @@ public class UcmExportEngine extends
 
 		// TODO: Not like!! Doesn't match the spirit of what we're trying to do
 		Builder<ExportTarget> builder = Stream.builder();
-		session.iterateURISearchResults(query, new URIHandler() {
-			@Override
-			public void handleURI(UcmSession session, long pos, URI objectUri) {
-				builder
-					.accept(new ExportTarget(CmfObject.Archetype.DOCUMENT, objectUri.toString(), objectUri.toString()));
-			}
-		});
+		session.iterateURISearchResults(query,
+			(s, o, u) -> builder.accept(new ExportTarget(CmfObject.Archetype.DOCUMENT, u.toString(), u.toString())));
 		return builder.build();
 	}
 
@@ -125,13 +118,8 @@ public class UcmExportEngine extends
 				UcmFolder folder = UcmFolder.class.cast(object);
 				// Not a shortcut, so we'll recurse into it and submit each and every one of
 				// its contents, but we won't be recursing into shortcuts
-				session.iterateFolderContentsRecursive(folder, false, new ObjectHandler() {
-					@Override
-					public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
-						builder.accept(new ExportTarget(object.getType().archetype, object.getUniqueURI().toString(),
-							object.getURI().toString()));
-					}
-				});
+				session.iterateFolderContentsRecursive(folder, false, (s, p, u, o) -> builder.accept(
+					new ExportTarget(o.getType().archetype, o.getUniqueURI().toString(), o.getURI().toString())));
 				return builder.build();
 		}
 		return Stream.empty();
@@ -148,9 +136,9 @@ public class UcmExportEngine extends
 	}
 
 	@Override
-	protected UcmExportContextFactory newContextFactory(UcmSession session, CfgTools cfg,
-		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> streamStore, Transformer transformer, Logger output,
-		WarningTracker warningTracker) throws Exception {
+	protected UcmExportContextFactory newContextFactory(UcmSession session, CfgTools cfg, CmfObjectStore<?> objectStore,
+		CmfContentStore<?, ?> streamStore, Transformer transformer, Logger output, WarningTracker warningTracker)
+		throws Exception {
 		return new UcmExportContextFactory(this, session, cfg, objectStore, streamStore, output, warningTracker);
 	}
 

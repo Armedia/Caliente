@@ -277,7 +277,7 @@ public class DataGen {
 								final IDfSession session;
 								try {
 									session = pool.acquireSession();
-								} catch (Exception e) {
+								} catch (DfException e) {
 									String msg = "Failed to obtain a client session for processing";
 									if (debug) {
 										DataGen.this.log.error(msg, e);

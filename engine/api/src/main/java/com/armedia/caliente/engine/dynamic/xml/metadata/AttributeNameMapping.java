@@ -18,13 +18,13 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.ShareableLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataTransformNames.t", propOrder = {
 	"mappings", "defaultTransform"
 })
-public class AttributeNameMapping implements ReadWriteLockable {
+public class AttributeNameMapping implements ShareableLockable {
 
 	private static final boolean DEFAULT_CASE_SENSITIVE = true;
 
@@ -57,7 +57,7 @@ public class AttributeNameMapping implements ReadWriteLockable {
 	protected Boolean caseSensitive = null;
 
 	@Override
-	public final ReadWriteLock getMainLock() {
+	public final ReadWriteLock getShareableLock() {
 		return this.rwLock;
 	}
 
@@ -69,7 +69,7 @@ public class AttributeNameMapping implements ReadWriteLockable {
 	}
 
 	public void initialize(Boolean caseSensitive) {
-		readLockedUpgradable(() -> this.matchers, Objects::isNull, (e) -> {
+		shareLockedUpgradable(() -> this.matchers, Objects::isNull, (e) -> {
 			this.caseSensitive = Tools.coalesce(caseSensitive, AttributeNameMapping.DEFAULT_CASE_SENSITIVE);
 			this.activeDefault = this.defaultTransform;
 			List<NameMatcher> matchers = new ArrayList<>();
@@ -84,15 +84,15 @@ public class AttributeNameMapping implements ReadWriteLockable {
 	}
 
 	public boolean isCaseSensitive() {
-		return readLocked(() -> this.caseSensitive);
+		return shareLocked(() -> this.caseSensitive);
 	}
 
 	public Expression getDefaultTransform() {
-		return readLocked(() -> this.defaultTransform);
+		return shareLocked(() -> this.defaultTransform);
 	}
 
 	public void setDefaultTransform(Expression value) {
-		writeLocked(() -> {
+		mutexLocked(() -> {
 			this.defaultTransform = value;
 			close();
 			initialize(this.caseSensitive);
@@ -100,7 +100,7 @@ public class AttributeNameMapping implements ReadWriteLockable {
 	}
 
 	public String transformName(final String sqlName) throws ScriptException {
-		return readLocked(() -> {
+		return shareLocked(() -> {
 			boolean hasGroups = false;
 			String regex = null;
 			Expression repl = null;
@@ -137,7 +137,7 @@ public class AttributeNameMapping implements ReadWriteLockable {
 	}
 
 	public void close() {
-		writeLocked(() -> {
+		mutexLocked(() -> {
 			if (this.matchers == null) { return; }
 			this.activeDefault = null;
 			this.caseSensitive = null;

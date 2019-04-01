@@ -11,7 +11,6 @@ import java.util.Objects;
 
 import com.armedia.caliente.engine.ucm.UcmConstants;
 import com.armedia.caliente.engine.ucm.UcmSession;
-import com.armedia.caliente.engine.ucm.UcmSession.RequestPreparation;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
@@ -139,17 +138,14 @@ public class FolderContentsIterator {
 
 	private DataBinder getNextBatch() throws UcmServiceException {
 		try {
-			return this.session.callService("FLD_BROWSE", new RequestPreparation() {
-				@Override
-				public void prepareRequest(DataBinder binder) {
-					FolderContentsIterator.this.folderLocatorMode.applySearchParameters(binder,
-						FolderContentsIterator.this.searchKey);
-					FolderContentsIterator.this.folderIteratorMode.setParameters(binder);
-					binder.putLocal(FolderContentsIterator.this.folderIteratorMode.count,
-						String.valueOf(FolderContentsIterator.this.pageSize));
-					binder.putLocal(FolderContentsIterator.this.folderIteratorMode.startRow,
-						String.valueOf(FolderContentsIterator.this.pageSize * FolderContentsIterator.this.pageCount));
-				}
+			return this.session.callService("FLD_BROWSE", (binder) -> {
+				FolderContentsIterator.this.folderLocatorMode.applySearchParameters(binder,
+					FolderContentsIterator.this.searchKey);
+				FolderContentsIterator.this.folderIteratorMode.setParameters(binder);
+				binder.putLocal(FolderContentsIterator.this.folderIteratorMode.count,
+					String.valueOf(FolderContentsIterator.this.pageSize));
+				binder.putLocal(FolderContentsIterator.this.folderIteratorMode.startRow,
+					String.valueOf(FolderContentsIterator.this.pageSize * FolderContentsIterator.this.pageCount));
 			}).getResponseAsBinder();
 		} catch (IdcClientException e) {
 			throw new UcmServiceException(

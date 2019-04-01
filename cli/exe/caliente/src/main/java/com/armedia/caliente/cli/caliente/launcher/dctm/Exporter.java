@@ -18,6 +18,7 @@ import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.common.DfException;
 
 class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 	private static final Option BATCH_SIZE = new OptionImpl() //
@@ -178,7 +179,7 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		try {
 			this.pool = new DfcSessionPool(settings);
 			this.session = this.pool.acquireSession();
-		} catch (Exception e) {
+		} catch (DfException e) {
 			throw new CalienteException("Failed to initialize the connection pool or get the primary session", e);
 		}
 

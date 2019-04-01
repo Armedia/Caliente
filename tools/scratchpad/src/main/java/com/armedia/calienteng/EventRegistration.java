@@ -9,12 +9,11 @@ import java.util.TreeSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
@@ -216,15 +215,12 @@ public class EventRegistration implements Comparable<EventRegistration> {
 		}
 		String dql = "select count(*) as counter from dmi_registry where registered_id = %s and user_name = %s";
 		dql = String.format(dql, DfUtils.quoteString(object.getObjectId().getId()), DfUtils.quoteString(user));
-		IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.EXECREAD_QUERY);
-		try {
-			if (!c.next()) {
+		try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_EXECREAD_QUERY)) {
+			if (!query.hasNext()) {
 				// This should be impossible, but still cover for it...
 				throw new DfException("DQL Query somehow returned no results, even though it's a count(*) query");
 			}
-			return c.getInt("counter");
-		} finally {
-			DfUtils.closeQuietly(c);
+			return query.next().getInt("counter");
 		}
 	}
 
@@ -270,11 +266,8 @@ public class EventRegistration implements Comparable<EventRegistration> {
 		String dql = "select r_object_id from dmi_registry where registered_id = %s and event = %s and user_name = %s";
 		dql = String.format(dql, DfUtils.quoteString(object.getObjectId().getId()), DfUtils.quoteString(event),
 			DfUtils.quoteString(user));
-		IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.EXECREAD_QUERY);
-		try {
-			return c.next();
-		} finally {
-			DfUtils.closeQuietly(c);
+		try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_EXECREAD_QUERY)) {
+			return query.hasNext();
 		}
 	}
 
@@ -343,16 +336,10 @@ public class EventRegistration implements Comparable<EventRegistration> {
 		}
 		String dql = "select * from dmi_registry where registered_id = %s and user_name = %s order by event";
 		dql = String.format(dql, DfUtils.quoteString(object.getObjectId().getId()), DfUtils.quoteString(user));
-		IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.EXECREAD_QUERY);
 		Set<EventRegistration> ret = new TreeSet<>();
-		try {
-			while (c.next()) {
-				ret.add(EventRegistration.loadRegistration(c));
-			}
-			return ret;
-		} finally {
-			DfUtils.closeQuietly(c);
-		}
+		DctmQuery.run(session, dql, DctmQuery.Type.DF_EXECREAD_QUERY,
+			(o) -> ret.add(EventRegistration.loadRegistration(o)));
+		return ret;
 	}
 
 	/**
@@ -376,13 +363,13 @@ public class EventRegistration implements Comparable<EventRegistration> {
 		final IDfSession session = object.getSession();
 		String dql = "select event from dmi_registry where registered_id = %s order by user_name, event";
 		dql = String.format(dql, DfUtils.quoteString(object.getObjectId().getId()));
-		IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.EXECREAD_QUERY);
-		try {
+		try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_EXECREAD_QUERY)) {
 			Map<String, Set<EventRegistration>> ret = new TreeMap<>();
 			String user = null;
 			Set<EventRegistration> s = null;
-			while (c.next()) {
-				String userName = c.getString("user_name");
+			while (query.hasNext()) {
+				IDfTypedObject o = query.next();
+				String userName = o.getString("user_name");
 				if (!Tools.equals(user, userName)) {
 					if (s != null) {
 						ret.put(user, s);
@@ -391,14 +378,12 @@ public class EventRegistration implements Comparable<EventRegistration> {
 					user = userName;
 					s = new TreeSet<>();
 				}
-				s.add(EventRegistration.loadRegistration(c));
+				s.add(EventRegistration.loadRegistration(o));
 			}
 			if ((user != null) && (s != null)) {
 				ret.put(user, s);
 			}
 			return ret;
-		} finally {
-			DfUtils.closeQuietly(c);
 		}
 	}
 }

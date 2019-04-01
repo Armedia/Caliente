@@ -27,13 +27,13 @@ import org.slf4j.LoggerFactory;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.dslocator.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.ShareableLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSource.t", propOrder = {
 	"url", "driver", "user", "password", "settings",
 })
-public class MetadataSource implements ReadWriteLockable {
+public class MetadataSource implements ShareableLockable {
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -63,7 +63,7 @@ public class MetadataSource implements ReadWriteLockable {
 	private DataSource dataSource = null;
 
 	@Override
-	public ReadWriteLock getMainLock() {
+	public ReadWriteLock getShareableLock() {
 		return this.rwLock;
 	}
 
@@ -134,7 +134,7 @@ public class MetadataSource implements ReadWriteLockable {
 	}
 
 	public void initialize() throws Exception {
-		readLockedUpgradable(() -> this.dataSource, Objects::isNull, (e) -> {
+		shareLockedUpgradable(() -> this.dataSource, Objects::isNull, (e) -> {
 			if (this.dataSource != null) { return; }
 			Map<String, String> settingsMap = getSettingsMap();
 
@@ -170,7 +170,7 @@ public class MetadataSource implements ReadWriteLockable {
 	}
 
 	public Connection getConnection() throws SQLException {
-		return readLocked(() -> {
+		return shareLocked(() -> {
 			if (this.dataSource == null) {
 				throw new IllegalStateException(String.format("The datasource [%s] is not yet initialized", this.name));
 			}
@@ -179,7 +179,7 @@ public class MetadataSource implements ReadWriteLockable {
 	}
 
 	public void close() {
-		readLockedUpgradable(() -> this.dataSource, Objects::nonNull, (e) -> {
+		shareLockedUpgradable(() -> this.dataSource, Objects::nonNull, (e) -> {
 			// TODO: is there any uninitialization we should be doing here?
 			this.dataSource = null;
 		});

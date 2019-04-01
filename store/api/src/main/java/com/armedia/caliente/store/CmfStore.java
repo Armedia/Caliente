@@ -11,25 +11,25 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.function.CheckedConsumer;
 import com.armedia.commons.utilities.function.CheckedFunction;
 import com.armedia.commons.utilities.function.CheckedSupplier;
 
-public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends BaseReadWriteLockable {
+public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends BaseShareableLockable {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private boolean open = true;
 
 	protected final void assertOpen() {
-		readLocked(() -> {
+		shareLocked(() -> {
 			if (!this.open) { throw new IllegalStateException("This stream store is not open, call init() first"); }
 		});
 	}
 
 	protected final boolean isOpen() {
-		return readLocked(() -> this.open);
+		return shareLocked(() -> this.open);
 	}
 
 	final boolean close() {
@@ -37,7 +37,7 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 	}
 
 	final boolean close(boolean cleanupIfEmpty) {
-		return readLockedUpgradable(() -> this.open, (e) -> e, (e) -> {
+		return shareLockedUpgradable(() -> this.open, (e) -> e, (e) -> {
 			try {
 				return doClose(cleanupIfEmpty);
 			} finally {
@@ -64,12 +64,12 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 
 	protected final <E> E runConcurrently(CheckedFunction<OPERATION, E, CmfStorageException> operation)
 		throws CmfStorageException {
-		return runOperation(this::readLocked, operation);
+		return runOperation(this::shareLocked, operation);
 	}
 
 	protected final void runConcurrently(CheckedConsumer<OPERATION, CmfStorageException> operation)
 		throws CmfStorageException {
-		runOperation(this::readLocked, (op) -> {
+		runOperation(this::shareLocked, (op) -> {
 			operation.acceptChecked(op);
 			return null;
 		});
@@ -77,12 +77,12 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 
 	protected final <E> E runExclusively(CheckedFunction<OPERATION, E, CmfStorageException> operation)
 		throws CmfStorageException {
-		return runOperation(this::writeLocked, operation);
+		return runOperation(this::mutexLocked, operation);
 	}
 
 	protected final void runExclusively(CheckedConsumer<OPERATION, CmfStorageException> operation)
 		throws CmfStorageException {
-		runOperation(this::writeLocked, (op) -> {
+		runOperation(this::mutexLocked, (op) -> {
 			operation.acceptChecked(op);
 			return null;
 		});

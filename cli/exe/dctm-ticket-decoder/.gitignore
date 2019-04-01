@@ -1,0 +1,5 @@
+/target/
+/documentum/
+/dfc.properties
+/dfc.keystore
+/bulkdel*.log

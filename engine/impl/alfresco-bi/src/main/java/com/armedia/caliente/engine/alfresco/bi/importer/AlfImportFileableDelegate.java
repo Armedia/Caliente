@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker.MarkerType;
+import com.armedia.caliente.engine.alfresco.bi.importer.ScanIndexItemMarker.MarkerType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;

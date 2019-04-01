@@ -18,10 +18,10 @@ import javax.xml.bind.annotation.XmlValue;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.ShareableLockable;
 
 @XmlTransient
-public abstract class AttributeNamesSource implements Iterable<String>, ReadWriteLockable {
+public abstract class AttributeNamesSource implements Iterable<String>, ShareableLockable {
 
 	public static final Character DEFAULT_SEPARATOR = Character.valueOf(',');
 
@@ -41,7 +41,7 @@ public abstract class AttributeNamesSource implements Iterable<String>, ReadWrit
 	private Map<String, String> values = null;
 
 	@Override
-	public ReadWriteLock getMainLock() {
+	public ReadWriteLock getShareableLock() {
 		return this.rwLock;
 	}
 
@@ -69,7 +69,7 @@ public abstract class AttributeNamesSource implements Iterable<String>, ReadWrit
 	protected abstract Set<String> getValues(Connection c) throws Exception;
 
 	public final void initialize(Connection c) throws Exception {
-		readLockedUpgradable(() -> this.values, Objects::isNull, (e) -> {
+		shareLockedUpgradable(() -> this.values, Objects::isNull, (e) -> {
 			this.activeCaseSensitive = isCaseSensitive();
 			Set<String> values = getValues(c);
 			if (values == null) {
@@ -84,28 +84,28 @@ public abstract class AttributeNamesSource implements Iterable<String>, ReadWrit
 	}
 
 	public final int size() {
-		return readLocked(() -> {
+		return shareLocked(() -> {
 			if (this.values == null) { return 0; }
 			return this.values.size();
 		});
 	}
 
 	public final Set<String> getValues() {
-		return readLocked(() -> {
+		return shareLocked(() -> {
 			if (this.values == null) { return Collections.emptySet(); }
 			return Tools.freezeSet(new LinkedHashSet<>(this.values.values()));
 		});
 	}
 
 	public final Set<String> getCanonicalizedValues() {
-		return readLocked(() -> {
+		return shareLocked(() -> {
 			if (this.values == null) { return Collections.emptySet(); }
 			return Tools.freezeSet(new LinkedHashSet<>(this.values.keySet()));
 		});
 	}
 
 	public final boolean contains(String str) {
-		return readLocked(() -> {
+		return shareLocked(() -> {
 			if (this.values == null) { return false; }
 			return this.values.containsKey(canonicalize(str));
 		});
@@ -117,7 +117,7 @@ public abstract class AttributeNamesSource implements Iterable<String>, ReadWrit
 	}
 
 	public final void close() {
-		readLockedUpgradable(() -> this.values, Objects::nonNull, (e) -> {
+		shareLockedUpgradable(() -> this.values, Objects::nonNull, (e) -> {
 			this.values = null;
 			this.activeCaseSensitive = null;
 		});

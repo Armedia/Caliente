@@ -23,13 +23,13 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.ShareableLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSet.t", propOrder = {
 	"loaders"
 })
-public class MetadataSet implements ReadWriteLockable {
+public class MetadataSet implements ShareableLockable {
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -59,7 +59,7 @@ public class MetadataSet implements ReadWriteLockable {
 	private Map<String, MetadataSource> dataSources;
 
 	@Override
-	public ReadWriteLock getMainLock() {
+	public ReadWriteLock getShareableLock() {
 		return this.rwLock;
 	}
 
@@ -95,7 +95,7 @@ public class MetadataSet implements ReadWriteLockable {
 	}
 
 	public void initialize(Map<String, MetadataSource> ds) throws Exception {
-		readLockedUpgradable(() -> this.initializedLoaders, Objects::isNull, (e) -> {
+		shareLockedUpgradable(() -> this.initializedLoaders, Objects::isNull, (e) -> {
 			if (this.initializedLoaders != null) { return; }
 			List<AttributeValuesLoader> initializedLoaders = new ArrayList<>();
 			Map<String, MetadataSource> dataSources = new HashMap<>();
@@ -139,7 +139,7 @@ public class MetadataSet implements ReadWriteLockable {
 	}
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws Exception {
-		return readLocked(() -> {
+		return shareLocked(() -> {
 			// If there are no loades initialized, this is a problem...
 			if (this.initializedLoaders == null) { throw new Exception("This metadata source is not yet initialized"); }
 
@@ -187,7 +187,7 @@ public class MetadataSet implements ReadWriteLockable {
 	}
 
 	public void close() {
-		readLockedUpgradable(() -> this.initializedLoaders, Objects::nonNull, (e) -> {
+		shareLockedUpgradable(() -> this.initializedLoaders, Objects::nonNull, (e) -> {
 			if (this.initializedLoaders == null) { return; }
 			for (AttributeValuesLoader loader : this.initializedLoaders) {
 				try {

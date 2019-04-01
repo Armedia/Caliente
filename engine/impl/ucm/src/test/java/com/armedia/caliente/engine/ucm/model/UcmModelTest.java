@@ -13,7 +13,6 @@ import org.junit.Test;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.ucm.BaseTest;
 import com.armedia.caliente.engine.ucm.UcmSession;
-import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
 
 public class UcmModelTest extends BaseTest {
 
@@ -98,25 +97,21 @@ public class UcmModelTest extends BaseTest {
 	public void testModelRecursiveIteration() throws Throwable {
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			UcmSession s = w.get();
+			UcmSession session = w.get();
 
 			UcmModel m = new UcmModel();
-			UcmFolder f = s.getFolder("/");
-			m.iterateFolderContentsRecursive(s, f.getURI(), true, new ObjectHandler() {
-				@Override
-				public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
-					String type = (object.getType() == UcmObjectType.FILE ? "FILE" : "FLDR");
-					if (object.isShortcut()) {
-						type = String.format(">%s", type);
-					} else {
-						type = String.format(" %s", type);
-					}
-					String shortcut = object.isShortcut() ? String.format(" | target=%s ", object.getTargetGUID()) : "";
-					String data = String.format("{ uri=%s | guid=%s%s }", object.getURI(),
-						object.getString(object.getType() == UcmObjectType.FILE ? UcmAtt.dDocName : UcmAtt.fFolderGUID),
-						shortcut);
-					System.out.printf("%s %s : %s%n", type, object.getPath(), data);
+			UcmFolder f = session.getFolder("/");
+			m.iterateFolderContentsRecursive(session, f.getURI(), true, (s, p, u, o) -> {
+				String type = (o.getType() == UcmObjectType.FILE ? "FILE" : "FLDR");
+				if (o.isShortcut()) {
+					type = String.format(">%s", type);
+				} else {
+					type = String.format(" %s", type);
 				}
+				String shortcut = o.isShortcut() ? String.format(" | target=%s ", o.getTargetGUID()) : "";
+				String data = String.format("{ uri=%s | guid=%s%s }", o.getURI(),
+					o.getString(o.getType() == UcmObjectType.FILE ? UcmAtt.dDocName : UcmAtt.fFolderGUID), shortcut);
+				System.out.printf("%s %s : %s%n", type, o.getPath(), data);
 			});
 		} catch (UcmServiceException e) {
 			handleException(e.getCause());
@@ -230,28 +225,24 @@ public class UcmModelTest extends BaseTest {
 	public void testFullRecursion() throws Exception {
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			UcmSession s = w.get();
+			UcmSession session = w.get();
 			UcmModel model = new UcmModel();
-			UcmFolder root = model.getRootFolder(s);
-			model.iterateFolderContentsRecursive(s, root, false, new ObjectHandler() {
-				@Override
-				public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
-					UcmAtt guidAtt = (object.getType() == UcmObjectType.FILE ? UcmAtt.dDocName : UcmAtt.fFolderGUID);
-					System.out.printf("[%s] -> [%s] (GUID:%s)%n", object.getPath(), objectUri,
-						object.getString(guidAtt));
-					try {
-						UcmFolder parent = object.getParentFolder(session);
-						if (parent == null) {
-							System.out.printf("\tno parent%n");
-						} else {
-							System.out.printf("\tparent = [%s] -> [%s]%n", parent.getPath(), parent.getURI());
-							if (object.isShortcut()) {
-								System.out.printf("\t---> [%s]%n", object.getTargetGUID());
-							}
+			UcmFolder root = model.getRootFolder(session);
+			model.iterateFolderContentsRecursive(session, root, false, (s, p, u, o) -> {
+				UcmAtt guidAtt = (o.getType() == UcmObjectType.FILE ? UcmAtt.dDocName : UcmAtt.fFolderGUID);
+				System.out.printf("[%s] -> [%s] (GUID:%s)%n", o.getPath(), u, o.getString(guidAtt));
+				try {
+					UcmFolder parent = o.getParentFolder(s);
+					if (parent == null) {
+						System.out.printf("\tno parent%n");
+					} else {
+						System.out.printf("\tparent = [%s] -> [%s]%n", parent.getPath(), parent.getURI());
+						if (o.isShortcut()) {
+							System.out.printf("\t---> [%s]%n", o.getTargetGUID());
 						}
-					} catch (Exception e) {
-						e.printStackTrace(System.err);
 					}
+				} catch (Exception e) {
+					e.printStackTrace(System.err);
 				}
 			});
 		} finally {
@@ -325,15 +316,11 @@ public class UcmModelTest extends BaseTest {
 		String query = "<not>\n(\ndID\n<matches>\n`-1`\n)\n              {   dID                }         \n    [   3    ,    5     / 2 ]\n\n";
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			UcmSession s = w.get();
+			UcmSession session = w.get();
 			UcmModel model = new UcmModel();
 
-			model.iterateDocumentSearchResults(s, query, 10000, new ObjectHandler() {
-				@Override
-				public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
-					System.out.printf("Got file # %02d: [%s](%s)%n", pos, object.getPath(), object.getUniqueURI());
-				}
-			});
+			model.iterateDocumentSearchResults(session, query, 10000,
+				(s, p, u, o) -> System.out.printf("Got file # %02d: [%s](%s)%n", p, o.getPath(), o.getUniqueURI()));
 		} finally {
 			w.close();
 		}

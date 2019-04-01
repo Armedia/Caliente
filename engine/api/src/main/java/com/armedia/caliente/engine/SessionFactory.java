@@ -8,9 +8,9 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
-public abstract class SessionFactory<SESSION> extends BaseReadWriteLockable
+public abstract class SessionFactory<SESSION> extends BaseShareableLockable
 	implements PooledObjectFactory<SESSION>, AutoCloseable {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -43,7 +43,7 @@ public abstract class SessionFactory<SESSION> extends BaseReadWriteLockable
 	}
 
 	public final SessionWrapper<SESSION> acquireSession() throws SessionFactoryException {
-		return readLocked(() -> {
+		return shareLocked(() -> {
 			if (!this.open) { throw new IllegalStateException("This session factory is not open"); }
 			try {
 				return newWrapper(this.pool.borrowObject());
@@ -67,7 +67,7 @@ public abstract class SessionFactory<SESSION> extends BaseReadWriteLockable
 
 	@Override
 	public final void close() {
-		readLockedUpgradable(() -> this.open, () -> {
+		shareLockedUpgradable(() -> this.open, () -> {
 			try {
 				this.pool.close();
 				doClose();

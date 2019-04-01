@@ -5,11 +5,10 @@ import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
@@ -62,14 +61,11 @@ public class DctmExportTools {
 				} else {
 					final IDfSession session = source.getSession();
 					String dql = "select t.name from dmi_object_type o, dm_type t where o.i_type = t.i_type and o.r_object_id = %s";
-					IDfCollection c = DfUtils.executeQuery(session, String.format(dql, DfUtils.quoteString(id.getId())),
-						IDfQuery.DF_EXECREAD_QUERY);
-					try {
-						if (c.next()) {
-							dctmType = DctmObjectType.decodeType(session, c.getString("name"));
+					try (DctmQuery query = new DctmQuery(session, String.format(dql, DfUtils.quoteString(id.getId())),
+						DctmQuery.Type.DF_EXECREAD_QUERY)) {
+						if (query.hasNext()) {
+							dctmType = DctmObjectType.decodeType(session, query.next().getString("name"));
 						}
-					} finally {
-						DfUtils.closeQuietly(c);
 					}
 				}
 			}
@@ -99,14 +95,11 @@ public class DctmExportTools {
 			// the object itself.
 			typeAttribute = Tools.coalesce(typeAttribute, DctmAttributes.R_OBJECT_TYPE);
 			String dql = "select t.name from dmi_object_type o, dm_type t where o.i_type = t.i_type and o.r_object_id = %s";
-			IDfCollection c = DfUtils.executeQuery(session, String.format(dql, DfUtils.quoteString(id.getId())),
-				IDfQuery.DF_EXECREAD_QUERY);
-			try {
-				if (c.next()) {
-					dctmType = DctmObjectType.decodeType(session, c.getString("name"));
+			try (DctmQuery query = new DctmQuery(session, String.format(dql, DfUtils.quoteString(id.getId())),
+				DctmQuery.Type.DF_EXECREAD_QUERY)) {
+				if (query.hasNext()) {
+					dctmType = DctmObjectType.decodeType(session, query.next().getString("name"));
 				}
-			} finally {
-				DfUtils.closeQuietly(c);
 			}
 		}
 		CmfObject.Archetype objectType = null;

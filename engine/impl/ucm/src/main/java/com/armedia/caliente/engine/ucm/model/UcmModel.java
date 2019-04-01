@@ -31,10 +31,10 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
 import com.armedia.caliente.engine.ucm.UcmConstants;
 import com.armedia.caliente.engine.ucm.UcmSession;
-import com.armedia.caliente.engine.ucm.UcmSession.RequestPreparation;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.function.CheckedSupplier;
+import com.armedia.commons.utilities.function.CheckedTriConsumer;
 
 import oracle.stellent.ridc.IdcClientException;
 import oracle.stellent.ridc.model.DataBinder;
@@ -504,12 +504,7 @@ public class UcmModel {
 					ServiceResponse response = null;
 					DataBinder responseData = null;
 					try {
-						response = s.callService("FLD_INFO", new RequestPreparation() {
-							@Override
-							public void prepareRequest(DataBinder binder) {
-								binder.putLocal("path", sanitizedPath);
-							}
-						});
+						response = s.callService("FLD_INFO", (binder) -> binder.putLocal("path", sanitizedPath));
 						responseData = response.getResponseAsBinder();
 					} catch (final IdcClientException e) {
 						if (isNotFoundException(e, "Exception caught retrieving the file at [%s]", sanitizedPath)) {
@@ -580,14 +575,11 @@ public class UcmModel {
 					}
 
 					try {
-						response = s.callService(serviceName, new RequestPreparation() {
-							@Override
-							public void prepareRequest(DataBinder binder) {
-								binder.putLocal(identifierAtt.name(), guid);
-								if (type == UcmObjectType.FILE) {
-									binder.putLocal("includeFileRenditionsInfo", "1");
-									binder.putLocal("isAddFolderMetadata", "1");
-								}
+						response = s.callService(serviceName, (binder) -> {
+							binder.putLocal(identifierAtt.name(), guid);
+							if (type == UcmObjectType.FILE) {
+								binder.putLocal("includeFileRenditionsInfo", "1");
+								binder.putLocal("isAddFolderMetadata", "1");
 							}
 						});
 						responseData = response.getResponseAsBinder();
@@ -712,13 +704,10 @@ public class UcmModel {
 					}
 
 					try {
-						response = s.callService(serviceName, new RequestPreparation() {
-							@Override
-							public void prepareRequest(DataBinder binder) {
-								binder.putLocal(identifierAtt.name(), searchKey);
-								if (file) {
-									binder.putLocal("isAddFolderMetadata", "1");
-								}
+						response = s.callService(serviceName, (binder) -> {
+							binder.putLocal(identifierAtt.name(), searchKey);
+							if (file) {
+								binder.putLocal("isAddFolderMetadata", "1");
 							}
 						});
 						responseData = response.getResponseAsBinder();
@@ -810,13 +799,10 @@ public class UcmModel {
 					ServiceResponse response = null;
 					DataBinder responseData = null;
 					try {
-						response = s.callService("DOC_INFO", new RequestPreparation() {
-							@Override
-							public void prepareRequest(DataBinder binder) {
-								binder.putLocal("dID", id);
-								binder.putLocal("includeFileRenditionsInfo", "1");
-								binder.putLocal("isAddFolderMetadata", "1");
-							}
+						response = s.callService("DOC_INFO", (binder) -> {
+							binder.putLocal("dID", id);
+							binder.putLocal("includeFileRenditionsInfo", "1");
+							binder.putLocal("isAddFolderMetadata", "1");
 						});
 						responseData = response.getResponseAsBinder();
 					} catch (final IdcClientException e) {
@@ -897,34 +883,24 @@ public class UcmModel {
 		return getFolderContents(s, guid.getURI());
 	}
 
-	@FunctionalInterface
-	public static interface URIHandler {
-		public void handleURI(UcmSession session, long pos, URI objectUri) throws UcmServiceException;
-	}
-
 	public Collection<URI> getURISearchResults(final UcmSession s, final String query) throws UcmServiceException {
 		return getURISearchResults(s, query, UcmConstants.DEFAULT_PAGE_SIZE);
 	}
 
-	public Collection<URI> getURISearchResults(final UcmSession s, final String query, final int pageSize)
+	public Collection<URI> getURISearchResults(final UcmSession session, final String query, final int pageSize)
 		throws UcmServiceException {
 		final List<URI> results = new ArrayList<>();
-		iterateURISearchResults(s, query, pageSize, new URIHandler() {
-			@Override
-			public void handleURI(UcmSession session, long pos, URI uri) {
-				results.add(uri);
-			}
-		});
+		iterateURISearchResults(session, query, pageSize, (s, p, u) -> results.add(u));
 		return results;
 	}
 
-	public long iterateURISearchResults(final UcmSession s, final String query, final URIHandler handler)
-		throws UcmServiceException {
+	public long iterateURISearchResults(final UcmSession s, final String query,
+		final CheckedTriConsumer<UcmSession, Long, URI, UcmServiceException> handler) throws UcmServiceException {
 		return iterateURISearchResults(s, query, UcmConstants.DEFAULT_PAGE_SIZE, handler);
 	}
 
-	public long iterateURISearchResults(final UcmSession s, final String query, int pageSize, final URIHandler handler)
-		throws UcmServiceException {
+	public long iterateURISearchResults(final UcmSession s, final String query, int pageSize,
+		final CheckedTriConsumer<UcmSession, Long, URI, UcmServiceException> handler) throws UcmServiceException {
 		Objects.requireNonNull(s, "Must provide a session to search with");
 		Objects.requireNonNull(query, "Must provide a query to execute");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
@@ -1012,30 +988,27 @@ public class UcmModel {
 		long rowNumber = 0;
 		outer: while (true) {
 			try {
-				ServiceResponse response = s.callService("GET_SEARCH_RESULTS", new RequestPreparation() {
-					@Override
-					public void prepareRequest(DataBinder binder) {
-						UcmModel.this.log.debug(
-							"Calling GET_SEARCH_RESULTS (dbMode = {}, start row = {}, page size = {}, sortField = {} {}, query = [{}])",
-							dbMode, startRow.get(), actualPageSize, sortField, desc ? "Desc" : "Asc", actualQuery);
+				ServiceResponse response = s.callService("GET_SEARCH_RESULTS", (binder) -> {
+					UcmModel.this.log.debug(
+						"Calling GET_SEARCH_RESULTS (dbMode = {}, start row = {}, page size = {}, sortField = {} {}, query = [{}])",
+						dbMode, startRow.get(), actualPageSize, sortField, desc ? "Desc" : "Asc", actualQuery);
 
-						binder.putLocal("QueryText", actualQuery);
-						if (dbMode) {
-							binder.putLocal("SearchEngineName", "database");
-						}
-						binder.putLocal("StartRow", String.valueOf(startRow.get()));
-						/*
-						if (sortSpec.length() > 0) {
-							binder.putLocal("SortSpec", sortSpec.toString());
-						}
-						*/
-						if (sortField != null) {
-							binder.putLocal("SortField", sortField);
-							binder.putLocal("SortOrder", desc ? "Desc" : "Asc");
-						}
-						binder.putLocal("ResultCount", String.valueOf(actualPageSize));
-						binder.putLocal("isAddFolderMetadata", "1");
+					binder.putLocal("QueryText", actualQuery);
+					if (dbMode) {
+						binder.putLocal("SearchEngineName", "database");
 					}
+					binder.putLocal("StartRow", String.valueOf(startRow.get()));
+					/*
+					if (sortSpec.length() > 0) {
+						binder.putLocal("SortSpec", sortSpec.toString());
+					}
+					*/
+					if (sortField != null) {
+						binder.putLocal("SortField", sortField);
+						binder.putLocal("SortOrder", desc ? "Desc" : "Asc");
+					}
+					binder.putLocal("ResultCount", String.valueOf(actualPageSize));
+					binder.putLocal("isAddFolderMetadata", "1");
 				});
 				DataBinder binder = response.getResponseAsBinder();
 				DataResultSet results = binder.getResultSet("SearchResults");
@@ -1050,7 +1023,7 @@ public class UcmModel {
 				for (DataObject o : results.getRows()) {
 					try {
 						URI uri = UcmModel.getURI(new UcmAttributes(o, results.getFields()));
-						handler.handleURI(s, ++rowNumber, uri);
+						handler.accept(s, ++rowNumber, uri);
 					} finally {
 						startRow.incrementAndGet();
 						if ((maxRows > 0) && (rowNumber >= maxRows)) {
@@ -1079,15 +1052,12 @@ public class UcmModel {
 		return getDocumentSearchResults(s, query, UcmConstants.DEFAULT_PAGE_SIZE);
 	}
 
-	public Collection<UcmFile> getDocumentSearchResults(final UcmSession s, final String query, final int pageSize)
+	public Collection<UcmFile> getDocumentSearchResults(final UcmSession session, final String query, final int pageSize)
 		throws UcmServiceException {
 		final List<UcmFile> results = new ArrayList<>();
-		iterateDocumentSearchResults(s, query, pageSize, new ObjectHandler() {
-			@Override
-			public void handleObject(UcmSession session, long pos, URI uri, UcmFSObject object) {
-				if (UcmFile.class.isInstance(object)) {
-					results.add(UcmFile.class.cast(object));
-				}
+		iterateDocumentSearchResults(session, query, pageSize, (s, p, u, o) -> {
+			if (UcmFile.class.isInstance(o)) {
+				results.add(UcmFile.class.cast(o));
 			}
 		});
 		return results;
@@ -1098,26 +1068,23 @@ public class UcmModel {
 		return iterateDocumentSearchResults(s, query, UcmConstants.DEFAULT_PAGE_SIZE, handler);
 	}
 
-	public long iterateDocumentSearchResults(final UcmSession s, final String query, int pageSize,
+	public long iterateDocumentSearchResults(final UcmSession session, final String query, int pageSize,
 		final ObjectHandler handler) throws UcmServiceException {
-		Objects.requireNonNull(s, "Must provide a session to search with");
+		Objects.requireNonNull(session, "Must provide a session to search with");
 		Objects.requireNonNull(query, "Must provide a query to execute");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
 
-		return iterateURISearchResults(s, query, new URIHandler() {
-			@Override
-			public void handleURI(UcmSession session, long pos, URI objectUri) throws UcmServiceException {
-				final UcmFile file;
-				try {
-					file = getFile(s, objectUri);
-				} catch (UcmFileNotFoundException e) {
-					// The result was returned, but not accessible? KABOOM!
-					throw new UcmServiceException(String.format(
-						"The file with URI [%s] was returned in the result set, but was not retrieved when searched for explicitly",
-						objectUri), e);
-				}
-				handler.handleObject(s, pos, file.getURI(), file);
+		return iterateURISearchResults(session, query, (s, p, u) -> {
+			final UcmFile file;
+			try {
+				file = getFile(s, u);
+			} catch (UcmFileNotFoundException e) {
+				// The result was returned, but not accessible? KABOOM!
+				throw new UcmServiceException(String.format(
+					"The file with URI [%s] was returned in the result set, but was not retrieved when searched for explicitly",
+					u), e);
 			}
+			handler.handleObject(s, p, file.getURI(), file);
 		});
 	}
 
@@ -1219,32 +1186,22 @@ public class UcmModel {
 		return (children != null ? children.size() : 0);
 	}
 
-	protected Map<String, URI> getFolderContents(UcmSession s, final URI uri)
+	protected Map<String, URI> getFolderContents(UcmSession session, final URI uri)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		final Map<String, URI> children = new LinkedHashMap<>();
-		iterateFolderContents(s, uri, new ObjectHandler() {
-			@Override
-			public void handleObject(UcmSession session, long pos, URI uri, UcmFSObject object) {
-				children.put(object.getName(), uri);
-			}
-		});
+		iterateFolderContents(session, uri, (s, p, u, o) -> children.put(o.getName(), u));
 		return children;
 	}
 
-	public Map<String, UcmFSObject> getFolderContents(UcmSession s, final UcmFolder folder)
+	public Map<String, UcmFSObject> getFolderContents(UcmSession session, final UcmFolder folder)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		final Map<String, UcmFSObject> children = new LinkedHashMap<>();
-		iterateFolderContents(s, folder.getURI(), new ObjectHandler() {
-			@Override
-			public void handleObject(UcmSession session, long pos, URI uri, UcmFSObject data) {
-				children.put(data.getName(), data);
-			}
-		});
+		iterateFolderContents(session, folder.getURI(), (s, p, u, o) -> children.put(o.getName(), o));
 		return children;
 	}
 
 	private int iterateFolderContentsRecursive(final Set<URI> recursions, final AtomicInteger outerPos,
-		final UcmSession s, final URI uri, final boolean followShortcuts, final ObjectHandler handler)
+		final UcmSession session, final URI uri, final boolean followShortcuts, final ObjectHandler handler)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to search for");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
@@ -1253,7 +1210,7 @@ public class UcmModel {
 
 		if (recursions.isEmpty()) {
 			// If this is the root of the invocation, we handle it!
-			handler.handleObject(s, outerPos.getAndIncrement(), uri, getFolder(s, uri));
+			handler.handleObject(session, outerPos.getAndIncrement(), uri, getFolder(session, uri));
 		}
 
 		if (!recursions.add(uri)) {
@@ -1262,24 +1219,19 @@ public class UcmModel {
 		}
 
 		try {
-			iterateFolderContents(s, uri, new ObjectHandler() {
-				@Override
-				public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
-					handler.handleObject(session, outerPos.getAndIncrement(), objectUri, object);
-					if (UcmModel.isFolderURI(uri) && (followShortcuts || !object.isShortcut())) {
-						try {
-							iterateFolderContentsRecursive(recursions, outerPos, s, objectUri, followShortcuts,
-								handler);
-						} catch (UcmFolderNotFoundException e) {
-							throw new UcmRuntimeException(String.format(
-								"Unexpected condition: can't find a folder that has just been found?? URI=[%s]",
-								objectUri), e);
-						} catch (UcmServiceException e) {
-							throw new UcmRuntimeServiceException(
-								String.format("Service exception caught while attempting to recurse through [%s] : %s",
-									objectUri, recursions),
-								e);
-						}
+			iterateFolderContents(session, uri, (s, p, u, o) -> {
+				handler.handleObject(s, outerPos.getAndIncrement(), u, o);
+				if (UcmModel.isFolderURI(u) && (followShortcuts || !o.isShortcut())) {
+					try {
+						iterateFolderContentsRecursive(recursions, outerPos, s, u, followShortcuts, handler);
+					} catch (UcmFolderNotFoundException e) {
+						throw new UcmRuntimeException(String.format(
+							"Unexpected condition: can't find a folder that has just been found?? URI=[%s]", u), e);
+					} catch (UcmServiceException e) {
+						throw new UcmRuntimeServiceException(
+							String.format("Service exception caught while attempting to recurse through [%s] : %s", u,
+								recursions),
+							e);
 					}
 				}
 			});
@@ -1303,27 +1255,17 @@ public class UcmModel {
 			handler);
 	}
 
-	Collection<URI> getFolderContentsRecursive(UcmSession s, boolean followShortCuts, final URI uri)
+	Collection<URI> getFolderContentsRecursive(UcmSession session, boolean followShortCuts, final URI uri)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		final Collection<URI> children = new ArrayList<>();
-		iterateFolderContentsRecursive(s, uri, followShortCuts, new ObjectHandler() {
-			@Override
-			public void handleObject(UcmSession session, long pos, URI uri, UcmFSObject obj) {
-				children.add(uri);
-			}
-		});
+		iterateFolderContentsRecursive(session, uri, followShortCuts, (s, p, u, o) -> children.add(u));
 		return children;
 	}
 
-	public Collection<UcmFSObject> getFolderContentsRecursive(UcmSession s, final UcmFolder folder,
+	public Collection<UcmFSObject> getFolderContentsRecursive(UcmSession session, final UcmFolder folder,
 		boolean followShortCuts) throws UcmServiceException, UcmFolderNotFoundException {
 		final Collection<UcmFSObject> children = new ArrayList<>();
-		iterateFolderContentsRecursive(s, folder.getURI(), followShortCuts, new ObjectHandler() {
-			@Override
-			public void handleObject(UcmSession session, long pos, URI uri, UcmFSObject o) {
-				children.add(o);
-			}
-		});
+		iterateFolderContentsRecursive(session, folder.getURI(), followShortCuts, (s, p, u, o) -> children.add(o));
 		return children;
 	}
 
@@ -1396,12 +1338,7 @@ public class UcmModel {
 					ServiceResponse response = null;
 					DataBinder responseData = null;
 					try {
-						response = s.callService("REV_HISTORY", new RequestPreparation() {
-							@Override
-							public void prepareRequest(DataBinder binder) {
-								binder.putLocal("dID", revisionId);
-							}
-						});
+						response = s.callService("REV_HISTORY", (binder) -> binder.putLocal("dID", revisionId));
 						responseData = response.getResponseAsBinder();
 					} catch (final IdcClientException e) {
 						if (isNotFoundException(e, "Exception caught retrieving the URI [%s]", uri)) {
@@ -1431,13 +1368,10 @@ public class UcmModel {
 
 	public InputStream getInputStream(UcmSession s, final UcmFile file, final String rendition)
 		throws UcmServiceException, UcmFileRevisionNotFoundException, UcmRenditionNotFoundException {
-		ServiceResponse response = s.callService("GET_FILE", new RequestPreparation() {
-			@Override
-			public void prepareRequest(DataBinder binder) {
-				binder.putLocal("dID", file.getRevisionId());
-				if (!StringUtils.isEmpty(rendition)) {
-					binder.putLocal("Rendition", rendition.toUpperCase());
-				}
+		ServiceResponse response = s.callService("GET_FILE", (binder) -> {
+			binder.putLocal("dID", file.getRevisionId());
+			if (!StringUtils.isEmpty(rendition)) {
+				binder.putLocal("Rendition", rendition.toUpperCase());
 			}
 		});
 		if (response.getResponseType() == ResponseType.STREAM) { return response.getResponseStream(); }
@@ -1535,13 +1469,10 @@ public class UcmModel {
 					ServiceResponse response = null;
 					DataBinder responseData = null;
 					try {
-						response = s.callService("DOC_INFO", new RequestPreparation() {
-							@Override
-							public void prepareRequest(DataBinder binder) {
-								binder.putLocal("dID", id);
-								binder.putLocal("includeFileRenditionsInfo", "1");
-								binder.putLocal("isAddFolderMetadata", "1");
-							}
+						response = s.callService("DOC_INFO", (binder) -> {
+							binder.putLocal("dID", id);
+							binder.putLocal("includeFileRenditionsInfo", "1");
+							binder.putLocal("isAddFolderMetadata", "1");
 						});
 						responseData = response.getResponseAsBinder();
 					} catch (final IdcClientException e) {

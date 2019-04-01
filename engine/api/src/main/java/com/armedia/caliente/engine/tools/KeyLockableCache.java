@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.LockDispenser;
-import com.armedia.commons.utilities.concurrent.ReadWriteMap;
+import com.armedia.commons.utilities.concurrent.ShareableMap;
 import com.armedia.commons.utilities.function.CheckedSupplier;
 
 public class KeyLockableCache<K extends Serializable, V> {
@@ -199,7 +199,7 @@ public class KeyLockableCache<K extends Serializable, V> {
 	public KeyLockableCache(int maxCount, TimeUnit maxAgeUnit, long maxAge) {
 		this.cacheId = String.format("%016x", KeyLockableCache.CACHE_ID.getAndIncrement());
 		final Map<K, CacheItem> cache = new LRUMap<>(Math.max(KeyLockableCache.MIN_LIMIT, maxCount));
-		this.cache = new ReadWriteMap<>(cache);
+		this.cache = new ShareableMap<>(cache);
 		if (maxAgeUnit == null) {
 			this.maxAgeUnit = KeyLockableCache.DEFAULT_MAX_AGE_UNIT;
 			this.maxAge = KeyLockableCache.DEFAULT_MAX_AGE;

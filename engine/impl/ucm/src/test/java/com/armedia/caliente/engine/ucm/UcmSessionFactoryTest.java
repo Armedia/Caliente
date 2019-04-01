@@ -8,8 +8,6 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.ucm.UcmSession.RequestPreparation;
-
 import oracle.stellent.ridc.IdcClientException;
 import oracle.stellent.ridc.model.DataBinder;
 import oracle.stellent.ridc.model.DataObject;
@@ -39,48 +37,34 @@ public class UcmSessionFactoryTest extends BaseTest {
 
 	@Test
 	public void FLD_BROWSE() throws Exception {
-		callService("FLD_BROWSE", new RequestPreparation() {
-			@Override
-			public void prepareRequest(DataBinder binder) {
-				binder.putLocal("path", "/");
-				binder.putLocal("doCombinedBrowse", "1");
-				binder.putLocal("foldersFirst", "1");
-				binder.putLocal("combinedCount", "100");
-				binder.putLocal("combinedStartRow", "0");
-				binder.putLocal("doRetrieveTargetInfo", "1");
-			}
+		callService("FLD_BROWSE", (binder) -> {
+			binder.putLocal("path", "/");
+			binder.putLocal("doCombinedBrowse", "1");
+			binder.putLocal("foldersFirst", "1");
+			binder.putLocal("combinedCount", "100");
+			binder.putLocal("combinedStartRow", "0");
+			binder.putLocal("doRetrieveTargetInfo", "1");
 		});
 	}
 
 	@Test
 	public void DOC_INFO_BY_NAME() throws Exception {
-		callService("DOC_INFO_BY_NAME", new RequestPreparation() {
-			@Override
-			public void prepareRequest(DataBinder binder) {
-				binder.putLocal("dDocName", "ARMDEC6AAP9055000001");
-				binder.putLocal("includeFileRenditionsInfo", "1");
-			}
+		callService("DOC_INFO_BY_NAME", (binder) -> {
+			binder.putLocal("dDocName", "ARMDEC6AAP9055000001");
+			binder.putLocal("includeFileRenditionsInfo", "1");
 		});
 	}
 
 	@Test
 	public void FLD_INFO() throws Exception {
-		callService("FLD_INFO", new RequestPreparation() {
-			@Override
-			public void prepareRequest(DataBinder binder) {
-				binder.putLocal("path", "/");
-			}
-		});
+		callService("FLD_INFO", (binder) -> binder.putLocal("path", "/"));
 	}
 
 	@Test
 	public void REV_HISTORY() throws Exception {
-		callService("REV_HISTORY", new RequestPreparation() {
-			@Override
-			public void prepareRequest(DataBinder binder) {
-				binder.putLocal("dID", "5");
-				binder.putLocal("includeFileRenditionsInfo", "1");
-			}
+		callService("REV_HISTORY", (binder) -> {
+			binder.putLocal("dID", "5");
+			binder.putLocal("includeFileRenditionsInfo", "1");
 		});
 	}
 
@@ -90,12 +74,9 @@ public class UcmSessionFactoryTest extends BaseTest {
 			"1", "2", "3", "5"
 		};
 		for (final String id : ids) {
-			callService("DOC_INFO", new RequestPreparation() {
-				@Override
-				public void prepareRequest(DataBinder binder) {
-					binder.putLocal("dID", id);
-					binder.putLocal("includeFileRenditionsInfo", "1");
-				}
+			callService("DOC_INFO", (binder) -> {
+				binder.putLocal("dID", id);
+				binder.putLocal("includeFileRenditionsInfo", "1");
 			});
 		}
 	}
@@ -120,12 +101,9 @@ public class UcmSessionFactoryTest extends BaseTest {
 
 	@Test
 	public void GET_FILE() throws Exception {
-		ServiceResponse response = callService("GET_FILE", new RequestPreparation() {
-			@Override
-			public void prepareRequest(DataBinder binder) {
-				binder.putLocal("dID", "5");
-				binder.putLocal("Rendition", "primary");
-			}
+		ServiceResponse response = callService("GET_FILE", (binder) -> {
+			binder.putLocal("dID", "5");
+			binder.putLocal("Rendition", "primary");
 		});
 		if (response.getResponseType() == ResponseType.STREAM) {
 			byte[] sha = DigestUtils.sha256(response.getResponseStream());
@@ -136,12 +114,7 @@ public class UcmSessionFactoryTest extends BaseTest {
 
 	@Test
 	public void QUERY_GROUP() throws Exception {
-		callService("QUERY_GROUP", new RequestPreparation() {
-			@Override
-			public void prepareRequest(DataBinder binder) {
-				binder.putLocal("dGroupName", "Public");
-			}
-		});
+		callService("QUERY_GROUP", (binder) -> binder.putLocal("dGroupName", "Public"));
 	}
 
 	@Test
@@ -150,17 +123,14 @@ public class UcmSessionFactoryTest extends BaseTest {
 		final AtomicInteger currentRow = new AtomicInteger(1);
 		final String query = "<not>(dID <matches> `-1`)";
 		while (true) {
-			ServiceResponse rsp = callService("GET_SEARCH_RESULTS", new RequestPreparation() {
-				@Override
-				public void prepareRequest(DataBinder binder) {
-					binder.putLocal("QueryText", query);
-					// binder.putLocal("SearchEngineName", "database");
-					binder.putLocal("StartRow", String.valueOf(currentRow.get()));
-					binder.putLocal("ResultCount", String.valueOf(pageSize));
-					binder.putLocal("isAddFolderMetadata", "1");
-					binder.putLocal("SortField", "dID");
-					binder.putLocal("SortOrder", "Asc");
-				}
+			ServiceResponse rsp = callService("GET_SEARCH_RESULTS", (binder) -> {
+				binder.putLocal("QueryText", query);
+				// binder.putLocal("SearchEngineName", "database");
+				binder.putLocal("StartRow", String.valueOf(currentRow.get()));
+				binder.putLocal("ResultCount", String.valueOf(pageSize));
+				binder.putLocal("isAddFolderMetadata", "1");
+				binder.putLocal("SortField", "dID");
+				binder.putLocal("SortOrder", "Asc");
 			});
 			DataBinder binder = rsp.getResponseAsBinder();
 			DataResultSet results = binder.getResultSet("SearchResults");
@@ -181,13 +151,10 @@ public class UcmSessionFactoryTest extends BaseTest {
 
 	@Test
 	public void FLD_FOLDER_SEARCH() throws Exception {
-		callService("FLD_FOLDER_SEARCH", new RequestPreparation() {
-			@Override
-			public void prepareRequest(DataBinder binder) {
-				binder.putLocal("QueryText", "<NOT>(fParentGUID <matches> `FLD_ROOT`)");
-				binder.putLocal("ResultCount", "1000");
-				binder.putLocal("StartRow", "1");
-			}
+		callService("FLD_FOLDER_SEARCH", (binder) -> {
+			binder.putLocal("QueryText", "<NOT>(fParentGUID <matches> `FLD_ROOT`)");
+			binder.putLocal("ResultCount", "1000");
+			binder.putLocal("StartRow", "1");
 		});
 	}
 }

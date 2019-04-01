@@ -39,22 +39,22 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
+import com.armedia.commons.dfc.util.DctmQuery;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPermitType;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfType;
+import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.client.distributed.IDfReference;
 import com.documentum.fc.common.DfException;
@@ -469,10 +469,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final String dql = String.format("select r_object_id from dm_acl where owner_name = %s and object_name = %s",
 			DfUtils.quoteString(aclDomain), DfUtils.quoteString(aclName));
 		IDfSession session = ctx.getSession();
-		IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_READ_QUERY);
 		final IDfId aclId;
-		try {
-			if (!c.next()) {
+		try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_READ_QUERY)) {
+			if (!query.hasNext()) {
 				// no such ACL
 				String msg = String.format(
 					"Failed to find the ACL [domain=%s, name=%s] for %s [%s](%s) - the target ACL couldn't be found",
@@ -482,9 +481,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				this.log.warn(msg);
 				return false;
 			}
-			aclId = c.getId(DctmAttributes.R_OBJECT_ID);
-		} finally {
-			DfUtils.closeQuietly(c);
+			aclId = query.next().getId(DctmAttributes.R_OBJECT_ID);
 		}
 
 		ctx.printf("Applying ACL [%s::%s](%s) to %s [%s](%s)", aclDomain, aclName, aclId.getId(),
@@ -651,9 +648,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 					final String dql = String.format(
 						"select owner_name, object_name from dm_acl where r_object_id = %s",
 						DfUtils.quoteString(m.getTargetValue()));
-					IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_READ_QUERY);
-					try {
-						if (c.next()) {
+					try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_READ_QUERY)) {
+						if (query.hasNext()) {
+							IDfTypedObject c = query.next();
 							domain = c.getString(DctmAttributes.OWNER_NAME);
 							name = c.getString(DctmAttributes.OBJECT_NAME);
 						} else {
@@ -663,8 +660,6 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 								aclId, this.cmfObject.getType().name(), this.cmfObject.getLabel(),
 								sysObject.getObjectId().getId(), m.getTargetValue());
 						}
-					} finally {
-						DfUtils.closeQuietly(c);
 					}
 				} else {
 					msg = String.format("Failed to find the ACL [%s] for %s [%s](%s) - no mapping was found", aclId,
@@ -908,20 +903,16 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final IDfId newId = targetSysObj.addReference(mainFolderId, bindingCondition.asString(),
 			bindingLabel.asString());
 
-		IDfCollection c = null;
 		final IDfReference ref;
-		try {
-			c = DfUtils.executeQuery(session,
-				String.format("select r_object_id from dm_reference_s where r_mirror_object_id = %s",
-					DfUtils.quoteString(newId.getId())));
-			if (!c.next()) {
+		try (DctmQuery query = new DctmQuery(session,
+			String.format("select r_object_id from dm_reference_s where r_mirror_object_id = %s",
+				DfUtils.quoteString(newId.getId())))) {
+			if (!query.hasNext()) {
 				// ERROR!
 				throw new ImportException(String.format("Reference [%s] could not be found with its new ID [%s]",
 					this.cmfObject.getLabel(), newId.getId()));
 			}
-			ref = IDfReference.class.cast(session.getObject(c.getId("r_object_id")));
-		} finally {
-			DfUtils.closeQuietly(c);
+			ref = IDfReference.class.cast(session.getObject(query.next().getId("r_object_id")));
 		}
 		CmfProperty<IDfValue> p = null;
 		p = this.cmfObject.getProperty(DctmAttributes.REFRESH_INTERVAL);
