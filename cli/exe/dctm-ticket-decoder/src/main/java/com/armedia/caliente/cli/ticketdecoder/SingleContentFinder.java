@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;

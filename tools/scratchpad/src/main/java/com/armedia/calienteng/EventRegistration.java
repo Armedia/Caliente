@@ -9,8 +9,8 @@ import java.util.TreeSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.caliente.tools.dfc.DctmQuery;
+import com.armedia.caliente.tools.dfc.DfUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;

@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.text.StringTokenizer;
 
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.commons.dfc.util.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;

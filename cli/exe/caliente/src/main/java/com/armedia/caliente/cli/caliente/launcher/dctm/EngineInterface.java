@@ -23,7 +23,7 @@ import com.armedia.caliente.engine.dfc.exporter.DctmExportEngineFactory;
 import com.armedia.caliente.engine.dfc.importer.DctmImportEngineFactory;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
-import com.armedia.commons.dfc.pool.DfcSessionFactory;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionFactory;
 import com.documentum.fc.common.DfLoggerDisabled;
 import com.documentum.fc.common.impl.logging.LoggingConfigurator;
 

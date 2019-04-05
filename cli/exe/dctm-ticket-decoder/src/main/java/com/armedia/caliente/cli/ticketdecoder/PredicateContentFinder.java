@@ -4,8 +4,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import com.armedia.commons.dfc.pool.DfcSessionPool;
-import com.armedia.commons.dfc.util.DctmQuery;
+import com.armedia.caliente.tools.dfc.DctmQuery;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;

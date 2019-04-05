@@ -30,14 +30,26 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-pool2</artifactId>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.documentum.dfc</groupId>
 			<artifactId>dfc-jars</artifactId>
 			<scope>system</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>org.junit.vintage</groupId>
-			<artifactId>junit-vintage-engine</artifactId>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.easymock</groupId>
+			<artifactId>easymock</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

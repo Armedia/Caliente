@@ -24,7 +24,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
-import com.armedia.commons.dfc.util.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;

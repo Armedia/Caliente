@@ -16,7 +16,7 @@ import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.filter.IntegerValueFilter;
 import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
-import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 

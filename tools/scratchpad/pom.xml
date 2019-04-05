@@ -24,8 +24,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.armedia.commons</groupId>
-			<artifactId>dfc-session-pool</artifactId>
+			<groupId>com.armedia.caliente.tools</groupId>
+			<artifactId>caliente-tools-dfc</artifactId>
+			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 

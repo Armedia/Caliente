@@ -3,7 +3,7 @@ package com.armedia.caliente.tools;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.documentum.com.DfClientX;
 import com.documentum.com.IDfClientX;
 import com.documentum.fc.client.IDfFolder;

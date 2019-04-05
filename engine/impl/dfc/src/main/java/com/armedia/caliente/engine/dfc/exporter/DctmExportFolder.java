@@ -12,7 +12,7 @@ import com.armedia.caliente.engine.dfc.DctmMappingUtils;
 import com.armedia.caliente.engine.dfc.common.DctmFolder;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.commons.dfc.util.DctmQuery;
+import com.armedia.caliente.tools.dfc.DctmQuery;
 import com.armedia.commons.utilities.FileNameTools;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;

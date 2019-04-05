@@ -37,12 +37,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.armedia.commons</groupId>
-			<artifactId>dfc-session-pool</artifactId>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-collections4</artifactId>
 			<scope>compile</scope>

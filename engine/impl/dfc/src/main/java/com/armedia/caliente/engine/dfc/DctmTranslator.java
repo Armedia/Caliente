@@ -15,7 +15,7 @@ import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
-import com.armedia.commons.dfc.util.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;

@@ -19,7 +19,7 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.caliente.tools.dfc.DfUtils;
 import com.armedia.commons.utilities.FileNameTools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;

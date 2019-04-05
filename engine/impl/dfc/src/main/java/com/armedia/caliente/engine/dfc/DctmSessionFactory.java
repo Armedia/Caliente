@@ -9,7 +9,7 @@ import org.apache.commons.pool2.PooledObject;
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionFactoryException;
 import com.armedia.caliente.tools.CmfCrypt;
-import com.armedia.commons.dfc.pool.DfcSessionFactory;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;

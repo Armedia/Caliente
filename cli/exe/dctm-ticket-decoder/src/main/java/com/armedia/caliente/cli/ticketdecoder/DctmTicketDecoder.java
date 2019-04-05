@@ -21,7 +21,7 @@ import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
-import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.Tools;

@@ -17,8 +17,8 @@ import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServi
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.TypeDeclaration;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.caliente.tools.dfc.DctmQuery;
+import com.armedia.caliente.tools.dfc.DfUtils;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;

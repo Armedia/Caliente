@@ -6,9 +6,9 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
-import com.armedia.commons.dfc.pool.DfcSessionPool;
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.caliente.tools.dfc.DctmQuery;
+import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;

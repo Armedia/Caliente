@@ -30,7 +30,7 @@ import com.armedia.caliente.cli.datagen.data.csv.CSVDataRecordManager;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
-import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfFolder;

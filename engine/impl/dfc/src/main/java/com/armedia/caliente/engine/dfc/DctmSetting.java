@@ -2,7 +2,7 @@ package com.armedia.caliente.engine.dfc;
 
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.commons.dfc.pool.DfcSessionFactory;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionFactory;
 
 public enum DctmSetting implements TransferEngineSetting {
 	//

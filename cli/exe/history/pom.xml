@@ -35,12 +35,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.armedia.commons</groupId>
-			<artifactId>dfc-session-pool</artifactId>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<scope>compile</scope>

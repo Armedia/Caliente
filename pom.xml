@@ -80,12 +80,6 @@
 				<version>0.7.0</version>
 			</dependency>
 
-			<dependency> 
-				<groupId>com.armedia.commons</groupId>
-				<artifactId>dfc-session-pool</artifactId>
-				<version>1.2.12</version>
-			</dependency>
-
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-api</artifactId>
@@ -285,6 +279,12 @@
 				<groupId>com.fasterxml.woodstox</groupId>
 				<artifactId>woodstox-core</artifactId>
 				<version>5.2.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.easymock</groupId>
+				<artifactId>easymock</artifactId>
+				<version>3.6</version>
 			</dependency>
 
 			<dependency>

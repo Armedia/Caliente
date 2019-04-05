@@ -2,8 +2,8 @@ package com.armedia.caliente.tools;
 
 import java.io.ByteArrayOutputStream;
 
-import com.armedia.commons.dfc.pool.DfcSessionPool;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfSession;

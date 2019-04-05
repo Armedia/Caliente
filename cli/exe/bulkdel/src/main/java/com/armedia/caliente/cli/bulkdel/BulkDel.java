@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
-import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.com.DfClientX;

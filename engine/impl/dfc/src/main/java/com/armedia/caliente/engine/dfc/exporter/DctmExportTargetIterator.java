@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.caliente.tools.dfc.DfUtils;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.common.DfException;

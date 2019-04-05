@@ -16,10 +16,10 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.tools.dfc.DctmQuery;
+import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.calienteng.EventRegistration;
-import com.armedia.commons.dfc.pool.DfcSessionPool;
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;

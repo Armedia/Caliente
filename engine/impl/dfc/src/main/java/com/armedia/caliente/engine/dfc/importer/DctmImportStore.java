@@ -8,7 +8,7 @@ import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.caliente.tools.dfc.DfUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.content.IDfStore;
