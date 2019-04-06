@@ -45,8 +45,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.armedia.commons</groupId>
-			<artifactId>datasource-locator</artifactId>
+			<groupId>com.armedia.caliente.tools</groupId>
+			<artifactId>caliente-tools-datasource</artifactId>
+			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
 

@@ -51,7 +51,7 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.tools.MimeTools;
-import com.armedia.commons.dslocator.DataSourceDescriptor;
+import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.function.TriConsumer;

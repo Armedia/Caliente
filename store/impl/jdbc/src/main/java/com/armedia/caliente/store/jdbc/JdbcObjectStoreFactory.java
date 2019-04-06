@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.store.CmfObjectStoreFactory;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.xml.StoreConfiguration;
-import com.armedia.commons.dslocator.DataSourceDescriptor;
-import com.armedia.commons.dslocator.DataSourceLocator;
+import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
+import com.armedia.caliente.tools.datasource.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
 
 public class JdbcObjectStoreFactory extends CmfObjectStoreFactory<JdbcOperation, JdbcObjectStore> {

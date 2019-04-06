@@ -24,8 +24,8 @@ import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.commons.dslocator.DataSourceDescriptor;
-import com.armedia.commons.dslocator.DataSourceLocator;
+import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
+import com.armedia.caliente.tools.datasource.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.concurrent.ShareableLockable;
 
