@@ -135,7 +135,6 @@ public class MetadataSource implements ShareableLockable {
 
 	public void initialize() throws Exception {
 		shareLockedUpgradable(() -> this.dataSource, Objects::isNull, (e) -> {
-			if (this.dataSource != null) { return; }
 			Map<String, String> settingsMap = getSettingsMap();
 
 			String url = StringUtils.strip(getUrl());
@@ -145,7 +144,7 @@ public class MetadataSource implements ShareableLockable {
 			setValue("driver", getDriver(), settingsMap);
 			setValue("user", getUser(), settingsMap);
 
-			String password = StringUtils.strip(getPassword());
+			String password = getPassword();
 			// TODO: Potentially try to decrypt the password...
 			setValue("password", password, settingsMap);
 
