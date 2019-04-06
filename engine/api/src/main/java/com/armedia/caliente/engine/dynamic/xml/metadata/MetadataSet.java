@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.ShareableLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -139,7 +140,7 @@ public class MetadataSet implements ShareableLockable {
 	}
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws Exception {
-		return shareLocked(() -> {
+		try (AutoLock lock = autoSharedLock()) {
 			// If there are no loades initialized, this is a problem...
 			if (this.initializedLoaders == null) { throw new Exception("This metadata source is not yet initialized"); }
 
@@ -183,7 +184,7 @@ public class MetadataSet implements ShareableLockable {
 				finalAttributes = null;
 			}
 			return finalAttributes;
-		});
+		}
 	}
 
 	public void close() {

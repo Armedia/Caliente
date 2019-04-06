@@ -11,6 +11,7 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.function.CheckedConsumer;
 import com.armedia.commons.utilities.function.CheckedFunction;
@@ -23,9 +24,9 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 	private boolean open = true;
 
 	protected final void assertOpen() {
-		shareLocked(() -> {
+		try (AutoLock lock = autoSharedLock()) {
 			if (!this.open) { throw new IllegalStateException("This stream store is not open, call init() first"); }
-		});
+		}
 	}
 
 	protected final boolean isOpen() {

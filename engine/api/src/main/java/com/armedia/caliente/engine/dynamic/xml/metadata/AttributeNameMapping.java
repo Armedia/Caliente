@@ -18,6 +18,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.ShareableLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -92,15 +93,15 @@ public class AttributeNameMapping implements ShareableLockable {
 	}
 
 	public void setDefaultTransform(Expression value) {
-		mutexLocked(() -> {
+		try (AutoLock lock = autoMutexLock()) {
 			this.defaultTransform = value;
 			close();
 			initialize(this.caseSensitive);
-		});
+		}
 	}
 
 	public String transformName(final String sqlName) throws ScriptException {
-		return shareLocked(() -> {
+		try (AutoLock lock = autoSharedLock()) {
 			boolean hasGroups = false;
 			String regex = null;
 			Expression repl = null;
@@ -133,15 +134,15 @@ public class AttributeNameMapping implements ShareableLockable {
 			// We have a regular expression, a replacement, and the regex has capturing groups, so
 			// we have to do a replacement
 			return sqlName.replaceAll(regex, value);
-		});
+		}
 	}
 
 	public void close() {
-		mutexLocked(() -> {
+		try (AutoLock lock = autoMutexLock()) {
 			if (this.matchers == null) { return; }
 			this.activeDefault = null;
 			this.caseSensitive = null;
 			this.matchers = null;
-		});
+		}
 	}
 }

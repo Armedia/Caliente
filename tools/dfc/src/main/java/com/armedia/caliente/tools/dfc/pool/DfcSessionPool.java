@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -105,7 +106,7 @@ public class DfcSessionPool extends BaseShareableLockable {
 	}
 
 	public final IDfSession acquireSession() throws DfException {
-		return shareLocked(() -> {
+		try (AutoLock lock = autoSharedLock()) {
 			if (!this.open) { throw new IllegalStateException("This session factory is not open"); }
 			try {
 				return this.pool.borrowObject();
@@ -113,7 +114,7 @@ public class DfcSessionPool extends BaseShareableLockable {
 				if (DfException.class.isInstance(e)) { throw DfException.class.cast(e); }
 				throw new DfException("The backend pool was unable to return a pooled session", e);
 			}
-		});
+		}
 	}
 
 	public final void configurePool(CfgTools cfg) {

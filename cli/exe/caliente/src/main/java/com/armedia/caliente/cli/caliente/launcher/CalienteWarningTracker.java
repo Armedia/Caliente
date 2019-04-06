@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectRef;
+import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
 public class CalienteWarningTracker extends BaseShareableLockable implements WarningTracker {
@@ -103,10 +104,10 @@ public class CalienteWarningTracker extends BaseShareableLockable implements War
 
 	private boolean persistWarning(Warning w) {
 		if (this.warnings == null) { return false; }
-		return mutexLocked(() -> {
+		try (AutoLock lock = autoMutexLock()) {
 			this.warnings.add(w);
 			return true;
-		});
+		}
 	}
 
 	@Override
@@ -126,7 +127,7 @@ public class CalienteWarningTracker extends BaseShareableLockable implements War
 	public String generateReport() {
 		if (!hasWarnings()) { return null; }
 
-		return shareLocked(() -> {
+		try (AutoLock lock = autoSharedLock()) {
 			Map<WarningType, Long> m = this.objectCounter.getCummulative();
 			final Long zero = Long.valueOf(0);
 			StringBuilder report = new StringBuilder();
@@ -147,13 +148,13 @@ public class CalienteWarningTracker extends BaseShareableLockable implements War
 				}
 			}
 			return report.toString();
-		});
+		}
 	}
 
 	public void generateReport(Logger output) {
 		if (!hasWarnings()) { return; }
 
-		shareLocked(() -> {
+		try (AutoLock lock = autoSharedLock()) {
 			Map<WarningType, Long> m = this.objectCounter.getCummulative();
 			final Long zero = Long.valueOf(0);
 			output.warn("Tracked Warnings Summary:");
@@ -174,6 +175,6 @@ public class CalienteWarningTracker extends BaseShareableLockable implements War
 					output.warn(w.toString(true));
 				}
 			}
-		});
+		}
 	}
 }

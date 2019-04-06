@@ -18,6 +18,7 @@ import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.function.CheckedLazySupplier;
 import com.ctc.wstx.api.WstxOutputProperties;
@@ -56,8 +57,7 @@ public class XmlContentPersistor extends BaseShareableLockable implements Conten
 	@Override
 	public void initialize(final File target) throws Exception {
 		final File finalTarget = Tools.canonicalize(target);
-		mutexLocked(() -> {
-
+		try (AutoLock lock = autoMutexLock()) {
 			this.out = new FileOutputStream(finalTarget);
 
 			XMLOutputFactory factory = XmlContentPersistor.OUTPUT_FACTORY.get();
@@ -78,7 +78,7 @@ public class XmlContentPersistor extends BaseShareableLockable implements Conten
 			this.marshaller.setProperty(Marshaller.JAXB_ENCODING, Charset.defaultCharset().name());
 			this.marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 			this.marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		});
+		}
 	}
 
 	@Override
@@ -90,12 +90,12 @@ public class XmlContentPersistor extends BaseShareableLockable implements Conten
 
 	@Override
 	public void close() throws Exception {
-		mutexLocked(() -> {
+		try (AutoLock lock = autoMutexLock()) {
 			this.xml.flush();
 			this.xml.writeEndDocument();
 			this.xml.close();
 			this.out.flush();
 			this.out.close();
-		});
+		}
 	}
 }

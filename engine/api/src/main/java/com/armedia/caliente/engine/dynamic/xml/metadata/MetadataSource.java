@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.caliente.tools.datasource.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.ShareableLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -169,12 +170,12 @@ public class MetadataSource implements ShareableLockable {
 	}
 
 	public Connection getConnection() throws SQLException {
-		return shareLocked(() -> {
+		try (AutoLock lock = autoSharedLock()) {
 			if (this.dataSource == null) {
 				throw new IllegalStateException(String.format("The datasource [%s] is not yet initialized", this.name));
 			}
 			return this.dataSource.getConnection();
-		});
+		}
 	}
 
 	public void close() {

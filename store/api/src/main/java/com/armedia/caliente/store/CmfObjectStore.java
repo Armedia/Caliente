@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.store.tools.CollectionObjectHandler;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.function.TriConsumer;
 
 /**
@@ -190,14 +191,14 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	}
 
 	public final boolean init(Map<String, String> settings) throws CmfStorageException {
-		return mutexLocked(() -> {
+		try (AutoLock lock = autoMutexLock()) {
 			// Do nothing - this is for subclasses to override
 			if (this.open) { return false; }
 			doInit(settings);
 			this.open = true;
 			this.objectFilterActive.set(false);
 			return this.open;
-		});
+		}
 	}
 
 	protected void doInit(Map<String, String> settings) throws CmfStorageException {

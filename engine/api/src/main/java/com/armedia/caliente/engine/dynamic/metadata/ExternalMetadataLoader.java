@@ -21,6 +21,7 @@ import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
 public class ExternalMetadataLoader extends BaseShareableLockable {
@@ -227,13 +228,13 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 	}
 
 	public void close() {
-		mutexLocked(() -> {
+		try (AutoLock lock = autoMutexLock()) {
 			if (!this.initialized) { return; }
 			try {
 				closeSources();
 			} finally {
 				this.initialized = false;
 			}
-		});
+		}
 	}
 }

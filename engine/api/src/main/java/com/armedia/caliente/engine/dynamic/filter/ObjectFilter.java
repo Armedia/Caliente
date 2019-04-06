@@ -21,6 +21,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
 public class ObjectFilter extends BaseShareableLockable {
@@ -66,7 +67,7 @@ public class ObjectFilter extends BaseShareableLockable {
 
 	public Boolean accept(CmfObject<CmfValue> cmfObject, CmfValueMapper mapper) throws ObjectFilterException {
 		Objects.requireNonNull(cmfObject, "Must provide an object to filter");
-		return shareLocked(() -> {
+		try (AutoLock lock = autoSharedLock()) {
 			if (this.closed) { throw new ObjectFilterException("This object filter is already closed"); }
 			DynamicElementContext ctx = new DynamicElementContext(cmfObject, new DefaultDynamicObject(cmfObject),
 				mapper, null);
@@ -98,7 +99,7 @@ public class ObjectFilter extends BaseShareableLockable {
 			this.log.trace("Default action: {} {}", StringUtils.capitalize(this.defaultOutcome.name().toLowerCase()),
 				cmfObject.getDescription());
 			return ret;
-		});
+		}
 	}
 
 	public <V> boolean acceptRaw(CmfObject<V> object, CmfValueMapper mapper) throws ObjectFilterException {
@@ -107,13 +108,13 @@ public class ObjectFilter extends BaseShareableLockable {
 	}
 
 	public void close() {
-		mutexLocked(() -> {
+		try (AutoLock lock = autoMutexLock()) {
 			try {
 				if (this.closed) { return; }
 				this.activeFilters.clear();
 			} finally {
 				this.closed = true;
 			}
-		});
+		}
 	}
 }

@@ -12,6 +12,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.AutoLock;
 
 public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperation<?>> extends CmfStore<OPERATION> {
 
@@ -297,14 +298,14 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		if (locator == null) { throw new IllegalArgumentException("Must provide a locator string"); }
 		// Short-cut, no need to luck if we won't do anything
 		if (!isSupportsFileAccess()) { return null; }
-		return shareLocked(() -> {
+		try (AutoLock lock = autoSharedLock()) {
 			assertOpen();
 			File f = doGetFile(locator);
 			if (f == null) {
 				throw new IllegalStateException("doGetFile() returned null - did you forget to override the method?");
 			}
 			return f.getCanonicalFile();
-		});
+		}
 	}
 
 	private void ensureParentExists(File f) throws IOException {

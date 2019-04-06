@@ -50,6 +50,7 @@ import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.BinaryEncoding;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
 public class Validator extends BaseShareableLockable {
@@ -909,7 +910,7 @@ public class Validator extends BaseShareableLockable {
 	}
 
 	public void validate(final Path sourcePath) {
-		shareLocked(() -> {
+		try (AutoLock lock = autoSharedLock()) {
 			if (this.closed.get()) { throw new IllegalStateException("This validator has been closed, but not reset"); }
 			// Validate the source file against the target...
 			final Path relativePath = this.sourceRoot.relativize(sourcePath);
@@ -967,7 +968,7 @@ public class Validator extends BaseShareableLockable {
 				(validated ? this.successCount : this.failureCount).incrementAndGet();
 				this.log.info("Validation for [{}] {}", relativePath.toString(), validated ? "PASSED" : "FAILED");
 			}
-		});
+		}
 	}
 
 	private void resetState() {
@@ -977,7 +978,7 @@ public class Validator extends BaseShareableLockable {
 	}
 
 	public void writeAndClear() throws IOException {
-		mutexLocked(() -> {
+		try (AutoLock lock = autoMutexLock()) {
 			try {
 				for (ValidationErrorType t : this.errors.keySet()) {
 					closeQuietly(this.errors.get(t));
@@ -990,7 +991,7 @@ public class Validator extends BaseShareableLockable {
 				resetState();
 				this.closed.set(true);
 			}
-		});
+		}
 	}
 
 	private void closeQuietly(Closeable c) {
