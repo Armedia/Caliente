@@ -116,8 +116,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.armedia.commons.datasource</groupId>
-			<artifactId>datasource-locator-pooled</artifactId>
+			<groupId>com.armedia.commons</groupId>
+			<artifactId>datasource-locator</artifactId>
 			<scope>compile</scope>
 		</dependency>
 
