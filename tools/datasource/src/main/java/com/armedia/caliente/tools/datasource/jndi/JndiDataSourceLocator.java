@@ -67,12 +67,7 @@ public class JndiDataSourceLocator extends DataSourceLocator {
 		this.log.debug("Located the DataSource named [{}]", jndiName);
 		// TODO: How to determine if the transactions are managed or not?
 		// For now, assume they're managed
-		return new DataSourceDescriptor<DataSource>(ds, true) {
-			@Override
-			public void close() {
-				// The DS is managed, so do nothing
-			}
-		};
+		return new DataSourceDescriptor<DataSource>(ds, true);
 	}
 
 	@Override

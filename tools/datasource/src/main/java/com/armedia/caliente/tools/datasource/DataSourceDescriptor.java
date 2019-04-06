@@ -2,11 +2,11 @@ package com.armedia.caliente.tools.datasource;
 
 import javax.sql.DataSource;
 
-public abstract class DataSourceDescriptor<DS extends DataSource> {
+public class DataSourceDescriptor<DS extends DataSource> {
 	private final DS dataSource;
 	private final boolean managedTransactions;
 
-	protected DataSourceDescriptor(DS dataSource, boolean managedTransactions) {
+	public DataSourceDescriptor(DS dataSource, boolean managedTransactions) {
 		this.dataSource = dataSource;
 		this.managedTransactions = managedTransactions;
 	}
@@ -19,5 +19,7 @@ public abstract class DataSourceDescriptor<DS extends DataSource> {
 		return this.managedTransactions;
 	}
 
-	public abstract void close();
+	public void close() {
+		// By default, do nothing...
+	}
 }

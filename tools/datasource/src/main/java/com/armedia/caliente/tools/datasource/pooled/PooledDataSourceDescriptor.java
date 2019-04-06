@@ -4,6 +4,7 @@
 
 package com.armedia.caliente.tools.datasource.pooled;
 
+import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -45,7 +46,7 @@ public class PooledDataSourceDescriptor extends DataSourceDescriptor<BasicDataSo
 		if (PooledDataSourceDescriptor.this.openFlag.compareAndSet(true, false)) {
 			try {
 				this.dataSource.close();
-			} catch (Exception e) {
+			} catch (SQLException e) {
 				// Log the error
 				String msg = String.format("Failed to close the JDBC connection pool for [%s]/[%s]",
 					PooledDataSourceDescriptor.this.driver, PooledDataSourceDescriptor.this.url);

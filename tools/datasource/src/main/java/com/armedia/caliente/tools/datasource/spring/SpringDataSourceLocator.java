@@ -52,12 +52,7 @@ public class SpringDataSourceLocator extends DataSourceLocator implements Applic
 			dataSource.getClass().getCanonicalName());
 		// TODO: How to determine if the transactions are managed or not?
 		// For now, assume they're managed
-		return new DataSourceDescriptor<DataSource>(dataSource, true) {
-			@Override
-			public void close() {
-				// The DS is managed, so do nothing
-			}
-		};
+		return new DataSourceDescriptor<>(dataSource, true);
 	}
 
 	@Override
