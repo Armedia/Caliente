@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.armedia.caliente.tools.datasource.pooled.PooledDataSourceLocator;
+import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.commons.utilities.CfgTools;
 
 class PooledDataSourceLocatorTest {
@@ -71,7 +71,10 @@ class PooledDataSourceLocatorTest {
 		settings.put("jdbc.driverClassName", PooledDataSourceLocatorTest.DRIVER_CLASS_NAME);
 		settings.put("jdbc.url", "jdbc:h2:mem:testdb");
 		settings.put("jdbc.user", "testuser");
-		Assertions.assertNotNull(loc.locateDataSource(new CfgTools(settings)));
+		DataSourceDescriptor<?> desc = loc.locateDataSource(new CfgTools(settings));
+		Assertions.assertNotNull(desc);
+		desc.close();
+		desc.close();
 	}
 
 }
