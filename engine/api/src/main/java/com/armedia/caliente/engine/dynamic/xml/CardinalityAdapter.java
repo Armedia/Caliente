@@ -22,7 +22,7 @@ public class CardinalityAdapter extends XmlEnumAdapter<Cardinality> {
 	}
 
 	public CardinalityAdapter() {
-		super(Cardinality.class);
+		super(Cardinality.class, Flag.MARSHAL_FOLDED);
 	}
 
 	@Override
