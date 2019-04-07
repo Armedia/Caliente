@@ -1,29 +1,29 @@
 package com.armedia.caliente.cli.filenamemapper;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.commons.utilities.Tools;
 
 public class FilenameMapperTest {
 
-	@BeforeClass
+	@BeforeAll
 	public static void setUpBeforeClass() throws Exception {
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void tearDownAfterClass() throws Exception {
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 
@@ -183,15 +183,15 @@ public class FilenameMapperTest {
 					try {
 						f.fixName(key, fixChar, fixLength);
 					} catch (Throwable t) {
-						Assert.assertTrue(msg, expected.isInstance(t));
+						Assertions.assertTrue(expected.isInstance(t), msg);
 					}
 				} else {
 					// WTF is it?
 				}
 			} else if (String.class.isInstance(value)) {
-				Assert.assertEquals(msg, value, f.fixName(key, fixChar, fixLength));
+				Assertions.assertEquals(value, f.fixName(key, fixChar, fixLength), msg);
 			} else if (value == null) {
-				Assert.assertNull(msg, f.fixName(key, fixChar, fixLength));
+				Assertions.assertNull(f.fixName(key, fixChar, fixLength), msg);
 			} else {
 				/// WTF is it??
 			}
@@ -323,15 +323,15 @@ public class FilenameMapperTest {
 					try {
 						f.fixName(key, fixChar, fixLength);
 					} catch (Throwable t) {
-						Assert.assertTrue(msg, expected.isInstance(t));
+						Assertions.assertTrue(expected.isInstance(t), msg);
 					}
 				} else {
 					// WTF is it?
 				}
 			} else if (String.class.isInstance(value)) {
-				Assert.assertEquals(msg, value, f.fixName(key, fixChar, fixLength));
+				Assertions.assertEquals(value, f.fixName(key, fixChar, fixLength), msg);
 			} else if (value == null) {
-				Assert.assertNull(msg, f.fixName(key, fixChar, fixLength));
+				Assertions.assertNull(f.fixName(key, fixChar, fixLength), msg);
 			} else {
 				/// WTF is it??
 			}
