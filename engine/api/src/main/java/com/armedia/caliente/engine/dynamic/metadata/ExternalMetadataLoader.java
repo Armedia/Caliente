@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -78,54 +77,42 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 	}
 
 	public void initialize() throws ExternalMetadataException {
-		initialize(null);
-	}
-
-	private void initialize(final Lock r) throws ExternalMetadataException {
-		final Lock w = getMutexLock();
-		if (r != null) {
-			r.unlock();
-		}
-		w.lock();
-		try {
-			if (this.initialized) { return; }
-			for (final MetadataSource src : this.metadata.getMetadataSources()) {
-				try {
-					src.initialize();
-				} catch (Exception e) {
-					throw new ExternalMetadataException(
-						String.format("Failed to initialize the external metadata source [%s]", src.getName()), e);
-				}
-				this.metadataSources.put(src.getName(), src);
-			}
-
-			for (final MetadataSet desc : this.metadata.getMetadataSets()) {
-				if (this.metadataSources.isEmpty()) {
-					throw new ExternalMetadataException(
-						"No metadata sources are defined - this is a configuration error!");
-				}
-				try {
-					desc.initialize(Tools.freezeMap(this.metadataSources));
-				} catch (Exception e) {
-					if (desc.isFailOnError()) {
-						// This item is required, so we must abort
-						throw new ExternalMetadataException("Failed to initialize a required external metadata source",
-							e);
+		shareLockedUpgradable(() -> this.initialized, (t) -> !t, (i) -> {
+			try {
+				for (final MetadataSource src : this.metadata.getMetadataSources()) {
+					try {
+						src.initialize();
+					} catch (Exception e) {
+						throw new ExternalMetadataException(
+							String.format("Failed to initialize the external metadata source [%s]", src.getName()), e);
 					}
+					this.metadataSources.put(src.getName(), src);
 				}
-				this.metadataSets.put(desc.getId(), desc);
-			}
 
-			this.initialized = true;
-		} finally {
-			if (!this.initialized) {
-				closeSources();
+				for (final MetadataSet desc : this.metadata.getMetadataSets()) {
+					if (this.metadataSources.isEmpty()) {
+						throw new ExternalMetadataException(
+							"No metadata sources are defined - this is a configuration error!");
+					}
+					try {
+						desc.initialize(Tools.freezeMap(this.metadataSources));
+					} catch (Exception e) {
+						if (desc.isFailOnError()) {
+							// This item is required, so we must abort
+							throw new ExternalMetadataException(
+								"Failed to initialize a required external metadata source", e);
+						}
+					}
+					this.metadataSets.put(desc.getId(), desc);
+				}
+
+				this.initialized = true;
+			} finally {
+				if (!this.initialized) {
+					closeSources();
+				}
 			}
-			if (r != null) {
-				r.lock();
-			}
-			w.unlock();
-		}
+		});
 	}
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws ExternalMetadataException {
@@ -152,10 +139,8 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, Collection<String> sourceNames)
 		throws ExternalMetadataException {
 		Objects.requireNonNull(object, "Must provide a CmfObject instance to retrieve extra metadata for");
-		final Lock l = getSharedLock();
-		l.lock();
-		try {
-			initialize(l);
+		initialize();
+		try (AutoLock lock = autoSharedLock()) {
 			if (sourceNames == null) {
 				sourceNames = this.metadataSets.keySet();
 			}
@@ -199,8 +184,6 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 				finalMap.putAll(m);
 			}
 			return finalMap.isEmpty() ? null : finalMap;
-		} finally {
-			l.unlock();
 		}
 	}
 

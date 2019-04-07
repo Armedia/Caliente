@@ -14,8 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
 import javax.script.Bindings;
@@ -38,11 +36,11 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.ShareableLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.function.CheckedConsumer;
 
 @XmlTransient
-public abstract class MetadataReaderBase implements AttributeValuesLoader, ShareableLockable {
+public abstract class MetadataReaderBase extends BaseShareableLockable implements AttributeValuesLoader {
 
 	@XmlElement(name = "query", required = true)
 	protected ParameterizedQuery query;
@@ -55,9 +53,6 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader, Share
 
 	@XmlAttribute(name = "dataSource", required = true)
 	protected String dataSource;
-
-	@XmlTransient
-	protected final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
 	@XmlTransient
 	protected String finalSql = null;
@@ -76,11 +71,6 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader, Share
 
 	@XmlTransient
 	protected Boolean columnNamesCaseSensitive = false;
-
-	@Override
-	public ReadWriteLock getShareableLock() {
-		return this.rwLock;
-	}
 
 	@Override
 	public final String getDataSource() {

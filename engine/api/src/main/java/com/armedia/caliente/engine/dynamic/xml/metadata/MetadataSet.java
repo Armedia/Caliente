@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -24,13 +22,13 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.AutoLock;
-import com.armedia.commons.utilities.concurrent.ShareableLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSet.t", propOrder = {
 	"loaders"
 })
-public class MetadataSet implements ShareableLockable {
+public class MetadataSet extends BaseShareableLockable {
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -51,18 +49,10 @@ public class MetadataSet implements ShareableLockable {
 	protected Boolean failOnMissing;
 
 	@XmlTransient
-	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-
-	@XmlTransient
 	private List<AttributeValuesLoader> initializedLoaders;
 
 	@XmlTransient
 	private Map<String, MetadataSource> dataSources;
-
-	@Override
-	public ReadWriteLock getShareableLock() {
-		return this.rwLock;
-	}
 
 	public List<AttributeValuesLoader> getLoaders() {
 		if (this.loaders == null) {

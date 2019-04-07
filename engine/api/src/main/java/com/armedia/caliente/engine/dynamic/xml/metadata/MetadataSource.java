@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.sql.DataSource;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -28,13 +26,13 @@ import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.caliente.tools.datasource.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.concurrent.AutoLock;
-import com.armedia.commons.utilities.concurrent.ShareableLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSource.t", propOrder = {
 	"url", "driver", "user", "password", "settings",
 })
-public class MetadataSource implements ShareableLockable {
+public class MetadataSource extends BaseShareableLockable {
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -58,15 +56,7 @@ public class MetadataSource implements ShareableLockable {
 	protected String name;
 
 	@XmlTransient
-	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-
-	@XmlTransient
 	private DataSource dataSource = null;
-
-	@Override
-	public ReadWriteLock getShareableLock() {
-		return this.rwLock;
-	}
 
 	public String getUrl() {
 		return this.url;

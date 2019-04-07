@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -21,6 +20,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.function.CheckedLazySupplier;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -104,9 +104,7 @@ public class MetadataFromDDL extends MetadataReaderBase {
 
 	@Override
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(Connection c, CmfObject<V> object) throws Exception {
-		final Lock readLock = this.rwLock.readLock();
-		readLock.lock();
-		try {
+		try (AutoLock lock = autoSharedLock()) {
 			final CmfAttributeTranslator<V> translator = object.getTranslator();
 			try (final PreparedStatement ps = c.prepareStatement(this.finalSql)) {
 				try (final ResultSet rs = getResultSet(ps, object, null)) {
@@ -172,8 +170,6 @@ public class MetadataFromDDL extends MetadataReaderBase {
 					return attributes;
 				}
 			}
-		} finally {
-			readLock.unlock();
 		}
 	}
 

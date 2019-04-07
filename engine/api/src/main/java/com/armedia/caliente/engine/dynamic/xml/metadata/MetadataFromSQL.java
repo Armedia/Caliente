@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.locks.Lock;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -23,6 +22,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.AutoLock;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataFromSQL.t", propOrder = {
@@ -71,9 +71,7 @@ public class MetadataFromSQL extends MetadataReaderBase {
 
 	@Override
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(Connection c, CmfObject<V> object) throws Exception {
-		final Lock lock = this.rwLock.readLock();
-		lock.lock();
-		try {
+		try (AutoLock lock = autoSharedLock()) {
 			final CmfAttributeTranslator<V> translator = object.getTranslator();
 			try (final PreparedStatement ps = c.prepareStatement(this.finalSql)) {
 				Map<String, CmfAttribute<V>> attributes = new TreeMap<>();
@@ -164,8 +162,6 @@ public class MetadataFromSQL extends MetadataReaderBase {
 				}
 				return attributes;
 			}
-		} finally {
-			lock.unlock();
 		}
 	}
 

@@ -3,8 +3,6 @@ package com.armedia.caliente.engine.dynamic.xml.metadata;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Pattern;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -18,13 +16,13 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.AutoLock;
-import com.armedia.commons.utilities.concurrent.ShareableLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataAttributeTypes.t", propOrder = {
 	"mappings", "defaultType"
 })
-public class AttributeTypeMapping implements ShareableLockable {
+public class AttributeTypeMapping extends BaseShareableLockable {
 
 	private static final boolean DEFAULT_CASE_SENSITIVE = true;
 
@@ -46,9 +44,6 @@ public class AttributeTypeMapping implements ShareableLockable {
 	protected CmfValue.Type defaultType;
 
 	@XmlTransient
-	protected final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-
-	@XmlTransient
 	protected List<TypeMatcher> matchers = null;
 
 	@XmlTransient
@@ -56,11 +51,6 @@ public class AttributeTypeMapping implements ShareableLockable {
 
 	@XmlTransient
 	protected Boolean caseSensitive = null;
-
-	@Override
-	public ReadWriteLock getShareableLock() {
-		return this.rwLock;
-	}
 
 	public List<MetadataTypeMapping> getMappings() {
 		if (this.mappings == null) {

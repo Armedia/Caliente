@@ -8,8 +8,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
@@ -19,10 +17,10 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.AutoLock;
-import com.armedia.commons.utilities.concurrent.ShareableLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
 @XmlTransient
-public abstract class AttributeNamesSource implements Iterable<String>, ShareableLockable {
+public abstract class AttributeNamesSource extends BaseShareableLockable implements Iterable<String> {
 
 	public static final Character DEFAULT_SEPARATOR = Character.valueOf(',');
 
@@ -33,18 +31,10 @@ public abstract class AttributeNamesSource implements Iterable<String>, Shareabl
 	protected Boolean caseSensitive;
 
 	@XmlTransient
-	protected final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-
-	@XmlTransient
 	private Boolean activeCaseSensitive = null;
 
 	@XmlTransient
 	private Map<String, String> values = null;
-
-	@Override
-	public ReadWriteLock getShareableLock() {
-		return this.rwLock;
-	}
 
 	public String getValue() {
 		return this.value;

@@ -3,8 +3,6 @@ package com.armedia.caliente.engine.dynamic.xml.metadata;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,13 +17,13 @@ import javax.xml.bind.annotation.XmlType;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.AutoLock;
-import com.armedia.commons.utilities.concurrent.ShareableLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataTransformNames.t", propOrder = {
 	"mappings", "defaultTransform"
 })
-public class AttributeNameMapping implements ShareableLockable {
+public class AttributeNameMapping extends BaseShareableLockable {
 
 	private static final boolean DEFAULT_CASE_SENSITIVE = true;
 
@@ -46,9 +44,6 @@ public class AttributeNameMapping implements ShareableLockable {
 	protected Expression defaultTransform;
 
 	@XmlTransient
-	protected final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-
-	@XmlTransient
 	protected List<NameMatcher> matchers = null;
 
 	@XmlTransient
@@ -56,11 +51,6 @@ public class AttributeNameMapping implements ShareableLockable {
 
 	@XmlTransient
 	protected Boolean caseSensitive = null;
-
-	@Override
-	public final ReadWriteLock getShareableLock() {
-		return this.rwLock;
-	}
 
 	public List<MetadataNameMapping> getMappings() {
 		if (this.mappings == null) {
