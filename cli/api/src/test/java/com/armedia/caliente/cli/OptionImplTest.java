@@ -2,8 +2,8 @@ package com.armedia.caliente.cli;
 
 import java.util.UUID;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class OptionImplTest {
 
@@ -13,7 +13,7 @@ public class OptionImplTest {
 		OptionImpl actual = null;
 
 		expected = new OptionImpl();
-		Assert.assertNotNull(expected);
+		Assertions.assertNotNull(expected);
 		expected.setArgumentName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
@@ -24,21 +24,21 @@ public class OptionImplTest {
 		expected.setValueSep('|');
 
 		actual = new OptionImpl(expected);
-		Assert.assertNotNull(actual);
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertEquals("key", expected.getKey(), actual.getKey());
+		Assertions.assertNotNull(actual);
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+		Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertTrue(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertTrue(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 
 		expected = new OptionImpl();
-		Assert.assertNotNull(expected);
+		Assertions.assertNotNull(expected);
 		expected.setArgumentName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
@@ -49,20 +49,20 @@ public class OptionImplTest {
 		expected.setValueSep('$');
 
 		actual = new OptionImpl(expected);
-		Assert.assertNotNull(actual);
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertEquals("key", expected.getKey(), actual.getKey());
+		Assertions.assertNotNull(actual);
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+		Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertTrue(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertTrue(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 
-		Assert.assertNotNull(expected.toString());
+		Assertions.assertNotNull(expected.toString());
 	}
 
 	@Test
@@ -70,7 +70,7 @@ public class OptionImplTest {
 		OptionImpl def = null;
 
 		def = new OptionImpl();
-		Assert.assertNotNull(def);
+		Assertions.assertNotNull(def);
 		def.setArgumentName(UUID.randomUUID().toString());
 		def.setDescription(UUID.randomUUID().toString());
 		def.setLongOpt(UUID.randomUUID().toString());
@@ -80,10 +80,10 @@ public class OptionImplTest {
 		def.setMinArguments(0);
 		def.setValueSep('|');
 
-		Assert.assertNotEquals(def, null);
-		Assert.assertNotEquals(def, new Object());
-		Assert.assertNotEquals(def, "");
-		Assert.assertEquals(def, def);
+		Assertions.assertNotEquals(def, null);
+		Assertions.assertNotEquals(def, new Object());
+		Assertions.assertNotEquals(def, "");
+		Assertions.assertEquals(def, def);
 	}
 
 	@Test
@@ -92,7 +92,7 @@ public class OptionImplTest {
 		OptionImpl actual = null;
 
 		expected = new OptionImpl();
-		Assert.assertNotNull(expected);
+		Assertions.assertNotNull(expected);
 		expected.setArgumentName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
@@ -103,18 +103,18 @@ public class OptionImplTest {
 		expected.setValueSep('|');
 
 		actual = expected.clone();
-		Assert.assertNotNull(actual);
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertEquals("key", expected.getKey(), actual.getKey());
+		Assertions.assertNotNull(actual);
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+		Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertTrue(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertTrue(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 	}
 
 	@Test
@@ -123,7 +123,7 @@ public class OptionImplTest {
 		OptionImpl actual = null;
 
 		expected = new OptionImpl();
-		Assert.assertNotNull(expected);
+		Assertions.assertNotNull(expected);
 		expected.setArgumentName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
@@ -134,33 +134,32 @@ public class OptionImplTest {
 		expected.setValueSep('|');
 
 		actual = expected.clone();
-		Assert.assertNotNull(actual);
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertEquals("key", expected.getKey(), actual.getKey());
+		Assertions.assertNotNull(actual);
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+		Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertTrue(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertTrue(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 
 		for (int i = 1; i < 100; i++) {
 			actual.setMaxArguments(i);
-			Assert.assertEquals(i, actual.getMaxArguments());
-			Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-			Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-			Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-			Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-			Assert.assertNotEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-			Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-			Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
-			Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
-			Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
+			Assertions.assertEquals(i, actual.getMaxArguments());
+			Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+			Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+			Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+			Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+			Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+			Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+			Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+			Assertions.assertFalse(Option.isIdentical(expected, actual), "equivalence test");
+			Assertions.assertFalse(Option.isIdentical(actual, expected), "inverse equivalence test");
+			Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 		}
 	}
 
@@ -170,7 +169,7 @@ public class OptionImplTest {
 		OptionImpl actual = null;
 
 		expected = new OptionImpl();
-		Assert.assertNotNull(expected);
+		Assertions.assertNotNull(expected);
 		expected.setArgumentName("test-value-name");
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
@@ -181,34 +180,34 @@ public class OptionImplTest {
 		expected.setValueSep('|');
 
 		actual = expected.clone();
-		Assert.assertNotNull(actual);
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertEquals("key", expected.getKey(), actual.getKey());
+		Assertions.assertNotNull(actual);
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+		Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertTrue(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertTrue(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 
 		for (int i = 1; i < 10; i++) {
 			String v = UUID.randomUUID().toString();
 			actual.setArgumentName(v);
-			Assert.assertEquals(v, actual.getArgumentName());
-			Assert.assertNotEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-			Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-			Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-			Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-			Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-			Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-			Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
-			Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
-			Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
+			Assertions.assertEquals(v, actual.getArgumentName());
+			Assertions.assertNotEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+			Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+			Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+			Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+			Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+			Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+			Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+			Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+			Assertions.assertFalse(Option.isIdentical(expected, actual), "equivalence test");
+			Assertions.assertFalse(Option.isIdentical(actual, expected), "inverse equivalence test");
+			Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 		}
 	}
 
@@ -218,7 +217,7 @@ public class OptionImplTest {
 		OptionImpl actual = null;
 
 		expected = new OptionImpl();
-		Assert.assertNotNull(expected);
+		Assertions.assertNotNull(expected);
 		expected.setArgumentName(UUID.randomUUID().toString());
 		expected.setDescription("test-description");
 		expected.setLongOpt(UUID.randomUUID().toString());
@@ -229,34 +228,34 @@ public class OptionImplTest {
 		expected.setValueSep('|');
 
 		actual = expected.clone();
-		Assert.assertNotNull(actual);
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertEquals("key", expected.getKey(), actual.getKey());
+		Assertions.assertNotNull(actual);
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+		Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertTrue(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertTrue(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 
 		for (int i = 1; i < 10; i++) {
 			String v = UUID.randomUUID().toString();
 			actual.setDescription(v);
-			Assert.assertEquals(v, actual.getDescription());
-			Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-			Assert.assertNotEquals("Description", expected.getDescription(), actual.getDescription());
-			Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-			Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-			Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-			Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-			Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
-			Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
-			Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
+			Assertions.assertEquals(v, actual.getDescription());
+			Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+			Assertions.assertNotEquals(expected.getDescription(), actual.getDescription(), "Description");
+			Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+			Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+			Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+			Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+			Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+			Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+			Assertions.assertFalse(Option.isIdentical(expected, actual), "equivalence test");
+			Assertions.assertFalse(Option.isIdentical(actual, expected), "inverse equivalence test");
+			Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 		}
 	}
 
@@ -266,7 +265,7 @@ public class OptionImplTest {
 		OptionImpl actual = null;
 
 		expected = new OptionImpl();
-		Assert.assertNotNull(expected);
+		Assertions.assertNotNull(expected);
 		expected.setArgumentName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt("test-description");
@@ -277,34 +276,33 @@ public class OptionImplTest {
 		expected.setValueSep('|');
 
 		actual = expected.clone();
-		Assert.assertNotNull(actual);
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertEquals("key", expected.getKey(), actual.getKey());
+		Assertions.assertNotNull(actual);
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+		Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertTrue(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertTrue(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 
 		for (int i = 1; i < 10; i++) {
 			String v = UUID.randomUUID().toString();
 			actual.setLongOpt(v);
-			Assert.assertEquals(v, actual.getLongOpt());
-			Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-			Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-			Assert.assertNotEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-			Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-			Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-			Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-			Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
-			Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
-			Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
+			Assertions.assertEquals(v, actual.getLongOpt());
+			Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+			Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+			Assertions.assertNotEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+			Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+			Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+			Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+			Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+			Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+			Assertions.assertFalse(Option.isIdentical(expected, actual), "equivalence test");
+			Assertions.assertFalse(Option.isIdentical(actual, expected), "inverse equivalence test");
 		}
 	}
 
@@ -314,7 +312,7 @@ public class OptionImplTest {
 		OptionImpl actual = null;
 
 		expected = new OptionImpl();
-		Assert.assertNotNull(expected);
+		Assertions.assertNotNull(expected);
 		expected.setArgumentName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
@@ -325,36 +323,36 @@ public class OptionImplTest {
 		expected.setValueSep('|');
 
 		actual = expected.clone();
-		Assert.assertNotNull(actual);
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertEquals("key", expected.getKey(), actual.getKey());
+		Assertions.assertNotNull(actual);
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+		Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertTrue(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertTrue(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 
 		for (char c : UUID.randomUUID().toString().toCharArray()) {
 			if (c == '-') {
 				continue;
 			}
 			actual.setShortOpt(c);
-			Assert.assertEquals(c, actual.getShortOpt().charValue());
-			Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-			Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-			Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-			Assert.assertNotEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-			Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-			Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-			Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
-			Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
-			Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
+			Assertions.assertEquals(c, actual.getShortOpt().charValue());
+			Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+			Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+			Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+			Assertions.assertNotEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+			Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+			Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+			Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+			Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+			Assertions.assertFalse(Option.isIdentical(expected, actual), "equivalence test");
+			Assertions.assertFalse(Option.isIdentical(actual, expected), "inverse equivalence test");
+			Assertions.assertNotEquals(expected.hashCode(), actual.hashCode());
 		}
 	}
 
@@ -364,7 +362,7 @@ public class OptionImplTest {
 		OptionImpl actual = null;
 
 		expected = new OptionImpl();
-		Assert.assertNotNull(expected);
+		Assertions.assertNotNull(expected);
 		expected.setArgumentName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
@@ -375,33 +373,34 @@ public class OptionImplTest {
 		expected.setValueSep('|');
 
 		actual = expected.clone();
-		Assert.assertNotNull(actual);
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertEquals("key", expected.getKey(), actual.getKey());
+		Assertions.assertNotNull(actual);
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+		Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertTrue(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertTrue(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 
 		for (char c : UUID.randomUUID().toString().toCharArray()) {
 			actual.setValueSep(c);
-			Assert.assertEquals(c, actual.getValueSep().charValue());
-			Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-			Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-			Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-			Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-			Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-			Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-			Assert.assertNotEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-			Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
-			Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
-			Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
+			Assertions.assertEquals(c, actual.getValueSep().charValue());
+			Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+			Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+			Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+			Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+			Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+			Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+			Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+			Assertions.assertNotEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+			Assertions.assertFalse(Option.isIdentical(expected, actual), "equivalence test");
+			Assertions.assertFalse(Option.isIdentical(actual, expected), "inverse equivalence test");
+			Assertions.assertNotEquals(expected.hashCode(), actual.hashCode());
+			Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 		}
 	}
 
@@ -411,7 +410,7 @@ public class OptionImplTest {
 		OptionImpl actual = null;
 
 		expected = new OptionImpl();
-		Assert.assertNotNull(expected);
+		Assertions.assertNotNull(expected);
 		expected.setArgumentName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
@@ -422,44 +421,44 @@ public class OptionImplTest {
 		expected.setValueSep('|');
 
 		actual = expected.clone();
-		Assert.assertNotNull(actual);
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertEquals("key", expected.getKey(), actual.getKey());
+		Assertions.assertNotNull(actual);
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+		Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertTrue(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertTrue(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 
 		actual.setMinArguments(1);
-		Assert.assertEquals(1, actual.getMinArguments());
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+		Assertions.assertNotEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertFalse(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertFalse(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertNotEquals(expected.hashCode(), actual.hashCode());
 
 		actual.setMinArguments(0);
-		Assert.assertEquals(0, actual.getMinArguments());
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertEquals("key", expected.getKey(), actual.getKey());
+		Assertions.assertEquals(0, actual.getMinArguments());
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertTrue(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertTrue(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 	}
 
 	@Test
@@ -468,7 +467,7 @@ public class OptionImplTest {
 		OptionImpl actual = null;
 
 		expected = new OptionImpl();
-		Assert.assertNotNull(expected);
+		Assertions.assertNotNull(expected);
 		expected.setArgumentName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
@@ -479,44 +478,44 @@ public class OptionImplTest {
 		expected.setValueSep('|');
 
 		actual = expected.clone();
-		Assert.assertNotNull(actual);
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertEquals("key", expected.getKey(), actual.getKey());
+		Assertions.assertNotNull(actual);
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.isRequired(), actual.isRequired(), "Required");
+		Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertTrue(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertTrue(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 
 		actual.setRequired(false);
-		Assert.assertFalse(actual.isRequired());
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
+		Assertions.assertFalse(actual.isRequired());
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertFalse(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertFalse(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 
 		actual.setRequired(true);
-		Assert.assertTrue(actual.isRequired());
-		Assert.assertEquals("ValueName", expected.getArgumentName(), actual.getArgumentName());
-		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
-		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
-		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("MaxValueCount", expected.getMaxArguments(), actual.getMaxArguments());
-		Assert.assertEquals("MinValueCount", expected.getMinArguments(), actual.getMinArguments());
-		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
-		Assert.assertEquals("key", expected.getKey(), actual.getKey());
+		Assertions.assertTrue(actual.isRequired());
+		Assertions.assertEquals(expected.getArgumentName(), actual.getArgumentName(), "ValueName");
+		Assertions.assertEquals(expected.getDescription(), actual.getDescription(), "Description");
+		Assertions.assertEquals(expected.getLongOpt(), actual.getLongOpt(), "LongOpt");
+		Assertions.assertEquals(expected.getShortOpt(), actual.getShortOpt(), "ShortOpt");
+		Assertions.assertEquals(expected.getMaxArguments(), actual.getMaxArguments(), "MaxValueCount");
+		Assertions.assertEquals(expected.getMinArguments(), actual.getMinArguments(), "MinValueCount");
+		Assertions.assertEquals(expected.getValueSep(), actual.getValueSep(), "ValueSep");
+		Assertions.assertTrue(Option.isIdentical(expected, actual), "equivalence test");
+		Assertions.assertTrue(Option.isIdentical(actual, expected), "inverse equivalence test");
+		Assertions.assertEquals(expected.getKey(), actual.getKey(), "key");
 	}
 
 	@Test
@@ -529,31 +528,31 @@ public class OptionImplTest {
 
 				expected.setMinArguments(min);
 				if (min <= 0) {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), 0, expected.getMinArguments());
+					Assertions.assertEquals(0, expected.getMinArguments(), String.format("min=%d max=%d", min, max));
 				} else {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), min, expected.getMinArguments());
+					Assertions.assertEquals(min, expected.getMinArguments(), String.format("min=%d max=%d", min, max));
 				}
 
 				expected.setMaxArguments(max);
 				if (max < 0) {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), -1, expected.getMaxArguments());
+					Assertions.assertEquals(-1, expected.getMaxArguments(), String.format("min=%d max=%d", min, max));
 				} else {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), max, expected.getMaxArguments());
+					Assertions.assertEquals(max, expected.getMaxArguments(), String.format("min=%d max=%d", min, max));
 				}
 
 				if (max > 0) {
 					if (max < min) {
-						Assert.assertEquals(String.format("min=%d max=%d", min, max), expected.getMaxArguments(),
-							expected.getMinArguments());
+						Assertions.assertEquals(expected.getMaxArguments(), expected.getMinArguments(),
+							String.format("min=%d max=%d", min, max));
 					} else {
-						Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(0, min),
-							expected.getMinArguments());
+						Assertions.assertEquals(Math.max(0, min), expected.getMinArguments(),
+							String.format("min=%d max=%d", min, max));
 					}
 				} else if (max < 0) {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(0, min),
-						expected.getMinArguments());
+					Assertions.assertEquals(Math.max(0, min), expected.getMinArguments(),
+						String.format("min=%d max=%d", min, max));
 				} else {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), 0, expected.getMinArguments());
+					Assertions.assertEquals(0, expected.getMinArguments(), String.format("min=%d max=%d", min, max));
 				}
 			}
 		}
@@ -564,29 +563,29 @@ public class OptionImplTest {
 
 				expected.setMaxArguments(max);
 				if (max < 0) {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), -1, expected.getMaxArguments());
+					Assertions.assertEquals(-1, expected.getMaxArguments(), String.format("min=%d max=%d", min, max));
 				} else {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), max, expected.getMaxArguments());
+					Assertions.assertEquals(max, expected.getMaxArguments(), String.format("min=%d max=%d", min, max));
 				}
 
 				expected.setMinArguments(min);
 				if (min <= 0) {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), 0, expected.getMinArguments());
+					Assertions.assertEquals(0, expected.getMinArguments(), String.format("min=%d max=%d", min, max));
 				} else {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), min, expected.getMinArguments());
+					Assertions.assertEquals(min, expected.getMinArguments(), String.format("min=%d max=%d", min, max));
 				}
 
 				if (min > 0) {
 					if ((min > max) && (max >= 0)) {
-						Assert.assertEquals(String.format("min=%d max=%d", min, max), expected.getMinArguments(),
-							expected.getMaxArguments());
+						Assertions.assertEquals(expected.getMinArguments(), expected.getMaxArguments(),
+							String.format("min=%d max=%d", min, max));
 					} else {
-						Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(-1, max),
-							expected.getMaxArguments());
+						Assertions.assertEquals(Math.max(-1, max), expected.getMaxArguments(),
+							String.format("min=%d max=%d", min, max));
 					}
 				} else {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(-1, max),
-						expected.getMaxArguments());
+					Assertions.assertEquals(Math.max(-1, max), expected.getMaxArguments(),
+						String.format("min=%d max=%d", min, max));
 				}
 			}
 		}
@@ -597,31 +596,31 @@ public class OptionImplTest {
 
 				expected.setMinArguments(min);
 				if (min <= 0) {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), 0, expected.getMinArguments());
+					Assertions.assertEquals(0, expected.getMinArguments(), String.format("min=%d max=%d", min, max));
 				} else {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), min, expected.getMinArguments());
+					Assertions.assertEquals(min, expected.getMinArguments(), String.format("min=%d max=%d", min, max));
 				}
 
 				expected.setMaxArguments(max);
 				if (max < 0) {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), -1, expected.getMaxArguments());
+					Assertions.assertEquals(-1, expected.getMaxArguments(), String.format("min=%d max=%d", min, max));
 				} else {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), max, expected.getMaxArguments());
+					Assertions.assertEquals(max, expected.getMaxArguments(), String.format("min=%d max=%d", min, max));
 				}
 
 				if (max > 0) {
 					if (max < min) {
-						Assert.assertEquals(String.format("min=%d max=%d", min, max), expected.getMaxArguments(),
-							expected.getMinArguments());
+						Assertions.assertEquals(expected.getMaxArguments(), expected.getMinArguments(),
+							String.format("min=%d max=%d", min, max));
 					} else {
-						Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(0, min),
-							expected.getMinArguments());
+						Assertions.assertEquals(Math.max(0, min), expected.getMinArguments(),
+							String.format("min=%d max=%d", min, max));
 					}
 				} else if (max < 0) {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(0, min),
-						expected.getMinArguments());
+					Assertions.assertEquals(Math.max(0, min), expected.getMinArguments(),
+						String.format("min=%d max=%d", min, max));
 				} else {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), 0, expected.getMinArguments());
+					Assertions.assertEquals(0, expected.getMinArguments(), String.format("min=%d max=%d", min, max));
 				}
 			}
 		}
@@ -632,29 +631,29 @@ public class OptionImplTest {
 
 				expected.setMaxArguments(max);
 				if (max < 0) {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), -1, expected.getMaxArguments());
+					Assertions.assertEquals(-1, expected.getMaxArguments(), String.format("min=%d max=%d", min, max));
 				} else {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), max, expected.getMaxArguments());
+					Assertions.assertEquals(max, expected.getMaxArguments(), String.format("min=%d max=%d", min, max));
 				}
 
 				expected.setMinArguments(min);
 				if (min <= 0) {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), 0, expected.getMinArguments());
+					Assertions.assertEquals(0, expected.getMinArguments(), String.format("min=%d max=%d", min, max));
 				} else {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), min, expected.getMinArguments());
+					Assertions.assertEquals(min, expected.getMinArguments(), String.format("min=%d max=%d", min, max));
 				}
 
 				if (min > 0) {
 					if ((min > max) && (max >= 0)) {
-						Assert.assertEquals(String.format("min=%d max=%d", min, max), expected.getMinArguments(),
-							expected.getMaxArguments());
+						Assertions.assertEquals(expected.getMinArguments(), expected.getMaxArguments(),
+							String.format("min=%d max=%d", min, max));
 					} else {
-						Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(-1, max),
-							expected.getMaxArguments());
+						Assertions.assertEquals(Math.max(-1, max), expected.getMaxArguments(),
+							String.format("min=%d max=%d", min, max));
 					}
 				} else {
-					Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(-1, max),
-						expected.getMaxArguments());
+					Assertions.assertEquals(Math.max(-1, max), expected.getMaxArguments(),
+						String.format("min=%d max=%d", min, max));
 				}
 			}
 		}
@@ -665,16 +664,16 @@ public class OptionImplTest {
 				expected = new OptionImpl();
 				expected.setArgumentLimits(min, max);
 				if (min <= 0) {
-					Assert.assertEquals(0, expected.getMinArguments());
+					Assertions.assertEquals(0, expected.getMinArguments());
 				} else {
-					Assert.assertEquals(min, expected.getMinArguments());
+					Assertions.assertEquals(min, expected.getMinArguments());
 				}
 				if (max < 0) {
-					Assert.assertEquals(-1, expected.getMaxArguments());
+					Assertions.assertEquals(-1, expected.getMaxArguments());
 				} else if (min <= max) {
-					Assert.assertEquals(max, expected.getMaxArguments());
+					Assertions.assertEquals(max, expected.getMaxArguments());
 				} else {
-					Assert.assertEquals(expected.getMinArguments(), expected.getMaxArguments());
+					Assertions.assertEquals(expected.getMinArguments(), expected.getMaxArguments());
 				}
 			}
 		}
@@ -685,16 +684,16 @@ public class OptionImplTest {
 				expected = new OptionImpl();
 				expected.setArgumentLimits(min, max);
 				if (min <= 0) {
-					Assert.assertEquals(0, expected.getMinArguments());
+					Assertions.assertEquals(0, expected.getMinArguments());
 				} else {
-					Assert.assertEquals(min, expected.getMinArguments());
+					Assertions.assertEquals(min, expected.getMinArguments());
 				}
 				if (max < 0) {
-					Assert.assertEquals(-1, expected.getMaxArguments());
+					Assertions.assertEquals(-1, expected.getMaxArguments());
 				} else if (min <= max) {
-					Assert.assertEquals(max, expected.getMaxArguments());
+					Assertions.assertEquals(max, expected.getMaxArguments());
 				} else {
-					Assert.assertEquals(expected.getMinArguments(), expected.getMaxArguments());
+					Assertions.assertEquals(expected.getMinArguments(), expected.getMaxArguments());
 				}
 			}
 		}
@@ -704,14 +703,14 @@ public class OptionImplTest {
 			expected = new OptionImpl();
 			expected.setArgumentLimits(l);
 			if (l <= 0) {
-				Assert.assertEquals(0, expected.getMinArguments());
+				Assertions.assertEquals(0, expected.getMinArguments());
 			} else {
-				Assert.assertEquals(l, expected.getMinArguments());
+				Assertions.assertEquals(l, expected.getMinArguments());
 			}
 			if (l < 0) {
-				Assert.assertEquals(-1, expected.getMaxArguments());
+				Assertions.assertEquals(-1, expected.getMaxArguments());
 			} else {
-				Assert.assertEquals(l, expected.getMaxArguments());
+				Assertions.assertEquals(l, expected.getMaxArguments());
 			}
 		}
 	}

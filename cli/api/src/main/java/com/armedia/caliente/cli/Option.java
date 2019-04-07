@@ -115,10 +115,10 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	 * {@link Object#equals(Object)} values:
 	 * </p>
 	 * <ul>
-	 * <li>{@link #getMinArguments()}</li>
-	 * <li>{@link #getMaxArguments()}</li>
-	 * <li>{@link #getValueSep()}</li>
-	 * <li>{@link #getValueFilter()}</li>
+	 * <li>{@link #isRequired()}</li>
+	 * <li>{@link #getDescription()}</li>
+	 * <li>{@link #getArgumentName()}</li>
+	 * <li>{@link #getDefaults()}</li>
 	 * </ul>
 	 *
 	 * @param a
@@ -130,7 +130,6 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 		if (!Tools.equals(a.isRequired(), b.isRequired())) { return false; }
 		if (!Tools.equals(a.getDescription(), b.getDescription())) { return false; }
 		if (!Tools.equals(a.getArgumentName(), b.getArgumentName())) { return false; }
-		if (!Tools.equals(a.getValueFilter(), b.getValueFilter())) { return false; }
 		if (!Tools.equals(a.getDefaults(), b.getDefaults())) { return false; }
 		return true;
 	}

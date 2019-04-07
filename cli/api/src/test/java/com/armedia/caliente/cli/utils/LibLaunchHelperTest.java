@@ -2,16 +2,16 @@ package com.armedia.caliente.cli.utils;
 
 import java.util.UUID;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class LibLaunchHelperTest {
 
 	@Test
 	public void testLibLaunchHelper() {
 		LibLaunchHelper lib = new LibLaunchHelper();
-		Assert.assertEquals(LibLaunchHelper.DEFAULT_LIB, lib.getDefault());
-		Assert.assertEquals(LibLaunchHelper.LIB_ENV_VAR, lib.getEnvVarName());
+		Assertions.assertEquals(LibLaunchHelper.DEFAULT_LIB, lib.getDefault());
+		Assertions.assertEquals(LibLaunchHelper.LIB_ENV_VAR, lib.getEnvVarName());
 	}
 
 	@Test
@@ -20,12 +20,12 @@ public class LibLaunchHelperTest {
 		String defaultLib = UUID.randomUUID().toString();
 
 		lib = new LibLaunchHelper(null);
-		Assert.assertNull(lib.getDefault());
-		Assert.assertEquals(LibLaunchHelper.LIB_ENV_VAR, lib.getEnvVarName());
+		Assertions.assertNull(lib.getDefault());
+		Assertions.assertEquals(LibLaunchHelper.LIB_ENV_VAR, lib.getEnvVarName());
 
 		lib = new LibLaunchHelper(defaultLib);
-		Assert.assertEquals(defaultLib, lib.getDefault());
-		Assert.assertEquals(LibLaunchHelper.LIB_ENV_VAR, lib.getEnvVarName());
+		Assertions.assertEquals(defaultLib, lib.getDefault());
+		Assertions.assertEquals(LibLaunchHelper.LIB_ENV_VAR, lib.getEnvVarName());
 	}
 
 	@Test
@@ -35,20 +35,20 @@ public class LibLaunchHelperTest {
 		String envVarName = String.format("env-var-%s", UUID.randomUUID().toString());
 
 		lib = new LibLaunchHelper(null, null);
-		Assert.assertNull(lib.getDefault());
-		Assert.assertNull(lib.getEnvVarName());
+		Assertions.assertNull(lib.getDefault());
+		Assertions.assertNull(lib.getEnvVarName());
 
 		lib = new LibLaunchHelper(defaultLib, null);
-		Assert.assertEquals(defaultLib, lib.getDefault());
-		Assert.assertNull(lib.getEnvVarName());
+		Assertions.assertEquals(defaultLib, lib.getDefault());
+		Assertions.assertNull(lib.getEnvVarName());
 
 		lib = new LibLaunchHelper(null, envVarName);
-		Assert.assertNull(lib.getDefault());
-		Assert.assertEquals(envVarName, lib.getEnvVarName());
+		Assertions.assertNull(lib.getDefault());
+		Assertions.assertEquals(envVarName, lib.getEnvVarName());
 
 		lib = new LibLaunchHelper(defaultLib, envVarName);
-		Assert.assertEquals(defaultLib, lib.getDefault());
-		Assert.assertEquals(envVarName, lib.getEnvVarName());
+		Assertions.assertEquals(defaultLib, lib.getDefault());
+		Assertions.assertEquals(envVarName, lib.getEnvVarName());
 	}
 
 	@Test

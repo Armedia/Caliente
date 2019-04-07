@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TokenLoaderTest {
 
@@ -13,8 +13,8 @@ public class TokenLoaderTest {
 	public void testParser() {
 		List<String> l = Collections.emptyList();
 		TokenLoader p = new TokenLoader(new StaticTokenSource("primary", l));
-		Assert.assertNotNull(p);
-		Assert.assertEquals(TokenLoader.DEFAULT_VALUE_SEPARATOR, p.getValueSeparator());
+		Assertions.assertNotNull(p);
+		Assertions.assertEquals(TokenLoader.DEFAULT_VALUE_SEPARATOR, p.getValueSeparator());
 	}
 
 	@Test

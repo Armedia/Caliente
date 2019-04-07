@@ -4,8 +4,8 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class ReaderTokenSourceTest {
 
@@ -31,9 +31,9 @@ public class ReaderTokenSourceTest {
 		});
 		ReaderTokenSource source = new CharacterSequenceTokenSource(str);
 		List<String> actual = source.getTokenStrings();
-		Assert.assertEquals("Token counts", expected.size(), actual.size());
+		Assertions.assertEquals(expected.size(), actual.size(), "Token counts");
 		for (int i = 0; i < actual.size(); i++) {
-			Assert.assertEquals(String.format("Mismatch found at token %d", i), expected.get(i), actual.get(i));
+			Assertions.assertEquals(expected.get(i), actual.get(i), String.format("Mismatch found at token %d", i));
 		}
 	}
 
@@ -43,6 +43,6 @@ public class ReaderTokenSourceTest {
 		String expected = "abc c d asd fa sdf  fa\\ sdf\\ asdf\r\n\r\n\t\f\" rest of the stuff ' ' ' ";
 		ReaderTokenSource source = new CharacterSequenceTokenSource(str);
 		String actual = source.readQuoted(new StringReader(str), '"');
-		Assert.assertEquals(expected, actual);
+		Assertions.assertEquals(expected, actual);
 	}
 }

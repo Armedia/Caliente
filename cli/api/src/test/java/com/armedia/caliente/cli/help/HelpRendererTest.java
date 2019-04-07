@@ -2,7 +2,7 @@ package com.armedia.caliente.cli.help;
 
 import java.util.Arrays;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandScheme;
