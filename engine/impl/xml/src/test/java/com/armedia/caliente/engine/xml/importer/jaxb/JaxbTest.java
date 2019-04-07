@@ -2,12 +2,12 @@ package com.armedia.caliente.engine.xml.importer.jaxb;
 
 import java.io.InputStream;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.commons.utilities.XmlTools;
 
@@ -31,7 +31,7 @@ public class JaxbTest {
 			T obj = null;
 			try (InputStream in = cl.getResourceAsStream(String.format("sample-%s.xml", this.suffix))) {
 				obj = XmlTools.unmarshal(this.c, schema, in);
-				Assert.assertNotNull(obj);
+				Assertions.assertNotNull(obj);
 			}
 
 			validate(obj);
@@ -39,28 +39,28 @@ public class JaxbTest {
 		}
 
 		protected void validate(T obj) throws Exception {
-			Assert.assertNotNull(obj);
+			Assertions.assertNotNull(obj);
 		}
 
 		protected void validate(T obj, String str) throws Exception {
-			Assert.assertNotNull(obj);
-			Assert.assertNotNull(str);
+			Assertions.assertNotNull(obj);
+			Assertions.assertNotNull(str);
 		}
 	}
 
-	@BeforeClass
+	@BeforeAll
 	public static void setUpBeforeClass() throws Exception {
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void tearDownAfterClass() throws Exception {
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 
