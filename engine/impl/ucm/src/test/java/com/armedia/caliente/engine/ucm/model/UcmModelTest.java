@@ -7,8 +7,8 @@ import java.util.UUID;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.ucm.BaseTest;
@@ -140,7 +140,7 @@ public class UcmModelTest extends BaseTest {
 				String path = String.format("/%s-non-existent-path-%s", UUID.randomUUID().toString(),
 					UUID.randomUUID().toString());
 				processPaths(model, s, path);
-				Assert.fail(String.format("Did not fail seeking non-existent path [%s]", path));
+				Assertions.fail(String.format("Did not fail seeking non-existent path [%s]", path));
 			} catch (UcmObjectNotFoundException e) {
 				// all is well
 			}
@@ -259,7 +259,7 @@ public class UcmModelTest extends BaseTest {
 
 			try {
 				model.getFile(s, "/");
-				Assert.fail("Did not fail seeking a folder");
+				Assertions.fail("Did not fail seeking a folder");
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
 			}
@@ -282,7 +282,7 @@ public class UcmModelTest extends BaseTest {
 
 			try {
 				model.getFolder(s, "/Caliente 3.0 Concept Document v4.0.docx");
-				Assert.fail("Did not fail seeking a file");
+				Assertions.fail("Did not fail seeking a file");
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
 			}
@@ -302,7 +302,7 @@ public class UcmModelTest extends BaseTest {
 
 			try {
 				model.getFile(s, "/");
-				Assert.fail("Did not fail seeking a folder");
+				Assertions.fail("Did not fail seeking a folder");
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
 			}

@@ -5,8 +5,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.ucm.model.UcmAttributes;
@@ -29,7 +29,7 @@ public class BaseTest {
 
 	protected static UcmSessionFactory factory = null;
 
-	@BeforeClass
+	@BeforeAll
 	public static final void setUpClass() throws Exception {
 		CmfCrypt crypto = new CmfCrypt();
 		Map<String, String> settingsMap = new TreeMap<>();
@@ -80,7 +80,7 @@ public class BaseTest {
 		throw e;
 	}
 
-	@AfterClass
+	@AfterAll
 	public static final void closeClass() throws Exception {
 		try {
 			if (BaseTest.factory != null) {
@@ -153,7 +153,7 @@ public class BaseTest {
 	public void test() throws Exception {
 		final ExportEngine<?, ?, ?, ?, ?, ?> engine = UcmExportEngine.getExportEngine();
 		Logger output = LoggerFactory.getLogger("console");
-	
+
 		Map<String, String> settings = new TreeMap<>();
 		settings.put(UcmSessionSetting.ATOMPUB_URL.getLabel(),
 			"http://armedia-vm.rivera.prv/alfresco/api/-default-/public/cmis/versions/1.0/atom");
@@ -163,7 +163,7 @@ public class BaseTest {
 		// settings.put(CmisSetting.EXPORT_QUERY.getLabel(), "SELECT * FROM cmis:document");
 		settings.put(CmisSetting.EXPORT_PATH.getLabel(), "/Shared");
 		settings.put(CmisSetting.EXPORT_PAGE_SIZE.getLabel(), "5");
-	
+
 		CmfObjectStore<?> objectStore = CmfStores.getObjectStore("default");
 		objectStore.clearProperties();
 		objectStore.clearAllObjects();
