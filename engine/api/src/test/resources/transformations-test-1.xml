@@ -114,7 +114,7 @@
 		<add-secondary-subtype>
 			<if>
 			</if>
-			<name lang="rhino">
+			<name lang="nashorn">
 				<![CDATA[sdjflk > < DS FASDF SD F<>F ASDF <>ASDF A>SD F<AD FA! & &  && A >  AD>]]>
 			</name>
 		</add-secondary-subtype>

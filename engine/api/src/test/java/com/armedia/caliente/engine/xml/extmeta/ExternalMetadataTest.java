@@ -69,7 +69,7 @@ public class ExternalMetadataTest {
 			}, //
 			{
 				"cmf:last_access_date", 1, new String[] {
-					"2017-10-09T14:39:19.000-06:00",
+					"2019-03-23T18:56:39.000-06:00",
 				}
 			}, //
 			{
@@ -460,7 +460,7 @@ public class ExternalMetadataTest {
 			"09de75d180020638", //
 			"subtype", //
 			secondaries, //
-			217L //
+			352L //
 		);
 
 		Object[][] data = {
@@ -476,7 +476,7 @@ public class ExternalMetadataTest {
 			}, //
 			{
 				"cmf:OBJECT_LABEL", 1, CmfValue.Type.STRING, new Object[] {
-					"/CMSMFTests/LANDING/ACCESS/READ_NONE/primary.png [1.0,CURRENT]",
+					"/CMSMFTests/LANDING/ACCESS/READ_NONE/primary.png#1.0,CURRENT",
 				}
 			}, //
 			{
@@ -495,16 +495,6 @@ public class ExternalMetadataTest {
 				}
 			}, //
 			{
-				"cmf:PRODUCT_NAME", 1, CmfValue.Type.STRING, new Object[] {
-					"Documentum",
-				}
-			}, //
-			{
-				"cmf:PRODUCT_VERSION", 1, CmfValue.Type.STRING, new Object[] {
-					"6.6.0.055 P3400 Win32.SQLServer",
-				}
-			}, //
-			{
 				"cmf:someSearchKey", 1, CmfValue.Type.STRING, new Object[] {
 					"09de75d180020638",
 				}
@@ -516,7 +506,7 @@ public class ExternalMetadataTest {
 			}, //
 			{
 				"cmf:objectIndexWithinExport", 1, CmfValue.Type.INTEGER, new Object[] {
-					217L,
+					352L,
 				}
 			}, //
 		};
@@ -534,7 +524,7 @@ public class ExternalMetadataTest {
 			final Object[] values = (Object[]) d[3];
 			Assert.assertNotNull(values);
 			Assert.assertEquals(count.intValue(), values.length);
-			Assert.assertTrue(attributes.containsKey(name));
+			Assert.assertTrue(String.format("Does not contain the key [%s]", name), attributes.containsKey(name));
 			CmfAttribute<CmfValue> att = attributes.get(name);
 			Assert.assertNotNull(att);
 			Assert.assertTrue(att.hasValues());
