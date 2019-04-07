@@ -12,7 +12,7 @@ import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.text.StringSubstitutor;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,7 @@ public class TestLoop {
 
 	private static DfcSessionPool POOL = null;
 
-	// @BeforeClass
+	// @BeforeAll
 	public static void setUpBeforeClass() throws Exception {
 		if (TestLoop.POOL == null) {
 			TestLoop.POOL = new DfcSessionPool("documentum", "dmadmin2", "ArM3D!A");
@@ -52,7 +52,7 @@ public class TestLoop {
 		}
 	}
 
-	// @AfterClass
+	// @AfterAll
 	public static void tearDownAfterClass() throws Exception {
 		if (TestLoop.POOL != null) {
 			try {
@@ -466,14 +466,14 @@ public class TestLoop {
 
 						switch (event) {
 							case dm_destroy:
-								Assert.assertNull(o);
+								Assertions.assertNull(o);
 								payloads.add(new Payload(i));
 								break;
 							case dm_checkin:
 							case dm_save:
 							case dm_unlink:
 							case dm_link:
-								Assert.assertNotNull(o);
+								Assertions.assertNotNull(o);
 								if (IDfFolder.class.isInstance(o) || IDfDocument.class.isInstance(o)) {
 									IDfSysObject so = IDfSysObject.class.cast(o);
 									// Identify the object
