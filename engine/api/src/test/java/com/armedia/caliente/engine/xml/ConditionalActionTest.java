@@ -2,8 +2,8 @@ package com.armedia.caliente.engine.xml;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
@@ -26,25 +26,25 @@ public class ConditionalActionTest {
 
 		action.setCondition(null);
 		action.apply(ctx);
-		Assert.assertNotNull(executed.get());
-		Assert.assertTrue(executed.get());
+		Assertions.assertNotNull(executed.get());
+		Assertions.assertTrue(executed.get());
 
 		executed.set(null);
 		action.setCondition(ConditionTools.COND_TRUE);
 		action.apply(ctx);
-		Assert.assertNotNull(executed.get());
-		Assert.assertTrue(executed.get());
+		Assertions.assertNotNull(executed.get());
+		Assertions.assertTrue(executed.get());
 
 		executed.set(null);
 		action.setCondition(ConditionTools.COND_FALSE);
 		action.apply(ctx);
-		Assert.assertNull(executed.get());
+		Assertions.assertNull(executed.get());
 
 		executed.set(null);
 		action.setCondition(ConditionTools.COND_FAIL);
 		try {
 			action.apply(ctx);
-			Assert.fail("Did not fail with an exploding condition");
+			Assertions.fail("Did not fail with an exploding condition");
 		} catch (ActionException e) {
 			// All is well
 		}

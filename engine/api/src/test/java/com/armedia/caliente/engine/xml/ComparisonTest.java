@@ -11,8 +11,8 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.store.CmfValue;
@@ -72,27 +72,25 @@ public class ComparisonTest {
 
 		for (CmfValue.Type t : data.keySet()) {
 			for (Pair<?, ?> p : data.get(t)) {
-				Assert.assertTrue(
-					String.format("Equality test failed between [%s] and [%s]", p.getLeft(), p.getRight()),
-					comp.check(t, p.getLeft(), p.getRight()));
-				Assert.assertFalse(
-					String.format("Inequality test failed between [%s] and [%s]", p.getLeft(), p.getRight()),
-					ncomp.check(t, p.getLeft(), p.getRight()));
+				Assertions.assertTrue(comp.check(t, p.getLeft(), p.getRight()),
+					String.format("Equality test failed between [%s] and [%s]", p.getLeft(), p.getRight()));
+				Assertions.assertFalse(ncomp.check(t, p.getLeft(), p.getRight()),
+					String.format("Inequality test failed between [%s] and [%s]", p.getLeft(), p.getRight()));
 
-				Assert.assertFalse(String.format("Equality test failed between [%s] and [%s]", null, p.getRight()),
-					comp.check(t, null, p.getRight()));
-				Assert.assertTrue(String.format("Inequality test failed between [%s] and [%s]", null, p.getRight()),
-					ncomp.check(t, null, p.getRight()));
+				Assertions.assertFalse(comp.check(t, null, p.getRight()),
+					String.format("Equality test failed between [%s] and [%s]", null, p.getRight()));
+				Assertions.assertTrue(ncomp.check(t, null, p.getRight()),
+					String.format("Inequality test failed between [%s] and [%s]", null, p.getRight()));
 
 				if (t == CmfValue.Type.STRING) {
 					// Also try the case-insensitive variants
 					String left = Tools.toString(p.getLeft()).toLowerCase();
 					String right = Tools.toString(p.getRight()).toUpperCase();
 
-					Assert.assertTrue(String.format("Equality (CI) test failed between [%s] and [%s]", left, right),
-						compi.check(t, p.getLeft(), p.getRight()));
-					Assert.assertFalse(String.format("Inequality (CI) test failed between [%s] and [%s]", left, right),
-						ncompi.check(t, p.getLeft(), p.getRight()));
+					Assertions.assertTrue(compi.check(t, p.getLeft(), p.getRight()),
+						String.format("Equality (CI) test failed between [%s] and [%s]", left, right));
+					Assertions.assertFalse(ncompi.check(t, p.getLeft(), p.getRight()),
+						String.format("Inequality (CI) test failed between [%s] and [%s]", left, right));
 				}
 			}
 		}
@@ -137,9 +135,8 @@ public class ComparisonTest {
 
 		for (CmfValue.Type t : data.keySet()) {
 			for (Pair<?, ?> p : data.get(t)) {
-				Assert.assertFalse(
-					String.format("Inequality test failed between [%s] and [%s]", p.getLeft(), p.getRight()),
-					comp.check(t, p.getLeft(), p.getRight()));
+				Assertions.assertFalse(comp.check(t, p.getLeft(), p.getRight()),
+					String.format("Inequality test failed between [%s] and [%s]", p.getLeft(), p.getRight()));
 			}
 		}
 	}

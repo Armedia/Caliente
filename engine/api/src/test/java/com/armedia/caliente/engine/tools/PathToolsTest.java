@@ -2,8 +2,8 @@ package com.armedia.caliente.engine.tools;
 
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class PathToolsTest {
 
@@ -29,7 +29,7 @@ public class PathToolsTest {
 		};
 		for (int i = 1; i < 8; i++) {
 			List<String> actual = PathTools.getNumericPaths(n, i);
-			Assert.assertArrayEquals(data[i], actual.toArray());
+			Assertions.assertArrayEquals(data[i], actual.toArray());
 		}
 	}
 

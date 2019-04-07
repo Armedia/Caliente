@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.store.CmfAttribute;
@@ -414,29 +414,29 @@ public class ExternalMetadataTest {
 			}, //
 		};
 		Map<String, CmfAttribute<CmfValue>> attributes = loader.getAttributeValues(obj);
-		Assert.assertNotNull(attributes);
-		Assert.assertFalse(attributes.isEmpty());
+		Assertions.assertNotNull(attributes);
+		Assertions.assertFalse(attributes.isEmpty());
 		for (Object[] d : data) {
-			Assert.assertEquals(3, d.length);
+			Assertions.assertEquals(3, d.length);
 			final String name = Tools.toString(d[0]);
-			Assert.assertNotNull(name);
+			Assertions.assertNotNull(name);
 			final Integer count = Tools.decodeInteger(d[1]);
-			Assert.assertNotNull(count);
+			Assertions.assertNotNull(count);
 			final String[] values = (String[]) d[2];
-			Assert.assertNotNull(values);
-			Assert.assertEquals(count.intValue(), values.length);
-			Assert.assertTrue(attributes.containsKey(name));
+			Assertions.assertNotNull(values);
+			Assertions.assertEquals(count.intValue(), values.length);
+			Assertions.assertTrue(attributes.containsKey(name));
 			CmfAttribute<CmfValue> att = attributes.get(name);
-			Assert.assertNotNull(att);
-			Assert.assertTrue(att.hasValues());
+			Assertions.assertNotNull(att);
+			Assertions.assertTrue(att.hasValues());
 
 			int actualCount = att.getValueCount();
 			List<CmfValue> actualValues = att.getValues();
-			Assert.assertEquals(count.intValue(), actualCount);
-			Assert.assertEquals(actualCount, actualValues.size());
+			Assertions.assertEquals(count.intValue(), actualCount);
+			Assertions.assertEquals(actualCount, actualValues.size());
 
 			for (int i = 0; i < count; i++) {
-				Assert.assertEquals(values[i], att.getValue(i).asString());
+				Assertions.assertEquals(values[i], att.getValue(i).asString());
 			}
 		}
 	}
@@ -511,33 +511,33 @@ public class ExternalMetadataTest {
 			}, //
 		};
 		Map<String, CmfAttribute<CmfValue>> attributes = loader.getAttributeValues(obj);
-		Assert.assertNotNull(attributes);
-		Assert.assertFalse(attributes.isEmpty());
+		Assertions.assertNotNull(attributes);
+		Assertions.assertFalse(attributes.isEmpty());
 		for (Object[] d : data) {
-			Assert.assertEquals(4, d.length);
+			Assertions.assertEquals(4, d.length);
 			final String name = Tools.toString(d[0]);
-			Assert.assertNotNull(name);
+			Assertions.assertNotNull(name);
 			final Integer count = Tools.decodeInteger(d[1]);
-			Assert.assertNotNull(count);
+			Assertions.assertNotNull(count);
 			final CmfValue.Type type = CmfValue.Type.class.cast(d[2]);
-			Assert.assertNotNull(type);
+			Assertions.assertNotNull(type);
 			final Object[] values = (Object[]) d[3];
-			Assert.assertNotNull(values);
-			Assert.assertEquals(count.intValue(), values.length);
-			Assert.assertTrue(String.format("Does not contain the key [%s]", name), attributes.containsKey(name));
+			Assertions.assertNotNull(values);
+			Assertions.assertEquals(count.intValue(), values.length);
+			Assertions.assertTrue(attributes.containsKey(name), String.format("Does not contain the key [%s]", name));
 			CmfAttribute<CmfValue> att = attributes.get(name);
-			Assert.assertNotNull(att);
-			Assert.assertTrue(att.hasValues());
-			Assert.assertEquals(name, att.getName());
-			Assert.assertSame(type, att.getType());
+			Assertions.assertNotNull(att);
+			Assertions.assertTrue(att.hasValues());
+			Assertions.assertEquals(name, att.getName());
+			Assertions.assertSame(type, att.getType());
 
 			int actualCount = att.getValueCount();
 			List<CmfValue> actualValues = att.getValues();
-			Assert.assertEquals(count.intValue(), actualCount);
-			Assert.assertEquals(actualCount, actualValues.size());
+			Assertions.assertEquals(count.intValue(), actualCount);
+			Assertions.assertEquals(actualCount, actualValues.size());
 
 			for (int i = 0; i < count; i++) {
-				Assert.assertEquals(values[i], att.getValue(i).asObject());
+				Assertions.assertEquals(values[i], att.getValue(i).asObject());
 			}
 		}
 	}

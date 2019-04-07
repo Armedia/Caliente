@@ -5,8 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
@@ -56,8 +56,8 @@ public class GroupConditionTest {
 			final boolean expected = (d[5] != 0);
 			c.getElements().clear();
 			c.getElements().addAll(conditions);
-			Assert.assertEquals(String.format("Failed while checking %s against %s", name, Arrays.toString(d)),
-				expected, c.check(ctx));
+			Assertions.assertEquals(expected, c.check(ctx),
+				String.format("Failed while checking %s against %s", name, Arrays.toString(d)));
 		}
 	}
 
@@ -210,9 +210,9 @@ public class GroupConditionTest {
 		GroupNot not = new GroupNot();
 		final DynamicElementContext ctx = new TestObjectContext();
 		not.setCondition(ConditionTools.COND_FALSE);
-		Assert.assertTrue(not.check(ctx));
+		Assertions.assertTrue(not.check(ctx));
 		not.setCondition(ConditionTools.COND_TRUE);
-		Assert.assertFalse(not.check(ctx));
+		Assertions.assertFalse(not.check(ctx));
 	}
 
 	@Test
