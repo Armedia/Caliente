@@ -3,8 +3,8 @@ package com.armedia.caliente.engine.dfc.exporter;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.dfc.DctmEngineTest;
 import com.armedia.caliente.engine.dfc.DctmSetting;
@@ -13,7 +13,7 @@ import com.armedia.commons.utilities.CfgTools;
 
 public class DctmExportEngineTest extends DctmEngineTest {
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		this.cmfObjectStore.clearAllObjects();
 		this.streamStore.clearAllStreams();
