@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import com.armedia.caliente.tools.dfc.DctmQuery;
+import com.armedia.caliente.tools.dfc.DfcQuery;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfLocalTransaction;
@@ -80,8 +80,8 @@ public class DctmUser extends DctmPrincipal {
 					try {
 						// Only pull users that aren't groups
 						int i = 0;
-						try (DctmQuery query = new DctmQuery(session,
-							"select * from dm_user where r_is_group = 0 order by 1", DctmQuery.Type.DF_READ_QUERY)) {
+						try (DfcQuery query = new DfcQuery(session,
+							"select * from dm_user where r_is_group = 0 order by 1", DfcQuery.Type.DF_READ_QUERY)) {
 							Map<String, DctmUser> users = new LinkedHashMap<>();
 							while (query.hasNext()) {
 								IDfTypedObject c = query.next();

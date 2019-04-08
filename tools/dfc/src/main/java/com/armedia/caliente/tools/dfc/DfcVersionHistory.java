@@ -18,27 +18,27 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
 
-public final class DctmVersionHistory<T extends IDfSysObject> implements Iterable<DctmVersion<T>> {
+public final class DfcVersionHistory<T extends IDfSysObject> implements Iterable<DfcVersion<T>> {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final IDfId chronicleId;
 
-	private final DctmVersion<T> rootVersion;
+	private final DfcVersion<T> rootVersion;
 
-	private final DctmVersion<T> currentVersion;
+	private final DfcVersion<T> currentVersion;
 
-	private final Map<IDfId, List<DctmVersionNumber>> patches;
+	private final Map<IDfId, List<DfcVersionNumber>> patches;
 	private final Map<IDfId, String> patchAntecedents;
 	private final Map<IDfId, Integer> indexes;
-	private final List<DctmVersion<T>> history;
-	private final Map<IDfId, DctmVersion<T>> mainIndex;
+	private final List<DfcVersion<T>> history;
+	private final Map<IDfId, DfcVersion<T>> mainIndex;
 
-	public DctmVersionHistory(IDfSession session, IDfId chronicleId) throws DfException, DctmException {
+	public DfcVersionHistory(IDfSession session, IDfId chronicleId) throws DfException, DctmException {
 		this(session, chronicleId, null);
 	}
 
-	public DctmVersionHistory(IDfSession session, IDfId chronicleId, Class<T> objectClass)
+	public DfcVersionHistory(IDfSession session, IDfId chronicleId, Class<T> objectClass)
 		throws DfException, DctmException {
 		if (session == null) { throw new NullPointerException(
 			"Must provide a valid session to read the history with"); }
@@ -48,14 +48,14 @@ public final class DctmVersionHistory<T extends IDfSysObject> implements Iterabl
 		this.chronicleId = chronicleId;
 
 		// No existing history, we must calculate it
-		final DctmVersionTree tree = new DctmVersionTree(session, chronicleId);
-		List<DctmVersionNumber> currentPatches = new ArrayList<DctmVersionNumber>();
-		List<DctmVersion<T>> history = new LinkedList<DctmVersion<T>>();
-		Map<IDfId, List<DctmVersionNumber>> patches = new HashMap<IDfId, List<DctmVersionNumber>>();
+		final DfcVersionTree tree = new DfcVersionTree(session, chronicleId);
+		List<DfcVersionNumber> currentPatches = new ArrayList<DfcVersionNumber>();
+		List<DfcVersion<T>> history = new LinkedList<DfcVersion<T>>();
+		Map<IDfId, List<DfcVersionNumber>> patches = new HashMap<IDfId, List<DfcVersionNumber>>();
 		Map<IDfId, String> patchAntecedents = new HashMap<IDfId, String>();
-		Map<IDfId, DctmVersion<T>> mainIndex = new HashMap<IDfId, DctmVersion<T>>();
-		DctmVersion<T> currentVersion = null;
-		for (DctmVersionNumber versionNumber : tree.allVersions) {
+		Map<IDfId, DfcVersion<T>> mainIndex = new HashMap<IDfId, DfcVersion<T>>();
+		DfcVersion<T> currentVersion = null;
+		for (DfcVersionNumber versionNumber : tree.allVersions) {
 			if (tree.totalPatches.contains(versionNumber)) {
 				currentPatches.add(versionNumber);
 				continue;
@@ -63,11 +63,11 @@ public final class DctmVersionHistory<T extends IDfSysObject> implements Iterabl
 
 			final IDfId id = new DfId(tree.indexByVersionNumber.get(versionNumber));
 			final IDfSysObject obj = IDfSysObject.class.cast(session.getObject(id));
-			final DctmVersion<T> thisVersion;
+			final DfcVersion<T> thisVersion;
 			if (objectClass != null) {
-				thisVersion = new DctmVersion<T>(this, versionNumber, objectClass.cast(obj));
+				thisVersion = new DfcVersion<T>(this, versionNumber, objectClass.cast(obj));
 			} else {
-				thisVersion = new DctmVersion<T>(this, versionNumber, obj.getObjectId(), obj.getCreationDate(),
+				thisVersion = new DfcVersion<T>(this, versionNumber, obj.getObjectId(), obj.getCreationDate(),
 					obj.getAntecedentId());
 			}
 			mainIndex.put(id, thisVersion);
@@ -77,10 +77,10 @@ public final class DctmVersionHistory<T extends IDfSysObject> implements Iterabl
 			history.add(thisVersion);
 			if (!currentPatches.isEmpty()) {
 				patches.put(id, Tools.freezeList(currentPatches));
-				currentPatches = new ArrayList<DctmVersionNumber>();
+				currentPatches = new ArrayList<DfcVersionNumber>();
 			}
 
-			DctmVersionNumber alternateAntecedent = tree.alternateAntecedent.get(versionNumber);
+			DfcVersionNumber alternateAntecedent = tree.alternateAntecedent.get(versionNumber);
 			if (alternateAntecedent != null) {
 				String antecedentId = tree.indexByVersionNumber.get(alternateAntecedent);
 				if (antecedentId == null) {
@@ -101,7 +101,7 @@ public final class DctmVersionHistory<T extends IDfSysObject> implements Iterabl
 
 		Map<IDfId, Integer> indexes = new HashMap<IDfId, Integer>(history.size());
 		int i = 0;
-		DctmVersion<T> rootVersion = null;
+		DfcVersion<T> rootVersion = null;
 		final String idxFmt;
 		final String max;
 		if (this.log.isTraceEnabled()) {
@@ -113,7 +113,7 @@ public final class DctmVersionHistory<T extends IDfSysObject> implements Iterabl
 			max = null;
 		}
 
-		for (DctmVersion<T> v : history) {
+		for (DfcVersion<T> v : history) {
 			if (rootVersion == null) {
 				rootVersion = v;
 			}
@@ -126,7 +126,7 @@ public final class DctmVersionHistory<T extends IDfSysObject> implements Iterabl
 		}
 
 		// Creating a new list here makes it easier for storage and traversal
-		this.history = Tools.freezeList(new ArrayList<DctmVersion<T>>(history));
+		this.history = Tools.freezeList(new ArrayList<DfcVersion<T>>(history));
 		this.indexes = Tools.freezeMap(indexes);
 		this.rootVersion = rootVersion;
 		this.currentVersion = currentVersion;
@@ -146,11 +146,11 @@ public final class DctmVersionHistory<T extends IDfSysObject> implements Iterabl
 		}
 	}
 
-	public DctmVersion<T> getRootVersion() {
+	public DfcVersion<T> getRootVersion() {
 		return this.rootVersion;
 	}
 
-	public DctmVersion<T> getCurrentVersion() {
+	public DfcVersion<T> getCurrentVersion() {
 		return this.currentVersion;
 	}
 
@@ -163,11 +163,11 @@ public final class DctmVersionHistory<T extends IDfSysObject> implements Iterabl
 	}
 
 	@Override
-	public Iterator<DctmVersion<T>> iterator() {
+	public Iterator<DfcVersion<T>> iterator() {
 		return this.history.iterator();
 	}
 
-	public List<DctmVersion<T>> getVersions() {
+	public List<DfcVersion<T>> getVersions() {
 		return this.history;
 	}
 
@@ -175,24 +175,24 @@ public final class DctmVersionHistory<T extends IDfSysObject> implements Iterabl
 		return this.chronicleId;
 	}
 
-	public DctmVersion<T> getVersion(IDfId id) {
+	public DfcVersion<T> getVersion(IDfId id) {
 		return this.mainIndex.get(id);
 	}
 
-	public DctmVersion<T> getAntecedent(DctmVersion<T> version) {
+	public DfcVersion<T> getAntecedent(DfcVersion<T> version) {
 		if (version == null) { throw new IllegalArgumentException(
 			"Must provide a version whose antecedent to retrieve"); }
 		return getAntecedent(version.getId());
 	}
 
-	public DctmVersion<T> getAntecedent(IDfId objectId) {
-		DctmVersion<T> v = getVersion(objectId);
+	public DfcVersion<T> getAntecedent(IDfId objectId) {
+		DfcVersion<T> v = getVersion(objectId);
 		if (v == null) { throw new IllegalArgumentException(
 			String.format("The object ID [%s] does not exist in this version history", objectId)); }
 		return this.mainIndex.get(v.getAntecedentId());
 	}
 
-	public List<DctmVersionNumber> getPatchesFor(IDfId objectId) {
+	public List<DfcVersionNumber> getPatchesFor(IDfId objectId) {
 		return this.patches.get(objectId);
 	}
 
@@ -208,7 +208,7 @@ public final class DctmVersionHistory<T extends IDfSysObject> implements Iterabl
 		return this.patchAntecedents;
 	}
 
-	public Map<IDfId, List<DctmVersionNumber>> getPatches() {
+	public Map<IDfId, List<DfcVersionNumber>> getPatches() {
 		return this.patches;
 	}
 

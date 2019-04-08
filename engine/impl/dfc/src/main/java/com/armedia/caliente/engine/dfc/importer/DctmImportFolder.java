@@ -19,7 +19,7 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.FileNameTools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
@@ -150,7 +150,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			IDfFolder actual = session.getFolderByPath(pathValue);
 
 			// Ok...so...we set the path to "whatever"...
-			DfUtils.lockObject(this.log, user);
+			DfcUtils.lockObject(this.log, user);
 			user.fetch(null);
 			user.setDefaultFolder(pathValue, (actual == null));
 			user.save();
@@ -182,7 +182,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				}
 
 				// It WAS a group! Set its group directory
-				DfUtils.lockObject(this.log, group);
+				DfcUtils.lockObject(this.log, group);
 				group.fetch(null);
 				group.setGroupDirectoryId(folder.getObjectId());
 				group.save();

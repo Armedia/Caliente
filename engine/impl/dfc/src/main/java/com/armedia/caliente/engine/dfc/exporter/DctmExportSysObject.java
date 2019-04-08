@@ -23,9 +23,9 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.tools.dfc.DctmException;
-import com.armedia.caliente.tools.dfc.DctmQuery;
-import com.armedia.caliente.tools.dfc.DctmVersionHistory;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcVersionHistory;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
@@ -220,7 +220,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		CmfProperty<IDfValue> reference = new CmfProperty<>(IntermediateProperty.IS_REFERENCE,
 			DctmDataType.DF_BOOLEAN.getStoredType(), false);
 		properties.add(reference);
-		reference.setValue(DfValueFactory.newBooleanValue(object.isReference()));
+		reference.setValue(DfValueFactory.of(object.isReference()));
 
 		CmfProperty<IDfValue> aclInheritedProp = new CmfProperty<>(IntermediateProperty.ACL_INHERITANCE,
 			DctmDataType.DF_STRING.getStoredType(), false);
@@ -247,7 +247,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			// Is the object's ACL the same as its parent folder's?
 			if (!aclInheritedSet && isSameACL(object, parent)) {
 				aclInheritedProp
-					.setValue(DfValueFactory.newStringValue(String.format("FOLDER[%s]", folderId.asString())));
+					.setValue(DfValueFactory.of(String.format("FOLDER[%s]", folderId.asString())));
 				aclInheritedSet = true;
 			}
 			parents.addValue(folderId);
@@ -256,7 +256,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		// Calculate the parent paths in the correct order... r_folder_path may have a different
 		// order in some documentum instances
 		for (List<String> p : calculateAllPaths(ctx.getSession(), object)) {
-			paths.addValue(DfValueFactory.newStringValue(FileNameTools.reconstitute(p, true, false, '/')));
+			paths.addValue(DfValueFactory.of(FileNameTools.reconstitute(p, true, false, '/')));
 		}
 
 		if (!aclInheritedSet) {
@@ -264,7 +264,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			if ((creator != null) && isSameACL(object, creator)) {
 				// Make sure we perform all necessary mappings
 				String userName = DctmMappingUtils.substituteMappableUsers(session, creator.getUserName());
-				aclInheritedProp.setValue(DfValueFactory.newStringValue(String.format("USER[%s]", userName)));
+				aclInheritedProp.setValue(DfValueFactory.of(String.format("USER[%s]", userName)));
 				aclInheritedSet = true;
 			}
 		}
@@ -274,12 +274,12 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			// Need to scale up the type hierarchy...
 			while (type != null) {
 				String dql = String.format("select acl_domain, acl_name from dmi_type_info where r_type_id = %s",
-					DfUtils.quoteString(type.getObjectId().getId()));
-				try (DctmQuery query = new DctmQuery(session, dql)) {
+					DfcUtils.quoteString(type.getObjectId().getId()));
+				try (DfcQuery query = new DfcQuery(session, dql)) {
 					if (query.hasNext()) {
 						if (isSameACL(object, query.next())) {
 							aclInheritedProp
-								.setValue(DfValueFactory.newStringValue(String.format("TYPE[%s]", type.getName())));
+								.setValue(DfValueFactory.of(String.format("TYPE[%s]", type.getName())));
 							aclInheritedSet = true;
 							break;
 						}
@@ -290,42 +290,42 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		}
 
 		if (!aclInheritedSet) {
-			aclInheritedProp.setValue(DfValueFactory.newStringValue("NONE[]"));
+			aclInheritedProp.setValue(DfValueFactory.of("NONE[]"));
 			aclInheritedSet = true;
 		}
 
 		IDfReference ref = getReferenceFor(object);
 		if (ref != null) {
 			properties.add(new CmfProperty<>(IntermediateProperty.REF_TARGET, DctmDataType.DF_STRING.getStoredType(),
-				false, DfValueFactory.newStringValue(object.getChronicleId().getId())));
+				false, DfValueFactory.of(object.getChronicleId().getId())));
 			String refVersion = ref.getBindingLabel();
 			if (StringUtils.equalsIgnoreCase(ISysObject.CURRENT_VERSION_LABEL, refVersion)) {
 				refVersion = "HEAD";
 			}
 			properties.add(new CmfProperty<>(IntermediateProperty.REF_VERSION, DctmDataType.DF_STRING.getStoredType(),
-				false, DfValueFactory.newStringValue(refVersion)));
+				false, DfValueFactory.of(refVersion)));
 
 			properties.add(new CmfProperty<>(DctmAttributes.BINDING_CONDITION, DctmDataType.DF_STRING.getStoredType(),
-				false, DfValueFactory.newStringValue(ref.getBindingCondition())));
+				false, DfValueFactory.of(ref.getBindingCondition())));
 			properties.add(new CmfProperty<>(DctmAttributes.BINDING_LABEL, DctmDataType.DF_STRING.getStoredType(),
-				false, DfValueFactory.newStringValue(ref.getBindingLabel())));
+				false, DfValueFactory.of(ref.getBindingLabel())));
 			properties.add(new CmfProperty<>(DctmAttributes.LOCAL_FOLDER_LINK, DctmDataType.DF_STRING.getStoredType(),
-				false, DfValueFactory.newStringValue(ref.getLocalFolderLink())));
+				false, DfValueFactory.of(ref.getLocalFolderLink())));
 			properties.add(new CmfProperty<>(DctmAttributes.REFERENCE_DB_NAME, DctmDataType.DF_STRING.getStoredType(),
-				false, DfValueFactory.newStringValue(ref.getReferenceDbName())));
+				false, DfValueFactory.of(ref.getReferenceDbName())));
 			properties.add(new CmfProperty<>(DctmAttributes.REFERENCE_BY_ID, DctmDataType.DF_ID.getStoredType(), false,
-				DfValueFactory.newIdValue(ref.getReferenceById())));
+				DfValueFactory.of(ref.getReferenceById())));
 			properties.add(new CmfProperty<>(DctmAttributes.REFERENCE_BY_NAME, DctmDataType.DF_STRING.getStoredType(),
-				false, DfValueFactory.newStringValue(ref.getReferenceByName())));
+				false, DfValueFactory.of(ref.getReferenceByName())));
 			properties.add(new CmfProperty<>(DctmAttributes.REFRESH_INTERVAL, DctmDataType.DF_INTEGER.getStoredType(),
-				false, DfValueFactory.newIntValue(ref.getRefreshInterval())));
+				false, DfValueFactory.of(ref.getRefreshInterval())));
 
 			properties.add(new CmfProperty<>(IntermediateProperty.VERSION_COUNT,
-				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(1)));
+				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.of(1)));
 			properties.add(new CmfProperty<>(IntermediateProperty.VERSION_INDEX,
-				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(1)));
+				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.of(1)));
 			properties.add(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
-				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(1)));
+				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.of(1)));
 			return false;
 		}
 
@@ -337,13 +337,13 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		String aclName = object.getACLName();
 		final String dql = String.format(
 			"select distinct r_object_id from dm_acl where owner_name = %s and object_name = %s",
-			DfUtils.quoteString(aclDomain), DfUtils.quoteString(aclName));
-		try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_READ_QUERY)) {
+			DfcUtils.quoteString(aclDomain), DfcUtils.quoteString(aclName));
+		try (DfcQuery query = new DfcQuery(session, dql, DfcQuery.Type.DF_READ_QUERY)) {
 			if (query.hasNext()) {
 				aclId = query.next().getId(DctmAttributes.R_OBJECT_ID);
 			}
 		}
-		aclIdProp.setValue(DfValueFactory.newIdValue(aclId));
+		aclIdProp.setValue(DfValueFactory.of(aclId));
 		return true;
 	}
 
@@ -373,7 +373,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		marshaled.setProperty(prop);
 		Set<String> ptid = calculateParentTreeIds(object);
 		for (String s : ptid) {
-			prop.addValue(DfValueFactory.newStringValue(s));
+			prop.addValue(DfValueFactory.of(s));
 		}
 		this.factory.pathIdCache.put(object.getObjectId().getId(), Collections.unmodifiableSet(ptid));
 
@@ -384,7 +384,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 				DctmDataType.DF_STRING.getStoredType(), true);
 			marshaled.setProperty(prop);
 			for (String s : ptid) {
-				prop.addValue(DfValueFactory.newStringValue(s));
+				prop.addValue(DfValueFactory.of(s));
 			}
 		}
 		marker = String.format(DctmExportSysObject.HISTORY_VDOC_STATUS, chronicleId);
@@ -392,15 +392,15 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		if (vdocMarker == null) {
 			String dql = String.format(
 				"select count(*) as vdocs from dm_document (ALL) where i_chronicle_id = %s and ((r_is_virtual_doc = 1) or (r_link_cnt > 0))",
-				DfUtils.quoteString(chronicleId));
-			try (DctmQuery query = new DctmQuery(ctx.getSession(), dql)) {
+				DfcUtils.quoteString(chronicleId));
+			try (DfcQuery query = new DfcQuery(ctx.getSession(), dql)) {
 				vdocMarker = query.hasNext() && (query.next().getInt("vdocs") > 0);
 				ctx.setObject(marker, vdocMarker);
 			}
 		}
 		prop = new CmfProperty<>(IntermediateProperty.VDOC_HISTORY, DctmDataType.DF_BOOLEAN.getStoredType(), false);
 		marshaled.setProperty(prop);
-		prop.setValue(DfValueFactory.newBooleanValue(vdocMarker.booleanValue()));
+		prop.setValue(DfValueFactory.of(vdocMarker.booleanValue()));
 	}
 
 	protected final String calculateVersionString(IDfSysObject sysObject, boolean full) throws DfException {
@@ -451,18 +451,18 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	 * @throws DfException
 	 * @throws ExportException
 	 */
-	protected final DctmVersionHistory<T> getVersionHistory(DctmExportContext ctx, T object)
+	protected final DfcVersionHistory<T> getVersionHistory(DctmExportContext ctx, T object)
 		throws DfException, ExportException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose versions to analyze"); }
 		final IDfSession session = object.getSession();
 		final IDfId chronicleId = object.getChronicleId();
 		final String historyObject = String.format(DctmExportSysObject.CTX_VERSION_HISTORY, chronicleId.getId());
 
-		DctmVersionHistory<T> history = ctx.getObject(historyObject);
+		DfcVersionHistory<T> history = ctx.getObject(historyObject);
 		if (history != null) { return history; }
 
 		try {
-			history = new DctmVersionHistory<>(session, chronicleId, this.objectClass);
+			history = new DfcVersionHistory<>(session, chronicleId, this.objectClass);
 			ctx.setObject(historyObject, history);
 		} catch (DctmException e) {
 			throw new ExportException(
@@ -515,8 +515,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			final String dql = "select distinct r_object_id from dm_sysobject (ALL) where i_chronicle_id = %s and (r_is_virtual_doc = 1 or r_link_cnt > 0) order by 1 ";
 			final IDfId chronicleId = object.getChronicleId();
 			Integer depth = null;
-			try (DctmQuery query = new DctmQuery(session,
-				String.format(dql, DfUtils.quoteString(chronicleId.getId())))) {
+			try (DfcQuery query = new DfcQuery(session,
+				String.format(dql, DfcUtils.quoteString(chronicleId.getId())))) {
 				// Now iterate over all the virtual document entries so we can cascade
 				while (query.hasNext()) {
 					IDfId id = query.next().getId("r_object_id");
@@ -594,7 +594,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		if (ctx.isSupported(CmfObject.Archetype.DATASTORE)) {
 			String storeName = sysObject.getStorageType();
 			if (StringUtils.isNotBlank(storeName)) {
-				IDfStore store = DfUtils.getStore(session, storeName);
+				IDfStore store = DfcUtils.getStore(session, storeName);
 				if (store != null) {
 					req.add(this.factory.newExportDelegate(session, store));
 				} else {
@@ -660,9 +660,9 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	protected IDfReference getReferenceFor(T object) throws DfException {
 		if ((object == null) || !object.isReference()) { return null; }
 		final IDfSession s = object.getSession();
-		try (DctmQuery query = new DctmQuery(s,
+		try (DfcQuery query = new DfcQuery(s,
 			String.format("select r_object_id from dm_reference_s where r_mirror_object_id = %s",
-				DfUtils.quoteString(object.getObjectId().getId())))) {
+				DfcUtils.quoteString(object.getObjectId().getId())))) {
 			if (!query.hasNext()) { return null; }
 			return IDfReference.class.cast(s.getObject(query.next().getId("r_object_id")));
 		}
@@ -676,7 +676,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	@Override
 	protected Collection<CmfObjectRef> calculateParentIds(IDfSession session, T sysObject) throws Exception {
 		List<CmfObjectRef> ret = new ArrayList<>();
-		for (IDfValue v : DfValueFactory.getAllRepeatingValues(DctmAttributes.I_FOLDER_ID, sysObject)) {
+		for (IDfValue v : DfValueFactory.getAllValues(DctmAttributes.I_FOLDER_ID, sysObject)) {
 			ret.add(new CmfObjectRef(CmfObject.Archetype.FOLDER, v.asId().getId()));
 		}
 		return ret;

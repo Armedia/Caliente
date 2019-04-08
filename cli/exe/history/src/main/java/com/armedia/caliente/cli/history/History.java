@@ -20,11 +20,11 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
-import com.armedia.caliente.tools.dfc.DctmCrypto;
+import com.armedia.caliente.tools.dfc.DfcCrypto;
 import com.armedia.caliente.tools.dfc.DctmException;
-import com.armedia.caliente.tools.dfc.DctmVersion;
-import com.armedia.caliente.tools.dfc.DctmVersionHistory;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcVersion;
+import com.armedia.caliente.tools.dfc.DfcVersionHistory;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfLocalTransaction;
@@ -71,7 +71,7 @@ public class History {
 		return s;
 	}
 
-	private String formatVersion(DctmVersion<?> version) {
+	private String formatVersion(DfcVersion<?> version) {
 		if (version == null) { return "(N/A)"; }
 		return String.format("%s (%s @ %s)", version.getVersionNumber(), version.getId(),
 			DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(version.getCreationDate().getDate()));
@@ -91,7 +91,7 @@ public class History {
 
 		final DfcSessionPool pool;
 		try {
-			pool = new DfcSessionPool(docbase, user, new DctmCrypto().decrypt(password));
+			pool = new DfcSessionPool(docbase, user, new DfcCrypto().decrypt(password));
 		} catch (DfException e) {
 			this.log.error("Failed to create the DFC session pool", e);
 			return 1;
@@ -114,7 +114,7 @@ public class History {
 						boolean ok = false;
 						final IDfLocalTransaction tx;
 						try {
-							tx = DfUtils.openTransaction(session);
+							tx = DfcUtils.openTransaction(session);
 						} catch (DfException e) {
 							throw new HistoryException(id, String.format(
 								"DFC reported an error while starting the read-only transaction for chronicle [%s]: %s",
@@ -153,7 +153,7 @@ public class History {
 
 								History.this.log.info("Scanning history with ID [{}] (from search spec [{}])...",
 									chronicleId, id);
-								DctmVersionHistory<IDfSysObject> history = new DctmVersionHistory<>(session,
+								DfcVersionHistory<IDfSysObject> history = new DfcVersionHistory<>(session,
 									chronicleId);
 								History.this.log.info("History with ID [{}] scanned successfully!", chronicleId);
 
@@ -167,7 +167,7 @@ public class History {
 								String fmt = String.format("\t\t%%s [%%0%dd]: %%s%n",
 									String.valueOf(history.size()).length());
 								int i = 0;
-								for (DctmVersion<IDfSysObject> v : history) {
+								for (DfcVersion<IDfSysObject> v : history) {
 									pw.printf(fmt, v == history.getCurrentVersion() ? "*" : " ", ++i, formatVersion(v));
 								}
 								pw.flush();
@@ -190,7 +190,7 @@ public class History {
 							}
 						} finally {
 							try {
-								DfUtils.abortTransaction(session, tx);
+								DfcUtils.abortTransaction(session, tx);
 							} catch (DfException e) {
 								// Here we don't raise an exception since we don't want to blot
 								// out any that are already being raised...

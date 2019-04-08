@@ -2,7 +2,7 @@ package com.armedia.caliente.tools;
 
 import java.io.ByteArrayOutputStream;
 
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfLocalTransaction;
@@ -15,7 +15,7 @@ public class DctmTest {
 		final DfcSessionPool pool = new DfcSessionPool("documentum", "dmadmin2", "ArM3D!A");
 		final IDfSession session = pool.acquireSession();
 		try {
-			final IDfLocalTransaction tx = DfUtils.openTransaction(session);
+			final IDfLocalTransaction tx = DfcUtils.openTransaction(session);
 			boolean ok = false;
 			try {
 				IDfFolder parent = session.getFolderByPath("/CMSMFTests/Specials");
@@ -37,11 +37,11 @@ public class DctmTest {
 				obj.link(parent.getObjectId().getId());
 				obj.save();
 
-				DfUtils.commitTransaction(session, tx);
+				DfcUtils.commitTransaction(session, tx);
 				ok = true;
 			} finally {
 				if (!ok) {
-					DfUtils.abortTransaction(session, tx);
+					DfcUtils.abortTransaction(session, tx);
 				}
 			}
 		} finally {

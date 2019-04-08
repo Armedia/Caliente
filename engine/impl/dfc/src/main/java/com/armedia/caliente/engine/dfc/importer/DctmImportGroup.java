@@ -19,7 +19,7 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfSession;
@@ -250,7 +250,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				continue;
 			}
 			this.log.info("Setting group [{}] as the default group for user [{}]", groupName, user.getUserName());
-			DfUtils.lockObject(this.log, user);
+			DfcUtils.lockObject(this.log, user);
 			user.fetch(null);
 			user.setUserGroupName(groupName);
 			user.save();

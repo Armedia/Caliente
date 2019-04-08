@@ -8,7 +8,7 @@ import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.content.IDfStore;
@@ -42,7 +42,7 @@ public class DctmImportStore extends DctmImportDelegate<IDfStore> {
 	@Override
 	protected IDfStore locateInCms(DctmImportContext ctx) throws DfException {
 		IDfValue name = this.cmfObject.getAttribute(DctmAttributes.NAME).getValue();
-		return DfUtils.getStore(ctx.getSession(), name.asString());
+		return DfcUtils.getStore(ctx.getSession(), name.asString());
 	}
 
 	@Override

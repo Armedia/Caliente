@@ -19,8 +19,8 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
-import com.armedia.caliente.tools.dfc.DctmQuery;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfSession;
@@ -76,8 +76,8 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 		IDfUser ret = session.getUserByLoginName(loginName, !StringUtils.isBlank(domainName) ? domainName : null);
 		if (ret == null) {
 			// Still no match? try by just login name, any domain
-			String dql = String.format(DctmImportUser.FIND_USER_BY_LOGIN_DQL, DfUtils.quoteString(loginName));
-			try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_EXECREAD_QUERY)) {
+			String dql = String.format(DctmImportUser.FIND_USER_BY_LOGIN_DQL, DfcUtils.quoteString(loginName));
+			try (DfcQuery query = new DfcQuery(session, dql, DfcQuery.Type.DF_EXECREAD_QUERY)) {
 				List<String> candidates = null;
 				while (query.hasNext()) {
 					IDfTypedObject c = query.next();
@@ -167,7 +167,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 		// Only do this for Documentum 6.5-SP2
 		if ((loginDomain == null) && serverVersion.startsWith("6.5") && "LDAP".equalsIgnoreCase(userSource)) {
 			IDfAttr attr = user.getAttr(user.findAttrIndex(DctmAttributes.USER_LOGIN_DOMAIN));
-			loginDomain = newStoredAttribute(attr, DfValueFactory.newStringValue(""));
+			loginDomain = newStoredAttribute(attr, DfValueFactory.of(""));
 			this.cmfObject.setAttribute(loginDomain);
 		}
 	}
@@ -198,7 +198,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 				final String inlinePasswordValue = ctx.getSettings().getString(Setting.DEFAULT_USER_PASSWORD.getLabel(),
 					userName);
 				setAttributeOnObject(DctmAttributes.USER_PASSWORD,
-					Collections.singletonList(DfValueFactory.newStringValue(inlinePasswordValue)), user);
+					Collections.singletonList(DfValueFactory.of(inlinePasswordValue)), user);
 			}
 		}
 

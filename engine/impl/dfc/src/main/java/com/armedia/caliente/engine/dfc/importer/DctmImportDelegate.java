@@ -30,8 +30,8 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.tools.dfc.DctmQuery;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfDocument;
@@ -57,7 +57,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportDelegateFactory, DctmImportEngine> {
 
 	private static final IDfValue CURRENT_VERSION_LABEL = DfValueFactory
-		.newStringValue(DfDocument.CURRENT_VERSION_LABEL);
+		.of(DfDocument.CURRENT_VERSION_LABEL);
 
 	private final class AspectHelper implements IDfAttachAspectCallback, IDfDetachAspectCallback {
 		private final AtomicReference<T> ref;
@@ -68,7 +68,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			IDfSession session = object.getSession();
 			IDfType type = object.getType();
 			IDfPersistentObject info = session.getObjectByQualification(
-				String.format("dmi_type_info where r_type_id = %s", DfUtils.quoteString(type.getObjectId().getId())));
+				String.format("dmi_type_info where r_type_id = %s", DfcUtils.quoteString(type.getObjectId().getId())));
 			Set<String> defaultAspects = Collections.emptySet();
 			if ((info != null) && info.hasAttr(DctmAttributes.DEFAULT_ASPECTS)) {
 				final int c = info.getValueCount(DctmAttributes.DEFAULT_ASPECTS);
@@ -247,7 +247,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				// Is this correct?
 				newLabel = calculateLabel(object);
 				this.log.info("Acquiring lock on existing {}", this.cmfObject.getDescription());
-				DfUtils.lockObject(this.log, object);
+				DfcUtils.lockObject(this.log, object);
 				object.fetch(null);
 				this.log.info("Acquired lock on {}", this.cmfObject.getDescription());
 				// First, store the mapping for the object's exact ID
@@ -606,7 +606,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			}
 			// Ensure the value's length is always consistent
 			if ((truncateLength > 0) && (value.asString().length() > truncateLength)) {
-				value = DfValueFactory.newStringValue(value.asString().substring(0, truncateLength));
+				value = DfValueFactory.of(value.asString().substring(0, truncateLength));
 			}
 			boolean ok = false;
 			try {
@@ -732,8 +732,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		// dctmObj.getIntSingleAttrValue(DctmAttributes.I_VSTAMP)));
 
 		return String.format(sql, objType,
-			DfUtils.generateSqlDateClause(modifyDate.asTime().getDate(), ctx.getSession()), vstampFlag,
-			DfUtils.quoteStringForSql(object.getObjectId().getId()));
+			DfcUtils.generateSqlDateClause(modifyDate.asTime().getDate(), ctx.getSession()), vstampFlag,
+			DfcUtils.quoteStringForSql(object.getObjectId().getId()));
 	}
 
 	/**
@@ -791,8 +791,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	 */
 	protected final boolean runExecSQL(IDfSession session, String sql) throws DfException {
 		boolean ok = false;
-		try (DctmQuery query = new DctmQuery(session, String.format("EXECUTE exec_sql WITH query='%s'", sql),
-			DctmQuery.Type.DF_QUERY)) {
+		try (DfcQuery query = new DfcQuery(session, String.format("EXECUTE exec_sql WITH query='%s'", sql),
+			DfcQuery.Type.DF_QUERY)) {
 			if (query.hasNext()) {
 				IDfTypedObject resultCol = query.next();
 				final IDfValue ret = resultCol.getValueAt(0);
@@ -804,8 +804,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 					ok = true;
 					outcome = "commit";
 				}
-				try (DctmQuery query2 = new DctmQuery(session,
-					String.format("EXECUTE exec_sql with query='%s';", outcome), DctmQuery.Type.DF_QUERY)) {
+				try (DfcQuery query2 = new DfcQuery(session,
+					String.format("EXECUTE exec_sql with query='%s';", outcome), DfcQuery.Type.DF_QUERY)) {
 				}
 			}
 			return ok;

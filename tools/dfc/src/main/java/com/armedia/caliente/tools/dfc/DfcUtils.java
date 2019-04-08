@@ -38,10 +38,10 @@ import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfList;
 
-public class DfUtils {
+public class DfcUtils {
 
-	private static final String ORACLE_DATETIME_PATTERN = DfUtils
-		.quoteStringForSql(DctmConstant.ORACLE_DATETIME_PATTERN);
+	private static final String ORACLE_DATETIME_PATTERN = DfcUtils
+		.quoteStringForSql(DfcConstant.ORACLE_DATETIME_PATTERN);
 
 	@FunctionalInterface
 	public static interface DfOperation {
@@ -120,7 +120,7 @@ public class DfUtils {
 		}
 	}
 
-	private static final Logger LOG = LoggerFactory.getLogger(DfUtils.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DfcUtils.class);
 
 	private static enum Permission {
 		//
@@ -180,8 +180,8 @@ public class DfUtils {
 			c.close();
 		} catch (DfException e) {
 			// quietly swallowed
-			if (DfUtils.LOG.isTraceEnabled()) {
-				DfUtils.LOG.trace("Swallowing exception on close", e);
+			if (DfcUtils.LOG.isTraceEnabled()) {
+				DfcUtils.LOG.trace("Swallowing exception on close", e);
 			}
 		}
 	}
@@ -209,11 +209,11 @@ public class DfUtils {
 	}
 
 	public static Stream<IDfTypedObject> stream(IDfCollection c) {
-		return DfUtils.stream(c, true);
+		return DfcUtils.stream(c, true);
 	}
 
 	public static Stream<IDfTypedObject> stream(IDfCollection c, boolean closeOnEnd) {
-		Stream<IDfTypedObject> ret = StreamTools.of(new DctmCollectionIterator(c), false);
+		Stream<IDfTypedObject> ret = StreamTools.of(new DfcCollectionIterator(c), false);
 		if (closeOnEnd) {
 			ret = ret.onClose(() -> {
 				try {
@@ -249,24 +249,24 @@ public class DfUtils {
 
 	public static String generateSqlDateClause(Date date, IDfSession session) throws DfException {
 		// First, output to the "netural" format
-		final String dateString = DateFormatUtils.formatUTC(date, DctmConstant.JAVA_SQL_DATETIME_PATTERN);
+		final String dateString = DateFormatUtils.formatUTC(date, DfcConstant.JAVA_SQL_DATETIME_PATTERN);
 		// Now, select the database format string
 		final String ret;
-		DbType dbType = DfUtils.getDbType(session);
+		DbType dbType = DfcUtils.getDbType(session);
 		switch (dbType) {
 			case ORACLE:
-				ret = String.format("TO_DATE(%s, %s)", DfUtils.quoteStringForSql(dateString),
-					DfUtils.ORACLE_DATETIME_PATTERN);
+				ret = String.format("TO_DATE(%s, %s)", DfcUtils.quoteStringForSql(dateString),
+					DfcUtils.ORACLE_DATETIME_PATTERN);
 				break;
 			case MSSQL:
-				ret = String.format("CONVERT(DATETIME, %s, %d)", DfUtils.quoteStringForSql(dateString),
-					DctmConstant.MSSQL_DATETIME_PATTERN);
+				ret = String.format("CONVERT(DATETIME, %s, %d)", DfcUtils.quoteStringForSql(dateString),
+					DfcConstant.MSSQL_DATETIME_PATTERN);
 				break;
 			default:
 				throw new UnsupportedOperationException(String.format("Unsupported database type [%s]", dbType));
 		}
-		if (DfUtils.LOG.isTraceEnabled()) {
-			DfUtils.LOG.trace("Generated {} SQL Date string [{}] from [{}]({})", dbType, ret,
+		if (DfcUtils.LOG.isTraceEnabled()) {
+			DfcUtils.LOG.trace("Generated {} SQL Date string [{}] from [{}]({})", dbType, ret,
 				DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(date), date.getTime());
 		}
 		return ret;
@@ -294,7 +294,7 @@ public class DfUtils {
 
 	public static Collection<String> decodeExtendedPermission(int xpermit) {
 		Collection<String> ep = new ArrayList<>();
-		DfUtils.EXTENDED_PERMISSIONS.forEach((label, pair) -> {
+		DfcUtils.EXTENDED_PERMISSIONS.forEach((label, pair) -> {
 			int mask = pair.getLeft();
 			boolean negated = pair.getRight();
 			boolean set = ((xpermit & mask) != 0);
@@ -312,7 +312,7 @@ public class DfUtils {
 		final AtomicInteger ret = new AtomicInteger(3);
 		if ((extendedPermissions != null) && !extendedPermissions.isEmpty()) {
 			extendedPermissions.forEach((p) -> {
-				Pair<Integer, Boolean> pair = DfUtils.EXTENDED_PERMISSIONS.get(StringUtils.upperCase(p));
+				Pair<Integer, Boolean> pair = DfcUtils.EXTENDED_PERMISSIONS.get(StringUtils.upperCase(p));
 				if (pair != null) {
 					int mask = pair.getLeft();
 					int current = ret.get();
@@ -353,7 +353,7 @@ public class DfUtils {
 
 	public static int decodeAccessPermission(String permission) {
 		if (permission == null) { throw new IllegalArgumentException("Must provide a permission to map"); }
-		Integer ret = DfUtils.PERMISSIONS_STR_MAP.get(permission);
+		Integer ret = DfcUtils.PERMISSIONS_STR_MAP.get(permission);
 		if (ret == null) {
 			throw new IllegalArgumentException(String.format("Unknown permissions value [%s] detected", permission));
 		}
@@ -386,7 +386,7 @@ public class DfUtils {
 
 	public static int decodePermitType(String permitType) {
 		if (permitType == null) { throw new IllegalArgumentException("Must provide a permit type to map"); }
-		Integer ret = DfUtils.PERMIT_TYPES_STR_MAP.get(permitType);
+		Integer ret = DfcUtils.PERMIT_TYPES_STR_MAP.get(permitType);
 		if (ret == null) {
 			throw new IllegalArgumentException(String.format("Unknown permit type value [%s] detected", permitType));
 		}
@@ -397,7 +397,7 @@ public class DfUtils {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to seek the store with"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a store name to look for"); }
 		return IDfStore.class.cast(
-			session.getObjectByQualification(String.format("dm_store where name = %s", DfUtils.quoteString(name))));
+			session.getObjectByQualification(String.format("dm_store where name = %s", DfcUtils.quoteString(name))));
 	}
 
 	/**
@@ -412,20 +412,20 @@ public class DfUtils {
 	 */
 	public static void runDctmJob(IDfSession dctmSession, String jobName) throws DfException {
 		// Set run_now attribute of a job to true to run a job.
-		String qualification = String.format("dm_job where object_name = %s", DfUtils.quoteString(jobName));
+		String qualification = String.format("dm_job where object_name = %s", DfcUtils.quoteString(jobName));
 		IDfSysObject oJob = IDfSysObject.class.cast(dctmSession.getObjectByQualification(qualification));
-		DfUtils.lockObject(DfUtils.LOG, oJob);
-		oJob.setBoolean(DctmConstant.RUN_NOW, true);
+		DfcUtils.lockObject(DfcUtils.LOG, oJob);
+		oJob.setBoolean(DfcConstant.RUN_NOW, true);
 		oJob.save();
 	}
 
 	public static <T extends IDfPersistentObject> T lockObject(T obj) throws DfException {
-		return DfUtils.lockObject(null, obj);
+		return DfcUtils.lockObject(null, obj);
 	}
 
 	public static <T extends IDfPersistentObject> T lockObject(Logger log, T obj) throws DfException {
 		if (obj == null) { return null; }
-		log = Tools.coalesce(log, DfUtils.LOG);
+		log = Tools.coalesce(log, DfcUtils.LOG);
 		boolean ok = false;
 		final String objectId = obj.getObjectId().getId();
 		final String objectClass = obj.getClass().getSimpleName();
@@ -462,7 +462,7 @@ public class DfUtils {
 	 * </p>
 	 */
 	public static DfException runRetryable(IDfSession session, DfOperation op) throws DfException {
-		return DfUtils.runRetryable(session, false, op, null);
+		return DfcUtils.runRetryable(session, false, op, null);
 	}
 
 	/**
@@ -474,7 +474,7 @@ public class DfUtils {
 	 */
 	public static DfException runRetryable(IDfSession session, DfOperation op, Predicate<DfException> filter)
 		throws DfException {
-		return DfUtils.runRetryable(session, false, op, filter);
+		return DfcUtils.runRetryable(session, false, op, filter);
 	}
 
 	/**
@@ -486,7 +486,7 @@ public class DfUtils {
 	 */
 	public static DfException runRetryable(IDfSession session, boolean openTransaction, DfOperation op)
 		throws DfException {
-		return DfUtils.runRetryable(session, openTransaction, op, null);
+		return DfcUtils.runRetryable(session, openTransaction, op, null);
 	}
 
 	/**
@@ -548,12 +548,12 @@ public class DfUtils {
 				ret = e;
 			}
 		} else {
-			final IDfLocalTransaction tx = DfUtils.openTransaction(session);
+			final IDfLocalTransaction tx = DfcUtils.openTransaction(session);
 			try {
 				op.execute(session);
-				DfUtils.commitTransaction(session, tx);
+				DfcUtils.commitTransaction(session, tx);
 			} catch (DfException e) {
-				DfUtils.abortTransaction(session, tx);
+				DfcUtils.abortTransaction(session, tx);
 				if ((filter != null) && !filter.test(e)) { throw e; }
 				ret = e;
 			}
@@ -562,19 +562,19 @@ public class DfUtils {
 	}
 
 	public static Collection<IDfPermit> getPermissionsWithFallback(final IDfSysObject object) throws DfException {
-		return DfUtils.getPermissionsWithFallback(object, null);
+		return DfcUtils.getPermissionsWithFallback(object, null);
 	}
 
 	public static Collection<IDfPermit> getPermissionsWithFallback(final IDfSysObject object,
 		Predicate<DfException> exceptionFilter) throws DfException {
 		final IDfSession session = Objects.requireNonNull(object, "Must provide a non-null IDfSysObject instance")
 			.getSession();
-		return DfUtils.getPermissionsWithFallback(session, object, exceptionFilter);
+		return DfcUtils.getPermissionsWithFallback(session, object, exceptionFilter);
 	}
 
 	public static Collection<IDfPermit> getPermissionsWithFallback(IDfSession session, final IDfSysObject object)
 		throws DfException {
-		return DfUtils.getPermissionsWithFallback(session, object, null);
+		return DfcUtils.getPermissionsWithFallback(session, object, null);
 	}
 
 	public static Collection<IDfPermit> getPermissionsWithFallback(IDfSession session, final IDfSysObject object,
@@ -588,7 +588,7 @@ public class DfUtils {
 		DfException raised = null;
 
 		ret.clear();
-		raised = DfUtils.runRetryable(session, (s) -> {
+		raised = DfcUtils.runRetryable(session, (s) -> {
 			IDfList list = object.getPermissions();
 			final int count = list.getCount();
 			for (int i = 0; i < count; i++) {
@@ -598,21 +598,21 @@ public class DfUtils {
 		if (raised == null) { return ret; }
 		if ((exceptionFilter != null) && exceptionFilter.test(raised)) { throw raised; }
 
-		return DfUtils.getPermissionsWithFallback(session, object.getACL(), exceptionFilter);
+		return DfcUtils.getPermissionsWithFallback(session, object.getACL(), exceptionFilter);
 	}
 
 	public static Collection<IDfPermit> getPermissionsWithFallback(final IDfACL acl) throws DfException {
-		return DfUtils.getPermissionsWithFallback(null, acl, null);
+		return DfcUtils.getPermissionsWithFallback(null, acl, null);
 	}
 
 	public static Collection<IDfPermit> getPermissionsWithFallback(final IDfACL acl,
 		Predicate<DfException> exceptionFilter) throws DfException {
-		return DfUtils.getPermissionsWithFallback(null, acl, exceptionFilter);
+		return DfcUtils.getPermissionsWithFallback(null, acl, exceptionFilter);
 	}
 
 	public static Collection<IDfPermit> getPermissionsWithFallback(IDfSession session, final IDfACL acl)
 		throws DfException {
-		return DfUtils.getPermissionsWithFallback(session, acl, null);
+		return DfcUtils.getPermissionsWithFallback(session, acl, null);
 	}
 
 	public static Collection<IDfPermit> getPermissionsWithFallback(IDfSession session, final IDfACL acl,
@@ -628,7 +628,7 @@ public class DfUtils {
 		// The previous strategy failed, so we move onto the next attempt which is getting the
 		// object's ACL and getting the permissions from there
 		ret.clear();
-		raised = DfUtils.runRetryable(session, (s) -> {
+		raised = DfcUtils.runRetryable(session, (s) -> {
 			IDfList list = acl.getPermissions();
 			final int count = list.getCount();
 			for (int i = 0; i < count; i++) {
@@ -640,7 +640,7 @@ public class DfUtils {
 
 		// Last chance - reconstruct the data from the ACL's attribute values...
 		ret.clear();
-		raised = DfUtils.runRetryable(session, (s) -> {
+		raised = DfcUtils.runRetryable(session, (s) -> {
 			final int count = acl.getValueCount(IDfACL.ACCESSOR_NAME);
 			Collection<String> valueStrings = new ArrayList<>();
 			for (int i = 0; i < count; i++) {
@@ -661,7 +661,7 @@ public class DfUtils {
 						if (permit < 1) {
 							permit = 1;
 						}
-						valueStrings.add(DfUtils.decodeAccessPermission(permit));
+						valueStrings.add(DfcUtils.decodeAccessPermission(permit));
 						findExtended = true;
 						break;
 
@@ -689,7 +689,7 @@ public class DfUtils {
 
 				if (findExtended) {
 					type = (restriction ? IDfPermit.DF_EXTENDED_RESTRICTION : IDfPermit.DF_EXTENDED_PERMIT);
-					for (String v : DfUtils.decodeExtendedPermission(acl.getRepeatingInt(IDfACL.ACCESSOR_XPERMIT, i))) {
+					for (String v : DfcUtils.decodeExtendedPermission(acl.getRepeatingInt(IDfACL.ACCESSOR_XPERMIT, i))) {
 						IDfPermit result = new DfPermit();
 						result.setAccessorName(accessor);
 						result.setPermitType(type);
@@ -710,11 +710,11 @@ public class DfUtils {
 	}
 
 	public static String getDocbasePrefix(IDfSession session) throws DfException {
-		return DfUtils.getDocbasePrefix(session.getDocbaseId());
+		return DfcUtils.getDocbasePrefix(session.getDocbaseId());
 	}
 
 	public static String getDocbasePrefix(String docbaseId) {
-		return DfUtils.getDocbasePrefix(Long.parseLong(docbaseId));
+		return DfcUtils.getDocbasePrefix(Long.parseLong(docbaseId));
 	}
 
 	public static String getDocbasePrefix(long docbaseId) {
@@ -722,19 +722,19 @@ public class DfUtils {
 	}
 
 	public static String decodeDataTicket(long dataTicket) {
-		return DfUtils.decodeDataTicketImpl(null, dataTicket, null);
+		return DfcUtils.decodeDataTicketImpl(null, dataTicket, null);
 	}
 
 	public static String decodeDataTicket(long dataTicket, char sep) {
-		return DfUtils.decodeDataTicketImpl(null, dataTicket, sep);
+		return DfcUtils.decodeDataTicketImpl(null, dataTicket, sep);
 	}
 
 	public static String decodeDataTicket(String prefix, long dataTicket) {
-		return DfUtils.decodeDataTicketImpl(prefix, dataTicket, null);
+		return DfcUtils.decodeDataTicketImpl(prefix, dataTicket, null);
 	}
 
 	public static String decodeDataTicket(String prefix, long dataTicket, char sep) {
-		return DfUtils.decodeDataTicketImpl(prefix, dataTicket, sep);
+		return DfcUtils.decodeDataTicketImpl(prefix, dataTicket, sep);
 	}
 
 	private static String decodeDataTicketImpl(String prefix, long dataTicket, Character sep) {

@@ -16,8 +16,8 @@ import com.armedia.caliente.engine.dfc.common.DctmCmisACLTools;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.tools.dfc.DctmQuery;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
@@ -59,12 +59,12 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 		CmfProperty<IDfValue> property = null;
 
 		property = new CmfProperty<>(DctmACL.DOCUMENTUM_MARKER, DctmDataType.DF_BOOLEAN.getStoredType(), false);
-		property.setValue(DfValueFactory.newBooleanValue(true));
+		property.setValue(DfValueFactory.of(true));
 		properties.add(property);
 
 		final String aclId = acl.getObjectId().getId();
-		try (DctmQuery query = new DctmQuery(ctx.getSession(),
-			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), DctmQuery.Type.DF_EXECREAD_QUERY)) {
+		try (DfcQuery query = new DfcQuery(ctx.getSession(),
+			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), DfcQuery.Type.DF_EXECREAD_QUERY)) {
 			CmfProperty<IDfValue> p = new CmfProperty<>(IntermediateProperty.USERS_WITH_DEFAULT_ACL,
 				DctmDataType.DF_STRING.getStoredType());
 			query.forEachRemaining((o) -> p.addValue(o.getValueAt(0)));
@@ -81,7 +81,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			DctmDataType.DF_STRING.getStoredType(), true);
 		final IDfSession session = ctx.getSession();
 		Set<String> missingAccessors = new HashSet<>();
-		for (IDfPermit p : DfUtils.getPermissionsWithFallback(session, acl)) {
+		for (IDfPermit p : DfcUtils.getPermissionsWithFallback(session, acl)) {
 			// First, validate the accessor
 			final String accessor = p.getAccessorName();
 			final boolean group;
@@ -120,10 +120,10 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 				}
 			}
 
-			accessors.addValue(DfValueFactory.newStringValue(DctmMappingUtils.substituteMappableUsers(acl, accessor)));
-			accessorTypes.addValue(DfValueFactory.newStringValue(accessorType));
-			permitTypes.addValue(DfValueFactory.newIntValue(p.getPermitType()));
-			permitValues.addValue(DfValueFactory.newStringValue(p.getPermitValueString()));
+			accessors.addValue(DfValueFactory.of(DctmMappingUtils.substituteMappableUsers(acl, accessor)));
+			accessorTypes.addValue(DfValueFactory.of(accessorType));
+			permitTypes.addValue(DfValueFactory.of(p.getPermitType()));
+			permitValues.addValue(DfValueFactory.of(p.getPermitValueString()));
 		}
 		properties.add(accessors);
 		properties.add(accessorTypes);

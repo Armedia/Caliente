@@ -12,7 +12,7 @@ import com.armedia.caliente.engine.dfc.DctmMappingUtils;
 import com.armedia.caliente.engine.dfc.common.DctmFolder;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.tools.dfc.DctmQuery;
+import com.armedia.caliente.tools.dfc.DfcQuery;
 import com.armedia.commons.utilities.FileNameTools;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -76,9 +76,9 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		super.getDataProperties(ctx, properties, folder);
 		final String folderId = folder.getObjectId().getId();
 
-		try (DctmQuery query = new DctmQuery(ctx.getSession(),
+		try (DfcQuery query = new DfcQuery(ctx.getSession(),
 			String.format(DctmExportFolder.DQL_FIND_USERS_WITH_DEFAULT_FOLDER, folderId),
-			DctmQuery.Type.DF_EXECREAD_QUERY)) {
+			DfcQuery.Type.DF_EXECREAD_QUERY)) {
 			CmfProperty<IDfValue> usersWithDefaultFolder = new CmfProperty<>(
 				IntermediateProperty.USERS_WITH_DEFAULT_FOLDER, DctmDataType.DF_STRING.getStoredType());
 			CmfProperty<IDfValue> usersDefaultFolderPaths = new CmfProperty<>(
@@ -98,9 +98,9 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 			properties.add(usersDefaultFolderPaths);
 		}
 
-		try (DctmQuery query = new DctmQuery(ctx.getSession(),
+		try (DfcQuery query = new DfcQuery(ctx.getSession(),
 			String.format(DctmExportFolder.DQL_FIND_GROUPS_WITH_DEFAULT_FOLDER, folderId),
-			DctmQuery.Type.DF_EXECREAD_QUERY)) {
+			DfcQuery.Type.DF_EXECREAD_QUERY)) {
 			CmfProperty<IDfValue> groupsWithDefaultFolder = new CmfProperty<>(
 				IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER, DctmDataType.DF_STRING.getStoredType());
 			query.forEachRemaining((resultCol) -> {

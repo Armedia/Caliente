@@ -6,7 +6,7 @@ package com.armedia.caliente.tools.dfc;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class DctmConstant {
+public class DfcConstant {
 
 	/** The string value that is stored in user type attribute for inline users. */
 	public static final String USER_SOURCE_INLINE_PASSWORD = "inline password";

@@ -20,7 +20,7 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
-import com.armedia.caliente.tools.dfc.DctmCrypto;
+import com.armedia.caliente.tools.dfc.DfcCrypto;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.PooledWorkers;
@@ -66,7 +66,7 @@ public class DctmTicketDecoder {
 
 		final DfcSessionPool pool;
 		try {
-			pool = new DfcSessionPool(docbase, user, new DctmCrypto().decrypt(password));
+			pool = new DfcSessionPool(docbase, user, new DfcCrypto().decrypt(password));
 		} catch (DfException e) {
 			this.log.error("Failed to create the DFC session pool", e);
 			return 1;

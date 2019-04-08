@@ -9,8 +9,8 @@ import java.util.TreeSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.tools.dfc.DctmQuery;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -214,8 +214,8 @@ public class EventRegistration implements Comparable<EventRegistration> {
 			user = session.getLoginUserName();
 		}
 		String dql = "select count(*) as counter from dmi_registry where registered_id = %s and user_name = %s";
-		dql = String.format(dql, DfUtils.quoteString(object.getObjectId().getId()), DfUtils.quoteString(user));
-		try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_EXECREAD_QUERY)) {
+		dql = String.format(dql, DfcUtils.quoteString(object.getObjectId().getId()), DfcUtils.quoteString(user));
+		try (DfcQuery query = new DfcQuery(session, dql, DfcQuery.Type.DF_EXECREAD_QUERY)) {
 			if (!query.hasNext()) {
 				// This should be impossible, but still cover for it...
 				throw new DfException("DQL Query somehow returned no results, even though it's a count(*) query");
@@ -264,9 +264,9 @@ public class EventRegistration implements Comparable<EventRegistration> {
 			user = session.getLoginUserName();
 		}
 		String dql = "select r_object_id from dmi_registry where registered_id = %s and event = %s and user_name = %s";
-		dql = String.format(dql, DfUtils.quoteString(object.getObjectId().getId()), DfUtils.quoteString(event),
-			DfUtils.quoteString(user));
-		try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_EXECREAD_QUERY)) {
+		dql = String.format(dql, DfcUtils.quoteString(object.getObjectId().getId()), DfcUtils.quoteString(event),
+			DfcUtils.quoteString(user));
+		try (DfcQuery query = new DfcQuery(session, dql, DfcQuery.Type.DF_EXECREAD_QUERY)) {
 			return query.hasNext();
 		}
 	}
@@ -335,9 +335,9 @@ public class EventRegistration implements Comparable<EventRegistration> {
 			user = session.getLoginUserName();
 		}
 		String dql = "select * from dmi_registry where registered_id = %s and user_name = %s order by event";
-		dql = String.format(dql, DfUtils.quoteString(object.getObjectId().getId()), DfUtils.quoteString(user));
+		dql = String.format(dql, DfcUtils.quoteString(object.getObjectId().getId()), DfcUtils.quoteString(user));
 		Set<EventRegistration> ret = new TreeSet<>();
-		DctmQuery.run(session, dql, DctmQuery.Type.DF_EXECREAD_QUERY,
+		DfcQuery.run(session, dql, DfcQuery.Type.DF_EXECREAD_QUERY,
 			(o) -> ret.add(EventRegistration.loadRegistration(o)));
 		return ret;
 	}
@@ -362,8 +362,8 @@ public class EventRegistration implements Comparable<EventRegistration> {
 		}
 		final IDfSession session = object.getSession();
 		String dql = "select event from dmi_registry where registered_id = %s order by user_name, event";
-		dql = String.format(dql, DfUtils.quoteString(object.getObjectId().getId()));
-		try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_EXECREAD_QUERY)) {
+		dql = String.format(dql, DfcUtils.quoteString(object.getObjectId().getId()));
+		try (DfcQuery query = new DfcQuery(session, dql, DfcQuery.Type.DF_EXECREAD_QUERY)) {
 			Map<String, Set<EventRegistration>> ret = new TreeMap<>();
 			String user = null;
 			Set<EventRegistration> s = null;

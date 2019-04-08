@@ -26,8 +26,8 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
-import com.armedia.caliente.tools.dfc.DctmQuery;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.DfObjectNotFoundException;
@@ -77,7 +77,7 @@ public class DctmExportEngine extends
 
 		// If it's a folder, we morph into a query-based recursion.
 		return findExportTargetsByQuery(session, configuration, factory,
-			String.format("dm_sysobject where folder(id(%s), DESCEND)", DfUtils.quoteString(id.getId())));
+			String.format("dm_sysobject where folder(id(%s), DESCEND)", DfcUtils.quoteString(id.getId())));
 	}
 
 	@Override
@@ -97,7 +97,7 @@ public class DctmExportEngine extends
 
 		// If it's a folder, we morph into a query-based recursion.
 		return findExportTargetsByQuery(session, configuration, factory,
-			String.format("dm_sysobject where folder(id(%s), DESCEND)", DfUtils.quoteString(id.getId())));
+			String.format("dm_sysobject where folder(id(%s), DESCEND)", DfcUtils.quoteString(id.getId())));
 	}
 
 	@Override
@@ -113,8 +113,8 @@ public class DctmExportEngine extends
 		final int batchSize = configuration.getInteger(Setting.EXPORT_BATCH_SIZE);
 
 		@SuppressWarnings("resource")
-		DctmQuery dctmQuery = new DctmQuery(session, query, DctmQuery.Type.DF_EXECREAD_QUERY, batchSize);
-		return dctmQuery.stream().map(this::getExportTarget);
+		DfcQuery dfcQuery = new DfcQuery(session, query, DfcQuery.Type.DF_EXECREAD_QUERY, batchSize);
+		return dfcQuery.stream().map(this::getExportTarget);
 	}
 
 	private ExportTarget getExportTarget(IDfTypedObject t) {
@@ -150,6 +150,6 @@ public class DctmExportEngine extends
 
 	@Override
 	protected IDfValue getValue(CmfValue.Type type, Object value) {
-		return DfValueFactory.newValue(DctmTranslator.translateType(type).getDfConstant(), value);
+		return DfValueFactory.of(DctmTranslator.translateType(type).getDfConstant(), value);
 	}
 }

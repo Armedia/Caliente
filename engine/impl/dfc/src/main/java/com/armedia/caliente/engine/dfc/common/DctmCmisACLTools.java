@@ -25,7 +25,7 @@ import com.armedia.caliente.engine.tools.AclTools;
 import com.armedia.caliente.engine.tools.AclTools.AccessorType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
@@ -99,7 +99,7 @@ public class DctmCmisACLTools implements DctmACL {
 		public final Set<String> actions;
 
 		private PermitToAction(int permit, String... actions) {
-			DfUtils.decodeAccessPermission(permit);
+			DfcUtils.decodeAccessPermission(permit);
 			this.permit = permit;
 			Set<String> a = new HashSet<>();
 			for (String s : actions) {
@@ -274,7 +274,7 @@ public class DctmCmisACLTools implements DctmACL {
 			DfPermit permit = new DfPermit();
 			permit.setAccessorName(accessorName);
 			permit.setPermitType(IDfPermit.DF_ACCESS_PERMIT);
-			permit.setPermitValue(DfUtils.decodeAccessPermission(perm));
+			permit.setPermitValue(DfcUtils.decodeAccessPermission(perm));
 			ret.add(permit);
 
 			for (String x : extended) {
@@ -324,7 +324,7 @@ public class DctmCmisACLTools implements DctmACL {
 			}
 
 			// Set the actor name property
-			accessors.addValue(DfValueFactory.newStringValue(accessorName));
+			accessors.addValue(DfValueFactory.of(accessorName));
 			final AccessorType type;
 			if (group) {
 				IDfGroup g = IDfGroup.class.cast(o);
@@ -336,12 +336,12 @@ public class DctmCmisACLTools implements DctmACL {
 			} else {
 				type = AccessorType.USER;
 			}
-			accessorTypes.addValue(DfValueFactory.newStringValue(type.name()));
+			accessorTypes.addValue(DfValueFactory.of(type.name()));
 
 			// Comma-concatenate the actions into the actions property
 			Set<String> actions = DctmCmisACLTools.calculateActionsForPermissions(accessorPermit, extendedPermits);
 			String allActions = AclTools.encode(actions);
-			accessorActions.addValue(DfValueFactory.newStringValue(allActions));
+			accessorActions.addValue(DfValueFactory.of(allActions));
 		}
 
 		properties.add(accessors);

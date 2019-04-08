@@ -80,7 +80,7 @@ public class DctmImportEngine extends
 
 	@Override
 	protected IDfValue getValue(CmfValue.Type type, Object value) {
-		return DfValueFactory.newValue(DctmTranslator.translateType(type).getDfConstant(), value);
+		return DfValueFactory.of(DctmTranslator.translateType(type).getDfConstant(), value);
 	}
 
 	@Override

@@ -20,8 +20,8 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
-import com.armedia.caliente.tools.dfc.DctmCrypto;
-import com.armedia.caliente.tools.dfc.DctmQuery;
+import com.armedia.caliente.tools.dfc.DfcCrypto;
+import com.armedia.caliente.tools.dfc.DfcQuery;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfLocalTransaction;
@@ -211,7 +211,7 @@ class FilenameMapper {
 
 		final DfcSessionPool dfcPool;
 		try {
-			dfcPool = new DfcSessionPool(docbase, dctmUser, new DctmCrypto().decrypt(dctmPass));
+			dfcPool = new DfcSessionPool(docbase, dctmUser, new DfcCrypto().decrypt(dctmPass));
 		} catch (DfException e) {
 			this.log.error("Failed to open the session pool to docbase [{}] as [{}]", docbase, dctmUser, e);
 			return 1;
@@ -235,7 +235,7 @@ class FilenameMapper {
 					}
 
 					this.log.info("Executing the main query");
-					try (DctmQuery query = new DctmQuery(session, FilenameMapper.ALL_DQL)) {
+					try (DfcQuery query = new DfcQuery(session, FilenameMapper.ALL_DQL)) {
 						long count = 0;
 						final long start = System.currentTimeMillis();
 						this.log.info("Query ready, iterating over the results");

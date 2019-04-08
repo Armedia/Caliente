@@ -65,7 +65,7 @@ public class DctmAttributeHandlers {
 		 * @throws DfException
 		 */
 		public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr) throws DfException {
-			return DfValueFactory.getAllRepeatingValues(attr, object);
+			return DfValueFactory.getAllValues(attr, object);
 		}
 
 		/**

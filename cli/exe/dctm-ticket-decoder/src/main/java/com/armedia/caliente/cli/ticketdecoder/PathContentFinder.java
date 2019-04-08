@@ -4,7 +4,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -31,6 +31,6 @@ public class PathContentFinder extends PredicateContentFinder {
 
 		// If it's a folder, we morph into a query-based recursion.
 		return super.getIds(session,
-			String.format("dm_sysobject where folder(id(%s), DESCEND)", DfUtils.quoteString(id.getId())));
+			String.format("dm_sysobject where folder(id(%s), DESCEND)", DfcUtils.quoteString(id.getId())));
 	}
 }

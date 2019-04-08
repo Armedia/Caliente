@@ -3,7 +3,7 @@ package com.armedia.caliente.tools.dfc;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.documentum.fc.impl.util.RegistryPasswordUtils;
 
-public class DctmCrypto extends CmfCrypt {
+public class DfcCrypto extends CmfCrypt {
 
 	private static final Scheme DFC_SCHEME = new Scheme() {
 
@@ -24,7 +24,7 @@ public class DctmCrypto extends CmfCrypt {
 
 	};
 
-	public DctmCrypto() {
-		super(DctmCrypto.DFC_SCHEME, CmfCrypt.DEFAULT_SCHEME);
+	public DfcCrypto() {
+		super(DfcCrypto.DFC_SCHEME, CmfCrypt.DEFAULT_SCHEME);
 	}
 }

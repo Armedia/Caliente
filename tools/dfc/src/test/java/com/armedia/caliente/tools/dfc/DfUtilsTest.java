@@ -14,7 +14,7 @@ import org.easymock.EasyMock;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfSession;
@@ -32,22 +32,22 @@ public class DfUtilsTest {
 		// First, try short-circuits
 		session = EasyMock.createMock(IDfSession.class);
 		EasyMock.replay(session);
-		ret = DfUtils.runRetryable(session, false, null, null);
+		ret = DfcUtils.runRetryable(session, false, null, null);
 		EasyMock.verify(session);
 
 		session = EasyMock.createMock(IDfSession.class);
 		EasyMock.replay(session);
-		ret = DfUtils.runRetryable(session, true, null, null);
+		ret = DfcUtils.runRetryable(session, true, null, null);
 		EasyMock.verify(session);
 
 		try {
-			ret = DfUtils.runRetryable(null, false, (s) -> {
+			ret = DfcUtils.runRetryable(null, false, (s) -> {
 			}, null);
 			Assertions.fail("Did not fail with a null session");
 		} catch (NullPointerException e) {
 		}
 		try {
-			ret = DfUtils.runRetryable(null, true, (s) -> {
+			ret = DfcUtils.runRetryable(null, true, (s) -> {
 			}, null);
 			Assertions.fail("Did not fail with a null session");
 		} catch (NullPointerException e) {
@@ -59,7 +59,7 @@ public class DfUtilsTest {
 		EasyMock.replay(session);
 		opCalled.set(false);
 		// Do nothing, no errors
-		ret = DfUtils.runRetryable(session, false, (s) -> opCalled.set(true), null);
+		ret = DfcUtils.runRetryable(session, false, (s) -> opCalled.set(true), null);
 		Assertions.assertNull(ret);
 		Assertions.assertTrue(opCalled.get());
 		EasyMock.verify(session);
@@ -74,7 +74,7 @@ public class DfUtilsTest {
 		EasyMock.replay(session);
 		opCalled.set(false);
 		// Do nothing, no errors
-		ret = DfUtils.runRetryable(session, true, (s) -> opCalled.set(true), null);
+		ret = DfcUtils.runRetryable(session, true, (s) -> opCalled.set(true), null);
 		Assertions.assertNull(ret);
 		Assertions.assertTrue(opCalled.get());
 		EasyMock.verify(session);
@@ -88,7 +88,7 @@ public class DfUtilsTest {
 		EasyMock.replay(session);
 		opCalled.set(false);
 		// Do nothing, no errors
-		ret = DfUtils.runRetryable(session, false, (s) -> opCalled.set(true), null);
+		ret = DfcUtils.runRetryable(session, false, (s) -> opCalled.set(true), null);
 		Assertions.assertNull(ret);
 		Assertions.assertTrue(opCalled.get());
 		EasyMock.verify(session);
@@ -101,7 +101,7 @@ public class DfUtilsTest {
 		EasyMock.replay(session);
 		opCalled.set(false);
 		// Do nothing, no errors
-		ret = DfUtils.runRetryable(session, true, (s) -> opCalled.set(true), null);
+		ret = DfcUtils.runRetryable(session, true, (s) -> opCalled.set(true), null);
 		Assertions.assertNull(ret);
 		Assertions.assertTrue(opCalled.get());
 		EasyMock.verify(session);
@@ -120,7 +120,7 @@ public class DfUtilsTest {
 		EasyMock.expect(session.isTransactionActive()).andReturn(false);
 		EasyMock.replay(session);
 		opCalled.set(false);
-		ret = DfUtils.runRetryable(session, false, (s) -> {
+		ret = DfcUtils.runRetryable(session, false, (s) -> {
 			// Do nothing, no errors
 			opCalled.set(true);
 			throw expected;
@@ -139,7 +139,7 @@ public class DfUtilsTest {
 		EasyMock.expectLastCall().once();
 		EasyMock.replay(session);
 		opCalled.set(false);
-		ret = DfUtils.runRetryable(session, true, (s) -> {
+		ret = DfcUtils.runRetryable(session, true, (s) -> {
 			// Do nothing, no errors
 			opCalled.set(true);
 			throw expected;
@@ -157,7 +157,7 @@ public class DfUtilsTest {
 		EasyMock.expectLastCall().once();
 		EasyMock.replay(session);
 		opCalled.set(false);
-		ret = DfUtils.runRetryable(session, false, (s) -> {
+		ret = DfcUtils.runRetryable(session, false, (s) -> {
 			// Do nothing, no errors
 			opCalled.set(true);
 			throw expected;
@@ -174,7 +174,7 @@ public class DfUtilsTest {
 		EasyMock.expectLastCall().once();
 		EasyMock.replay(session);
 		opCalled.set(false);
-		ret = DfUtils.runRetryable(session, true, (s) -> {
+		ret = DfcUtils.runRetryable(session, true, (s) -> {
 			// Do nothing, no errors
 			opCalled.set(true);
 			throw expected;
@@ -198,7 +198,7 @@ public class DfUtilsTest {
 		EasyMock.replay(session);
 		opCalled.set(false);
 		try {
-			DfUtils.runRetryable(session, false, (s) -> {
+			DfcUtils.runRetryable(session, false, (s) -> {
 				// Do nothing, no errors
 				opCalled.set(true);
 				throw new DfException();
@@ -217,7 +217,7 @@ public class DfUtilsTest {
 		EasyMock.replay(session);
 		opCalled.set(false);
 		try {
-			DfUtils.runRetryable(session, true, (s) -> {
+			DfcUtils.runRetryable(session, true, (s) -> {
 				// Do nothing, no errors
 				opCalled.set(true);
 				throw new DfException();
@@ -237,7 +237,7 @@ public class DfUtilsTest {
 		EasyMock.replay(session);
 		opCalled.set(false);
 		try {
-			DfUtils.runRetryable(session, true, (s) -> {
+			DfcUtils.runRetryable(session, true, (s) -> {
 				// Do nothing, no errors
 				opCalled.set(true);
 				throw new DfException();
@@ -258,7 +258,7 @@ public class DfUtilsTest {
 		EasyMock.replay(session);
 		opCalled.set(false);
 		try {
-			DfUtils.runRetryable(session, true, (s) -> {
+			DfcUtils.runRetryable(session, true, (s) -> {
 				// Do nothing, no errors
 				opCalled.set(true);
 				throw new DfException();
@@ -277,7 +277,7 @@ public class DfUtilsTest {
 		EasyMock.replay(session);
 		opCalled.set(false);
 		try {
-			DfUtils.runRetryable(session, false, (s) -> {
+			DfcUtils.runRetryable(session, false, (s) -> {
 				// Do nothing, no errors
 				opCalled.set(true);
 				throw new DfException();
@@ -297,7 +297,7 @@ public class DfUtilsTest {
 		EasyMock.replay(session);
 		opCalled.set(false);
 		try {
-			DfUtils.runRetryable(session, true, (s) -> {
+			DfcUtils.runRetryable(session, true, (s) -> {
 				// Do nothing, no errors
 				opCalled.set(true);
 				throw new DfException();
@@ -326,7 +326,7 @@ public class DfUtilsTest {
 		EasyMock.expect(session.isTransactionActive()).andReturn(false).once();
 		EasyMock.replay(session);
 		opCalled.set(false);
-		ret = DfUtils.runRetryable(session, false, (s) -> {
+		ret = DfcUtils.runRetryable(session, false, (s) -> {
 			// Do nothing, no errors
 			opCalled.set(true);
 			throw expected;
@@ -340,7 +340,7 @@ public class DfUtilsTest {
 		EasyMock.replay(session);
 		opCalled.set(false);
 		try {
-			ret = DfUtils.runRetryable(session, false, (s) -> {
+			ret = DfcUtils.runRetryable(session, false, (s) -> {
 				// Do nothing, no errors
 				opCalled.set(true);
 				throw new DfException();
@@ -361,7 +361,7 @@ public class DfUtilsTest {
 		EasyMock.expectLastCall().once();
 		EasyMock.replay(session);
 		opCalled.set(false);
-		ret = DfUtils.runRetryable(session, false, (s) -> {
+		ret = DfcUtils.runRetryable(session, false, (s) -> {
 			// Do nothing, no errors
 			opCalled.set(true);
 			throw expected;
@@ -378,7 +378,7 @@ public class DfUtilsTest {
 		EasyMock.replay(session);
 		opCalled.set(false);
 		try {
-			ret = DfUtils.runRetryable(session, false, (s) -> {
+			ret = DfcUtils.runRetryable(session, false, (s) -> {
 				// Do nothing, no errors
 				opCalled.set(true);
 				throw new DfException();
@@ -894,8 +894,8 @@ public class DfUtilsTest {
 
 			int expectedInt = p.getRight();
 
-			Set<String> actualSet = new TreeSet<>(DfUtils.decodeExtendedPermission(expectedInt));
-			int actualInt = DfUtils.decodeExtendedPermission(expectedSet);
+			Set<String> actualSet = new TreeSet<>(DfcUtils.decodeExtendedPermission(expectedInt));
+			int actualInt = DfcUtils.decodeExtendedPermission(expectedSet);
 			Assertions.assertEquals(expectedSet, actualSet,
 				String.format("Failed testing %s (%s)", expectedSet, Integer.toBinaryString(expectedInt)));
 			Assertions.assertEquals(expectedInt, actualInt, String.format("Failed testing %s (%s vs. %s)", expectedSet,
@@ -931,7 +931,7 @@ public class DfUtilsTest {
 
 			int expectedInt = p.getRight();
 
-			Set<String> actualSet = new TreeSet<>(DfUtils.decodeExtendedPermission(expectedInt));
+			Set<String> actualSet = new TreeSet<>(DfcUtils.decodeExtendedPermission(expectedInt));
 			Assertions.assertEquals(expectedSet, actualSet,
 				String.format("Failed testing %s (%s)", expectedSet, Integer.toBinaryString(expectedInt)));
 		});

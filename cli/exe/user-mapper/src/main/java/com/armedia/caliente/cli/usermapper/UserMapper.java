@@ -40,8 +40,8 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.utils.CliValuePrompt;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.tools.CmfCrypt;
-import com.armedia.caliente.tools.dfc.DctmCrypto;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcCrypto;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
@@ -261,7 +261,7 @@ public class UserMapper {
 							users.add(Tools.coalesce(userMappings.getProperty(n), n));
 						}
 					} finally {
-						DfUtils.closeQuietly(c);
+						DfcUtils.closeQuietly(c);
 					}
 					v = StringUtils.join(users, '|');
 				} else if (v == UserMapper.GROUP_MEMBERS) {
@@ -274,7 +274,7 @@ public class UserMapper {
 							groups.add(convertGroupName(groupMappings, n));
 						}
 					} finally {
-						DfUtils.closeQuietly(c);
+						DfcUtils.closeQuietly(c);
 					}
 					v = StringUtils.join(groups, '|');
 				} else {
@@ -479,7 +479,7 @@ public class UserMapper {
 			final String dctmPass = this.dfcLaunchHelper.getDfcPassword(cli);
 
 			try {
-				dfcPool = new DfcSessionPool(docbase, dctmUser, new DctmCrypto().decrypt(dctmPass));
+				dfcPool = new DfcSessionPool(docbase, dctmUser, new DfcCrypto().decrypt(dctmPass));
 			} catch (DfException e) {
 				UserMapper.log.error("Failed to open the session pool to docbase [{}] as [{}]", docbase, dctmUser, e);
 				return 1;

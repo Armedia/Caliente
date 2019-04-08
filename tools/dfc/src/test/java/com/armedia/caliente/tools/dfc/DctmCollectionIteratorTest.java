@@ -9,7 +9,7 @@ import org.easymock.EasyMock;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.armedia.caliente.tools.dfc.DctmCollectionIterator;
+import com.armedia.caliente.tools.dfc.DfcCollectionIterator;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
@@ -29,7 +29,7 @@ public class DctmCollectionIteratorTest {
 		EasyMock.expectLastCall().once();
 		EasyMock.replay(c);
 
-		try (DctmCollectionIterator it = new DctmCollectionIterator(c)) {
+		try (DfcCollectionIterator it = new DfcCollectionIterator(c)) {
 			Assertions.assertFalse(it.hasNext());
 			Assertions.assertThrows(NoSuchElementException.class, () -> it.next());
 		}
@@ -50,7 +50,7 @@ public class DctmCollectionIteratorTest {
 		EasyMock.expectLastCall().once();
 		EasyMock.replay(c);
 
-		try (DctmCollectionIterator it = new DctmCollectionIterator(c)) {
+		try (DfcCollectionIterator it = new DfcCollectionIterator(c)) {
 			int p = 0;
 			while (it.hasNext()) {
 				IDfTypedObject a = l.get(p++);
@@ -70,7 +70,7 @@ public class DctmCollectionIteratorTest {
 		EasyMock.expectLastCall().once();
 		EasyMock.replay(c);
 
-		try (DctmCollectionIterator it = new DctmCollectionIterator(c)) {
+		try (DfcCollectionIterator it = new DfcCollectionIterator(c)) {
 			try {
 				it.hasNext();
 				Assertions.fail("Did not fail with a cascaded exception");
@@ -89,7 +89,7 @@ public class DctmCollectionIteratorTest {
 		EasyMock.expectLastCall().once();
 		EasyMock.replay(c);
 
-		try (DctmCollectionIterator it = new DctmCollectionIterator(c)) {
+		try (DfcCollectionIterator it = new DfcCollectionIterator(c)) {
 			try {
 				it.hasNext();
 				Assertions.fail("Did not fail with a cascaded exception");
@@ -119,7 +119,7 @@ public class DctmCollectionIteratorTest {
 		EasyMock.expectLastCall().once();
 		EasyMock.replay(c);
 
-		try (DctmCollectionIterator it = new DctmCollectionIterator(c)) {
+		try (DfcCollectionIterator it = new DfcCollectionIterator(c)) {
 			int i = 0;
 			while (it.hasNext()) {
 				IDfTypedObject a = l.get(i++);

@@ -10,11 +10,11 @@ import org.apache.commons.text.StringTokenizer;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, Cloneable {
+public final class DfcVersionNumber implements Comparable<DfcVersionNumber>, Cloneable {
 
-	public static final Comparator<DctmVersionNumber> ASCENDING = new Comparator<DctmVersionNumber>() {
+	public static final Comparator<DfcVersionNumber> ASCENDING = new Comparator<DfcVersionNumber>() {
 		@Override
-		public int compare(DctmVersionNumber a, DctmVersionNumber b) {
+		public int compare(DfcVersionNumber a, DfcVersionNumber b) {
 			if (a == b) { return 0; }
 			if (a == null) { return -1; }
 			if (b == null) { return 1; }
@@ -42,10 +42,10 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 		}
 	};
 
-	public static final Comparator<DctmVersionNumber> DESCENDING = new Comparator<DctmVersionNumber>() {
+	public static final Comparator<DfcVersionNumber> DESCENDING = new Comparator<DfcVersionNumber>() {
 		@Override
-		public int compare(DctmVersionNumber a, DctmVersionNumber b) {
-			return -DctmVersionNumber.ASCENDING.compare(a, b);
+		public int compare(DfcVersionNumber a, DfcVersionNumber b) {
+			return -DfcVersionNumber.ASCENDING.compare(a, b);
 		}
 	};
 
@@ -65,13 +65,13 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 	private final int[] numbers;
 	private final int length;
 
-	private DctmVersionNumber(int[] numbers, int length) {
+	private DfcVersionNumber(int[] numbers, int length) {
 		this.numbers = numbers;
 		this.length = length;
-		this.string = DctmVersionNumber.toString(numbers, length);
+		this.string = DfcVersionNumber.toString(numbers, length);
 	}
 
-	public DctmVersionNumber(String version) {
+	public DfcVersionNumber(String version) {
 		if (StringUtils.isBlank(version)) { throw new IllegalArgumentException("Illegal blank version label"); }
 		StringTokenizer tok = new StringTokenizer(version, '.');
 		List<String> l = tok.getTokenList();
@@ -104,7 +104,7 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 	}
 
 	public String toString(int components) {
-		return DctmVersionNumber.toString(this.numbers, components);
+		return DfcVersionNumber.toString(this.numbers, components);
 	}
 
 	@Override
@@ -117,12 +117,12 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		DctmVersionNumber other = DctmVersionNumber.class.cast(obj);
+		DfcVersionNumber other = DfcVersionNumber.class.cast(obj);
 		if (getComponentCount() != other.getComponentCount()) { return false; }
 		return equals(other, 0);
 	}
 
-	public boolean equals(DctmVersionNumber other, int depth) {
+	public boolean equals(DfcVersionNumber other, int depth) {
 		if (depth < 0) { throw new IllegalArgumentException("Must provide a positive depth"); }
 		if (other == this) { return true; }
 		final int thisLength = getComponentCount();
@@ -149,35 +149,35 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 		return true;
 	}
 
-	public DctmVersionNumber getSubset(int components) {
+	public DfcVersionNumber getSubset(int components) {
 		if (components < 1) { throw new IllegalArgumentException("Must contain at least one version component"); }
 		if (components >= getComponentCount()) { return this; }
-		return new DctmVersionNumber(this.numbers, components);
+		return new DfcVersionNumber(this.numbers, components);
 	}
 
 	@Override
-	public DctmVersionNumber clone() {
+	public DfcVersionNumber clone() {
 		try {
-			return DctmVersionNumber.class.cast(super.clone());
+			return DfcVersionNumber.class.cast(super.clone());
 		} catch (CloneNotSupportedException e) {
 			// This should be impossible
 			throw new RuntimeException("Cloning operation failed", e);
 		}
 	}
 
-	private boolean isSameBranch(DctmVersionNumber other) {
+	private boolean isSameBranch(DfcVersionNumber other) {
 		final int length = getComponentCount();
 		if (length != other.getComponentCount()) { return false; }
 		return this.equals(other, length - 1);
 	}
 
-	public boolean isSibling(DctmVersionNumber other) {
+	public boolean isSibling(DfcVersionNumber other) {
 		final int length = getComponentCount();
 		if (length != other.getComponentCount()) { return false; }
 		return this.equals(other, length - 1) && (getComponent(length - 1) != other.getComponent(length - 1));
 	}
 
-	public boolean isSuccessorOf(DctmVersionNumber other) {
+	public boolean isSuccessorOf(DfcVersionNumber other) {
 		if (other == null) {
 			throw new IllegalArgumentException("Must provide another version number to check against");
 		}
@@ -194,7 +194,7 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 		}
 	}
 
-	public boolean isAntecedentOf(DctmVersionNumber other) {
+	public boolean isAntecedentOf(DfcVersionNumber other) {
 		if (other == null) {
 			throw new IllegalArgumentException("Must provide another version number to check against");
 		}
@@ -211,7 +211,7 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 		}
 	}
 
-	public boolean isAncestorOf(DctmVersionNumber other) {
+	public boolean isAncestorOf(DfcVersionNumber other) {
 		if (other == null) {
 			throw new IllegalArgumentException("Must provide another version number to check against");
 		}
@@ -220,7 +220,7 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 		return equals(other, len);
 	}
 
-	public boolean isDescendantOf(DctmVersionNumber other) {
+	public boolean isDescendantOf(DfcVersionNumber other) {
 		if (other == null) {
 			throw new IllegalArgumentException("Must provide another version number to check against");
 		}
@@ -229,7 +229,7 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 		return equals(other, len);
 	}
 
-	public int getDepthInCommon(DctmVersionNumber other) {
+	public int getDepthInCommon(DfcVersionNumber other) {
 		if (other == null) {
 			throw new IllegalArgumentException("Must provide another version number to check against");
 		}
@@ -242,11 +242,11 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 		return length;
 	}
 
-	public DctmVersionNumber getAntecedent() {
+	public DfcVersionNumber getAntecedent() {
 		return getAntecedent(false);
 	}
 
-	public DctmVersionNumber getAntecedent(final boolean includeBranchSibling) {
+	public DfcVersionNumber getAntecedent(final boolean includeBranchSibling) {
 		// At the root?
 		final int len = getComponentCount();
 		if (len <= 2) { return null; }
@@ -269,16 +269,16 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 		int[] num = new int[len];
 		System.arraycopy(this.numbers, 0, num, 0, len);
 		num[len - 1 - off] = lastC - 1;
-		return new DctmVersionNumber(num, len);
+		return new DfcVersionNumber(num, len);
 	}
 
-	public Set<DctmVersionNumber> getAllAntecedents() {
+	public Set<DfcVersionNumber> getAllAntecedents() {
 		return getAllAntecedents(false);
 	}
 
-	public Set<DctmVersionNumber> getAllAntecedents(final boolean includeBranchSibling) {
-		Set<DctmVersionNumber> s = new TreeSet<>();
-		DctmVersionNumber vn = this;
+	public Set<DfcVersionNumber> getAllAntecedents(final boolean includeBranchSibling) {
+		Set<DfcVersionNumber> s = new TreeSet<>();
+		DfcVersionNumber vn = this;
 		while (vn != null) {
 			vn = vn.getAntecedent(includeBranchSibling);
 			if (vn != null) {
@@ -289,7 +289,7 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 	}
 
 	@Override
-	public int compareTo(DctmVersionNumber o) {
-		return DctmVersionNumber.ASCENDING.compare(this, o);
+	public int compareTo(DfcVersionNumber o) {
+		return DfcVersionNumber.ASCENDING.compare(this, o);
 	}
 }

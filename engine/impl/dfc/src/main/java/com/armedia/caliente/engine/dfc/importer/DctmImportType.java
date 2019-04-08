@@ -22,8 +22,8 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
-import com.armedia.caliente.tools.dfc.DctmQuery;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.IDfACL;
@@ -87,8 +87,8 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 		}
 
 		final String aclDql = String.format("ALTER TYPE %s SET DEFAULT ACL %s IN %s", type.getName(),
-			DfUtils.quoteString(acl.getObjectName()), DfUtils.quoteString(acl.getDomain()));
-		DctmQuery.run(session, aclDql);
+			DfcUtils.quoteString(acl.getObjectName()), DfcUtils.quoteString(acl.getDomain()));
+		DfcQuery.run(session, aclDql);
 	}
 
 	protected void setDefaultAspects(DctmImportContext ctx, IDfType type) throws DfException {
@@ -98,7 +98,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 		final IDfSession session = ctx.getSession();
 		for (IDfValue v : prop) {
 			IDfPersistentObject o = session.getObjectByQualification(
-				String.format("dmc_aspect_type where object_name = %s", DfUtils.quoteString(v.asString())));
+				String.format("dmc_aspect_type where object_name = %s", DfcUtils.quoteString(v.asString())));
 			if (o == null) {
 				this.log.warn(
 					"Type [{}] references non-existent aspect [{}] as a default aspect - can't replicate the setting because the aspect doesn't exist",
@@ -107,7 +107,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			}
 			final String aclDql = String.format("ALTER TYPE %s ADD DEFAULT ASPECT %s", type.getName(), v.asString());
 			// TODO: Should the aspect name be quoted? The docs don't say so...
-			DctmQuery.run(session, aclDql);
+			DfcQuery.run(session, aclDql);
 		}
 	}
 
@@ -118,7 +118,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 		final IDfSession session = ctx.getSession();
 
 		final String storeName = prop.getValue().asString();
-		IDfStore store = DfUtils.getStore(session, storeName);
+		IDfStore store = DfcUtils.getStore(session, storeName);
 		if (store == null) {
 			this.log.warn(
 				"Type [{}] references non-existent store [{}] as a default store - can't replicate the setting",
@@ -126,7 +126,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			return;
 		}
 		final String aclDql = String.format("ALTER TYPE %s SET DEFAULT STORAGE %s", type.getName(), store.getName());
-		DctmQuery.run(session, aclDql);
+		DfcQuery.run(session, aclDql);
 	}
 
 	@Override
@@ -212,7 +212,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			this.log.info("Creating new type [{}] with DQL:{}{}{}{}", typeName, Tools.NL, Tools.NL, dql, Tools.NL);
 		}
 
-		try (DctmQuery query = new DctmQuery(session, dql.toString(), DctmQuery.Type.DF_QUERY)) {
+		try (DfcQuery query = new DfcQuery(session, dql.toString(), DfcQuery.Type.DF_QUERY)) {
 			while (query.hasNext()) {
 				IDfType type = castObject(session.getObject(query.next().getId(DctmAttributes.NEW_OBJECT_ID)));
 				setDefaultACL(ctx, type);
@@ -252,8 +252,8 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 				DctmDataType dataType = DctmDataType.fromAttribute(att);
 				final String dec = dataType.getDeclaration(att);
 				try {
-					DctmQuery.run(session, String.format(template, typeName, att.getName(), dec),
-						DctmQuery.Type.DF_QUERY);
+					DfcQuery.run(session, String.format(template, typeName, att.getName(), dec),
+						DfcQuery.Type.DF_QUERY);
 				} catch (Exception e) {
 					ok = false;
 					errors.add(Pair.of(att, e));
@@ -322,8 +322,8 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 				DctmDataType dataType = DctmDataType.fromAttribute(srcAtt);
 				final String dec = dataType.getDeclaration(srcAtt);
 				try {
-					DctmQuery.run(session, String.format(template, typeName, srcAtt.getName(), dec),
-						DctmQuery.Type.DF_QUERY);
+					DfcQuery.run(session, String.format(template, typeName, srcAtt.getName(), dec),
+						DfcQuery.Type.DF_QUERY);
 					context.trackWarning(this.cmfObject, "Modified DM_TYPE [%s] attribute [%s] to match [%s]", typeName,
 						tgtAtt, srcAtt);
 				} catch (Exception ex) {

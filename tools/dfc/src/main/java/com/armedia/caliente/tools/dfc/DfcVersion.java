@@ -10,15 +10,15 @@ import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfTime;
 
-public final class DctmVersion<T extends IDfSysObject> implements Comparable<DctmVersion<T>> {
-	private final DctmVersionHistory<T> history;
+public final class DfcVersion<T extends IDfSysObject> implements Comparable<DfcVersion<T>> {
+	private final DfcVersionHistory<T> history;
 	private final IDfId id;
 	private final IDfId antecedentId;
 	private final IDfTime creationDate;
-	private final DctmVersionNumber versionNumber;
+	private final DfcVersionNumber versionNumber;
 	private final T object;
 
-	DctmVersion(DctmVersionHistory<T> history, DctmVersionNumber versionNumber, T object) throws DfException {
+	DfcVersion(DfcVersionHistory<T> history, DfcVersionNumber versionNumber, T object) throws DfException {
 		this.history = history;
 		this.versionNumber = versionNumber;
 		this.object = object;
@@ -27,7 +27,7 @@ public final class DctmVersion<T extends IDfSysObject> implements Comparable<Dct
 		this.antecedentId = object.getAntecedentId();
 	}
 
-	DctmVersion(DctmVersionHistory<T> history, DctmVersionNumber versionNumber, IDfId id, IDfTime creationDate,
+	DfcVersion(DfcVersionHistory<T> history, DfcVersionNumber versionNumber, IDfId id, IDfTime creationDate,
 		IDfId antecedentId) throws DfException {
 		this.history = history;
 		this.versionNumber = versionNumber;
@@ -37,7 +37,7 @@ public final class DctmVersion<T extends IDfSysObject> implements Comparable<Dct
 		this.antecedentId = antecedentId;
 	}
 
-	public DctmVersionHistory<T> getHistory() {
+	public DfcVersionHistory<T> getHistory() {
 		return this.history;
 	}
 
@@ -61,12 +61,12 @@ public final class DctmVersion<T extends IDfSysObject> implements Comparable<Dct
 		return this.creationDate;
 	}
 
-	public DctmVersionNumber getVersionNumber() {
+	public DfcVersionNumber getVersionNumber() {
 		return this.versionNumber;
 	}
 
 	@Override
-	public int compareTo(DctmVersion<T> o) {
+	public int compareTo(DfcVersion<T> o) {
 		if (o == null) { return 1; }
 		if (equals(o)) { return 0; }
 
@@ -97,7 +97,7 @@ public final class DctmVersion<T extends IDfSysObject> implements Comparable<Dct
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		@SuppressWarnings("unchecked")
-		DctmVersion<T> other = (DctmVersion<T>) obj;
+		DfcVersion<T> other = (DfcVersion<T>) obj;
 		return (Tools.compare(this.versionNumber, other.versionNumber) == 0);
 	}
 

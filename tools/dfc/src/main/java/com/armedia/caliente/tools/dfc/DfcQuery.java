@@ -15,7 +15,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
 
-public class DctmQuery extends CloseableIterator<IDfTypedObject> {
+public class DfcQuery extends CloseableIterator<IDfTypedObject> {
 
 	public static enum Type {
 		//
@@ -41,33 +41,33 @@ public class DctmQuery extends CloseableIterator<IDfTypedObject> {
 	public static final Type DEFAULT_TYPE = Type.DF_QUERY;
 
 	public static void run(IDfSession session, String dql) throws DfException {
-		DctmQuery.run(session, dql, null, 0);
+		DfcQuery.run(session, dql, null, 0);
 	}
 
 	public static void run(IDfSession session, String dql, Type type) throws DfException {
-		DctmQuery.run(session, dql, type, 0);
+		DfcQuery.run(session, dql, type, 0);
 	}
 
 	public static void run(IDfSession session, String dql, Type type, int batchSize) throws DfException {
-		try (DctmQuery q = new DctmQuery(session, dql, type, batchSize)) {
+		try (DfcQuery q = new DfcQuery(session, dql, type, batchSize)) {
 			// Do nothing...
 		}
 	}
 
 	public static void run(IDfSession session, String dql, CheckedConsumer<IDfTypedObject, DfException> consumer)
 		throws DfException {
-		DctmQuery.run(session, dql, null, 0, consumer);
+		DfcQuery.run(session, dql, null, 0, consumer);
 	}
 
 	public static void run(IDfSession session, String dql, Type type,
 		CheckedConsumer<IDfTypedObject, DfException> consumer) throws DfException {
-		DctmQuery.run(session, dql, type, 0, consumer);
+		DfcQuery.run(session, dql, type, 0, consumer);
 	}
 
 	public static void run(IDfSession session, String dql, Type type, int batchSize,
 		CheckedConsumer<IDfTypedObject, DfException> consumer) throws DfException {
 		Objects.requireNonNull(consumer, "Must provide a valid consumer");
-		try (DctmQuery q = new DctmQuery(session, dql, type, batchSize)) {
+		try (DfcQuery q = new DfcQuery(session, dql, type, batchSize)) {
 			q.forEachRemaining(consumer);
 		}
 	}
@@ -80,27 +80,27 @@ public class DctmQuery extends CloseableIterator<IDfTypedObject> {
 	private final IDfSession session;
 	private final IDfCollection collection;
 
-	public DctmQuery(IDfSession session, String dql) throws DfException {
+	public DfcQuery(IDfSession session, String dql) throws DfException {
 		this(session, dql, null, 0);
 	}
 
-	public DctmQuery(IDfSession session, String dql, Type type) throws DfException {
+	public DfcQuery(IDfSession session, String dql, Type type) throws DfException {
 		this(session, dql, type, 0);
 	}
 
-	public DctmQuery(IDfSession session, String dql, Type type, int batchSize) throws DfException {
+	public DfcQuery(IDfSession session, String dql, Type type, int batchSize) throws DfException {
 		this.session = Objects.requireNonNull(session, "Must provide a non-null session");
 		this.dql = Objects.requireNonNull(dql, "Must provide a DQL query to execute");
-		this.type = Tools.coalesce(type, DctmQuery.DEFAULT_TYPE);
+		this.type = Tools.coalesce(type, DfcQuery.DEFAULT_TYPE);
 		IDfQuery query = new DfClientX().getQuery();
 		if (this.log.isTraceEnabled()) {
 			this.log.trace("Executing DQL (type={}):{}{}", type, Tools.NL, dql);
 		}
 		query.setDQL(dql);
 		if (batchSize > 0) {
-			batchSize = Tools.ensureBetween(DctmQuery.MIN_BATCH_SIZE, batchSize, DctmQuery.MAX_BATCH_SIZE);
+			batchSize = Tools.ensureBetween(DfcQuery.MIN_BATCH_SIZE, batchSize, DfcQuery.MAX_BATCH_SIZE);
 		} else {
-			batchSize = DctmQuery.DEFAULT_BATCH_SIZE;
+			batchSize = DfcQuery.DEFAULT_BATCH_SIZE;
 		}
 		this.batchSize = batchSize;
 		query.setBatchSize(this.batchSize);
@@ -117,9 +117,9 @@ public class DctmQuery extends CloseableIterator<IDfTypedObject> {
 		}
 	}
 
-	private static DctmQuery restart(DctmQuery query) throws DfException {
+	private static DfcQuery restart(DfcQuery query) throws DfException {
 		Objects.requireNonNull(query, "Must provide a query to restart");
-		return new DctmQuery(query.getSession(), query.getDql(), query.getType(), query.getBatchSize());
+		return new DfcQuery(query.getSession(), query.getDql(), query.getType(), query.getBatchSize());
 	}
 
 	public <EX extends Throwable> void forEachRemaining(CheckedConsumer<IDfTypedObject, EX> consumer)
@@ -130,8 +130,8 @@ public class DctmQuery extends CloseableIterator<IDfTypedObject> {
 		}
 	}
 
-	public DctmQuery restart() throws DfException {
-		return DctmQuery.restart(this);
+	public DfcQuery restart() throws DfException {
+		return DfcQuery.restart(this);
 	}
 
 	public Type getType() {

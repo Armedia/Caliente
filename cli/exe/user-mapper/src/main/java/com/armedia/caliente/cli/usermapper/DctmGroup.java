@@ -6,8 +6,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
-import com.armedia.caliente.tools.dfc.DctmQuery;
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
@@ -40,7 +40,7 @@ public class DctmGroup extends DctmPrincipal {
 				u.add(users.getString("users_names"));
 			}
 		} finally {
-			DfUtils.closeQuietly(users);
+			DfcUtils.closeQuietly(users);
 		}
 		return Tools.freezeSet(u);
 	}
@@ -56,7 +56,7 @@ public class DctmGroup extends DctmPrincipal {
 				u.add(users.getString("groups_names"));
 			}
 		} finally {
-			DfUtils.closeQuietly(users);
+			DfcUtils.closeQuietly(users);
 		}
 		return Tools.freezeSet(u);
 	}
@@ -80,9 +80,9 @@ public class DctmGroup extends DctmPrincipal {
 						session.beginTrans();
 					}
 					try {
-						try (DctmQuery query = new DctmQuery(session,
+						try (DfcQuery query = new DfcQuery(session,
 							"select group_name, group_source, group_global_unique_id from dm_group order by 2, 1",
-							DctmQuery.Type.DF_READ_QUERY)) {
+							DfcQuery.Type.DF_READ_QUERY)) {
 							Map<String, DctmGroup> allGroups = new LinkedHashMap<>();
 							int i = 0;
 							while (query.hasNext()) {

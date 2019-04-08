@@ -17,7 +17,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.armedia.caliente.tools.dfc.DctmVersionNumber;
+import com.armedia.caliente.tools.dfc.DfcVersionNumber;
 import com.armedia.commons.utilities.Tools;
 
 public class DctmVersionNumberTest {
@@ -77,8 +77,8 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testHashCode() {
 		for (String s : DctmVersionNumberTest.TEST_VERSIONS) {
-			DctmVersionNumber a = new DctmVersionNumber(s);
-			DctmVersionNumber b = new DctmVersionNumber(s);
+			DfcVersionNumber a = new DfcVersionNumber(s);
+			DfcVersionNumber b = new DfcVersionNumber(s);
 			Assertions.assertEquals(a.hashCode(), b.hashCode(), s);
 		}
 	}
@@ -86,19 +86,19 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testDctmVersionNumber() {
 		try {
-			new DctmVersionNumber(null);
+			new DfcVersionNumber(null);
 			Assertions.fail("Did not fail with a null parameter");
 		} catch (IllegalArgumentException e) {
 			// all is well
 		}
 		try {
-			new DctmVersionNumber("");
+			new DfcVersionNumber("");
 			Assertions.fail("Did not fail with an empty string parameter");
 		} catch (IllegalArgumentException e) {
 			// all is well
 		}
 		try {
-			new DctmVersionNumber("                     ");
+			new DfcVersionNumber("                     ");
 			Assertions.fail("Did not fail with a spaces-only parameter");
 		} catch (IllegalArgumentException e) {
 			// all is well
@@ -108,7 +108,7 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testGetComponent() {
 		for (String s : DctmVersionNumberTest.COMPONENT_COUNTERS.keySet()) {
-			DctmVersionNumber vn = new DctmVersionNumber(s);
+			DfcVersionNumber vn = new DfcVersionNumber(s);
 			// Integer components = DctmVersionNumberTest.COMPONENTS.get(s);
 			int cc = vn.getComponentCount();
 			for (int i = 1; i <= cc; i++) {
@@ -120,7 +120,7 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testGetLastComponent() {
 		for (String s : DctmVersionNumberTest.COMPONENT_COUNTERS.keySet()) {
-			DctmVersionNumber vn = new DctmVersionNumber(s);
+			DfcVersionNumber vn = new DfcVersionNumber(s);
 			Integer components = DctmVersionNumberTest.COMPONENT_COUNTERS.get(s);
 			Assertions.assertEquals(components.intValue(), vn.getLastComponent(), s);
 		}
@@ -129,7 +129,7 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testGetComponentCount() {
 		for (String s : DctmVersionNumberTest.COMPONENT_COUNTERS.keySet()) {
-			DctmVersionNumber vn = new DctmVersionNumber(s);
+			DfcVersionNumber vn = new DfcVersionNumber(s);
 			Integer components = DctmVersionNumberTest.COMPONENT_COUNTERS.get(s);
 			Assertions.assertEquals(components.intValue(), vn.getComponentCount(), s);
 		}
@@ -138,7 +138,7 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testToString() {
 		for (String s : DctmVersionNumberTest.TEST_VERSIONS) {
-			DctmVersionNumber vn = new DctmVersionNumber(s);
+			DfcVersionNumber vn = new DfcVersionNumber(s);
 			Assertions.assertEquals(s, vn.toString());
 		}
 	}
@@ -150,9 +150,9 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testEqualsObject() {
 		for (String a : DctmVersionNumberTest.TEST_VERSIONS) {
-			final DctmVersionNumber va = new DctmVersionNumber(a);
+			final DfcVersionNumber va = new DfcVersionNumber(a);
 			for (String b : DctmVersionNumberTest.TEST_VERSIONS) {
-				final DctmVersionNumber vb = new DctmVersionNumber(b);
+				final DfcVersionNumber vb = new DfcVersionNumber(b);
 				if (a.equals(b)) {
 					Assertions.assertEquals(va, vb, String.format("[%s] vs [%s]", a, b));
 					Assertions.assertEquals(vb, va, String.format("[%s] vs [%s]", b, a));
@@ -168,9 +168,9 @@ public class DctmVersionNumberTest {
 	public void testEqualsDctmVersionNumberInt() {
 		for (String a : DctmVersionNumberTest.TEST_VERSIONS) {
 			final Pattern pA = Pattern.compile(String.format("^\\Q%s\\E(?:\\.\\d+\\.\\d+)*$", a));
-			final DctmVersionNumber va = new DctmVersionNumber(a);
+			final DfcVersionNumber va = new DfcVersionNumber(a);
 			for (String b : DctmVersionNumberTest.TEST_VERSIONS) {
-				final DctmVersionNumber vb = new DctmVersionNumber(b);
+				final DfcVersionNumber vb = new DfcVersionNumber(b);
 				final Pattern pB = Pattern.compile(String.format("^\\Q%s\\E(?:\\.\\d+\\.\\d+)*$", b));
 				if (a.equals(b)) {
 					// Same numbers, so they must match throughout
@@ -263,8 +263,8 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testClone() {
 		for (String s : DctmVersionNumberTest.TEST_VERSIONS) {
-			DctmVersionNumber a = new DctmVersionNumber(s);
-			DctmVersionNumber b = a.clone();
+			DfcVersionNumber a = new DfcVersionNumber(s);
+			DfcVersionNumber b = a.clone();
 			Assertions.assertNotSame(a, b);
 			Assertions.assertEquals(a, b);
 			Assertions.assertNotSame(b, a);
@@ -275,9 +275,9 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testIsSibling() {
 		for (final String a : DctmVersionNumberTest.TEST_VERSIONS) {
-			final DctmVersionNumber va = new DctmVersionNumber(a);
+			final DfcVersionNumber va = new DfcVersionNumber(a);
 			for (final String b : DctmVersionNumberTest.TEST_VERSIONS) {
-				final DctmVersionNumber vb = new DctmVersionNumber(b);
+				final DfcVersionNumber vb = new DfcVersionNumber(b);
 				// For A to be a sibling of B, they must have the same number of components,
 				// and must match on all components except the last pair
 				boolean expected = ((va.getComponentCount() == vb.getComponentCount())
@@ -291,9 +291,9 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testIsSuccessorOf() {
 		for (final String a : DctmVersionNumberTest.TEST_VERSIONS) {
-			final DctmVersionNumber va = new DctmVersionNumber(a);
+			final DfcVersionNumber va = new DfcVersionNumber(a);
 			for (final String b : DctmVersionNumberTest.TEST_VERSIONS) {
-				final DctmVersionNumber vb = new DctmVersionNumber(b);
+				final DfcVersionNumber vb = new DfcVersionNumber(b);
 				// For A to be a successor of B, A must have the same number of components as B,
 				// all must match except the last one, and the last component from A must be
 				// greater than the last one from B. There is an edge case when the length is
@@ -311,9 +311,9 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testIsAntecedentOf() {
 		for (final String a : DctmVersionNumberTest.TEST_VERSIONS) {
-			final DctmVersionNumber va = new DctmVersionNumber(a);
+			final DfcVersionNumber va = new DfcVersionNumber(a);
 			for (final String b : DctmVersionNumberTest.TEST_VERSIONS) {
-				final DctmVersionNumber vb = new DctmVersionNumber(b);
+				final DfcVersionNumber vb = new DfcVersionNumber(b);
 				// For A to be an antecedent of B, A must have the same number of components as B,
 				// all must match except the last one, and the last component from A must be
 				// less than the last one from B. There is an edge case when the length is
@@ -331,9 +331,9 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testIsAncestorOf() {
 		for (final String a : DctmVersionNumberTest.TEST_VERSIONS) {
-			final DctmVersionNumber va = new DctmVersionNumber(a);
+			final DfcVersionNumber va = new DfcVersionNumber(a);
 			for (final String b : DctmVersionNumberTest.TEST_VERSIONS) {
-				final DctmVersionNumber vb = new DctmVersionNumber(b);
+				final DfcVersionNumber vb = new DfcVersionNumber(b);
 				// For A to be an ancestor of B, B must have more components than A,
 				// and must match with all the components of A
 				boolean expected = ((va.getComponentCount() < vb.getComponentCount())
@@ -346,9 +346,9 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testIsDescendantOf() {
 		for (final String a : DctmVersionNumberTest.TEST_VERSIONS) {
-			final DctmVersionNumber va = new DctmVersionNumber(a);
+			final DfcVersionNumber va = new DfcVersionNumber(a);
 			for (final String b : DctmVersionNumberTest.TEST_VERSIONS) {
-				final DctmVersionNumber vb = new DctmVersionNumber(b);
+				final DfcVersionNumber vb = new DfcVersionNumber(b);
 				// For A to be a descendant of B, A must have more components than B,
 				// and must match with all the components of B
 				boolean expected = ((va.getComponentCount() > vb.getComponentCount())
@@ -361,10 +361,10 @@ public class DctmVersionNumberTest {
 	@Test
 	public void testGetDepthInCommon() {
 		for (String a : DctmVersionNumberTest.TEST_VERSIONS) {
-			DctmVersionNumber va = new DctmVersionNumber(a);
+			DfcVersionNumber va = new DfcVersionNumber(a);
 			String[] ca = a.split("\\.");
 			for (String b : DctmVersionNumberTest.TEST_VERSIONS) {
-				DctmVersionNumber vb = new DctmVersionNumber(b);
+				DfcVersionNumber vb = new DfcVersionNumber(b);
 				String[] cb = b.split("\\.");
 
 				int c = 0;
@@ -379,18 +379,18 @@ public class DctmVersionNumberTest {
 
 	@Test
 	public void testCompareTo() {
-		List<DctmVersionNumber> l = new ArrayList<>(DctmVersionNumberTest.TEST_VERSIONS.size());
+		List<DfcVersionNumber> l = new ArrayList<>(DctmVersionNumberTest.TEST_VERSIONS.size());
 		for (String s : DctmVersionNumberTest.TEST_VERSIONS) {
-			DctmVersionNumber va = new DctmVersionNumber(s);
-			DctmVersionNumber vb = new DctmVersionNumber(s);
+			DfcVersionNumber va = new DfcVersionNumber(s);
+			DfcVersionNumber vb = new DfcVersionNumber(s);
 			l.add(va);
 			Assertions.assertEquals(0, va.compareTo(vb), s);
 			Assertions.assertEquals(0, vb.compareTo(va), s);
 		}
 
 		Collections.sort(l);
-		DctmVersionNumber a = null;
-		for (DctmVersionNumber b : l) {
+		DfcVersionNumber a = null;
+		for (DfcVersionNumber b : l) {
 			if (a != null) {
 				Assertions.assertTrue(a.compareTo(b) <= 0, String.format("[%s] vs [%s]", a, b));
 			}
@@ -399,7 +399,7 @@ public class DctmVersionNumberTest {
 
 		Collections.reverse(l);
 		a = null;
-		for (DctmVersionNumber b : l) {
+		for (DfcVersionNumber b : l) {
 			if (a != null) {
 				Assertions.assertTrue(a.compareTo(b) >= 0, String.format("[%s] vs [%s]", a, b));
 			}
@@ -409,14 +409,14 @@ public class DctmVersionNumberTest {
 
 	@Test
 	public void testGetSubset() {
-		List<DctmVersionNumber> l = new ArrayList<>(DctmVersionNumberTest.COMPONENT_COUNTERS.size());
+		List<DfcVersionNumber> l = new ArrayList<>(DctmVersionNumberTest.COMPONENT_COUNTERS.size());
 		for (String s : DctmVersionNumberTest.COMPONENT_COUNTERS.keySet()) {
-			l.add(new DctmVersionNumber(s));
+			l.add(new DfcVersionNumber(s));
 		}
 		Collections.sort(l);
 		Collections.reverse(l);
-		DctmVersionNumber big = null;
-		for (DctmVersionNumber small : l) {
+		DfcVersionNumber big = null;
+		for (DfcVersionNumber small : l) {
 			if (big != null) {
 				int len = big.getComponentCount();
 				if (len == 2) {

@@ -11,7 +11,7 @@ import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.tools.dfc.DctmCrypto;
+import com.armedia.caliente.tools.dfc.DfcCrypto;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
@@ -20,7 +20,7 @@ public class DctmExportEngineFactory extends
 	ExportEngineFactory<IDfSession, IDfValue, DctmExportContext, DctmExportContextFactory, DctmExportDelegateFactory, DctmExportEngine> {
 
 	public DctmExportEngineFactory() {
-		super(true, new DctmCrypto());
+		super(true, new DfcCrypto());
 	}
 
 	@Override

@@ -13,11 +13,11 @@ import com.documentum.fc.common.DfException;
  * @author diego
  *
  */
-public class DctmCollectionIterator extends CloseableIterator<IDfTypedObject> {
+public class DfcCollectionIterator extends CloseableIterator<IDfTypedObject> {
 
 	private final IDfCollection collection;
 
-	public DctmCollectionIterator(IDfCollection collection) {
+	public DfcCollectionIterator(IDfCollection collection) {
 		this.collection = collection;
 	}
 

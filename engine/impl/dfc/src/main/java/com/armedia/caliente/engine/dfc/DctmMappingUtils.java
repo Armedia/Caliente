@@ -77,7 +77,7 @@ public class DctmMappingUtils {
 							if (!forward.containsKey(serverAttribute)) {
 								final IDfValue value = src.getValue(serverAttribute);
 								final IDfValue substitution = DfValueFactory
-									.newStringValue(String.format("${%s}", serverAttribute));
+									.of(String.format("${%s}", serverAttribute));
 								forward.put(substitution.asString(), value);
 								reverse.put(value.asString(), substitution);
 							}
@@ -104,12 +104,12 @@ public class DctmMappingUtils {
 	public static List<IDfValue> substituteMappableUsers(IDfTypedObject object, IDfAttr attr) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
 		if (attr == null) { throw new IllegalArgumentException("Must provide an attribute to expand"); }
-		return DctmMappingUtils.substituteMappableUsers(object, DfValueFactory.getAllRepeatingValues(attr, object));
+		return DctmMappingUtils.substituteMappableUsers(object, DfValueFactory.getAllValues(attr, object));
 	}
 
 	public static String substituteMappableUsers(IDfTypedObject object, String user) throws DfException {
 		if (user == null) { throw new IllegalArgumentException("Must provide a user to substitute"); }
-		return DctmMappingUtils.substituteMappableUsers(object, DfValueFactory.newStringValue(user)).asString();
+		return DctmMappingUtils.substituteMappableUsers(object, DfValueFactory.of(user)).asString();
 	}
 
 	public static IDfValue substituteMappableUsers(IDfTypedObject object, IDfValue value) throws DfException {
@@ -125,7 +125,7 @@ public class DctmMappingUtils {
 
 	public static String substituteMappableUsers(IDfSession session, String user) throws DfException {
 		if (user == null) { throw new IllegalArgumentException("Must provide a user to substitute"); }
-		return DctmMappingUtils.substituteMappableUsers(session, DfValueFactory.newStringValue(user)).asString();
+		return DctmMappingUtils.substituteMappableUsers(session, DfValueFactory.of(user)).asString();
 	}
 
 	public static IDfValue substituteMappableUsers(IDfSession session, IDfValue value) throws DfException {

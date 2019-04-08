@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.tools.dfc.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfSession;
@@ -38,7 +38,7 @@ public abstract class ContentFinder implements Callable<Void> {
 	@Override
 	public final Void call() throws DfException {
 		final IDfSession session = this.pool.acquireSession();
-		final IDfLocalTransaction tx = DfUtils.openTransaction(session);
+		final IDfLocalTransaction tx = DfcUtils.openTransaction(session);
 		try {
 			Stream<IDfId> ids = getIds(session);
 			if (ids != null) {
@@ -53,7 +53,7 @@ public abstract class ContentFinder implements Callable<Void> {
 		} finally {
 			try {
 				// No matter what...roll back!
-				DfUtils.abortTransaction(session, tx);
+				DfcUtils.abortTransaction(session, tx);
 			} catch (DfException e) {
 				this.log.warn("Could not abort an open transaction", e);
 			} finally {

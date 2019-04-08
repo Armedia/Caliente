@@ -11,7 +11,7 @@
 		<level value="INFO"/>
 	</logger>
 	
-	<logger name="com.armedia.caliente.tools.dfc.DctmVersionHistory">
+	<logger name="com.armedia.caliente.tools.dfc.DfcVersionHistory">
 		<level value="TRACE"/>
 	</logger>
 

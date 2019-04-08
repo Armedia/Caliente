@@ -232,6 +232,6 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 
 	@Override
 	public IDfValue getValue(CmfValue.Type type, Object value) {
-		return DfValueFactory.newValue(DctmTranslator.translateType(type).getDfConstant(), value);
+		return DfValueFactory.of(DctmTranslator.translateType(type).getDfConstant(), value);
 	}
 }

@@ -19,27 +19,27 @@ public final class DfValueFactory {
 	private DfValueFactory() {
 	}
 
-	public static IDfValue newValue(int type, Object v) {
+	public static IDfValue of(int type, Object v) {
 		switch (type) {
 			case IDfValue.DF_BOOLEAN:
-				if (Boolean.class.isInstance(v)) { return DfValueFactory.newBooleanValue(Boolean.class.cast(v)); }
+				if (Boolean.class.isInstance(v)) { return DfValueFactory.of(Boolean.class.cast(v)); }
 				break;
 
 			case IDfValue.DF_DOUBLE:
 				if (Number.class
-					.isInstance(v)) { return DfValueFactory.newDoubleValue(Number.class.cast(v).doubleValue()); }
+					.isInstance(v)) { return DfValueFactory.of(Number.class.cast(v).doubleValue()); }
 				break;
 
 			case IDfValue.DF_INTEGER:
-				if (Number.class.isInstance(v)) { return DfValueFactory.newIntValue(Number.class.cast(v).longValue()); }
+				if (Number.class.isInstance(v)) { return DfValueFactory.of(Number.class.cast(v).longValue()); }
 				break;
 
 			case IDfValue.DF_TIME:
-				if (Date.class.isInstance(v)) { return DfValueFactory.newTimeValue(Date.class.cast(v)); }
+				if (Date.class.isInstance(v)) { return DfValueFactory.of(Date.class.cast(v)); }
 				break;
 
 			case IDfValue.DF_ID:
-				if (IDfId.class.isInstance(v)) { return DfValueFactory.newIdValue(IDfId.class.cast(v)); }
+				if (IDfId.class.isInstance(v)) { return DfValueFactory.of(IDfId.class.cast(v)); }
 				break;
 
 			case IDfValue.DF_STRING:
@@ -49,66 +49,66 @@ public final class DfValueFactory {
 				throw new RuntimeException(String.format("Unsupported type [%s] for value [%s]", type, v));
 		}
 		if (v == null) { return null; }
-		return DfValueFactory.newStringValue(Tools.toString(v));
+		return DfValueFactory.of(Tools.toString(v));
 	}
 
-	public static IDfValue newBooleanValue(boolean v) {
+	public static IDfValue of(boolean v) {
 		return new DfValue(String.valueOf(v), IDfValue.DF_BOOLEAN);
 	}
 
-	public static IDfValue newIntValue(int v) {
+	public static IDfValue of(int v) {
 		return new DfValue(String.valueOf(v), IDfValue.DF_INTEGER);
 	}
 
-	public static IDfValue newIntValue(long v) {
+	public static IDfValue of(long v) {
 		return new DfValue(String.valueOf((int) v), IDfValue.DF_INTEGER);
 	}
 
-	public static IDfValue newStringValue(String v) {
+	public static IDfValue of(String v) {
 		if (v == null) { return null; }
 		return new DfValue(v, IDfValue.DF_STRING);
 	}
 
-	public static IDfValue newIdValue(IDfId v) {
+	public static IDfValue of(IDfId v) {
 		if (v == null) {
 			v = DfId.DF_NULLID;
 		}
 		return new DfValue(v.toString(), IDfValue.DF_ID);
 	}
 
-	public static IDfValue newIdValue(String v) {
+	public static IDfValue ofId(String v) {
 		if (v == null) {
 			v = DfId.DF_NULLID_STR;
 		}
 		return new DfValue(v, IDfValue.DF_ID);
 	}
 
-	public static IDfValue newTimeValue(IDfTime v) {
+	public static IDfValue of(IDfTime v) {
 		if (v == null) { return null; }
 		return new DfValue(v);
 	}
 
-	public static IDfValue newTimeValue(long v) {
+	public static IDfValue ofTime(long v) {
 		return new DfValue(new DfTime(new Date(v)));
 	}
 
-	public static IDfValue newTimeValue(Date v) {
+	public static IDfValue of(Date v) {
 		return new DfValue(new DfTime(v));
 	}
 
-	public static IDfValue newDoubleValue(float v) {
+	public static IDfValue of(float v) {
 		return new DfValue(Double.toHexString(v), IDfValue.DF_DOUBLE);
 	}
 
-	public static IDfValue newDoubleValue(double v) {
+	public static IDfValue of(double v) {
 		return new DfValue(Double.toHexString(v), IDfValue.DF_DOUBLE);
 	}
 
-	public static List<IDfValue> getAllRepeatingValues(IDfAttr attr, IDfTypedObject object) throws DfException {
-		return DfValueFactory.getAllRepeatingValues(attr.getName(), object);
+	public static List<IDfValue> getAllValues(IDfAttr attr, IDfTypedObject object) throws DfException {
+		return DfValueFactory.getAllValues(attr.getName(), object);
 	}
 
-	public static List<IDfValue> getAllRepeatingValues(String attr, IDfTypedObject object) throws DfException {
+	public static List<IDfValue> getAllValues(String attr, IDfTypedObject object) throws DfException {
 		int valueCount = object.getValueCount(attr);
 		List<IDfValue> ret = new ArrayList<IDfValue>(valueCount);
 		for (int i = 0; i < valueCount; i++) {
