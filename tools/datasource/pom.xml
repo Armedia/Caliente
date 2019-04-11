@@ -7,7 +7,7 @@
 	<description>A set of components for locating DataSources</description>
 	<groupId>com.armedia.caliente.tools</groupId>
 	<artifactId>caliente-tools-datasource</artifactId>
-	<packaging>jar</packaging>
+	<packaging>bundle</packaging>
 
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
@@ -72,4 +72,23 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Bundle-Category></Bundle-Category>
+						<Bundle-Symbolic-Name>${project.groupId}.${project.artifactId}</Bundle-Symbolic-Name>
+						<!--
+						<Export-Package></Export-Package>
+						-->
+					</instructions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
