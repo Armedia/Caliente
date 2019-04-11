@@ -570,14 +570,14 @@
 
 		<!-- The command-line tools -->
 		<module>cli/api</module>
-		<module>cli/exe/bulkdel</module>
 		<module>cli/exe/caliente</module>
-		<module>cli/exe/datagen</module>
-		<module>cli/exe/filename-mapper</module>
-		<module>cli/exe/history</module>
-		<module>cli/exe/user-mapper</module>
-		<module>cli/exe/validator</module>
+		<module>cli/exe/dctm-bulkdel</module>
+		<module>cli/exe/dctm-datagen</module>
+		<module>cli/exe/dctm-filename-mapper</module>
+		<module>cli/exe/dctm-history</module>
 		<module>cli/exe/dctm-ticket-decoder</module>
+		<module>cli/exe/dctm-user-mapper</module>
+		<module>cli/exe/validator</module>
 
 		<!-- Some general-use tools -->
 		<module>tools/alfresco-bi</module>

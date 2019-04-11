@@ -2,10 +2,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<name>Armedia Caliente CLI - Documentum Filename Mapper</name>
-	<description>A standalone tool to repair and deduplicate filenames (Documentum version)</description>
+	<name>Armedia Caliente CLI - Documentum Bulk Deleter</name>
+	<description>A CLI executable that deletes documentum objects in bulk</description>
 	<groupId>com.armedia.caliente.cli</groupId>
-	<artifactId>caliente-cli-filename-mapper</artifactId>
+	<artifactId>caliente-cli-dctm-bulkdel</artifactId>
 	<packaging>jar</packaging>
 
 	<parent>
@@ -16,20 +16,13 @@
 	</parent>
 
 	<properties>
-		<executableName>caliente-filename-mapper</executableName>
+		<executableName>caliente-dctm-bulkdel</executableName>
 	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.armedia.caliente</groupId>
 			<artifactId>caliente-cli</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.caliente</groupId>
-			<artifactId>caliente-engine</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
@@ -80,7 +73,7 @@
 						<configuration>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.armedia.caliente.cli.filenamemapper.Launcher</mainClass>
+									<mainClass>com.armedia.caliente.cli.bulkdel.Launcher</mainClass>
 								</transformer>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
