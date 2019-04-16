@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.local.common;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
@@ -17,13 +16,12 @@ public final class LocalCommon {
 	public static final Set<String> TARGETS = Collections.singleton(LocalCommon.TARGET_NAME);
 
 	private LocalCommon() {
-
 	}
 
-	public static File getRootDirectory(CfgTools cfg) throws IOException {
+	public static File getRootDirectory(CfgTools cfg) {
 		String root = cfg.getString(LocalSetting.ROOT);
 		if (root == null) { return null; }
-		return new File(root).getCanonicalFile();
+		return Tools.canonicalize(new File(root));
 	}
 
 	public static String calculateId(String portablePath) {
