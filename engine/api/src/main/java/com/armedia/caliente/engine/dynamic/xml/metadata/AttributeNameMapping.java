@@ -16,8 +16,9 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataTransformNames.t", propOrder = {
@@ -83,7 +84,7 @@ public class AttributeNameMapping extends BaseShareableLockable {
 	}
 
 	public void setDefaultTransform(Expression value) {
-		try (AutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			this.defaultTransform = value;
 			close();
 			initialize(this.caseSensitive);
@@ -91,7 +92,7 @@ public class AttributeNameMapping extends BaseShareableLockable {
 	}
 
 	public String transformName(final String sqlName) throws ScriptException {
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			boolean hasGroups = false;
 			String regex = null;
 			Expression repl = null;
@@ -128,7 +129,7 @@ public class AttributeNameMapping extends BaseShareableLockable {
 	}
 
 	public void close() {
-		try (AutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			if (this.matchers == null) { return; }
 			this.activeDefault = null;
 			this.caseSensitive = null;

@@ -10,8 +10,8 @@ import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.ticketdecoder.xml.Page;
 import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 
 public class CsvContentPersistor extends BaseShareableLockable implements ContentPersistor {
 
@@ -23,7 +23,7 @@ public class CsvContentPersistor extends BaseShareableLockable implements Conten
 	@Override
 	public void initialize(final File target) throws Exception {
 		final File finalTarget = Tools.canonicalize(target);
-		try (AutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			this.out = new PrintWriter(new FileWriter(finalTarget));
 			this.out.printf("R_OBJECT_ID,DOCUMENTUM_PATH,LENGTH,FORMAT,CONTENT_STORE_PATH%n");
 			this.out.flush();
@@ -51,7 +51,7 @@ public class CsvContentPersistor extends BaseShareableLockable implements Conten
 		} else {
 			path = "";
 		}
-		try (AutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			this.out.printf("%s,%s,%d,%s,%s%n", //
 				StringEscapeUtils.escapeCsv(content.getId()), //
 				StringEscapeUtils.escapeCsv(path), //
@@ -64,7 +64,7 @@ public class CsvContentPersistor extends BaseShareableLockable implements Conten
 
 	@Override
 	public void close() throws Exception {
-		try (AutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			this.out.flush();
 			this.out.close();
 		}

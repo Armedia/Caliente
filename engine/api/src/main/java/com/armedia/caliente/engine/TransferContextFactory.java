@@ -16,8 +16,9 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.ConfigurationSetting;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public abstract class TransferContextFactory< //
 	SESSION, //
@@ -133,7 +134,7 @@ public abstract class TransferContextFactory< //
 	}
 
 	public final void close() {
-		try (AutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			try {
 				if (!this.open) { return; }
 				doClose();
@@ -162,7 +163,7 @@ public abstract class TransferContextFactory< //
 	}
 
 	public final CONTEXT newContext(String rootId, CmfObject.Archetype rootType, SESSION session, int batchPosition) {
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
 			return constructContext(rootId, rootType, session, batchPosition);
 		}

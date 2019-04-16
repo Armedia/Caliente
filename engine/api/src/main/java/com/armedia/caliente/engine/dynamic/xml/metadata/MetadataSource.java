@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.caliente.tools.datasource.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSource.t", propOrder = {
@@ -160,7 +160,7 @@ public class MetadataSource extends BaseShareableLockable {
 	}
 
 	public Connection getConnection() throws SQLException {
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (this.dataSource == null) {
 				throw new IllegalStateException(String.format("The datasource [%s] is not yet initialized", this.name));
 			}

@@ -12,7 +12,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.AutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperation<?>> extends CmfStore<OPERATION> {
 
@@ -298,7 +298,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		if (locator == null) { throw new IllegalArgumentException("Must provide a locator string"); }
 		// Short-cut, no need to luck if we won't do anything
 		if (!isSupportsFileAccess()) { return null; }
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			assertOpen();
 			File f = doGetFile(locator);
 			if (f == null) {

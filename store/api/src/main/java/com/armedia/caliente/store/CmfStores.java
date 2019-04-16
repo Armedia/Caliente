@@ -23,8 +23,9 @@ import com.armedia.caliente.store.xml.StoreDefinitions;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.XmlTools;
-import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public final class CmfStores extends BaseShareableLockable {
 
@@ -73,7 +74,7 @@ public final class CmfStores extends BaseShareableLockable {
 	}
 
 	private void initConfigurations(URL config, Collection<StoreConfiguration> storeConfigurations) {
-		try (AutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			for (StoreConfiguration storeCfg : storeConfigurations) {
 				this.configurations.put(storeCfg.getId(), storeCfg);
 			}
@@ -81,7 +82,7 @@ public final class CmfStores extends BaseShareableLockable {
 	}
 
 	private void initStores(URL config, Collection<StoreConfiguration> storeConfigurations) {
-		try (AutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			int i = 0;
 			for (StoreConfiguration storeCfg : storeConfigurations) {
 				i++;
@@ -158,7 +159,7 @@ public final class CmfStores extends BaseShareableLockable {
 		final String type = configuration.getType();
 		if (type == null) { throw new IllegalArgumentException("The configuration does not specify the store type"); }
 
-		try (AutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			CmfStore<?> dupe = this.cmfStores.get(id);
 			if (dupe != null) {
 				throw new DuplicateCmfStoreException(
@@ -194,7 +195,7 @@ public final class CmfStores extends BaseShareableLockable {
 		if (name == null) {
 			throw new IllegalArgumentException("Must provide the name of the store configuration to retrieve");
 		}
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			StoreConfiguration cfg = this.configurations.get(name);
 			return (cfg != null ? cfg.clone() : null);
 		}
@@ -202,7 +203,7 @@ public final class CmfStores extends BaseShareableLockable {
 
 	private void closeInstance() {
 		if (this.open.compareAndSet(true, false)) {
-			try (AutoLock lock = autoMutexLock()) {
+			try (MutexAutoLock lock = autoMutexLock()) {
 				try {
 					for (Map.Entry<String, CmfStore<?>> entry : this.cmfStores.entrySet()) {
 						String n = entry.getKey();
@@ -274,7 +275,7 @@ public final class CmfStores extends BaseShareableLockable {
 	}
 
 	public static void initialize(boolean configOnly) {
-		try (AutoLock lock = CmfStores.LOCK.autoMutexLock()) {
+		try (MutexAutoLock lock = CmfStores.LOCK.autoMutexLock()) {
 			// If we're already initialized, dump out
 			if ((CmfStores.OBJECT_STORES != null) || (CmfStores.CONTENT_STORES != null)) { return; }
 
@@ -330,7 +331,7 @@ public final class CmfStores extends BaseShareableLockable {
 
 	private static boolean doClose() {
 		boolean ret = false;
-		try (AutoLock lock = CmfStores.LOCK.autoMutexLock()) {
+		try (MutexAutoLock lock = CmfStores.LOCK.autoMutexLock()) {
 			if (CmfStores.OBJECT_STORES != null) {
 				CmfStores.OBJECT_STORES.closeInstance();
 				CmfStores.OBJECT_STORES = null;
@@ -362,7 +363,7 @@ public final class CmfStores extends BaseShareableLockable {
 	public static CmfObjectStore<?> createObjectStore(StoreConfiguration configuration)
 		throws CmfStorageException, DuplicateCmfStoreException {
 		CmfStores.initialize();
-		try (AutoLock lock = CmfStores.LOCK.autoSharedLock()) {
+		try (SharedAutoLock lock = CmfStores.LOCK.autoSharedLock()) {
 			return CmfObjectStore.class.cast(CmfStores.assertValid(CmfStores.OBJECT_STORES).createStore(configuration));
 		}
 	}
@@ -370,7 +371,7 @@ public final class CmfStores extends BaseShareableLockable {
 	public static CmfContentStore<?, ?> createContentStore(StoreConfiguration configuration)
 		throws CmfStorageException, DuplicateCmfStoreException {
 		CmfStores.initialize();
-		try (AutoLock lock = CmfStores.LOCK.autoSharedLock()) {
+		try (SharedAutoLock lock = CmfStores.LOCK.autoSharedLock()) {
 			return CmfContentStore.class
 				.cast(CmfStores.assertValid(CmfStores.CONTENT_STORES).createStore(configuration));
 		}

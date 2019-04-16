@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public abstract class SessionFactory<SESSION> extends BaseShareableLockable
 	implements PooledObjectFactory<SESSION>, AutoCloseable {
@@ -44,7 +44,7 @@ public abstract class SessionFactory<SESSION> extends BaseShareableLockable
 	}
 
 	public final SessionWrapper<SESSION> acquireSession() throws SessionFactoryException {
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (!this.open) { throw new IllegalStateException("This session factory is not open"); }
 			try {
 				return newWrapper(this.pool.borrowObject());

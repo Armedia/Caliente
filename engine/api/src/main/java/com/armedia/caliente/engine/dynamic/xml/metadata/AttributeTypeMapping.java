@@ -15,8 +15,9 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataAttributeTypes.t", propOrder = {
@@ -85,7 +86,7 @@ public class AttributeTypeMapping extends BaseShareableLockable {
 	}
 
 	public void setDefaultType(CmfValue.Type value) {
-		try (AutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			this.defaultType = value;
 			close();
 			initialize(this.caseSensitive);
@@ -93,7 +94,7 @@ public class AttributeTypeMapping extends BaseShareableLockable {
 	}
 
 	public CmfValue.Type getMappedType(final String sqlName) {
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			for (TypeMatcher tm : this.matchers) {
 				if (tm.pattern.matcher(sqlName).matches()) { return tm.type; }
 			}

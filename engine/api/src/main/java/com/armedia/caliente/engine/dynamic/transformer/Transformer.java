@@ -16,8 +16,9 @@ import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
-import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public class Transformer extends BaseShareableLockable {
 
@@ -69,7 +70,7 @@ public class Transformer extends BaseShareableLockable {
 
 	public CmfObject<CmfValue> transform(CmfValueMapper mapper, final CmfAttributeNameMapper nameMapper,
 		SchemaService schemaService, CmfObject<CmfValue> object) throws TransformerException {
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (this.closed) { throw new TransformerException("This transformer instance is already closed"); }
 			if (this.transformations == null) { return object; }
 			DynamicElementContext ctx = createContext(mapper, object);
@@ -109,7 +110,7 @@ public class Transformer extends BaseShareableLockable {
 	}
 
 	public void close() {
-		try (AutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			try {
 				if (this.closed) { return; }
 				if (this.metadataLoader != null) {

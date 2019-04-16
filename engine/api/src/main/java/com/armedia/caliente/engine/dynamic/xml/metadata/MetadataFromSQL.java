@@ -22,7 +22,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.AutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataFromSQL.t", propOrder = {
@@ -71,7 +71,7 @@ public class MetadataFromSQL extends MetadataReaderBase {
 
 	@Override
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(Connection c, CmfObject<V> object) throws Exception {
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			final CmfAttributeTranslator<V> translator = object.getTranslator();
 			try (final PreparedStatement ps = c.prepareStatement(this.finalSql)) {
 				Map<String, CmfAttribute<V>> attributes = new TreeMap<>();

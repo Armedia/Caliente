@@ -20,8 +20,9 @@ import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public class ExternalMetadataLoader extends BaseShareableLockable {
 
@@ -140,7 +141,7 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 		throws ExternalMetadataException {
 		Objects.requireNonNull(object, "Must provide a CmfObject instance to retrieve extra metadata for");
 		initialize();
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (sourceNames == null) {
 				sourceNames = this.metadataSets.keySet();
 			}
@@ -211,7 +212,7 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 	}
 
 	public void close() {
-		try (AutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			if (!this.initialized) { return; }
 			try {
 				closeSources();

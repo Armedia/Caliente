@@ -16,8 +16,8 @@ import javax.xml.bind.annotation.XmlValue;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 @XmlTransient
 public abstract class AttributeNamesSource extends BaseShareableLockable implements Iterable<String> {
@@ -75,28 +75,28 @@ public abstract class AttributeNamesSource extends BaseShareableLockable impleme
 	}
 
 	public final int size() {
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (this.values == null) { return 0; }
 			return this.values.size();
 		}
 	}
 
 	public final Set<String> getValues() {
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (this.values == null) { return Collections.emptySet(); }
 			return Tools.freezeSet(new LinkedHashSet<>(this.values.values()));
 		}
 	}
 
 	public final Set<String> getCanonicalizedValues() {
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (this.values == null) { return Collections.emptySet(); }
 			return Tools.freezeSet(new LinkedHashSet<>(this.values.keySet()));
 		}
 	}
 
 	public final boolean contains(String str) {
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (this.values == null) { return false; }
 			return this.values.containsKey(canonicalize(str));
 		}

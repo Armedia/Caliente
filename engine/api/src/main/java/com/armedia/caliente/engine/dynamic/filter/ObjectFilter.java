@@ -21,8 +21,9 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.AutoLock;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public class ObjectFilter extends BaseShareableLockable {
 
@@ -67,7 +68,7 @@ public class ObjectFilter extends BaseShareableLockable {
 
 	public Boolean accept(CmfObject<CmfValue> cmfObject, CmfValueMapper mapper) throws ObjectFilterException {
 		Objects.requireNonNull(cmfObject, "Must provide an object to filter");
-		try (AutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (this.closed) { throw new ObjectFilterException("This object filter is already closed"); }
 			DynamicElementContext ctx = new DynamicElementContext(cmfObject, new DefaultDynamicObject(cmfObject),
 				mapper, null);
@@ -108,7 +109,7 @@ public class ObjectFilter extends BaseShareableLockable {
 	}
 
 	public void close() {
-		try (AutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			try {
 				if (this.closed) { return; }
 				this.activeFilters.clear();
