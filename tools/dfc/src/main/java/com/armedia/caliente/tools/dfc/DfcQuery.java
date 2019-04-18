@@ -94,7 +94,7 @@ public class DfcQuery extends CloseableIterator<IDfTypedObject> {
 		this.type = Tools.coalesce(type, DfcQuery.DEFAULT_TYPE);
 		IDfQuery query = new DfClientX().getQuery();
 		if (this.log.isTraceEnabled()) {
-			this.log.trace("Executing DQL (type={}):{}{}", type, Tools.NL, dql);
+			this.log.trace("Executing DQL (type={}):{}{}", this.type, Tools.NL, dql);
 		}
 		query.setDQL(dql);
 		if (batchSize > 0) {
@@ -106,7 +106,7 @@ public class DfcQuery extends CloseableIterator<IDfTypedObject> {
 		query.setBatchSize(this.batchSize);
 		boolean ok = false;
 		try {
-			this.collection = query.execute(session, type.type);
+			this.collection = query.execute(session, this.type.type);
 			ok = true;
 		} finally {
 			if (!ok) {
