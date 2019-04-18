@@ -65,4 +65,9 @@ public class ConstructedType {
 	public int getAttributeCount() {
 		return this.attributes.size();
 	}
+
+	@Override
+	public String toString() {
+		return String.format("{%s}%s", this.name, this.secondaries);
+	}
 }
