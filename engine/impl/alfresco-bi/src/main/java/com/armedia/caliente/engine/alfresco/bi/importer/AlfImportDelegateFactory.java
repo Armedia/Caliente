@@ -501,8 +501,9 @@ public class AlfImportDelegateFactory
 		// This is the base name, others may change it...
 		thisMarker.setTargetName(contentFile.getName());
 		switch (type) {
-			case NORMAL:
 			case VDOC_ROOT:
+				thisMarker.setDirectory(true);
+			case NORMAL:
 				thisMarker.setTargetName(ctx.getObjectName(cmfObject));
 				break;
 
@@ -526,10 +527,12 @@ public class AlfImportDelegateFactory
 			case RENDITION_ROOT:
 				// Special case: the target name must be ${objectId}-renditions
 				thisMarker.setTargetName(String.format("%s-renditions", cmfObject.getId()));
+				thisMarker.setDirectory(true);
 				break;
 
 			case RENDITION_TYPE:
 				targetPath = String.format("%s/%s", targetPath, renditionRootPath);
+				thisMarker.setDirectory(true);
 				break;
 
 			case RENDITION_ENTRY:
@@ -762,10 +765,11 @@ public class AlfImportDelegateFactory
 		markerList.clear();
 
 		try {
-			(folder ? this.folderIndex : this.fileIndex).marshal(item);
+			(item.isDirectory() ? this.folderIndex : this.fileIndex).marshal(item);
 		} catch (Exception e) {
 			throw new ImportException(
-				String.format("Failed to serialize the %s to XML: %s", folder ? "folder" : "file", item), e);
+				String.format("Failed to serialize the %s to XML: %s", item.isDirectory() ? "folder" : "file", item),
+				e);
 		}
 	}
 
