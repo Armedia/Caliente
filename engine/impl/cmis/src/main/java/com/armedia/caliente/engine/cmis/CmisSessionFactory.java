@@ -58,7 +58,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 			}
 		}
 		if (!parameters.containsKey(SessionParameter.BINDING_TYPE)) {
-			parameters.put(SessionParameter.BINDING_TYPE, BindingType.ATOMPUB.value());
+			parameters.put(SessionParameter.BINDING_TYPE, BindingType.BROWSER.value());
 		}
 		int ps = settings.getInteger(CmisSessionSetting.DEFAULT_PAGE_SIZE);
 		if (ps <= 0) {
