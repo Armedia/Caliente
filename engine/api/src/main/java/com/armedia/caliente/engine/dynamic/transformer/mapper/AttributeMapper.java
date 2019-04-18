@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
@@ -271,8 +273,11 @@ public class AttributeMapper {
 		final boolean includeResiduals, DynamicObject object, CmfAttributeNameMapper nameMapper) {
 		final Map<String, DynamicValue> dynamicValues = object.getAtt();
 		if (!includeResiduals) {
-			// Remove all residuals
-			dynamicValues.keySet().retainAll(mappings.keySet());
+			// Remove all residuals. That is: remove everything from the dyamicValues
+			// map that won't be processed by a mapping
+			Set<String> keepers = new LinkedHashSet<>();
+			mappings.values().forEach((m) -> keepers.add(m.getSourceName()));
+			dynamicValues.keySet().retainAll(keepers);
 		}
 		mappings.forEach((name, mapping) -> {
 			DynamicValue oldValue = null;
