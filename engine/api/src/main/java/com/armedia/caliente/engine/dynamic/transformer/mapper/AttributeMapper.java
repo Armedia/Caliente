@@ -269,17 +269,17 @@ public class AttributeMapper {
 		return String.format("%s:%s", this.residualsPrefix, (m.matches() ? m.group(2) : attributeName));
 	}
 
-	protected void applyResult(final ConstructedType type, final Map<String, AttributeMapping> mappings,
+	protected void applyResult(final ConstructedType type, final Collection<AttributeMapping> mappings,
 		final boolean includeResiduals, DynamicObject object, CmfAttributeNameMapper nameMapper) {
 		final Map<String, DynamicValue> dynamicValues = object.getAtt();
 		if (!includeResiduals) {
 			// Remove all residuals. That is: remove everything from the dyamicValues
 			// map that won't be processed by a mapping
 			Set<String> keepers = new LinkedHashSet<>();
-			mappings.values().forEach((m) -> keepers.add(m.getSourceName()));
+			mappings.forEach((m) -> keepers.add(m.getSourceName()));
 			dynamicValues.keySet().retainAll(keepers);
 		}
-		mappings.forEach((name, mapping) -> {
+		mappings.forEach((mapping) -> {
 			DynamicValue oldValue = null;
 			DynamicValue newValue = null;
 
@@ -381,6 +381,6 @@ public class AttributeMapper {
 				break;
 		}
 
-		applyResult(type, finalValues, residualsEnabled, object, nameMapper);
+		applyResult(type, finalValues.values(), residualsEnabled, object, nameMapper);
 	}
 }
