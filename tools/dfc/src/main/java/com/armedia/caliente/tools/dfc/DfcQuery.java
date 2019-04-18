@@ -88,6 +88,10 @@ public class DfcQuery extends CloseableIterator<IDfTypedObject> {
 		this(session, dql, type, 0);
 	}
 
+	public DfcQuery(IDfSession session, String dql, int batchSize) throws DfException {
+		this(session, dql, null, batchSize);
+	}
+
 	public DfcQuery(IDfSession session, String dql, Type type, int batchSize) throws DfException {
 		this.session = Objects.requireNonNull(session, "Must provide a non-null session");
 		this.dql = Objects.requireNonNull(dql, "Must provide a DQL query to execute");
