@@ -586,10 +586,7 @@ public abstract class ImportEngine<//
 		final CmfObjectStore<?> objectStore = importState.objectStore;
 		final CfgTools settings = importState.cfg;
 
-		final int threadCount;
-		synchronized (this) {
-			threadCount = getThreadCount(settings);
-		}
+		final int threadCount = getThreadCount(settings);
 
 		final SynchronizedCounter workerCounter = new SynchronizedCounter();
 		final ExecutorService parallelExecutor = newExecutor(threadCount);

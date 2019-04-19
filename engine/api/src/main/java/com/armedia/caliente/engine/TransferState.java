@@ -13,8 +13,10 @@ import org.slf4j.Logger;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.ShareableMap;
 
-public abstract class TransferState {
+public abstract class TransferState extends BaseShareableLockable {
 	public final UUID jobId = UUID.randomUUID();
 	public final Logger output;
 	public final File baseData;
@@ -22,7 +24,7 @@ public abstract class TransferState {
 	public final CmfContentStore<?, ?> streamStore;
 	public final CfgTools cfg;
 
-	private final Map<String, Object> properties = new HashMap<>();
+	private final Map<String, Object> properties;
 
 	/**
 	 * @param output
@@ -37,21 +39,22 @@ public abstract class TransferState {
 		this.objectStore = objectStore;
 		this.streamStore = streamStore;
 		this.cfg = settings;
+		this.properties = new ShareableMap<>(this, new HashMap<>());
 	}
 
-	public final synchronized boolean setProperty(String property, Object value) {
+	public final boolean setProperty(String property, Object value) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a non-null property name"); }
 		if (value == null) { throw new IllegalArgumentException("Must provide a non-null value"); }
 		Object o = this.properties.put(property, value);
 		return (o != null);
 	}
 
-	public final synchronized Object removeProperty(String property) {
+	public final Object removeProperty(String property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a non-null property name"); }
 		return this.properties.remove(property);
 	}
 
-	public final synchronized <T> T getProperty(String property) {
+	public final <T> T getProperty(String property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a non-null property name"); }
 		try {
 			@SuppressWarnings("unchecked")
@@ -62,20 +65,20 @@ public abstract class TransferState {
 		}
 	}
 
-	public final synchronized boolean hasProperty(String property) {
+	public final boolean hasProperty(String property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a non-null property name"); }
 		return this.properties.containsKey(property);
 	}
 
-	public final synchronized void clearProperties() {
+	public final void clearProperties() {
 		this.properties.clear();
 	}
 
-	public final synchronized int getPropertyCount() {
+	public final int getPropertyCount() {
 		return this.properties.size();
 	}
 
-	public final synchronized Set<String> getPropertyNames() {
+	public final Set<String> getPropertyNames() {
 		return new HashSet<>(this.properties.keySet());
 	}
 }

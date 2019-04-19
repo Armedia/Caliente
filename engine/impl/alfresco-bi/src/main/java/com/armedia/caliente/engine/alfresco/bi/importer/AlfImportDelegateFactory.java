@@ -63,7 +63,9 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.concurrent.ShareableSet;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
@@ -223,25 +225,29 @@ public class AlfImportDelegateFactory
 	}
 
 	boolean initializeVdocSupport() {
-		if (this.initializedVdocs.get() == null) {
-			synchronized (this) {
-				if (this.initializedVdocs.get() == null) {
-					boolean ok = false;
-					try {
-						getType("cm:folder", "dctm:vdocRoot");
-						getType("cm:folder", "dctm:vdocVersion");
-						getType("dctm:vdocReference");
-						ok = true;
-					} catch (Exception e) {
-						this.log.warn("VDoc support has been disabled", e);
-					} finally {
-						// Make sure we only do this once
-						this.initializedVdocs.set(ok);
+		try (SharedAutoLock shared = autoSharedLock()) {
+			Boolean result = this.initializedVdocs.get();
+			if (result == null) {
+				try (MutexAutoLock mutex = shared.upgrade()) {
+					result = this.initializedVdocs.get();
+					if (result == null) {
+						boolean ok = false;
+						try {
+							getType("cm:folder", "dctm:vdocRoot");
+							getType("cm:folder", "dctm:vdocVersion");
+							getType("dctm:vdocReference");
+							ok = true;
+						} catch (Exception e) {
+							this.log.warn("VDoc support has been disabled", e);
+						} finally {
+							// Make sure we only do this once
+							this.initializedVdocs.set(result = ok);
+						}
 					}
 				}
 			}
+			return result;
 		}
-		return this.initializedVdocs.get();
 	}
 
 	@Override

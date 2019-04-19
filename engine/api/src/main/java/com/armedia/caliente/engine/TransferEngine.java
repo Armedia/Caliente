@@ -45,6 +45,7 @@ import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
 public abstract class TransferEngine< //
 	LISTENER extends TransferListener, //
@@ -56,7 +57,7 @@ public abstract class TransferEngine< //
 	CONTEXT_FACTORY extends TransferContextFactory<SESSION, VALUE, CONTEXT, ?>, //
 	DELEGATE_FACTORY extends TransferDelegateFactory<SESSION, VALUE, CONTEXT, ?>, //
 	ENGINE_FACTORY extends TransferEngineFactory<LISTENER, RESULT, EXCEPTION, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ?> //
-> implements Callable<CmfObjectCounter<RESULT>> {
+> extends BaseShareableLockable implements Callable<CmfObjectCounter<RESULT>> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_KEY = "${REFERRENT_KEY}$";

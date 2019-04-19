@@ -5,13 +5,14 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 
 public abstract class TransferDelegateFactory< //
 	SESSION, //
 	VALUE, //
 	CONTEXT extends TransferContext<SESSION, VALUE, ?>, //
 	ENGINE extends TransferEngine<?, ?, ?, SESSION, VALUE, CONTEXT, ?, ?, ?> //
-> {
+> extends BaseShareableLockable {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 

@@ -642,11 +642,7 @@ public abstract class ExportEngine<//
 		final Logger output = exportState.output;
 		final CmfObjectStore<?> objectStore = exportState.objectStore;
 		final CfgTools settings = exportState.cfg;
-		final int threadCount;
-		// Ensure nobody changes this under our feet
-		synchronized (this) {
-			threadCount = getThreadCount(settings);
-		}
+		final int threadCount = getThreadCount(settings);
 		String msg = String.format("Will export items using %d threads", threadCount);
 		this.log.info(msg);
 		if (output != null) {
