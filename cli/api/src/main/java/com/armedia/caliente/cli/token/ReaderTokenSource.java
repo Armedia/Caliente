@@ -17,11 +17,11 @@ public abstract class ReaderTokenSource implements TokenSource {
 	private Charset charset = ReaderTokenSource.DEFAULT_CHARSET;
 
 	public synchronized Charset getCharset() {
-		return Tools.coalesce(this.charset, ReaderTokenSource.DEFAULT_CHARSET);
+		return this.charset;
 	}
 
 	public synchronized void setCharset(Charset charset) {
-		this.charset = charset;
+		this.charset = Tools.coalesce(this.charset, ReaderTokenSource.DEFAULT_CHARSET);
 	}
 
 	protected abstract Reader openReader() throws IOException;
