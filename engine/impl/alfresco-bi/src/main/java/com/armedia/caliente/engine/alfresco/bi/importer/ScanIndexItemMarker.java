@@ -220,8 +220,12 @@ public class ScanIndexItemMarker implements Cloneable {
 	public ScanIndexItem getItem(List<ScanIndexItemMarker> markers) {
 		ScanIndexItem item = new ScanIndexItem();
 		item.setDirectory(this.directory);
-		item.setSourcePath(convertToSlashes(this.sourcePath.toString()));
-		item.setSourceName(this.sourceName);
+		if (this.sourcePath != null) {
+			item.setSourcePath(convertToSlashes(this.sourcePath.toString()));
+		}
+		if (this.sourceName != null) {
+			item.setSourceName(this.sourceName);
+		}
 		item.setTargetPath(this.targetPath);
 		item.setTargetName(this.targetName);
 		List<ScanIndexItemVersion> versions = item.getVersions();

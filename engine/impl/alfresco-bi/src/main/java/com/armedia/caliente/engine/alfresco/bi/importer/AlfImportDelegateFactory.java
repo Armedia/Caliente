@@ -49,6 +49,7 @@ import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
@@ -387,18 +388,16 @@ public class AlfImportDelegateFactory
 	}
 
 	protected final ScanIndexItemMarker generateItemMarker(final AlfImportContext ctx, final boolean folder,
-		final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile, MarkerType type)
-		throws ImportException {
+		final CmfObject<CmfValue> cmfObject, CmfContentStream content, File contentFile, File metadataFile,
+		MarkerType type) throws ImportException {
 		final int head;
 		final int count;
 		final int current;
 		String renditionRootPath = null;
 		switch (type) {
 			case RENDITION_ROOT:
-				contentFile = contentFile.getParentFile();
 				// Fall-through
 			case RENDITION_TYPE:
-				contentFile = contentFile.getParentFile();
 				// Fall-through
 			case RENDITION_ENTRY:
 				renditionRootPath = String.format("%s-renditions", cmfObject.getId());
@@ -497,6 +496,15 @@ public class AlfImportDelegateFactory
 			storeArtificialFolderToIndex(targetPath);
 		}
 
+		final String renditionTypeStr;
+		{
+			String typeStr = content.getRenditionIdentifier();
+			if (!StringUtils.isBlank(content.getModifier())) {
+				typeStr = String.format("%s(%s)", typeStr, content.getModifier());
+			}
+			renditionTypeStr = typeStr;
+		}
+
 		String append = null;
 		// This is the base name, others may change it...
 		thisMarker.setTargetName(contentFile.getName());
@@ -528,18 +536,21 @@ public class AlfImportDelegateFactory
 				// Special case: the target name must be ${objectId}-renditions
 				thisMarker.setTargetName(String.format("%s-renditions", cmfObject.getId()));
 				thisMarker.setDirectory(true);
+				thisMarker.setContent(null);
 				break;
 
 			case RENDITION_TYPE:
 				targetPath = String.format("%s/%s", targetPath, renditionRootPath);
+				thisMarker.setTargetName(renditionTypeStr);
 				thisMarker.setDirectory(true);
+				thisMarker.setContent(null);
 				break;
 
 			case RENDITION_ENTRY:
-				// Add the rendition root path
-				targetPath = String.format("%s/%s", targetPath, renditionRootPath);
-				// Add the rendition type path
-				targetPath = String.format("%s/%s", targetPath, contentFile.getParentFile().getName());
+				// Add the rendition root path and type path
+				targetPath = String.format("%s/%s/%s", targetPath, renditionRootPath, renditionTypeStr);
+				thisMarker.setTargetName(
+					String.format("%s.%s[%08x]", cmfObject.getId(), renditionTypeStr, content.getRenditionPage()));
 				break;
 
 			default:
@@ -706,13 +717,13 @@ public class AlfImportDelegateFactory
 	}
 
 	protected final void storeToIndex(final AlfImportContext ctx, final boolean folder,
-		final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile, MarkerType type)
-		throws ImportException {
+		final CmfObject<CmfValue> cmfObject, CmfContentStream content, File contentFile, File metadataFile,
+		MarkerType type) throws ImportException {
 
 		storeManifestToScanIndex();
 
-		final ScanIndexItemMarker thisMarker = generateItemMarker(ctx, folder, cmfObject, contentFile, metadataFile,
-			type);
+		final ScanIndexItemMarker thisMarker = generateItemMarker(ctx, folder, cmfObject, content, contentFile,
+			metadataFile, type);
 		List<ScanIndexItemMarker> markerList = null;
 		switch (type) {
 			case VDOC_ROOT:
