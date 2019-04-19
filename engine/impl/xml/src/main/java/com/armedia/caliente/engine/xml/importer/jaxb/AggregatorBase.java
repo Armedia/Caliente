@@ -13,53 +13,50 @@ public class AggregatorBase<T> {
 
 	private final String label;
 
-	protected List<T> items;
+	protected final List<T> items = new ShareableList<>(new ArrayList<T>());
 
 	protected AggregatorBase(String label) {
 		this.label = label;
 	}
 
-	protected final synchronized List<T> getItems() {
-		if (this.items == null) {
-			this.items = new ShareableList<>(new ArrayList<T>());
-		}
+	protected final List<T> getItems() {
 		return this.items;
 	}
 
 	public final boolean add(Collection<T> item) {
-		return getItems().addAll(item);
+		return this.items.addAll(item);
 	}
 
 	public final boolean add(T item) {
-		return getItems().add(item);
+		return this.items.add(item);
 	}
 
 	public final boolean remove(Collection<T> item) {
-		return getItems().removeAll(item);
+		return this.items.removeAll(item);
 	}
 
 	public final boolean remove(T item) {
-		return getItems().remove(item);
+		return this.items.remove(item);
 	}
 
 	public final boolean containsAll(Collection<T> item) {
-		return getItems().containsAll(item);
+		return this.items.containsAll(item);
 	}
 
 	public final boolean contains(T item) {
-		return getItems().contains(item);
+		return this.items.contains(item);
 	}
 
 	public final void clear() {
-		getItems().clear();
+		this.items.clear();
 	}
 
 	public final int getCount() {
-		return getItems().size();
+		return this.items.size();
 	}
 
 	@Override
-	public final synchronized String toString() {
-		return String.format("%s [%s=%s]", getClass().getSimpleName(), this.label, getItems());
+	public final String toString() {
+		return String.format("%s [%s=%s]", getClass().getSimpleName(), this.label, this.items);
 	}
 }
