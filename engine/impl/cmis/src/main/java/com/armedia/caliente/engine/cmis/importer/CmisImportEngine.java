@@ -37,7 +37,7 @@ public class CmisImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchFailRemainder() {
+		public boolean isFailBatchOnError() {
 			return true;
 		}
 
@@ -60,7 +60,7 @@ public class CmisImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchFailRemainder() {
+		public boolean isFailBatchOnError() {
 			return true;
 		}
 
@@ -83,7 +83,7 @@ public class CmisImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchFailRemainder() {
+		public boolean isFailBatchOnError() {
 			return true;
 		}
 

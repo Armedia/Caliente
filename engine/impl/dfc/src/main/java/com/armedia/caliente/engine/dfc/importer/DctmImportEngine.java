@@ -48,7 +48,7 @@ public class DctmImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchFailRemainder() {
+		public boolean isFailBatchOnError() {
 			return true;
 		}
 

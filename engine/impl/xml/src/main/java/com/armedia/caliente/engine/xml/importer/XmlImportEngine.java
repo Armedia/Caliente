@@ -38,7 +38,7 @@ public class XmlImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchFailRemainder() {
+		public boolean isFailBatchOnError() {
 			return true;
 		}
 
@@ -61,7 +61,7 @@ public class XmlImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchFailRemainder() {
+		public boolean isFailBatchOnError() {
 			return true;
 		}
 
@@ -84,7 +84,7 @@ public class XmlImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchFailRemainder() {
+		public boolean isFailBatchOnError() {
 			return true;
 		}
 
@@ -107,7 +107,7 @@ public class XmlImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchFailRemainder() {
+		public boolean isFailBatchOnError() {
 			return true;
 		}
 
@@ -130,7 +130,7 @@ public class XmlImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchFailRemainder() {
+		public boolean isFailBatchOnError() {
 			return true;
 		}
 

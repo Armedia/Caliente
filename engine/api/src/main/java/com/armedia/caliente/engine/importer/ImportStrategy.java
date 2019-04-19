@@ -31,7 +31,7 @@ public interface ImportStrategy {
 	 * @return {@code true} if batches should be failed after the first failure, or {@code false} if
 	 *         processing should continue regardless
 	 */
-	public boolean isBatchFailRemainder();
+	public boolean isFailBatchOnError();
 
 	/**
 	 * <p>

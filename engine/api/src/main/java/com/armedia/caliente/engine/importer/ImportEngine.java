@@ -240,7 +240,7 @@ public abstract class ImportEngine<//
 										session.rollback();
 									}
 									this.listenerDelegator.objectImportFailed(this.importState.jobId, next, t);
-									if (this.batch.strategy.isBatchFailRemainder()) {
+									if (this.batch.strategy.isFailBatchOnError()) {
 										// If we're supposed to kill the batch, fail all
 										// the other objects
 										failBatch = true;
@@ -318,9 +318,9 @@ public abstract class ImportEngine<//
 		@Override
 		public String toString() {
 			return String.format(
-				"Batch [type=%s, id=%s, status=%s, strategy.parallel=%s, strategy.failRemainder=%s, contents=%s]",
-				this.type, this.id, this.status, this.strategy.isParallelCapable(),
-				this.strategy.isBatchFailRemainder(), this.contents);
+				"Batch [type=%s, id=%s, status=%s, strategy.parallel=%s, strategy.failBatchOnError=%s, contents=%s]",
+				this.type, this.id, this.status, this.strategy.isParallelCapable(), this.strategy.isFailBatchOnError(),
+				this.contents);
 		}
 	}
 

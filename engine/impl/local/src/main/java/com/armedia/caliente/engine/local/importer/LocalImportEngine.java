@@ -43,7 +43,7 @@ public class LocalImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchFailRemainder() {
+		public boolean isFailBatchOnError() {
 			return true;
 		}
 
@@ -66,7 +66,7 @@ public class LocalImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchFailRemainder() {
+		public boolean isFailBatchOnError() {
 			return true;
 		}
 
@@ -89,7 +89,7 @@ public class LocalImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchFailRemainder() {
+		public boolean isFailBatchOnError() {
 			return true;
 		}
 

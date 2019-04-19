@@ -119,7 +119,7 @@ public enum DctmObjectType {
 		}
 
 		@Override
-		public boolean isBatchFailRemainder() {
+		public boolean isFailBatchOnError() {
 			return DctmObjectType.this.failureInterruptsBatch;
 		}
 
