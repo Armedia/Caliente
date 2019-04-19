@@ -16,6 +16,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ShareableSet;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "group.t", propOrder = {
@@ -58,10 +59,10 @@ public class GroupT implements Comparable<GroupT> {
 	protected List<PropertyT> properties;
 
 	@XmlTransient
-	protected Set<String> userSet = new TreeSet<>();
+	protected Set<String> userSet = new ShareableSet<>(new TreeSet<>());
 
 	@XmlTransient
-	protected Set<String> groupSet = new TreeSet<>();
+	protected Set<String> groupSet = new ShareableSet<>(new TreeSet<>());
 
 	protected void sortAttributes() {
 		if (this.attributes != null) {
@@ -93,14 +94,14 @@ public class GroupT implements Comparable<GroupT> {
 	protected void afterUnmarshal(Unmarshaller u, Object parent) {
 		sortAttributes();
 		if (this.userSet == null) {
-			this.userSet = new TreeSet<>();
+			this.userSet = new ShareableSet<>(new TreeSet<>());
 		}
 		this.userSet.clear();
 		if (this.users != null) {
 			this.userSet.addAll(this.users);
 		}
 		if (this.groupSet == null) {
-			this.groupSet = new TreeSet<>();
+			this.groupSet = new ShareableSet<>(new TreeSet<>());
 		}
 		this.groupSet.clear();
 		if (this.groups != null) {
@@ -122,43 +123,43 @@ public class GroupT implements Comparable<GroupT> {
 		return this.attributes;
 	}
 
-	public synchronized int getUserCount() {
+	public int getUserCount() {
 		return this.userSet.size();
 	}
 
-	public synchronized boolean addUser(String user) {
+	public boolean addUser(String user) {
 		return this.userSet.add(user);
 	}
 
-	public synchronized boolean removeUser(String user) {
+	public boolean removeUser(String user) {
 		return this.userSet.remove(user);
 	}
 
-	public synchronized boolean hasUser(String user) {
+	public boolean hasUser(String user) {
 		return this.userSet.contains(user);
 	}
 
-	public synchronized void clearUsers() {
+	public void clearUsers() {
 		this.userSet.clear();
 	}
 
-	public synchronized int getGroupCount() {
+	public int getGroupCount() {
 		return this.groupSet.size();
 	}
 
-	public synchronized boolean addGroup(String group) {
+	public boolean addGroup(String group) {
 		return this.groupSet.add(group);
 	}
 
-	public synchronized boolean removeGroup(String group) {
+	public boolean removeGroup(String group) {
 		return this.groupSet.remove(group);
 	}
 
-	public synchronized boolean hasGroup(String group) {
+	public boolean hasGroup(String group) {
 		return this.groupSet.contains(group);
 	}
 
-	public synchronized void clearGroups() {
+	public void clearGroups() {
 		this.groupSet.clear();
 	}
 
@@ -235,6 +236,6 @@ public class GroupT implements Comparable<GroupT> {
 	public String toString() {
 		return String.format(
 			"GroupT [name=%s, type=%s, email=%s, administrator=%s, displayName=%s, users=%s, groups=%s]", this.name,
-			this.type, this.email, this.administrator, this.displayName, this.users, this.groups);
+			this.type, this.email, this.administrator, this.displayName, this.userSet, this.groupSet);
 	}
 }
