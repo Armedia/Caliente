@@ -192,9 +192,9 @@ public class ScanIndexItemMarker implements Cloneable {
 	@Override
 	public String toString() {
 		return String.format(
-			"ScanIndexItemMarker [type=%s, targetName=%s, directory=%s, thisIndex=%s, headIndex=%s, versionCount=%s, sourcePath=%s, sourceName=%s, targetPath=%s, targetName=%s, number=%s, content=%s, metadata=%s]",
-			this.type, this.targetName, this.directory, this.index, this.headIndex, this.versionCount, this.sourcePath,
-			this.sourceName, this.targetPath, this.targetName, this.number, this.content, this.metadata);
+			"ScanIndexItemMarker [type=%s, directory=%s, thisIndex=%s, headIndex=%s, versionCount=%s, sourcePath=%s, sourceName=%s, targetPath=%s, targetName=%s, number=%s, content=%s, metadata=%s]",
+			this.type, this.directory, this.index, this.headIndex, this.versionCount, this.sourcePath, this.sourceName,
+			this.targetPath, this.targetName, this.number, this.content, this.metadata);
 	}
 
 	public ScanIndexItemVersion getVersion() {
