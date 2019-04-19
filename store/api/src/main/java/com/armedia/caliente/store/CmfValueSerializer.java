@@ -164,20 +164,18 @@ public enum CmfValueSerializer {
 	}
 
 	private static Map<CmfValue.Type, CmfValueSerializer> MAP = null;
+	static {
+		Map<CmfValue.Type, CmfValueSerializer> m = new EnumMap<>(CmfValue.Type.class);
+		for (CmfValueSerializer s : CmfValueSerializer.values()) {
+			if (m.containsKey(s.type)) {
+				throw new IllegalStateException(String.format("Duplicate mapping for data type [%s]", s.type));
+			}
+			m.put(s.type, s);
+		}
+		CmfValueSerializer.MAP = Tools.freezeMap(m);
+	}
 
 	public static CmfValueSerializer get(CmfValue.Type type) {
-		synchronized (CmfValueSerializer.class) {
-			if (CmfValueSerializer.MAP == null) {
-				Map<CmfValue.Type, CmfValueSerializer> m = new EnumMap<>(CmfValue.Type.class);
-				for (CmfValueSerializer s : CmfValueSerializer.values()) {
-					if (m.containsKey(s.type)) {
-						throw new IllegalStateException(String.format("Duplicate mapping for data type [%s]", s.type));
-					}
-					m.put(s.type, s);
-				}
-				CmfValueSerializer.MAP = Tools.freezeMap(m);
-			}
-			return CmfValueSerializer.MAP.get(type);
-		}
+		return CmfValueSerializer.MAP.get(type);
 	}
 }
