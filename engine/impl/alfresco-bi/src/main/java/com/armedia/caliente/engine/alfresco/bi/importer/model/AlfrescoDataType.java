@@ -72,11 +72,8 @@ public enum AlfrescoDataType {
 	}
 
 	private static Map<CmfValue.Type, AlfrescoDataType> CMF_MAP = null;
-
 	private static Map<String, AlfrescoDataType> STR_MAP = null;
-
-	private static synchronized Map<CmfValue.Type, AlfrescoDataType> getCmfMappings() {
-		if (AlfrescoDataType.CMF_MAP != null) { return AlfrescoDataType.CMF_MAP; }
+	static {
 		Map<CmfValue.Type, AlfrescoDataType> m = new EnumMap<>(CmfValue.Type.class);
 		Map<String, AlfrescoDataType> m2 = new HashMap<>();
 		for (AlfrescoDataType p : AlfrescoDataType.values()) {
@@ -97,22 +94,16 @@ public enum AlfrescoDataType {
 		}
 		AlfrescoDataType.CMF_MAP = Tools.freezeMap(m);
 		AlfrescoDataType.STR_MAP = Tools.freezeMap(m2);
-		return AlfrescoDataType.CMF_MAP;
-	}
-
-	private static synchronized Map<String, AlfrescoDataType> getStrMappings() {
-		AlfrescoDataType.getCmfMappings();
-		return AlfrescoDataType.STR_MAP;
 	}
 
 	public static AlfrescoDataType decode(CmfValue.Type t) {
-		AlfrescoDataType pt = AlfrescoDataType.getCmfMappings().get(t);
+		AlfrescoDataType pt = AlfrescoDataType.CMF_MAP.get(t);
 		if (pt == null) { throw new IllegalArgumentException(String.format("Unsupported property type %s", t)); }
 		return pt;
 	}
 
 	public static AlfrescoDataType decode(String s) {
-		AlfrescoDataType pt = AlfrescoDataType.getStrMappings().get(s);
+		AlfrescoDataType pt = AlfrescoDataType.STR_MAP.get(s);
 		if (pt == null) { throw new IllegalArgumentException(String.format("Unsupported property type name [%s]", s)); }
 		return pt;
 	}

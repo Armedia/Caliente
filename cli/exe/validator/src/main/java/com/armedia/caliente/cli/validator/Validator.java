@@ -209,26 +209,22 @@ public class Validator extends BaseShareableLockable {
 		}
 
 		private static Map<AlfrescoDataType, ValueComparator> MAP = null;
-
-		public static ValueComparator getComparator(AlfrescoDataType type) {
-			if (ValueComparator.MAP == null) {
-				synchronized (ValueComparator.class) {
-					if (ValueComparator.MAP == null) {
-						Map<AlfrescoDataType, ValueComparator> m = new EnumMap<>(AlfrescoDataType.class);
-						for (ValueComparator c : ValueComparator.values()) {
-							for (AlfrescoDataType t : c.supported) {
-								ValueComparator C = m.put(t, c);
-								if (C != null) {
-									throw new IllegalStateException(String.format(
-										"Comparators %s and %s both support type %s - this is not permitted, only one should support it",
-										c.name(), C.name(), t.name()));
-								}
-							}
-						}
-						ValueComparator.MAP = Tools.freezeMap(m);
+		static {
+			Map<AlfrescoDataType, ValueComparator> m = new EnumMap<>(AlfrescoDataType.class);
+			for (ValueComparator c : ValueComparator.values()) {
+				for (AlfrescoDataType t : c.supported) {
+					ValueComparator C = m.put(t, c);
+					if (C != null) {
+						throw new IllegalStateException(String.format(
+							"Comparators %s and %s both support type %s - this is not permitted, only one should support it",
+							c.name(), C.name(), t.name()));
 					}
 				}
 			}
+			ValueComparator.MAP = Tools.freezeMap(m);
+		}
+
+		public static ValueComparator getComparator(AlfrescoDataType type) {
 			return Tools.coalesce(ValueComparator.MAP.get(type), ValueComparator.OBJECT);
 		}
 	}
