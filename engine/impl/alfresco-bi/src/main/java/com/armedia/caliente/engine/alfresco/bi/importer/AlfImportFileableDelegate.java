@@ -467,8 +467,16 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	protected String generateRenditionName(CmfContentStream info) {
-		return String.format("%s-[%s]-%08x-%s", this.cmfObject.getId(), info.getRenditionIdentifier(),
-			info.getRenditionPage(), Tools.coalesce(info.getModifier(), ""));
+		String modifierStr = info.getModifier();
+		if (!StringUtils.isBlank(modifierStr)) {
+			modifierStr = String.format("(%s)", modifierStr);
+		}
+		String extensionStr = info.getExtension();
+		if (!StringUtils.isBlank(extensionStr)) {
+			extensionStr = String.format(".%s", extensionStr);
+		}
+		return String.format("%s-rendition.%s%s[%08x]%s", this.cmfObject.getId(), info.getRenditionIdentifier(),
+			modifierStr, info.getRenditionPage(), extensionStr);
 	}
 
 	protected final void populateRenditionAttributes(Properties p, AlfrescoType targetType, CmfContentStream content)
