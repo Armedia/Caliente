@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,8 +38,8 @@ public class DctmMappingUtils {
 	}
 
 	private static final Pattern SUBSTITUTION = Pattern.compile("^\\$\\{([\\w]+)\\}$");
-	private static final Map<String, Map<String, IDfValue>> FWD_MAPPINGS = new HashMap<>();
-	private static final Map<String, Map<String, IDfValue>> REV_MAPPINGS = new HashMap<>();
+	private static final Map<String, Map<String, IDfValue>> FWD_MAPPINGS = new ConcurrentHashMap<>();
+	private static final Map<String, Map<String, IDfValue>> REV_MAPPINGS = new ConcurrentHashMap<>();
 
 	// TODO: Make this configurable via a configuration setting/CLI parameter
 	private static final String[] SUBSTITUTION_ATTRIBUTES = {
