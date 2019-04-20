@@ -80,8 +80,4 @@ public final class CommandScheme extends OptionScheme {
 	public int getCommandCount() {
 		return this.commands.size();
 	}
-
-	public static CommandScheme castAs(OptionScheme scheme) {
-		return (CommandScheme.class.isInstance(scheme) ? CommandScheme.class.cast(scheme) : null);
-	}
 }

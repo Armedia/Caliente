@@ -352,7 +352,7 @@ public final class HelpRenderer {
 		final String line = StringUtils.repeat('=', width);
 
 		final OptionScheme baseScheme = help.getBaseScheme();
-		final CommandScheme commandScheme = CommandScheme.castAs(baseScheme);
+		final CommandScheme commandScheme = Tools.cast(CommandScheme.class, baseScheme);
 		final Command command = help.getCommand();
 		final PrintWriter pw = new PrintWriter(w);
 

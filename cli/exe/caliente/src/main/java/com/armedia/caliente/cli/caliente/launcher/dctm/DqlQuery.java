@@ -315,7 +315,7 @@ class DqlQuery {
 		for (Clause c : this.clauses.keySet()) {
 			b.append(" ");
 			Object data = this.clauses.get(c);
-			if (data instanceof List) {
+			if (List.class.isInstance(data)) {
 				List<?> l = List.class.cast(data);
 				boolean first = true;
 				for (Object o : l) {

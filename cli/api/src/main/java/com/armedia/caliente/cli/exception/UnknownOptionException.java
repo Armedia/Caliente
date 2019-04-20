@@ -3,6 +3,7 @@ package com.armedia.caliente.cli.exception;
 import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.token.Token;
+import com.armedia.commons.utilities.Tools;
 
 public class UnknownOptionException extends CommandLineSyntaxException {
 	private static final long serialVersionUID = 1L;
@@ -14,7 +15,7 @@ public class UnknownOptionException extends CommandLineSyntaxException {
 	@Override
 	protected String renderMessage() {
 		String commandPart = "";
-		Command command = Command.castAs(getOptionScheme());
+		Command command = Tools.cast(Command.class, getOptionScheme());
 		if (command != null) {
 			commandPart = String.format(" as part of the '%s' command", command.getName());
 		}

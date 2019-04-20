@@ -50,8 +50,4 @@ public class Command extends OptionScheme {
 	public Set<String> getAliases() {
 		return this.aliases;
 	}
-
-	public static Command castAs(OptionScheme scheme) {
-		return (Command.class.isInstance(scheme) ? Command.class.cast(scheme) : null);
-	}
 }

@@ -277,7 +277,7 @@ public class OptionParser {
 		final char optionValueSplitter, Collection<String> args)
 		throws CommandLineSyntaxException, HelpRequestedException {
 
-		final CommandScheme commandScheme = CommandScheme.castAs(baseScheme);
+		final CommandScheme commandScheme = Tools.cast(CommandScheme.class, baseScheme);
 
 		if ((args == null) || args.isEmpty()) {
 			// Check for missing required command
