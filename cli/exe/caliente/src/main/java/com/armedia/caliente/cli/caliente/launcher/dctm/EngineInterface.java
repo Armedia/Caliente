@@ -24,8 +24,6 @@ import com.armedia.caliente.engine.dfc.importer.DctmImportEngineFactory;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionFactory;
-import com.documentum.fc.common.DfLoggerDisabled;
-import com.documentum.fc.common.impl.logging.LoggingConfigurator;
 
 public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
 
@@ -48,8 +46,9 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	public EngineInterface() {
 		super(DctmCommon.TARGET_NAME);
 		// Load the logging-related patch classes
-		DfLoggerDisabled.class.hashCode();
-		LoggingConfigurator.class.hashCode();
+		// TODO: FIX THIS!!!
+		// DfLoggerDisabled.class.hashCode();
+		// LoggingConfigurator.class.hashCode();
 	}
 
 	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
