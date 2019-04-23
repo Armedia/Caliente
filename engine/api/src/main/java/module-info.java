@@ -11,6 +11,8 @@ module com.armedia.caliente.engine {
 	exports com.armedia.caliente.engine.importer;
 	exports com.armedia.caliente.engine.tools;
 
+	uses com.armedia.caliente.engine.dynamic.Action;
+	uses com.armedia.caliente.engine.dynamic.Condition;
 	uses com.armedia.caliente.engine.exporter.ExportEngineFactory;
 	uses com.armedia.caliente.engine.exporter.ExportEngineListener;
 	uses com.armedia.caliente.engine.importer.ImportEngineFactory;
