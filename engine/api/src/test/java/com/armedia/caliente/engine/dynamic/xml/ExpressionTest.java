@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.xml;
+package com.armedia.caliente.engine.dynamic.xml;
 
 import java.util.Random;
 import java.util.Set;
@@ -13,8 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
-import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.engine.transform.TestObjectContext;
+import com.armedia.caliente.engine.dynamic.TestObjectContext;
 import com.armedia.caliente.store.CmfValue;
 
 public class ExpressionTest {
@@ -125,7 +124,8 @@ public class ExpressionTest {
 					Number n = Number.class.cast(actual);
 					Assertions.assertEquals(expectedInt, n.intValue());
 				} else {
-					Assertions.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
+					Assertions
+						.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
 				}
 			}
 		}
@@ -166,7 +166,8 @@ public class ExpressionTest {
 					Number n = Number.class.cast(actual);
 					Assertions.assertEquals(expectedInt, n.intValue());
 				} else {
-					Assertions.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
+					Assertions
+						.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
 				}
 			}
 		}
@@ -207,7 +208,8 @@ public class ExpressionTest {
 					Number n = Number.class.cast(actual);
 					Assertions.assertEquals(expectedInt, n.intValue());
 				} else {
-					Assertions.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
+					Assertions
+						.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
 				}
 			}
 		}
@@ -248,7 +250,8 @@ public class ExpressionTest {
 					Number n = Number.class.cast(actual);
 					Assertions.assertEquals(expectedInt, n.intValue());
 				} else {
-					Assertions.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
+					Assertions
+						.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
 				}
 			}
 		}

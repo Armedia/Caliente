@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.xml.conditions;
+package com.armedia.caliente.engine.dynamic.xml.conditions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.TestObjectContext;
+import com.armedia.caliente.engine.dynamic.xml.ConditionTools;
 import com.armedia.caliente.engine.dynamic.xml.conditions.ConditionGroup;
 import com.armedia.caliente.engine.dynamic.xml.conditions.GroupAnd;
 import com.armedia.caliente.engine.dynamic.xml.conditions.GroupNand;
@@ -20,8 +22,6 @@ import com.armedia.caliente.engine.dynamic.xml.conditions.GroupOneof;
 import com.armedia.caliente.engine.dynamic.xml.conditions.GroupOr;
 import com.armedia.caliente.engine.dynamic.xml.conditions.GroupXnor;
 import com.armedia.caliente.engine.dynamic.xml.conditions.GroupXor;
-import com.armedia.caliente.engine.transform.TestObjectContext;
-import com.armedia.caliente.engine.xml.ConditionTools;
 
 public class GroupConditionTest {
 

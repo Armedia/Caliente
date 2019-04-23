@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.xml;
+package com.armedia.caliente.engine.dynamic.xml;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,11 +6,6 @@ import java.io.InputStream;
 import javax.xml.bind.JAXBException;
 
 import org.junit.jupiter.api.Test;
-
-import com.armedia.caliente.engine.dynamic.xml.ExternalMetadata;
-import com.armedia.caliente.engine.dynamic.xml.Filters;
-import com.armedia.caliente.engine.dynamic.xml.Transformations;
-import com.armedia.caliente.engine.dynamic.xml.XmlBase;
 
 public class XmlBaseTest {
 

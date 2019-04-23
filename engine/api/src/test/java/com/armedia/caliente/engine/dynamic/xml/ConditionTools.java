@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.xml;
+package com.armedia.caliente.engine.dynamic.xml;
 
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;

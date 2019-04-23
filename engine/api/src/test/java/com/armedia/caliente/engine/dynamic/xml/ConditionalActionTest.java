@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.xml;
+package com.armedia.caliente.engine.dynamic.xml;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.TestObjectContext;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
-import com.armedia.caliente.engine.transform.TestObjectContext;
 
 public class ConditionalActionTest {
 

@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.xml.extmeta;
+package com.armedia.caliente.engine.dynamic.metadata;
 
 import java.net.URL;
 import java.util.Collections;
