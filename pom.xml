@@ -333,14 +333,17 @@
 						<encoding>${project.build.sourceEncoding}</encoding>
 						<source>${project.build.target}</source>
 						<target>${project.build.target}</target>
+						<!--
 						<compilerId>eclipse</compilerId>
 						<compilerArguments>
 							<properties>${project.basedir}/.settings/org.eclipse.jdt.core.prefs</properties>
 						</compilerArguments>
+						-->
 						<showWarnings>true</showWarnings>
 						<showDeprecation>true</showDeprecation>
 					</configuration>
 					<dependencies>
+						<!--
 						<dependency>
 							<groupId>org.codehaus.plexus</groupId>
 							<artifactId>plexus-compiler-eclipse</artifactId>
@@ -351,7 +354,8 @@
 							<artifactId>ecj</artifactId>
 							<version>3.17.0</version>
 						</dependency>
-					</dependencies>
+ 						-->
+ 					</dependencies>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
