@@ -14,7 +14,7 @@ import com.armedia.commons.utilities.Tools;
 public class BasicLogger extends MarkerIgnoringBase implements Logger {
 	private static final long serialVersionUID = 1L;
 
-	private static enum Level {
+	public static enum Level {
 		//
 		NONE, ERROR, WARN, INFO, DEBUG, TRACE,
 		//
