@@ -31,6 +31,12 @@
 			<groupId>javax.mail</groupId>
 			<artifactId>mailapi</artifactId>
 			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>javax.activation</groupId>
+					<artifactId>activation</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
