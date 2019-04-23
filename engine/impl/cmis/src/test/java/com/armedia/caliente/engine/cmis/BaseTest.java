@@ -1,3 +1,4 @@
+package com.armedia.caliente.engine.cmis;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -5,8 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.cmis.CmisSessionSetting;
-import com.armedia.caliente.engine.cmis.CmisSetting;
 import com.armedia.caliente.engine.cmis.exporter.CmisExportEngineFactory;
 import com.armedia.caliente.engine.exporter.ExportSetting;
 import com.armedia.caliente.store.CmfContentStore;
