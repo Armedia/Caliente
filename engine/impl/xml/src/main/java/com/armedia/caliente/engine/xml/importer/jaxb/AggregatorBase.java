@@ -15,6 +15,10 @@ public class AggregatorBase<T> {
 
 	protected final List<T> items = new ShareableList<>(new ArrayList<T>());
 
+	protected AggregatorBase() {
+		throw new UnsupportedOperationException("This constructor should NEVER be called");
+	}
+
 	protected AggregatorBase(String label) {
 		this.label = label;
 	}
