@@ -1,0 +1,14 @@
+--add-opens
+  com.armedia.caliente.engine/com.armedia.caliente.engine=org.junit.platform.commons
+
+--add-reads
+  com.armedia.caliente.engine=com.junit.jupiter.api
+
+--add-reads
+  com.armedia.caliente.engine=org.easymock
+
+--add-reads
+  com.h2database=com.h2database
+
+--add-reads
+  spring.context=spring.context
