@@ -1,3 +1,4 @@
+package com.armedia.caliente.tools;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
