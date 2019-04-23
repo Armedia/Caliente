@@ -11,6 +11,10 @@
  */
 package com.armedia.caliente.store.tools;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.Map;
@@ -18,6 +22,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.activation.MimeType;
 import javax.activation.MimeTypeParseException;
+
+import org.apache.commons.io.IOUtils;
+
+import eu.medsea.mimeutil.MimeUtil;
 
 /**
  * This class serves as a utility class to encapsulate the MIME functionality from the identifier
@@ -42,6 +50,8 @@ public class MimeTools {
 				String.format("Failed to parse the default mime string [%s]", MimeTools.DEFAULT_MIME_STRING));
 		}
 		UNKNOWN = MimeTools.DEFAULT_MIME_TYPE;
+		MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.MagicMimeMimeDetector");
+		MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.ExtensionMimeDetector");
 	}
 
 	public static MimeType resolveMimeType(String type) {
@@ -67,5 +77,127 @@ public class MimeTools {
 			}
 		}
 		return (ret != null ? ret.get() : null);
+	}
+
+	/**
+	 * First, register the MIME detectors globally, and initialize the cache
+	 */
+
+	private static eu.medsea.mimeutil.MimeType cast(Object o) {
+		return eu.medsea.mimeutil.MimeType.class.cast(o);
+	}
+
+	/**
+	 * Convert to {@link MimeType} from {@link eu.medsea.mimeutil.MimeType}, by preserving the
+	 * primary and sub types.
+	 *
+	 * @param type
+	 * @return the equivalent {@link MimeType} instance to the given
+	 *         {@link eu.medsea.mimeutil.MimeType}
+	 */
+	private static MimeType convert(eu.medsea.mimeutil.MimeType type) {
+		if (type == null) { return null; }
+		return MimeTools.resolveMimeType(String.format("%s/%s", type.getMediaType(), type.getSubType()));
+	}
+
+	public static MimeType determineMimeType(File data) throws IOException {
+		try (FileInputStream in = new FileInputStream(data)) {
+			return MimeTools.determineMimeType(data.getName(), in);
+		}
+	}
+
+	/**
+	 * Identifies the MIME type for the given data using MIME magic.
+	 *
+	 * @param data
+	 * @return the correct {@link MimeType} instance detected from the given data
+	 */
+	public static MimeType determineMimeType(InputStream data) throws IOException {
+		return MimeTools.determineMimeType(IOUtils.toByteArray(data));
+	}
+
+	/**
+	 * Identifies the MIME type for the given data using MIME magic.
+	 *
+	 * @param data
+	 * @return the correct {@link MimeType} instance detected from the given data
+	 */
+	public static MimeType determineMimeType(byte[] data) {
+		return MimeTools.convert(MimeTools.cast(MimeUtil.getMimeTypes(data).iterator().next()));
+	}
+
+	/**
+	 * Identifies the MIME type for the given fileName using Extension mapping
+	 *
+	 * @param fileName
+	 * @return the correct {@link MimeType} instance detected from the given filename's extension
+	 */
+	public static MimeType determineMimeType(String fileName) {
+		return MimeTools.convert(MimeTools.cast(MimeUtil.getMimeTypes(fileName).iterator().next()));
+	}
+
+	/**
+	 * Identifies the MIME type for the given data and, if that fails, attempts to identify it via
+	 * the fileName.
+	 *
+	 * @param data
+	 * @param fileName
+	 * @return the correct {@link MimeType} instance detected from the given data or filename
+	 */
+	public static MimeType determineMimeType(byte[] data, String fileName) {
+		MimeType type = MimeTools.determineMimeType(data);
+		if (type != MimeTools.UNKNOWN) { return type; }
+		return MimeTools.determineMimeType(fileName);
+	}
+
+	/**
+	 * Identifies the MIME type for the given data and, if that fails, attempts to identify it via
+	 * the fileName.
+	 *
+	 * @param data
+	 * @param fileName
+	 * @return the correct {@link MimeType} instance detected from the given data or filename
+	 */
+	public static MimeType determineMimeType(InputStream data, String fileName) {
+		MimeType type = null;
+		try {
+			type = MimeTools.determineMimeType(data);
+		} catch (IOException e) {
+			// Ignore it...try to do it by name anyway
+		}
+		if ((type != null) && (type != MimeTools.UNKNOWN)) { return type; }
+		return MimeTools.determineMimeType(fileName);
+	}
+
+	/**
+	 * Identifies the MIME type for the given fileName and, if that fails, attempts to identify it
+	 * via the data sample.
+	 *
+	 * @param fileName
+	 * @param data
+	 * @return the correct {@link MimeType} instance detected from the given filename or data
+	 */
+	public static MimeType determineMimeType(String fileName, byte[] data) {
+		MimeType type = MimeTools.determineMimeType(fileName);
+		if (type != MimeTools.UNKNOWN) { return type; }
+		return MimeTools.determineMimeType(data);
+	}
+
+	/**
+	 * Identifies the MIME type for the given fileName and, if that fails, attempts to identify it
+	 * via the data sample.
+	 *
+	 * @param fileName
+	 * @param data
+	 * @return the correct {@link MimeType} instance detected from the given filename or data
+	 */
+	public static MimeType determineMimeType(String fileName, InputStream data) {
+		MimeType type = MimeTools.determineMimeType(fileName);
+		if (type != MimeTools.UNKNOWN) { return type; }
+		try {
+			return MimeTools.determineMimeType(data);
+		} catch (IOException e) {
+			return MimeTools.UNKNOWN;
+		}
 	}
 }
