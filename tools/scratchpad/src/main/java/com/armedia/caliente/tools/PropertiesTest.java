@@ -44,7 +44,7 @@ public class PropertiesTest {
 		}
 
 		@Override
-		public Iterator<?> getPrefixes(String namespaceURI) {
+		public Iterator<String> getPrefixes(String namespaceURI) {
 			return null;
 		}
 
@@ -56,7 +56,7 @@ public class PropertiesTest {
 	private static final String DTD = String
 		.format("<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">%n");
 	*/
-	private static final LazyInitializer<XMLOutputFactory> FACTORY = new LazyInitializer<XMLOutputFactory>() {
+	private static final LazyInitializer<XMLOutputFactory> FACTORY = new LazyInitializer<>() {
 		@Override
 		protected XMLOutputFactory initialize() throws ConcurrentException {
 			// return XMLOutputFactory.newInstance();
