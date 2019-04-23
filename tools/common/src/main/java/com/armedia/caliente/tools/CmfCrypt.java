@@ -60,7 +60,7 @@ public class CmfCrypt {
 		return DatatypeConverter.parseBase64Binary(value);
 	}
 
-	protected static interface Scheme {
+	public static interface Scheme {
 		public String decryptValue(String password) throws Exception;
 
 		public String encryptValue(String password) throws Exception;
