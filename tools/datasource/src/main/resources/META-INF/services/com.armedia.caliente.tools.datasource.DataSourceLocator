@@ -1,8 +1,0 @@
-# For direct pooled implementation
-com.armedia.caliente.tools.datasource.pooled.PooledDataSourceLocator
-
-# For using JNDI (via InitialContext)
-com.armedia.caliente.tools.datasource.jndi.JndiDataSourceLocator
-
-# For using Spring (needs a helper!)
-com.armedia.caliente.tools.datasource.spring.SpringDataSourceLocator
