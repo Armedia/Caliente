@@ -32,21 +32,21 @@ public class ComparisonTest {
 
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.INTEGER, pairs);
-		pairs.add(Pair.of(new Integer(1), new Integer(1)));
-		pairs.add(Pair.of(new Integer(42423), new Integer(42423)));
+		pairs.add(Pair.of(Integer.valueOf(1), Integer.valueOf(1)));
+		pairs.add(Pair.of(Integer.valueOf(42423), Integer.valueOf(42423)));
 
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.BOOLEAN, pairs);
-		pairs.add(Pair.of(new Boolean(true), new Boolean(true)));
-		pairs.add(Pair.of(new Boolean(false), new Boolean(false)));
+		pairs.add(Pair.of(Boolean.valueOf(true), Boolean.valueOf(true)));
+		pairs.add(Pair.of(Boolean.valueOf(false), Boolean.valueOf(false)));
 
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.DOUBLE, pairs);
-		pairs.add(Pair.of(new Double(1.00001), new Double(1.00001)));
-		pairs.add(Pair.of(new Float(1.00001), new Float(1.00001)));
-		pairs.add(Pair.of(new Double(Double.NaN), new Double(Double.NaN)));
-		pairs.add(Pair.of(new Double(Double.POSITIVE_INFINITY), new Double(Double.POSITIVE_INFINITY)));
-		pairs.add(Pair.of(new Double(Double.NEGATIVE_INFINITY), new Double(Double.NEGATIVE_INFINITY)));
+		pairs.add(Pair.of(Double.valueOf(1.00001), Double.valueOf(1.00001)));
+		pairs.add(Pair.of(Float.valueOf(1.00001f), Float.valueOf(1.00001f)));
+		pairs.add(Pair.of(Double.valueOf(Double.NaN), Double.valueOf(Double.NaN)));
+		pairs.add(Pair.of(Double.valueOf(Double.POSITIVE_INFINITY), Double.valueOf(Double.POSITIVE_INFINITY)));
+		pairs.add(Pair.of(Double.valueOf(Double.NEGATIVE_INFINITY), Double.valueOf(Double.NEGATIVE_INFINITY)));
 
 		Calendar c = Calendar.getInstance();
 		pairs = new ArrayList<>();
@@ -100,21 +100,21 @@ public class ComparisonTest {
 		// Test two known-different values for inequality
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.INTEGER, pairs);
-		pairs.add(Pair.of(new Integer(1), new Integer(2)));
-		pairs.add(Pair.of(new Integer(42423), new Integer(42424)));
+		pairs.add(Pair.of(Integer.valueOf(1), Integer.valueOf(2)));
+		pairs.add(Pair.of(Integer.valueOf(42423), Integer.valueOf(42424)));
 
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.BOOLEAN, pairs);
-		pairs.add(Pair.of(new Boolean(true), new Boolean(false)));
-		pairs.add(Pair.of(new Boolean(false), new Boolean(true)));
+		pairs.add(Pair.of(Boolean.valueOf(true), Boolean.valueOf(false)));
+		pairs.add(Pair.of(Boolean.valueOf(false), Boolean.valueOf(true)));
 
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.DOUBLE, pairs);
-		pairs.add(Pair.of(new Double(1.00001), new Double(1.00002)));
-		pairs.add(Pair.of(new Float(1.00002), new Float(1.00001)));
-		pairs.add(Pair.of(new Double(Double.NaN), new Double(0.0)));
-		pairs.add(Pair.of(new Double(Double.POSITIVE_INFINITY), new Double(Double.NEGATIVE_INFINITY)));
-		pairs.add(Pair.of(new Double(Double.NEGATIVE_INFINITY), new Double(Double.POSITIVE_INFINITY)));
+		pairs.add(Pair.of(Double.valueOf(1.00001), Double.valueOf(1.00002)));
+		pairs.add(Pair.of(Float.valueOf(1.00002f), Float.valueOf(1.00001f)));
+		pairs.add(Pair.of(Double.valueOf(Double.NaN), Double.valueOf(0.0)));
+		pairs.add(Pair.of(Double.valueOf(Double.POSITIVE_INFINITY), Double.valueOf(Double.NEGATIVE_INFINITY)));
+		pairs.add(Pair.of(Double.valueOf(Double.NEGATIVE_INFINITY), Double.valueOf(Double.POSITIVE_INFINITY)));
 
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.DATETIME, pairs);
