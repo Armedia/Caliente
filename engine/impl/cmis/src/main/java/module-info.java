@@ -3,6 +3,12 @@ module com.armedia.caliente.engine.cmis {
 	exports com.armedia.caliente.engine.cmis.exporter;
 	exports com.armedia.caliente.engine.cmis.importer;
 
+	provides com.armedia.caliente.engine.importer.ImportEngineFactory with //
+		com.armedia.caliente.engine.cmis.importer.CmisImportEngineFactory;
+
+	provides com.armedia.caliente.engine.exporter.ExportEngineFactory with //
+		com.armedia.caliente.engine.cmis.exporter.CmisExportEngineFactory;
+
 	requires java.activation;
 
 	requires chemistry.opencmis.client.api;

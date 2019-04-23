@@ -1,9 +1,10 @@
 module com.armedia.caliente.engine.alfrescobi {
 	exports com.armedia.caliente.engine.alfresco.bi;
 	exports com.armedia.caliente.engine.alfresco.bi.importer;
-	// exports com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model;
 	exports com.armedia.caliente.engine.alfresco.bi.importer.model;
-	// exports com.armedia.caliente.engine.alfresco.bi.importer.model.jaxb;
+
+	provides com.armedia.caliente.engine.importer.ImportEngineFactory with //
+		com.armedia.caliente.engine.alfresco.bi.importer.AlfImportEngineFactory;
 
 	requires java.activation;
 	requires java.xml;
