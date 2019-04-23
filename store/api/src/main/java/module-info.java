@@ -5,6 +5,7 @@ module com.armedia.caliente.store {
 
 	uses com.armedia.caliente.store.CmfObjectStoreFactory;
 	uses com.armedia.caliente.store.CmfContentStoreFactory;
+	uses com.armedia.caliente.store.CmfContentOrganizer;
 
 	requires java.activation;
 	requires java.xml;
