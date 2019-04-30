@@ -595,6 +595,7 @@
 		<module>cli/exe/dctm-history</module>
 		<module>cli/exe/dctm-ticket-decoder</module>
 		<module>cli/exe/dctm-user-mapper</module>
+		<module>cli/exe/flat2db</module>
 		<module>cli/exe/validator</module>
 
 		<!-- Some general-use tools -->
