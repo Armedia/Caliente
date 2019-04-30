@@ -1,0 +1,270 @@
+flat2db [--lib ....] ${configXml}
+
+<dependency>
+  <groupId>org.apache.poi</groupId>
+  <artifactId>poi</artifactId>
+  <version>4.1.0</version>
+</dependency>
+
+// Target tables must already exist.
+//		* A Liquibase changeset can be applied to create them if necessary, but they must exist nonetheless once processing begins
+
+// CSVs are matched to tables based on:
+//		* If an alias is given, then use that in the mapping XML to ID the CSV, otherwise use the CSV's filename
+// 		* Then, if a mapping is given in the mapping XML, then do it based on that
+//		* Finally, if no mapping is given in the mapping XML, then ingest into a table whose name matches the CSV filename minus the extension
+//			(if the file has some weird name, an alias= clause must be used, or a mapping XML with the file's full name)
+
+<flat-2-db>
+	<data-sources>
+		<!-- for DB storage -->
+		<data-source id="dataSourceId" type="pooled|jndi|spring">
+			<!-- these will be applied directly to the datasource locator -->
+			<properties>
+				<property>value</property>
+				<property>value</property>
+			</properties>
+
+			<!-- what initializations to perform for the given DataSource -->
+			<startup>
+				<changeset>liquibase-changeset-url-or-file-path</changeset>
+				<rollback-changeset by="tag|number|date">value</rollback-changeset>
+				<sql-script>sql-script-to-run-on-prep</sql-script>
+				<sql>
+					<![CDATA[
+						-- SQL to run on prep
+					]]>
+				</sql>
+			</startup>
+
+			<!-- sequence of tasks to run after each batch is successfully savepointed
+			<batch-pre>
+				<script [lang="jexl"]>
+					<!-- run this script -->
+				</script>
+				<sql>
+					<!-- run this SQL -->
+				</sql>
+			</batch-pre>
+
+			<!-- how many records to insert per batch (if ommitted, a default number is used) -->
+			<!-- The number must be >= 1, or it'll be ignored -->
+			<!--
+				the transactional flag indicates whether a single transcation should be used per batch, or all inserts
+				should be part of an overarching transaction.  If the latter case, a savepoint will still be used per batch
+			-->
+			<batch-size transactional="true|false">100</batch-size>
+
+			<!-- sequence of tasks to run after each batch is successfully savepointed
+			<batch-post>
+				<script [lang="jexl"]>
+					<!-- run this script -->
+				</script>
+				<sql>
+					<!-- run this SQL -->
+				</sql>
+			</batch-post>
+
+			<!-- sequence of tasks to run after a batch fails -->
+			<batch-error>
+				...
+			</batch-error>
+
+			<shutdown>
+				.... (same as <startup>, but run during shutdown) ....
+			</shutdown>
+		</data-source>
+
+		<data-source ...>
+			...
+		</data-source>
+	</data-sources>
+
+	<structures>
+		<!-- name : must be unique, may not be the string "default" -->
+		<structure id="structure-1">
+			<header>
+				<!-- which row has the headers - if missing, no headers are used-->
+				<!-- the header row must not be within the records selected between <first-row> and <last-row>/<rows> -->
+				<row>#-abs-row</row>
+
+				<!-- ... OR ... -->
+
+				<column>
+					<!-- constant / ${expression-possibly-referencing-other-columns-by-name-or-index} / #engine-specific-expression-that-yields-the-name -->
+					<name>column-name</name>
+
+					<!-- the sql-compatible data type for the column (optional, default is to coerce into the target type in the DB) -->
+					<data-type>...</data-type>
+
+					<!-- constant / ${expression-possibly-referencing-other-columns-by-name-or-index} / #engine-specific-expression-that-yields-the-value(s?) -->
+					<value>...</value>  <!-- what to do here? support constants? column copies/processing? -->
+				</column>
+				<column>
+					...
+				</column>
+			</header>
+			<range>
+				<!-- first row for the data we're interested in -->
+				<first>#-abs-pos</first>
+				<!-- last row for the data we're interested in, can't mix with <count> -->
+				<last>#-abs-pos</last>
+				<!-- how many rows to consume, can't mix with <last> -->
+				<count>#-of-rows</count>
+			</range>
+
+			<filter [lang="....?" | class="fqcn"]>
+				<![CDATA[
+					// Script that returns an explicit false-value if a row should be skipped,
+					// and the row is accepted otherwise (true-value or null/void)
+					// The filter will be given two already-tabular (map) views of the record:
+					// one indexed by column name (if possible), and one by column index (0-based). If there
+					// are no column names, both mappings are one and the same
+				]]>
+			</filter>
+		</structure>
+
+		<!-- extends : must reference already-existing structure names, values from earlier names -->
+		<!-- (further to the left) override values from latter names (further to the right)       -->
+		<structure id="structure-2" extends="structure-1,...,structure-N">
+			<!-- to disable the <header>, use <header/> -->
+			<!-- to disable the <range>, use <range/> -->
+			<!-- to disable the <range>/<first>, use <first>NONE</first> -->
+			<!-- to disable the <range>/<last>, use <last>NONE</last> -->
+			<!-- to disable the <range>/<count>, use <count>ALL</count> -->
+			<!-- to disable the <filter>, use <filter/> -->
+		</structure>
+
+		<!-- which structure id should be used as the default (the id must be defined above) -->
+		<default>structure-id</default>
+	</structures>
+
+	<files>
+		<!-- file ID must be unique -->
+		<excel id="fileId1">
+			<!-- where the file is stored - either a local file path or a resource/URL -->
+			<source>....</source>
+			<sheets>
+				<!-- copy = what sheet settings to copy from, must be defined in <common> area, or "default" to reference the common default -->
+				<default-structure [extends="settings-2"]>
+					...
+				</default-structure>
+
+				<!-- sheetId = the ID with which this sheet will be referred -->
+				<!-- sheet-ID = the sheet ID within the worksheet -->
+				<!-- sheet-num = the sheet number within the worksheet -->
+				<!-- copy = what <structures>/<structure> to copy from, may be the string "default" to reference the "closest" default -->
+				<sheet-structure [id="sheetId"] sheet="sheet-ID|sheet-num" [extends="structure-id|default"]>
+					...
+				</sheet-structure>
+
+				<sheet-structure ...>
+					...
+				</sheet-structure>
+			</sheets>
+		</excel>
+
+		<csv id="fileId2" header-row="true|false" eol-comment="#" stable-rows="true|false">
+			<source>....</source>
+			<structure [extends="..."]>
+				...
+			</structure>
+		</csv>
+
+		<xml id="fileId3">
+			<source>...</source>
+
+			<!-- this XPath expression will be used to find each record -->
+			<xslt-table id="xslt-1">
+				<source>xslt-sheet-that-produces-a-table-and-turns-this-into-a-CSV</source>
+				<settings [extends="..."]>
+					...
+				</settings>
+			</xslt-table>
+
+			<direct-table id="direct-1">
+				<records>xpath-expression</records>
+				<columns>
+					<column>
+						<!-- this expression will yield the column name. Must yield unique values per record -->
+						<name>xpath-expression</name>
+						<!-- this expression will yield the column's value(s?) -->
+						<value>xpath-expression</value>
+						<data-type>datatype</data-type>
+					</column>
+					<column>
+						...
+					</column>
+				</columns>
+
+				<!-- only <range> and <filter> make sense here -->
+				<structure [extends="..."]>
+					...
+				</structure>
+			</direct-table>
+
+			<direct-table id="direct-2">
+				...
+			</direct-table>
+		</xml>
+	</files>
+
+	<mappings>
+		<mapping>
+			<data-source>data-source-id</data-source>
+
+			<!-- this can be a table name, schema+table, etc... -->
+			<to>target-table-spec</to>
+
+			<from file="fileId">
+				<!-- override datasource settings -->
+
+				<!-- to disable startup, use <startup inherit="none"/> -->
+				<!-- inherit value means run the inherited commands before or after this one, or none to not run it at all -->
+				<startup [inherit="none|before|after"]>
+					....
+				</startup>
+
+				<!-- to disable batch-pre, use <batch-pre inherit="none"/> -->
+				<batch-pre [inherit="none|before|after"]>
+					...
+				</batch-pre>
+
+				<!-- This can only override, not inherit the DataSource's -->
+				<batch-size transactional="true|false">100</batch-size>
+
+				<!-- to disable batch-post, use <batch-post inherit="none"/> -->
+				<batch-post [inherit="none|before|after"]>
+					...
+				</batch-post>
+
+				<!-- to disable batch-error, use <batch-error inherit="none"/> -->
+				<batch-error [inherit="none|before|after"]>
+					...
+				</batch-error>
+
+				<!-- to disable shutdown, use <shutdown inherit="none"/> -->
+				<shutdown [inherit="none|before|after"]>
+					....
+				</shutdown>
+
+				<!-- if we want to customize the column mappings instead of making them one-to-one direct -->
+				<columns>
+					<column>
+						<from-name>source-column-name</from-name>
+						<from-index>source-column-index</from-index>
+						<to>target-column-name</to>
+					</column>
+					<column>
+						...
+					</column>
+				</columns>
+			</from>
+
+			<from ...>
+				....
+			</from>
+		</mapping>
+	</mappings>
+
+</flat-2-db>
