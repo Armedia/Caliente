@@ -1,20 +1,16 @@
-flat2db [--lib ....] ${configXml}
-
-<dependency>
-  <groupId>org.apache.poi</groupId>
-  <artifactId>poi</artifactId>
-  <version>4.1.0</version>
-</dependency>
-
-// Target tables must already exist.
-//		* A Liquibase changeset can be applied to create them if necessary, but they must exist nonetheless once processing begins
-
-// CSVs are matched to tables based on:
-//		* If an alias is given, then use that in the mapping XML to ID the CSV, otherwise use the CSV's filename
-// 		* Then, if a mapping is given in the mapping XML, then do it based on that
-//		* Finally, if no mapping is given in the mapping XML, then ingest into a table whose name matches the CSV filename minus the extension
-//			(if the file has some weird name, an alias= clause must be used, or a mapping XML with the file's full name)
-
+<?xml version="1.1"?>
+<!--
+	flat2db [-lib ....] ${configXml}
+	
+	// Target tables must already exist.
+	//		* A Liquibase changeset can be applied to create them if necessary, but they must exist nonetheless once processing begins
+	
+	// CSVs are matched to tables based on:
+	//		* If an alias is given, then use that in the mapping XML to ID the CSV, otherwise use the CSV's filename
+	// 		* Then, if a mapping is given in the mapping XML, then do it based on that
+	//		* Finally, if no mapping is given in the mapping XML, then ingest into a table whose name matches the CSV filename minus the extension
+	//			(if the file has some weird name, an alias= clause must be used, or a mapping XML with the file's full name)
+-->
 <flat-2-db>
 	<data-sources>
 		<!-- for DB storage -->
@@ -37,9 +33,9 @@ flat2db [--lib ....] ${configXml}
 				</sql>
 			</startup>
 
-			<!-- sequence of tasks to run after each batch is successfully savepointed
+			<!-- sequence of tasks to run after each batch is successfully savepointed -->
 			<batch-pre>
-				<script [lang="jexl"]>
+				<script lang="jexl">
 					<!-- run this script -->
 				</script>
 				<sql>
@@ -55,9 +51,9 @@ flat2db [--lib ....] ${configXml}
 			-->
 			<batch-size transactional="true|false">100</batch-size>
 
-			<!-- sequence of tasks to run after each batch is successfully savepointed
+			<!-- sequence of tasks to run after each batch is successfully savepointed -->
 			<batch-post>
-				<script [lang="jexl"]>
+				<script lang="jexl">
 					<!-- run this script -->
 				</script>
 				<sql>
@@ -71,11 +67,11 @@ flat2db [--lib ....] ${configXml}
 			</batch-error>
 
 			<shutdown>
-				.... (same as <startup>, but run during shutdown) ....
+				.... (same as <startup/>, but run during shutdown) ....
 			</shutdown>
 		</data-source>
 
-		<data-source ...>
+		<data-source id="..." type="...">
 			...
 		</data-source>
 	</data-sources>
@@ -113,7 +109,8 @@ flat2db [--lib ....] ${configXml}
 				<count>#-of-rows</count>
 			</range>
 
-			<filter [lang="....?" | class="fqcn"]>
+			<!-- only one of either lang or className may be specified -->
+			<filter lang="....?" className="fqcn">
 				<![CDATA[
 					// Script that returns an explicit false-value if a row should be skipped,
 					// and the row is accepted otherwise (true-value or null/void)
@@ -146,7 +143,7 @@ flat2db [--lib ....] ${configXml}
 			<source>....</source>
 			<sheets>
 				<!-- copy = what sheet settings to copy from, must be defined in <common> area, or "default" to reference the common default -->
-				<default-structure [extends="settings-2"]>
+				<default-structure extends="settings-2">
 					...
 				</default-structure>
 
@@ -154,11 +151,11 @@ flat2db [--lib ....] ${configXml}
 				<!-- sheet-ID = the sheet ID within the worksheet -->
 				<!-- sheet-num = the sheet number within the worksheet -->
 				<!-- copy = what <structures>/<structure> to copy from, may be the string "default" to reference the "closest" default -->
-				<sheet-structure [id="sheetId"] sheet="sheet-ID|sheet-num" [extends="structure-id|default"]>
+				<sheet-structure id="sheetId" sheet="sheet-ID|sheet-num" extends="structure-id|default">
 					...
 				</sheet-structure>
 
-				<sheet-structure ...>
+				<sheet-structure id="...">
 					...
 				</sheet-structure>
 			</sheets>
@@ -166,7 +163,7 @@ flat2db [--lib ....] ${configXml}
 
 		<csv id="fileId2" header-row="true|false" eol-comment="#" stable-rows="true|false">
 			<source>....</source>
-			<structure [extends="..."]>
+			<structure extends="...">
 				...
 			</structure>
 		</csv>
@@ -177,7 +174,7 @@ flat2db [--lib ....] ${configXml}
 			<!-- this XPath expression will be used to find each record -->
 			<xslt-table id="xslt-1">
 				<source>xslt-sheet-that-produces-a-table-and-turns-this-into-a-CSV</source>
-				<settings [extends="..."]>
+				<settings extends="...">
 					...
 				</settings>
 			</xslt-table>
@@ -198,7 +195,7 @@ flat2db [--lib ....] ${configXml}
 				</columns>
 
 				<!-- only <range> and <filter> make sense here -->
-				<structure [extends="..."]>
+				<structure extends="...">
 					...
 				</structure>
 			</direct-table>
@@ -221,12 +218,12 @@ flat2db [--lib ....] ${configXml}
 
 				<!-- to disable startup, use <startup inherit="none"/> -->
 				<!-- inherit value means run the inherited commands before or after this one, or none to not run it at all -->
-				<startup [inherit="none|before|after"]>
+				<startup inherit="none|before|after">
 					....
 				</startup>
 
 				<!-- to disable batch-pre, use <batch-pre inherit="none"/> -->
-				<batch-pre [inherit="none|before|after"]>
+				<batch-pre inherit="none|before|after">
 					...
 				</batch-pre>
 
@@ -234,17 +231,17 @@ flat2db [--lib ....] ${configXml}
 				<batch-size transactional="true|false">100</batch-size>
 
 				<!-- to disable batch-post, use <batch-post inherit="none"/> -->
-				<batch-post [inherit="none|before|after"]>
+				<batch-post inherit="none|before|after">
 					...
 				</batch-post>
 
 				<!-- to disable batch-error, use <batch-error inherit="none"/> -->
-				<batch-error [inherit="none|before|after"]>
+				<batch-error inherit="none|before|after">
 					...
 				</batch-error>
 
 				<!-- to disable shutdown, use <shutdown inherit="none"/> -->
-				<shutdown [inherit="none|before|after"]>
+				<shutdown inherit="none|before|after">
 					....
 				</shutdown>
 
@@ -261,10 +258,9 @@ flat2db [--lib ....] ${configXml}
 				</columns>
 			</from>
 
-			<from ...>
+			<from file="...">
 				....
 			</from>
 		</mapping>
 	</mappings>
-
 </flat-2-db>
