@@ -2,6 +2,7 @@ package com.armedia.caliente.tools.datasource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,14 +38,16 @@ public abstract class DataSourceLocator {
 
 	public static DataSourceLocator getFirstLocatorFor(final String locationType) {
 		DataSourceLocator.LOG.debug("Looking for the first locator to match the location type [{}]", locationType);
-		DataSourceLocator first = DataSourceLocator.LOADER.getFirst((l) -> l.supportsLocationType(locationType));
-		if (first != null) {
+		try {
+			DataSourceLocator first = DataSourceLocator.LOADER.getFirst((l) -> l.supportsLocationType(locationType));
 			DataSourceLocator.LOG.debug("The first locator to match the location type [{}] was of class [{}]",
 				locationType, first.getClass().getCanonicalName());
-		} else {
+			return first;
+		} catch (NoSuchElementException e) {
+			// No element found...
 			DataSourceLocator.LOG.debug("No locator found to match the location type [{}]", locationType);
+			return null;
 		}
-		return first;
 	}
 
 	public static List<DataSourceLocator> getAllLocatorsFor(final String locationType) {
