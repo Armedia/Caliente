@@ -38,7 +38,6 @@ import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndex;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
 import com.armedia.commons.utilities.CloseableIterator;
-import com.armedia.commons.utilities.StreamTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
 
@@ -265,7 +264,7 @@ public final class BulkImportManager {
 		final Unmarshaller u = XmlTools.getUnmarshaller(null, ScanIndex.class, ScanIndexItem.class,
 			ScanIndexItemVersion.class);
 
-		CloseableIterator<ScanIndexItem> it = new CloseableIterator<ScanIndexItem>() {
+		return new CloseableIterator<ScanIndexItem>() {
 			@Override
 			protected CloseableIterator<ScanIndexItem>.Result findNext() throws Exception {
 				while (xml.nextTag() == XMLStreamConstants.START_ELEMENT) {
@@ -296,7 +295,6 @@ public final class BulkImportManager {
 					Closer.closeQuietly(in);
 				}
 			}
-		};
-		return StreamTools.of(it, Spliterator.IMMUTABLE | Spliterator.NONNULL).onClose(it::close);
+		}.stream(Spliterator.IMMUTABLE | Spliterator.NONNULL);
 	}
 }
