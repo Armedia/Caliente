@@ -1,13 +1,18 @@
 <root>
   <facet id="jpt.jaxb">
     <node name="classgen">
-      <attribute name="package" value="com.armedia.caliente.generator"/>
+      <attribute name="package" value="com.armedia.caliente.cli.flat2db.xml"/>
     </node>
     <node name="libprov">
       <attribute name="provider-id" value="jaxb-user-library-provider"/>
     </node>
     <node name="platform">
       <attribute name="platform-id" value="generic_2_2"/>
+    </node>
+    <node name="schemas">
+      <node name="schema-1">
+        <attribute name="location" value="platform:/resource/caliente-flat2db/src/main/resources/flat2db.xsd"/>
+      </node>
     </node>
   </facet>
 </root>
