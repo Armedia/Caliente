@@ -216,7 +216,7 @@ public class Launcher extends AbstractLauncher {
 			path = Launcher.DEFAULT_DATA_PATH.toString();
 		}
 
-		File f = createFile(path);
+		File f = newCanonicalFile(path);
 		if (f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
@@ -235,7 +235,7 @@ public class Launcher extends AbstractLauncher {
 			path = new File(this.baseDataLocation, Launcher.DEFAULT_DB_PATH).getAbsolutePath();
 		}
 
-		File f = createFile(path);
+		File f = newCanonicalFile(path);
 		if (f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
@@ -276,7 +276,7 @@ public class Launcher extends AbstractLauncher {
 			path = new File(this.baseDataLocation, Launcher.DEFAULT_STREAMS_PATH).getAbsolutePath();
 		}
 
-		File f = createFile(path);
+		File f = newCanonicalFile(path);
 		if (f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
@@ -332,7 +332,7 @@ public class Launcher extends AbstractLauncher {
 			path = new File(this.baseDataLocation, Launcher.DEFAULT_LOG_PATH).getAbsolutePath();
 		}
 
-		File f = createFile(path);
+		File f = newCanonicalFile(path);
 		if (f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
@@ -402,12 +402,12 @@ public class Launcher extends AbstractLauncher {
 		return true;
 	}
 
-	private File createFile(String path) {
+	private File newCanonicalFile(String path) {
 		return Tools.canonicalize(new File(path));
 	}
 
 	protected File locateFile(String path, boolean required) throws IOException {
-		File f = createFile(path);
+		File f = newCanonicalFile(path);
 		if (!f.exists()) {
 			if (required) { throw new IOException(String.format("The file [%s] doesn't exist", f.getAbsolutePath())); }
 			return null;
@@ -522,7 +522,7 @@ public class Launcher extends AbstractLauncher {
 		String logCfg = baseValues.getString(CLIParam.log_cfg);
 		boolean customLog = false;
 		if (logCfg != null) {
-			final File cfg = createFile(logCfg);
+			final File cfg = newCanonicalFile(logCfg);
 			if (cfg.exists() && cfg.isFile() && cfg.canRead()) {
 				DOMConfigurator.configure(Tools.canonicalize(cfg).getAbsolutePath());
 				customLog = true;
