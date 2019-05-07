@@ -245,7 +245,7 @@ public class Launcher extends AbstractLauncher {
 		return f;
 	}
 
-	private StoreConfiguration configureObjectStore() throws IOException, CommandLineProcessingException {
+	private StoreConfiguration buildObjectStoreConfiguration() throws IOException, CommandLineProcessingException {
 		final File metadataLocation = this.objectStoreLocation;
 		final Map<String, String> commonValues = new HashMap<>();
 		commonValues.put("dir.root", this.baseDataLocation.getAbsolutePath());
@@ -286,7 +286,8 @@ public class Launcher extends AbstractLauncher {
 		return f;
 	}
 
-	private StoreConfiguration configureContentStore() throws IOException, CommandLineProcessingException {
+	private StoreConfiguration buildContentStoreConfiguration(CmfObjectStore<?> objectStore)
+		throws IOException, CommandLineProcessingException {
 
 		final boolean directFsExport = this.directFsMode;
 		final File contentLocation = this.contentStoreLocation;
@@ -352,7 +353,7 @@ public class Launcher extends AbstractLauncher {
 
 		StoreConfiguration cfg = null;
 
-		cfg = configureObjectStore();
+		cfg = buildObjectStoreConfiguration();
 		this.objectStore = CmfStores.createObjectStore(cfg);
 		storeLocation = this.objectStore.getStoreLocation();
 		if (storeLocation != null) {
@@ -361,10 +362,7 @@ public class Launcher extends AbstractLauncher {
 			this.console.info("The Metadata Store does not support local storage");
 		}
 
-		// TODO: Did these objects require "external" content references? I.e. do their content
-		// streams reside in the local filesystem?
-
-		cfg = configureContentStore();
+		cfg = buildContentStoreConfiguration(this.objectStore);
 		this.contentStore = CmfStores.createContentStore(cfg);
 		storeLocation = this.contentStore.getStoreLocation();
 		if (storeLocation != null) {
