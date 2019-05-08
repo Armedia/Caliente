@@ -198,13 +198,7 @@ public class Launcher extends AbstractLauncher {
 		if (error != null) { throw new CommandLineProcessingException(1, error); }
 
 		this.baseDataLocation = getBaseDataLocation(commandValues);
-
-		this.objectStoreLocation = getMetadataLocation(commandValues);
-		this.contentStoreLocation = getContentLocation(commandValues);
 		this.logLocation = getLogLocation(baseValues);
-
-		this.directFsMode = commandValues.isPresent(CLIParam.direct_fs);
-		this.contentOrganizer = commandValues.getString(CLIParam.organizer, Launcher.DEFAULT_STREAMS_ORGANIZER);
 	}
 
 	private File getBaseDataLocation(OptionValues baseValues) throws CommandLineProcessingException {
@@ -267,8 +261,8 @@ public class Launcher extends AbstractLauncher {
 		return cfg;
 	}
 
-	private File getContentLocation(OptionValues baseValues) throws CommandLineProcessingException {
-		// Step 2: There is no special location used by the engine, so see what the user wants to do
+	private File getContentLocation(CmfObjectStore<?> objectStore, OptionValues baseValues)
+		throws CommandLineProcessingException {
 		String path = null;
 		if (baseValues.isPresent(CLIParam.streams)) {
 			path = baseValues.getString(CLIParam.streams);
@@ -286,8 +280,7 @@ public class Launcher extends AbstractLauncher {
 		return f;
 	}
 
-	private StoreConfiguration buildContentStoreConfiguration(CmfObjectStore<?> objectStore)
-		throws IOException, CommandLineProcessingException {
+	private StoreConfiguration buildContentStoreConfiguration() throws IOException, CommandLineProcessingException {
 
 		final boolean directFsExport = this.directFsMode;
 		final File contentLocation = this.contentStoreLocation;
@@ -343,7 +336,7 @@ public class Launcher extends AbstractLauncher {
 		return f;
 	}
 
-	private void initializeStores() throws Exception {
+	private void initializeStores(OptionValues commandValues) throws Exception {
 		if (!this.command.getDescriptor().isRequiresStorage()) { return; }
 
 		// Set the filesystem location where files will be created or read from
@@ -353,6 +346,7 @@ public class Launcher extends AbstractLauncher {
 
 		StoreConfiguration cfg = null;
 
+		this.objectStoreLocation = getMetadataLocation(commandValues);
 		cfg = buildObjectStoreConfiguration();
 		this.objectStore = CmfStores.createObjectStore(cfg);
 		storeLocation = this.objectStore.getStoreLocation();
@@ -362,7 +356,10 @@ public class Launcher extends AbstractLauncher {
 			this.console.info("The Metadata Store does not support local storage");
 		}
 
-		cfg = buildContentStoreConfiguration(this.objectStore);
+		this.contentStoreLocation = getContentLocation(this.objectStore, commandValues);
+		this.directFsMode = commandValues.isPresent(CLIParam.direct_fs);
+		this.contentOrganizer = commandValues.getString(CLIParam.organizer, Launcher.DEFAULT_STREAMS_ORGANIZER);
+		cfg = buildContentStoreConfiguration();
 		this.contentStore = CmfStores.createContentStore(cfg);
 		storeLocation = this.contentStore.getStoreLocation();
 		if (storeLocation != null) {
@@ -559,7 +556,7 @@ public class Launcher extends AbstractLauncher {
 		Collection<String> positionals) throws Exception {
 
 		try {
-			initializeStores();
+			initializeStores(commandValues);
 
 			final CalienteState state = new CalienteState(this.baseDataLocation, this.objectStoreLocation,
 				this.objectStore, this.contentStoreLocation, this.contentStore);
