@@ -39,6 +39,10 @@ public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory
 		return this.descriptor;
 	}
 
+	public boolean isShouldStoreContentLocationExplicit() {
+		return false;
+	}
+
 	public final ENGINE_FACTORY getEngineFactory() {
 		return this.engineFactory;
 	}

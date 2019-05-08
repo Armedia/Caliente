@@ -45,6 +45,7 @@ import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.engine.tools.HierarchicalOrganizer;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfStoreFactory;
 import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.CmfValue;
@@ -76,6 +77,7 @@ public class Launcher extends AbstractLauncher {
 	}
 
 	public static final CmfCrypt CRYPTO = new CmfCrypt();
+	public static final String STORE_PROP_CONTENT_LOCATION_EXPLICIT = "caliente.content.location.explicit";
 
 	public static final void main(String... args) {
 		System.exit(new Launcher().launch(CLIParam.help, args));
@@ -263,10 +265,39 @@ public class Launcher extends AbstractLauncher {
 
 	private File getContentLocation(CmfObjectStore<?> objectStore, OptionValues baseValues)
 		throws CommandLineProcessingException {
-		String path = null;
-		if (baseValues.isPresent(CLIParam.streams)) {
+		final boolean optionPresent = baseValues.isPresent(CLIParam.streams);
+		if (this.command.isShouldStoreContentLocationExplicit()) {
+			// TODO: some engines may not need this set to true just because the flag is
+			// present - some circumstances may mean that the flag is present, but content
+			// is being copied unto the default location so this flag should either not be
+			// stored, or be stored as FALSE
+			try {
+				objectStore.setProperty(Launcher.STORE_PROP_CONTENT_LOCATION_EXPLICIT, new CmfValue(optionPresent));
+			} catch (CmfStorageException e) {
+				throw new CommandLineProcessingException(1,
+					String.format("Failed to store the property %s into the Object Store",
+						Launcher.STORE_PROP_CONTENT_LOCATION_EXPLICIT),
+					e);
+			}
+		}
+		final String path;
+		if (optionPresent) {
 			path = baseValues.getString(CLIParam.streams);
 		} else {
+			final CmfValue contentLocationExplicit;
+			try {
+				contentLocationExplicit = objectStore.getProperty(Launcher.STORE_PROP_CONTENT_LOCATION_EXPLICIT);
+			} catch (CmfStorageException e) {
+				throw new CommandLineProcessingException(1,
+					String.format("Failed to query the property %s from the Object Store",
+						Launcher.STORE_PROP_CONTENT_LOCATION_EXPLICIT),
+					e);
+			}
+			if ((contentLocationExplicit == null) || contentLocationExplicit.asBoolean()) {
+				throw new CommandLineProcessingException(1,
+					String.format("Must provide the --%s option to point to the content for this extraction",
+						CLIParam.streams.option.getKey()));
+			}
 			path = new File(this.baseDataLocation, Launcher.DEFAULT_STREAMS_PATH).getAbsolutePath();
 		}
 
