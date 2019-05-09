@@ -77,7 +77,7 @@ public class Launcher extends AbstractLauncher {
 	}
 
 	public static final CmfCrypt CRYPTO = new CmfCrypt();
-	public static final String STORE_PROP_CONTENT_LOCATION_EXPLICIT = "caliente.content.location.explicit";
+	public static final String STORE_PROP_CONTENT_LOCATION_REQUIRED = "caliente.content.location.required";
 
 	public static final void main(String... args) {
 		System.exit(new Launcher().launch(CLIParam.help, args));
@@ -263,52 +263,68 @@ public class Launcher extends AbstractLauncher {
 		return cfg;
 	}
 
-	private File getContentLocation(CmfObjectStore<?> objectStore, OptionValues baseValues)
+	private File getContentLocation(CmfObjectStore<?> objectStore, OptionValues commandValues)
 		throws CommandLineProcessingException {
-		final boolean optionPresent = baseValues.isPresent(CLIParam.streams);
-		if (this.command.isShouldStoreContentLocationExplicit()) {
-			// TODO: some engines may not need this set to true just because the flag is
-			// present - some circumstances may mean that the flag is present, but content
-			// is being copied unto the default location so this flag should either not be
-			// stored, or be stored as FALSE
-			try {
-				objectStore.setProperty(Launcher.STORE_PROP_CONTENT_LOCATION_EXPLICIT, new CmfValue(optionPresent));
-			} catch (CmfStorageException e) {
-				throw new CommandLineProcessingException(1,
-					String.format("Failed to store the property %s into the Object Store",
-						Launcher.STORE_PROP_CONTENT_LOCATION_EXPLICIT),
-					e);
-			}
-		}
-		final String path;
-		if (optionPresent) {
-			path = baseValues.getString(CLIParam.streams);
+		final boolean contentLocationWasGiven = commandValues.isPresent(CLIParam.streams);
+		final File calculatedContentLocation = Tools
+			.canonicalize(new File(this.baseDataLocation, Launcher.DEFAULT_STREAMS_PATH));
+		final File contentLocation;
+		if (contentLocationWasGiven) {
+			contentLocation = newCanonicalFile(commandValues.getString(CLIParam.streams));
 		} else {
-			final CmfValue contentLocationExplicit;
-			try {
-				contentLocationExplicit = objectStore.getProperty(Launcher.STORE_PROP_CONTENT_LOCATION_EXPLICIT);
-			} catch (CmfStorageException e) {
-				throw new CommandLineProcessingException(1,
-					String.format("Failed to query the property %s from the Object Store",
-						Launcher.STORE_PROP_CONTENT_LOCATION_EXPLICIT),
-					e);
-			}
-			if ((contentLocationExplicit == null) || contentLocationExplicit.asBoolean()) {
-				throw new CommandLineProcessingException(1,
-					String.format("Must provide the --%s option to point to the content for this extraction",
-						CLIParam.streams.option.getKey()));
-			}
-			path = new File(this.baseDataLocation, Launcher.DEFAULT_STREAMS_PATH).getAbsolutePath();
+			contentLocation = calculatedContentLocation;
 		}
-
-		File f = newCanonicalFile(path);
-		if (f.exists() && !f.isFile() && !f.isDirectory()) {
+		if (contentLocation.exists() && !contentLocation.isFile() && !contentLocation.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
 				"The object at path [%s] is neither a file nor a directory - can't use it to describe the content store",
-				f));
+				contentLocation));
 		}
-		return f;
+
+		// If the option is not present, then check to see if it's required to process
+		// this data set (if this is a new data set, this property won't be set so we're fine)
+		if (!contentLocationWasGiven) {
+			try {
+				final CmfValue contentLocationRequired = objectStore
+					.getProperty(Launcher.STORE_PROP_CONTENT_LOCATION_REQUIRED);
+				if ((contentLocationRequired != null) && contentLocationRequired.asBoolean()) {
+					throw new CommandLineProcessingException(1,
+						String.format("Must provide the --%s option to point to the content for this extraction",
+							CLIParam.streams.option.getKey()));
+				}
+			} catch (CmfStorageException e) {
+				throw new CommandLineProcessingException(1,
+					String.format("Failed to query the property %s from the Object Store",
+						Launcher.STORE_PROP_CONTENT_LOCATION_REQUIRED),
+					e);
+			}
+		}
+
+		// If this processing mode needs to set the location requirement (exports do),
+		// then we calculate the value and store it
+		if (this.command.isShouldStoreContentLocationRequirement()) {
+			// These two will only be equals if --streams is not given, or --streams is given
+			// and its final canonical location matches the calculated default location
+			final boolean contentInDefaultLocation = Tools.equals(contentLocation, calculatedContentLocation);
+
+			// The content location flag (--streams) will be required "downstream" (i.e. upon import
+			// of the data set being created) if the content streams were NOT stored in the
+			// default location during extraction. When this can happen varies engine-to-engine so
+			// we make sure to delegate the calculation calculate.
+			final boolean contentLocationRequired = !contentInDefaultLocation
+				|| this.command.isContentStreamsExternal(commandValues);
+			try {
+				objectStore.setProperty(Launcher.STORE_PROP_CONTENT_LOCATION_REQUIRED,
+					new CmfValue(contentLocationRequired));
+			} catch (CmfStorageException e) {
+				throw new CommandLineProcessingException(1,
+					String.format("Failed to store the property %s into the Object Store",
+						Launcher.STORE_PROP_CONTENT_LOCATION_REQUIRED),
+					e);
+			}
+		}
+
+		return contentLocation;
 	}
 
 	private StoreConfiguration buildContentStoreConfiguration() throws IOException, CommandLineProcessingException {

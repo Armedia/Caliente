@@ -41,6 +41,11 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 	}
 
 	@Override
+	public boolean isContentStreamsExternal(OptionValues commandValues) {
+		return !commandValues.isPresent(Exporter.COPY_CONTENT);
+	}
+
+	@Override
 	protected boolean preInitialize(CalienteState state, Map<String, Object> settings) {
 		return super.preInitialize(state, settings);
 	}
@@ -75,12 +80,12 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		super.customizeContentStoreProperties(cfg);
 		cfg.getSettings().put(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel(), Boolean.TRUE.toString());
 	}
-
+	
 	protected File getContentFilesLocation() {
 		if (isCopyContent()) { return super.getContentFilesLocation(); }
 		return new File(BaseParam.source.getString());
 	}
-
+	
 	protected String getContentOrganizerName() {
 		return LocalOrganizer.NAME;
 	}

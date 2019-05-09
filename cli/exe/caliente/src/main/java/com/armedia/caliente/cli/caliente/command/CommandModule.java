@@ -39,7 +39,11 @@ public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory
 		return this.descriptor;
 	}
 
-	public boolean isShouldStoreContentLocationExplicit() {
+	public boolean isShouldStoreContentLocationRequirement() {
+		return false;
+	}
+
+	public boolean isContentStreamsExternal(OptionValues commandValues) {
 		return false;
 	}
 

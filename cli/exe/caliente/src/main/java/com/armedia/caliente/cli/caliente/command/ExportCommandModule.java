@@ -52,7 +52,7 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 	}
 
 	@Override
-	public boolean isShouldStoreContentLocationExplicit() {
+	public boolean isShouldStoreContentLocationRequirement() {
 		return true;
 	}
 
