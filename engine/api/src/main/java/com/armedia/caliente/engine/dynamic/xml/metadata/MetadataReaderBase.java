@@ -186,7 +186,7 @@ public abstract class MetadataReaderBase extends BaseShareableLockable implement
 					Object value = null;
 					if (att.hasValues()) {
 						CmfValueCodec<V> codec = translator.getCodec(att.getType());
-						value = att.getType().getValue(codec.encodeValue(att.getValue()));
+						value = att.getType().getValue(codec.encode(att.getValue()));
 					}
 					attributes.put(att.getName(), value);
 				}
@@ -195,7 +195,7 @@ public abstract class MetadataReaderBase extends BaseShareableLockable implement
 					Object value = null;
 					if (prop.hasValues()) {
 						CmfValueCodec<V> codec = translator.getCodec(prop.getType());
-						value = prop.getType().getValue(codec.encodeValue(prop.getValue()));
+						value = prop.getType().getValue(codec.encode(prop.getValue()));
 					}
 					attributes.put(prop.getName(), value);
 				}
