@@ -22,10 +22,10 @@ import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.store.xml.StoreDefinitions;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
-import com.armedia.commons.utilities.XmlTools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.xml.XmlTools;
 
 public final class CmfStores extends BaseShareableLockable {
 

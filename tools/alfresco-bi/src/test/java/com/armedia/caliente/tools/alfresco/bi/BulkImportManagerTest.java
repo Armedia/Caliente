@@ -29,7 +29,7 @@ import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.ResourceLoader;
-import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.xml.XmlTools;
 
 class BulkImportManagerTest {
 
@@ -180,8 +180,7 @@ class BulkImportManagerTest {
 	void testScanAndMarshal() throws Exception {
 
 		// Find the XML file(s)
-		Unmarshaller u = XmlTools.getUnmarshaller(null, ScanIndex.class, ScanIndexItem.class,
-			ScanIndexItemVersion.class);
+		Unmarshaller u = XmlTools.getUnmarshaller(ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class);
 		Marshaller m = XmlTools.getMarshaller(ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class);
 		URL url = ResourceLoader.getResourceOrFile("classpath:/alfresco-bulk-import/scan.folders.xml");
 		File f = new File(url.toURI());

@@ -10,7 +10,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
-import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.xml.XmlTools;
 
 public abstract class XmlBase {
 

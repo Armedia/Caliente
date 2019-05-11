@@ -49,7 +49,7 @@ import com.armedia.caliente.store.tools.FilenameEncoder;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.xml.XmlTools;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
