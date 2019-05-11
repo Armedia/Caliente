@@ -11,7 +11,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.dfc.DctmAttributes;
-import com.armedia.caliente.engine.dfc.DctmConstant;
 import com.armedia.caliente.engine.dfc.DctmMappingUtils;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.common.Setting;
@@ -19,9 +18,10 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
+import com.armedia.caliente.tools.dfc.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfcConstant;
 import com.armedia.caliente.tools.dfc.DfcQuery;
 import com.armedia.caliente.tools.dfc.DfcUtils;
-import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
@@ -192,7 +192,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 			// Next, set the password
 			CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.USER_SOURCE);
 			final IDfValue userSource = (att != null ? att.getValue() : null);
-			if ((att == null) || Tools.equals(DctmConstant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
+			if ((att == null) || Tools.equals(DfcConstant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
 				// Default the password to the user's login name, if a specific value hasn't been
 				// selected for global use
 				final String inlinePasswordValue = ctx.getSettings().getString(Setting.DEFAULT_USER_PASSWORD.getLabel(),
