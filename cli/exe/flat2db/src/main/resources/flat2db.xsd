@@ -48,7 +48,7 @@
 		</xsd:restriction>
 	</xsd:simpleType>
 
-	<xsd:complexType name="properties.t">
+	<xsd:complexType name="properties.t" mixed="false">
 		<xsd:sequence>
 			<xsd:any minOccurs="0" maxOccurs="unbounded" processContents="skip" />
 		</xsd:sequence>
@@ -166,7 +166,7 @@
 		<xsd:attribute name="id" type="tns:id_string.t" use="required" />
 		<xsd:attribute name="extends" type="tns:trimmed_string.t" use="optional" />
 	</xsd:complexType>
-	
+
 	<xsd:complexType name="structures.t">
 		<xsd:sequence>
 			<xsd:element name="structure" type="tns:structure.t" minOccurs="1" maxOccurs="unbounded"/>
