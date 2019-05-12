@@ -176,15 +176,10 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		object.setAttribute(att);
 
 		Path path = file.toPath();
-		final BasicFileAttributeView basic = getFileAttributeView(path, BasicFileAttributeView.class);
-		final DosFileAttributeView dos = getFileAttributeView(path, DosFileAttributeView.class);
-		final AclFileAttributeView acl = getFileAttributeView(path, AclFileAttributeView.class);
-		final PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
-		final UserDefinedFileAttributeView extendedAtts = getFileAttributeView(path,
-			UserDefinedFileAttributeView.class);
 
 		// Ok... we have the attribute views, export the information
 		try {
+			final BasicFileAttributeView basic = getFileAttributeView(path, BasicFileAttributeView.class);
 			BasicFileAttributes basicAtts = basic.readAttributes();
 
 			att = new CmfAttribute<>(IntermediateAttribute.CREATION_DATE, CmfValue.Type.DATETIME, false);
@@ -199,7 +194,26 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			att.setValue(new CmfValue(new Date(basicAtts.lastAccessTime().toMillis())));
 			object.setAttribute(att);
 
-			if (extendedAtts != null) {
+			if (getType() == CmfObject.Archetype.DOCUMENT) {
+				att = new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_LENGTH, CmfValue.Type.DOUBLE, false);
+				att.setValue(new CmfValue((double) basicAtts.size()));
+				object.setAttribute(att);
+
+				// All documents are roots...
+				CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
+					CmfValue.Type.BOOLEAN, false);
+				versionTreeRoot.setValue(new CmfValue(true));
+				object.setProperty(versionTreeRoot);
+			}
+		} catch (IOException e) {
+			throw new ExportException(String.format("Failed to collect the basic attribute information for [%s]", file),
+				e);
+		}
+
+		final UserDefinedFileAttributeView extendedAtts = getFileAttributeView(path,
+			UserDefinedFileAttributeView.class);
+		if (extendedAtts != null) {
+			try {
 				for (String name : extendedAtts.list()) {
 					int bytes = extendedAtts.size(name);
 					if (bytes == 0) {
@@ -221,9 +235,14 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 					att.setValue(new CmfValue(data));
 					object.setAttribute(att);
 				}
+			} catch (Exception e) {
+				// Do nothing
 			}
+		}
 
-			if (dos != null) {
+		final DosFileAttributeView dos = getFileAttributeView(path, DosFileAttributeView.class);
+		if (dos != null) {
+			try {
 				DosFileAttributes atts = dos.readAttributes();
 				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "hidden"),
 					CmfValue.Type.BOOLEAN, false);
@@ -244,43 +263,41 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 					CmfValue.Type.BOOLEAN, false);
 				att.setValue(new CmfValue(atts.isReadOnly()));
 				object.setAttribute(att);
+			} catch (Exception e) {
+				// do nothing...
 			}
+		}
 
-			if (getType() == CmfObject.Archetype.DOCUMENT) {
-				att = new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_LENGTH, CmfValue.Type.DOUBLE, false);
-				att.setValue(new CmfValue((double) basicAtts.size()));
-				object.setAttribute(att);
+		UserPrincipal owner = getOwner(path);
+		if (owner != null) {
+			att = new CmfAttribute<>(IntermediateAttribute.CREATED_BY, CmfValue.Type.STRING, false);
+			att.setValue(new CmfValue(owner.getName()));
+			object.setAttribute(att);
 
-				// All documents are roots...
-				CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
-					CmfValue.Type.BOOLEAN, false);
-				versionTreeRoot.setValue(new CmfValue(true));
-				object.setProperty(versionTreeRoot);
-			}
+			att = new CmfAttribute<>(IntermediateAttribute.OWNER, CmfValue.Type.STRING, false);
+			att.setValue(new CmfValue(owner.getName()));
+			object.setAttribute(att);
+		}
 
-			UserPrincipal owner = getOwner(path);
-			if (owner != null) {
-				att = new CmfAttribute<>(IntermediateAttribute.CREATED_BY, CmfValue.Type.STRING, false);
-				att.setValue(new CmfValue(owner.getName()));
-				object.setAttribute(att);
-
-				att = new CmfAttribute<>(IntermediateAttribute.OWNER, CmfValue.Type.STRING, false);
-				att.setValue(new CmfValue(owner.getName()));
-				object.setAttribute(att);
-			}
-
-			if (posix != null) {
+		final PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
+		if (posix != null) {
+			try {
 				PosixFileAttributes posixAtts = posix.readAttributes();
 				GroupPrincipal ownerGroup = posixAtts.group();
 				att = new CmfAttribute<>(IntermediateAttribute.GROUP, CmfValue.Type.STRING, false);
 				att.setValue(new CmfValue(ownerGroup.getName()));
 				object.setAttribute(att);
+			} catch (Exception e) {
+				// Do nothing...
 			}
+		}
 
-			if (acl != null) {
-				// TODO: Before we can do this, we have to come up with a neutral, portable
-				// mechanism to describe an ACL such that it works for ALL CMS engines...and this is
-				// quite the conundrum to say the least...
+		final AclFileAttributeView acl = getFileAttributeView(path, AclFileAttributeView.class);
+		if (acl != null) {
+			// TODO: Before we can do this, we have to come up with a neutral, portable
+			// mechanism to describe an ACL such that it works for ALL CMS engines...and this is
+			// quite the conundrum to say the least...
+			try {
 				for (AclEntry e : acl.getAcl()) {
 					AclEntryType type = e.type();
 					UserPrincipal principal = e.principal();
@@ -289,9 +306,9 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 					for (AclEntryPermission p : e.permissions()) {
 					}
 				}
+			} catch (Exception e) {
+				// Do nothing...
 			}
-		} catch (IOException e) {
-			throw new ExportException(String.format("Failed to collect the attribute information for [%s]", file), e);
 		}
 
 		// The parent is always the parent folder
