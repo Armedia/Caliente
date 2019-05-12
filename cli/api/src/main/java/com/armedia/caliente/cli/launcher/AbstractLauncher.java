@@ -202,7 +202,7 @@ public abstract class AbstractLauncher {
 			showFooter(this.console, ret);
 			return ret;
 		} catch (Exception e) {
-			showError(this.log, e);
+			showError(this.console, e);
 			return 1;
 		}
 	}
