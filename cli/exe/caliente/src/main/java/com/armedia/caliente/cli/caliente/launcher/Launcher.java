@@ -612,11 +612,12 @@ public class Launcher extends AbstractLauncher {
 			final Logger log = LoggerFactory.getLogger(getClass());
 			final CmfObjectStore<?> objectStore = state.getObjectStore();
 			final boolean writeProperties = (objectStore != null);
-			final String format = String.format("caliente.%s.%s.%%s", engineName.toLowerCase(),
+			final String format = String.format("caliente.%s.%%s",
 				this.command.getDescriptor().getTitle().toLowerCase());
 			try {
 				if (writeProperties) {
 					Map<String, CmfValue> properties = new TreeMap<>();
+					properties.put(String.format(format, "engine"), new CmfValue(engineName));
 					properties.put(String.format(format, "version"), new CmfValue(Launcher.VERSION));
 					properties.put(String.format(format, "start"), new CmfValue(new Date()));
 					objectStore.setProperties(properties);
