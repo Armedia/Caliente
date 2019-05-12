@@ -30,7 +30,8 @@ public abstract class ClasspathPatcher {
 	static {
 		ClassLoader cl = ClassLoader.getSystemClassLoader();
 		if (!(cl instanceof URLClassLoader)) {
-			throw new RuntimeException("System Classloader is not a URLClassLoader");
+			throw new RuntimeException(
+				String.format("System Classloader is not a URLClassLoader (%s)", cl.getClass().getCanonicalName()));
 		}
 		CL = URLClassLoader.class.cast(cl);
 		try {
