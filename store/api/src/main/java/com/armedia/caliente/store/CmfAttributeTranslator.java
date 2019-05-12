@@ -13,7 +13,8 @@ public abstract class CmfAttributeTranslator<VALUE> {
 
 	private static class DefaultValueCodec extends BaseCodec<CmfValue, CmfValue> implements CmfValueCodec<CmfValue> {
 		private DefaultValueCodec(CmfValue.Type type) {
-			super(Function.identity(), type.getNull(), Function.identity(), type.getNull());
+			super(Function.identity(), type.getNull(), CmfValue::isNull, Function.identity(), type.getNull(),
+				CmfValue::isNull);
 		}
 	};
 
