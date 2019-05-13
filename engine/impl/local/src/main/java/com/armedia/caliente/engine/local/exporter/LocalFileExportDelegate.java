@@ -351,7 +351,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		if (getType() != CmfObject.Archetype.DOCUMENT) { return null; }
 
 		List<CmfContentStream> ret = new ArrayList<>(1);
-		CmfContentStream info = new CmfContentStream(0, "");
+		CmfContentStream info = new CmfContentStream(0);
 		File src = this.object.getAbsolute();
 		MimeType type = null;
 		try {
@@ -359,6 +359,13 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		} catch (IOException e) {
 			type = MimeTools.DEFAULT_MIME_TYPE;
 		}
+
+		marshalled
+			.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, CmfValue.Type.INTEGER, new CmfValue(1)));
+		marshalled.setProperty(
+			new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, CmfValue.Type.INTEGER, new CmfValue(0)));
+		marshalled
+			.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX, CmfValue.Type.INTEGER, new CmfValue(0)));
 
 		CmfAttribute<CmfValue> typeAtt = new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_MIME_TYPE,
 			CmfValue.Type.STRING, false);
