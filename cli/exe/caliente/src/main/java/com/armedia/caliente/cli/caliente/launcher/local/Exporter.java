@@ -18,6 +18,7 @@ import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.local.common.LocalSetting;
+import com.armedia.caliente.engine.tools.LocalOrganizer;
 import com.armedia.commons.utilities.Tools;
 
 class Exporter extends ExportCommandModule implements DynamicCommandOptions {
@@ -76,7 +77,8 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 	}
 
 	/*
-	protected void customizeContentStoreProperties(StoreConfiguration cfg) {
+	@Override
+	public void customizeContentStoreProperties(StoreConfiguration cfg) {
 		super.customizeContentStoreProperties(cfg);
 		cfg.getSettings().put(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel(), Boolean.TRUE.toString());
 	}
@@ -85,11 +87,13 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		if (isCopyContent()) { return super.getContentFilesLocation(); }
 		return new File(BaseParam.source.getString());
 	}
-	
-	protected String getContentOrganizerName() {
+	*/
+
+	@Override
+	public String getContentOrganizerName(OptionValues commandValues) {
+		if (commandValues.isPresent(Exporter.COPY_CONTENT)) { return null; }
 		return LocalOrganizer.NAME;
 	}
-	*/
 
 	@Override
 	protected boolean doConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)

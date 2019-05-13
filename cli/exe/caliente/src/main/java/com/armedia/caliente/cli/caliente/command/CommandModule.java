@@ -136,7 +136,7 @@ public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory
 		return execute(state, commandValues, positionals);
 	}
 
-	public String getContentOrganizerName() {
+	public String getContentOrganizerName(OptionValues commandValues) {
 		return null;
 	}
 

@@ -241,7 +241,8 @@ public class Launcher extends AbstractLauncher {
 		return f;
 	}
 
-	private StoreConfiguration buildObjectStoreConfiguration() throws IOException, CommandLineProcessingException {
+	private StoreConfiguration buildObjectStoreConfiguration(OptionValues commandValues)
+		throws IOException, CommandLineProcessingException {
 		final File metadataLocation = this.objectStoreLocation;
 		final Map<String, String> commonValues = new HashMap<>();
 		commonValues.put("dir.root", this.baseDataLocation.getAbsolutePath());
@@ -327,7 +328,8 @@ public class Launcher extends AbstractLauncher {
 		return contentLocation;
 	}
 
-	private StoreConfiguration buildContentStoreConfiguration() throws IOException, CommandLineProcessingException {
+	private StoreConfiguration buildContentStoreConfiguration(OptionValues commandValues)
+		throws IOException, CommandLineProcessingException {
 
 		final boolean directFsExport = this.directFsMode;
 		final File contentLocation = this.contentStoreLocation;
@@ -344,9 +346,12 @@ public class Launcher extends AbstractLauncher {
 		StoreConfiguration cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
 
 		String contentOrganizer = this.contentOrganizer;
-		if (!directFsExport) {
+		if (directFsExport) {
+			// Ugly hack, but works...
+			this.contentOrganizer = cfg.getEffectiveSettings().get("uri.organizer");
+		} else {
 			if (StringUtils.isBlank(contentOrganizer)) {
-				contentOrganizer = Tools.coalesce(this.command.getContentOrganizerName(),
+				contentOrganizer = Tools.coalesce(this.command.getContentOrganizerName(commandValues),
 					Launcher.DEFAULT_STREAMS_ORGANIZER);
 			}
 			this.contentOrganizer = contentOrganizer;
@@ -394,7 +399,7 @@ public class Launcher extends AbstractLauncher {
 		StoreConfiguration cfg = null;
 
 		this.objectStoreLocation = getMetadataLocation(commandValues);
-		cfg = buildObjectStoreConfiguration();
+		cfg = buildObjectStoreConfiguration(commandValues);
 		this.objectStore = CmfStores.createObjectStore(cfg);
 		storeLocation = this.objectStore.getStoreLocation();
 		if (storeLocation != null) {
@@ -405,8 +410,8 @@ public class Launcher extends AbstractLauncher {
 
 		this.contentStoreLocation = getContentLocation(this.objectStore, commandValues);
 		this.directFsMode = commandValues.isPresent(CLIParam.direct_fs);
-		this.contentOrganizer = commandValues.getString(CLIParam.organizer, Launcher.DEFAULT_STREAMS_ORGANIZER);
-		cfg = buildContentStoreConfiguration();
+		this.contentOrganizer = commandValues.getString(CLIParam.organizer);
+		cfg = buildContentStoreConfiguration(commandValues);
 		this.contentStore = CmfStores.createContentStore(cfg, this.objectStore);
 		storeLocation = this.contentStore.getStoreLocation();
 		if (storeLocation != null) {
