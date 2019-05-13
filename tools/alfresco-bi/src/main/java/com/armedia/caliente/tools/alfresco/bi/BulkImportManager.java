@@ -80,6 +80,9 @@ public final class BulkImportManager {
 		} else {
 			contentPath = contentPath.toRealPath();
 		}
+		if (contentPath.startsWith(this.basePath)) {
+			contentPath = this.basePath;
+		}
 		this.contentPath = contentPath;
 
 		this.bulkImportRoot = basePath.resolve(BulkImportManager.BULK_IMPORT_ROOT);
