@@ -282,6 +282,10 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 	}
 
+	public CmfContentStore(CmfStore<?> parent) {
+		super(parent, "content");
+	}
+
 	protected abstract boolean isSupported(LOCATOR locator);
 
 	public abstract boolean isSupportsFileAccess();

@@ -1,13 +1,19 @@
 package com.armedia.caliente.store;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +28,33 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private boolean open = true;
+
+	private final CmfStore<?> parent;
+	private final String prefix;
+	private final ConcurrentMap<String, String> prefixedNames = new ConcurrentHashMap<>();
+
+	public CmfStore() {
+		this(null, null);
+	}
+
+	public CmfStore(CmfStore<?> parent, String prefix) {
+		this.parent = parent;
+		if (this.parent == null) {
+			this.prefix = null;
+		} else {
+			prefix = StringUtils.strip(Objects.requireNonNull(prefix, "Must provide a non-null prefix string"));
+			this.prefix = prefix;
+			if (StringUtils.isBlank(this.prefix)) {
+				throw new IllegalArgumentException("Must provide a non-blank prefix string");
+			}
+		}
+	}
+
+	private String buildPropertyName(String name) {
+		if (this.prefix == null) { return name; }
+		return ConcurrentUtils.createIfAbsentUnchecked(this.prefixedNames, name,
+			() -> String.format("%s.%s", this.prefix, name));
+	}
 
 	protected final void assertOpen() {
 		try (SharedAutoLock lock = autoSharedLock()) {
@@ -145,6 +178,11 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 	}
 
 	protected final Map<String, CmfValue> doClearProperties(Collection<String> properties) throws CmfStorageException {
+		if (this.parent != null) {
+			Collection<String> newProperties = new ArrayList<>(properties.size());
+			properties.forEach((p) -> newProperties.add(buildPropertyName(p)));
+			return this.parent.doClearProperties(newProperties);
+		}
 		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -175,6 +213,10 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 	}
 
 	public final void clearAllProperties() throws CmfStorageException {
+		if (this.parent != null) {
+			this.parent.clearAllProperties(this.prefix);
+			return;
+		}
 		runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -198,7 +240,38 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 
 	protected abstract void clearAllProperties(OPERATION operation) throws CmfStorageException;
 
+	public final void clearAllProperties(String prefix) throws CmfStorageException {
+		if (this.parent != null) {
+			this.parent.clearAllProperties(buildPropertyName(prefix));
+			return;
+		}
+		runConcurrently((operation) -> {
+			final boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				clearAllProperties(operation, prefix);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+			} finally {
+				if (tx && !ok) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for clearing all properties", e);
+					}
+				}
+			}
+		});
+	}
+
+	protected abstract void clearAllProperties(OPERATION operation, String prefix) throws CmfStorageException;
+
 	protected final CmfValue doGetProperty(String property) throws CmfStorageException {
+		if (this.parent != null) { //
+			return this.parent.getProperty(buildPropertyName(property));
+		}
 		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			try {
@@ -219,6 +292,9 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 	protected abstract CmfValue getProperty(OPERATION operation, String property) throws CmfStorageException;
 
 	protected final CmfValue doSetProperty(String property, CmfValue value) throws CmfStorageException {
+		if (this.parent != null) { //
+			return this.parent.setProperty(buildPropertyName(property), value);
+		}
 		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -243,6 +319,13 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 	}
 
 	protected final Map<String, CmfValue> doSetProperties(Map<String, CmfValue> properties) throws CmfStorageException {
+		if (this.parent != null) {
+			Map<String, CmfValue> newProperties = new LinkedHashMap<>();
+			for (String k : properties.keySet()) {
+				newProperties.put(buildPropertyName(k), properties.get(k));
+			}
+			return this.parent.setProperties(newProperties);
+		}
 		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -278,6 +361,9 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 		throws CmfStorageException;
 
 	public final Set<String> getPropertyNames() throws CmfStorageException {
+		if (this.parent != null) { //
+			return this.parent.getPropertyNames(this.prefix);
+		}
 		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			try {
@@ -296,7 +382,32 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 
 	protected abstract Set<String> getPropertyNames(OPERATION operation) throws CmfStorageException;
 
+	public final Set<String> getPropertyNames(String prefix) throws CmfStorageException {
+		if (this.parent != null) {//
+			return this.parent.getPropertyNames(buildPropertyName(prefix));
+		}
+		return runConcurrently((operation) -> {
+			final boolean tx = operation.begin();
+			try {
+				return getPropertyNames(operation, prefix);
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for getting all property names", e);
+					}
+				}
+			}
+		});
+	}
+
+	protected abstract Set<String> getPropertyNames(OPERATION operation, String prefix) throws CmfStorageException;
+
 	protected final CmfValue doClearProperty(String property) throws CmfStorageException {
+		if (this.parent != null) { //
+			return this.parent.doClearProperty(buildPropertyName(property));
+		}
 		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			boolean ok = false;

@@ -10,9 +10,12 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "store.t", propOrder = {
-	"type", "prep", "setting"
+	"parent", "type", "prep", "setting"
 })
 public class StoreConfiguration extends SettingContainer {
+
+	@XmlElement(name = "parent", required = false)
+	protected String parent;
 
 	@XmlElement(required = true)
 	protected String type;
@@ -31,6 +34,14 @@ public class StoreConfiguration extends SettingContainer {
 	@Override
 	protected void beforeMarshal(Marshaller marshaller) {
 		super.beforeMarshal(marshaller);
+	}
+
+	public String getParentName() {
+		return this.parent;
+	}
+
+	public void setParentName(String parent) {
+		this.parent = parent;
 	}
 
 	/**

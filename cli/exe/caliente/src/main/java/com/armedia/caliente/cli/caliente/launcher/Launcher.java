@@ -407,7 +407,7 @@ public class Launcher extends AbstractLauncher {
 		this.directFsMode = commandValues.isPresent(CLIParam.direct_fs);
 		this.contentOrganizer = commandValues.getString(CLIParam.organizer, Launcher.DEFAULT_STREAMS_ORGANIZER);
 		cfg = buildContentStoreConfiguration();
-		this.contentStore = CmfStores.createContentStore(cfg);
+		this.contentStore = CmfStores.createContentStore(cfg, this.objectStore);
 		storeLocation = this.contentStore.getStoreLocation();
 		if (storeLocation != null) {
 			this.console.info("Using content directory: [{}]", storeLocation.getAbsolutePath());

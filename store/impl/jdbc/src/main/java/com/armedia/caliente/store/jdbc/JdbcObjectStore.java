@@ -48,6 +48,7 @@ import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.caliente.store.CmfStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.tools.MimeTools;
@@ -76,9 +77,9 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 	private final Map<JdbcDialect.Query, String> queries;
 	private final CfgTools cfg;
 
-	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData,
-		CfgTools cfg) throws CmfStorageException {
-		super(JdbcOperation.class, true);
+	public JdbcObjectStore(CmfStore<?> parent, DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema,
+		boolean cleanData, CfgTools cfg) throws CmfStorageException {
+		super(parent, JdbcOperation.class, true);
 		if (dataSourceDescriptor == null) {
 			throw new IllegalArgumentException("Must provide a valid DataSource instance");
 		}
@@ -2029,5 +2030,15 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to load the object filter data", e);
 		}
+	}
+
+	@Override
+	protected void clearAllProperties(JdbcOperation operation, String prefix) throws CmfStorageException {
+		this.propertyManager.clearAllProperties(operation, prefix);
+	}
+
+	@Override
+	protected Set<String> getPropertyNames(JdbcOperation operation, String prefix) throws CmfStorageException {
+		return this.propertyManager.getPropertyNames(operation, prefix);
 	}
 }
