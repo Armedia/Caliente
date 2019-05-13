@@ -159,22 +159,22 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 				}
 
 				this.propertiesLoaded = propertiesLoaded;
-
-				CmfValue currentOrganizerName = getProperty("organizer");
-				if ((currentOrganizerName == null) || currentOrganizerName.isNull()) {
-					// For backwards compatibility
-					currentOrganizerName = getProperty("strategy");
-				}
-				if ((currentOrganizerName != null) && !currentOrganizerName.isNull()) {
-					CmfContentOrganizer currentOrganizer = CmfContentOrganizer
-						.getOrganizer(currentOrganizerName.asString());
-					if (currentOrganizer != null) {
-						organizer = currentOrganizer;
-						storeOrganizerName = false;
-					}
-				}
 			} else {
 				this.propertiesLoaded = true;
+			}
+
+			CmfValue currentOrganizerName = getProperty("organizer");
+			if ((currentOrganizerName == null) || currentOrganizerName.isNull()) {
+				// For backwards compatibility
+				currentOrganizerName = getProperty("strategy");
+			}
+			if ((currentOrganizerName != null) && !currentOrganizerName.isNull()) {
+				CmfContentOrganizer currentOrganizer = CmfContentOrganizer
+					.getOrganizer(currentOrganizerName.asString());
+				if (currentOrganizer != null) {
+					organizer = currentOrganizer;
+					storeOrganizerName = false;
+				}
 			}
 		}
 		this.organizer = organizer;
