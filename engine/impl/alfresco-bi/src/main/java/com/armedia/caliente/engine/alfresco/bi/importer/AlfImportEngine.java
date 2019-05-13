@@ -309,7 +309,12 @@ public class AlfImportEngine extends
 			throw new IOException("Can't proceed without a content directory to store artifacts in");
 		}
 		File contentFile = Tools.canonicalize(new File(content));
-		FileUtils.forceMkdir(contentFile);
+		if (!contentFile.exists()) {
+			FileUtils.forceMkdir(contentFile);
+		} else if (!contentFile.isDirectory()) {
+			throw new IOException(String.format("The given content path of [%s] is not a valid directory",
+				contentFile.getAbsolutePath()));
+		}
 
 		String unfiledPath = settings.getString(AlfSetting.UNFILED_PATH);
 		unfiledPath = FilenameUtils.separatorsToUnix(unfiledPath);
