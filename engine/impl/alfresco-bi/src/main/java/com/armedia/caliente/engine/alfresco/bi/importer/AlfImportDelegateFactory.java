@@ -162,7 +162,8 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	private final Path baseData;
+	private final Path contentRoot;
+	private final Path metadataRoot;
 	private final BulkImportManager biManager;
 
 	private final Properties userLoginMap = new Properties();
@@ -183,12 +184,13 @@ public class AlfImportDelegateFactory
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
 		throws IOException, JAXBException, XMLStreamException, DynamicElementException {
 		super(engine, configuration);
-		this.baseData = engine.getBaseData();
+		this.metadataRoot = engine.getBaseData();
 		this.biManager = engine.getBulkImportManager();
 		this.schema = engine.getSchema();
 		this.defaultTypes = engine.getDefaultTypes();
 
 		FileUtils.forceMkdir(this.biManager.getContentPath().toFile());
+		this.contentRoot = this.biManager.getContentPath();
 
 		final File modelDir = this.biManager.getContentModelsPath().toFile();
 		FileUtils.forceMkdir(modelDir);
@@ -393,6 +395,10 @@ public class AlfImportDelegateFactory
 		return path.toString();
 	}
 
+	protected Path getContentRelativePath(File contentFile) {
+		return this.contentRoot.relativize(contentFile.toPath());
+	}
+
 	protected final ScanIndexItemMarker generateItemMarker(final AlfImportContext ctx, final boolean folder,
 		final CmfObject<CmfValue> cmfObject, CmfContentStream content, File contentFile, File metadataFile,
 		MarkerType type) throws ImportException {
@@ -452,8 +458,8 @@ public class AlfImportDelegateFactory
 		metadataFile = AlfImportDelegateFactory.normalizeAbsolute(metadataFile);
 
 		// basePath is the base path within which the entire import resides
-		final Path relativeContentPath = this.baseData.relativize(contentFile.toPath());
-		final Path relativeMetadataPath = (metadataFile != null ? this.baseData.relativize(metadataFile.toPath())
+		final Path relativeContentPath = getContentRelativePath(contentFile);
+		final Path relativeMetadataPath = (metadataFile != null ? this.metadataRoot.relativize(metadataFile.toPath())
 			: null);
 		Path relativeMetadataParent = (metadataFile != null ? relativeMetadataPath.getParent() : null);
 		if (relativeMetadataParent == null) {
