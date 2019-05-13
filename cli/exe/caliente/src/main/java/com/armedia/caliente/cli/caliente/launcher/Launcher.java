@@ -257,7 +257,7 @@ public class Launcher extends AbstractLauncher {
 			loadStoreProperties("object", metadataLocation.isFile() ? metadataLocation.getAbsolutePath() : null));
 
 		cfg.getSettings().putAll(commonValues);
-		this.command.customizeObjectStoreProperties(cfg);
+		this.command.customizeObjectStoreProperties(commandValues, cfg);
 		commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA,
 			String.valueOf(this.command.getDescriptor().isRequiresCleanData()));
 		cfg.getSettings().putAll(commonValues);
@@ -358,7 +358,7 @@ public class Launcher extends AbstractLauncher {
 			applyStoreProperties(cfg,
 				loadStoreProperties("content", contentLocation.isFile() ? contentLocation.getAbsolutePath() : null));
 		}
-		this.command.customizeContentStoreProperties(cfg);
+		this.command.customizeContentStoreProperties(commandValues, cfg);
 		if (!directFsExport) {
 			cfg.getSettings().put("dir.content.organizer", this.contentOrganizer);
 		}

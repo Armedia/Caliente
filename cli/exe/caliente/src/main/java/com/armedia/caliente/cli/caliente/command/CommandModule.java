@@ -140,11 +140,11 @@ public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory
 		return null;
 	}
 
-	public void customizeObjectStoreProperties(StoreConfiguration cfg) {
+	public void customizeObjectStoreProperties(OptionValues commandValues, StoreConfiguration cfg) {
 		// Do nothing by default
 	}
 
-	public void customizeContentStoreProperties(StoreConfiguration cfg) {
+	public void customizeContentStoreProperties(OptionValues commandValues, StoreConfiguration cfg) {
 		// Do nothing by default
 	}
 
