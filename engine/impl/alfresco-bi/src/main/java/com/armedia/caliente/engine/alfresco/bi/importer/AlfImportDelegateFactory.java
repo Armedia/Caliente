@@ -429,22 +429,27 @@ public class AlfImportDelegateFactory
 				CmfProperty<CmfValue> vCounter = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
 				CmfProperty<CmfValue> vHeadIndex = cmfObject.getProperty(IntermediateProperty.VERSION_HEAD_INDEX);
 				CmfProperty<CmfValue> vIndex = cmfObject.getProperty(IntermediateProperty.VERSION_INDEX);
-				if ((vCounter == null) || !vCounter.hasValues() || //
-					(vHeadIndex == null) || !vHeadIndex.hasValues() || //
-					(vIndex == null) || !vIndex.hasValues()) {
-					if (!folder) {
-						// ERROR: insufficient data
-						throw new ImportException(
-							String.format("No version indexes found for %s", cmfObject.getDescription()));
-					}
-					// It's OK for directories...everything is 1
-					head = 1;
-					count = 1;
-					current = 1;
-				} else {
+				// These 3 must either all be present and have values, or none of them...
+				if (((vCounter == null) || !vCounter.hasValues()) && //
+					((vHeadIndex == null) || !vHeadIndex.hasValues()) && //
+					((vIndex == null) || !vIndex.hasValues())) {
+					// If none of them have values...
+					head = count = current = 1;
+				} else if ((vCounter != null) && vCounter.hasValues()
+					&& ((vHeadIndex != null) && vHeadIndex.hasValues() && (vIndex != null) && vIndex.hasValues())) {
+					// If all of them have values...
 					head = vHeadIndex.getValue().asInteger();
 					count = vCounter.getValue().asInteger();
 					current = vIndex.getValue().asInteger();
+				} else {
+					// Only some have values, so only be lenient for directories...
+					if (!folder) {
+						// ERROR: insufficient data
+						throw new ImportException(
+							String.format("Incomplete version indexes found for %s (", cmfObject.getDescription()));
+					}
+					// It's OK for directories...everything is 1
+					head = count = current = 1;
 				}
 				break;
 		}
