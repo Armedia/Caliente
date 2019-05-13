@@ -490,11 +490,11 @@ public class Validator extends BaseShareableLockable {
 				} catch (InterruptedException e) {
 					// Log the error...
 					Validator.LOG.error("Failed to submit the file [{}] for processing - workers no longer working",
-						file.toAbsolutePath().toString(), e);
+						file.toRealPath().toString(), e);
 					return FileVisitResult.TERMINATE;
 				} catch (Exception e) {
 					Validator.LOG.error("Failed to submit the file [{}] for processing - unexpected exception caught",
-						file.toAbsolutePath().toString(), e);
+						file.toRealPath().toString(), e);
 				}
 			}
 			return FileVisitResult.CONTINUE;
@@ -504,7 +504,7 @@ public class Validator extends BaseShareableLockable {
 
 		@Override
 		public final FileVisitResult visitFileFailed(Path file, IOException exception) throws IOException {
-			Validator.this.log.warn("Failed to visit the file at [{}]", file.toAbsolutePath(), exception);
+			Validator.this.log.warn("Failed to visit the file at [{}]", file.toRealPath(), exception);
 			// We continue b/c we need to keep trying...
 			return FileVisitResult.CONTINUE;
 		}

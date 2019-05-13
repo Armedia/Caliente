@@ -1,6 +1,7 @@
 package com.armedia.caliente.tools.alfresco.bi;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -31,7 +32,7 @@ import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.ResourceLoader;
 import com.armedia.commons.utilities.xml.XmlTools;
 
-class BulkImportManagerTest {
+public class BulkImportManagerTest {
 
 	private static Path BULK_IMPORT_ROOT = Paths.get("alfresco-bulk-import");
 	private static Path MODEL_DIRECTORY = BulkImportManagerTest.BULK_IMPORT_ROOT.resolve("content-models");
@@ -40,9 +41,13 @@ class BulkImportManagerTest {
 	private static Path FILE_INDEX = BulkImportManagerTest.BULK_IMPORT_ROOT.resolve("scan.files.xml");
 	private static Path FOLDER_INDEX = BulkImportManagerTest.BULK_IMPORT_ROOT.resolve("scan.folders.xml");
 
-	private final Path CWD = Paths.get(".").normalize().toAbsolutePath();
+	private final Path CWD;
 
 	private final Random rand = new Random(System.nanoTime());
+
+	BulkImportManagerTest() throws IOException {
+		this.CWD = Paths.get(".").toRealPath();
+	}
 
 	private Path buildRandomPath() {
 		Path p = null;
@@ -58,7 +63,7 @@ class BulkImportManagerTest {
 	}
 
 	@Test
-	void testBulkImportManager() {
+	public void testBulkImportManager() throws Exception {
 		BulkImportManager bim = null;
 		Path p = null;
 
@@ -79,59 +84,59 @@ class BulkImportManagerTest {
 	}
 
 	@Test
-	void testGetContentPathScanIndexItemVersion() {
+	public void testGetContentPathScanIndexItemVersion() {
 	}
 
 	@Test
-	void testGetContentPathPath() {
+	public void testGetContentPathPath() {
 	}
 
 	@Test
-	void testGetArtificialFolderPath() {
+	public void testGetArtificialFolderPath() {
 	}
 
 	@Test
-	void testGetMetadataPathScanIndexItemVersion() {
+	public void testGetMetadataPathScanIndexItemVersion() {
 	}
 
 	@Test
-	void testGetMetadataPathPath() {
+	public void testGetMetadataPathPath() {
 	}
 
 	@Test
-	void testGetBulkImportRoot() {
+	public void testGetBulkImportRoot() {
 	}
 
 	@Test
-	void testGetIndexFilePath() {
+	public void testGetIndexFilePath() {
 	}
 
 	@Test
-	void testGetManifestPath() {
+	public void testGetManifestPath() {
 	}
 
 	@Test
-	void testOpenManifestWriterCharsetBoolean() {
+	public void testOpenManifestWriterCharsetBoolean() {
 	}
 
 	@Test
-	void testOpenManifestWriterBoolean() {
+	public void testOpenManifestWriterBoolean() {
 	}
 
 	@Test
-	void testOpenManifestWriterCharset() {
+	public void testOpenManifestWriterCharset() {
 	}
 
 	@Test
-	void testOpenManifestReaderCharset() {
+	public void testOpenManifestReaderCharset() {
 	}
 
 	@Test
-	void testOpenManifestReader() {
+	public void testOpenManifestReader() {
 	}
 
 	@Test
-	void testVerifyPaths() {
+	public void testVerifyPaths() throws Exception {
 		BulkImportManager bim = null;
 		// Generate a few random paths
 		List<Path> paths = new ArrayList<>();
@@ -141,7 +146,7 @@ class BulkImportManagerTest {
 
 		for (Path p : paths) {
 			bim = new BulkImportManager(p);
-			p = p.normalize().toAbsolutePath();
+			p = p.toRealPath();
 
 			Path other = bim.getBasePath();
 			Assertions.assertEquals(p, other);
@@ -177,7 +182,7 @@ class BulkImportManagerTest {
 	}
 
 	@Test
-	void testScanAndMarshal() throws Exception {
+	public void testScanAndMarshal() throws Exception {
 
 		// Find the XML file(s)
 		Unmarshaller u = XmlTools.getUnmarshaller(ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class);

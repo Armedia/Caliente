@@ -61,21 +61,27 @@ public final class BulkImportManager {
 	private final List<Path> fileIndexes;
 	private final List<Path> folderIndexes;
 
-	public BulkImportManager(Path basePath) {
+	public BulkImportManager(Path basePath) throws IOException {
 		this(basePath, null, null);
 	}
 
-	public BulkImportManager(Path basePath, Path contentPath) {
+	public BulkImportManager(Path basePath, Path contentPath) throws IOException {
 		this(basePath, contentPath, null);
 	}
 
-	public BulkImportManager(Path basePath, String unfiledPath) {
+	public BulkImportManager(Path basePath, String unfiledPath) throws IOException {
 		this(basePath, null, unfiledPath);
 	}
 
-	public BulkImportManager(Path basePath, Path contentPath, String unfiledPath) {
-		this.basePath = Objects.requireNonNull(basePath).normalize().toAbsolutePath();
-		this.contentPath = (contentPath != null ? contentPath.normalize().toAbsolutePath() : null);
+	public BulkImportManager(Path basePath, Path contentPath, String unfiledPath) throws IOException {
+		this.basePath = Objects.requireNonNull(basePath).toRealPath();
+		if (contentPath == null) {
+			contentPath = this.basePath;
+		} else {
+			contentPath = contentPath.toRealPath();
+		}
+		this.contentPath = contentPath;
+
 		this.bulkImportRoot = basePath.resolve(BulkImportManager.BULK_IMPORT_ROOT);
 		this.modelDirectory = this.basePath.resolve(BulkImportManager.CONTENT_MODEL_DIRECTORY);
 		this.manifest = this.basePath.resolve(BulkImportManager.INGESTION_MANIFEST);

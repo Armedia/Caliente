@@ -253,7 +253,7 @@ public class TokenLoader implements Iterable<Token> {
 					Path relativeTo = currentSource.getSourcePath().getParent();
 					sourcePath = relativeTo.resolve(sourcePath);
 				}
-				newSource = new LocalPathTokenSource(sourcePath.toAbsolutePath().normalize());
+				newSource = new LocalPathTokenSource(sourcePath.toRealPath());
 			}
 
 			return new State(newSource);
