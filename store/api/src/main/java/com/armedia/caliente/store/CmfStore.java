@@ -269,9 +269,7 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 	protected abstract void clearAllProperties(OPERATION operation, String prefix) throws CmfStorageException;
 
 	protected final CmfValue doGetProperty(String property) throws CmfStorageException {
-		if (this.parent != null) { //
-			return this.parent.getProperty(buildPropertyName(property));
-		}
+		if (this.parent != null) { return this.parent.getProperty(buildPropertyName(property)); }
 		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			try {
@@ -292,9 +290,7 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 	protected abstract CmfValue getProperty(OPERATION operation, String property) throws CmfStorageException;
 
 	protected final CmfValue doSetProperty(String property, CmfValue value) throws CmfStorageException {
-		if (this.parent != null) { //
-			return this.parent.setProperty(buildPropertyName(property), value);
-		}
+		if (this.parent != null) { return this.parent.setProperty(buildPropertyName(property), value); }
 		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -361,9 +357,7 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 		throws CmfStorageException;
 
 	public final Set<String> getPropertyNames() throws CmfStorageException {
-		if (this.parent != null) { //
-			return this.parent.getPropertyNames(this.prefix);
-		}
+		if (this.parent != null) { return this.parent.getPropertyNames(this.prefix); }
 		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			try {
@@ -383,9 +377,7 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 	protected abstract Set<String> getPropertyNames(OPERATION operation) throws CmfStorageException;
 
 	public final Set<String> getPropertyNames(String prefix) throws CmfStorageException {
-		if (this.parent != null) {//
-			return this.parent.getPropertyNames(buildPropertyName(prefix));
-		}
+		if (this.parent != null) { return this.parent.getPropertyNames(buildPropertyName(prefix)); }
 		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			try {
@@ -405,9 +397,7 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 	protected abstract Set<String> getPropertyNames(OPERATION operation, String prefix) throws CmfStorageException;
 
 	protected final CmfValue doClearProperty(String property) throws CmfStorageException {
-		if (this.parent != null) { //
-			return this.parent.doClearProperty(buildPropertyName(property));
-		}
+		if (this.parent != null) { return this.parent.doClearProperty(buildPropertyName(property)); }
 		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			boolean ok = false;
