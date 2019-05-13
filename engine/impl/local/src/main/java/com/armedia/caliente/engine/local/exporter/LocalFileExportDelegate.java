@@ -30,16 +30,22 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.activation.MimeType;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalFile;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.store.CmfAttribute;
@@ -324,6 +330,19 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		object.setAttribute(att);
 		object.setProperty(prop);
 
+		prop = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfValue.Type.STRING, true);
+		object.setProperty(prop);
+		Set<String> ptid;
+		try {
+			ptid = calculateParentTreeIds(file);
+		} catch (IOException e) {
+			throw new ExportException(
+				String.format("Failed to calculate the parent path IDs for [%s]", file.getAbsolutePath()), e);
+		}
+		for (String s : ptid) {
+			prop.addValue(new CmfValue(s));
+		}
+
 		prop = new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING, true);
 		prop.setValue(new CmfValue(this.object.getPortableParentPath()));
 		object.setProperty(prop);
@@ -336,6 +355,25 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		}
 
 		return true;
+	}
+
+	protected static Set<String> calculateParentTreeIds(LocalRoot root, File f) throws IOException {
+		f = root.relativize(f);
+		LinkedList<String> parents = new LinkedList<>();
+		while (true) {
+			f = f.getParentFile();
+			if ((f == null) || StringUtils.isEmpty(f.getName())) {
+				break;
+			}
+			String path = LocalCommon.getPortablePath(f.getPath());
+			String id = LocalCommon.calculateId(path);
+			parents.addFirst(id);
+		}
+		return new LinkedHashSet<>(parents);
+	}
+
+	protected Set<String> calculateParentTreeIds(File f) throws IOException {
+		return LocalFileExportDelegate.calculateParentTreeIds(this.root, f);
 	}
 
 	@Override

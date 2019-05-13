@@ -15,9 +15,12 @@ import com.armedia.caliente.store.CmfValue;
 abstract class LocalExportDelegate<T> extends
 	ExportDelegate<T, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
+	protected final LocalRoot root;
+
 	protected LocalExportDelegate(LocalExportDelegateFactory factory, LocalRoot root, Class<T> klass, T object)
 		throws Exception {
 		super(factory, root, klass, object);
+		this.root = root;
 	}
 
 	@Override
