@@ -290,7 +290,7 @@ public class Launcher extends AbstractLauncher {
 					.getProperty(Launcher.STORE_PROP_CONTENT_LOCATION_REQUIRED);
 				if ((contentLocationRequired != null) && contentLocationRequired.asBoolean()) {
 					throw new CommandLineProcessingException(1, String.format(
-						"This extraction doesn't seem to bundle with the content streams; you must provide the required option to point out its location (usually --%s)",
+						"This extraction doesn't seem to bundle with the content streams; you must provide the required option to point out its location (usually %s)",
 						CLIParam.streams.option.getKey()));
 				}
 			} catch (CmfStorageException e) {
