@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Spliterator;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -150,6 +151,12 @@ public final class BulkImportManager {
 		return path;
 	}
 
+	private Path resolve(Path base, Supplier<String> childPathSource) {
+		String str = childPathSource.get();
+		if (str == null) { return null; }
+		return resolve(base, str);
+	}
+
 	public Path getBasePath() {
 		return this.basePath;
 	}
@@ -180,7 +187,7 @@ public final class BulkImportManager {
 	}
 
 	public Path resolveContentPath(ScanIndexItemVersion version) {
-		return resolve(this.contentPath, version.getContent());
+		return resolve(this.contentPath, version::getContent);
 	}
 
 	// For now these are identical but they might change
@@ -193,7 +200,7 @@ public final class BulkImportManager {
 	}
 
 	public Path resolveMetadataPath(ScanIndexItemVersion version) {
-		return resolve(this.basePath, version.getMetadata());
+		return resolve(this.basePath, version::getMetadata);
 	}
 
 	// For now these are identical but they might change
