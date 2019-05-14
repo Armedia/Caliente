@@ -134,10 +134,10 @@ public final class BulkImportManager {
 		return f;
 	}
 
-	private Path resolve(String childPath) {
-		if (StringUtils.isEmpty(childPath)) { return this.basePath; }
+	private Path resolve(Path base, String childPath) {
+		if (StringUtils.isEmpty(childPath)) { return base; }
 		// Split by forward slashes... this may be running on Windows!
-		Path path = this.basePath;
+		Path path = base;
 		for (String s : Tools.splitEscapedStream('/', childPath).collect(Collectors.toCollection(ArrayList::new))) {
 			path = path.resolve(s);
 		}
@@ -174,7 +174,7 @@ public final class BulkImportManager {
 	}
 
 	public Path resolveContentPath(ScanIndexItemVersion version) {
-		return resolve(version.getContent());
+		return resolve(this.contentPath, version.getContent());
 	}
 
 	// For now these are identical but they might change
@@ -187,7 +187,7 @@ public final class BulkImportManager {
 	}
 
 	public Path resolveMetadataPath(ScanIndexItemVersion version) {
-		return resolve(version.getMetadata());
+		return resolve(this.basePath, version.getMetadata());
 	}
 
 	// For now these are identical but they might change
