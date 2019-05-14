@@ -52,6 +52,9 @@ public final class BulkImportManager {
 
 	private static final String METADATA_SUFFIX = ".xml";
 
+	public static final String BASE_PATH_MARKER = "${BASE_PATH}$";
+	public static final String BASE_PATH_PREFIX = String.format("%s/", BulkImportManager.BASE_PATH_MARKER);
+
 	private final Path basePath;
 	private final Path contentPath;
 	private final Path unfiledPath;
@@ -136,6 +139,9 @@ public final class BulkImportManager {
 
 	private Path resolve(Path base, String childPath) {
 		if (StringUtils.isEmpty(childPath)) { return base; }
+		if (childPath.startsWith(BulkImportManager.BASE_PATH_PREFIX)) {
+			return resolve(this.basePath, childPath.substring(BulkImportManager.BASE_PATH_PREFIX.length()));
+		}
 		// Split by forward slashes... this may be running on Windows!
 		Path path = base;
 		for (String s : Tools.splitEscapedStream('/', childPath).collect(Collectors.toCollection(ArrayList::new))) {
@@ -162,7 +168,7 @@ public final class BulkImportManager {
 
 	public Path getManifestPath(boolean relative) {
 		if (!relative) { return this.manifest; }
-		return this.basePath.relativize(this.manifest);
+		return Paths.get(BulkImportManager.BASE_PATH_MARKER).resolve(this.basePath.relativize(this.manifest));
 	}
 
 	public Path getUnfiledPath() {
