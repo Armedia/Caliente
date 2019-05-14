@@ -279,6 +279,10 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			att.setValue(new CmfValue(owner.getName()));
 			object.setAttribute(att);
 
+			att = new CmfAttribute<>(IntermediateAttribute.LAST_MODIFIED_BY, CmfValue.Type.STRING, false);
+			att.setValue(new CmfValue(owner.getName()));
+			object.setAttribute(att);
+
 			att = new CmfAttribute<>(IntermediateAttribute.OWNER, CmfValue.Type.STRING, false);
 			att.setValue(new CmfValue(owner.getName()));
 			object.setAttribute(att);
