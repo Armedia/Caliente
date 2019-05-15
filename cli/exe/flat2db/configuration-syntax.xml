@@ -162,7 +162,7 @@
 				<records>xpath-expression-that-yields-elements-to-be-considered-records</records>
 				<columns>
 					<column>
-						<!-- this expression will yield the column name. Must yield unique values per record -->
+						<!-- this expression will yield the column name. fileMust yield unique values per record -->
 						<name>xpath-expression</name>
 						<!-- this expression will yield the column's value(s?) -->
 						<value>xpath-expression</value>

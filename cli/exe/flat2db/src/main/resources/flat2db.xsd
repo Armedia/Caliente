@@ -203,18 +203,18 @@
 					</xsd:sequence>
 				</xsd:complexType>
 
-				<xsd:unique name="uniqueDataSourceId">
+				<xsd:unique name="dataSourcePK">
 					<xsd:selector xpath="tns:data-source" />
 					<xsd:field xpath="@id" />
 				</xsd:unique>
 			</xsd:element>
 
 			<xsd:element name="structures" type="tns:structures.t" minOccurs="0" maxOccurs="1">
-				<xsd:unique name="uniqueStructureId">
+				<xsd:unique name="structurePK">
 					<xsd:selector xpath="tns:*" />
 					<xsd:field xpath="@id" />
 				</xsd:unique>
-		        <xsd:keyref name="structureFk" refer="tns:uniqueStructureId">
+		        <xsd:keyref name="structureFk" refer="tns:structurePK">
 		            <xsd:selector xpath="tns:default" />
 		            <xsd:field xpath="." />
 		        </xsd:keyref>
@@ -226,14 +226,30 @@
 						<xsd:element name="file" type="xsd:string" />
 					</xsd:sequence>
 				</xsd:complexType>
-				<xsd:unique name="uniqueFileId">
+				<xsd:unique name="filePK">
 					<xsd:selector xpath="tns:*" />
 					<xsd:field xpath="@id" />
 				</xsd:unique>
 			</xsd:element>
-			<xsd:element name="mappings" type="tns:script.t" minOccurs="1" maxOccurs="1" />
+
+			<xsd:element name="mappings">
+				<xsd:complexType>
+					<xsd:sequence minOccurs="1" maxOccurs="unbounded">
+						<xsd:element name="mapping" type="xsd:string" />
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:element name="flat-2-db" type="tns:flat2db.t" />
+	<xsd:element name="flat-2-db" type="tns:flat2db.t">
+        <xsd:keyref name="mappingsDataSourceFK" refer="tns:dataSourcePK">
+            <xsd:selector xpath="tns:mappings/mapping/data-source" />
+            <xsd:field xpath="." />
+        </xsd:keyref>
+        <xsd:keyref name="mappingsFileFK" refer="tns:filePK">
+            <xsd:selector xpath="tns:mappings/mapping/from" />
+            <xsd:field xpath="@file" />
+        </xsd:keyref>
+	</xsd:element>
 </xsd:schema>
