@@ -11,7 +11,7 @@
     </node>
     <node name="schemas">
       <node name="schema-1">
-        <attribute name="location" value="platform:/resource/caliente-flat2db/src/main/resources/flat2db.xsd"/>
+        <attribute name="location" value="platform:/resource/caliente-cli-flat2db/src/main/resources/flat2db.xsd"/>
       </node>
     </node>
   </facet>

@@ -5,7 +5,7 @@
 	<name>Armedia Caliente CLI - Flat File to Database Converter</name>
 	<description>A standalone tool to convert flat files (XLS, CSV, XML) into Database tables</description>
 	<groupId>com.armedia.caliente.cli</groupId>
-	<artifactId>caliente-flat2db</artifactId>
+	<artifactId>caliente-cli-flat2db</artifactId>
 	<packaging>jar</packaging>
 
 	<parent>
