@@ -59,7 +59,7 @@ public class Launcher extends AbstractLauncher {
 	protected int run(OptionValues cli, String command, OptionValues commandValues, Collection<String> positionals)
 		throws Exception {
 		final String reportMarker = DateFormatUtils.format(new Date(), Launcher.REPORT_MARKER_FORMAT);
-		System.setProperty("logName", String.format("caliente-validator-%s", reportMarker));
+		System.setProperty("logName", String.format("%s-%s", getProgramName(), reportMarker));
 
 		final File biFile = new File(cli.getString(CLIParam.bulk_import)).getCanonicalFile();
 		if (!Launcher.verifyPath(this.log, biFile, "bulk import")) { return 1; }
