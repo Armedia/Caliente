@@ -11,10 +11,10 @@
 	//		* Finally, if no mapping is given in the mapping XML, then ingest into a table whose name matches the CSV filename minus the extension
 	//			(if the file has some weird name, an alias= clause must be used, or a mapping XML with the file's full name)
 -->
-<flat-2-db>
+<flat-2-db xmlns="http://www.armedia.com/ns/caliente/flat2db" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.armedia.com/ns/caliente/flat2db src/main/resources/flat2db.xsd ">
 	<data-sources>
 		<!-- for DB storage -->
-		<data-source id="dataSourceId" type="pooled|jndi|spring">
+		<data-source id="dataSourceId" type="pooled">
 			<!-- these will be applied directly to the datasource locator -->
 			<properties>
 				<propertyName>value</propertyName>
@@ -24,7 +24,9 @@
 			<!-- what initializations to perform for the given DataSource -->
 			<startup>
 				<changeset>liquibase-changeset-url-or-file-path</changeset>
-				<rollback-changeset by="tag|number|date">value</rollback-changeset>
+				<rollback-changeset by="tag">value</rollback-changeset>
+				<rollback-changeset by="number">value</rollback-changeset>
+				<rollback-changeset by="date">value</rollback-changeset>
 				<sql-script>sql-script-to-run-on-prep</sql-script>
 				<sql>
 					<![CDATA[
@@ -34,40 +36,17 @@
 			</startup>
 
 			<!-- sequence of tasks to run after each batch is successfully savepointed -->
-			<batch-pre>
-				<script lang="jexl">
-					<!-- run this script -->
-				</script>
-				<sql>
-					<!-- run this SQL -->
-				</sql>
-			</batch-pre>
-
-			<!-- how many records to insert per batch (if ommitted, a default number is used) -->
-			<!-- The number must be >= 1, or it'll be ignored -->
-			<!--
-				the transactional flag indicates whether a single transcation should be used per batch, or all inserts
-				should be part of an overarching transaction.  If the latter case, a savepoint will still be used per batch
-			-->
-			<batch-size transactional="true|false">100</batch-size>
-
-			<!-- sequence of tasks to run after each batch is successfully savepointed -->
-			<batch-post>
-				<script lang="jexl">
-					<!-- run this script -->
-				</script>
-				<sql>
-					<!-- run this SQL -->
-				</sql>
-			</batch-post>
+			<on-insert>
+				<sql>xxx</sql>
+			</on-insert>
 
 			<!-- sequence of tasks to run after a batch fails -->
-			<batch-error>
-				...
-			</batch-error>
+			<on-error>
+				<sql>xxx</sql>
+			</on-error>
 
 			<shutdown>
-				.... (same as <startup/>, but run during shutdown) ....
+				<!-- .... (same as <startup/>, but run during shutdown) .... -->
 			</shutdown>
 		</data-source>
 
@@ -135,7 +114,6 @@
 		<!-- which structure id should be used as the default (the id must be defined above) -->
 		<default>structure-id</default>
 	</structures>
-		return 0;
 
 	<files>
 		<!-- file ID must be unique -->
@@ -181,13 +159,14 @@
 			</xslt-table>
 
 			<direct-table id="direct-1">
-				<records>xpath-expression</records>
+				<records>xpath-expression-that-yields-elements-to-be-considered-records</records>
 				<columns>
 					<column>
 						<!-- this expression will yield the column name. Must yield unique values per record -->
 						<name>xpath-expression</name>
 						<!-- this expression will yield the column's value(s?) -->
 						<value>xpath-expression</value>
+						<!-- In case we need to specify the data type it must be coerced into -->
 						<data-type>datatype</data-type>
 					</column>
 					<column>
@@ -247,16 +226,18 @@
 				</shutdown>
 
 				<!-- if we want to customize the column mappings instead of making them one-to-one direct -->
-				<columns>
+				<column-mappings>
 					<column>
 						<from-name>source-column-name</from-name>
 						<from-index>source-column-index</from-index>
+
+						<!-- <to> value must be unique per file -->
 						<to>target-column-name</to>
 					</column>
 					<column>
 						...
 					</column>
-				</columns>
+				</column-mappings>
 			</from>
 
 			<from file="...">
