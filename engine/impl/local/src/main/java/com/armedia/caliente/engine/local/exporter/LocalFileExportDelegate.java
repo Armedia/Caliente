@@ -9,11 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.AclEntry;
-import java.nio.file.attribute.AclEntryFlag;
-import java.nio.file.attribute.AclEntryPermission;
-import java.nio.file.attribute.AclEntryType;
-import java.nio.file.attribute.AclFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.DosFileAttributeView;
@@ -301,6 +296,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			}
 		}
 
+		/*
 		final AclFileAttributeView acl = getFileAttributeView(path, AclFileAttributeView.class);
 		if (acl != null) {
 			// TODO: Before we can do this, we have to come up with a neutral, portable
@@ -319,6 +315,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 				// Do nothing...
 			}
 		}
+		*/
 
 		// The parent is always the parent folder
 		CmfProperty<CmfValue> prop = null;
