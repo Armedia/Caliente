@@ -242,7 +242,7 @@
 
 			<xsd:element name="structures" type="tns:structures.t" minOccurs="0" maxOccurs="1">
 				<xsd:key name="structurePK">
-					<xsd:selector xpath="tns:*" />
+					<xsd:selector xpath="tns:structure" />
 					<xsd:field xpath="@id" />
 				</xsd:key>
 		        <xsd:keyref name="structureFk" refer="tns:structurePK">
