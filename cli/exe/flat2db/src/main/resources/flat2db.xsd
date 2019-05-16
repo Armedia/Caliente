@@ -199,6 +199,25 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="fileInputBase.t">
+		<xsd:sequence>
+			<xsd:element name="source" type="tns:trimmedString.t" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="fileSpreadsheetSheets.t">
+		<xsd:sequence>
+			<xsd:element name="default-structure" minOccurs="0" maxOccurs="1">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="fileSpreadsheet.t">
+		<xsd:sequence>
+			<xsd:element name="sheets" type="tns:fileSpreadsheetSheets.t" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
 	<xsd:complexType name="flat2db.t">
 		<xsd:sequence>
 			<xsd:element name="data-sources" minOccurs="1" maxOccurs="1">

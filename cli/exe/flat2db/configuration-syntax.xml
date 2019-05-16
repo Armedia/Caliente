@@ -40,7 +40,7 @@
 				<sql>xxx</sql>
 			</on-insert>
 
-			<!-- sequence of tasks to run after a batch fails -->
+			<!-- sequence of tasks to run after an insert fails -->
 			<on-error>
 				<sql>xxx</sql>
 			</on-error>
