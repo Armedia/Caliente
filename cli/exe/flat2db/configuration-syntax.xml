@@ -14,7 +14,7 @@
 <flat-2-db xmlns="http://www.armedia.com/ns/caliente/flat2db" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.armedia.com/ns/caliente/flat2db src/main/resources/flat2db.xsd ">
 	<data-sources>
 		<!-- for DB storage -->
-		<data-source id="dataSourceId" type="pooled">
+		<data-source id="1" type="pooled">
 			<!-- these will be applied directly to the datasource locator -->
 			<properties>
 				<propertyName>value</propertyName>
@@ -50,18 +50,21 @@
 			</shutdown>
 		</data-source>
 
-		<data-source id="..." type="...">
-			...
+		<data-source id="2" type="spring">
+			<properties>
+				<propertyName>value</propertyName>
+				<propertyName>value</propertyName>
+			</properties>
 		</data-source>
 	</data-sources>
 
 	<structures>
 		<!-- name : must be unique, may not be the string "default" -->
-		<structure id="structure-1">
+		<structure id="1">
 			<header>
 				<!-- which row has the headers - if missing, no headers are used-->
 				<!-- the header row must not be within the records selected between <first-row> and <last-row>/<rows> -->
-				<row>#-abs-row</row>
+				<!-- <row>0</row> -->
 
 				<!-- ... OR ... -->
 
@@ -70,26 +73,33 @@
 					<name>column-name</name>
 
 					<!-- the sql-compatible data type for the column (optional, default is to coerce into the target type in the DB) -->
-					<data-type>...</data-type>
+					<data-type>DATE</data-type>
 
 					<!-- constant / ${expression-possibly-referencing-other-columns-by-name-or-index} / #engine-specific-expression-that-yields-the-value(s?) -->
 					<value>...</value>  <!-- what to do here? support constants? column copies/processing? -->
 				</column>
 				<column>
-					...
+					<!-- constant / ${expression-possibly-referencing-other-columns-by-name-or-index} / #engine-specific-expression-that-yields-the-name -->
+					<name>column-name-2</name>
+
+					<!-- the sql-compatible data type for the column (optional, default is to coerce into the target type in the DB) -->
+					<data-type>DATE</data-type>
+
+					<!-- constant / ${expression-possibly-referencing-other-columns-by-name-or-index} / #engine-specific-expression-that-yields-the-value(s?) -->
+					<value>...</value>  <!-- what to do here? support constants? column copies/processing? -->
 				</column>
 			</header>
 			<range>
 				<!-- first row for the data we're interested in -->
-				<first>#-abs-pos</first>
+				<first>0</first>
 				<!-- last row for the data we're interested in, can't mix with <count> -->
-				<last>#-abs-pos</last>
+				<last>111</last>
 				<!-- how many rows to consume, can't mix with <last> -->
-				<count>#-of-rows</count>
+				<!-- <count>222</count> -->
 			</range>
 
 			<!-- only one of either lang or className may be specified -->
-			<filter lang="....?" className="fqcn">
+			<filter lang="....?">
 				<![CDATA[
 					// Script that returns an explicit false-value if a row should be skipped,
 					// and the row is accepted otherwise (true-value or null/void)
@@ -102,7 +112,7 @@
 
 		<!-- extends : must reference already-existing structure names, values from earlier names -->
 		<!-- (further to the left) override values from latter names (further to the right)       -->
-		<structure id="structure-2" extends="structure-1,...,structure-N">
+		<structure id="2" extends="structure-1,...,structure-N">
 			<!-- to disable the <header>, use <header/> -->
 			<!-- to disable the <range>, use <range/> -->
 			<!-- to disable the <range>/<first>, use <first>NONE</first> -->
@@ -112,7 +122,7 @@
 		</structure>
 
 		<!-- which structure id should be used as the default (the id must be defined above) -->
-		<default>structure-id</default>
+		<default>1</default>
 	</structures>
 
 	<files>
@@ -188,7 +198,7 @@
 
 	<mappings>
 		<mapping>
-			<data-source>data-source-id</data-source>
+			<data-source>1</data-source>
 
 			<!-- this can be a table name, schema+table, etc... -->
 			<to>target-table-spec</to>
