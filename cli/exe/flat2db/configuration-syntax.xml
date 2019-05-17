@@ -61,6 +61,14 @@
 	<structures>
 		<!-- name : must be unique, may not be the string "default" -->
 		<structure id="1">
+			<range>
+				<!-- first row for the data we're interested in -->
+				<first-row>0</first-row>
+				<!-- last row for the data we're interested in, can't mix with <count> -->
+				<last-row>111</last-row>
+				<!-- how many rows to consume, can't mix with <last> -->
+				<!-- <row-count>222</row-count> -->
+			</range>
 			<header>
 				<!-- which row has the headers - if missing, no headers are used-->
 				<!-- the header row must not be within the records selected between <first-row> and <last-row>/<rows> -->
@@ -89,14 +97,6 @@
 					<value>...</value>  <!-- what to do here? support constants? column copies/processing? -->
 				</column>
 			</header>
-			<range>
-				<!-- first row for the data we're interested in -->
-				<first>0</first>
-				<!-- last row for the data we're interested in, can't mix with <count> -->
-				<last>111</last>
-				<!-- how many rows to consume, can't mix with <last> -->
-				<!-- <count>222</count> -->
-			</range>
 
 			<!-- only one of either lang or className may be specified -->
 			<filter lang="....?">
@@ -127,30 +127,43 @@
 
 	<files>
 		<!-- file ID must be unique -->
-		<excel id="fileId1">
+		<spreadsheet id="fileId1">
 			<!-- where the file is stored - either a local file path or a resource/URL -->
 			<source>....</source>
-			<sheets>
-				<!-- copy = what sheet settings to copy from, must be defined in <common> area, or "default" to reference the common default -->
-				<default-structure extends="settings-2">
-					...
-				</default-structure>
+			<!-- copy = what sheet settings to copy from, must be defined in <common> area, or "default" to reference the common default -->
+			<default-structure extends="settings-2">
+				<range>
+					<first-row></first-row>
+					<last-row></last-row>
+					<row-count></row-count>
+					<first-column></first-column>
+					<last-column></last-column>
+					<column-count></column-count>
+				</range>
+			</default-structure>
 
-				<!-- sheetId = the ID with which this sheet will be referred -->
-				<!-- sheet-ID = the sheet ID within the worksheet -->
-				<!-- sheet-num = the sheet number within the worksheet -->
-				<!-- copy = what <structures>/<structure> to copy from, may be the string "default" to reference the "closest" default -->
-				<sheet-structure id="sheetId" sheet="sheet-ID|sheet-num" extends="structure-id|default">
-					...
-				</sheet-structure>
+			<!-- sheetId = the ID with which this sheet will be referred -->
+			<!-- sheet-ID = the sheet ID within the worksheet -->
+			<!-- sheet-num = the sheet number within the worksheet -->
+			<!-- copy = what <structures>/<structure> to copy from, may be the string "default" to reference the "closest" default -->
+			<sheet-structure id="sheetId" sheet="sheet-ID|sheet-num" extends="structure-id|default">
+				<range>
+					<first-row></first-row>
+					<last-row></last-row>
+					<row-count></row-count>
+					<first-column></first-column>
+					<last-column></last-column>
+					<column-count></column-count>
+				</range>
+				...
+			</sheet-structure>
 
-				<sheet-structure id="...">
-					...
-				</sheet-structure>
-			</sheets>
-		</excel>
+			<sheet-structure id="...">
+				...
+			</sheet-structure>
+		</spreadsheet>
 
-		<csv id="fileId2" header-row="true|false" eol-comment="#" stable-rows="true|false">
+		<csv id="fileId2" header-row="true|false" stable-rows="true|false">
 			<source>....</source>
 			<structure extends="...">
 				...

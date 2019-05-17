@@ -158,23 +158,23 @@
 
 	<xsd:complexType name="structureRange.t">
 		<xsd:sequence>
-			<xsd:element name="first" type="tns:naturalNumber.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="first-row" type="tns:naturalNumber.t" minOccurs="0" maxOccurs="1" />
 			<xsd:choice minOccurs="0" maxOccurs="1">
-				<xsd:element name="last" type="tns:naturalNumber.t" />
-				<xsd:element name="count" type="tns:naturalNumber.t" />
+				<xsd:element name="last-row" type="tns:naturalNumber.t" />
+				<xsd:element name="row-count" type="tns:naturalNumber.t" />
 			</xsd:choice>
 		</xsd:sequence>
 	</xsd:complexType>
 
 	<xsd:complexType name="structureBase.t">
 		<xsd:sequence>
+			<xsd:element name="range" type="tns:structureRange.t" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="header" type="tns:structureHeader.t" minOccurs="0" maxOccurs="1">
 				<xsd:key name="headerColumnPK">
 					<xsd:selector xpath="tns:column/tns:name" />
 					<xsd:field xpath="." />
 				</xsd:key>
 			</xsd:element>
-			<xsd:element name="range" type="tns:structureRange.t" minOccurs="0" maxOccurs="1" />
 			<xsd:choice minOccurs="0" maxOccurs="1">
 				<xsd:element name="filter" type="tns:script.t" />
 				<xsd:element name="filter-class" type="tns:className.t" />
