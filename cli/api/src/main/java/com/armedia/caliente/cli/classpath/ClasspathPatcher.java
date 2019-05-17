@@ -36,7 +36,7 @@ public abstract class ClasspathPatcher {
 	 * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
 	 *
 	 */
-	public static final class CPCL extends URLClassLoader {
+	private static final class CPCL extends URLClassLoader {
 		public CPCL(URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
 			super(urls, parent, factory);
 		}
@@ -50,7 +50,7 @@ public abstract class ClasspathPatcher {
 		}
 
 		@Override
-		public void addURL(URL url) {
+		protected void addURL(URL url) {
 			super.addURL(url);
 		}
 	}
