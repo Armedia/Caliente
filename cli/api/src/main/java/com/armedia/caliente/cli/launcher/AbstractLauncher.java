@@ -38,6 +38,11 @@ public abstract class AbstractLauncher {
 
 	private static final String[] NO_ARGS = {};
 
+	static {
+		// Make sure this is called as early as possible
+		ClasspathPatcher.init();
+	}
+
 	protected Logger log = AbstractLauncher.BOOT_LOG;
 	protected Logger console = AbstractLauncher.BOOT_LOG;
 
