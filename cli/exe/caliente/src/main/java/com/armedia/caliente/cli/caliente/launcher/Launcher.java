@@ -150,7 +150,9 @@ public class Launcher extends AbstractLauncher {
 		// Now, find the engines available
 		OptionImpl impl = OptionImpl.cast(CLIParam.engine);
 		if (impl != null) {
-			impl.setValueFilter(new StringValueFilter(false, AbstractEngineInterface.getAliases(this.log)));
+			Collection<String> engines = AbstractEngineInterface.getAliases(this.log);
+			if (engines.isEmpty()) { throw new IllegalStateException("No engine interfaces found, cannot continue!"); }
+			impl.setValueFilter(new StringValueFilter(false, engines));
 		}
 
 		return scheme //
