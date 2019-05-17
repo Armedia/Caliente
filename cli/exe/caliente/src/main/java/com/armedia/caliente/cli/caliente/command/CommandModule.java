@@ -39,6 +39,14 @@ public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory
 		return this.descriptor;
 	}
 
+	public boolean isShouldStoreContentLocationRequirement() {
+		return false;
+	}
+
+	public boolean isContentStreamsExternal(OptionValues commandValues) {
+		return false;
+	}
+
 	public final ENGINE_FACTORY getEngineFactory() {
 		return this.engineFactory;
 	}
@@ -128,15 +136,15 @@ public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory
 		return execute(state, commandValues, positionals);
 	}
 
-	public String getContentOrganizerName() {
+	public String getContentOrganizerName(OptionValues commandValues) {
 		return null;
 	}
 
-	public void customizeObjectStoreProperties(StoreConfiguration cfg) {
+	public void customizeObjectStoreProperties(OptionValues commandValues, StoreConfiguration cfg) {
 		// Do nothing by default
 	}
 
-	public void customizeContentStoreProperties(StoreConfiguration cfg) {
+	public void customizeContentStoreProperties(OptionValues commandValues, StoreConfiguration cfg) {
 		// Do nothing by default
 	}
 

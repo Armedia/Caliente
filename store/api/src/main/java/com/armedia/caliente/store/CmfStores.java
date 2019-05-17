@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,10 +23,10 @@ import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.store.xml.StoreDefinitions;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
-import com.armedia.commons.utilities.XmlTools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.xml.XmlTools;
 
 public final class CmfStores extends BaseShareableLockable {
 
@@ -87,7 +88,23 @@ public final class CmfStores extends BaseShareableLockable {
 			for (StoreConfiguration storeCfg : storeConfigurations) {
 				i++;
 				try {
-					createStore(storeCfg);
+					String parentName = StringUtils.strip(storeCfg.getParentName());
+					if (StringUtils.isBlank(parentName)) {
+						this.log.warn("Content store [{}] has a blank parent name - will assume <null> instead",
+							storeCfg.getId());
+						parentName = null;
+					}
+					CmfStore<?> parent = null;
+					if (parentName != null) {
+						parent = getStore(parentName);
+						if (parent == null) {
+							this.log.error(
+								"Content store [{}] contains an illegal forward reference to parent store [{}] - please resolve this in the configuration file",
+								storeCfg.getId(), parentName);
+							continue;
+						}
+					}
+					createStore(storeCfg, parent);
 				} catch (Throwable t) {
 					String msg = String.format(
 						"Exception raised attempting to initialize %s store #%d from the definitions at [%s]",
@@ -148,7 +165,14 @@ public final class CmfStores extends BaseShareableLockable {
 		return prepInstance;
 	}
 
+	/*
 	private CmfStore<?> createStore(StoreConfiguration configuration)
+		throws CmfStorageException, DuplicateCmfStoreException {
+		return createStore(configuration, null);
+	}
+	*/
+
+	private CmfStore<?> createStore(StoreConfiguration configuration, CmfStore<?> parent)
 		throws CmfStorageException, DuplicateCmfStoreException {
 		assertOpen();
 		if (configuration == null) {
@@ -174,7 +198,7 @@ public final class CmfStores extends BaseShareableLockable {
 
 			final boolean cleanData = cfg.getBoolean(CmfStoreFactory.CFG_CLEAN_DATA, false);
 			final CmfStorePrep prep = prepareStore(configuration, cleanData);
-			CmfStore<?> instance = factory.newInstance(configuration, cleanData, prep);
+			CmfStore<?> instance = factory.newInstance(parent, configuration, cleanData, prep);
 			this.cmfStores.put(id, instance);
 			if (prep != null) {
 				this.cmfPreps.put(id, prep);
@@ -245,7 +269,6 @@ public final class CmfStores extends BaseShareableLockable {
 	}
 
 	private static final Logger LOG = LoggerFactory.getLogger(CmfStores.class);
-
 	private static final BaseShareableLockable LOCK = new BaseShareableLockable();
 	private static CmfStores OBJECT_STORES = null;
 	private static CmfStores CONTENT_STORES = null;
@@ -362,18 +385,29 @@ public final class CmfStores extends BaseShareableLockable {
 
 	public static CmfObjectStore<?> createObjectStore(StoreConfiguration configuration)
 		throws CmfStorageException, DuplicateCmfStoreException {
+		return CmfStores.createObjectStore(configuration, null);
+	}
+
+	public static CmfObjectStore<?> createObjectStore(StoreConfiguration configuration, CmfStore<?> parent)
+		throws CmfStorageException, DuplicateCmfStoreException {
 		CmfStores.initialize();
 		try (SharedAutoLock lock = CmfStores.LOCK.autoSharedLock()) {
-			return CmfObjectStore.class.cast(CmfStores.assertValid(CmfStores.OBJECT_STORES).createStore(configuration));
+			return CmfObjectStore.class
+				.cast(CmfStores.assertValid(CmfStores.OBJECT_STORES).createStore(configuration, parent));
 		}
 	}
 
 	public static CmfContentStore<?, ?> createContentStore(StoreConfiguration configuration)
 		throws CmfStorageException, DuplicateCmfStoreException {
+		return CmfStores.createContentStore(configuration, null);
+	}
+
+	public static CmfContentStore<?, ?> createContentStore(StoreConfiguration configuration, CmfStore<?> parent)
+		throws CmfStorageException, DuplicateCmfStoreException {
 		CmfStores.initialize();
 		try (SharedAutoLock lock = CmfStores.LOCK.autoSharedLock()) {
 			return CmfContentStore.class
-				.cast(CmfStores.assertValid(CmfStores.CONTENT_STORES).createStore(configuration));
+				.cast(CmfStores.assertValid(CmfStores.CONTENT_STORES).createStore(configuration, parent));
 		}
 	}
 

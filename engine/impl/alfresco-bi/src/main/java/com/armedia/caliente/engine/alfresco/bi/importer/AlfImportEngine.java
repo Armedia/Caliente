@@ -53,7 +53,7 @@ import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.alfresco.bi.BulkImportManager;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.xml.XmlTools;
 
 public class AlfImportEngine extends
 	ImportEngine<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportContextFactory, AlfImportDelegateFactory, AlfImportEngineFactory> {
@@ -309,7 +309,12 @@ public class AlfImportEngine extends
 			throw new IOException("Can't proceed without a content directory to store artifacts in");
 		}
 		File contentFile = Tools.canonicalize(new File(content));
-		FileUtils.forceMkdir(contentFile);
+		if (!contentFile.exists()) {
+			FileUtils.forceMkdir(contentFile);
+		} else if (!contentFile.isDirectory()) {
+			throw new IOException(String.format("The given content path of [%s] is not a valid directory",
+				contentFile.getAbsolutePath()));
+		}
 
 		String unfiledPath = settings.getString(AlfSetting.UNFILED_PATH);
 		unfiledPath = FilenameUtils.separatorsToUnix(unfiledPath);

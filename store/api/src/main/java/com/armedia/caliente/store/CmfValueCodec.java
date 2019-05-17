@@ -4,18 +4,12 @@
 
 package com.armedia.caliente.store;
 
+import com.armedia.commons.utilities.Codec;
+
 /**
  * @author diego
  *
  */
-public interface CmfValueCodec<VALUE> {
-
-	public CmfValue encodeValue(VALUE value);
-
-	public VALUE decodeValue(CmfValue value);
-
-	public boolean isNull(VALUE value);
-
-	public VALUE getNull();
+public interface CmfValueCodec<VALUE> extends Codec<VALUE, CmfValue> {
 
 }

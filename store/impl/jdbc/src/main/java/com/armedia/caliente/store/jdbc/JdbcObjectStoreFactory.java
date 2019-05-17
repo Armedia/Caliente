@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfObjectStoreFactory;
 import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.caliente.store.CmfStore;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.caliente.tools.datasource.DataSourceLocator;
@@ -21,7 +22,7 @@ public class JdbcObjectStoreFactory extends CmfObjectStoreFactory<JdbcOperation,
 	}
 
 	@Override
-	protected JdbcObjectStore newInstance(StoreConfiguration configuration, boolean cleanData,
+	protected JdbcObjectStore newInstance(CmfStore<?> parent, StoreConfiguration configuration, boolean cleanData,
 		Supplier<CfgTools> prepInfo) throws CmfStorageException {
 		// It's either direct, or taken from Spring or JNDI
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
@@ -39,7 +40,7 @@ public class JdbcObjectStoreFactory extends CmfObjectStoreFactory<JdbcOperation,
 				continue;
 			}
 			try {
-				return new JdbcObjectStore(ds, cfg.getBoolean(Setting.UPDATE_SCHEMA), cleanData, cfg);
+				return new JdbcObjectStore(parent, ds, cfg.getBoolean(Setting.UPDATE_SCHEMA), cleanData, cfg);
 			} catch (Exception e) {
 				throw new CmfStorageException(String.format("Failed to initialize the CmsObjectStore %s[%s]",
 					configuration.getType(), configuration.getId()), e);

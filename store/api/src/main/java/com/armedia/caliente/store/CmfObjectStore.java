@@ -176,11 +176,13 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	private boolean open = false;
 	private final AtomicBoolean objectFilterActive = new AtomicBoolean(false);
 
-	protected CmfObjectStore(Class<OPERATION> operationClass) throws CmfStorageException {
-		this(operationClass, false);
+	protected CmfObjectStore(CmfStore<?> parent, Class<OPERATION> operationClass) throws CmfStorageException {
+		this(parent, operationClass, false);
 	}
 
-	protected CmfObjectStore(Class<OPERATION> operationClass, boolean openState) throws CmfStorageException {
+	protected CmfObjectStore(CmfStore<?> parent, Class<OPERATION> operationClass, boolean openState)
+		throws CmfStorageException {
+		super(parent, "object");
 		if (operationClass == null) { throw new IllegalArgumentException("Must provide the operation class"); }
 		this.operationClass = operationClass;
 		this.open = openState;

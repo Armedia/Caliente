@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 import com.armedia.caliente.store.CmfContentOrganizer;
 import com.armedia.caliente.store.CmfContentStoreFactory;
 import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.caliente.store.CmfStore;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -16,7 +17,7 @@ public class LocalContentStoreFactory extends CmfContentStoreFactory<LocalConten
 	}
 
 	@Override
-	protected LocalContentStore newInstance(StoreConfiguration configuration, boolean cleanData,
+	protected LocalContentStore newInstance(CmfStore<?> parent, StoreConfiguration configuration, boolean cleanData,
 		Supplier<CfgTools> prepInfo) throws CmfStorageException {
 		// It's either direct, or taken from Spring or JNDI
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
@@ -33,6 +34,6 @@ public class LocalContentStoreFactory extends CmfContentStoreFactory<LocalConten
 			this.log.debug("Creating a new local file store with base path [{}], and organizer [{}]", basePath,
 				organizer.getName());
 		}
-		return new LocalContentStore(cfg, new File(basePath), organizer, cleanData);
+		return new LocalContentStore(parent, cfg, new File(basePath), organizer, cleanData);
 	}
 }

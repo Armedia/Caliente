@@ -7,9 +7,9 @@ import java.util.TreeSet;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.XmlEnumAdapter;
+import com.armedia.commons.utilities.xml.EnumCodec;
 
-public class CardinalityAdapter extends XmlEnumAdapter<Cardinality> {
+public class CardinalityAdapter extends EnumCodec<Cardinality> {
 
 	private static final String STAR = "*";
 	private static Set<String> STAR_ALIASES;

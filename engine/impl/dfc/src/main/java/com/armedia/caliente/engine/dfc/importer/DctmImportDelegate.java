@@ -30,9 +30,9 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.caliente.tools.dfc.DfcQuery;
 import com.armedia.caliente.tools.dfc.DfcUtils;
-import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfDocument;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -56,8 +56,7 @@ import com.documentum.fc.common.admin.DfAdminException;
 public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportDelegateFactory, DctmImportEngine> {
 
-	private static final IDfValue CURRENT_VERSION_LABEL = DfValueFactory
-		.of(DfDocument.CURRENT_VERSION_LABEL);
+	private static final IDfValue CURRENT_VERSION_LABEL = DfValueFactory.of(DfDocument.CURRENT_VERSION_LABEL);
 
 	private final class AspectHelper implements IDfAttachAspectCallback, IDfDetachAspectCallback {
 		private final AtomicReference<T> ref;
@@ -602,7 +601,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			}
 
 			if (value == null) {
-				value = dataType.getNull();
+				value = dataType.getNullValue();
 			}
 			// Ensure the value's length is always consistent
 			if ((truncateLength > 0) && (value.asString().length() > truncateLength)) {
@@ -688,7 +687,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				throw new IllegalArgumentException("Must provide the data type for the attribute being cleared");
 			}
 			try {
-				object.setValue(attrName, dataType.getNull());
+				object.setValue(attrName, dataType.getNullValue());
 			} catch (DfAdminException e) {
 				// If it's not the kind of thing we're defending against, then rethrow it
 				if (!StringUtils.startsWithIgnoreCase(e.getMessageId(), "DM_SET_")) { throw e; }

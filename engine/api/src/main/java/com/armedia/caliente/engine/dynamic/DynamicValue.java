@@ -60,7 +60,7 @@ public class DynamicValue extends CmfBaseSetting {
 		CmfValueCodec<V> codec = translator.getCodec(property.getType());
 		if (isMultivalued()) {
 			for (V raw : property) {
-				CmfValue v = codec.encodeValue(raw);
+				CmfValue v = codec.encode(raw);
 				if ((v != null) && !v.isNull()) {
 					this.values.add(this.type.getValue(v));
 				} else {
@@ -68,7 +68,7 @@ public class DynamicValue extends CmfBaseSetting {
 				}
 			}
 		} else {
-			CmfValue v = codec.encodeValue(property.getValue());
+			CmfValue v = codec.encode(property.getValue());
 			if ((v != null) && !v.isNull()) {
 				this.value = this.type.getValue(v);
 			} else {

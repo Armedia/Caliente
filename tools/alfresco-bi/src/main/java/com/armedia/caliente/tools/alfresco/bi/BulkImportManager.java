@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Spliterator;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,9 +39,8 @@ import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndex;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
 import com.armedia.commons.utilities.CloseableIterator;
-import com.armedia.commons.utilities.StreamTools;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.xml.XmlTools;
 
 public final class BulkImportManager {
 
@@ -53,6 +53,9 @@ public final class BulkImportManager {
 
 	private static final String METADATA_SUFFIX = ".xml";
 
+	public static final String BASE_PATH_MARKER = "${BASE_PATH}$";
+	public static final String BASE_PATH_PREFIX = String.format("%s/", BulkImportManager.BASE_PATH_MARKER);
+
 	private final Path basePath;
 	private final Path contentPath;
 	private final Path unfiledPath;
@@ -62,21 +65,30 @@ public final class BulkImportManager {
 	private final List<Path> fileIndexes;
 	private final List<Path> folderIndexes;
 
-	public BulkImportManager(Path basePath) {
+	public BulkImportManager(Path basePath) throws IOException {
 		this(basePath, null, null);
 	}
 
-	public BulkImportManager(Path basePath, Path contentPath) {
+	public BulkImportManager(Path basePath, Path contentPath) throws IOException {
 		this(basePath, contentPath, null);
 	}
 
-	public BulkImportManager(Path basePath, String unfiledPath) {
+	public BulkImportManager(Path basePath, String unfiledPath) throws IOException {
 		this(basePath, null, unfiledPath);
 	}
 
-	public BulkImportManager(Path basePath, Path contentPath, String unfiledPath) {
-		this.basePath = Objects.requireNonNull(basePath).normalize().toAbsolutePath();
-		this.contentPath = (contentPath != null ? contentPath.normalize().toAbsolutePath() : null);
+	public BulkImportManager(Path basePath, Path contentPath, String unfiledPath) throws IOException {
+		this.basePath = Objects.requireNonNull(basePath).toRealPath();
+		if (contentPath == null) {
+			contentPath = this.basePath;
+		} else {
+			contentPath = contentPath.toRealPath();
+		}
+		if (contentPath.startsWith(this.basePath)) {
+			contentPath = this.basePath;
+		}
+		this.contentPath = contentPath;
+
 		this.bulkImportRoot = basePath.resolve(BulkImportManager.BULK_IMPORT_ROOT);
 		this.modelDirectory = this.basePath.resolve(BulkImportManager.CONTENT_MODEL_DIRECTORY);
 		this.manifest = this.basePath.resolve(BulkImportManager.INGESTION_MANIFEST);
@@ -126,14 +138,23 @@ public final class BulkImportManager {
 		return f;
 	}
 
-	private Path resolve(String childPath) {
-		if (StringUtils.isEmpty(childPath)) { return this.basePath; }
+	private Path resolve(Path base, String childPath) {
+		if (StringUtils.isEmpty(childPath)) { return base; }
+		if (childPath.startsWith(BulkImportManager.BASE_PATH_PREFIX)) {
+			return resolve(this.basePath, childPath.substring(BulkImportManager.BASE_PATH_PREFIX.length()));
+		}
 		// Split by forward slashes... this may be running on Windows!
-		Path path = this.basePath;
+		Path path = base;
 		for (String s : Tools.splitEscapedStream('/', childPath).collect(Collectors.toCollection(ArrayList::new))) {
 			path = path.resolve(s);
 		}
 		return path;
+	}
+
+	private Path resolve(Path base, Supplier<String> childPathSource) {
+		String str = childPathSource.get();
+		if (str == null) { return null; }
+		return resolve(base, str);
 	}
 
 	public Path getBasePath() {
@@ -154,7 +175,7 @@ public final class BulkImportManager {
 
 	public Path getManifestPath(boolean relative) {
 		if (!relative) { return this.manifest; }
-		return this.basePath.relativize(this.manifest);
+		return Paths.get(BulkImportManager.BASE_PATH_MARKER).resolve(this.basePath.relativize(this.manifest));
 	}
 
 	public Path getUnfiledPath() {
@@ -166,7 +187,7 @@ public final class BulkImportManager {
 	}
 
 	public Path resolveContentPath(ScanIndexItemVersion version) {
-		return resolve(version.getContent());
+		return resolve(this.contentPath, version::getContent);
 	}
 
 	// For now these are identical but they might change
@@ -179,7 +200,7 @@ public final class BulkImportManager {
 	}
 
 	public Path resolveMetadataPath(ScanIndexItemVersion version) {
-		return resolve(version.getMetadata());
+		return resolve(this.basePath, version::getMetadata);
 	}
 
 	// For now these are identical but they might change
@@ -262,10 +283,10 @@ public final class BulkImportManager {
 			}
 		}
 
-		final Unmarshaller u = XmlTools.getUnmarshaller(null, ScanIndex.class, ScanIndexItem.class,
+		final Unmarshaller u = XmlTools.getUnmarshaller(ScanIndex.class, ScanIndexItem.class,
 			ScanIndexItemVersion.class);
 
-		CloseableIterator<ScanIndexItem> it = new CloseableIterator<ScanIndexItem>() {
+		final CloseableIterator<ScanIndexItem> it = new CloseableIterator<ScanIndexItem>() {
 			@Override
 			protected CloseableIterator<ScanIndexItem>.Result findNext() throws Exception {
 				while (xml.nextTag() == XMLStreamConstants.START_ELEMENT) {
@@ -297,6 +318,6 @@ public final class BulkImportManager {
 				}
 			}
 		};
-		return StreamTools.of(it, Spliterator.IMMUTABLE | Spliterator.NONNULL).onClose(it::close);
+		return it.stream(Spliterator.IMMUTABLE | Spliterator.NONNULL);
 	}
 }

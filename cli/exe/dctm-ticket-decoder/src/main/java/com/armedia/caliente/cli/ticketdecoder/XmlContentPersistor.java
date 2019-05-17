@@ -17,10 +17,10 @@ import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.XmlTools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.function.CheckedLazySupplier;
+import com.armedia.commons.utilities.xml.XmlTools;
 import com.ctc.wstx.api.WstxOutputProperties;
 import com.ctc.wstx.stax.WstxOutputFactory;
 

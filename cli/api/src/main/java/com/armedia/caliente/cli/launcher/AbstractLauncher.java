@@ -38,6 +38,11 @@ public abstract class AbstractLauncher {
 
 	private static final String[] NO_ARGS = {};
 
+	static {
+		// Make sure this is called as early as possible
+		ClasspathPatcher.init();
+	}
+
 	protected Logger log = AbstractLauncher.BOOT_LOG;
 	protected Logger console = AbstractLauncher.BOOT_LOG;
 
@@ -202,7 +207,7 @@ public abstract class AbstractLauncher {
 			showFooter(this.console, ret);
 			return ret;
 		} catch (Exception e) {
-			showError(this.log, e);
+			showError(this.console, e);
 			return 1;
 		}
 	}

@@ -45,6 +45,7 @@ import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.engine.tools.HierarchicalOrganizer;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfStoreFactory;
 import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.CmfValue;
@@ -76,6 +77,7 @@ public class Launcher extends AbstractLauncher {
 	}
 
 	public static final CmfCrypt CRYPTO = new CmfCrypt();
+	public static final String STORE_PROP_CONTENT_LOCATION_REQUIRED = "caliente.content.location.required";
 
 	public static final void main(String... args) {
 		System.exit(new Launcher().launch(CLIParam.help, args));
@@ -148,7 +150,9 @@ public class Launcher extends AbstractLauncher {
 		// Now, find the engines available
 		OptionImpl impl = OptionImpl.cast(CLIParam.engine);
 		if (impl != null) {
-			impl.setValueFilter(new StringValueFilter(false, AbstractEngineInterface.getAliases(this.log)));
+			Collection<String> engines = AbstractEngineInterface.getAliases(this.log);
+			if (engines.isEmpty()) { throw new IllegalStateException("No engine interfaces found, cannot continue!"); }
+			impl.setValueFilter(new StringValueFilter(false, engines));
 		}
 
 		return scheme //
@@ -198,13 +202,7 @@ public class Launcher extends AbstractLauncher {
 		if (error != null) { throw new CommandLineProcessingException(1, error); }
 
 		this.baseDataLocation = getBaseDataLocation(commandValues);
-
-		this.objectStoreLocation = getMetadataLocation(commandValues);
-		this.contentStoreLocation = getContentLocation(commandValues);
 		this.logLocation = getLogLocation(baseValues);
-
-		this.directFsMode = commandValues.isPresent(CLIParam.direct_fs);
-		this.contentOrganizer = commandValues.getString(CLIParam.organizer, Launcher.DEFAULT_STREAMS_ORGANIZER);
 	}
 
 	private File getBaseDataLocation(OptionValues baseValues) throws CommandLineProcessingException {
@@ -216,7 +214,7 @@ public class Launcher extends AbstractLauncher {
 			path = Launcher.DEFAULT_DATA_PATH.toString();
 		}
 
-		File f = createFile(path);
+		File f = newCanonicalFile(path);
 		if (f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
@@ -235,7 +233,7 @@ public class Launcher extends AbstractLauncher {
 			path = new File(this.baseDataLocation, Launcher.DEFAULT_DB_PATH).getAbsolutePath();
 		}
 
-		File f = createFile(path);
+		File f = newCanonicalFile(path);
 		if (f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
@@ -245,7 +243,8 @@ public class Launcher extends AbstractLauncher {
 		return f;
 	}
 
-	private StoreConfiguration configureObjectStore() throws IOException, CommandLineProcessingException {
+	private StoreConfiguration buildObjectStoreConfiguration(OptionValues commandValues)
+		throws IOException, CommandLineProcessingException {
 		final File metadataLocation = this.objectStoreLocation;
 		final Map<String, String> commonValues = new HashMap<>();
 		commonValues.put("dir.root", this.baseDataLocation.getAbsolutePath());
@@ -260,33 +259,79 @@ public class Launcher extends AbstractLauncher {
 			loadStoreProperties("object", metadataLocation.isFile() ? metadataLocation.getAbsolutePath() : null));
 
 		cfg.getSettings().putAll(commonValues);
-		this.command.customizeObjectStoreProperties(cfg);
+		this.command.customizeObjectStoreProperties(commandValues, cfg);
 		commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA,
 			String.valueOf(this.command.getDescriptor().isRequiresCleanData()));
 		cfg.getSettings().putAll(commonValues);
 		return cfg;
 	}
 
-	private File getContentLocation(OptionValues baseValues) throws CommandLineProcessingException {
-		// Step 2: There is no special location used by the engine, so see what the user wants to do
-		String path = null;
-		if (baseValues.isPresent(CLIParam.streams)) {
-			path = baseValues.getString(CLIParam.streams);
+	private File getContentLocation(CmfObjectStore<?> objectStore, OptionValues commandValues)
+		throws CommandLineProcessingException {
+		final boolean contentLocationWasGiven = commandValues.isPresent(CLIParam.streams);
+		final File calculatedContentLocation = Tools
+			.canonicalize(new File(this.baseDataLocation, Launcher.DEFAULT_STREAMS_PATH));
+		final File contentLocation;
+		if (contentLocationWasGiven) {
+			contentLocation = newCanonicalFile(commandValues.getString(CLIParam.streams));
 		} else {
-			path = new File(this.baseDataLocation, Launcher.DEFAULT_STREAMS_PATH).getAbsolutePath();
+			contentLocation = calculatedContentLocation;
 		}
-
-		File f = createFile(path);
-		if (f.exists() && !f.isFile() && !f.isDirectory()) {
+		if (contentLocation.exists() && !contentLocation.isFile() && !contentLocation.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
 				"The object at path [%s] is neither a file nor a directory - can't use it to describe the content store",
-				f));
+				contentLocation));
 		}
-		return f;
+
+		// If the option is not present, then check to see if it's required to process
+		// this data set (if this is a new data set, this property won't be set so we're fine)
+		if (!contentLocationWasGiven) {
+			try {
+				final CmfValue contentLocationRequired = objectStore
+					.getProperty(Launcher.STORE_PROP_CONTENT_LOCATION_REQUIRED);
+				if ((contentLocationRequired != null) && contentLocationRequired.asBoolean()) {
+					throw new CommandLineProcessingException(1, String.format(
+						"This extraction doesn't seem to bundle with the content streams; you must provide the required option to point out its location (usually %s)",
+						CLIParam.streams.option.getKey()));
+				}
+			} catch (CmfStorageException e) {
+				throw new CommandLineProcessingException(1,
+					String.format("Failed to query the property %s from the Object Store",
+						Launcher.STORE_PROP_CONTENT_LOCATION_REQUIRED),
+					e);
+			}
+		}
+
+		// If this processing mode needs to set the location requirement (exports do),
+		// then we calculate the value and store it
+		if (this.command.isShouldStoreContentLocationRequirement()) {
+			// These two will only be equals if --streams is not given, or --streams is given
+			// and its final canonical location matches the calculated default location
+			final boolean contentInDefaultLocation = Tools.equals(contentLocation, calculatedContentLocation);
+
+			// The content location flag (--streams) will be required "downstream" (i.e. upon import
+			// of the data set being created) if the content streams were NOT stored in the
+			// default location during extraction. When this can happen varies engine-to-engine so
+			// we make sure to delegate the calculation calculate.
+			final boolean contentLocationRequired = !contentInDefaultLocation
+				|| this.command.isContentStreamsExternal(commandValues);
+			try {
+				objectStore.setProperty(Launcher.STORE_PROP_CONTENT_LOCATION_REQUIRED,
+					new CmfValue(contentLocationRequired));
+			} catch (CmfStorageException e) {
+				throw new CommandLineProcessingException(1,
+					String.format("Failed to store the property %s into the Object Store",
+						Launcher.STORE_PROP_CONTENT_LOCATION_REQUIRED),
+					e);
+			}
+		}
+
+		return contentLocation;
 	}
 
-	private StoreConfiguration configureContentStore() throws IOException, CommandLineProcessingException {
+	private StoreConfiguration buildContentStoreConfiguration(OptionValues commandValues)
+		throws IOException, CommandLineProcessingException {
 
 		final boolean directFsExport = this.directFsMode;
 		final File contentLocation = this.contentStoreLocation;
@@ -303,16 +348,19 @@ public class Launcher extends AbstractLauncher {
 		StoreConfiguration cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
 
 		String contentOrganizer = this.contentOrganizer;
-		if (!directFsExport) {
+		if (directFsExport) {
+			// Ugly hack, but works...
+			this.contentOrganizer = cfg.getEffectiveSettings().get("uri.organizer");
+		} else {
 			if (StringUtils.isBlank(contentOrganizer)) {
-				contentOrganizer = Tools.coalesce(this.command.getContentOrganizerName(),
+				contentOrganizer = Tools.coalesce(this.command.getContentOrganizerName(commandValues),
 					Launcher.DEFAULT_STREAMS_ORGANIZER);
 			}
 			this.contentOrganizer = contentOrganizer;
 			applyStoreProperties(cfg,
 				loadStoreProperties("content", contentLocation.isFile() ? contentLocation.getAbsolutePath() : null));
 		}
-		this.command.customizeContentStoreProperties(cfg);
+		this.command.customizeContentStoreProperties(commandValues, cfg);
 		if (!directFsExport) {
 			cfg.getSettings().put("dir.content.organizer", this.contentOrganizer);
 		}
@@ -332,7 +380,7 @@ public class Launcher extends AbstractLauncher {
 			path = new File(this.baseDataLocation, Launcher.DEFAULT_LOG_PATH).getAbsolutePath();
 		}
 
-		File f = createFile(path);
+		File f = newCanonicalFile(path);
 		if (f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
@@ -342,7 +390,7 @@ public class Launcher extends AbstractLauncher {
 		return f;
 	}
 
-	private void initializeStores() throws Exception {
+	private void initializeStores(OptionValues commandValues) throws Exception {
 		if (!this.command.getDescriptor().isRequiresStorage()) { return; }
 
 		// Set the filesystem location where files will be created or read from
@@ -352,7 +400,8 @@ public class Launcher extends AbstractLauncher {
 
 		StoreConfiguration cfg = null;
 
-		cfg = configureObjectStore();
+		this.objectStoreLocation = getMetadataLocation(commandValues);
+		cfg = buildObjectStoreConfiguration(commandValues);
 		this.objectStore = CmfStores.createObjectStore(cfg);
 		storeLocation = this.objectStore.getStoreLocation();
 		if (storeLocation != null) {
@@ -361,11 +410,11 @@ public class Launcher extends AbstractLauncher {
 			this.console.info("The Metadata Store does not support local storage");
 		}
 
-		// TODO: Did these objects require "external" content references? I.e. do their content
-		// streams reside in the local filesystem?
-
-		cfg = configureContentStore();
-		this.contentStore = CmfStores.createContentStore(cfg);
+		this.contentStoreLocation = getContentLocation(this.objectStore, commandValues);
+		this.directFsMode = commandValues.isPresent(CLIParam.direct_fs);
+		this.contentOrganizer = commandValues.getString(CLIParam.organizer);
+		cfg = buildContentStoreConfiguration(commandValues);
+		this.contentStore = CmfStores.createContentStore(cfg, this.objectStore);
 		storeLocation = this.contentStore.getStoreLocation();
 		if (storeLocation != null) {
 			this.console.info("Using content directory: [{}]", storeLocation.getAbsolutePath());
@@ -402,12 +451,12 @@ public class Launcher extends AbstractLauncher {
 		return true;
 	}
 
-	private File createFile(String path) {
+	private File newCanonicalFile(String path) {
 		return Tools.canonicalize(new File(path));
 	}
 
 	protected File locateFile(String path, boolean required) throws IOException {
-		File f = createFile(path);
+		File f = newCanonicalFile(path);
 		if (!f.exists()) {
 			if (required) { throw new IOException(String.format("The file [%s] doesn't exist", f.getAbsolutePath())); }
 			return null;
@@ -522,7 +571,7 @@ public class Launcher extends AbstractLauncher {
 		String logCfg = baseValues.getString(CLIParam.log_cfg);
 		boolean customLog = false;
 		if (logCfg != null) {
-			final File cfg = createFile(logCfg);
+			final File cfg = newCanonicalFile(logCfg);
 			if (cfg.exists() && cfg.isFile() && cfg.canRead()) {
 				DOMConfigurator.configure(Tools.canonicalize(cfg).getAbsolutePath());
 				customLog = true;
@@ -561,7 +610,7 @@ public class Launcher extends AbstractLauncher {
 		Collection<String> positionals) throws Exception {
 
 		try {
-			initializeStores();
+			initializeStores(commandValues);
 
 			final CalienteState state = new CalienteState(this.baseDataLocation, this.objectStoreLocation,
 				this.objectStore, this.contentStoreLocation, this.contentStore);
@@ -570,11 +619,12 @@ public class Launcher extends AbstractLauncher {
 			final Logger log = LoggerFactory.getLogger(getClass());
 			final CmfObjectStore<?> objectStore = state.getObjectStore();
 			final boolean writeProperties = (objectStore != null);
-			final String format = String.format("caliente.%s.%s.%%s", engineName.toLowerCase(),
+			final String format = String.format("caliente.%s.%%s",
 				this.command.getDescriptor().getTitle().toLowerCase());
 			try {
 				if (writeProperties) {
 					Map<String, CmfValue> properties = new TreeMap<>();
+					properties.put(String.format(format, "engine"), new CmfValue(engineName));
 					properties.put(String.format(format, "version"), new CmfValue(Launcher.VERSION));
 					properties.put(String.format(format, "start"), new CmfValue(new Date()));
 					objectStore.setProperties(properties);

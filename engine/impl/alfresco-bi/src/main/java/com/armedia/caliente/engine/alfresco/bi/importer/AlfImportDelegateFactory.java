@@ -62,10 +62,10 @@ import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.XmlTools;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.concurrent.ShareableSet;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.xml.XmlTools;
 
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
@@ -162,7 +162,8 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	private final Path baseData;
+	private final Path contentRoot;
+	private final Path metadataRoot;
 	private final BulkImportManager biManager;
 
 	private final Properties userLoginMap = new Properties();
@@ -183,12 +184,13 @@ public class AlfImportDelegateFactory
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
 		throws IOException, JAXBException, XMLStreamException, DynamicElementException {
 		super(engine, configuration);
-		this.baseData = engine.getBaseData();
+		this.metadataRoot = engine.getBaseData();
 		this.biManager = engine.getBulkImportManager();
 		this.schema = engine.getSchema();
 		this.defaultTypes = engine.getDefaultTypes();
 
 		FileUtils.forceMkdir(this.biManager.getContentPath().toFile());
+		this.contentRoot = this.biManager.getContentPath();
 
 		final File modelDir = this.biManager.getContentModelsPath().toFile();
 		FileUtils.forceMkdir(modelDir);
@@ -393,6 +395,10 @@ public class AlfImportDelegateFactory
 		return path.toString();
 	}
 
+	protected Path getContentRelativePath(File contentFile) {
+		return this.contentRoot.relativize(contentFile.toPath());
+	}
+
 	protected final ScanIndexItemMarker generateItemMarker(final AlfImportContext ctx, final boolean folder,
 		final CmfObject<CmfValue> cmfObject, CmfContentStream content, File contentFile, File metadataFile,
 		MarkerType type) throws ImportException {
@@ -423,22 +429,27 @@ public class AlfImportDelegateFactory
 				CmfProperty<CmfValue> vCounter = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
 				CmfProperty<CmfValue> vHeadIndex = cmfObject.getProperty(IntermediateProperty.VERSION_HEAD_INDEX);
 				CmfProperty<CmfValue> vIndex = cmfObject.getProperty(IntermediateProperty.VERSION_INDEX);
-				if ((vCounter == null) || !vCounter.hasValues() || //
-					(vHeadIndex == null) || !vHeadIndex.hasValues() || //
-					(vIndex == null) || !vIndex.hasValues()) {
-					if (!folder) {
-						// ERROR: insufficient data
-						throw new ImportException(
-							String.format("No version indexes found for %s", cmfObject.getDescription()));
-					}
-					// It's OK for directories...everything is 1
-					head = 1;
-					count = 1;
-					current = 1;
-				} else {
+				// These 3 must either all be present and have values, or none of them...
+				if (((vCounter == null) || !vCounter.hasValues()) && //
+					((vHeadIndex == null) || !vHeadIndex.hasValues()) && //
+					((vIndex == null) || !vIndex.hasValues())) {
+					// If none of them have values...
+					head = count = current = 1;
+				} else if ((vCounter != null) && vCounter.hasValues()
+					&& ((vHeadIndex != null) && vHeadIndex.hasValues() && (vIndex != null) && vIndex.hasValues())) {
+					// If all of them have values...
 					head = vHeadIndex.getValue().asInteger();
 					count = vCounter.getValue().asInteger();
 					current = vIndex.getValue().asInteger();
+				} else {
+					// Only some have values, so only be lenient for directories...
+					if (!folder) {
+						// ERROR: insufficient data
+						throw new ImportException(
+							String.format("Incomplete version indexes found for %s (", cmfObject.getDescription()));
+					}
+					// It's OK for directories...everything is 1
+					head = count = current = 1;
 				}
 				break;
 		}
@@ -452,8 +463,8 @@ public class AlfImportDelegateFactory
 		metadataFile = AlfImportDelegateFactory.normalizeAbsolute(metadataFile);
 
 		// basePath is the base path within which the entire import resides
-		final Path relativeContentPath = this.baseData.relativize(contentFile.toPath());
-		final Path relativeMetadataPath = (metadataFile != null ? this.baseData.relativize(metadataFile.toPath())
+		final Path relativeContentPath = getContentRelativePath(contentFile);
+		final Path relativeMetadataPath = (metadataFile != null ? this.metadataRoot.relativize(metadataFile.toPath())
 			: null);
 		Path relativeMetadataParent = (metadataFile != null ? relativeMetadataPath.getParent() : null);
 		if (relativeMetadataParent == null) {

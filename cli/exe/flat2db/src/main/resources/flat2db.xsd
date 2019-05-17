@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd"
+	targetNamespace="http://www.armedia.com/ns/caliente/flat2db" xmlns:tns="http://www.armedia.com/ns/caliente/flat2db"
+	elementFormDefault="qualified" attributeFormDefault="unqualified" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.0">
+
+	<xsd:simpleType name="naturalNumber.t">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="(0|[1-9][0-9]*)" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="trimmedString.t">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+			<xsd:whiteSpace value="collapse" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="className.t">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+			<xsd:whiteSpace value="collapse" />
+			<xsd:pattern value="([a-zA-Z_$][a-zA-Z\d_$]*\.)*[a-zA-Z_$][a-zA-Z\d_$]*" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="idString.t">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+			<xsd:whiteSpace value="collapse" />
+			<xsd:pattern value="[\w_]+" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="settingName.t">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+			<xsd:whiteSpace value="collapse" />
+			<xsd:pattern value="[\w_.]+" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="emptyTrimmedString.t">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="0" />
+			<xsd:whiteSpace value="collapse" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:complexType name="properties.t" mixed="false">
+		<xsd:sequence>
+			<xsd:any minOccurs="0" maxOccurs="unbounded" processContents="skip" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:simpleType name="rollbackChangesetBy.t" final="restriction">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="tag" />
+			<xsd:enumeration value="number" />
+			<xsd:enumeration value="date" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="dbDataType.t" final="restriction">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="STRING" />
+			<xsd:enumeration value="INTEGER" />
+			<xsd:enumeration value="DOUBLE" />
+			<xsd:enumeration value="DATE" />
+			<xsd:enumeration value="TIME" />
+			<xsd:enumeration value="DATETIME" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="dataSourceType.t" final="restriction">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="pooled" />
+			<xsd:enumeration value="spring" />
+			<xsd:enumeration value="jndi" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:complexType name="rollbackChangeset.t">
+		<xsd:simpleContent>
+			<xsd:extension base="tns:trimmedString.t">
+				<xsd:attribute name="by" type="tns:rollbackChangesetBy.t" use="required" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="script.t">
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="lang" type="tns:trimmedString.t" use="optional" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:group name="sqlTasks">
+		<xsd:choice>
+			<xsd:element name="sql" type="tns:trimmedString.t" />
+			<xsd:element name="sql-script" type="tns:trimmedString.t" />
+			<xsd:element name="script" type="tns:script.t" />
+		</xsd:choice>
+	</xsd:group>
+
+	<xsd:group name="sqlInitializerTasks">
+		<xsd:choice>
+			<xsd:element name="changeset" type="tns:trimmedString.t" />
+			<xsd:element name="rollback-changeset" type="tns:rollbackChangeset.t" />
+		</xsd:choice>
+	</xsd:group>
+
+	<xsd:complexType name="sqlTasks.t">
+		<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+			<xsd:choice minOccurs="1" maxOccurs="1">
+				<xsd:group ref="tns:sqlTasks" />
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="sqlInitializerTasks.t">
+		<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+			<xsd:choice minOccurs="1" maxOccurs="1">
+				<xsd:group ref="tns:sqlTasks" />
+				<xsd:group ref="tns:sqlInitializerTasks" />
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="dataSource.t">
+		<xsd:sequence>
+			<xsd:element name="properties" type="tns:properties.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="startup" type="tns:sqlInitializerTasks.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="on-insert" type="tns:sqlTasks.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="on-error" type="tns:sqlTasks.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="shutdown" type="tns:sqlInitializerTasks.t" minOccurs="0" maxOccurs="1" />
+		</xsd:sequence>
+		<xsd:attribute name="id" type="tns:idString.t" use="required" />
+		<xsd:attribute name="type" type="tns:dataSourceType.t" use="optional" default="pooled" />
+	</xsd:complexType>
+
+	<xsd:complexType name="structureColumn.t">
+		<xsd:sequence>
+			<xsd:element name="name" type="tns:trimmedString.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="data-type" type="tns:dbDataType.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="value" type="xsd:string" minOccurs="0" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="structureHeader.t">
+		<xsd:choice minOccurs="1" maxOccurs="1">
+			<xsd:element name="row" type="tns:naturalNumber.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="column" type="tns:structureColumn.t" minOccurs="1" maxOccurs="unbounded" />
+		</xsd:choice>
+	</xsd:complexType>
+
+	<xsd:complexType name="structureRange.t">
+		<xsd:sequence>
+			<xsd:element name="first-row" type="tns:naturalNumber.t" minOccurs="0" maxOccurs="1" />
+			<xsd:choice minOccurs="0" maxOccurs="1">
+				<xsd:element name="last-row" type="tns:naturalNumber.t" />
+				<xsd:element name="row-count" type="tns:naturalNumber.t" />
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="structureBase.t">
+		<xsd:sequence>
+			<xsd:element name="range" type="tns:structureRange.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="header" type="tns:structureHeader.t" minOccurs="0" maxOccurs="1">
+				<xsd:key name="headerColumnPK">
+					<xsd:selector xpath="tns:column/tns:name" />
+					<xsd:field xpath="." />
+				</xsd:key>
+			</xsd:element>
+			<xsd:choice minOccurs="0" maxOccurs="1">
+				<xsd:element name="filter" type="tns:script.t" />
+				<xsd:element name="filter-class" type="tns:className.t" />
+			</xsd:choice>
+		</xsd:sequence>
+		<xsd:attribute name="extends" type="tns:trimmedString.t" use="optional" />
+	</xsd:complexType>
+
+	<xsd:complexType name="structure.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:structureBase.t">
+				<xsd:attribute name="id" type="tns:idString.t" use="required" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="structures.t">
+		<xsd:sequence>
+			<xsd:element name="structure" type="tns:structure.t" minOccurs="1" maxOccurs="unbounded" />
+			<xsd:element name="default" type="tns:idString.t" minOccurs="0" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="sheetStructure.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:structure.t">
+				<xsd:attribute name="sheet" type="xsd:string" use="required" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="fileInputBase.t">
+		<xsd:sequence>
+			<xsd:element name="source" type="tns:trimmedString.t" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="fileSpreadsheetSheets.t">
+		<xsd:sequence>
+			<xsd:element name="default-structure" minOccurs="0" maxOccurs="1">
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="fileSpreadsheet.t">
+		<xsd:sequence>
+			<xsd:element name="sheets" type="tns:fileSpreadsheetSheets.t" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="flat2db.t">
+		<xsd:sequence>
+			<xsd:element name="data-sources" minOccurs="1" maxOccurs="1">
+				<xsd:complexType>
+					<xsd:sequence minOccurs="1" maxOccurs="unbounded">
+						<xsd:element name="data-source" type="tns:dataSource.t" />
+					</xsd:sequence>
+				</xsd:complexType>
+
+				<xsd:key name="dataSourcePK">
+					<xsd:selector xpath="tns:data-source" />
+					<xsd:field xpath="@id" />
+				</xsd:key>
+			</xsd:element>
+
+			<xsd:element name="structures" type="tns:structures.t" minOccurs="0" maxOccurs="1">
+				<xsd:key name="structurePK">
+					<xsd:selector xpath="tns:structure" />
+					<xsd:field xpath="@id" />
+				</xsd:key>
+		        <xsd:keyref name="structureFk" refer="tns:structurePK">
+		            <xsd:selector xpath="tns:default" />
+		            <xsd:field xpath="." />
+		        </xsd:keyref>
+			</xsd:element>
+
+			<xsd:element name="files">
+				<xsd:complexType>
+					<xsd:sequence minOccurs="1" maxOccurs="unbounded">
+						<xsd:element name="file" type="xsd:string" />
+					</xsd:sequence>
+				</xsd:complexType>
+				<xsd:key name="filePK">
+					<xsd:selector xpath="tns:*" />
+					<xsd:field xpath="@id" />
+				</xsd:key>
+			</xsd:element>
+
+			<xsd:element name="mappings">
+				<xsd:complexType>
+					<xsd:sequence minOccurs="1" maxOccurs="unbounded">
+						<xsd:element name="mapping" type="xsd:string" />
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:element name="flat-2-db" type="tns:flat2db.t">
+        <xsd:keyref name="mappingsDataSourceFK" refer="tns:dataSourcePK">
+            <xsd:selector xpath="tns:mappings/mapping/data-source" />
+            <xsd:field xpath="." />
+        </xsd:keyref>
+        <xsd:keyref name="mappingsFileFK" refer="tns:filePK">
+            <xsd:selector xpath="tns:mappings/mapping/from" />
+            <xsd:field xpath="@file" />
+        </xsd:keyref>
+	</xsd:element>
+</xsd:schema>

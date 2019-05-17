@@ -52,6 +52,11 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 	}
 
 	@Override
+	public boolean isShouldStoreContentLocationRequirement() {
+		return true;
+	}
+
+	@Override
 	protected boolean doConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
 		return true;

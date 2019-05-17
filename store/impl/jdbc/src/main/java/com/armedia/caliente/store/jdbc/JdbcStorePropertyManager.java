@@ -22,7 +22,9 @@ public class JdbcStorePropertyManager {
 		UPDATE("update %s set value = ? where name = ?"),
 		DELETE("delete from %s where name = ?"),
 		GET_NAMES("select name from %s order by name"),
+		GET_NAMES_PREFIX("select name from %s where name like ? order by name"),
 		DELETE_ALL("delete from %s"),
+		DELETE_ALL_PREFIX("delete from %s where name like ?")
 		//
 		;
 
@@ -140,13 +142,40 @@ public class JdbcStorePropertyManager {
 
 	void clearAllProperties(JdbcOperation operation) throws CmfStorageException {
 		try {
-			clearAllProperties(operation.getConnection());
+			JdbcTools.getQueryRunner().update(operation.getConnection(), getSql(Op.DELETE_ALL));
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to delete all the store properties", e);
 		}
 	}
 
-	void clearAllProperties(Connection c) throws SQLException {
-		JdbcTools.getQueryRunner().update(c, getSql(Op.DELETE_ALL));
+	void clearAllProperties(JdbcOperation operation, String prefix) throws CmfStorageException {
+		try {
+			JdbcTools.getQueryRunner().update(operation.getConnection(), getSql(Op.DELETE_ALL_PREFIX),
+				String.format("%s.%%", prefix));
+		} catch (SQLException e) {
+			throw new CmfStorageException(
+				String.format("Failed to delete all the store properties with the prefix [%s]", prefix), e);
+		}
+	}
+
+	Set<String> getPropertyNames(JdbcOperation operation, final String prefix) throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		try {
+			return JdbcTools.getQueryRunner().query(c, getSql(Op.GET_NAMES), (rs) -> {
+				Set<String> ret = new TreeSet<>();
+				String pfx = String.format("%s.", prefix);
+				while (rs.next()) {
+					String s = rs.getString("name");
+					if (rs.wasNull()) {
+						continue;
+					}
+					ret.add(s.substring(pfx.length()));
+				}
+				return ret;
+			}, String.format("%s.%%", prefix));
+		} catch (SQLException e) {
+			throw new CmfStorageException(
+				String.format("Failed to retrieve the store property names with the prefix [%s]", prefix), e);
+		}
 	}
 }

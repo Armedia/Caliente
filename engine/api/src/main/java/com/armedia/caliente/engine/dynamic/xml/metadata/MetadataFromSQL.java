@@ -135,12 +135,12 @@ public class MetadataFromSQL extends MetadataReaderBase {
 							// Increase our counter, since rs.getRow() isn't mandatory
 							++pos;
 
-							V finalValue = codec.getNull();
+							V finalValue = codec.getNullValue();
 							// If we have a column name, use it. Otherwise, default to the first
 							// column in the result set
 							Object value = getValue(rs, columnIndex, attribute.getType());
 							if (!rs.wasNull()) {
-								finalValue = codec.decodeValue(new CmfValue(attribute.getType(), value));
+								finalValue = codec.decode(new CmfValue(attribute.getType(), value));
 							}
 							attribute.addValue(finalValue);
 

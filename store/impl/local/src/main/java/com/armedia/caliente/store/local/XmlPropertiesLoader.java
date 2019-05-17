@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
-import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.xml.XmlTools;
 
 public abstract class XmlPropertiesLoader<P extends XmlProperty, S extends XmlStoreProperties<P>> {
 

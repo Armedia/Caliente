@@ -49,7 +49,7 @@ import com.armedia.caliente.engine.xml.importer.jaxb.UsersT;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.xml.XmlTools;
 
 public class XmlImportDelegateFactory
 	extends ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {

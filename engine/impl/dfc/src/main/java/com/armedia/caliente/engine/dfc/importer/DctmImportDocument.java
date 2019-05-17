@@ -33,10 +33,10 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
-import com.armedia.caliente.tools.dfc.DfcQuery;
-import com.armedia.caliente.tools.dfc.DfcVersionNumber;
-import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
+import com.armedia.caliente.tools.dfc.DfcVersionNumber;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
@@ -719,7 +719,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			int page = 0;
 			String pageModifier = info.getModifier();
 			if (StringUtils.isEmpty(pageModifier)) {
-				pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER, DctmDataType.DF_STRING.getNull().asString());
+				pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER,
+					DctmDataType.DF_STRING.getNullValue().asString());
 			}
 
 			if (fromDctm) {

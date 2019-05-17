@@ -18,6 +18,7 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +40,7 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.caliente.store.CmfStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.local.xml.PropertiesLoader;
@@ -49,7 +51,7 @@ import com.armedia.caliente.store.tools.FilenameEncoder;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.xml.XmlTools;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -98,8 +100,9 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		return f.exists() && f.isFile() && f.canRead();
 	}
 
-	public LocalContentStore(CfgTools settings, File baseDir, CmfContentOrganizer organizer, boolean cleanData)
-		throws CmfStorageException {
+	public LocalContentStore(CmfStore<?> parent, CfgTools settings, File baseDir, CmfContentOrganizer organizer,
+		boolean cleanData) throws CmfStorageException {
+		super(parent);
 		if (settings == null) { throw new IllegalArgumentException("Must provide configuration settings"); }
 		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
 		if (baseDir.exists() && !baseDir.isDirectory()) {
@@ -118,7 +121,7 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 			f = baseDir;
 		}
 		this.baseDir = f;
-		this.storeProperties = settings.getBoolean(LocalContentStoreSetting.STORE_PROPERTIES);
+		this.storeProperties = (parent == null) && settings.getBoolean(LocalContentStoreSetting.STORE_PROPERTIES);
 
 		final File newPropertiesFile = new File(baseDir, "caliente-store-properties.xml");
 		final File oldPropertiesFile = new File(baseDir, "store-properties.xml");
@@ -135,26 +138,30 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		boolean storeOrganizerName = true;
 		if (cleanData) {
 			this.propertiesLoaded = false;
-			clearProperties();
+			clearAllProperties();
 			clearAllStreams();
 		} else {
-			// First, try the legacy mode...
-			boolean propertiesLoaded = false;
-			try {
-				propertiesLoaded = new PropertiesLoader().loadProperties(this.propertiesFile, this.properties);
-			} catch (CmfStorageException e) {
-				// Legacy didn't work....log a warning?
-				this.log.warn("Failed to load the store properties, will try the legacy model");
+			if (parent == null) {
+				// First, try the legacy mode...
+				boolean propertiesLoaded = false;
 				try {
-					propertiesLoaded = new LegacyPropertiesLoader().loadProperties(this.propertiesFile,
-						this.properties);
-				} catch (CmfStorageException e2) {
-					this.log.error("Failed to load the store properties using the legacy model", e2);
-					throw new CmfStorageException("Failed to load both the modern and legacy properties models", e);
+					propertiesLoaded = new PropertiesLoader().loadProperties(this.propertiesFile, this.properties);
+				} catch (CmfStorageException e) {
+					// Legacy didn't work....log a warning?
+					this.log.warn("Failed to load the store properties, will try the legacy model");
+					try {
+						propertiesLoaded = new LegacyPropertiesLoader().loadProperties(this.propertiesFile,
+							this.properties);
+					} catch (CmfStorageException e2) {
+						this.log.error("Failed to load the store properties using the legacy model", e2);
+						throw new CmfStorageException("Failed to load both the modern and legacy properties models", e);
+					}
 				}
-			}
 
-			this.propertiesLoaded = propertiesLoaded;
+				this.propertiesLoaded = propertiesLoaded;
+			} else {
+				this.propertiesLoaded = true;
+			}
 
 			CmfValue currentOrganizerName = getProperty("organizer");
 			if ((currentOrganizerName == null) || currentOrganizerName.isNull()) {
@@ -183,10 +190,10 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		}
 
 		CmfValue v = null;
-		v = this.properties.get(LocalContentStoreSetting.FORCE_SAFE_FILENAMES.getLabel());
+		v = getProperty(LocalContentStoreSetting.FORCE_SAFE_FILENAMES.getLabel());
 		this.forceSafeFilenames = ((v != null) && v.asBoolean());
 
-		v = this.properties.get(LocalContentStoreSetting.SAFE_FILENAME_ENCODING.getLabel());
+		v = getProperty(LocalContentStoreSetting.SAFE_FILENAME_ENCODING.getLabel());
 		if ((v != null) && this.forceSafeFilenames) {
 			try {
 				this.safeFilenameEncoding = Charset.forName(v.asString());
@@ -197,20 +204,20 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		} else {
 			this.safeFilenameEncoding = null;
 
-			v = this.properties.get(LocalContentStoreSetting.FIX_FILENAMES.getLabel());
+			v = getProperty(LocalContentStoreSetting.FIX_FILENAMES.getLabel());
 			this.fixFilenames = ((v != null) && v.asBoolean());
 		}
 
-		v = this.properties.get(LocalContentStoreSetting.FAIL_ON_COLLISIONS.getLabel());
+		v = getProperty(LocalContentStoreSetting.FAIL_ON_COLLISIONS.getLabel());
 		this.failOnCollisions = ((v != null) && v.asBoolean());
 
-		v = this.properties.get(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel());
+		v = getProperty(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel());
 		this.ignoreDescriptor = ((v != null) && v.asBoolean());
 
-		v = this.properties.get(LocalContentStoreSetting.USE_WINDOWS_FIX.getLabel());
+		v = getProperty(LocalContentStoreSetting.USE_WINDOWS_FIX.getLabel());
 		this.useWindowsFix = ((v != null) && v.asBoolean());
 		// This helps make sure the actual used value is stored
-		this.properties.put(LocalContentStoreSetting.USE_WINDOWS_FIX.getLabel(), new CmfValue(this.useWindowsFix));
+		setProperty(LocalContentStoreSetting.USE_WINDOWS_FIX.getLabel(), new CmfValue(this.useWindowsFix));
 	}
 
 	protected void initProperties() throws CmfStorageException {
@@ -233,15 +240,15 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		final boolean ignoreFragment = this.settings.getBoolean(LocalContentStoreSetting.IGNORE_DESCRIPTOR);
 		final boolean useWindowsFix = this.settings.getBoolean(LocalContentStoreSetting.USE_WINDOWS_FIX);
 
-		this.properties.put(LocalContentStoreSetting.FORCE_SAFE_FILENAMES.getLabel(), new CmfValue(forceSafeFilenames));
+		setProperty(LocalContentStoreSetting.FORCE_SAFE_FILENAMES.getLabel(), new CmfValue(forceSafeFilenames));
 		if (safeFilenameEncoding != null) {
-			this.properties.put(LocalContentStoreSetting.SAFE_FILENAME_ENCODING.getLabel(),
+			setProperty(LocalContentStoreSetting.SAFE_FILENAME_ENCODING.getLabel(),
 				new CmfValue(safeFilenameEncoding.name()));
 		}
-		this.properties.put(LocalContentStoreSetting.FIX_FILENAMES.getLabel(), new CmfValue(fixFilenames));
-		this.properties.put(LocalContentStoreSetting.FAIL_ON_COLLISIONS.getLabel(), new CmfValue(failOnCollisions));
-		this.properties.put(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel(), new CmfValue(ignoreFragment));
-		this.properties.put(LocalContentStoreSetting.USE_WINDOWS_FIX.getLabel(),
+		setProperty(LocalContentStoreSetting.FIX_FILENAMES.getLabel(), new CmfValue(fixFilenames));
+		setProperty(LocalContentStoreSetting.FAIL_ON_COLLISIONS.getLabel(), new CmfValue(failOnCollisions));
+		setProperty(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel(), new CmfValue(ignoreFragment));
+		setProperty(LocalContentStoreSetting.USE_WINDOWS_FIX.getLabel(),
 			new CmfValue(useWindowsFix || SystemUtils.IS_OS_WINDOWS));
 	}
 
@@ -540,5 +547,29 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	@Override
 	protected LocalHandle constructHandle(CmfObject<?> object, CmfContentStream info, URI locator) {
 		return new LocalHandle(object, info, locator);
+	}
+
+	@Override
+	protected void clearAllProperties(LocalStoreOperation operation, String prefix) throws CmfStorageException {
+		prefix = String.format("%s.", prefix);
+		Set<String> deletions = new LinkedHashSet<>();
+		for (String s : this.properties.keySet()) {
+			if (s.startsWith(prefix)) {
+				deletions.add(s);
+			}
+		}
+		this.properties.keySet().removeAll(deletions);
+	}
+
+	@Override
+	protected Set<String> getPropertyNames(LocalStoreOperation operation, String prefix) throws CmfStorageException {
+		prefix = String.format("%s.", prefix);
+		Set<String> matches = new TreeSet<>();
+		for (String s : this.properties.keySet()) {
+			if (s.startsWith(prefix)) {
+				matches.add(s.substring(prefix.length()));
+			}
+		}
+		return matches;
 	}
 }

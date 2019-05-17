@@ -18,6 +18,9 @@ import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.local.common.LocalSetting;
+import com.armedia.caliente.engine.tools.LocalOrganizer;
+import com.armedia.caliente.store.local.LocalContentStoreSetting;
+import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.commons.utilities.Tools;
 
 class Exporter extends ExportCommandModule implements DynamicCommandOptions {
@@ -38,6 +41,11 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 
 	Exporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
+	}
+
+	@Override
+	public boolean isContentStreamsExternal(OptionValues commandValues) {
+		return !commandValues.isPresent(Exporter.COPY_CONTENT);
 	}
 
 	@Override
@@ -70,21 +78,25 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		return commandValues.isPresent(Exporter.COPY_CONTENT) && !commandValues.isPresent(CLIParam.skip_content);
 	}
 
-	/*
-	protected void customizeContentStoreProperties(StoreConfiguration cfg) {
-		super.customizeContentStoreProperties(cfg);
-		cfg.getSettings().put(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel(), Boolean.TRUE.toString());
+	@Override
+	public void customizeContentStoreProperties(OptionValues commandValues, StoreConfiguration cfg) {
+		super.customizeContentStoreProperties(commandValues, cfg);
+		boolean ignoreDescriptor = !isCopyContent(commandValues);
+		cfg.getSettings().put(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel(), String.valueOf(ignoreDescriptor));
 	}
 
+	/*
 	protected File getContentFilesLocation() {
 		if (isCopyContent()) { return super.getContentFilesLocation(); }
 		return new File(BaseParam.source.getString());
 	}
+	*/
 
-	protected String getContentOrganizerName() {
+	@Override
+	public String getContentOrganizerName(OptionValues commandValues) {
+		if (commandValues.isPresent(Exporter.COPY_CONTENT)) { return null; }
 		return LocalOrganizer.NAME;
 	}
-	*/
 
 	@Override
 	protected boolean doConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
