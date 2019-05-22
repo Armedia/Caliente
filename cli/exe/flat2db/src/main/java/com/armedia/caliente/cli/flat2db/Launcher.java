@@ -47,6 +47,9 @@ public class Launcher extends AbstractLauncher {
 			.addFrom( //
 				Option.unwrap(CLIParam.values()) //
 			) //
+			.setArgumentName("configuration-file") //
+			.setMinArguments(1) //
+			.setMaxArguments(1) //
 		;
 	}
 }

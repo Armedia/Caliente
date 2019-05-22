@@ -6,6 +6,7 @@ import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
 
 public enum CLIParam implements Supplier<Option> {
+	/*
 	cfg(
 		new OptionImpl() //
 			.setRequired(true) //
@@ -16,6 +17,7 @@ public enum CLIParam implements Supplier<Option> {
 			.setDescription("The configuration file") //
 	), //
 		//
+	 */
 	;
 
 	private final Option option;
