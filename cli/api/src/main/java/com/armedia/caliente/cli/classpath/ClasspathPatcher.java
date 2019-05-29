@@ -71,11 +71,12 @@ public abstract class ClasspathPatcher {
 	}
 
 	public static final void init() {
-		ClasspathPatcher.LOCK.shareLockedUpgradable(() -> ClasspathPatcher.CL, Objects::isNull, (cl) -> {
-			URLClassLoader ucl = Tools.cast(URLClassLoader.class, Thread.currentThread().getContextClassLoader());
+		ClasspathPatcher.LOCK.shareLockedUpgradable(() -> ClasspathPatcher.CL, Objects::isNull, (oldCl) -> {
+			ClassLoader cl = Thread.currentThread().getContextClassLoader();
+			URLClassLoader ucl = Tools.cast(URLClassLoader.class, cl);
 			ClasspathPatcher.ADD_URL = ClasspathPatcher.getConsumer(ucl);
 			if (ClasspathPatcher.ADD_URL == null) {
-				final CPCL newCl = new CPCL(ClasspathPatcher.NO_URLS, ucl);
+				final CPCL newCl = new CPCL(ClasspathPatcher.NO_URLS, cl);
 				ucl = newCl;
 				Thread.currentThread().setContextClassLoader(newCl);
 				ClasspathPatcher.ADD_URL = newCl::addURL;
