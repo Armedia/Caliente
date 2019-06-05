@@ -6,10 +6,13 @@ import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.commons.utilities.CheckedCodec;
+import com.armedia.commons.utilities.EnumCodec;
+import com.armedia.commons.utilities.EnumCodec.Flag;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.xml.EnumCodec;
+import com.armedia.commons.utilities.xml.AbstractEnumAdapter;
 
-public class CardinalityAdapter extends EnumCodec<Cardinality> {
+public class CardinalityAdapter extends AbstractEnumAdapter<Cardinality> {
 
 	private static final String STAR = "*";
 	private static Set<String> STAR_ALIASES;
@@ -21,19 +24,24 @@ public class CardinalityAdapter extends EnumCodec<Cardinality> {
 		CardinalityAdapter.STAR_ALIASES = Tools.freezeSet(new LinkedHashSet<>(s));
 	}
 
+	private static final CheckedCodec<Cardinality, String, Exception> STAR_CODEC = new CheckedCodec<Cardinality, String, Exception>() {
+		@Override
+		public String encode(Cardinality c) throws Exception {
+			if (c == Cardinality.ALL) { return CardinalityAdapter.STAR; }
+			return null;
+		}
+
+		@Override
+		public Cardinality decode(String s) throws Exception {
+			if (CardinalityAdapter.STAR_ALIASES.contains(StringUtils.upperCase(s))) { return Cardinality.ALL; }
+			return null;
+		}
+	};
+
+	private static final EnumCodec<Cardinality> CODEC = new EnumCodec<>(Cardinality.class,
+		CardinalityAdapter.STAR_CODEC, Flag.MARSHAL_FOLDED);
+
 	public CardinalityAdapter() {
-		super(Cardinality.class, Flag.MARSHAL_FOLDED);
-	}
-
-	@Override
-	protected Cardinality specialUnmarshal(String v) throws Exception {
-		if (CardinalityAdapter.STAR_ALIASES.contains(StringUtils.upperCase(v))) { return Cardinality.ALL; }
-		return null;
-	}
-
-	@Override
-	protected String specialMarshal(Cardinality e) throws Exception {
-		if (e == Cardinality.ALL) { return CardinalityAdapter.STAR; }
-		return null;
+		super(CardinalityAdapter.CODEC);
 	}
 }
