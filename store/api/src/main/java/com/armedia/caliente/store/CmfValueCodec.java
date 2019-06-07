@@ -4,7 +4,7 @@
 
 package com.armedia.caliente.store;
 
-import com.armedia.commons.utilities.Codec;
+import com.armedia.commons.utilities.codec.Codec;
 
 /**
  * @author diego

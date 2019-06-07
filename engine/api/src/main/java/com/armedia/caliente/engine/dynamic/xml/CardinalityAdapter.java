@@ -6,10 +6,10 @@ import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.commons.utilities.CheckedCodec;
-import com.armedia.commons.utilities.EnumCodec;
-import com.armedia.commons.utilities.EnumCodec.Flag;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.codec.CheckedCodec;
+import com.armedia.commons.utilities.codec.EnumCodec;
+import com.armedia.commons.utilities.codec.EnumCodec.Flag;
 import com.armedia.commons.utilities.xml.AbstractEnumAdapter;
 
 public class CardinalityAdapter extends AbstractEnumAdapter<Cardinality> {

@@ -6,12 +6,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-import com.armedia.commons.utilities.BaseCodec;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.codec.FunctionalCodec;
 
 public abstract class CmfAttributeTranslator<VALUE> {
 
-	private static class DefaultValueCodec extends BaseCodec<CmfValue, CmfValue> implements CmfValueCodec<CmfValue> {
+	private static class DefaultValueCodec extends FunctionalCodec<CmfValue, CmfValue>
+		implements CmfValueCodec<CmfValue> {
 		private DefaultValueCodec(CmfValue.Type type) {
 			super(Function.identity(), type.getNull(), CmfValue::isNull, Function.identity(), type.getNull(),
 				CmfValue::isNull);
