@@ -40,8 +40,8 @@ public class ProgressTrigger extends BaseShareableLockable {
 			return ProgressTrigger.this.triggerCount;
 		}
 
-		public long getExpectedIntervalNanos() {
-			return ProgressTrigger.this.triggerIntervalNanos;
+		public Duration getExpectedInterval() {
+			return ProgressTrigger.this.triggerInterval;
 		}
 
 		public long getStartNanoTime() {
@@ -67,7 +67,7 @@ public class ProgressTrigger extends BaseShareableLockable {
 			return ratePerNanos * nanoMultiplier;
 		}
 
-		public double getIntervalRate() {
+		public double getIntervalRatePerSecond() {
 			return getIntervalRate(TimeUnit.SECONDS);
 		}
 
@@ -75,15 +75,15 @@ public class ProgressTrigger extends BaseShareableLockable {
 			return getRate(this.intervalCount, (this.triggerNanoTime - this.lastTriggerNanoTime), timeUnit);
 		}
 
-		public long getIntervalNanos() {
-			return (this.triggerNanoTime - this.lastTriggerNanoTime);
+		public Duration getIntervalDuration() {
+			return Duration.ofNanos(this.triggerNanoTime - this.lastTriggerNanoTime);
 		}
 
 		public long getTotalCount() {
 			return this.totalCount;
 		}
 
-		public double getTotalRate() {
+		public double getTotalRatePerSecond() {
 			return getTotalRate(TimeUnit.SECONDS);
 		}
 
@@ -91,8 +91,8 @@ public class ProgressTrigger extends BaseShareableLockable {
 			return getRate(this.totalCount, (this.triggerNanoTime - this.startNanoTime), timeUnit);
 		}
 
-		public long getTotalNanos() {
-			return (this.triggerNanoTime - this.startNanoTime);
+		public Duration getTotalDuration() {
+			return Duration.ofNanos(this.triggerNanoTime - this.startNanoTime);
 		}
 	}
 

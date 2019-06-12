@@ -115,9 +115,9 @@ public class ProgressTriggerTest {
 			Assertions.assertEquals(start.get(), r.getStartNanoTime());
 			Assertions.assertEquals(counter.get(), r.getTotalCount());
 			Assertions.assertEquals(triggerCount, r.getIntervalCount());
-			System.out.printf("Progress report (by count): %d/%dns (~%.3f/s) | %d/%dns (~%.3f/s)%n",
-				r.getIntervalCount(), r.getIntervalNanos(), r.getIntervalRate(), r.getTotalCount(), r.getTotalNanos(),
-				r.getTotalRate());
+			System.out.printf("Progress report (by count): %d/%s (~%.3f/s) | %d/%s (~%.3f/s)%n", r.getIntervalCount(),
+				r.getIntervalDuration(), r.getIntervalRatePerSecond(), r.getTotalCount(), r.getTotalDuration(),
+				r.getTotalRatePerSecond());
 		};
 		final ProgressTrigger progressTrigger = new ProgressTrigger(startTrigger, trigger, triggerCount);
 		for (int i = 0; i < 100000000; i++) {
@@ -143,14 +143,35 @@ public class ProgressTriggerTest {
 				Assertions.fail(String.format("The interval should have been at least %d nanos, but was %d",
 					intervalNanos, timeDelta));
 			}
-			System.out.printf("Progress report (by time): %d/%dns (~%.3f/s) | %d/%dns (~%.3f/s)%n",
-				r.getIntervalCount(), r.getIntervalNanos(), r.getIntervalRate(), r.getTotalCount(), r.getTotalNanos(),
-				r.getTotalRate());
+			System.out.printf("Progress report (by time): %d/%s (~%.3f/s) | %d/%s (~%.3f/s)%n", r.getIntervalCount(),
+				r.getIntervalDuration(), r.getIntervalRatePerSecond(), r.getTotalCount(), r.getTotalDuration(),
+				r.getTotalRatePerSecond());
 		};
 		final ProgressTrigger progressTrigger = new ProgressTrigger(startTrigger, trigger, interval);
 		for (int i = 0; i < 1000000000; i++) {
 			counter.incrementAndGet();
 			progressTrigger.trigger();
+		}
+	}
+
+	@Test
+	public void testTriggerForced() {
+		final AtomicLong start = new AtomicLong(0);
+		final Consumer<Long> startTrigger = (s) -> {
+			Assertions.assertEquals(0, start.get());
+			start.set(s);
+		};
+		final long triggerCount = 1000000;
+		final AtomicLong counter = new AtomicLong(0);
+		final Consumer<ProgressReport> trigger = (r) -> {
+			Assertions.assertEquals(start.get(), r.getStartNanoTime());
+			Assertions.assertEquals(counter.get(), r.getTotalCount());
+			Assertions.assertEquals(1, r.getIntervalCount());
+		};
+		final ProgressTrigger progressTrigger = new ProgressTrigger(startTrigger, trigger, triggerCount);
+		for (int i = 0; i < 100000000; i++) {
+			counter.incrementAndGet();
+			progressTrigger.trigger(true);
 		}
 	}
 }
