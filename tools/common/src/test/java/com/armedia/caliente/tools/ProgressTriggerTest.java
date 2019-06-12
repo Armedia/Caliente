@@ -109,7 +109,7 @@ public class ProgressTriggerTest {
 			Assertions.assertEquals(0, start.get());
 			start.set(s);
 		};
-		final long triggerCount = 10000;
+		final long triggerCount = 1000000;
 		final AtomicLong counter = new AtomicLong(0);
 		final Consumer<ProgressReport> trigger = (r) -> {
 			Assertions.assertEquals(start.get(), r.getStartNanoTime());
@@ -120,7 +120,7 @@ public class ProgressTriggerTest {
 				r.getTotalRate());
 		};
 		final ProgressTrigger progressTrigger = new ProgressTrigger(startTrigger, trigger, triggerCount);
-		for (int i = 0; i < 10000000; i++) {
+		for (int i = 0; i < 100000000; i++) {
 			counter.incrementAndGet();
 			progressTrigger.trigger();
 		}
@@ -148,7 +148,7 @@ public class ProgressTriggerTest {
 				r.getTotalRate());
 		};
 		final ProgressTrigger progressTrigger = new ProgressTrigger(startTrigger, trigger, interval);
-		for (int i = 0; i < 100000000; i++) {
+		for (int i = 0; i < 1000000000; i++) {
 			counter.incrementAndGet();
 			progressTrigger.trigger();
 		}
