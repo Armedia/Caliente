@@ -1,4 +1,4 @@
-package com.armedia.caliente.tools;
+package com.armedia.caliente.content;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
