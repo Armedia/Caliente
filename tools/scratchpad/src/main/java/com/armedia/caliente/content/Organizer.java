@@ -6,27 +6,23 @@ import javax.jcr.Session;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jackrabbit.commons.JcrUtils;
 
 public abstract class Organizer<CONTEXT extends OrganizerContext> {
 
 	protected final String folderType;
-	protected final String contentType;
 
-	public Organizer(String folderType, String contentType) {
+	public Organizer(String folderType) {
 		this.folderType = folderType;
-		this.contentType = contentType;
 	}
 
 	public final String getFolderType() {
 		return this.folderType;
 	}
 
-	public final String getContentType() {
-		return this.contentType;
-	}
-
-	public final Node newContentNode(Session session, ContentStoreClient client) throws RepositoryException {
+	public final Pair<Node, String> newContentLocation(Session session, ContentStoreClient client)
+		throws RepositoryException {
 		final String applicationName = client.getApplicationName();
 		final String clientId = client.getId();
 
@@ -36,15 +32,17 @@ public abstract class Organizer<CONTEXT extends OrganizerContext> {
 				intermediatePath = String.format("%08x", state.getFileIdHex().hashCode());
 			}
 			intermediatePath = String.format("/%s", intermediatePath);
-			String fileName = renderFileNameTag(state);
-			if (StringUtils.isBlank(fileName)) {
-				fileName = "";
+			String fileNameTag = renderFileNameTag(state);
+			if (StringUtils.isBlank(fileNameTag)) {
+				fileNameTag = "";
 			} else {
-				fileName = String.format("-%s", fileName);
+				fileNameTag = String.format("-%s", fileNameTag);
 			}
-			final String fullPath = String.format("/%s%s/%s%s-%s-%s", applicationName, intermediatePath,
-				applicationName, fileName, clientId, state.getFileIdHex());
-			return JcrUtils.getOrCreateByPath(fullPath, this.folderType, this.contentType, session, false);
+			final String parentPath = String.format("/%s%s", applicationName, intermediatePath);
+			final Node parent = JcrUtils.getOrCreateByPath(parentPath, this.folderType, session);
+			final String fileName = String.format("%s%s-%s-%s", applicationName, fileNameTag, clientId,
+				state.getFileIdHex());
+			return Pair.of(parent, fileName);
 		}
 	}
 
