@@ -20,26 +20,20 @@ public class ProgressTrigger extends BaseShareableLockable {
 	public static final Duration DEFAULT_TRIGGER_INTERVAL = Duration.ofSeconds(5);
 	public static final long DEFAULT_TRIGGER_COUNT = 1000;
 
-	private static final double NANOS_PER_SECOND = TimeUnit.SECONDS.toNanos(1);
-
 	public final class ProgressReport {
 		private final long startNanoTime;
 		private final long triggerNanoTime;
 		private final long lastTriggerNanoTime;
 		private final long intervalCount;
-		private final double intervalRate;
 		private final long totalCount;
-		private final double totalRate;
 
 		private ProgressReport(long startNanos, long triggerNanos, long lastTriggerNanoTime, long intervalCount,
-			double intervalRate, long triggerCount, double triggerRate) {
+			long triggerCount) {
 			this.startNanoTime = startNanos;
 			this.triggerNanoTime = triggerNanos;
 			this.lastTriggerNanoTime = lastTriggerNanoTime;
 			this.intervalCount = intervalCount;
-			this.intervalRate = intervalRate;
 			this.totalCount = triggerCount;
-			this.totalRate = triggerRate;
 		}
 
 		public long getAutoTriggerCount() {
@@ -66,8 +60,19 @@ public class ProgressTrigger extends BaseShareableLockable {
 			return this.intervalCount;
 		}
 
+		private double getRate(double count, long timeNanos, TimeUnit timeUnit) {
+			long nanoMultiplier = TimeUnit.NANOSECONDS.convert(1,
+				Objects.requireNonNull(timeUnit, "Must provide a time unit to calculate with"));
+			double ratePerNanos = (count / timeNanos);
+			return ratePerNanos * nanoMultiplier;
+		}
+
 		public double getIntervalRate() {
-			return this.intervalRate;
+			return getIntervalRate(TimeUnit.SECONDS);
+		}
+
+		public double getIntervalRate(TimeUnit timeUnit) {
+			return getRate(this.intervalCount, (this.triggerNanoTime - this.lastTriggerNanoTime), timeUnit);
 		}
 
 		public long getIntervalNanos() {
@@ -79,7 +84,11 @@ public class ProgressTrigger extends BaseShareableLockable {
 		}
 
 		public double getTotalRate() {
-			return this.totalRate;
+			return getTotalRate(TimeUnit.SECONDS);
+		}
+
+		public double getTotalRate(TimeUnit timeUnit) {
+			return getRate(this.totalCount, (this.triggerNanoTime - this.startNanoTime), timeUnit);
 		}
 
 		public long getTotalNanos() {
@@ -189,30 +198,25 @@ public class ProgressTrigger extends BaseShareableLockable {
 				}
 			}
 
-			final Long currentCount = this.currentTriggerCount.incrementAndGet();
+			final Long totalCount = this.currentTriggerCount.incrementAndGet();
 			final boolean triggerByCount = (forced
-				|| ((this.triggerCount > 0) && ((currentCount % this.triggerCount) == 0)));
+				|| ((this.triggerCount > 0) && ((totalCount % this.triggerCount) == 0)));
 
 			// Is it time to show progress? Have 10 seconds passed?
-			final long now = System.nanoTime();
-			final long last = this.lastTrigger.get();
-			final double thisInterval = (now - last);
-			final boolean triggerByTime = (forced
-				|| ((this.triggerIntervalNanos > 0) && ((now - last) >= this.triggerIntervalNanos)));
+			final long thisTriggerNanoTime = System.nanoTime();
+			final long lastTriggerNanoTime = this.lastTrigger.get();
+			final boolean triggerByTime = (forced || ((this.triggerIntervalNanos > 0)
+				&& ((thisTriggerNanoTime - lastTriggerNanoTime) >= this.triggerIntervalNanos)));
 
 			// This avoids a race condition where we don't show successive progress reports from
 			// different threads
 			final boolean shouldTrigger = (forced || triggerByCount || triggerByTime);
-			if (shouldTrigger && this.lastTrigger.compareAndSet(last, now)) {
-				final Double prev = this.previousTriggerCount.doubleValue();
-				final double totalDuration = now - this.start.get();
-				this.previousTriggerCount.set(currentCount.longValue());
-				final long countPerInterval = (currentCount.longValue() - prev.longValue());
-				final Double intervalRate = ((countPerInterval * ProgressTrigger.NANOS_PER_SECOND) / thisInterval);
-				final Double totalRate = ((currentCount.doubleValue() * ProgressTrigger.NANOS_PER_SECOND)
-					/ totalDuration);
-				this.trigger.accept(new ProgressReport(this.start.get(), now, last, countPerInterval, intervalRate,
-					currentCount, totalRate));
+			if (shouldTrigger && this.lastTrigger.compareAndSet(lastTriggerNanoTime, thisTriggerNanoTime)) {
+				final Double previousCount = this.previousTriggerCount.doubleValue();
+				this.previousTriggerCount.set(totalCount.longValue());
+				final long intervalCount = (totalCount.longValue() - previousCount.longValue());
+				this.trigger.accept(new ProgressReport(this.start.get(), thisTriggerNanoTime, lastTriggerNanoTime,
+					intervalCount, totalCount));
 			}
 		}
 	}
