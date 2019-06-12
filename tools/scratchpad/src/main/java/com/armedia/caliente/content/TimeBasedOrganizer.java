@@ -1,18 +1,11 @@
 package com.armedia.caliente.content;
 
-import java.time.ZoneId;
-import java.util.TimeZone;
-
-import org.apache.commons.lang3.time.FastDateFormat;
+import java.time.format.DateTimeFormatter;
 
 public class TimeBasedOrganizer extends Organizer<TimeBasedOrganizerContext> {
 
-	protected static final ZoneId TIME_ZONE_ID = ZoneId.of("Z");
-	protected static final TimeZone TIME_ZONE = TimeZone.getTimeZone(TimeBasedOrganizer.TIME_ZONE_ID);
-	private static final FastDateFormat PATH_FORMAT = FastDateFormat.getInstance("yyyy/MMdd/HHmm",
-		TimeBasedOrganizer.TIME_ZONE);
-	private static final FastDateFormat NAME_FORMAT = FastDateFormat.getInstance("yyyyMMddHHmmssSSS",
-		TimeBasedOrganizer.TIME_ZONE);
+	private static final DateTimeFormatter PATH_FORMAT = DateTimeFormatter.ofPattern("yyyy/MMdd/HHmm");
+	private static final DateTimeFormatter NAME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
 
 	public TimeBasedOrganizer(String folderType, String contentType) {
 		super(folderType, contentType);
@@ -25,11 +18,11 @@ public class TimeBasedOrganizer extends Organizer<TimeBasedOrganizerContext> {
 
 	@Override
 	protected String renderIntermediatePath(TimeBasedOrganizerContext state) {
-		return TimeBasedOrganizer.PATH_FORMAT.format(state.getTimestamp());
+		return state.getTimestamp().format(TimeBasedOrganizer.PATH_FORMAT);
 	}
 
 	@Override
 	protected String renderFileNameTag(TimeBasedOrganizerContext state) {
-		return TimeBasedOrganizer.NAME_FORMAT.format(state.getTimestamp());
+		return state.getTimestamp().format(TimeBasedOrganizer.NAME_FORMAT);
 	}
 }

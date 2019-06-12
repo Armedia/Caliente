@@ -8,11 +8,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class SequentialOrganizerTest {
+public class SequentialOrganizerTest {
+
+	private final SequentialOrganizer organizer = new SequentialOrganizer("folder", "content");
 
 	@Test
-	void testRenderIntermediatePath() {
-		final SequentialOrganizer organizer = new SequentialOrganizer("folder", "content");
+	public void testRenderIntermediatePath() {
 		final String appName = "Application-Name";
 		final String clientId = UUID.randomUUID().toString();
 		final List<Pair<Long, String>> values = new LinkedList<>();
@@ -33,8 +34,8 @@ class SequentialOrganizerTest {
 		values.add(Pair.of(Long.MAX_VALUE, "7f/fff/fff/fff/fff"));
 
 		for (Pair<Long, String> p : values) {
-			OrganizerContext context = organizer.newState(appName, clientId, p.getLeft());
-			Assertions.assertEquals(p.getRight(), organizer.renderIntermediatePath(context));
+			OrganizerContext context = this.organizer.newState(appName, clientId, p.getLeft());
+			Assertions.assertEquals(p.getRight(), this.organizer.renderIntermediatePath(context));
 		}
 	}
 }
