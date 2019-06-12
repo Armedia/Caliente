@@ -60,7 +60,7 @@ public class ProgressTrigger extends BaseShareableLockable {
 			return this.intervalCount;
 		}
 
-		private double getRate(double count, long timeNanos, TimeUnit timeUnit) {
+		private double calculateRate(double count, long timeNanos, TimeUnit timeUnit) {
 			long nanoMultiplier = TimeUnit.NANOSECONDS.convert(1,
 				Objects.requireNonNull(timeUnit, "Must provide a time unit to calculate with"));
 			double ratePerNanos = (count / timeNanos);
@@ -72,7 +72,7 @@ public class ProgressTrigger extends BaseShareableLockable {
 		}
 
 		public double getIntervalRate(TimeUnit timeUnit) {
-			return getRate(this.intervalCount, (this.triggerNanoTime - this.lastTriggerNanoTime), timeUnit);
+			return calculateRate(this.intervalCount, (this.triggerNanoTime - this.lastTriggerNanoTime), timeUnit);
 		}
 
 		public Duration getIntervalDuration() {
@@ -88,7 +88,7 @@ public class ProgressTrigger extends BaseShareableLockable {
 		}
 
 		public double getTotalRate(TimeUnit timeUnit) {
-			return getRate(this.totalCount, (this.triggerNanoTime - this.startNanoTime), timeUnit);
+			return calculateRate(this.totalCount, (this.triggerNanoTime - this.startNanoTime), timeUnit);
 		}
 
 		public Duration getTotalDuration() {
