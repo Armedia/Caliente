@@ -8,7 +8,7 @@ public class TimeBasedOrganizer extends Organizer<TimeBasedOrganizerContext> {
 	private static final DateTimeFormatter NAME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
 
 	public TimeBasedOrganizer(String folderType, String contentType) {
-		super(folderType, contentType);
+		super(folderType);
 	}
 
 	@Override

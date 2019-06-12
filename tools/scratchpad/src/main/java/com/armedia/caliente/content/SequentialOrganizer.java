@@ -3,7 +3,7 @@ package com.armedia.caliente.content;
 public class SequentialOrganizer extends Organizer<OrganizerContext> {
 
 	public SequentialOrganizer(String folderType, String contentType) {
-		super(folderType, contentType);
+		super(folderType);
 	}
 
 	@Override
