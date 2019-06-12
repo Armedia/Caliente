@@ -1,6 +1,8 @@
 package com.armedia.caliente.tools;
 
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
@@ -93,16 +95,6 @@ public class ProgressTriggerTest {
 	}
 
 	@Test
-	public void testReset() {
-		Assertions.fail("Not yet implemented");
-	}
-
-	@Test
-	public void testTriggerBoolean() {
-		Assertions.fail("Not yet implemented");
-	}
-
-	@Test
 	public void testTriggerByCount() {
 		final AtomicLong start = new AtomicLong(0);
 		final Consumer<Long> startTrigger = (s) -> {
@@ -115,6 +107,7 @@ public class ProgressTriggerTest {
 			Assertions.assertEquals(start.get(), r.getStartNanoTime());
 			Assertions.assertEquals(counter.get(), r.getTotalCount());
 			Assertions.assertEquals(triggerCount, r.getIntervalCount());
+			Assertions.assertEquals(triggerCount, r.getTriggerCount());
 			System.out.printf("Progress report (by count): %d/%s (~%.3f/s) | %d/%s (~%.3f/s)%n", r.getIntervalCount(),
 				r.getIntervalDuration(), r.getIntervalRatePerSecond(), r.getTotalCount(), r.getTotalDuration(),
 				r.getTotalRatePerSecond());
@@ -138,6 +131,7 @@ public class ProgressTriggerTest {
 		final AtomicLong counter = new AtomicLong(0);
 		final Consumer<ProgressReport> trigger = (r) -> {
 			Assertions.assertEquals(start.get(), r.getStartNanoTime());
+			Assertions.assertEquals(interval, r.getTriggerInterval());
 			long timeDelta = (r.getTriggerNanoTime() - r.getLastTriggerNanoTime());
 			if (timeDelta < intervalNanos) {
 				Assertions.fail(String.format("The interval should have been at least %d nanos, but was %d",
@@ -173,5 +167,76 @@ public class ProgressTriggerTest {
 			counter.incrementAndGet();
 			progressTrigger.trigger(true);
 		}
+	}
+
+	@Test
+	public void testReset() {
+		final AtomicLong start = new AtomicLong(0);
+		final AtomicInteger startCount = new AtomicInteger(0);
+		final long triggerCount = 10000;
+		final AtomicLong counter = new AtomicLong(0);
+		final Consumer<Long> startTrigger = (s) -> {
+			startCount.incrementAndGet();
+			start.set(s);
+		};
+		final Consumer<ProgressReport> trigger = (r) -> {
+			Assertions.assertEquals(counter.get(), r.getTotalCount());
+		};
+		final ProgressTrigger progressTrigger = new ProgressTrigger(startTrigger, trigger, triggerCount);
+		Assertions.assertEquals(0, startCount.get());
+		for (int i = 0; i < 1000000; i++) {
+			counter.incrementAndGet();
+			progressTrigger.trigger();
+		}
+		Assertions.assertEquals(1, startCount.get());
+		progressTrigger.reset();
+		counter.set(0);
+		for (int i = 0; i < 1000000; i++) {
+			counter.incrementAndGet();
+			progressTrigger.trigger();
+		}
+		Assertions.assertEquals(2, startCount.get());
+	}
+
+	@Test
+	public void testPause() {
+		final AtomicLong start = new AtomicLong(0);
+		final AtomicInteger startCount = new AtomicInteger(0);
+		final long triggerCount = 10000;
+		final AtomicLong counter = new AtomicLong(0);
+		final AtomicBoolean paused = new AtomicBoolean(false);
+		final Consumer<Long> startTrigger = (s) -> {
+			Assertions.assertFalse(paused.get());
+			startCount.incrementAndGet();
+			start.set(s);
+		};
+		final Consumer<ProgressReport> trigger = (r) -> {
+			Assertions.assertFalse(paused.get());
+			Assertions.assertEquals(counter.get(), r.getTotalCount());
+		};
+		final ProgressTrigger progressTrigger = new ProgressTrigger(startTrigger, trigger, triggerCount);
+		Assertions.assertEquals(0, startCount.get());
+		Assertions.assertFalse(progressTrigger.isPaused());
+		paused.set(progressTrigger.isPaused());
+		for (int i = 0; i < 1000000; i++) {
+			counter.incrementAndGet();
+			progressTrigger.trigger();
+		}
+		Assertions.assertEquals(1, startCount.get());
+		progressTrigger.setPaused(true);
+		Assertions.assertTrue(progressTrigger.isPaused());
+		paused.set(progressTrigger.isPaused());
+		for (int i = 0; i < 1000000; i++) {
+			progressTrigger.trigger();
+		}
+		Assertions.assertEquals(1, startCount.get());
+		progressTrigger.setPaused(false);
+		Assertions.assertFalse(progressTrigger.isPaused());
+		paused.set(progressTrigger.isPaused());
+		for (int i = 0; i < 1000000; i++) {
+			counter.incrementAndGet();
+			progressTrigger.trigger();
+		}
+		Assertions.assertEquals(1, startCount.get());
 	}
 }

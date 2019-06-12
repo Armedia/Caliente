@@ -36,11 +36,11 @@ public class ProgressTrigger extends BaseShareableLockable {
 			this.totalCount = triggerCount;
 		}
 
-		public long getAutoTriggerCount() {
+		public long getTriggerCount() {
 			return ProgressTrigger.this.triggerCount;
 		}
 
-		public Duration getExpectedInterval() {
+		public Duration getTriggerInterval() {
 			return ProgressTrigger.this.triggerInterval;
 		}
 
@@ -63,8 +63,7 @@ public class ProgressTrigger extends BaseShareableLockable {
 		private double calculateRate(double count, long timeNanos, TimeUnit timeUnit) {
 			long nanoMultiplier = TimeUnit.NANOSECONDS.convert(1,
 				Objects.requireNonNull(timeUnit, "Must provide a time unit to calculate with"));
-			double ratePerNanos = (count / timeNanos);
-			return ratePerNanos * nanoMultiplier;
+			return ((count * nanoMultiplier) / timeNanos);
 		}
 
 		public double getIntervalRatePerSecond() {
