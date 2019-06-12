@@ -6,11 +6,18 @@ public class TimeBasedOrganizerContext extends OrganizerContext {
 	private final LocalTime timestamp;
 
 	public TimeBasedOrganizerContext(String applicationName, String clientId, long fileId) {
-		super(applicationName, clientId, fileId);
-		this.timestamp = LocalTime.now(TimeBasedOrganizer.TIME_ZONE_ID);
+		this(applicationName, clientId, fileId, null);
 	}
 
-	public LocalTime getTimestamp() {
+	public TimeBasedOrganizerContext(String applicationName, String clientId, long fileId, LocalTime timestamp) {
+		super(applicationName, clientId, fileId);
+		if (timestamp == null) {
+			timestamp = LocalTime.now(TimeBasedOrganizer.TIME_ZONE_ID);
+		}
+		this.timestamp = timestamp;
+	}
+
+	public final LocalTime getTimestamp() {
 		return this.timestamp;
 	}
 }
