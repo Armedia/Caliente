@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -120,7 +121,61 @@ public class ProgressTriggerTest {
 	}
 
 	@Test
+	public void testConcurrentTriggerByCount() {
+		final AtomicLong start = new AtomicLong(0);
+		final Consumer<Long> startTrigger = (s) -> {
+			Assertions.assertEquals(0, start.get());
+			start.set(s);
+		};
+		final long triggerCount = 10000;
+		final AtomicLong counter = new AtomicLong(0);
+		final Consumer<ProgressReport> trigger = (r) -> {
+			Assertions.assertEquals(start.get(), r.getStartNanoTime());
+			Assertions.assertEquals(triggerCount, r.getIntervalCount());
+			Assertions.assertEquals(triggerCount, r.getTriggerCount());
+			System.out.printf("Progress report (parallel by count): %d/%s (~%.3f/s) | %d/%s (~%.3f/s)%n",
+				r.getIntervalCount(), r.getIntervalDuration(), r.getIntervalRatePerSecond(), r.getTotalCount(),
+				r.getTotalDuration(), r.getTotalRatePerSecond());
+		};
+		final ProgressTrigger progressTrigger = new ProgressTrigger(startTrigger, trigger, triggerCount);
+		IntStream.rangeClosed(0, 1000000).parallel().forEach((i) -> {
+			counter.incrementAndGet();
+			progressTrigger.trigger();
+		});
+	}
+
+	@Test
 	public void testTriggerByTime() {
+		final AtomicLong start = new AtomicLong(0);
+		final Consumer<Long> startTrigger = (s) -> {
+			Assertions.assertEquals(0, start.get());
+			start.set(s);
+		};
+		final Duration interval = Duration.ofMillis(2000);
+		final long intervalNanos = interval.toNanos();
+		final AtomicLong counter = new AtomicLong(0);
+		final Consumer<ProgressReport> trigger = (r) -> {
+			Assertions.assertEquals(start.get(), r.getStartNanoTime());
+			Assertions.assertEquals(interval, r.getTriggerInterval());
+			Assertions.assertEquals(counter.get(), r.getTotalCount());
+			long timeDelta = (r.getTriggerNanoTime() - r.getLastTriggerNanoTime());
+			if (timeDelta < intervalNanos) {
+				Assertions.fail(String.format("The interval should have been at least %d nanos, but was %d",
+					intervalNanos, timeDelta));
+			}
+			System.out.printf("Progress report (by time): %d/%s (~%.3f/s) | %d/%s (~%.3f/s)%n", r.getIntervalCount(),
+				r.getIntervalDuration(), r.getIntervalRatePerSecond(), r.getTotalCount(), r.getTotalDuration(),
+				r.getTotalRatePerSecond());
+		};
+		final ProgressTrigger progressTrigger = new ProgressTrigger(startTrigger, trigger, interval);
+		for (int i = 0; i < 1000000000; i++) {
+			counter.incrementAndGet();
+			progressTrigger.trigger();
+		}
+	}
+
+	@Test
+	public void testConcurrentTriggerByTime() {
 		final AtomicLong start = new AtomicLong(0);
 		final Consumer<Long> startTrigger = (s) -> {
 			Assertions.assertEquals(0, start.get());
@@ -137,15 +192,15 @@ public class ProgressTriggerTest {
 				Assertions.fail(String.format("The interval should have been at least %d nanos, but was %d",
 					intervalNanos, timeDelta));
 			}
-			System.out.printf("Progress report (by time): %d/%s (~%.3f/s) | %d/%s (~%.3f/s)%n", r.getIntervalCount(),
-				r.getIntervalDuration(), r.getIntervalRatePerSecond(), r.getTotalCount(), r.getTotalDuration(),
-				r.getTotalRatePerSecond());
+			System.out.printf("Progress report (parallel by time): %d/%s (~%.3f/s) | %d/%s (~%.3f/s)%n",
+				r.getIntervalCount(), r.getIntervalDuration(), r.getIntervalRatePerSecond(), r.getTotalCount(),
+				r.getTotalDuration(), r.getTotalRatePerSecond());
 		};
 		final ProgressTrigger progressTrigger = new ProgressTrigger(startTrigger, trigger, interval);
-		for (int i = 0; i < 1000000000; i++) {
+		IntStream.rangeClosed(0, 1000000).parallel().forEach((i) -> {
 			counter.incrementAndGet();
 			progressTrigger.trigger();
-		}
+		});
 	}
 
 	@Test
