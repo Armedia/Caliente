@@ -1,18 +1,14 @@
 package com.armedia.caliente.tools;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
-import com.armedia.commons.utilities.FileNameTools;
+import com.armedia.caliente.content.JackrabbitTest;
 
 /**
  * This class is used as a testbed to run quick'n'dirty DFC test programs
@@ -42,22 +38,7 @@ public class Scratchpad extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		String path = "(unfiled)/some/weird/path/name";
-		while (path != null) {
-			System.out.printf("PATH=[%s]%n", path);
-			path = FileNameTools.dirname(path);
-			if (path.equals(".")) {
-				break;
-			}
-		}
-		Collection<Pair<String, Integer>> c = new ArrayList<>();
-		for (int i = 0; i < 10; i++) {
-			c.add(Pair.of(String.format("number-%02d", i), i));
-		}
-		System.out.printf("RESULT: %s%n",
-			c.stream().map(Pair::getLeft).collect(Collectors.toCollection(ArrayList::new)));
-		// PropertiesTest.test();
-		// DctmTest.test();
+		new JackrabbitTest().call();
 		return 0;
 	}
 
