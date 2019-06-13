@@ -9,11 +9,7 @@ import com.armedia.commons.utilities.function.LazySupplier;
 
 public class ContentStoreClient {
 	// TODO: Fix this for something meaningful and reproducible ... maybe based on IP addresses?
-	private static final LazySupplier<String> ID = new LazySupplier<>(ContentStoreClient::calculateClientId);
-
-	private static String calculateClientId() {
-		return UUID.randomUUID().toString();
-	}
+	private static final LazySupplier<String> ID = new LazySupplier<>(UUID.randomUUID()::toString);
 
 	private final String applicationName;
 	private final String id;
