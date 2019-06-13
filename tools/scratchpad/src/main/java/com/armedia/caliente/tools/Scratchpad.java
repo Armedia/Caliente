@@ -30,7 +30,7 @@ import com.armedia.commons.utilities.Tools;
 public class Scratchpad extends AbstractLauncher {
 
 	static final int MIN_TESTS = 1000;
-	static final int DEFAULT_TESTS = 100000;
+	static final int DEFAULT_TESTS = 1000000;
 
 	public static final void main(String... args) {
 		System.exit(new Scratchpad().launch(args));
@@ -95,8 +95,8 @@ public class Scratchpad extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		new JcrOakTest(this.threadsLaunchHelper.getThreads(baseValues, 10),
-			baseValues.getInteger(CLIParam.test_count)).call();
+		new JcrOakTest(this.threadsLaunchHelper.getThreads(baseValues, 10), baseValues.getInteger(CLIParam.test_count))
+			.call();
 		return 0;
 	}
 
