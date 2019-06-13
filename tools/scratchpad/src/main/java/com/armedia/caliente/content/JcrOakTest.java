@@ -98,14 +98,8 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 		final Consumer<Long> writeStartTrigger = (s) -> {
 			this.console.info("Started generating {} content files", this.testCount);
 		};
-		final Consumer<ProgressReport> writeTrigger = (pr) -> {
-			String id = pr.getIntervalDuration().toString();
-			String irps = String.format("%.3f", pr.getIntervalRatePerSecond());
-			String td = pr.getTotalDuration().toString();
-			String trps = String.format("%.3f", pr.getTotalRatePerSecond());
-			this.console.info("\n\tWrite progress report: {}/{} (~{}/s) | {}/{} (~{}/s)\n", pr.getIntervalCount(), id,
-				irps, pr.getTotalCount(), td, trps);
-		};
+		final Consumer<ProgressReport> writeTrigger = (pr) -> this.console.info("\n\tWrite progress report: {} | {}\n",
+			pr.getIntervalStatistics(), pr.getAggregateStatistics());
 		final ProgressTrigger writeProgress = new ProgressTrigger(writeStartTrigger, writeTrigger, this.reportInterval);
 		final ContentStoreClient client = new ContentStoreClient("writeTest", "sharedClient");
 		final PooledWorkersLogic<Pair<Session, ContentStoreClient>, Integer, Exception> logic = new FunctionalPooledWorkersLogic<>(
@@ -145,14 +139,8 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 		final Consumer<Long> readStartTrigger = (s) -> {
 			this.console.info("Started reading back content files");
 		};
-		final Consumer<ProgressReport> readTrigger = (pr) -> {
-			String id = pr.getIntervalDuration().toString();
-			String irps = String.format("%.3f", pr.getIntervalRatePerSecond());
-			String td = pr.getTotalDuration().toString();
-			String trps = String.format("%.3f", pr.getTotalRatePerSecond());
-			this.console.info("\n\tRead progress report: {}/{} (~{}/s) | {}/{} (~{}/s)\n", pr.getIntervalCount(), id,
-				irps, pr.getTotalCount(), td, trps);
-		};
+		final Consumer<ProgressReport> readTrigger = (pr) -> this.console.info("\n\tRead progress report: {} | {}\n",
+			pr.getIntervalStatistics(), pr.getAggregateStatistics());
 		final ProgressTrigger readProgress = new ProgressTrigger(readStartTrigger, readTrigger, this.reportInterval);
 		final PooledWorkersLogic<Session, Pair<String, Long>, Exception> logic = new FunctionalPooledWorkersLogic<>(
 			() -> repository.login(this.credentials), //

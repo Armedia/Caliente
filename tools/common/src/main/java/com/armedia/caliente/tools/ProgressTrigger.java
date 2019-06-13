@@ -1,6 +1,9 @@
 package com.armedia.caliente.tools;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -11,8 +14,18 @@ import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.function.LazySupplier;
 
 public class ProgressTrigger extends BaseShareableLockable {
+
+	public static final ZoneId ZULU = ZoneId.of("Z");
+
+	public static ZonedDateTime fromNanos(long nanos) {
+		long seconds = TimeUnit.SECONDS.convert(nanos, TimeUnit.NANOSECONDS);
+		Instant instant = Instant.ofEpochSecond(seconds,
+			nanos - TimeUnit.NANOSECONDS.convert(seconds, TimeUnit.SECONDS));
+		return ZonedDateTime.ofInstant(instant, ProgressTrigger.ZULU);
+	}
 
 	public static final Consumer<Long> DEFAULT_START_TRIGGER = (l) -> {
 	};
@@ -20,20 +33,66 @@ public class ProgressTrigger extends BaseShareableLockable {
 	public static final Duration DEFAULT_TRIGGER_INTERVAL = Duration.ofSeconds(5);
 	public static final long DEFAULT_TRIGGER_COUNT = 1000;
 
-	public final class ProgressReport {
-		private final long startNanoTime;
-		private final long triggerNanoTime;
-		private final long lastTriggerNanoTime;
-		private final long intervalCount;
-		private final long totalCount;
+	public static final class Statistics {
+		private final Duration duration;
+		private final long count;
+		private final double nanosPerTick;
 
-		private ProgressReport(long startNanos, long triggerNanos, long lastTriggerNanoTime, long intervalCount,
-			long triggerCount) {
-			this.startNanoTime = startNanos;
-			this.triggerNanoTime = triggerNanos;
-			this.lastTriggerNanoTime = lastTriggerNanoTime;
-			this.intervalCount = intervalCount;
-			this.totalCount = triggerCount;
+		private final LazySupplier<String> string;
+
+		Statistics(Duration duration, long count) {
+			this.duration = Objects.requireNonNull(duration, "Must provide an interval");
+			this.count = count;
+			this.nanosPerTick = ((double) this.duration.toNanos() / count);
+			this.string = new LazySupplier<>(
+				() -> String.format("%d/%s (~%.3f/s)", count, duration, getRatePerSecond()));
+		}
+
+		public Duration getDuration() {
+			return this.duration;
+		}
+
+		public long getCount() {
+			return this.count;
+		}
+
+		public double getRatePerSecond() {
+			return getRatePer(TimeUnit.SECONDS);
+		}
+
+		public double getRatePer(TimeUnit timeUnit) {
+			double nanoMultiplier = TimeUnit.NANOSECONDS.convert(1,
+				Objects.requireNonNull(timeUnit, "Must provide a time unit to calculate with"));
+			return nanoMultiplier / this.nanosPerTick;
+		}
+
+		@Override
+		public String toString() {
+			return this.string.get();
+		}
+	}
+
+	public final class ProgressReport {
+		private final ZonedDateTime startTime;
+		private final ZonedDateTime triggerTime;
+		private final ZonedDateTime lastTriggerTime;
+
+		private final Statistics intervalStatistics;
+		private final Statistics aggregateStatistics;
+
+		private final LazySupplier<String> string;
+
+		private ProgressReport(long startNanoTime, long triggerNanoTime, long lastTriggerNanoTime, long intervalCount,
+			long aggregateCount) {
+			this.startTime = ProgressTrigger.fromNanos(startNanoTime);
+			this.triggerTime = ProgressTrigger.fromNanos(triggerNanoTime);
+			this.lastTriggerTime = ProgressTrigger.fromNanos(lastTriggerNanoTime);
+			this.intervalStatistics = new Statistics(Duration.ofNanos(triggerNanoTime - lastTriggerNanoTime),
+				intervalCount);
+			this.aggregateStatistics = new Statistics(Duration.ofNanos(triggerNanoTime - startNanoTime),
+				aggregateCount);
+			this.string = new LazySupplier<>(
+				() -> String.format("Interval: %s / Aggregate: %s", this.intervalStatistics, this.aggregateStatistics));
 		}
 
 		public long getTriggerCount() {
@@ -44,54 +103,29 @@ public class ProgressTrigger extends BaseShareableLockable {
 			return ProgressTrigger.this.triggerInterval;
 		}
 
-		public long getStartNanoTime() {
-			return this.startNanoTime;
+		public ZonedDateTime getStartTime() {
+			return this.startTime;
 		}
 
-		public long getTriggerNanoTime() {
-			return this.triggerNanoTime;
+		public ZonedDateTime getTriggerTime() {
+			return this.triggerTime;
 		}
 
-		public long getLastTriggerNanoTime() {
-			return this.lastTriggerNanoTime;
+		public ZonedDateTime getLastTriggerTime() {
+			return this.lastTriggerTime;
 		}
 
-		public long getIntervalCount() {
-			return this.intervalCount;
+		public Statistics getIntervalStatistics() {
+			return this.intervalStatistics;
 		}
 
-		private double calculateRate(double count, long timeNanos, TimeUnit timeUnit) {
-			long nanoMultiplier = TimeUnit.NANOSECONDS.convert(1,
-				Objects.requireNonNull(timeUnit, "Must provide a time unit to calculate with"));
-			return ((count * nanoMultiplier) / timeNanos);
+		public Statistics getAggregateStatistics() {
+			return this.aggregateStatistics;
 		}
 
-		public double getIntervalRatePerSecond() {
-			return getIntervalRate(TimeUnit.SECONDS);
-		}
-
-		public double getIntervalRate(TimeUnit timeUnit) {
-			return calculateRate(this.intervalCount, (this.triggerNanoTime - this.lastTriggerNanoTime), timeUnit);
-		}
-
-		public Duration getIntervalDuration() {
-			return Duration.ofNanos(this.triggerNanoTime - this.lastTriggerNanoTime);
-		}
-
-		public long getTotalCount() {
-			return this.totalCount;
-		}
-
-		public double getTotalRatePerSecond() {
-			return getTotalRate(TimeUnit.SECONDS);
-		}
-
-		public double getTotalRate(TimeUnit timeUnit) {
-			return calculateRate(this.totalCount, (this.triggerNanoTime - this.startNanoTime), timeUnit);
-		}
-
-		public Duration getTotalDuration() {
-			return Duration.ofNanos(this.triggerNanoTime - this.startNanoTime);
+		@Override
+		public String toString() {
+			return this.string.get();
 		}
 	}
 
@@ -197,11 +231,12 @@ public class ProgressTrigger extends BaseShareableLockable {
 				}
 			}
 
-			final Long totalCount = this.currentTriggerCount.incrementAndGet();
+			// Have the required number of ticks been logged?
+			final long totalCount = this.currentTriggerCount.incrementAndGet();
 			final boolean triggerByCount = (forced
 				|| ((this.triggerCount > 0) && ((totalCount % this.triggerCount) == 0)));
 
-			// Is it time to show progress? Have 10 seconds passed?
+			// Is it time to show progress?
 			final long thisTriggerNanoTime = System.nanoTime();
 			final long lastTriggerNanoTime = this.lastTrigger.get();
 			final boolean triggerByTime = (forced || ((this.triggerIntervalNanos > 0)
@@ -211,26 +246,24 @@ public class ProgressTrigger extends BaseShareableLockable {
 			// different threads
 			final boolean shouldTrigger = (forced || triggerByCount || triggerByTime);
 			if (shouldTrigger && this.lastTrigger.compareAndSet(lastTriggerNanoTime, thisTriggerNanoTime)) {
-				final long previousCount = this.previousTriggerCount.get();
-				this.previousTriggerCount.set(totalCount.longValue());
-				final long intervalCount = (totalCount.longValue() - previousCount);
+				final long previousCount = this.previousTriggerCount.getAndSet(totalCount);
+				final long intervalCount = (totalCount - previousCount);
 				this.trigger.accept(new ProgressReport(this.start.get(), thisTriggerNanoTime, lastTriggerNanoTime,
 					intervalCount, totalCount));
 			}
 		}
 	}
 
-	public final ProgressReport renderReport() {
+	public final ProgressReport getReport() {
 		try (SharedAutoLock lock = autoSharedLock()) {
-			final Long totalCount = this.currentTriggerCount.get();
-			// Is it time to show progress? Have 10 seconds passed?
+			final long totalCount = this.currentTriggerCount.get();
 			final long thisTriggerNanoTime = System.nanoTime();
 			final long lastTriggerNanoTime = this.lastTrigger.get();
 
 			// This avoids a race condition where we don't show successive progress reports from
 			// different threads
 			final long previousCount = this.previousTriggerCount.get();
-			final long intervalCount = (totalCount.longValue() - previousCount);
+			final long intervalCount = (totalCount - previousCount);
 			return new ProgressReport(this.start.get(), thisTriggerNanoTime, lastTriggerNanoTime, intervalCount,
 				totalCount);
 		}
