@@ -9,6 +9,8 @@ import com.armedia.commons.utilities.Tools;
 
 public abstract class NumericValueFilter<N extends Number> extends OptionValueFilter implements Comparator<N> {
 
+	protected static final boolean DEFAULT_INCLUSIVE = true;
+
 	private final N min;
 	private final boolean minInc;
 	private final N max;
@@ -16,7 +18,7 @@ public abstract class NumericValueFilter<N extends Number> extends OptionValueFi
 	private final String description;
 
 	protected NumericValueFilter(String label, N min, N max) {
-		this(label, min, true, max, true);
+		this(label, min, NumericValueFilter.DEFAULT_INCLUSIVE, max, NumericValueFilter.DEFAULT_INCLUSIVE);
 	}
 
 	protected NumericValueFilter(String label, N min, boolean minInclusive, N max, boolean maxInclusive) {
