@@ -9,14 +9,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
+import javax.jcr.Binary;
 import javax.jcr.Credentials;
 import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.oak.Oak;
@@ -48,7 +51,7 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 	final Credentials credentials = new SimpleCredentials("root", "system01".toCharArray());
 	final Organizer<?> organizer = new SequentialOrganizer();
 	final Logger console = LoggerFactory.getLogger("console");
-	private final TestDataGenerator testData = new TestDataGenerator(JcrOakTest.MAX_STREAMS);
+	private final TestDataGenerator testData;
 
 	private final int threads;
 	private final int testCount;
@@ -57,41 +60,69 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 	public JcrOakTest(int threadCount, int testCount) {
 		this.threads = threadCount;
 		this.testCount = Math.max(1000, testCount);
+		this.testData = new TestDataGenerator(JcrOakTest.MAX_STREAMS, (i) -> {
+			Long factor = FileUtils.ONE_MB;
+			return (1 << (i % 6)) * factor.intValue();
+		});
 	}
 
 	private Repository buildRepository() throws RepositoryException {
 		final String host = ServerAddress.defaultHost();
 		final int port = ServerAddress.defaultPort();
 		final String db = "oak";
+		final ServerAddress addx = new ServerAddress(host, port);
+		this.console.info("Initializing the repository connection to {}@{}", db, addx);
 		MongoCredential credentials = MongoCredential.createCredential("oak", db, "oak".toCharArray()) //
 		//
 		;
 		MongoClientOptions.Builder options = new MongoClientOptions.Builder() //
 		//
 		;
-		MongoClient client = new MongoClient(new ServerAddress(host, port), credentials, options.build()) //
+		this.console.info("Readying the Mongo client");
+		MongoClient client = new MongoClient(addx, credentials, options.build()) //
 		//
 		;
 
+		this.console.info("Mongo client ready!! Creating the NodeStore...");
 		MongoDocumentNodeStoreBuilder builder = new MongoDocumentNodeStoreBuilder() //
 			.setMongoDB(client, db) //
 		//
 		;
 
 		// Configure oak
+		this.console.info("NodeStore ready!! Creating the Oak instance...");
 		Oak oak = new Oak(builder.build()) //
 			.with(new PropertyIndexProvider()) //
 		//
 		;
 
 		// Configure jcr
+		this.console.info("Oak ready!! Creating the Jcr instance...");
 		Jcr jcr = new Jcr(oak) //
 			.with(new OpenSecurityProvider()) //
 		//
 		;
 
 		// Return the repository
-		return jcr.createRepository();
+		this.console.info("Jcr ready!! Creating the Repository...");
+		Repository repository = jcr.createRepository();
+		this.console.info("Repository ready!");
+		return repository;
+	}
+
+	private void analyzeProperties(Node node) {
+		try {
+			Node content = node.getNode("jcr:content");
+			Property p = content.getProperty("jcr:data");
+			Binary b = p.getBinary();
+			int size = (int) b.getSize();
+			byte[] buf = new byte[size / 2];
+			Integer read = b.read(buf, size / 4);
+			read.hashCode();
+		} catch (Exception e) {
+			// Ignore!
+			e.hashCode();
+		}
 	}
 
 	private void writeFiles(Repository repository) throws Exception {
@@ -109,14 +140,22 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 				Pair<Node, String> target = this.organizer.newContentLocation(session, p.getRight());
 				Node folder = target.getLeft();
 				final long counterPos = this.counter.getAndIncrement();
+				final Node file;
 				try (InputStream data = this.testData.getInputStream(counterPos)) {
-					Node file = JcrUtils.putFile(folder, target.getRight(), "application/octet-stream", data);
+					file = JcrUtils.putFile(folder, target.getRight(), "application/octet-stream", data);
 					String path = file.getPath();
-					// this.console.info("Generated element # {} @ [{}]", counterPos, path);
+					this.console.debug("Generated element # {} @ [{}]", counterPos, path);
 					writeProgress.trigger();
 					this.elements.offer(Pair.of(path, counterPos));
 				}
 				session.save();
+				/*
+				try {
+					analyzeProperties(file);
+				} catch (Exception e) {
+					// ignore!!
+				}
+				*/
 			}, //
 			(p, i, e) -> this.console.error("******** EXCEPTION CAUGHT PROCESSING ITEM # {} ********", i, e), //
 			(p) -> p.getLeft().logout());
@@ -154,12 +193,13 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 						this.console.error("*** FAILED TO FIND NODE [{}] (#{}) ***", path, counterPos);
 						return;
 					}
+					analyzeProperties(node);
 					try (InputStream in = JcrUtils.readFile(node)) {
 						// Validate that the data is the correct data...
 						String readHash = DigestUtils.sha256Hex(in);
 						String expectedHash = this.testData.getHash(counterPos);
 						if (!Tools.equals(readHash, expectedHash)) {
-							// this.console.info("Read element # {} @ [{}]", counterPos, path);
+							this.console.debug("Read element # {} @ [{}]", counterPos, path);
 						} else {
 							this.console.error("*** WRONG DATA RETURNED FROM [{}] (#{}) - expected {} but got {} ***",
 								path, counterPos, expectedHash, readHash);
@@ -193,7 +233,9 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 	@Override
 	public Void call() throws Exception {
 		final Repository repository = buildRepository();
+		this.console.info("Initializing the test data...");
 		this.testData.reset();
+		this.console.info("Test data ready!");
 
 		try {
 			writeFiles(repository);

@@ -30,7 +30,7 @@ import com.armedia.commons.utilities.Tools;
 public class Scratchpad extends AbstractLauncher {
 
 	static final int MIN_TESTS = 1000;
-	static final int DEFAULT_TESTS = 1000000;
+	static final int DEFAULT_TESTS = 10000;
 
 	public static final void main(String... args) {
 		System.exit(new Scratchpad().launch(args));

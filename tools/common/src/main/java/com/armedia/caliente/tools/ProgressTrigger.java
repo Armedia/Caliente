@@ -36,14 +36,12 @@ public class ProgressTrigger extends BaseShareableLockable {
 	public static final class Statistics {
 		private final Duration duration;
 		private final long count;
-		private final double nanosPerTick;
 
 		private final LazySupplier<String> string;
 
 		Statistics(Duration duration, long count) {
 			this.duration = Objects.requireNonNull(duration, "Must provide an interval");
 			this.count = count;
-			this.nanosPerTick = ((double) this.duration.toNanos() / count);
 			this.string = new LazySupplier<>(
 				() -> String.format("%d/%s (~%.3f/s)", count, duration, getRatePerSecond()));
 		}
@@ -63,7 +61,7 @@ public class ProgressTrigger extends BaseShareableLockable {
 		public double getRatePer(TimeUnit timeUnit) {
 			double nanoMultiplier = TimeUnit.NANOSECONDS.convert(1,
 				Objects.requireNonNull(timeUnit, "Must provide a time unit to calculate with"));
-			return nanoMultiplier / this.nanosPerTick;
+			return (nanoMultiplier * this.count) / this.duration.toNanos();
 		}
 
 		@Override

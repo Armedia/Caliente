@@ -6,12 +6,15 @@ import java.io.UncheckedIOException;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.DigestInputStream;
@@ -37,12 +40,23 @@ public class TestDataGenerator extends BaseShareableLockable {
 		}
 	}
 
+	private final Logger log = LoggerFactory.getLogger("console");
+
 	private final Random random = new Random(System.nanoTime());
 	private final ConcurrentMap<Integer, Pair<BinaryMemoryBuffer, String>> streams = new ConcurrentHashMap<>();
 	private final int count;
+	private final Function<Integer, Integer> sizeCalculator;
 
 	public TestDataGenerator(int count) {
+		this(count, null);
+	}
+
+	public TestDataGenerator(int count, Function<Integer, Integer> sizeCalculator) {
 		this.count = Tools.ensureBetween(1, count, Integer.MAX_VALUE);
+		if (sizeCalculator == null) {
+			sizeCalculator = (i) -> ((i + 1) * 2048);
+		}
+		this.sizeCalculator = sizeCalculator;
 	}
 
 	public void reset() {
@@ -56,9 +70,11 @@ public class TestDataGenerator extends BaseShareableLockable {
 
 	public Pair<BinaryMemoryBuffer, String> getTestData(long count) {
 		try (SharedAutoLock lock = autoSharedLock()) {
-			final Integer index = (int) (count % this.count);
+			final int index = (int) (count % this.count);
+			final int streamSize = this.sizeCalculator.apply(index);
 			return ConcurrentUtils.createIfAbsentUnchecked(this.streams, index, () -> {
-				try (InputStream in = new RandomStream((index + 1) * 2048)) {
+				this.log.info("Rendering stream # {} of {} bytes ...", index, streamSize);
+				try (InputStream in = new RandomStream(streamSize)) {
 					try (DigestInputStream din = new DigestInputStream(in, DigestUtils.getSha256Digest())) {
 						BinaryMemoryBuffer buf = new BinaryMemoryBuffer();
 						try {
@@ -66,7 +82,9 @@ public class TestDataGenerator extends BaseShareableLockable {
 						} finally {
 							buf.close();
 						}
-						return Pair.of(buf, Hex.encodeHexString(din.collectHash().getRight()));
+						String hash = Hex.encodeHexString(din.collectHash().getRight());
+						this.log.info("Rendered stream # {} of {} bytes (hash = {})", index, streamSize, hash);
+						return Pair.of(buf, hash);
 					}
 				} catch (IOException e) {
 					throw new UncheckedIOException(e);
