@@ -1,11 +1,15 @@
 package com.armedia.caliente.content;
 
 import java.io.InputStream;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -25,6 +29,7 @@ import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.jcr.Jcr;
 import org.apache.jackrabbit.oak.plugins.document.mongo.MongoDocumentNodeStoreBuilder;
 import org.apache.jackrabbit.oak.plugins.index.property.PropertyIndexProvider;
+import org.apache.jackrabbit.oak.spi.security.OpenSecurityProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +42,8 @@ import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoClientURI;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
 
 public class JackrabbitTest extends BaseShareableLockable implements Callable<Void> {
 
@@ -57,12 +63,18 @@ public class JackrabbitTest extends BaseShareableLockable implements Callable<Vo
 	}
 
 	private Repository buildRepository() throws RepositoryException {
-		final String uri = "mongodb://localhost:27017";
+		final String host = ServerAddress.defaultHost();
+		final int port = ServerAddress.defaultPort();
 		final String db = "oak";
+		MongoCredential credentials = MongoCredential.createCredential("oak", db, "oak".toCharArray()) //
+		//
+		;
 		MongoClientOptions.Builder options = new MongoClientOptions.Builder() //
 		//
 		;
-		MongoClient client = new MongoClient(new MongoClientURI(uri, options));
+		MongoClient client = new MongoClient(new ServerAddress(host, port), credentials, options.build()) //
+		//
+		;
 
 		MongoDocumentNodeStoreBuilder builder = new MongoDocumentNodeStoreBuilder() //
 			.setMongoDB(client, db) //
@@ -71,12 +83,13 @@ public class JackrabbitTest extends BaseShareableLockable implements Callable<Vo
 
 		// Configure oak
 		Oak oak = new Oak(builder.build()) //
+			.with(new PropertyIndexProvider()) //
 		//
 		;
 
 		// Configure jcr
-		Jcr jcr = new Jcr(oak).with(new PropertyIndexProvider()) //
-			.with(new PropertyIndexProvider()) //
+		Jcr jcr = new Jcr(oak) //
+			.with(new OpenSecurityProvider()) //
 		//
 		;
 
@@ -99,7 +112,8 @@ public class JackrabbitTest extends BaseShareableLockable implements Callable<Vo
 		final ProgressTrigger writeProgress = new ProgressTrigger(writeStartTrigger, writeTrigger);
 		final ExecutorService executor = Executors.newWorkStealingPool(this.threads);
 		try {
-			Callable<Void> worker = () -> {
+			final int workerCount = 100000;
+			Callable<Pair<Node, String>> worker = () -> {
 				final ContentStoreClient client = new ContentStoreClient("writeTest", Thread.currentThread().getName());
 				final Session session = repository.login(this.credentials);
 				try {
@@ -114,17 +128,31 @@ public class JackrabbitTest extends BaseShareableLockable implements Callable<Vo
 						this.elements.offer(Pair.of(path, counterPos));
 					}
 					session.save();
-					return null;
+					return target;
 				} finally {
 					session.logout();
 				}
 			};
 
-			for (int i = 0; i < 100000; i++) {
-				executor.submit(worker);
+			List<Future<Pair<Node, String>>> futures = new LinkedList<>();
+			for (int i = 0; i < workerCount; i++) {
+				futures.add(executor.submit(worker));
+			}
+			executor.shutdown();
+
+			for (Future<Pair<Node, String>> f : futures) {
+				try {
+					f.get();
+				} catch (CancellationException e) {
+					// Job was cancelled, ignore
+				} catch (ExecutionException e) {
+					// Job had an error
+					this.console.warn("Exception raised from a worker", e);
+				} catch (InterruptedException e) {
+					// Interrupted while waiting...
+				}
 			}
 		} finally {
-			executor.shutdown();
 			boolean abort = false;
 			try {
 				if (!executor.awaitTermination(15, TimeUnit.SECONDS)) {

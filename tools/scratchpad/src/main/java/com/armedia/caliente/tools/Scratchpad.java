@@ -3,8 +3,8 @@ package com.armedia.caliente.tools;
 import java.io.File;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 
 import org.apache.log4j.xml.DOMConfigurator;
@@ -16,7 +16,6 @@ import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.content.JackrabbitTest;
@@ -35,13 +34,14 @@ public class Scratchpad extends AbstractLauncher {
 	}
 
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
-	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
+	// private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper();
 
 	@Override
 	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionValues baseValues, String command,
 		OptionValues commandValies, Collection<String> positionals) {
-		return Arrays.asList(this.dfcLaunchHelper);
+		// return Arrays.asList(this.dfcLaunchHelper);
+		return Collections.emptyList();
 	}
 
 	@Override
@@ -92,7 +92,7 @@ public class Scratchpad extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		new JackrabbitTest(this.threadsLaunchHelper.getThreads(commandValues, 10)).call();
+		new JackrabbitTest(this.threadsLaunchHelper.getThreads(baseValues, 10)).call();
 		return 0;
 	}
 
@@ -102,9 +102,11 @@ public class Scratchpad extends AbstractLauncher {
 			.addGroup( //
 				this.libLaunchHelper.asGroup() //
 			) //
+			/*
 			.addGroup( //
 				this.dfcLaunchHelper.asGroup() //
 			) //
+			*/
 			.addGroup( //
 				this.threadsLaunchHelper.asGroup() //
 			) //

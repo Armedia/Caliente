@@ -43,14 +43,13 @@ public class TestDataGenerator extends BaseShareableLockable {
 
 	public TestDataGenerator(int count) {
 		this.count = Tools.ensureBetween(1, count, Integer.MAX_VALUE);
-		reset();
 	}
 
 	public void reset() {
 		try (MutexAutoLock lock = autoMutexLock()) {
 			this.streams.clear();
-			for (long i = 0; i < this.count; i++) {
-				getTestData(i);
+			for (long index = 0; index < this.count; index++) {
+				getTestData(index);
 			}
 		}
 	}
