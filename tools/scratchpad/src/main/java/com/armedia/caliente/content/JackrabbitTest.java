@@ -1,17 +1,10 @@
 package com.armedia.caliente.content;
 
 import java.io.InputStream;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
@@ -57,9 +50,11 @@ public class JackrabbitTest extends BaseShareableLockable implements Callable<Vo
 	private final TestDataGenerator testData = new TestDataGenerator(JackrabbitTest.MAX_STREAMS);
 
 	private final int threads;
+	private final int testCount;
 
-	public JackrabbitTest(int threadCount) {
+	public JackrabbitTest(int threadCount, int testCount) {
 		this.threads = threadCount;
+		this.testCount = Math.max(1000, testCount);
 	}
 
 	private Repository buildRepository() throws RepositoryException {
@@ -110,58 +105,33 @@ public class JackrabbitTest extends BaseShareableLockable implements Callable<Vo
 				pr.getTotalCount(), td, trps);
 		};
 		final ProgressTrigger writeProgress = new ProgressTrigger(writeStartTrigger, writeTrigger);
-		final ExecutorService executor = Executors.newWorkStealingPool(this.threads);
+		final ContentStoreClient client = new ContentStoreClient("writeTest", "sharedClient");
+		final PooledWorkersLogic<Pair<Session, ContentStoreClient>, Integer, Exception> logic = new FunctionalPooledWorkersLogic<>(
+			() -> Pair.of(repository.login(this.credentials), client), //
+			(p, c) -> {
+				final Session session = p.getLeft();
+				Pair<Node, String> target = this.organizer.newContentLocation(session, p.getRight());
+				Node folder = target.getLeft();
+				final long counterPos = this.counter.getAndIncrement();
+				try (InputStream data = this.testData.getInputStream(counterPos)) {
+					Node file = JcrUtils.putFile(folder, target.getRight(), "application/octet-stream", data);
+					String path = file.getPath();
+					// this.console.info("Generated element # {} @ [{}]", counterPos, path);
+					writeProgress.trigger();
+					this.elements.offer(Pair.of(path, counterPos));
+				}
+				session.save();
+			}, (p, target, e) -> this.console.error("******** EXCEPTION CAUGHT ********", e),
+			(p) -> p.getLeft().logout());
+		final PooledWorkers<Pair<Session, ContentStoreClient>, Integer> writers = new PooledWorkers<>();
 		try {
-			final int workerCount = 100000;
-			Callable<Pair<Node, String>> worker = () -> {
-				final ContentStoreClient client = new ContentStoreClient("writeTest", Thread.currentThread().getName());
-				final Session session = repository.login(this.credentials);
-				try {
-					Pair<Node, String> target = this.organizer.newContentLocation(session, client);
-					Node folder = target.getLeft();
-					final long counterPos = this.counter.getAndIncrement();
-					try (InputStream data = this.testData.getInputStream(counterPos)) {
-						Node file = JcrUtils.putFile(folder, target.getRight(), "application/octet-stream", data);
-						String path = file.getPath();
-						this.console.info("Generated element # {} @ [{}]", counterPos, path);
-						writeProgress.trigger();
-						this.elements.offer(Pair.of(path, counterPos));
-					}
-					session.save();
-					return target;
-				} finally {
-					session.logout();
-				}
-			};
-
-			List<Future<Pair<Node, String>>> futures = new LinkedList<>();
-			for (int i = 0; i < workerCount; i++) {
-				futures.add(executor.submit(worker));
-			}
-			executor.shutdown();
-
-			for (Future<Pair<Node, String>> f : futures) {
-				try {
-					f.get();
-				} catch (CancellationException e) {
-					// Job was cancelled, ignore
-				} catch (ExecutionException e) {
-					// Job had an error
-					this.console.warn("Exception raised from a worker", e);
-				} catch (InterruptedException e) {
-					// Interrupted while waiting...
-				}
+			writers.start(logic, this.threads);
+			for (int i = 0; i < this.testCount; i++) {
+				writers.addWorkItemNonblock(i);
 			}
 		} finally {
-			boolean abort = false;
-			try {
-				if (!executor.awaitTermination(15, TimeUnit.SECONDS)) {
-					abort = true;
-				}
-			} finally {
-				if (abort) {
-					executor.shutdownNow();
-				}
+			for (Integer i : writers.waitForCompletion()) {
+				this.console.warn("****** UNPROCESSED ITEM # {}", i);
 			}
 		}
 	}
