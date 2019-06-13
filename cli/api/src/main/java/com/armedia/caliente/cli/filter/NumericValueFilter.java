@@ -17,7 +17,6 @@ public abstract class NumericValueFilter<N extends Number> extends OptionValueFi
 
 	protected NumericValueFilter(String label, N min, N max) {
 		this(label, min, true, max, true);
-
 	}
 
 	protected NumericValueFilter(String label, N min, boolean minInclusive, N max, boolean maxInclusive) {
