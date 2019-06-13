@@ -5,7 +5,7 @@ import java.math.BigInteger;
 public class BigIntegerValueFilter extends NumericValueFilter<BigInteger> {
 
 	public BigIntegerValueFilter(BigInteger min, BigInteger max) {
-		super("big integer", min, max);
+		this(min, NumericValueFilter.DEFAULT_INCLUSIVE, max, NumericValueFilter.DEFAULT_INCLUSIVE);
 	}
 
 	public BigIntegerValueFilter(BigInteger min, boolean minInclusive, BigInteger max, boolean maxInclusive) {

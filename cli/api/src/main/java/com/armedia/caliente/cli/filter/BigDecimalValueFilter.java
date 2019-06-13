@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 public class BigDecimalValueFilter extends NumericValueFilter<BigDecimal> {
 
 	public BigDecimalValueFilter(BigDecimal min, BigDecimal max) {
-		super("big decimal", min, max);
+		this(min, NumericValueFilter.DEFAULT_INCLUSIVE, max, NumericValueFilter.DEFAULT_INCLUSIVE);
 	}
 
 	public BigDecimalValueFilter(BigDecimal min, boolean minInclusive, BigDecimal max, boolean maxInclusive) {

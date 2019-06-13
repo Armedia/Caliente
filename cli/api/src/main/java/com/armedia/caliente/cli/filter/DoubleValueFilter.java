@@ -2,8 +2,16 @@ package com.armedia.caliente.cli.filter;
 
 public class DoubleValueFilter extends NumericValueFilter<Double> {
 
+	public DoubleValueFilter(Double min) {
+		this(min, Double.MAX_VALUE);
+	}
+
+	public DoubleValueFilter(Double min, boolean minInclusive) {
+		this(min, minInclusive, Double.MAX_VALUE, NumericValueFilter.DEFAULT_INCLUSIVE);
+	}
+
 	public DoubleValueFilter(Double min, Double max) {
-		super("double", min, max);
+		this(min, NumericValueFilter.DEFAULT_INCLUSIVE, max, NumericValueFilter.DEFAULT_INCLUSIVE);
 	}
 
 	public DoubleValueFilter(Double min, boolean minInclusive, Double max, boolean maxInclusive) {
