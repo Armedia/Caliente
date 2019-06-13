@@ -38,7 +38,7 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 
-public class JackrabbitTest extends BaseShareableLockable implements Callable<Void> {
+public class JcrOakTest extends BaseShareableLockable implements Callable<Void> {
 
 	private static final int MAX_STREAMS = 100;
 
@@ -47,12 +47,12 @@ public class JackrabbitTest extends BaseShareableLockable implements Callable<Vo
 	final Credentials credentials = new SimpleCredentials("root", "system01".toCharArray());
 	final Organizer<?> organizer = new SequentialOrganizer();
 	final Logger console = LoggerFactory.getLogger("console");
-	private final TestDataGenerator testData = new TestDataGenerator(JackrabbitTest.MAX_STREAMS);
+	private final TestDataGenerator testData = new TestDataGenerator(JcrOakTest.MAX_STREAMS);
 
 	private final int threads;
 	private final int testCount;
 
-	public JackrabbitTest(int threadCount, int testCount) {
+	public JcrOakTest(int threadCount, int testCount) {
 		this.threads = threadCount;
 		this.testCount = Math.max(1000, testCount);
 	}
@@ -94,7 +94,7 @@ public class JackrabbitTest extends BaseShareableLockable implements Callable<Vo
 
 	private void writeFiles(Repository repository) throws Exception {
 		final Consumer<Long> writeStartTrigger = (s) -> {
-			this.console.info("Started generating content files");
+			this.console.info("Started generating {} content files", this.testCount);
 		};
 		final Consumer<ProgressReport> writeTrigger = (pr) -> {
 			String id = pr.getIntervalDuration().toString();
@@ -108,7 +108,7 @@ public class JackrabbitTest extends BaseShareableLockable implements Callable<Vo
 		final ContentStoreClient client = new ContentStoreClient("writeTest", "sharedClient");
 		final PooledWorkersLogic<Pair<Session, ContentStoreClient>, Integer, Exception> logic = new FunctionalPooledWorkersLogic<>(
 			() -> Pair.of(repository.login(this.credentials), client), //
-			(p, c) -> {
+			(p, i) -> {
 				final Session session = p.getLeft();
 				Pair<Node, String> target = this.organizer.newContentLocation(session, p.getRight());
 				Node folder = target.getLeft();
@@ -121,7 +121,8 @@ public class JackrabbitTest extends BaseShareableLockable implements Callable<Vo
 					this.elements.offer(Pair.of(path, counterPos));
 				}
 				session.save();
-			}, (p, target, e) -> this.console.error("******** EXCEPTION CAUGHT ********", e),
+			}, //
+			(p, i, e) -> this.console.error("******** EXCEPTION CAUGHT PROCESSING ITEM # {} ********", i, e), //
 			(p) -> p.getLeft().logout());
 		final PooledWorkers<Pair<Session, ContentStoreClient>, Integer> writers = new PooledWorkers<>();
 		try {

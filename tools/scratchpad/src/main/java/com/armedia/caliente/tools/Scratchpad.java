@@ -18,7 +18,7 @@ import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
-import com.armedia.caliente.content.JackrabbitTest;
+import com.armedia.caliente.content.JcrOakTest;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -95,7 +95,7 @@ public class Scratchpad extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		new JackrabbitTest(this.threadsLaunchHelper.getThreads(baseValues, 10),
+		new JcrOakTest(this.threadsLaunchHelper.getThreads(baseValues, 10),
 			baseValues.getInteger(CLIParam.test_count)).call();
 		return 0;
 	}
