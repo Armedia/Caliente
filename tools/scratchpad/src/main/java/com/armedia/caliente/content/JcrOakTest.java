@@ -1,6 +1,7 @@
 package com.armedia.caliente.content;
 
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
@@ -51,6 +52,7 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 
 	private final int threads;
 	private final int testCount;
+	private final Duration reportInterval = Duration.ofSeconds(1);
 
 	public JcrOakTest(int threadCount, int testCount) {
 		this.threads = threadCount;
@@ -104,7 +106,7 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 			this.console.info("\n\tWrite progress report: {}/{} (~{}/s) | {}/{} (~{}/s)\n", pr.getIntervalCount(), id,
 				irps, pr.getTotalCount(), td, trps);
 		};
-		final ProgressTrigger writeProgress = new ProgressTrigger(writeStartTrigger, writeTrigger);
+		final ProgressTrigger writeProgress = new ProgressTrigger(writeStartTrigger, writeTrigger, this.reportInterval);
 		final ContentStoreClient client = new ContentStoreClient("writeTest", "sharedClient");
 		final PooledWorkersLogic<Pair<Session, ContentStoreClient>, Integer, Exception> logic = new FunctionalPooledWorkersLogic<>(
 			() -> Pair.of(repository.login(this.credentials), client), //
@@ -131,7 +133,9 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 				writers.addWorkItemNonblock(i);
 			}
 		} finally {
-			for (Integer i : writers.waitForCompletion()) {
+			List<Integer> remaining = writers.waitForCompletion();
+			writeProgress.trigger(true);
+			for (Integer i : remaining) {
 				this.console.warn("****** UNPROCESSED ITEM # {}", i);
 			}
 		}
@@ -149,7 +153,7 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 			this.console.info("\n\tRead progress report: {}/{} (~{}/s) | {}/{} (~{}/s)\n", pr.getIntervalCount(), id,
 				irps, pr.getTotalCount(), td, trps);
 		};
-		final ProgressTrigger readProgress = new ProgressTrigger(readStartTrigger, readTrigger);
+		final ProgressTrigger readProgress = new ProgressTrigger(readStartTrigger, readTrigger, this.reportInterval);
 		final PooledWorkersLogic<Session, Pair<String, Long>, Exception> logic = new FunctionalPooledWorkersLogic<>(
 			() -> repository.login(this.credentials), //
 			(session, target) -> {
@@ -187,6 +191,7 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 			this.elements.forEach(readers::addWorkItemNonblock);
 		} finally {
 			List<Pair<String, Long>> remaining = readers.waitForCompletion();
+			readProgress.trigger(true);
 			for (Pair<String, Long> r : remaining) {
 				this.console.warn("****** UNPROCESSED ITEM: {}", r);
 			}
