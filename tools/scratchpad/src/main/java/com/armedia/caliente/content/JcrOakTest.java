@@ -167,7 +167,7 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 						String readHash = DigestUtils.sha256Hex(in);
 						String expectedHash = this.testData.getHash(counterPos);
 						if (!Tools.equals(readHash, expectedHash)) {
-							this.console.info("Read element # {} @ [{}]", counterPos, path);
+							// this.console.info("Read element # {} @ [{}]", counterPos, path);
 						} else {
 							this.console.error("*** WRONG DATA RETURNED FROM [{}] (#{}) - expected {} but got {} ***",
 								path, counterPos, expectedHash, readHash);

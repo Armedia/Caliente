@@ -211,12 +211,28 @@ public class ProgressTrigger extends BaseShareableLockable {
 			// different threads
 			final boolean shouldTrigger = (forced || triggerByCount || triggerByTime);
 			if (shouldTrigger && this.lastTrigger.compareAndSet(lastTriggerNanoTime, thisTriggerNanoTime)) {
-				final Double previousCount = this.previousTriggerCount.doubleValue();
+				final long previousCount = this.previousTriggerCount.get();
 				this.previousTriggerCount.set(totalCount.longValue());
-				final long intervalCount = (totalCount.longValue() - previousCount.longValue());
+				final long intervalCount = (totalCount.longValue() - previousCount);
 				this.trigger.accept(new ProgressReport(this.start.get(), thisTriggerNanoTime, lastTriggerNanoTime,
 					intervalCount, totalCount));
 			}
+		}
+	}
+
+	public final ProgressReport renderReport() {
+		try (SharedAutoLock lock = autoSharedLock()) {
+			final Long totalCount = this.currentTriggerCount.get();
+			// Is it time to show progress? Have 10 seconds passed?
+			final long thisTriggerNanoTime = System.nanoTime();
+			final long lastTriggerNanoTime = this.lastTrigger.get();
+
+			// This avoids a race condition where we don't show successive progress reports from
+			// different threads
+			final long previousCount = this.previousTriggerCount.get();
+			final long intervalCount = (totalCount.longValue() - previousCount);
+			return new ProgressReport(this.start.get(), thisTriggerNanoTime, lastTriggerNanoTime, intervalCount,
+				totalCount);
 		}
 	}
 }
