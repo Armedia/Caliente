@@ -101,8 +101,8 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 			String irps = String.format("%.3f", pr.getIntervalRatePerSecond());
 			String td = pr.getTotalDuration().toString();
 			String trps = String.format("%.3f", pr.getTotalRatePerSecond());
-			this.console.info("\n\tProgress report: {}/{} (~{}/s) | {}/{} (~{}/s)\n", pr.getIntervalCount(), id, irps,
-				pr.getTotalCount(), td, trps);
+			this.console.info("\n\tWrite progress report: {}/{} (~{}/s) | {}/{} (~{}/s)\n", pr.getIntervalCount(), id,
+				irps, pr.getTotalCount(), td, trps);
 		};
 		final ProgressTrigger writeProgress = new ProgressTrigger(writeStartTrigger, writeTrigger);
 		final ContentStoreClient client = new ContentStoreClient("writeTest", "sharedClient");
