@@ -92,7 +92,7 @@ public class Scratchpad extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		new JackrabbitTest().call();
+		new JackrabbitTest(this.threadsLaunchHelper.getThreads(commandValues, 10)).call();
 		return 0;
 	}
 

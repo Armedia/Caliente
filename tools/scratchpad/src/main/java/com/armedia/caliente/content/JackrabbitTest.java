@@ -21,11 +21,10 @@ import javax.jcr.SimpleCredentials;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.jackrabbit.oak.InitialContent;
 import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.jcr.Jcr;
+import org.apache.jackrabbit.oak.plugins.document.mongo.MongoDocumentNodeStoreBuilder;
 import org.apache.jackrabbit.oak.plugins.index.property.PropertyIndexProvider;
-import org.apache.jackrabbit.oak.spi.security.OpenSecurityProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +35,9 @@ import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientURI;
 
 public class JackrabbitTest extends BaseShareableLockable implements Callable<Void> {
 
@@ -43,7 +45,7 @@ public class JackrabbitTest extends BaseShareableLockable implements Callable<Vo
 
 	private final AtomicLong counter = new AtomicLong(0);
 	private final BlockingQueue<Pair<String, Long>> elements = new LinkedBlockingQueue<>();
-	final Credentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
+	final Credentials credentials = new SimpleCredentials("root", "system01".toCharArray());
 	final Organizer<?> organizer = new SequentialOrganizer();
 	final Logger console = LoggerFactory.getLogger("console");
 	private final TestDataGenerator testData = new TestDataGenerator(JackrabbitTest.MAX_STREAMS);
@@ -55,16 +57,30 @@ public class JackrabbitTest extends BaseShareableLockable implements Callable<Vo
 	}
 
 	private Repository buildRepository() throws RepositoryException {
-		Oak oak = new Oak() //
-			.with(new OpenSecurityProvider()) //
-			.with(new InitialContent()) //
-			.with(new PropertyIndexProvider()) //
-		;
-		/// Configure oak
-		Jcr jcr = new Jcr(oak) //
+		final String uri = "mongodb://localhost:27017";
+		final String db = "oak";
+		MongoClientOptions.Builder options = new MongoClientOptions.Builder() //
 		//
 		;
-		// Configure Jcr
+		MongoClient client = new MongoClient(new MongoClientURI(uri, options));
+
+		MongoDocumentNodeStoreBuilder builder = new MongoDocumentNodeStoreBuilder() //
+			.setMongoDB(client, db) //
+		//
+		;
+
+		// Configure oak
+		Oak oak = new Oak(builder.build()) //
+		//
+		;
+
+		// Configure jcr
+		Jcr jcr = new Jcr(oak).with(new PropertyIndexProvider()) //
+			.with(new PropertyIndexProvider()) //
+		//
+		;
+
+		// Return the repository
 		return jcr.createRepository();
 	}
 
