@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 
 public class TimeBasedOrganizerTest {
 
-	private final TimeBasedOrganizer organizer = new TimeBasedOrganizer("foler", "file");
+	private final TimeBasedOrganizer organizer = new TimeBasedOrganizer();
 	private final ZoneId zoneId = TimeBasedOrganizerContext.ZONE_ID;
 
 	@Test

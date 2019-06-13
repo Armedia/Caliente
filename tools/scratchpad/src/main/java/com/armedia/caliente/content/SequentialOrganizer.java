@@ -2,7 +2,11 @@ package com.armedia.caliente.content;
 
 public class SequentialOrganizer extends Organizer<OrganizerContext> {
 
-	public SequentialOrganizer(String folderType, String contentType) {
+	public SequentialOrganizer() {
+		this(null);
+	}
+
+	public SequentialOrganizer(String folderType) {
 		super(folderType);
 	}
 

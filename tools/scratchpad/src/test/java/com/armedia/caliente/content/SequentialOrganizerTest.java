@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 public class SequentialOrganizerTest {
 
-	private final SequentialOrganizer organizer = new SequentialOrganizer("folder", "content");
+	private final SequentialOrganizer organizer = new SequentialOrganizer();
 
 	@Test
 	public void testRenderIntermediatePath() {

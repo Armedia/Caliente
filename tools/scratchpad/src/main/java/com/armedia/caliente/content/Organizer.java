@@ -9,12 +9,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jackrabbit.commons.JcrUtils;
 
+import com.armedia.commons.utilities.Tools;
+
 public abstract class Organizer<CONTEXT extends OrganizerContext> {
+
+	protected static final String FOLDER_TYPE = "nt:folder";
 
 	protected final String folderType;
 
 	public Organizer(String folderType) {
-		this.folderType = folderType;
+		this.folderType = Tools.coalesce(folderType, Organizer.FOLDER_TYPE);
 	}
 
 	public final String getFolderType() {
