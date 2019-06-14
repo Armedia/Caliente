@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 
+import javax.jcr.Repository;
+
 import org.apache.log4j.xml.DOMConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +21,9 @@ import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.content.JcrOakTest;
+import com.armedia.caliente.content.MongoRepository;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.CheckedSupplier;
 
 /**
  * This class is used as a testbed to run quick'n'dirty DFC test programs
@@ -95,8 +99,10 @@ public class Scratchpad extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		new JcrOakTest(this.threadsLaunchHelper.getThreads(baseValues, 10), baseValues.getInteger(CLIParam.test_count))
-			.call();
+		final int threads = this.threadsLaunchHelper.getThreads(baseValues, 10);
+		final int tests = baseValues.getInteger(CLIParam.test_count);
+		final CheckedSupplier<Repository, Exception> repository = new MongoRepository();
+		new JcrOakTest(threads, tests, repository).call();
 		return 0;
 	}
 

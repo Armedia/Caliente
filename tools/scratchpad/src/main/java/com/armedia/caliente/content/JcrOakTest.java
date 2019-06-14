@@ -3,6 +3,7 @@ package com.armedia.caliente.content;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -12,7 +13,6 @@ import java.util.function.Consumer;
 import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
@@ -20,11 +20,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.jackrabbit.oak.Oak;
-import org.apache.jackrabbit.oak.jcr.Jcr;
-import org.apache.jackrabbit.oak.plugins.document.mongo.MongoDocumentNodeStoreBuilder;
-import org.apache.jackrabbit.oak.plugins.index.property.PropertyIndexProvider;
-import org.apache.jackrabbit.oak.spi.security.OpenSecurityProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,12 +30,12 @@ import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoCredential;
-import com.mongodb.ServerAddress;
+import com.armedia.commons.utilities.function.CheckedSupplier;
 
 public class JcrOakTest extends BaseShareableLockable implements Callable<Void> {
+
+	private static final Consumer<Repository> NULL_CLOSER = (r) -> {
+	};
 
 	private static final int MAX_STREAMS = 100;
 
@@ -54,58 +49,27 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 	private final int threads;
 	private final int testCount;
 	private final Duration reportInterval = Duration.ofSeconds(1);
+	private final CheckedSupplier<Repository, Exception> repositorySupplier;
+	private final Consumer<Repository> repositoryCloser;
 
-	public JcrOakTest(int threadCount, int testCount) {
+	public JcrOakTest(int threadCount, int testCount, CheckedSupplier<Repository, Exception> repositorySupplier) {
+		this(threadCount, testCount, repositorySupplier, null);
+	}
+
+	public JcrOakTest(int threadCount, int testCount, CheckedSupplier<Repository, Exception> repositorySupplier,
+		Consumer<Repository> repositoryCloser) {
+		this.repositorySupplier = Objects.requireNonNull(repositorySupplier,
+			"Must provide a way to initialize the repository");
 		this.threads = threadCount;
 		this.testCount = Math.max(1000, testCount);
 		this.testData = new TestDataGenerator(JcrOakTest.MAX_STREAMS, (i) -> {
 			Long factor = FileUtils.ONE_MB;
 			return (1 << (i % 6)) * factor.intValue();
 		});
-	}
-
-	private Repository buildRepository() throws RepositoryException {
-		final String host = ServerAddress.defaultHost();
-		final int port = ServerAddress.defaultPort();
-		final String db = "oak";
-		final ServerAddress addx = new ServerAddress(host, port);
-		this.console.info("Initializing the repository connection to {}@{}", db, addx);
-		MongoCredential credentials = MongoCredential.createCredential("oak", db, "oak".toCharArray()) //
-		//
-		;
-		MongoClientOptions.Builder options = new MongoClientOptions.Builder() //
-		//
-		;
-		this.console.info("Readying the Mongo client");
-		MongoClient client = new MongoClient(addx, credentials, options.build()) //
-		//
-		;
-
-		this.console.info("Mongo client ready!! Creating the NodeStore...");
-		MongoDocumentNodeStoreBuilder builder = new MongoDocumentNodeStoreBuilder() //
-			.setMongoDB(client, db) //
-		//
-		;
-
-		// Configure oak
-		this.console.info("NodeStore ready!! Creating the Oak instance...");
-		Oak oak = new Oak(builder.build()) //
-			.with(new PropertyIndexProvider()) //
-		//
-		;
-
-		// Configure jcr
-		this.console.info("Oak ready!! Creating the Jcr instance...");
-		Jcr jcr = new Jcr(oak) //
-			.with(new OpenSecurityProvider()) //
-		//
-		;
-
-		// Return the repository
-		this.console.info("Jcr ready!! Creating the Repository...");
-		Repository repository = jcr.createRepository();
-		this.console.info("Repository ready!");
-		return repository;
+		if (repositoryCloser == null) {
+			repositoryCloser = JcrOakTest.NULL_CLOSER;
+		}
+		this.repositoryCloser = repositoryCloser;
 	}
 
 	private void writeFiles(Repository repository) throws Exception {
@@ -201,13 +165,9 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 		}
 	}
 
-	private void closeRepository(Repository repository) {
-		//
-	}
-
 	@Override
 	public Void call() throws Exception {
-		final Repository repository = buildRepository();
+		final Repository repository = this.repositorySupplier.get();
 		this.console.info("Initializing the test data...");
 		this.testData.reset();
 		this.console.info("Test data ready!");
@@ -216,7 +176,7 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 			writeFiles(repository);
 			readFiles(repository);
 		} finally {
-			closeRepository(repository);
+			this.repositoryCloser.accept(repository);
 		}
 		return null;
 	}
