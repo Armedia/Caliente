@@ -9,10 +9,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
-import javax.jcr.Binary;
 import javax.jcr.Credentials;
 import javax.jcr.Node;
-import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -110,21 +108,6 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 		return repository;
 	}
 
-	private void analyzeProperties(Node node) {
-		try {
-			Node content = node.getNode("jcr:content");
-			Property p = content.getProperty("jcr:data");
-			Binary b = p.getBinary();
-			int size = (int) b.getSize();
-			byte[] buf = new byte[size / 2];
-			Integer read = b.read(buf, size / 4);
-			read.hashCode();
-		} catch (Exception e) {
-			// Ignore!
-			e.hashCode();
-		}
-	}
-
 	private void writeFiles(Repository repository) throws Exception {
 		final Consumer<Long> writeStartTrigger = (s) -> {
 			this.console.info("Started generating {} content files", this.testCount);
@@ -149,13 +132,6 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 					this.elements.offer(Pair.of(path, counterPos));
 				}
 				session.save();
-				/*
-				try {
-					analyzeProperties(file);
-				} catch (Exception e) {
-					// ignore!!
-				}
-				*/
 			}, //
 			(p, i, e) -> this.console.error("******** EXCEPTION CAUGHT PROCESSING ITEM # {} ********", i, e), //
 			(p) -> p.getLeft().logout());
@@ -193,7 +169,6 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 						this.console.error("*** FAILED TO FIND NODE [{}] (#{}) ***", path, counterPos);
 						return;
 					}
-					analyzeProperties(node);
 					try (InputStream in = JcrUtils.readFile(node)) {
 						// Validate that the data is the correct data...
 						String readHash = DigestUtils.sha256Hex(in);
