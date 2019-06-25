@@ -63,12 +63,9 @@ public class CmisSchemaService implements SchemaService {
 			return null;
 		}
 
-		ObjectType parent = type;
-		while (parent.getParentType() != null) {
-			parent = type.getParentType();
-		}
+		ObjectType baseType = type.getBaseType();
 		// Check to see if the root base type is the secondary type
-		if (secondary != Tools.equals(BaseTypeId.CMIS_SECONDARY, parent.getId())) { return null; }
+		if (secondary != Tools.equals(BaseTypeId.CMIS_SECONDARY, baseType.getId())) { return null; }
 		Map<String, PropertyDefinition<?>> properties = type.getPropertyDefinitions();
 		Map<String, AttributeDeclaration> attributes = new TreeMap<>();
 		for (String name : properties.keySet()) {
