@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.xml.conditions;
 
 import java.util.ArrayList;
@@ -5,8 +31,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
@@ -56,8 +82,8 @@ public class GroupConditionTest {
 			final boolean expected = (d[5] != 0);
 			c.getElements().clear();
 			c.getElements().addAll(conditions);
-			Assert.assertEquals(String.format("Failed while checking %s against %s", name, Arrays.toString(d)),
-				expected, c.check(ctx));
+			Assertions.assertEquals(expected, c.check(ctx),
+				String.format("Failed while checking %s against %s", name, Arrays.toString(d)));
 		}
 	}
 
@@ -210,9 +236,9 @@ public class GroupConditionTest {
 		GroupNot not = new GroupNot();
 		final DynamicElementContext ctx = new TestObjectContext();
 		not.setCondition(ConditionTools.COND_FALSE);
-		Assert.assertTrue(not.check(ctx));
+		Assertions.assertTrue(not.check(ctx));
 		not.setCondition(ConditionTools.COND_TRUE);
-		Assert.assertFalse(not.check(ctx));
+		Assertions.assertFalse(not.check(ctx));
 	}
 
 	@Test

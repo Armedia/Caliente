@@ -37,15 +37,6 @@
 		</settings>
 	</contentstore>
 
-	<contentstore id="jdbc">
-		<type>jdbc</type>
-		<settings>
-			<setting name="location.type">pooled</setting>
-			<setting name="jdbc.url">jdbc:${db.type}:${dir.metadata}/${db.name};${db.flags}</setting>
-			<setting name="jdbc.driver">${db.driver}</setting>
-		</settings>
-	</contentstore>
-
 	<contentstore id="direct">
 		<type>local</type>
 		<settings>

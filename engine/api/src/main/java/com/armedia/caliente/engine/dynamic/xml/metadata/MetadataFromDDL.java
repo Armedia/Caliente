@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import java.sql.Connection;
@@ -6,7 +32,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -21,6 +46,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 import com.armedia.commons.utilities.function.CheckedLazySupplier;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -104,9 +130,7 @@ public class MetadataFromDDL extends MetadataReaderBase {
 
 	@Override
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(Connection c, CmfObject<V> object) throws Exception {
-		final Lock readLock = this.rwLock.readLock();
-		readLock.lock();
-		try {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			final CmfAttributeTranslator<V> translator = object.getTranslator();
 			try (final PreparedStatement ps = c.prepareStatement(this.finalSql)) {
 				try (final ResultSet rs = getResultSet(ps, object, null)) {
@@ -142,13 +166,13 @@ public class MetadataFromDDL extends MetadataReaderBase {
 							}
 
 							CmfValueCodec<V> codec = translator.getCodec(attribute.getType());
-							V finalValue = codec.getNull();
+							V finalValue = codec.getNullValue();
 							Object value = getValue(rs, column, attribute.getType());
 							// TODO: Use the structure information to determine if we need to
 							// deserialize the value or not... should we also make this bit
 							// configurable?
 							if (!rs.wasNull()) {
-								finalValue = codec.decodeValue(new CmfValue(attribute.getType(), value));
+								finalValue = codec.decode(new CmfValue(attribute.getType(), value));
 							}
 							attribute.addValue(finalValue);
 						}
@@ -172,8 +196,6 @@ public class MetadataFromDDL extends MetadataReaderBase {
 					return attributes;
 				}
 			}
-		} finally {
-			readLock.unlock();
 		}
 	}
 

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import java.sql.Connection;
@@ -6,7 +32,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.locks.Lock;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -23,6 +48,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataFromSQL.t", propOrder = {
@@ -71,9 +97,7 @@ public class MetadataFromSQL extends MetadataReaderBase {
 
 	@Override
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(Connection c, CmfObject<V> object) throws Exception {
-		final Lock lock = this.rwLock.readLock();
-		lock.lock();
-		try {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			final CmfAttributeTranslator<V> translator = object.getTranslator();
 			try (final PreparedStatement ps = c.prepareStatement(this.finalSql)) {
 				Map<String, CmfAttribute<V>> attributes = new TreeMap<>();
@@ -137,12 +161,12 @@ public class MetadataFromSQL extends MetadataReaderBase {
 							// Increase our counter, since rs.getRow() isn't mandatory
 							++pos;
 
-							V finalValue = codec.getNull();
+							V finalValue = codec.getNullValue();
 							// If we have a column name, use it. Otherwise, default to the first
 							// column in the result set
 							Object value = getValue(rs, columnIndex, attribute.getType());
 							if (!rs.wasNull()) {
-								finalValue = codec.decodeValue(new CmfValue(attribute.getType(), value));
+								finalValue = codec.decode(new CmfValue(attribute.getType(), value));
 							}
 							attribute.addValue(finalValue);
 
@@ -164,8 +188,6 @@ public class MetadataFromSQL extends MetadataReaderBase {
 				}
 				return attributes;
 			}
-		} finally {
-			lock.unlock();
 		}
 	}
 

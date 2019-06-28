@@ -10,9 +10,9 @@
 /*.manifest.csv
 /*.err
 /*Model.xml
-/*-usermap*.xml
-/*-groupmap*.xml
-/*-filenamemap*.xml
+/*usermap*.xml
+/*groupmap*.xml
+/*filenamemap*.xml
 /*.properties
 /*.sh
 /import-*.xml

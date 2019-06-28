@@ -1,2 +1,0 @@
-@javax.xml.bind.annotation.XmlSchema(namespace = com.armedia.caliente.cli.datagen.xml.ObjectFactory.NS, elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
-package com.armedia.caliente.cli.datagen.xml;

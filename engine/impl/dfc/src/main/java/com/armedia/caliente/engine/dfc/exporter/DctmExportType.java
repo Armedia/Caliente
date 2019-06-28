@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 /**
  *
  */
@@ -18,8 +44,8 @@ import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.commons.dfc.util.DfUtils;
-import com.armedia.commons.dfc.util.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -34,7 +60,7 @@ import com.documentum.fc.common.IDfList;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * @author diego
+ *
  *
  */
 public class DctmExportType extends DctmExportDelegate<IDfType> {
@@ -74,13 +100,13 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 
 		// First, as much as we can get from the type info
 		IDfPersistentObject typeInfo = ctx.getSession().getObjectByQualification(
-			String.format("dmi_type_info where r_type_id = %s", DfUtils.quoteString(type.getObjectId().getId())));
+			String.format("dmi_type_info where r_type_id = %s", DfcUtils.quoteString(type.getObjectId().getId())));
 		if (typeInfo != null) {
 			String aclDom = typeInfo.getString(DctmAttributes.ACL_DOMAIN);
 			String aclName = typeInfo.getString(DctmAttributes.ACL_NAME);
 			if (!StringUtils.isEmpty(aclDom) && !StringUtils.isEmpty(aclName)) {
 				properties.add(new CmfProperty<>(IntermediateProperty.DEFAULT_ACL, CmfValue.Type.STRING, false,
-					DfValueFactory.newStringValue(String.format("%s:%s", aclDom, aclName))));
+					DfValueFactory.of(String.format("%s:%s", aclDom, aclName))));
 			}
 
 			String defaultStorage = typeInfo.getString(DctmAttributes.DEFAULT_STORAGE);
@@ -88,7 +114,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 				try {
 					IDfStore store = IDfStore.class.cast(ctx.getSession().getObject(new DfId(defaultStorage)));
 					properties.add(new CmfProperty<>(IntermediateProperty.DEFAULT_STORAGE, CmfValue.Type.STRING, false,
-						DfValueFactory.newStringValue(store.getName())));
+						DfValueFactory.of(store.getName())));
 				} catch (DfObjectNotFoundException e) {
 					throw new ExportException(
 						String.format("Type [%s] references a nonexistent default object store with ID [%s]",
@@ -98,7 +124,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			}
 
 			properties.add(new CmfProperty<>(IntermediateProperty.DEFAULT_ASPECTS, CmfValue.Type.STRING, true,
-				DfValueFactory.getAllRepeatingValues(DctmAttributes.DEFAULT_ASPECTS, typeInfo)));
+				DfValueFactory.getAllValues(DctmAttributes.DEFAULT_ASPECTS, typeInfo)));
 		}
 
 		// Now for the value assistance
@@ -170,8 +196,8 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 			for (int i = 0; i < attCount; i++) {
 				IDfValue o = type.getRepeatingValue(DctmAttributes.ATTR_NAME, i);
-				IDfValue m = DfValueFactory.newStringValue(
-					nameMapper.encodeAttributeName(dctmTypeObjectType.getStoredObjectType(), o.asString()));
+				IDfValue m = DfValueFactory
+					.of(nameMapper.encodeAttributeName(dctmTypeObjectType.getStoredObjectType(), o.asString()));
 				orig.addValue(o);
 				mapped.addValue(m);
 			}

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 /**
  *
  */
@@ -33,10 +59,10 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DctmVersionNumber;
-import com.armedia.commons.dfc.util.DfUtils;
-import com.armedia.commons.dfc.util.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
+import com.armedia.caliente.tools.dfc.DfcVersionNumber;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
@@ -56,7 +82,7 @@ import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
+ *
  *
  */
 public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implements DctmDocument {
@@ -176,7 +202,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		// the exact existing version.
 		IDfPersistentObject obj = session.getObjectByQualification(
 			String.format("dm_sysobject (all) where i_chronicle_id = '%s' and any r_version_label = %s", chronicleId,
-				DfUtils.quoteString(implicitLabel)));
+				DfcUtils.quoteString(implicitLabel)));
 
 		// Return whatever we found...if we found nothing, then this is a new version
 		// and must be handled as such
@@ -312,7 +338,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				// Now we checkout and checkin and branch and whatnot as necessary until we can
 				// actually proceed with the rest of the algorithm...
 				final CmfProperty<IDfValue> prop = new CmfProperty<>(DctmAttributes.R_VERSION_LABEL,
-					CmfValue.Type.STRING, false, DfValueFactory.newStringValue(p.toString()));
+					CmfValue.Type.STRING, false, DfValueFactory.of(p.toString()));
 				if (substituteRoot) {
 					antecedentVersion.save();
 					// Don't need to do this again...
@@ -335,9 +361,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			// same except the last number), then we go ahead and assign it to antecedentVersion. If
 			// it's a sibling (same-level branch), or a descendant (sub-branch), then we leave the
 			// antecedent where it is
-			DctmVersionNumber newVersion = new DctmVersionNumber(
+			DfcVersionNumber newVersion = new DfcVersionNumber(
 				this.cmfObject.getAttribute(DctmAttributes.R_VERSION_LABEL).getValue().asString());
-			DctmVersionNumber lastVersion = new DctmVersionNumber(lastAntecedentVersion.asString());
+			DfcVersionNumber lastVersion = new DfcVersionNumber(lastAntecedentVersion.asString());
 			if (newVersion.isSuccessorOf(lastVersion)) {
 				antecedentVersion = lastAntecedent;
 			}
@@ -377,7 +403,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		int documentDots = StringUtils.countMatches(documentImplicitVersionLabel, ".");
 
 		final boolean shouldBranch = (documentDots == (antecedentDots + 2));
-		context.setValue(DctmImportSysObject.BRANCH_MARKER, DfValueFactory.newBooleanValue(shouldBranch));
+		context.setValue(DctmImportSysObject.BRANCH_MARKER, DfValueFactory.of(shouldBranch));
 		if (shouldBranch) {
 			// branch
 			IDfId branchID = antecedentVersion.branch(antecedentVersionImplicitVersionLabel);
@@ -556,7 +582,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		}
 
 		if (!StringUtils.isBlank(pageModifier)) {
-			pageModifier = DfUtils.quoteStringForSql(pageModifier);
+			pageModifier = DfcUtils.quoteStringForSql(pageModifier);
 		} else {
 			pageModifier = "dcr.page_modifier";
 		}
@@ -581,15 +607,15 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		if (setTime.isNullDate() || !setTime.isValid()) {
 			setTimeStr = "set_time";
 		} else {
-			setTimeStr = DfUtils.generateSqlDateClause(setTime.getDate(), session);
+			setTimeStr = DfcUtils.generateSqlDateClause(setTime.getDate(), session);
 		}
 
 		final String documentId = document.getObjectId().getId();
 		try {
 			// Run the exec sql
-			sql = String.format(sql, DfUtils.quoteStringForSql(setFile), DfUtils.quoteStringForSql(setClient),
-				setTimeStr, DfUtils.quoteStringForSql(documentId), renditionNumber, pageModifier, pageNumber,
-				DfUtils.quoteStringForSql(fullFormat));
+			sql = String.format(sql, DfcUtils.quoteStringForSql(setFile), DfcUtils.quoteStringForSql(setClient),
+				setTimeStr, DfcUtils.quoteStringForSql(documentId), renditionNumber, pageModifier, pageNumber,
+				DfcUtils.quoteStringForSql(fullFormat));
 			if (!runExecSQL(session, sql)) {
 				final String msg = String.format(
 					"SQL Execution failed for updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}:%n%s%n",
@@ -620,16 +646,16 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			// We have an extension, so try to identify it based on mime type +
 			// extension...though this may hardly be unique...
 			String dql = "select distinct name from dm_format where mime_type = %s and dos_extension = %s";
-			try (DctmQuery query = new DctmQuery(session,
-				String.format(dql, DfUtils.quoteString(aContentType), DfUtils.quoteString(extension)),
-				DctmQuery.Type.DF_EXECREAD_QUERY)) {
+			try (DfcQuery query = new DfcQuery(session,
+				String.format(dql, DfcUtils.quoteString(aContentType), DfcUtils.quoteString(extension)),
+				DfcQuery.Type.DF_EXECREAD_QUERY)) {
 				if (query.hasNext()) { return query.next().getString("name"); }
 			}
 		}
 
 		String dql = "select distinct name from dm_format where mime_type = %s";
-		try (DctmQuery query = new DctmQuery(session, String.format(dql, DfUtils.quoteString(aContentType)),
-			DctmQuery.Type.DF_EXECREAD_QUERY)) {
+		try (DfcQuery query = new DfcQuery(session, String.format(dql, DfcUtils.quoteString(aContentType)),
+			DfcQuery.Type.DF_EXECREAD_QUERY)) {
 			if (query.hasNext()) { return query.next().getString("name"); }
 		}
 
@@ -670,8 +696,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		// extension, so now we fall back to the extension if that's all we have
 		if (extension != null) {
 			String dql = "select distinct name from dm_format where dos_extension = %s";
-			try (DctmQuery query = new DctmQuery(session, String.format(dql, DfUtils.quoteString(extension)),
-				DctmQuery.Type.DF_EXECREAD_QUERY)) {
+			try (DfcQuery query = new DfcQuery(session, String.format(dql, DfcUtils.quoteString(extension)),
+				DfcQuery.Type.DF_EXECREAD_QUERY)) {
 				if (query.hasNext()) { return query.next().getString("name"); }
 			}
 		}
@@ -719,7 +745,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			int page = 0;
 			String pageModifier = info.getModifier();
 			if (StringUtils.isEmpty(pageModifier)) {
-				pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER, DctmDataType.DF_STRING.getNull().asString());
+				pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER,
+					DctmDataType.DF_STRING.getNullValue().asString());
 			}
 
 			if (fromDctm) {
@@ -801,7 +828,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 							this.cmfObject.getLabel(), this.cmfObject.getId(), v.asString()));
 					}
 					IDfSysObject so = IDfSysObject.class.cast(context.getSession().getObjectByQualification(String
-						.format("dm_sysobject where i_chronicle_id = %s", DfUtils.quoteString(m.getTargetValue()))));
+						.format("dm_sysobject where i_chronicle_id = %s", DfcUtils.quoteString(m.getTargetValue()))));
 					if (so == null) {
 						throw new ImportException(String.format(
 							"Virtual Document [%s](%s) references a component [%s] which could not be located, but may have failed during import",

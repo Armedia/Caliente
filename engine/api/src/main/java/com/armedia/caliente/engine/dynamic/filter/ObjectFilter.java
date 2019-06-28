@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.dynamic.filter;
 
 import java.util.ArrayList;
@@ -22,6 +48,8 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public class ObjectFilter extends BaseShareableLockable {
 
@@ -66,7 +94,7 @@ public class ObjectFilter extends BaseShareableLockable {
 
 	public Boolean accept(CmfObject<CmfValue> cmfObject, CmfValueMapper mapper) throws ObjectFilterException {
 		Objects.requireNonNull(cmfObject, "Must provide an object to filter");
-		return shareLocked(() -> {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (this.closed) { throw new ObjectFilterException("This object filter is already closed"); }
 			DynamicElementContext ctx = new DynamicElementContext(cmfObject, new DefaultDynamicObject(cmfObject),
 				mapper, null);
@@ -98,7 +126,7 @@ public class ObjectFilter extends BaseShareableLockable {
 			this.log.trace("Default action: {} {}", StringUtils.capitalize(this.defaultOutcome.name().toLowerCase()),
 				cmfObject.getDescription());
 			return ret;
-		});
+		}
 	}
 
 	public <V> boolean acceptRaw(CmfObject<V> object, CmfValueMapper mapper) throws ObjectFilterException {
@@ -107,13 +135,13 @@ public class ObjectFilter extends BaseShareableLockable {
 	}
 
 	public void close() {
-		mutexLocked(() -> {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			try {
 				if (this.closed) { return; }
 				this.activeFilters.clear();
 			} finally {
 				this.closed = true;
 			}
-		});
+		}
 	}
 }

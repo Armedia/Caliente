@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.dfc.exporter;
 
 import com.armedia.caliente.engine.dfc.DctmAttributes;
@@ -5,8 +31,8 @@ import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -61,8 +87,8 @@ public class DctmExportTools {
 				} else {
 					final IDfSession session = source.getSession();
 					String dql = "select t.name from dmi_object_type o, dm_type t where o.i_type = t.i_type and o.r_object_id = %s";
-					try (DctmQuery query = new DctmQuery(session, String.format(dql, DfUtils.quoteString(id.getId())),
-						DctmQuery.Type.DF_EXECREAD_QUERY)) {
+					try (DfcQuery query = new DfcQuery(session, String.format(dql, DfcUtils.quoteString(id.getId())),
+						DfcQuery.Type.DF_EXECREAD_QUERY)) {
 						if (query.hasNext()) {
 							dctmType = DctmObjectType.decodeType(session, query.next().getString("name"));
 						}
@@ -95,8 +121,8 @@ public class DctmExportTools {
 			// the object itself.
 			typeAttribute = Tools.coalesce(typeAttribute, DctmAttributes.R_OBJECT_TYPE);
 			String dql = "select t.name from dmi_object_type o, dm_type t where o.i_type = t.i_type and o.r_object_id = %s";
-			try (DctmQuery query = new DctmQuery(session, String.format(dql, DfUtils.quoteString(id.getId())),
-				DctmQuery.Type.DF_EXECREAD_QUERY)) {
+			try (DfcQuery query = new DfcQuery(session, String.format(dql, DfcUtils.quoteString(id.getId())),
+				DfcQuery.Type.DF_EXECREAD_QUERY)) {
 				if (query.hasNext()) {
 					dctmType = DctmObjectType.decodeType(session, query.next().getString("name"));
 				}

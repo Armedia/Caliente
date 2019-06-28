@@ -2,3 +2,4 @@
 /documentum/
 /*.log
 /dfc.properties
+/dfc.keystore

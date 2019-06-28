@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 /**
  *
  */
@@ -24,10 +50,11 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.store.tools.CollectionObjectHandler;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.function.TriConsumer;
 
 /**
- * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
+ *
  *
  */
 public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> extends CmfStore<OPERATION> {
@@ -175,11 +202,13 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	private boolean open = false;
 	private final AtomicBoolean objectFilterActive = new AtomicBoolean(false);
 
-	protected CmfObjectStore(Class<OPERATION> operationClass) throws CmfStorageException {
-		this(operationClass, false);
+	protected CmfObjectStore(CmfStore<?> parent, Class<OPERATION> operationClass) throws CmfStorageException {
+		this(parent, operationClass, false);
 	}
 
-	protected CmfObjectStore(Class<OPERATION> operationClass, boolean openState) throws CmfStorageException {
+	protected CmfObjectStore(CmfStore<?> parent, Class<OPERATION> operationClass, boolean openState)
+		throws CmfStorageException {
+		super(parent, "object");
 		if (operationClass == null) { throw new IllegalArgumentException("Must provide the operation class"); }
 		this.operationClass = operationClass;
 		this.open = openState;
@@ -190,14 +219,14 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	}
 
 	public final boolean init(Map<String, String> settings) throws CmfStorageException {
-		return mutexLocked(() -> {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			// Do nothing - this is for subclasses to override
 			if (this.open) { return false; }
 			doInit(settings);
 			this.open = true;
 			this.objectFilterActive.set(false);
 			return this.open;
-		});
+		}
 	}
 
 	protected void doInit(Map<String, String> settings) throws CmfStorageException {

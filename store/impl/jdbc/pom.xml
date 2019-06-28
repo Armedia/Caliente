@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
 		<artifactId>caliente</artifactId>
-		<version>3.8.0</version>
+		<version>3.8.1</version>
 		<relativePath>../../../pom.xml</relativePath>
 	</parent>
 
@@ -24,14 +24,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.armedia.commons.datasource</groupId>
-			<artifactId>datasource-locator-api</artifactId>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.commons.datasource</groupId>
-			<artifactId>datasource-locator-pooled</artifactId>
+			<groupId>com.armedia.caliente.tools</groupId>
+			<artifactId>caliente-tools-datasource</artifactId>
+			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 

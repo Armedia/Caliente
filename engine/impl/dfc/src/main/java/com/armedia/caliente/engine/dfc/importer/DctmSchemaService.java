@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.dfc.importer;
 
 import java.util.Collection;
@@ -17,8 +43,8 @@ import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServi
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.TypeDeclaration;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -49,7 +75,7 @@ public class DctmSchemaService implements SchemaService {
 	protected Collection<String> getTypeNames(Triple<String, String, String> dql) throws SchemaServiceException {
 		Set<String> names = new TreeSet<>();
 		try {
-			DctmQuery.run(this.session, dql.getMiddle(), DctmQuery.Type.DF_READ_QUERY,
+			DfcQuery.run(this.session, dql.getMiddle(), DfcQuery.Type.DF_READ_QUERY,
 				(c) -> names.add(c.getString(dql.getRight())));
 		} catch (DfException e) {
 			throw new SchemaServiceException(String.format("Failed to enumerate the existing %s types", dql.getLeft()),
@@ -79,7 +105,7 @@ public class DctmSchemaService implements SchemaService {
 			}
 
 			IDfPersistentObject typeInfo = this.session.getObjectByQualification(
-				String.format("dmi_type_info where r_type_id = %s", DfUtils.quoteString(type.getObjectId().getId())));
+				String.format("dmi_type_info where r_type_id = %s", DfcUtils.quoteString(type.getObjectId().getId())));
 			Collection<String> secondaries = new TreeSet<>();
 			final int secondaryCount = typeInfo.getValueCount(DctmAttributes.DEFAULT_ASPECTS);
 			for (int i = 0; i < secondaryCount; i++) {
@@ -99,19 +125,19 @@ public class DctmSchemaService implements SchemaService {
 
 	@Override
 	public TypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName) throws SchemaServiceException {
-		String dql = String.format(DctmSchemaService.ASPECT_TABLE_DQL, DfUtils.quoteString(secondaryTypeName));
-		try (DctmQuery query = new DctmQuery(this.session, dql, DctmQuery.Type.DF_READ_QUERY)) {
+		String dql = String.format(DctmSchemaService.ASPECT_TABLE_DQL, DfcUtils.quoteString(secondaryTypeName));
+		try (DfcQuery query = new DfcQuery(this.session, dql, DfcQuery.Type.DF_READ_QUERY)) {
 			if (!query.hasNext()) { return null; }
 			final String attrDef = query.next().getString(DctmAttributes.I_ATTR_DEF);
 
 			final Map<String, AttributeDeclaration> attributes = new TreeMap<>();
 			if (!StringUtils.isBlank(attrDef)) {
 				for (boolean repeating : DctmSchemaService.REPEATING) {
-					final IDfLocalTransaction tx = DfUtils.openTransaction(this.session);
+					final IDfLocalTransaction tx = DfcUtils.openTransaction(this.session);
 					try {
 						dql = String.format(DctmSchemaService.ASPECT_ATTR_DQL,
 							String.format("%s_%s", attrDef, repeating ? "r" : "s"));
-						try (DctmQuery query2 = new DctmQuery(this.session, dql, DctmQuery.Type.DF_READ_QUERY)) {
+						try (DfcQuery query2 = new DfcQuery(this.session, dql, DfcQuery.Type.DF_READ_QUERY)) {
 							if (!query.hasNext()) {
 								continue;
 							}
@@ -145,7 +171,7 @@ public class DctmSchemaService implements SchemaService {
 							throw e;
 						}
 					} finally {
-						DfUtils.abortTransaction(this.session, tx);
+						DfcUtils.abortTransaction(this.session, tx);
 					}
 				}
 			}

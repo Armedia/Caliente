@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 /**
  *
  */
@@ -37,9 +63,9 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DfUtils;
-import com.armedia.commons.dfc.util.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.DfPermit;
@@ -84,7 +110,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		throws DfException {
 		final Set<String> ret = new HashSet<>();
 
-		DfException e = DfUtils.runRetryable(session,
+		DfException e = DfcUtils.runRetryable(session,
 			(s) -> ret.addAll(StringTokenizer.getCSVInstance(sysObject.getXPermitList()).getTokenList()));
 		if ((e != null) && !StringUtils.equalsIgnoreCase("DM_SYSOBJECT_W_FOLDER_DEFACL", e.getMessageId())) { throw e; }
 
@@ -119,14 +145,14 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 					this.oldPermit = new DfPermit();
 					this.oldPermit.setAccessorName(userName);
 					this.oldPermit.setPermitType(IDfPermitType.ACCESS_PERMIT);
-					this.oldPermit.setPermitValue(DfUtils.decodeAccessPermission(oldPermission));
+					this.oldPermit.setPermitValue(DfcUtils.decodeAccessPermission(oldPermission));
 				} else {
 					this.oldPermit = null;
 				}
 				this.newPermit = new DfPermit();
 				this.newPermit.setAccessorName(userName);
 				this.newPermit.setPermitType(IDfPermitType.ACCESS_PERMIT);
-				this.newPermit.setPermitValue(DfUtils.decodeAccessPermission(newPermission));
+				this.newPermit.setPermitValue(DfcUtils.decodeAccessPermission(newPermission));
 			} else {
 				this.oldPermit = null;
 				this.newPermit = null;
@@ -260,7 +286,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		private void ensureLocked() throws DfException {
 			if (!this.locked) {
-				DfUtils.lockObject(this.log, this.parent);
+				DfcUtils.lockObject(this.log, this.parent);
 				this.parent.fetch(null);
 				this.locked = true;
 			}
@@ -465,10 +491,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	protected final boolean applyAcl(T sysObj, String aclDomain, String aclName, DctmImportContext ctx)
 		throws DfException, ImportException {
 		final String dql = String.format("select r_object_id from dm_acl where owner_name = %s and object_name = %s",
-			DfUtils.quoteString(aclDomain), DfUtils.quoteString(aclName));
+			DfcUtils.quoteString(aclDomain), DfcUtils.quoteString(aclName));
 		IDfSession session = ctx.getSession();
 		final IDfId aclId;
-		try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_READ_QUERY)) {
+		try (DfcQuery query = new DfcQuery(session, dql, DfcQuery.Type.DF_READ_QUERY)) {
 			if (!query.hasNext()) {
 				// no such ACL
 				String msg = String.format(
@@ -490,10 +516,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		/*
 		IDfACL acl = null;
-
+		
 		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-
+		
 		acl = IDfACL.class.cast(session.getObject(aclId));
 		sysObj.setACL(acl);
 		*/
@@ -570,7 +596,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			}
 
 			IDfPersistentObject typeInfo = session.getObjectByQualification(
-				String.format("dmi_type_info where r_type_id = %s", DfUtils.quoteString(t.getObjectId().getId())));
+				String.format("dmi_type_info where r_type_id = %s", DfcUtils.quoteString(t.getObjectId().getId())));
 			if (typeInfo == null) {
 				this.log.warn("Can't inherit an ACL from type [{}] for {} [{}]({}) - couldn't locate the type's info",
 					type, t.getName(), this.cmfObject.getType().name(), this.cmfObject.getLabel(),
@@ -645,8 +671,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				if (m != null) {
 					final String dql = String.format(
 						"select owner_name, object_name from dm_acl where r_object_id = %s",
-						DfUtils.quoteString(m.getTargetValue()));
-					try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_READ_QUERY)) {
+						DfcUtils.quoteString(m.getTargetValue()));
+					try (DfcQuery query = new DfcQuery(session, dql, DfcQuery.Type.DF_READ_QUERY)) {
 						if (query.hasNext()) {
 							IDfTypedObject c = query.next();
 							domain = c.getString(DctmAttributes.OWNER_NAME);
@@ -763,7 +789,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		CmfAttribute<IDfValue> modifyDateAtt = stored.getAttribute(DctmAttributes.R_MODIFY_DATE);
 		final String modifyDate;
 		if (modifyDateAtt != null) {
-			modifyDate = DfUtils.generateSqlDateClause(modifyDateAtt.getValue().asTime().getDate(), session);
+			modifyDate = DfcUtils.generateSqlDateClause(modifyDateAtt.getValue().asTime().getDate(), session);
 		} else {
 			modifyDate = "r_modify_date";
 		}
@@ -784,12 +810,12 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if (modifierName.length() == 0) {
 			modifierName = "${owner_name}";
 		}
-		modifierName = DfUtils.quoteStringForSql(DctmMappingUtils.resolveMappableUser(session, modifierName));
+		modifierName = DfcUtils.quoteStringForSql(DctmMappingUtils.resolveMappableUser(session, modifierName));
 
 		CmfAttribute<IDfValue> creationDateAtt = stored.getAttribute(DctmAttributes.R_CREATION_DATE);
 		final String creationDate;
 		if (creationDateAtt != null) {
-			creationDate = DfUtils.generateSqlDateClause(creationDateAtt.getValue().asTime().getDate(), session);
+			creationDate = DfcUtils.generateSqlDateClause(creationDateAtt.getValue().asTime().getDate(), session);
 		} else {
 			creationDate = "r_creation_date";
 		}
@@ -809,7 +835,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if (creatorName.length() == 0) {
 			creatorName = "${owner_name}";
 		}
-		creatorName = DfUtils.quoteStringForSql(DctmMappingUtils.resolveMappableUser(session, creatorName));
+		creatorName = DfcUtils.quoteStringForSql(DctmMappingUtils.resolveMappableUser(session, creatorName));
 
 		CmfAttribute<IDfValue> deletedAtt = stored.getAttribute(DctmAttributes.I_IS_DELETED);
 		final boolean deletedFlag = (deletedAtt != null) && deletedAtt.getValue().asBoolean();
@@ -828,7 +854,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
 		// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
 		return String.format(sql, modifyDate, modifierName, creationDate, creatorName, (deletedFlag ? 1 : 0),
-			vstampFlag, DfUtils.quoteStringForSql(sysObject.getObjectId().getId()));
+			vstampFlag, DfcUtils.quoteStringForSql(sysObject.getObjectId().getId()));
 	}
 
 	/**
@@ -881,7 +907,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		Mapping m = context.getValueMapper().getTargetMapping(this.cmfObject.getType(), DctmAttributes.R_OBJECT_ID,
 			referenceById.asString());
 		if (m != null) {
-			referenceById = DfValueFactory.newIdValue(m.getTargetValue());
+			referenceById = DfValueFactory.ofId(m.getTargetValue());
 		}
 
 		target = IDfSysObject.class.cast(session.getObject(referenceById.asId()));
@@ -902,9 +928,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			bindingLabel.asString());
 
 		final IDfReference ref;
-		try (DctmQuery query = new DctmQuery(session,
+		try (DfcQuery query = new DfcQuery(session,
 			String.format("select r_object_id from dm_reference_s where r_mirror_object_id = %s",
-				DfUtils.quoteString(newId.getId())))) {
+				DfcUtils.quoteString(newId.getId())))) {
 			if (!query.hasNext()) {
 				// ERROR!
 				throw new ImportException(String.format("Reference [%s] could not be found with its new ID [%s]",
@@ -969,8 +995,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final Class<T> dfClass = getObjectClass();
 		for (IDfValue p : getTargetPaths()) {
 			final String targetPath = ctx.getTargetPath(p.asString());
-			final String dql = String.format(dqlBase, DfUtils.quoteString(documentName),
-				DfUtils.quoteString(targetPath));
+			final String dql = String.format(dqlBase, DfcUtils.quoteString(documentName),
+				DfcUtils.quoteString(targetPath));
 			final String currentPath = String.format("%s/%s", targetPath, documentName);
 			IDfPersistentObject current = session.getObjectByQualification(dql);
 			if (current == null) {
@@ -1112,7 +1138,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			final IDfId id = new DfId(parentId);
 			session.flushObject(id);
 			final IDfSysObject parent = IDfSysObject.class.cast(session.getObject(id));
-			DfUtils.lockObject(this.log, parent);
+			DfcUtils.lockObject(this.log, parent);
 			parent.fetch(null);
 			parentCache.put(parentId, parent);
 		}

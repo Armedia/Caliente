@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 /**
  *
  */
@@ -30,9 +56,9 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DfUtils;
-import com.armedia.commons.dfc.util.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfDocument;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -49,15 +75,14 @@ import com.documentum.fc.common.IDfValue;
 import com.documentum.fc.common.admin.DfAdminException;
 
 /**
- * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
+ *
  *
  * @param <T>
  */
 public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportDelegateFactory, DctmImportEngine> {
 
-	private static final IDfValue CURRENT_VERSION_LABEL = DfValueFactory
-		.newStringValue(DfDocument.CURRENT_VERSION_LABEL);
+	private static final IDfValue CURRENT_VERSION_LABEL = DfValueFactory.of(DfDocument.CURRENT_VERSION_LABEL);
 
 	private final class AspectHelper implements IDfAttachAspectCallback, IDfDetachAspectCallback {
 		private final AtomicReference<T> ref;
@@ -68,7 +93,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			IDfSession session = object.getSession();
 			IDfType type = object.getType();
 			IDfPersistentObject info = session.getObjectByQualification(
-				String.format("dmi_type_info where r_type_id = %s", DfUtils.quoteString(type.getObjectId().getId())));
+				String.format("dmi_type_info where r_type_id = %s", DfcUtils.quoteString(type.getObjectId().getId())));
 			Set<String> defaultAspects = Collections.emptySet();
 			if ((info != null) && info.hasAttr(DctmAttributes.DEFAULT_ASPECTS)) {
 				final int c = info.getValueCount(DctmAttributes.DEFAULT_ASPECTS);
@@ -247,7 +272,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				// Is this correct?
 				newLabel = calculateLabel(object);
 				this.log.info("Acquiring lock on existing {}", this.cmfObject.getDescription());
-				DfUtils.lockObject(this.log, object);
+				DfcUtils.lockObject(this.log, object);
 				object.fetch(null);
 				this.log.info("Acquired lock on {}", this.cmfObject.getDescription());
 				// First, store the mapping for the object's exact ID
@@ -602,11 +627,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			}
 
 			if (value == null) {
-				value = dataType.getNull();
+				value = dataType.getNullValue();
 			}
 			// Ensure the value's length is always consistent
 			if ((truncateLength > 0) && (value.asString().length() > truncateLength)) {
-				value = DfValueFactory.newStringValue(value.asString().substring(0, truncateLength));
+				value = DfValueFactory.of(value.asString().substring(0, truncateLength));
 			}
 			boolean ok = false;
 			try {
@@ -688,7 +713,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				throw new IllegalArgumentException("Must provide the data type for the attribute being cleared");
 			}
 			try {
-				object.setValue(attrName, dataType.getNull());
+				object.setValue(attrName, dataType.getNullValue());
 			} catch (DfAdminException e) {
 				// If it's not the kind of thing we're defending against, then rethrow it
 				if (!StringUtils.startsWithIgnoreCase(e.getMessageId(), "DM_SET_")) { throw e; }
@@ -732,8 +757,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		// dctmObj.getIntSingleAttrValue(DctmAttributes.I_VSTAMP)));
 
 		return String.format(sql, objType,
-			DfUtils.generateSqlDateClause(modifyDate.asTime().getDate(), ctx.getSession()), vstampFlag,
-			DfUtils.quoteStringForSql(object.getObjectId().getId()));
+			DfcUtils.generateSqlDateClause(modifyDate.asTime().getDate(), ctx.getSession()), vstampFlag,
+			DfcUtils.quoteStringForSql(object.getObjectId().getId()));
 	}
 
 	/**
@@ -791,8 +816,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	 */
 	protected final boolean runExecSQL(IDfSession session, String sql) throws DfException {
 		boolean ok = false;
-		try (DctmQuery query = new DctmQuery(session, String.format("EXECUTE exec_sql WITH query='%s'", sql),
-			DctmQuery.Type.DF_QUERY)) {
+		try (DfcQuery query = new DfcQuery(session, String.format("EXECUTE exec_sql WITH query='%s'", sql),
+			DfcQuery.Type.DF_QUERY)) {
 			if (query.hasNext()) {
 				IDfTypedObject resultCol = query.next();
 				final IDfValue ret = resultCol.getValueAt(0);
@@ -804,8 +829,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 					ok = true;
 					outcome = "commit";
 				}
-				try (DctmQuery query2 = new DctmQuery(session,
-					String.format("EXECUTE exec_sql with query='%s';", outcome), DctmQuery.Type.DF_QUERY)) {
+				try (DfcQuery query2 = new DfcQuery(session,
+					String.format("EXECUTE exec_sql with query='%s';", outcome), DfcQuery.Type.DF_QUERY)) {
 				}
 			}
 			return ok;

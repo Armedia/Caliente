@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.cli.caliente.launcher;
 
 import java.util.Collection;
@@ -9,7 +35,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -34,9 +59,8 @@ import com.armedia.commons.utilities.concurrent.ShareableLockable;
 public abstract class AbstractEngineInterface {
 
 	private static final ShareableLockable INTERFACES_LOCK = new BaseShareableLockable();
-	private static final AtomicBoolean INTERFACES_INITIALIZED = new AtomicBoolean(false);
-	private static Map<String, String> ENGINE_ALIASES = null;
-	private static Map<String, AbstractEngineInterface> INTERFACES = null;
+	private static volatile Map<String, String> ENGINE_ALIASES = null;
+	private static volatile Map<String, AbstractEngineInterface> INTERFACES = null;
 
 	private static String canonicalizeName(String name) {
 		Objects.requireNonNull(name, "Name may not be null");
@@ -46,8 +70,8 @@ public abstract class AbstractEngineInterface {
 	}
 
 	private static void initializeInterfaces(final Logger log) {
-		AbstractEngineInterface.INTERFACES_LOCK
-			.shareLockedUpgradable(() -> !AbstractEngineInterface.INTERFACES_INITIALIZED.get(), () -> {
+		AbstractEngineInterface.INTERFACES_LOCK.shareLockedUpgradable(() -> AbstractEngineInterface.INTERFACES,
+			Objects::isNull, (m) -> {
 				final PluggableServiceLocator<AbstractEngineInterface> abstractEngineInterfaces = new PluggableServiceLocator<>(
 					AbstractEngineInterface.class);
 				abstractEngineInterfaces.setHideErrors(log == null);
@@ -110,7 +134,6 @@ public abstract class AbstractEngineInterface {
 					AbstractEngineInterface.INTERFACES = Tools.freezeMap(new LinkedHashMap<>(interfaces));
 					AbstractEngineInterface.ENGINE_ALIASES = Tools.freezeMap(new LinkedHashMap<>(engineAliases));
 				}
-				AbstractEngineInterface.INTERFACES_INITIALIZED.set(true);
 			});
 	}
 

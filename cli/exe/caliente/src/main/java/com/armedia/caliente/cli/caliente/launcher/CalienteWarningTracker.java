@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.cli.caliente.launcher;
 
 import java.util.LinkedList;
@@ -15,6 +41,8 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public class CalienteWarningTracker extends BaseShareableLockable implements WarningTracker {
 
@@ -103,10 +131,10 @@ public class CalienteWarningTracker extends BaseShareableLockable implements War
 
 	private boolean persistWarning(Warning w) {
 		if (this.warnings == null) { return false; }
-		return mutexLocked(() -> {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			this.warnings.add(w);
 			return true;
-		});
+		}
 	}
 
 	@Override
@@ -126,7 +154,7 @@ public class CalienteWarningTracker extends BaseShareableLockable implements War
 	public String generateReport() {
 		if (!hasWarnings()) { return null; }
 
-		return shareLocked(() -> {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			Map<WarningType, Long> m = this.objectCounter.getCummulative();
 			final Long zero = Long.valueOf(0);
 			StringBuilder report = new StringBuilder();
@@ -147,13 +175,13 @@ public class CalienteWarningTracker extends BaseShareableLockable implements War
 				}
 			}
 			return report.toString();
-		});
+		}
 	}
 
 	public void generateReport(Logger output) {
 		if (!hasWarnings()) { return; }
 
-		shareLocked(() -> {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			Map<WarningType, Long> m = this.objectCounter.getCummulative();
 			final Long zero = Long.valueOf(0);
 			output.warn("Tracked Warnings Summary:");
@@ -174,6 +202,6 @@ public class CalienteWarningTracker extends BaseShareableLockable implements War
 					output.warn(w.toString(true));
 				}
 			}
-		});
+		}
 	}
 }

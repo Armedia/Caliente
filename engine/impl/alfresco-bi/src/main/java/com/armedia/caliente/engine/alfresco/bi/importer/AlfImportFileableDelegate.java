@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
@@ -467,8 +493,16 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	protected String generateRenditionName(CmfContentStream info) {
-		return String.format("%s-[%s]-%08x-%s", this.cmfObject.getId(), info.getRenditionIdentifier(),
-			info.getRenditionPage(), Tools.coalesce(info.getModifier(), ""));
+		String modifierStr = info.getModifier();
+		if (!StringUtils.isBlank(modifierStr)) {
+			modifierStr = String.format("(%s)", modifierStr);
+		}
+		String extensionStr = info.getExtension();
+		if (!StringUtils.isBlank(extensionStr)) {
+			extensionStr = String.format(".%s", extensionStr);
+		}
+		return String.format("%s-rendition.%s%s[%08x]%s", this.cmfObject.getId(), info.getRenditionIdentifier(),
+			modifierStr, info.getRenditionPage(), extensionStr);
 	}
 
 	protected final void populateRenditionAttributes(Properties p, AlfrescoType targetType, CmfContentStream content)
@@ -620,11 +654,15 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				// metadata set on it
 				populateRenditionAttributes(p, targetType, content);
 				if (!renditionsRootIndexed) {
-					this.factory.storeToIndex(ctx, false, this.cmfObject, main, null, MarkerType.RENDITION_ROOT);
+					this.factory.storeToIndex(ctx, false, this.cmfObject, content, main, null,
+						MarkerType.RENDITION_ROOT);
 					renditionsRootIndexed = true;
 				}
-				if (renditionTypesIndexed.add(content.getRenditionIdentifier())) {
-					this.factory.storeToIndex(ctx, false, this.cmfObject, main, null, MarkerType.RENDITION_TYPE);
+
+				if (renditionTypesIndexed
+					.add(String.format("%s::%s", content.getRenditionIdentifier(), content.getModifier()))) {
+					this.factory.storeToIndex(ctx, false, this.cmfObject, content, main, null,
+						MarkerType.RENDITION_TYPE);
 				}
 			}
 
@@ -643,8 +681,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					if (this.cmfObject.isHistoryCurrent() && !vdocRootIndexed) {
 						final File vdocRootMeta = this.factory.generateMetadataFile(versionProps, this.cmfObject,
 							vdocVersion.getParentFile());
-						this.factory.storeToIndex(ctx, true, this.cmfObject, vdocVersion.getParentFile(), vdocRootMeta,
-							MarkerType.VDOC_ROOT);
+						this.factory.storeToIndex(ctx, true, this.cmfObject, content, vdocVersion.getParentFile(),
+							vdocRootMeta, MarkerType.VDOC_ROOT);
 						vdocRootIndexed = true;
 					}
 
@@ -656,10 +694,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					versionProps.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, StringUtils.join(aspects, ','));
 					final File vdocVersionMeta = this.factory.generateMetadataFile(versionProps, this.cmfObject,
 						vdocVersion);
-					this.factory.storeToIndex(ctx, true, this.cmfObject, vdocVersion, vdocVersionMeta,
+					this.factory.storeToIndex(ctx, true, this.cmfObject, content, vdocVersion, vdocVersionMeta,
 						MarkerType.VDOC_VERSION);
 				}
-				this.factory.storeToIndex(ctx, false, this.cmfObject, main, meta,
+				this.factory.storeToIndex(ctx, false, this.cmfObject, content, main, meta,
 					(primaryRendition ? MarkerType.VDOC_STREAM : MarkerType.VDOC_RENDITION));
 
 				CmfProperty<CmfValue> members = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
@@ -690,13 +728,13 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 						createStub(ctx, vdocMember, member.asString());
 						File vdocMemberMeta = this.factory.generateMetadataFile(vdocMemberProperties, this.cmfObject,
 							vdocMember);
-						this.factory.storeToIndex(ctx, false, this.cmfObject, vdocMember, vdocMemberMeta,
+						this.factory.storeToIndex(ctx, false, this.cmfObject, content, vdocMember, vdocMemberMeta,
 							MarkerType.VDOC_REFERENCE);
 					}
 				}
 			} else {
 				final boolean folder = (main.exists() && main.isFile() ? false : true);
-				this.factory.storeToIndex(ctx, folder, this.cmfObject, main, meta, markerType);
+				this.factory.storeToIndex(ctx, folder, this.cmfObject, content, main, meta, markerType);
 
 				// IF (and only if) the document is also the head document, but not the latest
 				// version (i.e. mid-tree "CURRENT", we need to copy everything over to a "new"

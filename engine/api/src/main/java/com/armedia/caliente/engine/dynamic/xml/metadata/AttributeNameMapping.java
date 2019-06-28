@@ -1,10 +1,34 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,13 +42,15 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.ShareableLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataTransformNames.t", propOrder = {
 	"mappings", "defaultTransform"
 })
-public class AttributeNameMapping implements ShareableLockable {
+public class AttributeNameMapping extends BaseShareableLockable {
 
 	private static final boolean DEFAULT_CASE_SENSITIVE = true;
 
@@ -45,9 +71,6 @@ public class AttributeNameMapping implements ShareableLockable {
 	protected Expression defaultTransform;
 
 	@XmlTransient
-	protected final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-
-	@XmlTransient
 	protected List<NameMatcher> matchers = null;
 
 	@XmlTransient
@@ -55,11 +78,6 @@ public class AttributeNameMapping implements ShareableLockable {
 
 	@XmlTransient
 	protected Boolean caseSensitive = null;
-
-	@Override
-	public final ReadWriteLock getShareableLock() {
-		return this.rwLock;
-	}
 
 	public List<MetadataNameMapping> getMappings() {
 		if (this.mappings == null) {
@@ -92,15 +110,15 @@ public class AttributeNameMapping implements ShareableLockable {
 	}
 
 	public void setDefaultTransform(Expression value) {
-		mutexLocked(() -> {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			this.defaultTransform = value;
 			close();
 			initialize(this.caseSensitive);
-		});
+		}
 	}
 
 	public String transformName(final String sqlName) throws ScriptException {
-		return shareLocked(() -> {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			boolean hasGroups = false;
 			String regex = null;
 			Expression repl = null;
@@ -133,15 +151,15 @@ public class AttributeNameMapping implements ShareableLockable {
 			// We have a regular expression, a replacement, and the regex has capturing groups, so
 			// we have to do a replacement
 			return sqlName.replaceAll(regex, value);
-		});
+		}
 	}
 
 	public void close() {
-		mutexLocked(() -> {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			if (this.matchers == null) { return; }
 			this.activeDefault = null;
 			this.caseSensitive = null;
 			this.matchers = null;
-		});
+		}
 	}
 }

@@ -1,0 +1,4 @@
+/target/
+/cmf-validator-faults.*.csv
+/cmf-validator-*.log
+/*Model.xml

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.ucm.model;
 
 import java.io.InputStream;
@@ -7,8 +33,8 @@ import java.util.UUID;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.ucm.BaseTest;
@@ -140,7 +166,7 @@ public class UcmModelTest extends BaseTest {
 				String path = String.format("/%s-non-existent-path-%s", UUID.randomUUID().toString(),
 					UUID.randomUUID().toString());
 				processPaths(model, s, path);
-				Assert.fail(String.format("Did not fail seeking non-existent path [%s]", path));
+				Assertions.fail(String.format("Did not fail seeking non-existent path [%s]", path));
 			} catch (UcmObjectNotFoundException e) {
 				// all is well
 			}
@@ -259,7 +285,7 @@ public class UcmModelTest extends BaseTest {
 
 			try {
 				model.getFile(s, "/");
-				Assert.fail("Did not fail seeking a folder");
+				Assertions.fail("Did not fail seeking a folder");
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
 			}
@@ -282,7 +308,7 @@ public class UcmModelTest extends BaseTest {
 
 			try {
 				model.getFolder(s, "/Caliente 3.0 Concept Document v4.0.docx");
-				Assert.fail("Did not fail seeking a file");
+				Assertions.fail("Did not fail seeking a file");
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
 			}
@@ -302,7 +328,7 @@ public class UcmModelTest extends BaseTest {
 
 			try {
 				model.getFile(s, "/");
-				Assert.fail("Did not fail seeking a folder");
+				Assertions.fail("Did not fail seeking a folder");
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
 			}

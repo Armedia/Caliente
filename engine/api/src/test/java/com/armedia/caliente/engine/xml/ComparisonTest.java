@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.xml;
 
 import java.net.URI;
@@ -11,8 +37,8 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.store.CmfValue;
@@ -32,21 +58,21 @@ public class ComparisonTest {
 
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.INTEGER, pairs);
-		pairs.add(Pair.of(new Integer(1), new Integer(1)));
-		pairs.add(Pair.of(new Integer(42423), new Integer(42423)));
+		pairs.add(Pair.of(Integer.valueOf(1), Integer.valueOf(1)));
+		pairs.add(Pair.of(Integer.valueOf(42423), Integer.valueOf(42423)));
 
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.BOOLEAN, pairs);
-		pairs.add(Pair.of(new Boolean(true), new Boolean(true)));
-		pairs.add(Pair.of(new Boolean(false), new Boolean(false)));
+		pairs.add(Pair.of(Boolean.valueOf(true), Boolean.valueOf(true)));
+		pairs.add(Pair.of(Boolean.valueOf(false), Boolean.valueOf(false)));
 
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.DOUBLE, pairs);
-		pairs.add(Pair.of(new Double(1.00001), new Double(1.00001)));
-		pairs.add(Pair.of(new Float(1.00001), new Float(1.00001)));
-		pairs.add(Pair.of(new Double(Double.NaN), new Double(Double.NaN)));
-		pairs.add(Pair.of(new Double(Double.POSITIVE_INFINITY), new Double(Double.POSITIVE_INFINITY)));
-		pairs.add(Pair.of(new Double(Double.NEGATIVE_INFINITY), new Double(Double.NEGATIVE_INFINITY)));
+		pairs.add(Pair.of(Double.valueOf(1.00001), Double.valueOf(1.00001)));
+		pairs.add(Pair.of(Float.valueOf(1.00001f), Float.valueOf(1.00001f)));
+		pairs.add(Pair.of(Double.valueOf(Double.NaN), Double.valueOf(Double.NaN)));
+		pairs.add(Pair.of(Double.valueOf(Double.POSITIVE_INFINITY), Double.valueOf(Double.POSITIVE_INFINITY)));
+		pairs.add(Pair.of(Double.valueOf(Double.NEGATIVE_INFINITY), Double.valueOf(Double.NEGATIVE_INFINITY)));
 
 		Calendar c = Calendar.getInstance();
 		pairs = new ArrayList<>();
@@ -72,27 +98,25 @@ public class ComparisonTest {
 
 		for (CmfValue.Type t : data.keySet()) {
 			for (Pair<?, ?> p : data.get(t)) {
-				Assert.assertTrue(
-					String.format("Equality test failed between [%s] and [%s]", p.getLeft(), p.getRight()),
-					comp.check(t, p.getLeft(), p.getRight()));
-				Assert.assertFalse(
-					String.format("Inequality test failed between [%s] and [%s]", p.getLeft(), p.getRight()),
-					ncomp.check(t, p.getLeft(), p.getRight()));
+				Assertions.assertTrue(comp.check(t, p.getLeft(), p.getRight()),
+					String.format("Equality test failed between [%s] and [%s]", p.getLeft(), p.getRight()));
+				Assertions.assertFalse(ncomp.check(t, p.getLeft(), p.getRight()),
+					String.format("Inequality test failed between [%s] and [%s]", p.getLeft(), p.getRight()));
 
-				Assert.assertFalse(String.format("Equality test failed between [%s] and [%s]", null, p.getRight()),
-					comp.check(t, null, p.getRight()));
-				Assert.assertTrue(String.format("Inequality test failed between [%s] and [%s]", null, p.getRight()),
-					ncomp.check(t, null, p.getRight()));
+				Assertions.assertFalse(comp.check(t, null, p.getRight()),
+					String.format("Equality test failed between [%s] and [%s]", null, p.getRight()));
+				Assertions.assertTrue(ncomp.check(t, null, p.getRight()),
+					String.format("Inequality test failed between [%s] and [%s]", null, p.getRight()));
 
 				if (t == CmfValue.Type.STRING) {
 					// Also try the case-insensitive variants
 					String left = Tools.toString(p.getLeft()).toLowerCase();
 					String right = Tools.toString(p.getRight()).toUpperCase();
 
-					Assert.assertTrue(String.format("Equality (CI) test failed between [%s] and [%s]", left, right),
-						compi.check(t, p.getLeft(), p.getRight()));
-					Assert.assertFalse(String.format("Inequality (CI) test failed between [%s] and [%s]", left, right),
-						ncompi.check(t, p.getLeft(), p.getRight()));
+					Assertions.assertTrue(compi.check(t, p.getLeft(), p.getRight()),
+						String.format("Equality (CI) test failed between [%s] and [%s]", left, right));
+					Assertions.assertFalse(ncompi.check(t, p.getLeft(), p.getRight()),
+						String.format("Inequality (CI) test failed between [%s] and [%s]", left, right));
 				}
 			}
 		}
@@ -102,21 +126,21 @@ public class ComparisonTest {
 		// Test two known-different values for inequality
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.INTEGER, pairs);
-		pairs.add(Pair.of(new Integer(1), new Integer(2)));
-		pairs.add(Pair.of(new Integer(42423), new Integer(42424)));
+		pairs.add(Pair.of(Integer.valueOf(1), Integer.valueOf(2)));
+		pairs.add(Pair.of(Integer.valueOf(42423), Integer.valueOf(42424)));
 
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.BOOLEAN, pairs);
-		pairs.add(Pair.of(new Boolean(true), new Boolean(false)));
-		pairs.add(Pair.of(new Boolean(false), new Boolean(true)));
+		pairs.add(Pair.of(Boolean.valueOf(true), Boolean.valueOf(false)));
+		pairs.add(Pair.of(Boolean.valueOf(false), Boolean.valueOf(true)));
 
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.DOUBLE, pairs);
-		pairs.add(Pair.of(new Double(1.00001), new Double(1.00002)));
-		pairs.add(Pair.of(new Float(1.00002), new Float(1.00001)));
-		pairs.add(Pair.of(new Double(Double.NaN), new Double(0.0)));
-		pairs.add(Pair.of(new Double(Double.POSITIVE_INFINITY), new Double(Double.NEGATIVE_INFINITY)));
-		pairs.add(Pair.of(new Double(Double.NEGATIVE_INFINITY), new Double(Double.POSITIVE_INFINITY)));
+		pairs.add(Pair.of(Double.valueOf(1.00001), Double.valueOf(1.00002)));
+		pairs.add(Pair.of(Float.valueOf(1.00002f), Float.valueOf(1.00001f)));
+		pairs.add(Pair.of(Double.valueOf(Double.NaN), Double.valueOf(0.0)));
+		pairs.add(Pair.of(Double.valueOf(Double.POSITIVE_INFINITY), Double.valueOf(Double.NEGATIVE_INFINITY)));
+		pairs.add(Pair.of(Double.valueOf(Double.NEGATIVE_INFINITY), Double.valueOf(Double.POSITIVE_INFINITY)));
 
 		pairs = new ArrayList<>();
 		data.put(CmfValue.Type.DATETIME, pairs);
@@ -137,9 +161,8 @@ public class ComparisonTest {
 
 		for (CmfValue.Type t : data.keySet()) {
 			for (Pair<?, ?> p : data.get(t)) {
-				Assert.assertFalse(
-					String.format("Inequality test failed between [%s] and [%s]", p.getLeft(), p.getRight()),
-					comp.check(t, p.getLeft(), p.getRight()));
+				Assertions.assertFalse(comp.check(t, p.getLeft(), p.getRight()),
+					String.format("Inequality test failed between [%s] and [%s]", p.getLeft(), p.getRight()));
 			}
 		}
 	}

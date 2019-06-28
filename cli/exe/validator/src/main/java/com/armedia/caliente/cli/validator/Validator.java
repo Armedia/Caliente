@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.cli.validator;
 
 import java.io.Closeable;
@@ -48,9 +74,11 @@ import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.tools.xml.XmlProperties;
-import com.armedia.commons.utilities.BinaryEncoding;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.codec.BinaryEncoding;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public class Validator extends BaseShareableLockable {
 
@@ -207,26 +235,22 @@ public class Validator extends BaseShareableLockable {
 		}
 
 		private static Map<AlfrescoDataType, ValueComparator> MAP = null;
-
-		public static ValueComparator getComparator(AlfrescoDataType type) {
-			if (ValueComparator.MAP == null) {
-				synchronized (ValueComparator.class) {
-					if (ValueComparator.MAP == null) {
-						Map<AlfrescoDataType, ValueComparator> m = new EnumMap<>(AlfrescoDataType.class);
-						for (ValueComparator c : ValueComparator.values()) {
-							for (AlfrescoDataType t : c.supported) {
-								ValueComparator C = m.put(t, c);
-								if (C != null) {
-									throw new IllegalStateException(String.format(
-										"Comparators %s and %s both support type %s - this is not permitted, only one should support it",
-										c.name(), C.name(), t.name()));
-								}
-							}
-						}
-						ValueComparator.MAP = Tools.freezeMap(m);
+		static {
+			Map<AlfrescoDataType, ValueComparator> m = new EnumMap<>(AlfrescoDataType.class);
+			for (ValueComparator c : ValueComparator.values()) {
+				for (AlfrescoDataType t : c.supported) {
+					ValueComparator C = m.put(t, c);
+					if (C != null) {
+						throw new IllegalStateException(String.format(
+							"Comparators %s and %s both support type %s - this is not permitted, only one should support it",
+							c.name(), C.name(), t.name()));
 					}
 				}
 			}
+			ValueComparator.MAP = Tools.freezeMap(m);
+		}
+
+		public static ValueComparator getComparator(AlfrescoDataType type) {
 			return Tools.coalesce(ValueComparator.MAP.get(type), ValueComparator.OBJECT);
 		}
 	}
@@ -492,11 +516,11 @@ public class Validator extends BaseShareableLockable {
 				} catch (InterruptedException e) {
 					// Log the error...
 					Validator.LOG.error("Failed to submit the file [{}] for processing - workers no longer working",
-						file.toAbsolutePath().toString(), e);
+						file.toRealPath().toString(), e);
 					return FileVisitResult.TERMINATE;
 				} catch (Exception e) {
 					Validator.LOG.error("Failed to submit the file [{}] for processing - unexpected exception caught",
-						file.toAbsolutePath().toString(), e);
+						file.toRealPath().toString(), e);
 				}
 			}
 			return FileVisitResult.CONTINUE;
@@ -506,7 +530,7 @@ public class Validator extends BaseShareableLockable {
 
 		@Override
 		public final FileVisitResult visitFileFailed(Path file, IOException exception) throws IOException {
-			Validator.this.log.warn("Failed to visit the file at [{}]", file.toAbsolutePath(), exception);
+			Validator.this.log.warn("Failed to visit the file at [{}]", file.toRealPath(), exception);
 			// We continue b/c we need to keep trying...
 			return FileVisitResult.CONTINUE;
 		}
@@ -909,7 +933,7 @@ public class Validator extends BaseShareableLockable {
 	}
 
 	public void validate(final Path sourcePath) {
-		shareLocked(() -> {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (this.closed.get()) { throw new IllegalStateException("This validator has been closed, but not reset"); }
 			// Validate the source file against the target...
 			final Path relativePath = this.sourceRoot.relativize(sourcePath);
@@ -967,7 +991,7 @@ public class Validator extends BaseShareableLockable {
 				(validated ? this.successCount : this.failureCount).incrementAndGet();
 				this.log.info("Validation for [{}] {}", relativePath.toString(), validated ? "PASSED" : "FAILED");
 			}
-		});
+		}
 	}
 
 	private void resetState() {
@@ -977,7 +1001,7 @@ public class Validator extends BaseShareableLockable {
 	}
 
 	public void writeAndClear() throws IOException {
-		mutexLocked(() -> {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			try {
 				for (ValidationErrorType t : this.errors.keySet()) {
 					closeQuietly(this.errors.get(t));
@@ -990,7 +1014,7 @@ public class Validator extends BaseShareableLockable {
 				resetState();
 				this.closed.set(true);
 			}
-		});
+		}
 	}
 
 	private void closeQuietly(Closeable c) {

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.dynamic;
 
 import java.util.ArrayList;
@@ -60,7 +86,7 @@ public class DynamicValue extends CmfBaseSetting {
 		CmfValueCodec<V> codec = translator.getCodec(property.getType());
 		if (isMultivalued()) {
 			for (V raw : property) {
-				CmfValue v = codec.encodeValue(raw);
+				CmfValue v = codec.encode(raw);
 				if ((v != null) && !v.isNull()) {
 					this.values.add(this.type.getValue(v));
 				} else {
@@ -68,7 +94,7 @@ public class DynamicValue extends CmfBaseSetting {
 				}
 			}
 		} else {
-			CmfValue v = codec.encodeValue(property.getValue());
+			CmfValue v = codec.encode(property.getValue());
 			if ((v != null) && !v.isNull()) {
 				this.value = this.type.getValue(v);
 			} else {

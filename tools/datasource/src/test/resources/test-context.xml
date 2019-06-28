@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans   http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+						http://www.springframework.org/schema/aop     http://www.springframework.org/schema/aop/spring-aop-4.3.xsd">
+
+	<bean name="springDataSourceLocator" class="com.armedia.caliente.tools.datasource.spring.SpringDataSourceLocator" />
+
+	<bean name="ds00" class="org.apache.commons.dbcp2.BasicDataSource">
+	    <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+	    <property name="url" value="jdbc:h2:mem:testdb01" />
+	    <property name="username" value="sa" />
+	    <property name="password" value="sa" />
+	</bean>
+
+	<bean name="ds02" class="org.apache.commons.dbcp2.BasicDataSource">
+	    <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+	    <property name="url" value="jdbc:h2:mem:testdb02" />
+	    <property name="username" value="sa" />
+	    <property name="password" value="sa" />
+	</bean>
+
+
+	<bean name="ds04" class="org.apache.commons.dbcp2.BasicDataSource">
+	    <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+	    <property name="url" value="jdbc:h2:mem:testdb04" />
+	    <property name="username" value="sa" />
+	    <property name="password" value="sa" />
+	</bean>
+
+
+	<bean name="ds06" class="org.apache.commons.dbcp2.BasicDataSource">
+	    <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+	    <property name="url" value="jdbc:h2:mem:testdb06" />
+	    <property name="username" value="sa" />
+	    <property name="password" value="sa" />
+	</bean>
+
+
+	<bean name="ds08" class="org.apache.commons.dbcp2.BasicDataSource">
+	    <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+	    <property name="url" value="jdbc:h2:mem:testdb08" />
+	    <property name="username" value="sa" />
+	    <property name="password" value="sa" />
+	</bean>
+
+</beans>

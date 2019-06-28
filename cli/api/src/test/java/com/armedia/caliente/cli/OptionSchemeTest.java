@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.cli;
 
 import java.nio.ByteBuffer;
@@ -5,8 +31,8 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.DuplicateOptionException;
@@ -18,19 +44,19 @@ public class OptionSchemeTest {
 	@Test
 	public void testConstructor() {
 		OptionScheme cl = new OptionScheme("test");
-		Assert.assertNotNull(cl);
+		Assertions.assertNotNull(cl);
 	}
 
 	@Test
 	public void testDefine() throws Exception {
 		OptionScheme cl = new OptionScheme("test");
-		Assert.assertNotNull(cl);
+		Assertions.assertNotNull(cl);
 
 		OptionImpl def = null;
 
 		try {
 			cl.add(def);
-			Assert.fail("Did not fail with a null parameter");
+			Assertions.fail("Did not fail with a null parameter");
 		} catch (NullPointerException e) {
 			// All is well
 		}
@@ -38,7 +64,7 @@ public class OptionSchemeTest {
 		def = new OptionImpl();
 		try {
 			cl.add(def);
-			Assert.fail("Did not fail with no short or long options");
+			Assertions.fail("Did not fail with no short or long options");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
@@ -64,7 +90,7 @@ public class OptionSchemeTest {
 				} else {
 					try {
 						def.setShortOpt(c);
-						Assert.fail(String.format("Did not fail with illegal character [%s]", c));
+						Assertions.fail(String.format("Did not fail with illegal character [%s]", c));
 					} catch (IllegalArgumentException e) {
 						// All is well
 					}
@@ -77,7 +103,7 @@ public class OptionSchemeTest {
 					} else {
 						try {
 							def.setLongOpt(longOpt);
-							Assert.fail(String.format("Did not fail with illegal character [%s]", c));
+							Assertions.fail(String.format("Did not fail with illegal character [%s]", c));
 						} catch (IllegalArgumentException e) {
 							// All is well
 						}
@@ -92,17 +118,17 @@ public class OptionSchemeTest {
 						p = cl.getOption(c);
 					}
 					if (!Character.isLetterOrDigit(c) && (c != '?') && (c != '$')) {
-						Assert.fail(String.format("Did not fail with illegal character [%s]", c));
+						Assertions.fail(String.format("Did not fail with illegal character [%s]", c));
 					}
-					Assert.assertTrue(Option.isIdentical(def, p));
+					Assertions.assertTrue(Option.isIdentical(def, p));
 				} catch (IllegalArgumentException e) {
 					if (Character.isLetterOrDigit(c)) {
-						Assert.fail(String.format("Failed with legal character [%s]", c));
+						Assertions.fail(String.format("Failed with legal character [%s]", c));
 					}
 				} catch (DuplicateOptionException e) {
 					if (c != '?') {
 						if (longOpt == null) {
-							Assert.fail(String.format(
+							Assertions.fail(String.format(
 								"Duplicate exception caught when no duplicate was in play (%s) existing = [%s] incoming = [%s]",
 								c, e.getExisting().getKey(), e.getIncoming().getKey()));
 						}
@@ -114,21 +140,21 @@ public class OptionSchemeTest {
 		def = new OptionImpl();
 		try {
 			def.setLongOpt("");
-			Assert.fail("Did not fail with an empty long option");
+			Assertions.fail("Did not fail with an empty long option");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 
 		try {
 			def.setLongOpt("a");
-			Assert.fail("Did not fail with a length-1 long option");
+			Assertions.fail("Did not fail with a length-1 long option");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 
 		try {
 			def.setLongOpt("  ");
-			Assert.fail("Did not fail with a long option with spaces");
+			Assertions.fail("Did not fail with a long option with spaces");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
@@ -136,27 +162,27 @@ public class OptionSchemeTest {
 		def.setLongOpt("ab");
 		cl.add(def);
 		Option p = cl.getOption(def.getLongOpt());
-		Assert.assertEquals(p, p);
-		Assert.assertNotEquals(p, null);
-		Assert.assertNotEquals(p, "");
-		// Assert.assertSame(cl, p.getParameterSchemeValues());
-		Assert.assertTrue(Option.isIdentical(def, p));
+		Assertions.assertEquals(p, p);
+		Assertions.assertNotEquals(p, null);
+		Assertions.assertNotEquals(p, "");
+		// Assertions.assertSame(cl, p.getParameterSchemeValues());
+		Assertions.assertTrue(Option.isIdentical(def, p));
 
 		cl.add(def);
 		Option p2 = cl.getOption(def.getLongOpt());
-		Assert.assertSame(p, p2);
+		Assertions.assertSame(p, p2);
 
 		def.setLongOpt("cd");
 		cl.add(def);
 		p2 = cl.getOption(def.getLongOpt());
-		Assert.assertSame(p, p2);
-		Assert.assertTrue(Option.isIdentical(def, p2));
-		Assert.assertEquals(p, p2);
+		Assertions.assertSame(p, p2);
+		Assertions.assertTrue(Option.isIdentical(def, p2));
+		Assertions.assertEquals(p, p2);
 
 		def.setShortOpt('x');
 		try {
 			cl.add(def);
-			Assert.fail(String.format("Did not fail with a duplicate option"));
+			Assertions.fail(String.format("Did not fail with a duplicate option"));
 		} catch (DuplicateOptionException e) {
 			// All is well
 		}
@@ -165,7 +191,7 @@ public class OptionSchemeTest {
 	@Test
 	public void testIterator() throws Exception {
 		OptionScheme cl = new OptionScheme("test");
-		Assert.assertNotNull(cl);
+		Assertions.assertNotNull(cl);
 
 		OptionImpl def = new OptionImpl();
 		Map<String, Option> m = new HashMap<>();
@@ -181,7 +207,7 @@ public class OptionSchemeTest {
 				// We're OK here...
 				continue;
 			}
-			Assert.assertTrue(String.format("Unexpected long option [%s]", longOpt), m.containsKey(longOpt));
+			Assertions.assertTrue(m.containsKey(longOpt), String.format("Unexpected long option [%s]", longOpt));
 		}
 	}
 
@@ -197,8 +223,8 @@ public class OptionSchemeTest {
 			.setLongOpt("help") //
 		;
 
-		Assert.assertNotNull(help);
-		Assert.assertNotNull(help.getKey());
+		Assertions.assertNotNull(help);
+		Assertions.assertNotNull(help.getKey());
 
 		String[] args = {
 			"-a", "true", //
@@ -226,7 +252,7 @@ public class OptionSchemeTest {
 		);
 
 		result = parser.parse(cl, null, args);
-		Assert.assertNotNull(result);
+		Assertions.assertNotNull(result);
 
 		args = new String[] {
 			"-a", "true", //
@@ -236,7 +262,7 @@ public class OptionSchemeTest {
 
 		try {
 			result = parser.parse(help, cl, null, args);
-			Assert.fail("Did not raise a command line syntax exception when the syntax was incorrect");
+			Assertions.fail("Did not raise a command line syntax exception when the syntax was incorrect");
 		} catch (CommandLineSyntaxException e) {
 			// All is well
 		}
@@ -249,7 +275,7 @@ public class OptionSchemeTest {
 
 		try {
 			result = parser.parse(help, cl, null, args);
-			Assert.fail("Did not raise a help exception when help was requested");
+			Assertions.fail("Did not raise a help exception when help was requested");
 		} catch (HelpRequestedException e) {
 			// All is well
 		}
@@ -267,8 +293,8 @@ public class OptionSchemeTest {
 			.setLongOpt("help") //
 		;
 
-		Assert.assertNotNull(help);
-		Assert.assertNotNull(help.getKey());
+		Assertions.assertNotNull(help);
+		Assertions.assertNotNull(help.getKey());
 
 		String[] args = {
 			"-a", "true", //
@@ -309,7 +335,7 @@ public class OptionSchemeTest {
 		};
 
 		result = parser.parse(cl, extender, args);
-		Assert.assertNotNull(result);
+		Assertions.assertNotNull(result);
 
 		args = new String[] {
 			"-a", "true", //
@@ -319,7 +345,7 @@ public class OptionSchemeTest {
 
 		try {
 			result = parser.parse(help, cl, extender, args);
-			Assert.fail("Did not raise a command line syntax exception when the syntax was incorrect");
+			Assertions.fail("Did not raise a command line syntax exception when the syntax was incorrect");
 		} catch (CommandLineSyntaxException e) {
 			// All is well
 		}
@@ -332,7 +358,7 @@ public class OptionSchemeTest {
 
 		try {
 			result = parser.parse(help, cl, extender, args);
-			Assert.fail("Did not raise a help exception when help was requested");
+			Assertions.fail("Did not raise a help exception when help was requested");
 		} catch (HelpRequestedException e) {
 			// All is well
 		}
@@ -342,7 +368,7 @@ public class OptionSchemeTest {
 	@Test
 	public void testGetBoolean() throws Exception {
 		OptionScheme cl = new OptionScheme("test");
-
+	
 		String[] args = {
 			"-a", "true", //
 			"-b", "false", //
@@ -350,7 +376,7 @@ public class OptionSchemeTest {
 			"-d", "garbage", //
 			"-f", //
 		};
-
+	
 		OptionImpl def = new OptionImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
@@ -373,36 +399,36 @@ public class OptionSchemeTest {
 		def.setMaxValueCount(0);
 		cl.add(def);
 		Option f = cl.getParameter(def);
-
+	
 		cl.parse("TEST", args);
-
-		Assert.assertTrue("a", a.getBoolean());
-		Assert.assertTrue("a-def", a.getBoolean(false));
-		Assert.assertFalse("b", b.getBoolean());
-		Assert.assertFalse("b-def", b.getBoolean(true));
-		Assert.assertEquals("a-dual", b.getBoolean(), cl.getBoolean(b));
-		Assert.assertEquals("a-dual-def", b.getBoolean(false), cl.getBoolean(b, false));
+	
+		Assertions.assertTrue("a", a.getBoolean());
+		Assertions.assertTrue("a-def", a.getBoolean(false));
+		Assertions.assertFalse("b", b.getBoolean());
+		Assertions.assertFalse("b-def", b.getBoolean(true));
+		Assertions.assertEquals("a-dual", b.getBoolean(), cl.getBoolean(b));
+		Assertions.assertEquals("a-dual-def", b.getBoolean(false), cl.getBoolean(b, false));
 		List<Boolean> C = c.getAllBooleans();
-		Assert.assertNotNull(C);
+		Assertions.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
-		Assert.assertEquals(CS.size(), C.size());
+		Assertions.assertEquals(CS.size(), C.size());
 		for (int i = 0; i < CS.size(); i++) {
 			Boolean v = Boolean.valueOf(CS.get(i));
-			Assert.assertEquals(v, C.get(i));
+			Assertions.assertEquals(v, C.get(i));
 		}
-		Assert.assertFalse("d", d.getBoolean());
-		Assert.assertNull("e", e.getBoolean());
-		Assert.assertNull("e-all", e.getAllBooleans());
-		Assert.assertTrue("e-def-true", e.getBoolean(true));
-		Assert.assertFalse("e-def-false", e.getBoolean(false));
-		Assert.assertNull("f", f.getBoolean());
-		Assert.assertTrue("f-all", f.getAllBooleans().isEmpty());
+		Assertions.assertFalse("d", d.getBoolean());
+		Assertions.assertNull("e", e.getBoolean());
+		Assertions.assertNull("e-all", e.getAllBooleans());
+		Assertions.assertTrue("e-def-true", e.getBoolean(true));
+		Assertions.assertFalse("e-def-false", e.getBoolean(false));
+		Assertions.assertNull("f", f.getBoolean());
+		Assertions.assertTrue("f-all", f.getAllBooleans().isEmpty());
 	}
-
+	
 	@Test
 	public void testGetInteger() throws Exception {
 		OptionScheme cl = new OptionScheme("test");
-
+	
 		String[] args = {
 			"-a", "1", //
 			"-b", "2", //
@@ -410,7 +436,7 @@ public class OptionSchemeTest {
 			"-d", "5", //
 			"-f", //
 		};
-
+	
 		OptionImpl def = new OptionImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
@@ -433,40 +459,40 @@ public class OptionSchemeTest {
 		def.setMaxValueCount(0);
 		cl.add(def);
 		Option f = cl.getParameter(def);
-
+	
 		cl.parse("TEST", args);
-
-		Assert.assertEquals("a", Integer.valueOf(1), a.getInteger());
-		Assert.assertEquals("a-def", 1, a.getInteger(2));
-		Assert.assertEquals("a-dual", b.getInteger(), cl.getInteger(b));
-		Assert.assertEquals("a-dual-def", b.getInteger(2), cl.getInteger(b, 2));
-		Assert.assertEquals("b", Integer.valueOf(2), b.getInteger());
-		Assert.assertEquals("b-def", 2, b.getInteger(3));
+	
+		Assertions.assertEquals("a", Integer.valueOf(1), a.getInteger());
+		Assertions.assertEquals("a-def", 1, a.getInteger(2));
+		Assertions.assertEquals("a-dual", b.getInteger(), cl.getInteger(b));
+		Assertions.assertEquals("a-dual-def", b.getInteger(2), cl.getInteger(b, 2));
+		Assertions.assertEquals("b", Integer.valueOf(2), b.getInteger());
+		Assertions.assertEquals("b-def", 2, b.getInteger(3));
 		List<Integer> C = c.getAllIntegers();
-		Assert.assertNotNull(C);
+		Assertions.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
-		Assert.assertEquals(CS.size(), C.size());
+		Assertions.assertEquals(CS.size(), C.size());
 		for (int i = 0; i < CS.size(); i++) {
 			Integer v = Integer.valueOf(CS.get(i));
-			Assert.assertEquals(v, C.get(i));
+			Assertions.assertEquals(v, C.get(i));
 		}
-		Assert.assertEquals("d", Integer.valueOf(5), d.getInteger());
-		Assert.assertNull("e", e.getInteger());
-		Assert.assertNull("e-all", e.getAllIntegers());
-		Assert.assertEquals("e-def-max", Integer.MAX_VALUE, e.getInteger(Integer.MAX_VALUE));
-		Assert.assertEquals("e-def-min", Integer.MIN_VALUE, e.getInteger(Integer.MIN_VALUE));
+		Assertions.assertEquals("d", Integer.valueOf(5), d.getInteger());
+		Assertions.assertNull("e", e.getInteger());
+		Assertions.assertNull("e-all", e.getAllIntegers());
+		Assertions.assertEquals("e-def-max", Integer.MAX_VALUE, e.getInteger(Integer.MAX_VALUE));
+		Assertions.assertEquals("e-def-min", Integer.MIN_VALUE, e.getInteger(Integer.MIN_VALUE));
 		for (int i = 0; i < 100; i++) {
 			int r = UUID.randomUUID().hashCode();
-			Assert.assertEquals("e-def", r, e.getInteger(r));
+			Assertions.assertEquals("e-def", r, e.getInteger(r));
 		}
-		Assert.assertNull("f", f.getInteger());
-		Assert.assertTrue("f-all", f.getAllIntegers().isEmpty());
+		Assertions.assertNull("f", f.getInteger());
+		Assertions.assertTrue("f-all", f.getAllIntegers().isEmpty());
 	}
-
+	
 	@Test
 	public void testGetLong() throws Exception {
 		OptionScheme cl = new OptionScheme("test");
-
+	
 		String[] args = {
 			"-a", "1", //
 			"-b", "2", //
@@ -474,7 +500,7 @@ public class OptionSchemeTest {
 			"-d", "5", //
 			"-f", //
 		};
-
+	
 		OptionImpl def = new OptionImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
@@ -497,40 +523,40 @@ public class OptionSchemeTest {
 		def.setMaxValueCount(0);
 		cl.add(def);
 		Option f = cl.getParameter(def);
-
+	
 		cl.parse("TEST", args);
-
-		Assert.assertEquals("a", Long.valueOf(1), a.getLong());
-		Assert.assertEquals("a-def", 1, a.getLong(2));
-		Assert.assertEquals("b", Long.valueOf(2), b.getLong());
-		Assert.assertEquals("b-def", 2, b.getLong(3));
-		Assert.assertEquals("a-dual", b.getLong(), cl.getLong(b));
-		Assert.assertEquals("a-dual-def", b.getLong(2), cl.getLong(b, 2));
+	
+		Assertions.assertEquals("a", Long.valueOf(1), a.getLong());
+		Assertions.assertEquals("a-def", 1, a.getLong(2));
+		Assertions.assertEquals("b", Long.valueOf(2), b.getLong());
+		Assertions.assertEquals("b-def", 2, b.getLong(3));
+		Assertions.assertEquals("a-dual", b.getLong(), cl.getLong(b));
+		Assertions.assertEquals("a-dual-def", b.getLong(2), cl.getLong(b, 2));
 		List<Long> C = c.getAllLongs();
-		Assert.assertNotNull(C);
+		Assertions.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
-		Assert.assertEquals(CS.size(), C.size());
+		Assertions.assertEquals(CS.size(), C.size());
 		for (int i = 0; i < CS.size(); i++) {
 			Long v = Long.valueOf(CS.get(i));
-			Assert.assertEquals(v, C.get(i));
+			Assertions.assertEquals(v, C.get(i));
 		}
-		Assert.assertEquals("d", Long.valueOf(5), d.getLong());
-		Assert.assertNull("e", e.getLong());
-		Assert.assertNull("e-all", e.getAllLongs());
-		Assert.assertEquals("e-def-max", Long.MAX_VALUE, e.getLong(Long.MAX_VALUE));
-		Assert.assertEquals("e-def-min", Long.MIN_VALUE, e.getLong(Long.MIN_VALUE));
+		Assertions.assertEquals("d", Long.valueOf(5), d.getLong());
+		Assertions.assertNull("e", e.getLong());
+		Assertions.assertNull("e-all", e.getAllLongs());
+		Assertions.assertEquals("e-def-max", Long.MAX_VALUE, e.getLong(Long.MAX_VALUE));
+		Assertions.assertEquals("e-def-min", Long.MIN_VALUE, e.getLong(Long.MIN_VALUE));
 		for (int i = 0; i < 100; i++) {
 			long r = UUID.randomUUID().hashCode() * UUID.randomUUID().hashCode();
-			Assert.assertEquals("e-def", r, e.getLong(r));
+			Assertions.assertEquals("e-def", r, e.getLong(r));
 		}
-		Assert.assertNull("f", f.getLong());
-		Assert.assertTrue("f-all", f.getAllLongs().isEmpty());
+		Assertions.assertNull("f", f.getLong());
+		Assertions.assertTrue("f-all", f.getAllLongs().isEmpty());
 	}
-
+	
 	@Test
 	public void testGetFloat() throws Exception {
 		OptionScheme cl = new OptionScheme("test");
-
+	
 		String[] args = {
 			"-a", "1.1", //
 			"-b", "2.2", //
@@ -538,7 +564,7 @@ public class OptionSchemeTest {
 			"-d", "5.5", //
 			"-f", //
 		};
-
+	
 		OptionImpl def = new OptionImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
@@ -561,39 +587,39 @@ public class OptionSchemeTest {
 		def.setMaxValueCount(0);
 		cl.add(def);
 		Option f = cl.getParameter(def);
-
+	
 		cl.parse("TEST", args);
-
-		Assert.assertEquals("a", Float.valueOf(1.1f), a.getFloat());
-		Assert.assertEquals("a-def", Float.valueOf(1.1f), a.getFloat(2.2f), 0.0f);
-		Assert.assertEquals("b", Float.valueOf(2.2f), b.getFloat());
-		Assert.assertEquals("b-def", Float.valueOf(2.2f), b.getFloat(1.1f), 0.0f);
-		Assert.assertEquals("a-dual", b.getFloat(), cl.getFloat(b));
-		Assert.assertEquals("a-dual-def", b.getFloat(2), cl.getFloat(b, 2), 0.0f);
+	
+		Assertions.assertEquals("a", Float.valueOf(1.1f), a.getFloat());
+		Assertions.assertEquals("a-def", Float.valueOf(1.1f), a.getFloat(2.2f), 0.0f);
+		Assertions.assertEquals("b", Float.valueOf(2.2f), b.getFloat());
+		Assertions.assertEquals("b-def", Float.valueOf(2.2f), b.getFloat(1.1f), 0.0f);
+		Assertions.assertEquals("a-dual", b.getFloat(), cl.getFloat(b));
+		Assertions.assertEquals("a-dual-def", b.getFloat(2), cl.getFloat(b, 2), 0.0f);
 		List<Float> C = c.getAllFloats();
-		Assert.assertNotNull(C);
+		Assertions.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
-		Assert.assertEquals(CS.size(), C.size());
+		Assertions.assertEquals(CS.size(), C.size());
 		for (int i = 0; i < CS.size(); i++) {
 			Float v = Float.valueOf(CS.get(i));
-			Assert.assertEquals(v, C.get(i));
+			Assertions.assertEquals(v, C.get(i));
 		}
-		Assert.assertEquals("d", Float.valueOf(5.5f), d.getFloat());
-		Assert.assertNull("e", e.getFloat());
-		Assert.assertNull("e-all", e.getAllFloats());
-		Assert.assertEquals("e-def-max", Float.MAX_VALUE, e.getFloat(Float.MAX_VALUE), 0.0f);
-		Assert.assertEquals("e-def-min", Float.MIN_VALUE, e.getFloat(Float.MIN_VALUE), 0.0f);
-		Assert.assertEquals("e-def-nan", Float.NaN, e.getFloat(Float.NaN), 0.0f);
-		Assert.assertEquals("e-def-+inf", Float.POSITIVE_INFINITY, e.getFloat(Float.POSITIVE_INFINITY), 0.0f);
-		Assert.assertEquals("e-def--inf", Float.NEGATIVE_INFINITY, e.getFloat(Float.NEGATIVE_INFINITY), 0.0f);
-		Assert.assertNull("f", f.getFloat());
-		Assert.assertTrue("f-all", f.getAllFloats().isEmpty());
+		Assertions.assertEquals("d", Float.valueOf(5.5f), d.getFloat());
+		Assertions.assertNull("e", e.getFloat());
+		Assertions.assertNull("e-all", e.getAllFloats());
+		Assertions.assertEquals("e-def-max", Float.MAX_VALUE, e.getFloat(Float.MAX_VALUE), 0.0f);
+		Assertions.assertEquals("e-def-min", Float.MIN_VALUE, e.getFloat(Float.MIN_VALUE), 0.0f);
+		Assertions.assertEquals("e-def-nan", Float.NaN, e.getFloat(Float.NaN), 0.0f);
+		Assertions.assertEquals("e-def-+inf", Float.POSITIVE_INFINITY, e.getFloat(Float.POSITIVE_INFINITY), 0.0f);
+		Assertions.assertEquals("e-def--inf", Float.NEGATIVE_INFINITY, e.getFloat(Float.NEGATIVE_INFINITY), 0.0f);
+		Assertions.assertNull("f", f.getFloat());
+		Assertions.assertTrue("f-all", f.getAllFloats().isEmpty());
 	}
-
+	
 	@Test
 	public void testGetDouble() throws Exception {
 		OptionScheme cl = new OptionScheme("test");
-
+	
 		String[] args = {
 			"-a", "1.1", //
 			"-b", "2.2", //
@@ -601,7 +627,7 @@ public class OptionSchemeTest {
 			"-d", "5.5", //
 			"-f", //
 		};
-
+	
 		OptionImpl def = new OptionImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
@@ -624,39 +650,39 @@ public class OptionSchemeTest {
 		def.setMaxValueCount(0);
 		cl.add(def);
 		Option f = cl.getParameter(def);
-
+	
 		cl.parse("TEST", args);
-
-		Assert.assertEquals("a", Double.valueOf(1.1), a.getDouble());
-		Assert.assertEquals("a-def", Double.valueOf(1.1), a.getDouble(2.2), 0.0);
-		Assert.assertEquals("b", Double.valueOf(2.2), b.getDouble());
-		Assert.assertEquals("b-def", Double.valueOf(2.2), b.getDouble(3.3), 0.0);
-		Assert.assertEquals("a-dual", b.getDouble(), cl.getDouble(b));
-		Assert.assertEquals("a-dual-def", b.getDouble(2), cl.getDouble(b, 2), 0.0);
+	
+		Assertions.assertEquals("a", Double.valueOf(1.1), a.getDouble());
+		Assertions.assertEquals("a-def", Double.valueOf(1.1), a.getDouble(2.2), 0.0);
+		Assertions.assertEquals("b", Double.valueOf(2.2), b.getDouble());
+		Assertions.assertEquals("b-def", Double.valueOf(2.2), b.getDouble(3.3), 0.0);
+		Assertions.assertEquals("a-dual", b.getDouble(), cl.getDouble(b));
+		Assertions.assertEquals("a-dual-def", b.getDouble(2), cl.getDouble(b, 2), 0.0);
 		List<Double> C = c.getAllDoubles();
-		Assert.assertNotNull(C);
+		Assertions.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
-		Assert.assertEquals(CS.size(), C.size());
+		Assertions.assertEquals(CS.size(), C.size());
 		for (int i = 0; i < CS.size(); i++) {
 			Double v = Double.valueOf(CS.get(i));
-			Assert.assertEquals(v, C.get(i));
+			Assertions.assertEquals(v, C.get(i));
 		}
-		Assert.assertEquals("d", Double.valueOf(5.5), d.getDouble());
-		Assert.assertNull("e", e.getDouble());
-		Assert.assertNull("e-all", e.getAllDoubles());
-		Assert.assertEquals("e-def-max", Double.MAX_VALUE, e.getDouble(Double.MAX_VALUE), 0.0);
-		Assert.assertEquals("e-def-min", Double.MIN_VALUE, e.getDouble(Double.MIN_VALUE), 0.0);
-		Assert.assertEquals("e-def-nan", Double.NaN, e.getDouble(Double.NaN), 0.0);
-		Assert.assertEquals("e-def-+inf", Double.POSITIVE_INFINITY, e.getDouble(Double.POSITIVE_INFINITY), 0.0);
-		Assert.assertEquals("e-def--inf", Double.NEGATIVE_INFINITY, e.getDouble(Double.NEGATIVE_INFINITY), 0.0);
-		Assert.assertNull("f", f.getDouble());
-		Assert.assertTrue("f-all", f.getAllDoubles().isEmpty());
+		Assertions.assertEquals("d", Double.valueOf(5.5), d.getDouble());
+		Assertions.assertNull("e", e.getDouble());
+		Assertions.assertNull("e-all", e.getAllDoubles());
+		Assertions.assertEquals("e-def-max", Double.MAX_VALUE, e.getDouble(Double.MAX_VALUE), 0.0);
+		Assertions.assertEquals("e-def-min", Double.MIN_VALUE, e.getDouble(Double.MIN_VALUE), 0.0);
+		Assertions.assertEquals("e-def-nan", Double.NaN, e.getDouble(Double.NaN), 0.0);
+		Assertions.assertEquals("e-def-+inf", Double.POSITIVE_INFINITY, e.getDouble(Double.POSITIVE_INFINITY), 0.0);
+		Assertions.assertEquals("e-def--inf", Double.NEGATIVE_INFINITY, e.getDouble(Double.NEGATIVE_INFINITY), 0.0);
+		Assertions.assertNull("f", f.getDouble());
+		Assertions.assertTrue("f-all", f.getAllDoubles().isEmpty());
 	}
-
+	
 	@Test
 	public void testGetString() throws Exception {
 		OptionScheme cl = new OptionScheme("test");
-
+	
 		String[] args = {
 			"-a", "1", //
 			"-b", "2", //
@@ -664,7 +690,7 @@ public class OptionSchemeTest {
 			"-d", "5", //
 			"-f",
 		};
-
+	
 		OptionImpl def = new OptionImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
@@ -687,164 +713,164 @@ public class OptionSchemeTest {
 		def.setMaxValueCount(0);
 		cl.add(def);
 		Option f = cl.getParameter(def);
-
+	
 		cl.parse("TEST", args);
-
-		Assert.assertEquals("a", "1", a.getString());
-		Assert.assertEquals("a-def", "1", a.getString("x"));
-		Assert.assertEquals("b", "2", b.getString());
-		Assert.assertEquals("b-def", "2", b.getString("x"));
-		Assert.assertEquals("a-dual", b.getString(), cl.getString(b));
-		Assert.assertEquals("a-dual-def", b.getString("x"), cl.getString(b, "x"));
+	
+		Assertions.assertEquals("a", "1", a.getString());
+		Assertions.assertEquals("a-def", "1", a.getString("x"));
+		Assertions.assertEquals("b", "2", b.getString());
+		Assertions.assertEquals("b-def", "2", b.getString("x"));
+		Assertions.assertEquals("a-dual", b.getString(), cl.getString(b));
+		Assertions.assertEquals("a-dual-def", b.getString("x"), cl.getString(b, "x"));
 		List<String> C = c.getAllStrings();
-		Assert.assertNotNull(C);
+		Assertions.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
-		Assert.assertEquals(CS.size(), C.size());
+		Assertions.assertEquals(CS.size(), C.size());
 		for (int i = 0; i < CS.size(); i++) {
-			Assert.assertEquals(CS.get(i), C.get(i));
+			Assertions.assertEquals(CS.get(i), C.get(i));
 		}
-		Assert.assertEquals("d", "5", d.getString());
-		Assert.assertEquals("d", "5", d.getString("x"));
-		Assert.assertNull("e", e.getString());
-		Assert.assertNull("e-all", e.getAllStrings());
+		Assertions.assertEquals("d", "5", d.getString());
+		Assertions.assertEquals("d", "5", d.getString("x"));
+		Assertions.assertNull("e", e.getString());
+		Assertions.assertNull("e-all", e.getAllStrings());
 		for (int i = 0; i < 100; i++) {
 			String s = UUID.randomUUID().toString();
-			Assert.assertEquals("e-def", s, e.getString(s));
+			Assertions.assertEquals("e-def", s, e.getString(s));
 		}
-		Assert.assertNull("f", f.getString());
-		Assert.assertTrue("f-all", f.getAllStrings().isEmpty());
+		Assertions.assertNull("f", f.getString());
+		Assertions.assertTrue("f-all", f.getAllStrings().isEmpty());
 	}
-
+	
 	@Test
 	public void testIsPresent() throws Exception {
 		// Short options
 		{
 			OptionScheme cl = new OptionScheme("test");
-
+	
 			String[] args = {
 				"-a", //
 				"-b", "2", //
 				"-c", "3,4", //
 			};
-
+	
 			OptionImpl def = new OptionImpl();
 			def.setShortOpt('a');
 			cl.add(def);
 			Option a = cl.getParameter(def);
-
+	
 			def.setMaxValueCount(1);
 			def.setShortOpt('b');
 			cl.add(def);
 			Option b = cl.getParameter(def);
-
+	
 			def.setMaxValueCount(-1);
 			def.setShortOpt('c');
 			cl.add(def);
 			Option c = cl.getParameter(def);
-
+	
 			def.setShortOpt('d');
 			cl.add(def);
 			Option d = cl.getParameter(def);
-
+	
 			cl.parse("TEST", args);
-
-			Assert.assertTrue(a.isPresent());
-			Assert.assertEquals(a.isPresent(), cl.isPresent(a));
-			Assert.assertTrue(b.isPresent());
-			Assert.assertTrue(c.isPresent());
-			Assert.assertFalse(d.isPresent());
-			Assert.assertEquals(d.isPresent(), cl.isPresent(d));
+	
+			Assertions.assertTrue(a.isPresent());
+			Assertions.assertEquals(a.isPresent(), cl.isPresent(a));
+			Assertions.assertTrue(b.isPresent());
+			Assertions.assertTrue(c.isPresent());
+			Assertions.assertFalse(d.isPresent());
+			Assertions.assertEquals(d.isPresent(), cl.isPresent(d));
 		}
 		// Long options
 		{
 			OptionScheme cl = new OptionScheme("test");
-
+	
 			String[] args = {
 				"--long-a", //
 				"--long-b", "2", //
 				"--long-c", "3,4", //
 			};
-
+	
 			OptionImpl def = new OptionImpl();
 			def.setLongOpt("long-a");
 			cl.add(def);
 			Option a = cl.getParameter(def);
-
+	
 			def.setMaxValueCount(1);
 			def.setLongOpt("long-b");
 			cl.add(def);
 			Option b = cl.getParameter(def);
-
+	
 			def.setMaxValueCount(-1);
 			def.setLongOpt("long-c");
 			cl.add(def);
 			Option c = cl.getParameter(def);
-
+	
 			def.setLongOpt("long-d");
 			cl.add(def);
 			Option d = cl.getParameter(def);
-
+	
 			cl.parse("TEST", args);
-
-			Assert.assertTrue(a.isPresent());
-			Assert.assertEquals(a.isPresent(), cl.isPresent(a));
-			Assert.assertTrue(b.isPresent());
-			Assert.assertTrue(c.isPresent());
-			Assert.assertFalse(d.isPresent());
-			Assert.assertEquals(d.isPresent(), cl.isPresent(d));
+	
+			Assertions.assertTrue(a.isPresent());
+			Assertions.assertEquals(a.isPresent(), cl.isPresent(a));
+			Assertions.assertTrue(b.isPresent());
+			Assertions.assertTrue(c.isPresent());
+			Assertions.assertFalse(d.isPresent());
+			Assertions.assertEquals(d.isPresent(), cl.isPresent(d));
 		}
 	}
-
+	
 	@Test
 	public void testGetRemainingParameters() throws Exception {
 		// With remaining
 		{
 			OptionScheme cl = new OptionScheme("test");
-
+	
 			String[] args = {
 				"-a", "1", //
 				"b", "2", //
 				"c", "3,4", //
 				"d", "5", //
 			};
-
+	
 			OptionImpl def = new OptionImpl();
 			def.setMaxValueCount(1);
 			def.setShortOpt('a');
 			cl.add(def);
 			Option a = cl.getParameter(def);
-
+	
 			cl.parse("TEST", args);
-
-			Assert.assertEquals("a", Integer.valueOf(1), a.getInteger());
+	
+			Assertions.assertEquals("a", Integer.valueOf(1), a.getInteger());
 			List<String> remaining = cl.getPositionalValues();
-			Assert.assertEquals(6, remaining.size());
+			Assertions.assertEquals(6, remaining.size());
 			for (int i = 2; i < args.length; i++) {
-				Assert.assertEquals(args[i], remaining.get(i - 2));
+				Assertions.assertEquals(args[i], remaining.get(i - 2));
 			}
 		}
 		// Without remaining
 		{
 			OptionScheme cl = new OptionScheme("test");
-
+	
 			String[] args = {
 				"-a", "1", //
 			};
-
+	
 			OptionImpl def = new OptionImpl();
 			def.setMaxValueCount(1);
 			def.setShortOpt('a');
 			cl.add(def);
 			Option a = cl.getParameter(def);
-
+	
 			cl.parse("TEST", args);
-
-			Assert.assertEquals("a", Integer.valueOf(1), a.getInteger());
+	
+			Assertions.assertEquals("a", Integer.valueOf(1), a.getInteger());
 			List<String> remaining = cl.getPositionalValues();
-			Assert.assertTrue(remaining.isEmpty());
+			Assertions.assertTrue(remaining.isEmpty());
 		}
 	}
-
+	
 	@Test
 	public void testShortOptions() {
 		OptionScheme cl = new OptionScheme(false);
@@ -865,29 +891,29 @@ public class OptionSchemeTest {
 				cl.add(def);
 				Option p = cl.getParameter(def);
 				shortOptions.add(p);
-				Assert.assertEquals(1, p.compareTo(null));
+				Assertions.assertEquals(1, p.compareTo(null));
 			} catch (IllegalArgumentException e) {
 				if (Character.isLetterOrDigit(c)) {
-					Assert.fail(String.format("Failed with legal character [%s]", c));
+					Assertions.fail(String.format("Failed with legal character [%s]", c));
 				}
 			} catch (DuplicateOptionException e) {
-				Assert.fail(String.format("Duplicate exception caught when no duplicate was in play (%s)", c));
+				Assertions.fail(String.format("Duplicate exception caught when no duplicate was in play (%s)", c));
 			}
 		}
-
+	
 		for (Option expected : shortOptions) {
 			Option actual = cl.getParameter(expected.getShortOpt());
-			Assert.assertEquals(expected, actual);
-			Assert.assertTrue(cl.hasParameter(expected.getShortOpt()));
+			Assertions.assertEquals(expected, actual);
+			Assertions.assertTrue(cl.hasParameter(expected.getShortOpt()));
 		}
-
+	
 		for (Option actual : cl.shortOptions()) {
-			Assert.assertNotNull(actual);
-			Assert.assertTrue(shortOptions.remove(actual));
+			Assertions.assertNotNull(actual);
+			Assertions.assertTrue(shortOptions.remove(actual));
 		}
-		Assert.assertTrue(shortOptions.isEmpty());
+		Assertions.assertTrue(shortOptions.isEmpty());
 	}
-
+	
 	@Test
 	public void testLongOptions() throws Exception {
 		OptionScheme cl = new OptionScheme("");
@@ -899,70 +925,70 @@ public class OptionSchemeTest {
 			cl.add(def);
 			Option p = cl.getParameter(def);
 			longOptions.add(p);
-			Assert.assertEquals(1, p.compareTo(null));
+			Assertions.assertEquals(1, p.compareTo(null));
 		}
-
+	
 		for (Option expected : longOptions) {
 			Option actual = cl.getParameter(expected.getLongOpt());extensionSupport
-			Assert.assertEquals(expected, actual);
-			Assert.assertTrue(cl.hasParameter(expected.getLongOpt()));
+			Assertions.assertEquals(expected, actual);
+			Assertions.assertTrue(cl.hasParameter(expected.getLongOpt()));
 		}
-
+	
 		for (Option actual : cl.longOptions()) {
-			Assert.assertNotNull(actual);
-			Assert.assertTrue(longOptions.remove(actual));
+			Assertions.assertNotNull(actual);
+			Assertions.assertTrue(longOptions.remove(actual));
 		}
-		Assert.assertTrue(longOptions.isEmpty());
+		Assertions.assertTrue(longOptions.isEmpty());
 	}
-
+	
 	@Test
 	public void testGetParameter() throws Exception {
 		OptionScheme cl = new OptionScheme("test");
-		Assert.assertNotNull(cl);
-
+		Assertions.assertNotNull(cl);
+	
 		OptionImpl def = null;
-
+	
 		def = new OptionImpl();
-
+	
 		def.setShortOpt('a');
 		cl.add(def);
 		Option a = cl.getParameter(def);
-
+	
 		def.setShortOpt('b');
 		cl.add(def);
 		Option b = cl.getParameter(def);
-
+	
 		def = new OptionImpl();
-
+	
 		def.setLongOpt("ab");
 		cl.add(def);
 		Option ab = cl.getParameter(def);
-
+	
 		def.setLongOpt("cd");
 		cl.add(def);
 		Option cd = cl.getParameter(def);
-
+	
 		String[] args = {
 			"-a", "--ab"
 		};
-
+	
 		cl.parse("TEST", args);
-
-		Assert.assertTrue(cl.isDefined(a));
-		Assert.assertSame(a, cl.getParameter(a));
-		Assert.assertTrue(cl.isPresent(a));
-
-		Assert.assertTrue(cl.isDefined(b));
-		Assert.assertSame(b, cl.getParameter(b));
-		Assert.assertFalse(cl.isPresent(b));
-
-		Assert.assertTrue(cl.isDefined(ab));
-		Assert.assertSame(ab, cl.getParameter(ab));
-		Assert.assertTrue(cl.isPresent(ab));
-
-		Assert.assertTrue(cl.isDefined(cd));
-		Assert.assertSame(cd, cl.getParameter(cd));
-		Assert.assertFalse(cl.isPresent(cd));
+	
+		Assertions.assertTrue(cl.isDefined(a));
+		Assertions.assertSame(a, cl.getParameter(a));
+		Assertions.assertTrue(cl.isPresent(a));
+	
+		Assertions.assertTrue(cl.isDefined(b));
+		Assertions.assertSame(b, cl.getParameter(b));
+		Assertions.assertFalse(cl.isPresent(b));
+	
+		Assertions.assertTrue(cl.isDefined(ab));
+		Assertions.assertSame(ab, cl.getParameter(ab));
+		Assertions.assertTrue(cl.isPresent(ab));
+	
+		Assertions.assertTrue(cl.isDefined(cd));
+		Assertions.assertSame(cd, cl.getParameter(cd));
+		Assertions.assertFalse(cl.isPresent(cd));
 	}
 	*/
 }

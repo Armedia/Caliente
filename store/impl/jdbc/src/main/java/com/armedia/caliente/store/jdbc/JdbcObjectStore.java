@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 /**
  *
  */
@@ -48,16 +74,17 @@ import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.caliente.store.CmfStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.tools.MimeTools;
-import com.armedia.commons.dslocator.DataSourceDescriptor;
+import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.function.TriConsumer;
 
 /**
- * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
+ *
  *
  */
 public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
@@ -76,9 +103,9 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 	private final Map<JdbcDialect.Query, String> queries;
 	private final CfgTools cfg;
 
-	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData,
-		CfgTools cfg) throws CmfStorageException {
-		super(JdbcOperation.class, true);
+	public JdbcObjectStore(CmfStore<?> parent, DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema,
+		boolean cleanData, CfgTools cfg) throws CmfStorageException {
+		super(parent, JdbcOperation.class, true);
 		if (dataSourceDescriptor == null) {
 			throw new IllegalArgumentException("Must provide a valid DataSource instance");
 		}
@@ -2029,5 +2056,15 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to load the object filter data", e);
 		}
+	}
+
+	@Override
+	protected void clearAllProperties(JdbcOperation operation, String prefix) throws CmfStorageException {
+		this.propertyManager.clearAllProperties(operation, prefix);
+	}
+
+	@Override
+	protected Set<String> getPropertyNames(JdbcOperation operation, String prefix) throws CmfStorageException {
+		return this.propertyManager.getPropertyNames(operation, prefix);
 	}
 }

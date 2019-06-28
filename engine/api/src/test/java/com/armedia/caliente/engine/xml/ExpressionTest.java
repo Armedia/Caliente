@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.xml;
 
 import java.util.Random;
@@ -8,8 +34,8 @@ import java.util.UUID;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
@@ -21,12 +47,12 @@ public class ExpressionTest {
 
 	@Test
 	public void testNull() {
-		Assert.assertNull(Expression.NULL.getLang());
-		Assert.assertNull(Expression.NULL.getScript());
+		Assertions.assertNull(Expression.NULL.getLang());
+		Assertions.assertNull(Expression.NULL.getScript());
 		Expression.NULL.setLang(UUID.randomUUID().toString());
-		Assert.assertNull(Expression.NULL.getLang());
+		Assertions.assertNull(Expression.NULL.getLang());
 		Expression.NULL.setScript(UUID.randomUUID().toString());
-		Assert.assertNull(Expression.NULL.getScript());
+		Assertions.assertNull(Expression.NULL.getScript());
 	}
 
 	@Test
@@ -35,20 +61,20 @@ public class ExpressionTest {
 		Expression e = null;
 
 		e = new Expression();
-		Assert.assertNull(e.getLang());
-		Assert.assertNull(e.getScript());
-		Assert.assertNull(Expression.eval(e, ctx));
+		Assertions.assertNull(e.getLang());
+		Assertions.assertNull(e.getScript());
+		Assertions.assertNull(Expression.eval(e, ctx));
 
 		String value = "               test script # 1            ";
 		e.setScript(value);
-		Assert.assertEquals(value, e.getScript());
-		Assert.assertEquals(value, Expression.eval(e, ctx));
+		Assertions.assertEquals(value, e.getScript());
+		Assertions.assertEquals(value, Expression.eval(e, ctx));
 
 		for (int i = 0; i < 10; i++) {
 			value = UUID.randomUUID().toString();
 			e.setScript(value);
-			Assert.assertEquals(value, e.getScript());
-			Assert.assertEquals(value, Expression.eval(e, ctx));
+			Assertions.assertEquals(value, e.getScript());
+			Assertions.assertEquals(value, Expression.eval(e, ctx));
 		}
 	}
 
@@ -63,21 +89,21 @@ public class ExpressionTest {
 		}
 
 		e = new Expression();
-		Assert.assertNull(e.getLang());
+		Assertions.assertNull(e.getLang());
 
 		for (String l : languages) {
 			try {
 				e.setLang(l);
-				Assert.assertEquals(l, e.getLang());
+				Assertions.assertEquals(l, e.getLang());
 			} catch (IllegalArgumentException ex) {
-				Assert.fail(String.format("Failed with known language [%s]", l));
+				Assertions.fail(String.format("Failed with known language [%s]", l));
 			}
 		}
 
 		try {
 			String badLang = String.format("This language certainly does not exist %s", UUID.randomUUID().toString());
 			e.setLang(badLang);
-			Assert.fail(String.format("Did not fail with known-bad language [%s]", badLang));
+			Assertions.fail(String.format("Did not fail with known-bad language [%s]", badLang));
 		} catch (IllegalArgumentException ex) {
 			// All is well
 		}
@@ -95,7 +121,7 @@ public class ExpressionTest {
 
 		Expression.eval(null, null);
 
-		Assert.assertNull(Expression.eval(null, ctx));
+		Assertions.assertNull(Expression.eval(null, ctx));
 
 		Random random = new Random(System.currentTimeMillis());
 		if (languages.contains("js")) {
@@ -111,7 +137,7 @@ public class ExpressionTest {
 			script = String.format("'%s'", expected);
 			e.setScript(script);
 			actual = Expression.eval(e, ctx);
-			Assert.assertEquals(expected, actual);
+			Assertions.assertEquals(expected, actual);
 
 			script = "vars.get('testValue').value";
 			e.setScript(script);
@@ -123,9 +149,10 @@ public class ExpressionTest {
 				actual = Expression.eval(e, ctx);
 				if (Number.class.isInstance(actual)) {
 					Number n = Number.class.cast(actual);
-					Assert.assertEquals(expectedInt, n.intValue());
+					Assertions.assertEquals(expectedInt, n.intValue());
 				} else {
-					Assert.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
+					Assertions
+						.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
 				}
 			}
 		}
@@ -144,14 +171,14 @@ public class ExpressionTest {
 			script = String.format("def tester = []\ntester << \"%s\"\ntester[0]", expected);
 			e.setScript(script);
 			actual = Expression.eval(e, ctx);
-			Assert.assertEquals(expected, actual);
+			Assertions.assertEquals(expected, actual);
 
 			for (int i = 0; i < 100; i++) {
 				expected = random.nextInt(Integer.MAX_VALUE);
 				script = String.format("def tester = []\ntester << %s\ntester[0]", expected);
 				e.setScript(script);
 				actual = Expression.eval(e, ctx);
-				Assert.assertEquals(expected, actual);
+				Assertions.assertEquals(expected, actual);
 			}
 
 			script = "def tester = vars['testValue'].value\ntester";
@@ -164,9 +191,10 @@ public class ExpressionTest {
 				actual = Expression.eval(e, ctx);
 				if (Number.class.isInstance(actual)) {
 					Number n = Number.class.cast(actual);
-					Assert.assertEquals(expectedInt, n.intValue());
+					Assertions.assertEquals(expectedInt, n.intValue());
 				} else {
-					Assert.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
+					Assertions
+						.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
 				}
 			}
 		}
@@ -185,14 +213,14 @@ public class ExpressionTest {
 			script = String.format("return new java.lang.String(\"%s\").hashCode()", expected);
 			e.setScript(script);
 			actual = Expression.eval(e, ctx);
-			Assert.assertEquals(expected.hashCode(), actual);
+			Assertions.assertEquals(expected.hashCode(), actual);
 
 			for (int i = 0; i < 100; i++) {
 				int number = random.nextInt(Integer.MAX_VALUE);
 				script = String.format("return (%d >> 1)", number);
 				e.setScript(script);
 				actual = Expression.eval(e, ctx);
-				Assert.assertEquals(number >> 1, actual);
+				Assertions.assertEquals(number >> 1, actual);
 			}
 
 			script = "return vars.testValue.value";
@@ -205,9 +233,10 @@ public class ExpressionTest {
 				actual = Expression.eval(e, ctx);
 				if (Number.class.isInstance(actual)) {
 					Number n = Number.class.cast(actual);
-					Assert.assertEquals(expectedInt, n.intValue());
+					Assertions.assertEquals(expectedInt, n.intValue());
 				} else {
-					Assert.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
+					Assertions
+						.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
 				}
 			}
 		}
@@ -226,14 +255,14 @@ public class ExpressionTest {
 			script = String.format("'%s'", expected);
 			e.setScript(script);
 			actual = Expression.eval(e, ctx);
-			Assert.assertEquals(expected, actual);
+			Assertions.assertEquals(expected, actual);
 
 			for (int i = 0; i < 100; i++) {
 				int number = random.nextInt(Integer.MAX_VALUE);
 				script = String.format("(%d / 2)", number);
 				e.setScript(script);
 				actual = Expression.eval(e, ctx);
-				Assert.assertEquals(number >> 1, actual);
+				Assertions.assertEquals(number >> 1, actual);
 			}
 
 			script = "vars.testValue.value";
@@ -246,9 +275,10 @@ public class ExpressionTest {
 				actual = Expression.eval(e, ctx);
 				if (Number.class.isInstance(actual)) {
 					Number n = Number.class.cast(actual);
-					Assert.assertEquals(expectedInt, n.intValue());
+					Assertions.assertEquals(expectedInt, n.intValue());
 				} else {
-					Assert.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
+					Assertions
+						.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
 				}
 			}
 		}
