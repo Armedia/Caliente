@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 /**
  *
  */
@@ -23,10 +49,10 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.tools.dfc.DctmException;
-import com.armedia.caliente.tools.dfc.DfcQuery;
-import com.armedia.caliente.tools.dfc.DfcVersionHistory;
-import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
+import com.armedia.caliente.tools.dfc.DfcVersionHistory;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.function.CheckedFunction;
@@ -51,7 +77,7 @@ import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * @author diego
+ *
  *
  */
 public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDelegate<T> implements DctmSysObject {
@@ -144,13 +170,13 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		List<List<String>> ret = new ArrayList<>();
 		for (int i = 0; i < parentCount; i++) {
 			final IDfId parentId = f.getFolderId(i);
-
+		
 			// Validate that it's a valid ID...
 			if (parentId.isNull() || !parentId.isObjectId()) {
 				this.log.warn("Invalid parent ID [{}] read from object [{}]: [{}]", parentId.toString(), oid);
 				continue;
 			}
-
+		
 			// Retrieve the parent...
 			final IDfFolder parent;
 			try {
@@ -161,10 +187,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 					String.format("DFC NPE Bug triggered by folder with ID [%s], which is a parent of object [%s]",
 						parentId.toString(), oid));
 			}
-
+		
 			// Parent not found...?!?!?!
 			if (parent == null) { throw new DfIdNotFoundException(parentId); }
-
+		
 			final int pathCount = parent.getFolderPathCount();
 			for (int j = 0; j < pathCount; j++) {
 				ret.add(FileNameTools.tokenize(parent.getFolderPath(j), '/'));
@@ -246,8 +272,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 			// Is the object's ACL the same as its parent folder's?
 			if (!aclInheritedSet && isSameACL(object, parent)) {
-				aclInheritedProp
-					.setValue(DfValueFactory.of(String.format("FOLDER[%s]", folderId.asString())));
+				aclInheritedProp.setValue(DfValueFactory.of(String.format("FOLDER[%s]", folderId.asString())));
 				aclInheritedSet = true;
 			}
 			parents.addValue(folderId);
@@ -278,8 +303,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 				try (DfcQuery query = new DfcQuery(session, dql)) {
 					if (query.hasNext()) {
 						if (isSameACL(object, query.next())) {
-							aclInheritedProp
-								.setValue(DfValueFactory.of(String.format("TYPE[%s]", type.getName())));
+							aclInheritedProp.setValue(DfValueFactory.of(String.format("TYPE[%s]", type.getName())));
 							aclInheritedSet = true;
 							break;
 						}
@@ -515,8 +539,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			final String dql = "select distinct r_object_id from dm_sysobject (ALL) where i_chronicle_id = %s and (r_is_virtual_doc = 1 or r_link_cnt > 0) order by 1 ";
 			final IDfId chronicleId = object.getChronicleId();
 			Integer depth = null;
-			try (DfcQuery query = new DfcQuery(session,
-				String.format(dql, DfcUtils.quoteString(chronicleId.getId())))) {
+			try (
+				DfcQuery query = new DfcQuery(session, String.format(dql, DfcUtils.quoteString(chronicleId.getId())))) {
 				// Now iterate over all the virtual document entries so we can cascade
 				while (query.hasNext()) {
 					IDfId id = query.next().getId("r_object_id");

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.tools.dfc;
 
 import java.util.ArrayList;
@@ -40,20 +66,22 @@ public final class DfcVersionHistory<T extends IDfSysObject> implements Iterable
 
 	public DfcVersionHistory(IDfSession session, IDfId chronicleId, Class<T> objectClass)
 		throws DfException, DctmException {
-		if (session == null) { throw new NullPointerException(
-			"Must provide a valid session to read the history with"); }
-		if (chronicleId == null) { throw new NullPointerException(
-			"Must provide a valid chronicle id to read the history for"); }
+		if (session == null) {
+			throw new NullPointerException("Must provide a valid session to read the history with");
+		}
+		if (chronicleId == null) {
+			throw new NullPointerException("Must provide a valid chronicle id to read the history for");
+		}
 
 		this.chronicleId = chronicleId;
 
 		// No existing history, we must calculate it
 		final DfcVersionTree tree = new DfcVersionTree(session, chronicleId);
-		List<DfcVersionNumber> currentPatches = new ArrayList<DfcVersionNumber>();
-		List<DfcVersion<T>> history = new LinkedList<DfcVersion<T>>();
-		Map<IDfId, List<DfcVersionNumber>> patches = new HashMap<IDfId, List<DfcVersionNumber>>();
-		Map<IDfId, String> patchAntecedents = new HashMap<IDfId, String>();
-		Map<IDfId, DfcVersion<T>> mainIndex = new HashMap<IDfId, DfcVersion<T>>();
+		List<DfcVersionNumber> currentPatches = new ArrayList<>();
+		List<DfcVersion<T>> history = new LinkedList<>();
+		Map<IDfId, List<DfcVersionNumber>> patches = new HashMap<>();
+		Map<IDfId, String> patchAntecedents = new HashMap<>();
+		Map<IDfId, DfcVersion<T>> mainIndex = new HashMap<>();
 		DfcVersion<T> currentVersion = null;
 		for (DfcVersionNumber versionNumber : tree.allVersions) {
 			if (tree.totalPatches.contains(versionNumber)) {
@@ -65,9 +93,9 @@ public final class DfcVersionHistory<T extends IDfSysObject> implements Iterable
 			final IDfSysObject obj = IDfSysObject.class.cast(session.getObject(id));
 			final DfcVersion<T> thisVersion;
 			if (objectClass != null) {
-				thisVersion = new DfcVersion<T>(this, versionNumber, objectClass.cast(obj));
+				thisVersion = new DfcVersion<>(this, versionNumber, objectClass.cast(obj));
 			} else {
-				thisVersion = new DfcVersion<T>(this, versionNumber, obj.getObjectId(), obj.getCreationDate(),
+				thisVersion = new DfcVersion<>(this, versionNumber, obj.getObjectId(), obj.getCreationDate(),
 					obj.getAntecedentId());
 			}
 			mainIndex.put(id, thisVersion);
@@ -77,7 +105,7 @@ public final class DfcVersionHistory<T extends IDfSysObject> implements Iterable
 			history.add(thisVersion);
 			if (!currentPatches.isEmpty()) {
 				patches.put(id, Tools.freezeList(currentPatches));
-				currentPatches = new ArrayList<DfcVersionNumber>();
+				currentPatches = new ArrayList<>();
 			}
 
 			DfcVersionNumber alternateAntecedent = tree.alternateAntecedent.get(versionNumber);
@@ -99,7 +127,7 @@ public final class DfcVersionHistory<T extends IDfSysObject> implements Iterable
 			Collections.sort(history);
 		}
 
-		Map<IDfId, Integer> indexes = new HashMap<IDfId, Integer>(history.size());
+		Map<IDfId, Integer> indexes = new HashMap<>(history.size());
 		int i = 0;
 		DfcVersion<T> rootVersion = null;
 		final String idxFmt;
@@ -126,7 +154,7 @@ public final class DfcVersionHistory<T extends IDfSysObject> implements Iterable
 		}
 
 		// Creating a new list here makes it easier for storage and traversal
-		this.history = Tools.freezeList(new ArrayList<DfcVersion<T>>(history));
+		this.history = Tools.freezeList(new ArrayList<>(history));
 		this.indexes = Tools.freezeMap(indexes);
 		this.rootVersion = rootVersion;
 		this.currentVersion = currentVersion;
@@ -180,15 +208,18 @@ public final class DfcVersionHistory<T extends IDfSysObject> implements Iterable
 	}
 
 	public DfcVersion<T> getAntecedent(DfcVersion<T> version) {
-		if (version == null) { throw new IllegalArgumentException(
-			"Must provide a version whose antecedent to retrieve"); }
+		if (version == null) {
+			throw new IllegalArgumentException("Must provide a version whose antecedent to retrieve");
+		}
 		return getAntecedent(version.getId());
 	}
 
 	public DfcVersion<T> getAntecedent(IDfId objectId) {
 		DfcVersion<T> v = getVersion(objectId);
-		if (v == null) { throw new IllegalArgumentException(
-			String.format("The object ID [%s] does not exist in this version history", objectId)); }
+		if (v == null) {
+			throw new IllegalArgumentException(
+				String.format("The object ID [%s] does not exist in this version history", objectId));
+		}
 		return this.mainIndex.get(v.getAntecedentId());
 	}
 

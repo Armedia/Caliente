@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.ucm;
 
 import java.util.Map;
@@ -153,7 +179,7 @@ public class BaseTest {
 	public void test() throws Exception {
 		final ExportEngine<?, ?, ?, ?, ?, ?> engine = UcmExportEngine.getExportEngine();
 		Logger output = LoggerFactory.getLogger("console");
-
+	
 		Map<String, String> settings = new TreeMap<>();
 		settings.put(UcmSessionSetting.ATOMPUB_URL.getLabel(),
 			"http://armedia-vm.rivera.prv/alfresco/api/-default-/public/cmis/versions/1.0/atom");
@@ -163,7 +189,7 @@ public class BaseTest {
 		// settings.put(CmisSetting.EXPORT_QUERY.getLabel(), "SELECT * FROM cmis:document");
 		settings.put(CmisSetting.EXPORT_PATH.getLabel(), "/Shared");
 		settings.put(CmisSetting.EXPORT_PAGE_SIZE.getLabel(), "5");
-
+	
 		CmfObjectStore<?> objectStore = CmfStores.getObjectStore("default");
 		objectStore.clearProperties();
 		objectStore.clearAllObjects();
