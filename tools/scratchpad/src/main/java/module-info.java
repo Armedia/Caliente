@@ -1,13 +1,28 @@
 module com.armedia.caliente.tools.scratchpad {
 	requires com.armedia.caliente.cli;
+	requires com.armedia.caliente.tools;
 	requires com.armedia.caliente.tools.datasource;
 	requires com.armedia.caliente.tools.dfc;
 	requires com.armedia.commons.utilities;
 	requires com.ctc.wstx;
 	requires dfc;
+	requires jackrabbit.jcr.commons;
+	requires java.management;
 	requires java.xml;
+	requires jcr;
+	requires log4j;
+	requires mongo.java.driver;
+	requires oak.core;
+	requires oak.core.spi;
+	requires oak.jcr;
+	requires oak.query.spi;
+	requires oak.security.spi;
+	requires oak.store.document;
+	requires oak.store.spi;
+	requires org.apache.commons.codec;
 	requires org.apache.commons.io;
 	requires org.apache.commons.lang3;
+	requires org.apache.commons.text;
 	requires org.codehaus.stax2;
 	requires slf4j.api;
 	requires stax.utils;

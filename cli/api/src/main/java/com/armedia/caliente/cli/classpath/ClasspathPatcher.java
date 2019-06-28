@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.cli.classpath;
 
 import java.io.File;
@@ -33,7 +59,7 @@ public abstract class ClasspathPatcher {
 	 * every way.
 	 * </p>
 	 *
-	 * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
+	 *
 	 *
 	 */
 	private static final class CPCL extends URLClassLoader {
@@ -71,11 +97,12 @@ public abstract class ClasspathPatcher {
 	}
 
 	public static final void init() {
-		ClasspathPatcher.LOCK.shareLockedUpgradable(() -> ClasspathPatcher.CL, Objects::isNull, (cl) -> {
-			URLClassLoader ucl = Tools.cast(URLClassLoader.class, Thread.currentThread().getContextClassLoader());
+		ClasspathPatcher.LOCK.shareLockedUpgradable(() -> ClasspathPatcher.CL, Objects::isNull, (oldCl) -> {
+			ClassLoader cl = Thread.currentThread().getContextClassLoader();
+			URLClassLoader ucl = Tools.cast(URLClassLoader.class, cl);
 			ClasspathPatcher.ADD_URL = ClasspathPatcher.getConsumer(ucl);
 			if (ClasspathPatcher.ADD_URL == null) {
-				final CPCL newCl = new CPCL(ClasspathPatcher.NO_URLS, ucl);
+				final CPCL newCl = new CPCL(ClasspathPatcher.NO_URLS, cl);
 				ucl = newCl;
 				Thread.currentThread().setContextClassLoader(newCl);
 				ClasspathPatcher.ADD_URL = newCl::addURL;
