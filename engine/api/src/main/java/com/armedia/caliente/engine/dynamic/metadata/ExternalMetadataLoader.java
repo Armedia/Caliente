@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.dynamic.metadata;
 
 import java.util.ArrayList;
@@ -7,7 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -22,6 +47,8 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public class ExternalMetadataLoader extends BaseShareableLockable {
 
@@ -77,54 +104,42 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 	}
 
 	public void initialize() throws ExternalMetadataException {
-		initialize(null);
-	}
-
-	private void initialize(final Lock r) throws ExternalMetadataException {
-		final Lock w = getMutexLock();
-		if (r != null) {
-			r.unlock();
-		}
-		w.lock();
-		try {
-			if (this.initialized) { return; }
-			for (final MetadataSource src : this.metadata.getMetadataSources()) {
-				try {
-					src.initialize();
-				} catch (Exception e) {
-					throw new ExternalMetadataException(
-						String.format("Failed to initialize the external metadata source [%s]", src.getName()), e);
-				}
-				this.metadataSources.put(src.getName(), src);
-			}
-
-			for (final MetadataSet desc : this.metadata.getMetadataSets()) {
-				if (this.metadataSources.isEmpty()) {
-					throw new ExternalMetadataException(
-						"No metadata sources are defined - this is a configuration error!");
-				}
-				try {
-					desc.initialize(Tools.freezeMap(this.metadataSources));
-				} catch (Exception e) {
-					if (desc.isFailOnError()) {
-						// This item is required, so we must abort
-						throw new ExternalMetadataException("Failed to initialize a required external metadata source",
-							e);
+		shareLockedUpgradable(() -> this.initialized, (t) -> !t, (i) -> {
+			try {
+				for (final MetadataSource src : this.metadata.getMetadataSources()) {
+					try {
+						src.initialize();
+					} catch (Exception e) {
+						throw new ExternalMetadataException(
+							String.format("Failed to initialize the external metadata source [%s]", src.getName()), e);
 					}
+					this.metadataSources.put(src.getName(), src);
 				}
-				this.metadataSets.put(desc.getId(), desc);
-			}
 
-			this.initialized = true;
-		} finally {
-			if (!this.initialized) {
-				closeSources();
+				for (final MetadataSet desc : this.metadata.getMetadataSets()) {
+					if (this.metadataSources.isEmpty()) {
+						throw new ExternalMetadataException(
+							"No metadata sources are defined - this is a configuration error!");
+					}
+					try {
+						desc.initialize(Tools.freezeMap(this.metadataSources));
+					} catch (Exception e) {
+						if (desc.isFailOnError()) {
+							// This item is required, so we must abort
+							throw new ExternalMetadataException(
+								"Failed to initialize a required external metadata source", e);
+						}
+					}
+					this.metadataSets.put(desc.getId(), desc);
+				}
+
+				this.initialized = true;
+			} finally {
+				if (!this.initialized) {
+					closeSources();
+				}
 			}
-			if (r != null) {
-				r.lock();
-			}
-			w.unlock();
-		}
+		});
 	}
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws ExternalMetadataException {
@@ -151,10 +166,8 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, Collection<String> sourceNames)
 		throws ExternalMetadataException {
 		Objects.requireNonNull(object, "Must provide a CmfObject instance to retrieve extra metadata for");
-		final Lock l = getSharedLock();
-		l.lock();
-		try {
-			initialize(l);
+		initialize();
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (sourceNames == null) {
 				sourceNames = this.metadataSets.keySet();
 			}
@@ -198,8 +211,6 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 				finalMap.putAll(m);
 			}
 			return finalMap.isEmpty() ? null : finalMap;
-		} finally {
-			l.unlock();
 		}
 	}
 
@@ -227,13 +238,13 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 	}
 
 	public void close() {
-		mutexLocked(() -> {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			if (!this.initialized) { return; }
 			try {
 				closeSources();
 			} finally {
 				this.initialized = false;
 			}
-		});
+		}
 	}
 }

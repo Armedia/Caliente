@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.store.jdbc;
 
 import java.sql.Connection;
@@ -22,7 +48,9 @@ public class JdbcStorePropertyManager {
 		UPDATE("update %s set value = ? where name = ?"),
 		DELETE("delete from %s where name = ?"),
 		GET_NAMES("select name from %s order by name"),
+		GET_NAMES_PREFIX("select name from %s where name like ? order by name"),
 		DELETE_ALL("delete from %s"),
+		DELETE_ALL_PREFIX("delete from %s where name like ?")
 		//
 		;
 
@@ -140,13 +168,40 @@ public class JdbcStorePropertyManager {
 
 	void clearAllProperties(JdbcOperation operation) throws CmfStorageException {
 		try {
-			clearAllProperties(operation.getConnection());
+			JdbcTools.getQueryRunner().update(operation.getConnection(), getSql(Op.DELETE_ALL));
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to delete all the store properties", e);
 		}
 	}
 
-	void clearAllProperties(Connection c) throws SQLException {
-		JdbcTools.getQueryRunner().update(c, getSql(Op.DELETE_ALL));
+	void clearAllProperties(JdbcOperation operation, String prefix) throws CmfStorageException {
+		try {
+			JdbcTools.getQueryRunner().update(operation.getConnection(), getSql(Op.DELETE_ALL_PREFIX),
+				String.format("%s.%%", prefix));
+		} catch (SQLException e) {
+			throw new CmfStorageException(
+				String.format("Failed to delete all the store properties with the prefix [%s]", prefix), e);
+		}
+	}
+
+	Set<String> getPropertyNames(JdbcOperation operation, final String prefix) throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		try {
+			return JdbcTools.getQueryRunner().query(c, getSql(Op.GET_NAMES), (rs) -> {
+				Set<String> ret = new TreeSet<>();
+				String pfx = String.format("%s.", prefix);
+				while (rs.next()) {
+					String s = rs.getString("name");
+					if (rs.wasNull()) {
+						continue;
+					}
+					ret.add(s.substring(pfx.length()));
+				}
+				return ret;
+			}, String.format("%s.%%", prefix));
+		} catch (SQLException e) {
+			throw new CmfStorageException(
+				String.format("Failed to retrieve the store property names with the prefix [%s]", prefix), e);
+		}
 	}
 }

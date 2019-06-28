@@ -1,0 +1,273 @@
+<?xml version="1.1"?>
+<!--
+<flat-2-db xmlns="http://www.armedia.com/ns/caliente/flat2db" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.armedia.com/ns/caliente/flat2db src/main/resources/flat2db.xsd ">
+-->
+<flat-2-db>
+	<data-sources>
+		<!-- for DB storage -->
+		<data-source id="1" type="pooled">
+			<!-- these will be applied directly to the datasource locator -->
+			<properties>
+				<propertyName>value</propertyName>
+				<propertyName>value</propertyName>
+			</properties>
+
+			<!-- what initializations to perform for the given DataSource -->
+			<startup>
+				<changeset>liquibase-changeset-url-or-file-path</changeset>
+				<rollback-changeset by="tag">value</rollback-changeset>
+				<rollback-changeset by="number">value</rollback-changeset>
+				<rollback-changeset by="date">value</rollback-changeset>
+				<sql-script>sql-script-to-run-on-prep</sql-script>
+				<sql>
+					<![CDATA[
+						-- SQL to run on prep
+					]]>
+				</sql>
+			</startup>
+
+			<!-- sequence of tasks to run after each batch is successfully savepointed -->
+			<on-insert>
+				<sql>xxx</sql>
+			</on-insert>
+
+			<!-- sequence of tasks to run after an insert fails -->
+			<on-error>
+				<sql>xxx</sql>
+			</on-error>
+
+			<shutdown>
+				<!-- .... (same as <startup/>, but run during shutdown) .... -->
+			</shutdown>
+		</data-source>
+
+		<data-source id="2" type="spring">
+			<properties>
+				<propertyName>value</propertyName>
+				<propertyName>value</propertyName>
+			</properties>
+		</data-source>
+	</data-sources>
+
+	<structures>
+		<!-- name : must be unique, may not be the string "default" -->
+		<structure id="1">
+			<range>
+				<!-- first row for the data we're interested in -->
+				<first-row>0</first-row>
+				<!-- last row for the data we're interested in, can't mix with <count> -->
+				<last-row>111</last-row>
+				<!-- how many rows to consume, can't mix with <last> -->
+				<!-- <row-count>222</row-count> -->
+			</range>
+			<header>
+				<!-- which row has the headers - if missing, no headers are used-->
+				<!-- the header row must not be within the records selected between <first-row> and <last-row>/<rows> -->
+				<!-- <row>0</row> -->
+
+				<!-- ... OR ... -->
+
+				<column>
+					<!-- constant / ${expression-possibly-referencing-other-columns-by-name-or-index} / #engine-specific-expression-that-yields-the-name -->
+					<name>column-name</name>
+
+					<!-- the sql-compatible data type for the column (optional, default is to coerce into the target type in the DB) -->
+					<data-type>DATE</data-type>
+
+					<!-- constant / ${expression-possibly-referencing-other-columns-by-name-or-index} / #engine-specific-expression-that-yields-the-value(s?) -->
+					<value>...</value>  <!-- what to do here? support constants? column copies/processing? -->
+				</column>
+				<column>
+					<!-- constant / ${expression-possibly-referencing-other-columns-by-name-or-index} / #engine-specific-expression-that-yields-the-name -->
+					<name>column-name-2</name>
+
+					<!-- the sql-compatible data type for the column (optional, default is to coerce into the target type in the DB) -->
+					<data-type>DATE</data-type>
+
+					<!-- constant / ${expression-possibly-referencing-other-columns-by-name-or-index} / #engine-specific-expression-that-yields-the-value(s?) -->
+					<value>...</value>  <!-- what to do here? support constants? column copies/processing? -->
+				</column>
+			</header>
+
+			<!-- only one of either lang or className may be specified -->
+			<filter lang="....?">
+				<![CDATA[
+					// Script that returns an explicit false-value if a row should be skipped,
+					// and the row is accepted otherwise (true-value or null/void)
+					// The filter will be given two already-tabular (map) views of the record:
+					// one indexed by column name (if possible), and one by column index (0-based). If there
+					// are no column names, both mappings are one and the same
+				]]>
+			</filter>
+		</structure>
+
+		<!-- extends : must reference already-existing structure names, values from earlier names -->
+		<!-- (further to the left) override values from latter names (further to the right)       -->
+		<structure id="2" extends="structure-1,...,structure-N">
+			<!-- to disable the <header>, use <header/> -->
+			<!-- to disable the <range>, use <range/> -->
+			<!-- to disable the <range>/<first>, use <first>NONE</first> -->
+			<!-- to disable the <range>/<last>, use <last>NONE</last> -->
+			<!-- to disable the <range>/<count>, use <count>ALL</count> -->
+			<!-- to disable the <filter>, use <filter/> -->
+		</structure>
+
+		<!-- which structure id should be used as the default (the id must be defined above) -->
+		<default>1</default>
+	</structures>
+
+	<files>
+		<!-- file ID must be unique -->
+		<spreadsheet id="fileId1">
+			<!-- where the file is stored - either a local file path or a resource/URL -->
+			<source>....</source>
+			<sheet-id>....</sheet-id>
+			<range>
+				<first-row></first-row>
+				<last-row></last-row>
+				<row-count></row-count>
+				<first-column></first-column>
+				<last-column></last-column>
+				<column-count></column-count>
+			</range>
+			<structure>
+				<!-- which row has the headers - if missing, no headers are used-->
+				<!-- the header row must not be within the records selected between <first-row> and <last-row>/<rows> -->
+				<!-- <header-row>0</header-row> -->
+
+				<!-- ... OR ... -->
+
+				<column>
+					<index>the-column's-index-within-the-column-list</index>
+					<!-- constant / ${expression-possibly-referencing-other-columns-by-name-or-index} / #engine-specific-expression-that-yields-the-name -->
+					<name>column-name</name>
+
+					<!-- the sql-compatible data type for the column (optional, default is to coerce into the target type in the DB) -->
+					<data-type>DATE</data-type>
+
+					<!-- constant / ${expression-possibly-referencing-other-columns-by-name-or-index} / #engine-specific-expression-that-yields-the-value(s?) -->
+					<value>...</value>  <!-- what to do here? support constants? column copies/processing? -->
+				</column>
+
+				<column>
+					<!-- constant / ${expression-possibly-referencing-other-columns-by-name-or-index} / #engine-specific-expression-that-yields-the-name -->
+					<name>column-name-2</name>
+
+					<!-- the sql-compatible data type for the column (optional, default is to coerce into the target type in the DB) -->
+					<data-type>DATE</data-type>
+
+					<!-- constant / ${expression-possibly-referencing-other-columns-by-name-or-index} / #engine-specific-expression-that-yields-the-value(s?) -->
+					<value>...</value>  <!-- what to do here? support constants? column copies/processing? -->
+				</column>
+				<filter>...</filter>
+			</structure>
+		</spreadsheet>
+
+		<table-file id="fileId2" header-row="true|false" stable-rows="true|false" separators="....">
+			<source>....</source>
+			<range>...</range>
+			<structure>
+				...
+			</structure>
+		</table-file>
+
+		<xslt id="fileId3">
+			<source>...</source>
+			<xslt>
+				<sheet>...</sheet>
+				<expr>...the actual XSLT...</expr>
+			</xslt>
+			<range>
+				<first-row></first-row>
+				<last-row></last-row>
+				<row-count></row-count>
+			</range>
+			<structure>....</structure>
+		</xslt>
+
+		<xpath id="fileId4">
+			<source>...</source>
+			<range>
+				<first-row></first-row>
+				<last-row></last-row>
+				<row-count></row-count>
+			</range>
+			<structure>
+				<records>xpath-expression-that-yields-elements-to-be-considered-records</records>
+				<columns>
+					<column>
+						<!-- this expression will yield the column name. fileMust yield unique values per record -->
+						<name>xpath-expression</name>
+						<!-- this expression will yield the column's value(s?) -->
+						<value>xpath-expression</value>
+						<!-- In case we need to specify the data type it must be coerced into -->
+						<data-type>datatype</data-type>
+					</column>
+					<column>
+						...
+					</column>
+				</columns>
+			</structure>
+		</xpath>
+	</files>
+
+	<mappings>
+		<mapping>
+			<data-source>1</data-source>
+
+			<!-- this can be a table name, schema+table, etc... -->
+			<to>target-table-spec</to>
+
+			<from file="fileId">
+				<!-- override datasource settings -->
+
+				<!-- to disable startup, use <startup inherit="none"/> -->
+				<!-- inherit value means run the inherited commands before or after this one, or none to not run it at all -->
+				<startup inherit="none|before|after">
+					....
+				</startup>
+
+				<!-- to disable batch-pre, use <batch-pre inherit="none"/> -->
+				<batch-pre inherit="none|before|after">
+					...
+				</batch-pre>
+
+				<!-- This can only override, not inherit the DataSource's -->
+				<batch-size transactional="true|false">100</batch-size>
+
+				<!-- to disable batch-post, use <batch-post inherit="none"/> -->
+				<batch-post inherit="none|before|after">
+					...
+				</batch-post>
+
+				<!-- to disable batch-error, use <batch-error inherit="none"/> -->
+				<batch-error inherit="none|before|after">
+					...
+				</batch-error>
+
+				<!-- to disable shutdown, use <shutdown inherit="none"/> -->
+				<shutdown inherit="none|before|after">
+					....
+				</shutdown>
+
+				<!-- if we want to customize the column mappings instead of making them one-to-one direct -->
+				<column-mappings>
+					<column>
+						<from-name>source-column-name</from-name>
+						<from-index>source-column-index</from-index>
+
+						<!-- <to> value must be unique per file -->
+						<to>target-column-name</to>
+					</column>
+					<column>
+						...
+					</column>
+				</column-mappings>
+			</from>
+
+			<from file="...">
+				....
+			</from>
+		</mapping>
+	</mappings>
+</flat-2-db>

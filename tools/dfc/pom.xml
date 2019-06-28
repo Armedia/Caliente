@@ -6,12 +6,12 @@
 	<description>A set of DFC utility classes</description>
 	<groupId>com.armedia.caliente.tools</groupId>
 	<artifactId>caliente-tools-dfc</artifactId>
-	<packaging>jar</packaging>
+	<packaging>bundle</packaging>
 
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
 		<artifactId>caliente</artifactId>
-		<version>3.8.0</version>
+		<version>3.8.1</version>
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
@@ -30,15 +30,46 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-pool2</artifactId>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.documentum.dfc</groupId>
 			<artifactId>dfc-jars</artifactId>
 			<scope>system</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>org.junit.vintage</groupId>
-			<artifactId>junit-vintage-engine</artifactId>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.easymock</groupId>
+			<artifactId>easymock</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Bundle-Category></Bundle-Category>
+						<Bundle-Symbolic-Name>${project.groupId}.${project.artifactId}</Bundle-Symbolic-Name>
+						<!--
+						<Export-Package></Export-Package>
+						-->
+					</instructions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.cli.classpath;
 
 import java.io.File;
@@ -5,119 +31,207 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLStreamHandlerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.ShareableLockable;
 
 public abstract class ClasspathPatcher {
 
-	private static final Class<?>[] PARAMETERS = new Class[] {
-		URL.class
-	};
-	private static final URLClassLoader CL;
-	private static final Method METHOD;
-	private static final Set<String> ADDED = new LinkedHashSet<>();
-
-	private static final Logger log = LoggerFactory.getLogger(ClasspathPatcher.class);
-
-	static {
-		ClassLoader cl = ClassLoader.getSystemClassLoader();
-		if (!(cl instanceof URLClassLoader)) {
-			throw new RuntimeException("System Classloader is not a URLClassLoader");
+	/**
+	 * <p>
+	 * This classloader exists as a substitute of {@link URLClassLoader} which we can freely invoke
+	 * {@link URLClassLoader#addURL(URL)} on because it's no longer a protected method. This helps
+	 * us sidestep some security issues with changing a method's visibility at runtime if that's not
+	 * allowed. Other than this method scope change, it's identical to {@link URLClassLoader} in
+	 * every way.
+	 * </p>
+	 *
+	 *
+	 *
+	 */
+	private static final class CPCL extends URLClassLoader {
+		public CPCL(URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
+			super(urls, parent, factory);
 		}
-		CL = URLClassLoader.class.cast(cl);
-		try {
-			METHOD = URLClassLoader.class.getDeclaredMethod("addURL", ClasspathPatcher.PARAMETERS);
-			ClasspathPatcher.METHOD.setAccessible(true);
-		} catch (Throwable t) {
-			throw new RuntimeException("Failed to initialize access to the addURL() method in the system classloader",
-				t);
+
+		public CPCL(URL[] urls, ClassLoader parent) {
+			super(urls, parent);
+		}
+
+		public CPCL(URL[] urls) {
+			super(urls);
+		}
+
+		@Override
+		protected void addURL(URL url) {
+			super.addURL(url);
 		}
 	}
 
-	protected ClasspathPatcher() {
+	private static final Logger LOG = LoggerFactory.getLogger(ClasspathPatcher.class);
+	private static final Class<?>[] PARAMETERS = new Class[] {
+		URL.class
+	};
+	private static final URL[] NO_URLS = {};
+	private static final URL NULL_URL = null;
+	private static volatile URLClassLoader CL = null;
+	private static volatile Consumer<URL> ADD_URL = null;
+	private static final Set<String> ADDED = new LinkedHashSet<>();
+	private static final ShareableLockable LOCK = new BaseShareableLockable();
+
+	static {
+		ClasspathPatcher.init();
+	}
+
+	public static final void init() {
+		ClasspathPatcher.LOCK.shareLockedUpgradable(() -> ClasspathPatcher.CL, Objects::isNull, (oldCl) -> {
+			ClassLoader cl = Thread.currentThread().getContextClassLoader();
+			URLClassLoader ucl = Tools.cast(URLClassLoader.class, cl);
+			ClasspathPatcher.ADD_URL = ClasspathPatcher.getConsumer(ucl);
+			if (ClasspathPatcher.ADD_URL == null) {
+				final CPCL newCl = new CPCL(ClasspathPatcher.NO_URLS, cl);
+				ucl = newCl;
+				Thread.currentThread().setContextClassLoader(newCl);
+				ClasspathPatcher.ADD_URL = newCl::addURL;
+			}
+			ClasspathPatcher.CL = ucl;
+		});
+	}
+
+	private static Consumer<URL> getConsumer(final ClassLoader ucl) {
+		if (ucl == null) { return null; }
+		Class<? extends ClassLoader> clclass = ucl.getClass();
+		try {
+			Method method = clclass.getDeclaredMethod("addURL", ClasspathPatcher.PARAMETERS);
+			try {
+				method.setAccessible(true);
+			} catch (SecurityException e) {
+				// Ok ... we couldn't disable the checks... let's try calling it anyway
+			}
+			// If this invocation succeeds, we can safely return a consumer. If it fails,
+			// then this method is not accessible to us...
+			method.invoke(ucl, ClasspathPatcher.NULL_URL);
+			final ClassLoader newCl = ucl;
+			Consumer<URL> consumer = (url) -> {
+				try {
+					method.invoke(newCl, url);
+				} catch (Exception e) {
+					if (ClasspathPatcher.LOG.isDebugEnabled()) {
+						ClasspathPatcher.LOG.error("Failed to add the URL [{}] to the classpath", url, e);
+					}
+				}
+			};
+			// This tells us if the method is reachable or not...
+			consumer.accept(null);
+			return consumer;
+		} catch (Throwable t) {
+			if (ClasspathPatcher.LOG.isDebugEnabled()) {
+				ClasspathPatcher.LOG.warn("Failed to introspect the addURL() method from {}",
+					clclass.getCanonicalName());
+			}
+			return null;
+		}
 	}
 
 	public static final boolean discoverPatches() {
 		return ClasspathPatcher.discoverPatches(false);
 	}
 
-	public static final synchronized boolean discoverPatches(boolean verbose) {
-		Set<URL> patches = new LinkedHashSet<>();
-		PluggableServiceLocator<ClasspathPatcher> patchers = new PluggableServiceLocator<>(ClasspathPatcher.class);
-		patchers.setHideErrors(false);
-		for (ClasspathPatcher p : patchers) {
-			// Make sure we only include the patchers we're interested in
-			Collection<URL> l = null;
-			try {
-				l = p.getPatches(verbose);
-			} catch (Exception e) {
-				if (verbose && ClasspathPatcher.log.isDebugEnabled()) {
-					ClasspathPatcher.log.warn("Failed to load the classpath patches from [{}]",
-						p.getClass().getCanonicalName(), e);
+	public static final boolean discoverPatches(boolean verbose) {
+		try (MutexAutoLock lock = ClasspathPatcher.LOCK.autoMutexLock()) {
+			Set<URL> patches = new LinkedHashSet<>();
+			PluggableServiceLocator<ClasspathPatcher> patchers = new PluggableServiceLocator<>(ClasspathPatcher.class);
+			patchers.setHideErrors(false);
+			for (ClasspathPatcher p : patchers) {
+				// Make sure we only include the patchers we're interested in
+				Collection<URL> l = null;
+				try {
+					l = p.getPatches(verbose);
+				} catch (Exception e) {
+					if (verbose) {
+						if (ClasspathPatcher.LOG.isDebugEnabled()) {
+							ClasspathPatcher.LOG.warn("Failed to load the classpath patches from [{}]",
+								p.getClass().getCanonicalName(), e);
+						} else {
+							ClasspathPatcher.LOG.warn("Failed to load the classpath patches from [{}]: {}",
+								p.getClass().getCanonicalName(), e.getMessage());
+						}
+					}
+					continue;
 				}
-				continue;
-			}
-			if ((l == null) || l.isEmpty()) {
-				continue;
-			}
-			for (URL u : l) {
-				if (u != null) {
-					patches.add(u);
+				if ((l == null) || l.isEmpty()) {
+					continue;
 				}
-			}
-		}
-
-		boolean ret = false;
-		for (URL u : patches) {
-			try {
-				ret |= ClasspathPatcher.addToClassPath(u);
-				if (verbose) {
-					ClasspathPatcher.log.info("Classpath addition: [{}]", u);
-				}
-			} catch (IOException e) {
-				if (verbose) {
-					if (ClasspathPatcher.log.isDebugEnabled()) {
-						ClasspathPatcher.log.error("Failed to add [{}] to the classpath", u, e);
-					} else {
-						ClasspathPatcher.log.error("Failed to add [{}] to the classpath", u);
+				for (URL u : l) {
+					if (u != null) {
+						patches.add(u);
 					}
 				}
 			}
+
+			boolean ret = false;
+			for (URL u : patches) {
+				try {
+					ret |= ClasspathPatcher.addToClassPath(u);
+					if (verbose) {
+						ClasspathPatcher.LOG.info("Classpath addition: [{}]", u);
+					}
+				} catch (IOException e) {
+					if (verbose) {
+						if (ClasspathPatcher.LOG.isDebugEnabled()) {
+							ClasspathPatcher.LOG.error("Failed to add [{}] to the classpath", u, e);
+						} else {
+							ClasspathPatcher.LOG.error("Failed to add [{}] to the classpath: {}", u, e.getMessage());
+						}
+					}
+				}
+			}
+			return ret;
 		}
-		return ret;
 	}
 
-	public static synchronized Set<String> getAdditions() {
-		return Tools.freezeSet(new LinkedHashSet<>(ClasspathPatcher.ADDED));
+	public static Set<String> getAdditions() {
+		return ClasspathPatcher.LOCK.shareLocked(() -> Tools.freezeSet(new LinkedHashSet<>(ClasspathPatcher.ADDED)));
 	}
 
-	public static synchronized boolean addToClassPath(URL u) throws IOException {
+	public static boolean addToClassPath(URL u) throws IOException {
 		if (u == null) { throw new IllegalArgumentException("Must provide a URL to add to the classpath"); }
-		if (ClasspathPatcher.ADDED.contains(u.toString())) { return false; }
-		try {
-			ClasspathPatcher.METHOD.invoke(ClasspathPatcher.CL, u);
-			return ClasspathPatcher.ADDED.add(u.toString());
-		} catch (Throwable t) {
-			throw new IOException(String.format("Failed to add the URL [%s] to the system classloader", u), t);
-		}
+		Boolean ret = ClasspathPatcher.LOCK.shareLockedUpgradable(() -> !ClasspathPatcher.ADDED.contains(u.toString()),
+			() -> {
+				try {
+					ClasspathPatcher.ADD_URL.accept(u);
+					return ClasspathPatcher.ADDED.add(u.toString());
+				} catch (Throwable t) {
+					throw new IOException(String.format("Failed to add the URL [%s] to the classloader", u), t);
+				}
+			});
+		return ((ret != null) && ret.booleanValue());
 	}
 
-	public static synchronized boolean addToClassPath(File f) throws IOException {
+	public static boolean addToClassPath(File f) throws IOException {
 		if (f == null) { throw new IllegalArgumentException("Must provide a File to add to the classpath"); }
 		return ClasspathPatcher.addToClassPath(f.toURI().toURL());
 	}
 
-	public static synchronized boolean addToClassPath(String f) throws IOException {
+	public static boolean addToClassPath(String f) throws IOException {
 		if (f == null) { throw new IllegalArgumentException("Must provide a File path to add to the classpath"); }
 		return ClasspathPatcher.addToClassPath(new File(f));
+	}
+
+	protected ClasspathPatcher() {
 	}
 
 	public abstract Collection<URL> getPatches(boolean verbose) throws Exception;

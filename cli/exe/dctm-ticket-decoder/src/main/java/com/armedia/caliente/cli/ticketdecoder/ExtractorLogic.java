@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.cli.ticketdecoder;
 
 import java.math.BigDecimal;
@@ -38,9 +64,9 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.ticketdecoder.xml.Page;
 import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
-import com.armedia.commons.dfc.pool.DfcSessionPool;
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.function.CheckedPredicate;
@@ -336,7 +362,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 	@Override
 	public void process(IDfSession session, IDfId id) throws Exception {
 		if (id == null) { return; }
-		final IDfLocalTransaction tx = DfUtils.openTransaction(session);
+		final IDfLocalTransaction tx = DfcUtils.openTransaction(session);
 		try {
 			Content c = getContent(session, id);
 			if (c == null) { return; }
@@ -346,7 +372,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		} finally {
 			try {
 				// No matter what...roll back!
-				DfUtils.abortTransaction(session, tx);
+				DfcUtils.abortTransaction(session, tx);
 			} catch (DfException e) {
 				this.log.warn("Could not abort an open transaction", e);
 			}
@@ -407,7 +433,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 			String root = obj.getString("root");
 			if (!StringUtils.isBlank(root)) {
 				obj = session.getObjectByQualification(
-					String.format("dm_location where object_name = %s", DfUtils.quoteString(root)));
+					String.format("dm_location where object_name = %s", DfcUtils.quoteString(root)));
 				if ((obj != null) && obj.hasAttr("file_system_path")) { return obj.getString("file_system_path"); }
 			}
 			return String.format("(no-path-for-store-%s)", content.getStorageId());
@@ -473,10 +499,10 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		int index = 0;
 		final IDfId id = document.getObjectId();
 		Long maxRendition = null;
-		try (DctmQuery query = new DctmQuery(session, String.format(dql, DfUtils.quoteString(id.getId())),
-			DctmQuery.Type.DF_EXECREAD_QUERY)) {
+		try (DfcQuery query = new DfcQuery(session, String.format(dql, DfcUtils.quoteString(id.getId())),
+			DfcQuery.Type.DF_EXECREAD_QUERY)) {
 
-			final String prefix = DfUtils.getDocbasePrefix(session);
+			final String prefix = DfcUtils.getDocbasePrefix(session);
 			Rendition rendition = null;
 			while (query.hasNext()) {
 				final IDfId contentId = query.next().getId("r_object_id");
@@ -489,7 +515,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 						contentId, id, e);
 					continue;
 				}
-				String streamPath = DfUtils.decodeDataTicket(prefix, content.getDataTicket(), '/');
+				String streamPath = DfcUtils.decodeDataTicket(prefix, content.getDataTicket(), '/');
 				String extension = getExtension(session, content.getFormatId());
 				if (StringUtils.isBlank(extension)) {
 					extension = StringUtils.EMPTY;

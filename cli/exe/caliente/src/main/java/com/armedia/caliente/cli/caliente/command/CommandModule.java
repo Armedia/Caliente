@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.cli.caliente.command;
 
 import java.util.Collection;
@@ -37,6 +63,14 @@ public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory
 
 	public CalienteCommand getDescriptor() {
 		return this.descriptor;
+	}
+
+	public boolean isShouldStoreContentLocationRequirement() {
+		return false;
+	}
+
+	public boolean isContentStreamsExternal(OptionValues commandValues) {
+		return false;
 	}
 
 	public final ENGINE_FACTORY getEngineFactory() {
@@ -128,15 +162,15 @@ public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory
 		return execute(state, commandValues, positionals);
 	}
 
-	public String getContentOrganizerName() {
+	public String getContentOrganizerName(OptionValues commandValues) {
 		return null;
 	}
 
-	public void customizeObjectStoreProperties(StoreConfiguration cfg) {
+	public void customizeObjectStoreProperties(OptionValues commandValues, StoreConfiguration cfg) {
 		// Do nothing by default
 	}
 
-	public void customizeContentStoreProperties(StoreConfiguration cfg) {
+	public void customizeContentStoreProperties(OptionValues commandValues, StoreConfiguration cfg) {
 		// Do nothing by default
 	}
 

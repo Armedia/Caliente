@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import java.io.InputStream;
@@ -14,8 +40,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
 import javax.script.Bindings;
@@ -38,11 +62,11 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.ShareableLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.function.CheckedConsumer;
 
 @XmlTransient
-public abstract class MetadataReaderBase implements AttributeValuesLoader, ShareableLockable {
+public abstract class MetadataReaderBase extends BaseShareableLockable implements AttributeValuesLoader {
 
 	@XmlElement(name = "query", required = true)
 	protected ParameterizedQuery query;
@@ -55,9 +79,6 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader, Share
 
 	@XmlAttribute(name = "dataSource", required = true)
 	protected String dataSource;
-
-	@XmlTransient
-	protected final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
 	@XmlTransient
 	protected String finalSql = null;
@@ -76,11 +97,6 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader, Share
 
 	@XmlTransient
 	protected Boolean columnNamesCaseSensitive = false;
-
-	@Override
-	public ReadWriteLock getShareableLock() {
-		return this.rwLock;
-	}
 
 	@Override
 	public final String getDataSource() {
@@ -196,7 +212,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader, Share
 					Object value = null;
 					if (att.hasValues()) {
 						CmfValueCodec<V> codec = translator.getCodec(att.getType());
-						value = att.getType().getValue(codec.encodeValue(att.getValue()));
+						value = att.getType().getValue(codec.encode(att.getValue()));
 					}
 					attributes.put(att.getName(), value);
 				}
@@ -205,7 +221,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader, Share
 					Object value = null;
 					if (prop.hasValues()) {
 						CmfValueCodec<V> codec = translator.getCodec(prop.getType());
-						value = prop.getType().getValue(codec.encodeValue(prop.getValue()));
+						value = prop.getType().getValue(codec.encode(prop.getValue()));
 					}
 					attributes.put(prop.getName(), value);
 				}

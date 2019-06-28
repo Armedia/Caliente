@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 /**
  *
  */
@@ -23,7 +49,7 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfACLException;
 import com.documentum.fc.client.DfPermit;
@@ -36,7 +62,7 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
+ *
  *
  */
 public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL {
@@ -51,7 +77,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			this.name = permit.getAccessorName();
 			this.type = permit.getPermitType();
 			this.value = permit.getPermitValueString();
-			this.typeStr = DfUtils.decodePermitType(this.type);
+			this.typeStr = DfcUtils.decodePermitType(this.type);
 		}
 
 		private Permit(IDfSession session, DctmImportACL aclDelegate, int pos) throws DfException {
@@ -63,7 +89,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			this.type = prop.getValue(pos).asInteger();
 			prop = acl.getProperty(DctmACL.PERMIT_VALUES);
 			this.value = prop.getValue(pos).asString();
-			this.typeStr = DfUtils.decodePermitType(this.type);
+			this.typeStr = DfcUtils.decodePermitType(this.type);
 		}
 
 		@Override
@@ -147,7 +173,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		if (att.getValue().asBoolean() != acl.getBoolean(att.getName())) { return false; }
 
 		// Now, count the permits
-		Collection<IDfPermit> existingPermits = DfUtils.getPermissionsWithFallback(ctx.getSession(), acl);
+		Collection<IDfPermit> existingPermits = DfcUtils.getPermissionsWithFallback(ctx.getSession(), acl);
 		CmfProperty<IDfValue> prop = this.cmfObject.getProperty(DctmACL.ACCESSORS);
 		if (existingPermits.size() != prop.getValueCount()) {
 			// The permit counts have to be identical...
@@ -205,7 +231,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 
 		// Clear any existing permissions
 		final IDfSession session = acl.getSession();
-		for (IDfPermit permit : DfUtils.getPermissionsWithFallback(context.getSession(), acl)) {
+		for (IDfPermit permit : DfcUtils.getPermissionsWithFallback(context.getSession(), acl)) {
 			try {
 				acl.revokePermit(permit);
 				if (this.log.isDebugEnabled()) {
@@ -448,7 +474,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			}
 
 			// Ok...so we relate this thing back to its owner as its internal ACL
-			DfUtils.lockObject(this.log, user);
+			DfcUtils.lockObject(this.log, user);
 			user.fetch(null);
 			user.setDefaultACLEx(acl.getDomain(), acl.getObjectName());
 			user.save();

@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
 		<artifactId>caliente</artifactId>
-		<version>3.8.0</version>
+		<version>3.8.1</version>
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
@@ -24,8 +24,16 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.armedia.commons</groupId>
-			<artifactId>dfc-session-pool</artifactId>
+			<groupId>com.armedia.caliente</groupId>
+			<artifactId>caliente-tools</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.caliente.tools</groupId>
+			<artifactId>caliente-tools-dfc</artifactId>
+			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -48,8 +56,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.armedia.commons.datasource</groupId>
-			<artifactId>datasource-locator-pooled</artifactId>
+			<groupId>com.armedia.caliente.tools</groupId>
+			<artifactId>caliente-tools-datasource</artifactId>
+			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -72,8 +81,36 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.junit.vintage</groupId>
-			<artifactId>junit-vintage-engine</artifactId>
+			<groupId>javax.jcr</groupId>
+			<artifactId>jcr</artifactId>
+			<version>2.0</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.jackrabbit</groupId>
+			<artifactId>oak-jcr</artifactId>
+			<version>1.14.0</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.jackrabbit</groupId>
+			<artifactId>oak-store-document</artifactId>
+			<version>1.14.0</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongo-java-driver</artifactId>
+			<version>3.10.2</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

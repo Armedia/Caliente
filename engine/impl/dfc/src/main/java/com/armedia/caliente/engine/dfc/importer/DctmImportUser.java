@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 /**
  *
  */
@@ -11,7 +37,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.dfc.DctmAttributes;
-import com.armedia.caliente.engine.dfc.DctmConstant;
 import com.armedia.caliente.engine.dfc.DctmMappingUtils;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.common.Setting;
@@ -19,9 +44,10 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DfUtils;
-import com.armedia.commons.dfc.util.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfcConstant;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
@@ -31,7 +57,7 @@ import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
+ *
  *
  */
 public class DctmImportUser extends DctmImportDelegate<IDfUser> {
@@ -76,8 +102,8 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 		IDfUser ret = session.getUserByLoginName(loginName, !StringUtils.isBlank(domainName) ? domainName : null);
 		if (ret == null) {
 			// Still no match? try by just login name, any domain
-			String dql = String.format(DctmImportUser.FIND_USER_BY_LOGIN_DQL, DfUtils.quoteString(loginName));
-			try (DctmQuery query = new DctmQuery(session, dql, DctmQuery.Type.DF_EXECREAD_QUERY)) {
+			String dql = String.format(DctmImportUser.FIND_USER_BY_LOGIN_DQL, DfcUtils.quoteString(loginName));
+			try (DfcQuery query = new DfcQuery(session, dql, DfcQuery.Type.DF_EXECREAD_QUERY)) {
 				List<String> candidates = null;
 				while (query.hasNext()) {
 					IDfTypedObject c = query.next();
@@ -167,7 +193,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 		// Only do this for Documentum 6.5-SP2
 		if ((loginDomain == null) && serverVersion.startsWith("6.5") && "LDAP".equalsIgnoreCase(userSource)) {
 			IDfAttr attr = user.getAttr(user.findAttrIndex(DctmAttributes.USER_LOGIN_DOMAIN));
-			loginDomain = newStoredAttribute(attr, DfValueFactory.newStringValue(""));
+			loginDomain = newStoredAttribute(attr, DfValueFactory.of(""));
 			this.cmfObject.setAttribute(loginDomain);
 		}
 	}
@@ -192,13 +218,13 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 			// Next, set the password
 			CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.USER_SOURCE);
 			final IDfValue userSource = (att != null ? att.getValue() : null);
-			if ((att == null) || Tools.equals(DctmConstant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
+			if ((att == null) || Tools.equals(DfcConstant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
 				// Default the password to the user's login name, if a specific value hasn't been
 				// selected for global use
 				final String inlinePasswordValue = ctx.getSettings().getString(Setting.DEFAULT_USER_PASSWORD.getLabel(),
 					userName);
 				setAttributeOnObject(DctmAttributes.USER_PASSWORD,
-					Collections.singletonList(DfValueFactory.newStringValue(inlinePasswordValue)), user);
+					Collections.singletonList(DfValueFactory.of(inlinePasswordValue)), user);
 			}
 		}
 

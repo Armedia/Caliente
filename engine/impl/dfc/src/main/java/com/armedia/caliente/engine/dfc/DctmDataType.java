@@ -1,10 +1,37 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.dfc;
 
 import java.text.ParseException;
-import java.util.Date;
+import java.util.Objects;
 
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
+import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
@@ -15,9 +42,7 @@ import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public enum DctmDataType implements CmfValueCodec<IDfValue> {
-	DF_BOOLEAN(CmfValue.Type.BOOLEAN, IDfValue.DF_BOOLEAN) {
-		private final String nullEncoding = String.valueOf(false);
-		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_BOOLEAN);
+	DF_BOOLEAN(CmfValue.Type.BOOLEAN, IDfValue.DF_BOOLEAN, new DfValue(Boolean.FALSE.toString(), IDfValue.DF_BOOLEAN)) {
 
 		@Override
 		public IDfValue doDecode(CmfValue value) {
@@ -30,16 +55,6 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		}
 
 		@Override
-		public IDfValue getNull() {
-			return this.nullValue;
-		}
-
-		@Override
-		public boolean isNull(IDfValue v) {
-			return (v == null);
-		}
-
-		@Override
 		public void setValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
 			object.setBoolean(name, value.asBoolean());
 		}
@@ -49,10 +64,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			object.appendBoolean(name, value.asBoolean());
 		}
 	},
-	DF_INTEGER(CmfValue.Type.INTEGER, IDfValue.DF_INTEGER) {
-		private final String nullEncoding = String.valueOf(0);
-		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_INTEGER);
-
+	DF_INTEGER(CmfValue.Type.INTEGER, IDfValue.DF_INTEGER, new DfValue("0", IDfValue.DF_INTEGER)) {
 		@Override
 		public IDfValue doDecode(CmfValue value) {
 			return new DfValue(String.valueOf(value.asInteger()), IDfValue.DF_INTEGER);
@@ -61,16 +73,6 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		@Override
 		protected Object doGetValue(IDfValue value) {
 			return value.asInteger();
-		}
-
-		@Override
-		public IDfValue getNull() {
-			return this.nullValue;
-		}
-
-		@Override
-		public boolean isNull(IDfValue v) {
-			return (v == null);
 		}
 
 		@Override
@@ -83,10 +85,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			object.appendInt(name, value.asInteger());
 		}
 	},
-	DF_STRING(CmfValue.Type.STRING, IDfValue.DF_STRING) {
-		private final String nullEncoding = "";
-		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_STRING);
-
+	DF_STRING(CmfValue.Type.STRING, IDfValue.DF_STRING, new DfValue("", IDfValue.DF_INTEGER)) {
 		@Override
 		public IDfValue doDecode(CmfValue value) {
 			return new DfValue(value.asString(), IDfValue.DF_STRING);
@@ -95,11 +94,6 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		@Override
 		protected Object doGetValue(IDfValue value) {
 			return value.asString();
-		}
-
-		@Override
-		public IDfValue getNull() {
-			return this.nullValue;
 		}
 
 		@Override
@@ -122,9 +116,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			object.appendString(name, value.asString());
 		}
 	},
-	DF_ID(CmfValue.Type.ID, IDfValue.DF_ID) {
-		private final String nullEncoding = DfId.DF_NULLID_STR;
-		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_ID);
+	DF_ID(CmfValue.Type.ID, IDfValue.DF_ID, new DfValue(DfId.DF_NULLID_STR, IDfValue.DF_ID)) {
 
 		@Override
 		public CmfValue doEncode(IDfValue value) {
@@ -146,11 +138,6 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		}
 
 		@Override
-		public IDfValue getNull() {
-			return this.nullValue;
-		}
-
-		@Override
 		public void setValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
 			object.setId(name, value.asId());
 		}
@@ -160,8 +147,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			object.appendId(name, value.asId());
 		}
 	},
-	DF_TIME(CmfValue.Type.DATETIME, IDfValue.DF_TIME) {
-		private final IDfValue nullValue = new DfValue(DfTime.DF_NULLDATE);
+	DF_TIME(CmfValue.Type.DATETIME, IDfValue.DF_TIME, new DfValue(DfTime.DF_NULLDATE)) {
 
 		@Override
 		public CmfValue doEncode(IDfValue value) {
@@ -193,8 +179,8 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		}
 
 		@Override
-		public IDfValue getNull() {
-			return this.nullValue;
+		public boolean isNullValue(IDfValue v) {
+			return (v == null) || v.asTime().isNullDate();
 		}
 
 		@Override
@@ -207,9 +193,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			object.appendTime(name, value.asTime());
 		}
 	},
-	DF_DOUBLE(CmfValue.Type.DOUBLE, IDfValue.DF_DOUBLE) {
-		private final String nullEncoding = Double.toHexString(0.0);
-		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_DOUBLE);
+	DF_DOUBLE(CmfValue.Type.DOUBLE, IDfValue.DF_DOUBLE, new DfValue(Double.toHexString(0.0), IDfValue.DF_DOUBLE)) {
 
 		@Override
 		public CmfValue doEncode(IDfValue value) {
@@ -227,11 +211,6 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		}
 
 		@Override
-		public IDfValue getNull() {
-			return this.nullValue;
-		}
-
-		@Override
 		public void setValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
 			object.setDouble(name, value.asDouble());
 		}
@@ -241,7 +220,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			object.appendDouble(name, value.asDouble());
 		}
 	},
-	DF_UNDEFINED(null, IDfValue.DF_UNDEFINED) {
+	DF_UNDEFINED(CmfValue.Type.OTHER, IDfValue.DF_UNDEFINED) {
 		private <T> T fail() {
 			throw new UnsupportedOperationException("Can't handle DF_UNDEFINED");
 		}
@@ -262,17 +241,53 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		}
 
 		@Override
-		public IDfValue getNull() {
+		public void setValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			fail();
+		}
+
+		@Override
+		public void appendValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			fail();
+		}
+
+		@Override
+		protected String generateDeclaration(IDfAttr attr) {
+			return fail();
+		}
+
+		@Override
+		public boolean isNullValue(IDfValue v) {
+			return fail();
+		}
+
+		@Override
+		public boolean isNullEncoding(CmfValue e) {
+			return fail();
+		}
+
+		@Override
+		public CmfValue getNullEncoding() {
+			return fail();
+		}
+
+		@Override
+		public IDfValue getNullValue() {
 			return fail();
 		}
 	};
 
 	private final CmfValue.Type type;
+	private final IDfValue nullValue;
 	private final int dfConstant;
 
 	private DctmDataType(CmfValue.Type type, int dfConstant) {
+		this(type, dfConstant, null);
+	}
+
+	private DctmDataType(CmfValue.Type type, int dfConstant, IDfValue nullValue) {
 		this.type = type;
 		this.dfConstant = dfConstant;
+		this.nullValue = nullValue;
 	}
 
 	public final CmfValue.Type getStoredType() {
@@ -314,43 +329,43 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 	 * <p>
 	 * Returns the null-equivalent value for this data type. This will <b>never</b> return
 	 * {@code null}. The strict definition of this method is that the invocation
-	 * {@code isNull(getNull())} <b><i>must</i></b> return {@code true}.
+	 * {@code isNullValue(getNullValue())} <b><i>must</i></b> return {@code true}.
 	 * </p>
 	 *
 	 * @return the null-equivalent value for this data type
 	 */
 	@Override
-	public abstract IDfValue getNull();
+	public IDfValue getNullValue() {
+		return this.nullValue;
+	}
 
 	/**
 	 * <p>
 	 * Returns {@code true} if the given value is the null-equivalent value for this data type. The
-	 * strict definition of this method is that the invocation {@code isNull(getNull())}
+	 * strict definition of this method is that the invocation {@code isNullValue(getNullValue())}
 	 * <b><i>must</i></b> return {@code true}.
 	 * </p>
 	 *
 	 * @return {@code true} if the given value is the null-equivalent value for this data type
 	 */
 	@Override
-	public boolean isNull(IDfValue v) {
-		return (v == null);
+	public boolean isNullValue(IDfValue v) {
+		return (v == null) || ((v.getDataType() == this.nullValue.getDataType()) && Tools.equals(v, this.nullValue));
 	}
 
 	/**
 	 * <p>
 	 * Encode the value into a {@link CmfValue}, such that for a given value {@code A}, invoking
-	 * {@link #decodeValue(CmfValue)} on that encoded CmfValue will result in a value {@code B},
-	 * such that {@code A.equals(B)} returns {@code true}.
+	 * {@link #decode(CmfValue)} on that encoded CmfValue will result in a value {@code B}, such
+	 * that {@code A.equals(B)} returns {@code true}.
 	 * </p>
 	 *
 	 * @param value
 	 * @return the string-encoded value
 	 */
 	@Override
-	public final CmfValue encodeValue(IDfValue value) {
-		if (value == null) {
-			value = getNull();
-		}
+	public final CmfValue encode(IDfValue value) {
+		if (value == null) { return getNullEncoding(); }
 		return doEncode(value);
 	}
 
@@ -375,36 +390,41 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 				return new CmfValue(value.asString());
 			case DATETIME:
 				IDfTime t = value.asTime();
-				Date d = null;
-				if (t.isNullDate()) {
-
-				} else {
-					d = t.getDate();
-				}
-				return new CmfValue(d);
+				if (t.isNullDate()) { return this.type.getNull(); }
+				return new CmfValue(t.getDate());
 			default:
 				break;
 		}
 		throw new IllegalArgumentException(String.format("Unsupported conversion type: [%s]", this.type));
 	}
 
+	@Override
+	public boolean isNullEncoding(CmfValue e) {
+		return (e == null) || e.isNull();
+	}
+
+	@Override
+	public CmfValue getNullEncoding() {
+		return this.type.getNull();
+	}
+
 	/**
 	 * <p>
 	 * Decode the string into an {@link IDfValue}, such that for a given string {@code A}, invoking
-	 * {@link #encodeValue(IDfValue)} on that decoded {@link IDfValue} will result in a string
-	 * {@code B}, such that {@code A.equals(B)} returns {@code true}.
+	 * {@link #encode(IDfValue)} on that decoded {@link IDfValue} will result in a string {@code B},
+	 * such that {@code A.equals(B)} returns {@code true}.
 	 * </p>
 	 * <p>
 	 * The exception to this rule is the value {@code null}: this will get encoded into an
-	 * {@link IDfValue} instance as specified by {@link #getNull()}.
+	 * {@link IDfValue} instance as specified by {@link #getNullValue()}.
 	 * </p>
 	 *
 	 * @param value
 	 * @return the string-encoded value
 	 */
 	@Override
-	public final IDfValue decodeValue(CmfValue value) {
-		if ((value == null) || value.isNull()) { return getNull(); }
+	public final IDfValue decode(CmfValue value) {
+		if (isNullEncoding(value)) { return getNullValue(); }
 		return doDecode(value);
 	}
 
@@ -412,22 +432,16 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 
 	public final Object getValue(IDfValue value) {
 		if (value == null) {
-			value = getNull();
+			value = getNullValue();
 		}
 		return doGetValue(value);
 	}
 
 	protected abstract Object doGetValue(IDfValue value);
 
-	/*
-	 * public static CmsDataType fromDfConstant(int constant) { }
-	 */
-
 	public static DctmDataType fromAttribute(IDfAttr attribute) {
-		if (attribute == null) {
-			throw new IllegalArgumentException("Must provide an attribute to decode the data type from");
-		}
-		return DctmDataType.fromDataType(attribute.getDataType());
+		return DctmDataType.fromDataType(
+			Objects.requireNonNull(attribute, "Must provide an attribute to decode the data type from").getDataType());
 	}
 
 	public static DctmDataType fromDataType(int dataType) {

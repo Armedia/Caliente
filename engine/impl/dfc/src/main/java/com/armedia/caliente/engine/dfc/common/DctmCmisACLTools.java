@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 /**
  *
  */
@@ -25,8 +51,8 @@ import com.armedia.caliente.engine.tools.AclTools;
 import com.armedia.caliente.engine.tools.AclTools.AccessorType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.commons.dfc.util.DfUtils;
-import com.armedia.commons.dfc.util.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfPermit;
@@ -39,7 +65,7 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * @author diego
+ *
  *
  */
 public class DctmCmisACLTools implements DctmACL {
@@ -99,7 +125,7 @@ public class DctmCmisACLTools implements DctmACL {
 		public final Set<String> actions;
 
 		private PermitToAction(int permit, String... actions) {
-			DfUtils.decodeAccessPermission(permit);
+			DfcUtils.decodeAccessPermission(permit);
 			this.permit = permit;
 			Set<String> a = new HashSet<>();
 			for (String s : actions) {
@@ -274,7 +300,7 @@ public class DctmCmisACLTools implements DctmACL {
 			DfPermit permit = new DfPermit();
 			permit.setAccessorName(accessorName);
 			permit.setPermitType(IDfPermit.DF_ACCESS_PERMIT);
-			permit.setPermitValue(DfUtils.decodeAccessPermission(perm));
+			permit.setPermitValue(DfcUtils.decodeAccessPermission(perm));
 			ret.add(permit);
 
 			for (String x : extended) {
@@ -324,7 +350,7 @@ public class DctmCmisACLTools implements DctmACL {
 			}
 
 			// Set the actor name property
-			accessors.addValue(DfValueFactory.newStringValue(accessorName));
+			accessors.addValue(DfValueFactory.of(accessorName));
 			final AccessorType type;
 			if (group) {
 				IDfGroup g = IDfGroup.class.cast(o);
@@ -336,12 +362,12 @@ public class DctmCmisACLTools implements DctmACL {
 			} else {
 				type = AccessorType.USER;
 			}
-			accessorTypes.addValue(DfValueFactory.newStringValue(type.name()));
+			accessorTypes.addValue(DfValueFactory.of(type.name()));
 
 			// Comma-concatenate the actions into the actions property
 			Set<String> actions = DctmCmisACLTools.calculateActionsForPermissions(accessorPermit, extendedPermits);
 			String allActions = AclTools.encode(actions);
-			accessorActions.addValue(DfValueFactory.newStringValue(allActions));
+			accessorActions.addValue(DfValueFactory.of(allActions));
 		}
 
 		properties.add(accessors);

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine;
 
 import java.util.EnumSet;
@@ -17,6 +43,8 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.ConfigurationSetting;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public abstract class TransferContextFactory< //
 	SESSION, //
@@ -132,7 +160,7 @@ public abstract class TransferContextFactory< //
 	}
 
 	public final void close() {
-		mutexLocked(() -> {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			try {
 				if (!this.open) { return; }
 				doClose();
@@ -145,7 +173,7 @@ public abstract class TransferContextFactory< //
 			} finally {
 				this.open = false;
 			}
-		});
+		}
 	}
 
 	protected abstract String calculateProductName(SESSION session) throws Exception;
@@ -161,10 +189,10 @@ public abstract class TransferContextFactory< //
 	}
 
 	public final CONTEXT newContext(String rootId, CmfObject.Archetype rootType, SESSION session, int batchPosition) {
-		return shareLocked(() -> {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
 			return constructContext(rootId, rootType, session, batchPosition);
-		});
+		}
 	}
 
 	protected abstract CONTEXT constructContext(String rootId, CmfObject.Archetype rootType, SESSION session,

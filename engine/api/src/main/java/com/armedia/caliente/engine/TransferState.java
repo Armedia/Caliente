@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine;
 
 import java.io.File;
@@ -13,8 +39,10 @@ import org.slf4j.Logger;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.ShareableMap;
 
-public abstract class TransferState {
+public abstract class TransferState extends BaseShareableLockable {
 	public final UUID jobId = UUID.randomUUID();
 	public final Logger output;
 	public final File baseData;
@@ -22,7 +50,7 @@ public abstract class TransferState {
 	public final CmfContentStore<?, ?> streamStore;
 	public final CfgTools cfg;
 
-	private final Map<String, Object> properties = new HashMap<>();
+	private final Map<String, Object> properties;
 
 	/**
 	 * @param output
@@ -37,21 +65,22 @@ public abstract class TransferState {
 		this.objectStore = objectStore;
 		this.streamStore = streamStore;
 		this.cfg = settings;
+		this.properties = new ShareableMap<>(this, new HashMap<>());
 	}
 
-	public final synchronized boolean setProperty(String property, Object value) {
+	public final boolean setProperty(String property, Object value) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a non-null property name"); }
 		if (value == null) { throw new IllegalArgumentException("Must provide a non-null value"); }
 		Object o = this.properties.put(property, value);
 		return (o != null);
 	}
 
-	public final synchronized Object removeProperty(String property) {
+	public final Object removeProperty(String property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a non-null property name"); }
 		return this.properties.remove(property);
 	}
 
-	public final synchronized <T> T getProperty(String property) {
+	public final <T> T getProperty(String property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a non-null property name"); }
 		try {
 			@SuppressWarnings("unchecked")
@@ -62,20 +91,20 @@ public abstract class TransferState {
 		}
 	}
 
-	public final synchronized boolean hasProperty(String property) {
+	public final boolean hasProperty(String property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a non-null property name"); }
 		return this.properties.containsKey(property);
 	}
 
-	public final synchronized void clearProperties() {
+	public final void clearProperties() {
 		this.properties.clear();
 	}
 
-	public final synchronized int getPropertyCount() {
+	public final int getPropertyCount() {
 		return this.properties.size();
 	}
 
-	public final synchronized Set<String> getPropertyNames() {
+	public final Set<String> getPropertyNames() {
 		return new HashSet<>(this.properties.keySet());
 	}
 }

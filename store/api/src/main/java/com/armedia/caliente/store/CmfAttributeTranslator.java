@@ -1,85 +1,58 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.store;
 
 import java.text.ParseException;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.codec.FunctionalCodec;
 
 public abstract class CmfAttributeTranslator<VALUE> {
-	private static class Codec implements CmfValueCodec<CmfValue> {
 
-		private final CmfValue.Type type;
-		private final CmfValue nullValue;
-
-		private Codec(CmfValue.Type type) {
-			this.type = type;
-			try {
-				this.nullValue = new CmfValue(this.type, null);
-			} catch (ParseException e) {
-				throw new RuntimeException("Unexpected parse exception", e);
-			}
-		}
-
-		@Override
-		public CmfValue encodeValue(CmfValue value) {
-			return Tools.coalesce(value, this.nullValue);
-		}
-
-		@Override
-		public CmfValue decodeValue(CmfValue value) {
-			return Tools.coalesce(value, this.nullValue);
-		}
-
-		@Override
-		public boolean isNull(CmfValue value) {
-			return (value == null) || value.isNull();
-		}
-
-		@Override
-		public CmfValue getNull() {
-			return this.nullValue;
-		}
-	};
-
-	private static class DefaultValueCodec implements CmfValueCodec<CmfValue> {
-
-		private final CmfValue.Type type;
-
+	private static class DefaultValueCodec extends FunctionalCodec<CmfValue, CmfValue>
+		implements CmfValueCodec<CmfValue> {
 		private DefaultValueCodec(CmfValue.Type type) {
-			this.type = type;
-		}
-
-		@Override
-		public boolean isNull(CmfValue value) {
-			return (value == null) || value.isNull();
-		}
-
-		@Override
-		public CmfValue getNull() {
-			return this.type.getNull();
-		}
-
-		@Override
-		public CmfValue encodeValue(CmfValue value) {
-			return value;
-		}
-
-		@Override
-		public CmfValue decodeValue(CmfValue value) {
-			return value;
+			super(Function.identity(), type.getNull(), CmfValue::isNull, Function.identity(), type.getNull(),
+				CmfValue::isNull);
 		}
 	};
 
 	public static final CmfAttributeNameMapper NULL_MAPPER = new CmfAttributeNameMapper();
 
-	private static final Map<CmfValue.Type, Codec> CODECS;
+	private static final Map<CmfValue.Type, CmfValueCodec<CmfValue>> CODECS;
 
 	static {
-		Map<CmfValue.Type, Codec> codecs = new EnumMap<>(CmfValue.Type.class);
+		Map<CmfValue.Type, CmfValueCodec<CmfValue>> codecs = new EnumMap<>(CmfValue.Type.class);
 		for (CmfValue.Type t : CmfValue.Type.values()) {
-			codecs.put(t, new Codec(t));
+			codecs.put(t, new DefaultValueCodec(t));
 		}
 		CODECS = Tools.freezeMap(codecs);
 	}
@@ -87,19 +60,9 @@ public abstract class CmfAttributeTranslator<VALUE> {
 	public static final CmfAttributeTranslator<CmfValue> CMFVALUE_TRANSLATOR = new CmfAttributeTranslator<CmfValue>(
 		CmfValue.class) {
 
-		private final Map<CmfValue.Type, CmfValueCodec<CmfValue>> codecs;
-
-		{
-			Map<CmfValue.Type, CmfValueCodec<CmfValue>> codecs = new EnumMap<>(CmfValue.Type.class);
-			for (CmfValue.Type t : CmfValue.Type.values()) {
-				codecs.put(t, new DefaultValueCodec(t));
-			}
-			this.codecs = Tools.freezeMap(codecs);
-		}
-
 		@Override
 		public CmfValueCodec<CmfValue> getCodec(CmfValue.Type type) {
-			return this.codecs.get(type);
+			return CmfAttributeTranslator.CODECS.get(type);
 		}
 
 		@Override
@@ -162,10 +125,10 @@ public abstract class CmfAttributeTranslator<VALUE> {
 			CmfValueCodec<VALUE> codec = getCodec(att.getType());
 			if (newAtt.isMultivalued()) {
 				for (CmfValue v : att) {
-					newAtt.addValue(codec.decodeValue(v));
+					newAtt.addValue(codec.decode(v));
 				}
 			} else {
-				newAtt.setValue(codec.decodeValue(att.getValue()));
+				newAtt.setValue(codec.decode(att.getValue()));
 			}
 			newObj.setAttribute(newAtt);
 		}
@@ -175,10 +138,10 @@ public abstract class CmfAttributeTranslator<VALUE> {
 			CmfValueCodec<VALUE> codec = getCodec(prop.getType());
 			if (newProp.isMultivalued()) {
 				for (CmfValue v : prop) {
-					newProp.addValue(codec.decodeValue(v));
+					newProp.addValue(codec.decode(v));
 				}
 			} else {
-				newProp.setValue(codec.decodeValue(prop.getValue()));
+				newProp.setValue(codec.decode(prop.getValue()));
 			}
 			newObj.setProperty(newProp);
 		}
@@ -215,10 +178,10 @@ public abstract class CmfAttributeTranslator<VALUE> {
 			CmfValueCodec<VALUE> codec = getCodec(att.getType());
 			if (newAtt.isMultivalued()) {
 				for (VALUE v : att) {
-					newAtt.addValue(codec.encodeValue(v));
+					newAtt.addValue(codec.encode(v));
 				}
 			} else {
-				newAtt.setValue(codec.encodeValue(att.getValue()));
+				newAtt.setValue(codec.encode(att.getValue()));
 			}
 			newObj.setAttribute(newAtt);
 		}
@@ -228,10 +191,10 @@ public abstract class CmfAttributeTranslator<VALUE> {
 			CmfValueCodec<VALUE> codec = getCodec(prop.getType());
 			if (newProp.isMultivalued()) {
 				for (VALUE v : prop) {
-					newProp.addValue(codec.encodeValue(v));
+					newProp.addValue(codec.encode(v));
 				}
 			} else {
-				newProp.setValue(codec.encodeValue(prop.getValue()));
+				newProp.setValue(codec.encode(prop.getValue()));
 			}
 			newObj.setProperty(newProp);
 		}

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 /**
  *
  */
@@ -16,9 +42,9 @@ import com.armedia.caliente.engine.dfc.common.DctmCmisACLTools;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DfUtils;
-import com.armedia.commons.dfc.util.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfGroup;
@@ -30,7 +56,7 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * @author diego
+ *
  *
  */
 public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL {
@@ -59,12 +85,12 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 		CmfProperty<IDfValue> property = null;
 
 		property = new CmfProperty<>(DctmACL.DOCUMENTUM_MARKER, DctmDataType.DF_BOOLEAN.getStoredType(), false);
-		property.setValue(DfValueFactory.newBooleanValue(true));
+		property.setValue(DfValueFactory.of(true));
 		properties.add(property);
 
 		final String aclId = acl.getObjectId().getId();
-		try (DctmQuery query = new DctmQuery(ctx.getSession(),
-			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), DctmQuery.Type.DF_EXECREAD_QUERY)) {
+		try (DfcQuery query = new DfcQuery(ctx.getSession(),
+			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), DfcQuery.Type.DF_EXECREAD_QUERY)) {
 			CmfProperty<IDfValue> p = new CmfProperty<>(IntermediateProperty.USERS_WITH_DEFAULT_ACL,
 				DctmDataType.DF_STRING.getStoredType());
 			query.forEachRemaining((o) -> p.addValue(o.getValueAt(0)));
@@ -81,7 +107,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			DctmDataType.DF_STRING.getStoredType(), true);
 		final IDfSession session = ctx.getSession();
 		Set<String> missingAccessors = new HashSet<>();
-		for (IDfPermit p : DfUtils.getPermissionsWithFallback(session, acl)) {
+		for (IDfPermit p : DfcUtils.getPermissionsWithFallback(session, acl)) {
 			// First, validate the accessor
 			final String accessor = p.getAccessorName();
 			final boolean group;
@@ -120,10 +146,10 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 				}
 			}
 
-			accessors.addValue(DfValueFactory.newStringValue(DctmMappingUtils.substituteMappableUsers(acl, accessor)));
-			accessorTypes.addValue(DfValueFactory.newStringValue(accessorType));
-			permitTypes.addValue(DfValueFactory.newIntValue(p.getPermitType()));
-			permitValues.addValue(DfValueFactory.newStringValue(p.getPermitValueString()));
+			accessors.addValue(DfValueFactory.of(DctmMappingUtils.substituteMappableUsers(acl, accessor)));
+			accessorTypes.addValue(DfValueFactory.of(accessorType));
+			permitTypes.addValue(DfValueFactory.of(p.getPermitType()));
+			permitValues.addValue(DfValueFactory.of(p.getPermitValueString()));
 		}
 		properties.add(accessors);
 		properties.add(accessorTypes);

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import java.sql.Connection;
@@ -6,8 +32,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -23,13 +47,14 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.ShareableLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSet.t", propOrder = {
 	"loaders"
 })
-public class MetadataSet implements ShareableLockable {
+public class MetadataSet extends BaseShareableLockable {
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -50,18 +75,10 @@ public class MetadataSet implements ShareableLockable {
 	protected Boolean failOnMissing;
 
 	@XmlTransient
-	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-
-	@XmlTransient
 	private List<AttributeValuesLoader> initializedLoaders;
 
 	@XmlTransient
 	private Map<String, MetadataSource> dataSources;
-
-	@Override
-	public ReadWriteLock getShareableLock() {
-		return this.rwLock;
-	}
 
 	public List<AttributeValuesLoader> getLoaders() {
 		if (this.loaders == null) {
@@ -139,7 +156,7 @@ public class MetadataSet implements ShareableLockable {
 	}
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws Exception {
-		return shareLocked(() -> {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			// If there are no loades initialized, this is a problem...
 			if (this.initializedLoaders == null) { throw new Exception("This metadata source is not yet initialized"); }
 
@@ -183,7 +200,7 @@ public class MetadataSet implements ShareableLockable {
 				finalAttributes = null;
 			}
 			return finalAttributes;
-		});
+		}
 	}
 
 	public void close() {

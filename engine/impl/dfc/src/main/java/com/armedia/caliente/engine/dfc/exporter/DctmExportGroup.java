@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 /**
  *
  */
@@ -18,9 +44,9 @@ import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DfUtils;
-import com.armedia.commons.dfc.util.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -31,7 +57,7 @@ import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * @author diego
+ *
  *
  */
 public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements DctmGroup {
@@ -72,7 +98,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 					groupsNames.add(nextGroupName);
 				}
 			} finally {
-				DfUtils.closeQuietly(results);
+				DfcUtils.closeQuietly(results);
 			}
 
 			int depth = 0;
@@ -108,9 +134,9 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		// CmfStore all the users that have this group as their default group
 		CmfProperty<IDfValue> property = new CmfProperty<>(IntermediateProperty.USERS_WITH_DEFAULT_GROUP,
 			DctmDataType.DF_STRING.getStoredType());
-		try (DctmQuery query = new DctmQuery(ctx.getSession(),
+		try (DfcQuery query = new DfcQuery(ctx.getSession(),
 			String.format(DctmExportGroup.DQL_FIND_USERS_WITH_DEFAULT_GROUP, group.getObjectId().getId()),
-			DctmQuery.Type.DF_EXECREAD_QUERY)) {
+			DfcQuery.Type.DF_EXECREAD_QUERY)) {
 			query.forEachRemaining((resultCol) -> {
 				IDfValue v = resultCol.getValueAt(0);
 				String mapped = DctmMappingUtils.substituteMappableUsers(ctx.getSession(), v.asString());
@@ -118,7 +144,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 					// Special users don't get their default groups modified
 					return;
 				}
-				property.addValue(DfValueFactory.newStringValue(mapped));
+				property.addValue(DfValueFactory.of(mapped));
 			});
 			properties.add(property);
 		}

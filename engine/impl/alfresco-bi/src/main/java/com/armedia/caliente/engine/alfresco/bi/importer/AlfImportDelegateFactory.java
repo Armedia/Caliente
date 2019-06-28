@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
@@ -49,6 +75,7 @@ import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
@@ -61,8 +88,10 @@ import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.concurrent.ShareableSet;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.xml.XmlTools;
 
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
@@ -159,7 +188,8 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	private final Path baseData;
+	private final Path contentRoot;
+	private final Path metadataRoot;
 	private final BulkImportManager biManager;
 
 	private final Properties userLoginMap = new Properties();
@@ -180,12 +210,13 @@ public class AlfImportDelegateFactory
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
 		throws IOException, JAXBException, XMLStreamException, DynamicElementException {
 		super(engine, configuration);
-		this.baseData = engine.getBaseData();
+		this.metadataRoot = engine.getBaseData();
 		this.biManager = engine.getBulkImportManager();
 		this.schema = engine.getSchema();
 		this.defaultTypes = engine.getDefaultTypes();
 
 		FileUtils.forceMkdir(this.biManager.getContentPath().toFile());
+		this.contentRoot = this.biManager.getContentPath();
 
 		final File modelDir = this.biManager.getContentModelsPath().toFile();
 		FileUtils.forceMkdir(modelDir);
@@ -222,25 +253,29 @@ public class AlfImportDelegateFactory
 	}
 
 	boolean initializeVdocSupport() {
-		if (this.initializedVdocs.get() == null) {
-			synchronized (this) {
-				if (this.initializedVdocs.get() == null) {
-					boolean ok = false;
-					try {
-						getType("cm:folder", "dctm:vdocRoot");
-						getType("cm:folder", "dctm:vdocVersion");
-						getType("dctm:vdocReference");
-						ok = true;
-					} catch (Exception e) {
-						this.log.warn("VDoc support has been disabled", e);
-					} finally {
-						// Make sure we only do this once
-						this.initializedVdocs.set(ok);
+		try (SharedAutoLock shared = autoSharedLock()) {
+			Boolean result = this.initializedVdocs.get();
+			if (result == null) {
+				try (MutexAutoLock mutex = shared.upgrade()) {
+					result = this.initializedVdocs.get();
+					if (result == null) {
+						boolean ok = false;
+						try {
+							getType("cm:folder", "dctm:vdocRoot");
+							getType("cm:folder", "dctm:vdocVersion");
+							getType("dctm:vdocReference");
+							ok = true;
+						} catch (Exception e) {
+							this.log.warn("VDoc support has been disabled", e);
+						} finally {
+							// Make sure we only do this once
+							this.initializedVdocs.set(result = ok);
+						}
 					}
 				}
 			}
+			return result;
 		}
-		return this.initializedVdocs.get();
 	}
 
 	@Override
@@ -386,19 +421,21 @@ public class AlfImportDelegateFactory
 		return path.toString();
 	}
 
+	protected Path getContentRelativePath(File contentFile) {
+		return this.contentRoot.relativize(contentFile.toPath());
+	}
+
 	protected final ScanIndexItemMarker generateItemMarker(final AlfImportContext ctx, final boolean folder,
-		final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile, MarkerType type)
-		throws ImportException {
+		final CmfObject<CmfValue> cmfObject, CmfContentStream content, File contentFile, File metadataFile,
+		MarkerType type) throws ImportException {
 		final int head;
 		final int count;
 		final int current;
 		String renditionRootPath = null;
 		switch (type) {
 			case RENDITION_ROOT:
-				contentFile = contentFile.getParentFile();
 				// Fall-through
 			case RENDITION_TYPE:
-				contentFile = contentFile.getParentFile();
 				// Fall-through
 			case RENDITION_ENTRY:
 				renditionRootPath = String.format("%s-renditions", cmfObject.getId());
@@ -418,22 +455,27 @@ public class AlfImportDelegateFactory
 				CmfProperty<CmfValue> vCounter = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
 				CmfProperty<CmfValue> vHeadIndex = cmfObject.getProperty(IntermediateProperty.VERSION_HEAD_INDEX);
 				CmfProperty<CmfValue> vIndex = cmfObject.getProperty(IntermediateProperty.VERSION_INDEX);
-				if ((vCounter == null) || !vCounter.hasValues() || //
-					(vHeadIndex == null) || !vHeadIndex.hasValues() || //
-					(vIndex == null) || !vIndex.hasValues()) {
-					if (!folder) {
-						// ERROR: insufficient data
-						throw new ImportException(
-							String.format("No version indexes found for %s", cmfObject.getDescription()));
-					}
-					// It's OK for directories...everything is 1
-					head = 1;
-					count = 1;
-					current = 1;
-				} else {
+				// These 3 must either all be present and have values, or none of them...
+				if (((vCounter == null) || !vCounter.hasValues()) && //
+					((vHeadIndex == null) || !vHeadIndex.hasValues()) && //
+					((vIndex == null) || !vIndex.hasValues())) {
+					// If none of them have values...
+					head = count = current = 1;
+				} else if ((vCounter != null) && vCounter.hasValues()
+					&& ((vHeadIndex != null) && vHeadIndex.hasValues() && (vIndex != null) && vIndex.hasValues())) {
+					// If all of them have values...
 					head = vHeadIndex.getValue().asInteger();
 					count = vCounter.getValue().asInteger();
 					current = vIndex.getValue().asInteger();
+				} else {
+					// Only some have values, so only be lenient for directories...
+					if (!folder) {
+						// ERROR: insufficient data
+						throw new ImportException(
+							String.format("Incomplete version indexes found for %s (", cmfObject.getDescription()));
+					}
+					// It's OK for directories...everything is 1
+					head = count = current = 1;
 				}
 				break;
 		}
@@ -447,8 +489,8 @@ public class AlfImportDelegateFactory
 		metadataFile = AlfImportDelegateFactory.normalizeAbsolute(metadataFile);
 
 		// basePath is the base path within which the entire import resides
-		final Path relativeContentPath = this.baseData.relativize(contentFile.toPath());
-		final Path relativeMetadataPath = (metadataFile != null ? this.baseData.relativize(metadataFile.toPath())
+		final Path relativeContentPath = getContentRelativePath(contentFile);
+		final Path relativeMetadataPath = (metadataFile != null ? this.metadataRoot.relativize(metadataFile.toPath())
 			: null);
 		Path relativeMetadataParent = (metadataFile != null ? relativeMetadataPath.getParent() : null);
 		if (relativeMetadataParent == null) {
@@ -497,12 +539,22 @@ public class AlfImportDelegateFactory
 			storeArtificialFolderToIndex(targetPath);
 		}
 
+		final String renditionTypeStr;
+		{
+			String typeStr = content.getRenditionIdentifier();
+			if (!StringUtils.isBlank(content.getModifier())) {
+				typeStr = String.format("%s(%s)", typeStr, content.getModifier());
+			}
+			renditionTypeStr = typeStr;
+		}
+
 		String append = null;
 		// This is the base name, others may change it...
 		thisMarker.setTargetName(contentFile.getName());
 		switch (type) {
-			case NORMAL:
 			case VDOC_ROOT:
+				thisMarker.setDirectory(true);
+			case NORMAL:
 				thisMarker.setTargetName(ctx.getObjectName(cmfObject));
 				break;
 
@@ -526,17 +578,22 @@ public class AlfImportDelegateFactory
 			case RENDITION_ROOT:
 				// Special case: the target name must be ${objectId}-renditions
 				thisMarker.setTargetName(String.format("%s-renditions", cmfObject.getId()));
+				thisMarker.setDirectory(true);
+				thisMarker.setContent(null);
 				break;
 
 			case RENDITION_TYPE:
 				targetPath = String.format("%s/%s", targetPath, renditionRootPath);
+				thisMarker.setTargetName(renditionTypeStr);
+				thisMarker.setDirectory(true);
+				thisMarker.setContent(null);
 				break;
 
 			case RENDITION_ENTRY:
-				// Add the rendition root path
-				targetPath = String.format("%s/%s", targetPath, renditionRootPath);
-				// Add the rendition type path
-				targetPath = String.format("%s/%s", targetPath, contentFile.getParentFile().getName());
+				// Add the rendition root path and type path
+				targetPath = String.format("%s/%s/%s", targetPath, renditionRootPath, renditionTypeStr);
+				thisMarker.setTargetName(
+					String.format("%s.%s[%08x]", cmfObject.getId(), renditionTypeStr, content.getRenditionPage()));
 				break;
 
 			default:
@@ -703,13 +760,13 @@ public class AlfImportDelegateFactory
 	}
 
 	protected final void storeToIndex(final AlfImportContext ctx, final boolean folder,
-		final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile, MarkerType type)
-		throws ImportException {
+		final CmfObject<CmfValue> cmfObject, CmfContentStream content, File contentFile, File metadataFile,
+		MarkerType type) throws ImportException {
 
 		storeManifestToScanIndex();
 
-		final ScanIndexItemMarker thisMarker = generateItemMarker(ctx, folder, cmfObject, contentFile, metadataFile,
-			type);
+		final ScanIndexItemMarker thisMarker = generateItemMarker(ctx, folder, cmfObject, content, contentFile,
+			metadataFile, type);
 		List<ScanIndexItemMarker> markerList = null;
 		switch (type) {
 			case VDOC_ROOT:
@@ -762,10 +819,11 @@ public class AlfImportDelegateFactory
 		markerList.clear();
 
 		try {
-			(folder ? this.folderIndex : this.fileIndex).marshal(item);
+			(item.isDirectory() ? this.folderIndex : this.fileIndex).marshal(item);
 		} catch (Exception e) {
 			throw new ImportException(
-				String.format("Failed to serialize the %s to XML: %s", folder ? "folder" : "file", item), e);
+				String.format("Failed to serialize the %s to XML: %s", item.isDirectory() ? "folder" : "file", item),
+				e);
 		}
 	}
 

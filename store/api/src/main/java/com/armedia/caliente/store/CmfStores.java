@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.store;
 
 import java.io.File;
@@ -12,12 +38,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,13 +49,15 @@ import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.store.xml.StoreDefinitions;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
-import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.xml.XmlTools;
 
-public final class CmfStores {
+public final class CmfStores extends BaseShareableLockable {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final AtomicBoolean open = new AtomicBoolean(true);
-	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 	private final Map<String, CmfStoreFactory<?>> factories;
 	private final Map<String, CmfStore<?>> cmfStores = new HashMap<>();
 	private final Map<String, CmfStorePrep> cmfPreps = new HashMap<>();
@@ -75,24 +101,36 @@ public final class CmfStores {
 	}
 
 	private void initConfigurations(URL config, Collection<StoreConfiguration> storeConfigurations) {
-		this.lock.writeLock().lock();
-		try {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			for (StoreConfiguration storeCfg : storeConfigurations) {
 				this.configurations.put(storeCfg.getId(), storeCfg);
 			}
-		} finally {
-			this.lock.writeLock().unlock();
 		}
 	}
 
 	private void initStores(URL config, Collection<StoreConfiguration> storeConfigurations) {
-		this.lock.writeLock().lock();
-		try {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			int i = 0;
 			for (StoreConfiguration storeCfg : storeConfigurations) {
 				i++;
 				try {
-					createStore(storeCfg);
+					String parentName = StringUtils.strip(storeCfg.getParentName());
+					if (StringUtils.isBlank(parentName)) {
+						this.log.warn("Content store [{}] has a blank parent name - will assume <null> instead",
+							storeCfg.getId());
+						parentName = null;
+					}
+					CmfStore<?> parent = null;
+					if (parentName != null) {
+						parent = getStore(parentName);
+						if (parent == null) {
+							this.log.error(
+								"Content store [{}] contains an illegal forward reference to parent store [{}] - please resolve this in the configuration file",
+								storeCfg.getId(), parentName);
+							continue;
+						}
+					}
+					createStore(storeCfg, parent);
 				} catch (Throwable t) {
 					String msg = String.format(
 						"Exception raised attempting to initialize %s store #%d from the definitions at [%s]",
@@ -104,8 +142,6 @@ public final class CmfStores {
 					}
 				}
 			}
-		} finally {
-			this.lock.writeLock().unlock();
 		}
 	}
 
@@ -155,7 +191,14 @@ public final class CmfStores {
 		return prepInstance;
 	}
 
+	/*
 	private CmfStore<?> createStore(StoreConfiguration configuration)
+		throws CmfStorageException, DuplicateCmfStoreException {
+		return createStore(configuration, null);
+	}
+	*/
+
+	private CmfStore<?> createStore(StoreConfiguration configuration, CmfStore<?> parent)
 		throws CmfStorageException, DuplicateCmfStoreException {
 		assertOpen();
 		if (configuration == null) {
@@ -166,9 +209,7 @@ public final class CmfStores {
 		final String type = configuration.getType();
 		if (type == null) { throw new IllegalArgumentException("The configuration does not specify the store type"); }
 
-		final Lock l = this.lock.writeLock();
-		l.lock();
-		try {
+		try (MutexAutoLock lock = autoMutexLock()) {
 			CmfStore<?> dupe = this.cmfStores.get(id);
 			if (dupe != null) {
 				throw new DuplicateCmfStoreException(
@@ -183,28 +224,20 @@ public final class CmfStores {
 
 			final boolean cleanData = cfg.getBoolean(CmfStoreFactory.CFG_CLEAN_DATA, false);
 			final CmfStorePrep prep = prepareStore(configuration, cleanData);
-			CmfStore<?> instance = factory.newInstance(configuration, cleanData, prep);
+			CmfStore<?> instance = factory.newInstance(parent, configuration, cleanData, prep);
 			this.cmfStores.put(id, instance);
 			if (prep != null) {
 				this.cmfPreps.put(id, prep);
 			}
 			this.configurations.put(id, configuration);
 			return instance;
-		} finally {
-			l.unlock();
 		}
 	}
 
 	private CmfStore<?> getStore(String name) {
 		assertOpen();
 		if (name == null) { throw new IllegalArgumentException("Must provide the name of the store to retrieve"); }
-		Lock l = this.lock.readLock();
-		l.lock();
-		try {
-			return this.cmfStores.get(name);
-		} finally {
-			l.unlock();
-		}
+		return shareLocked(() -> this.cmfStores.get(name));
 	}
 
 	private StoreConfiguration getConfiguration(String name) {
@@ -212,62 +245,57 @@ public final class CmfStores {
 		if (name == null) {
 			throw new IllegalArgumentException("Must provide the name of the store configuration to retrieve");
 		}
-		Lock l = this.lock.readLock();
-		l.lock();
-		try {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			StoreConfiguration cfg = this.configurations.get(name);
 			return (cfg != null ? cfg.clone() : null);
-		} finally {
-			l.unlock();
 		}
 	}
 
 	private void closeInstance() {
 		if (this.open.compareAndSet(true, false)) {
-			this.lock.writeLock().lock();
-			try {
-				for (Map.Entry<String, CmfStore<?>> entry : this.cmfStores.entrySet()) {
-					String n = entry.getKey();
-					CmfStore<?> s = entry.getValue();
-					try {
-						s.close();
-					} catch (Exception e) {
-						this.log.warn("Exception caught closing CmfObjectStore {}[{}]", n,
-							s.getClass().getCanonicalName(), e);
+			try (MutexAutoLock lock = autoMutexLock()) {
+				try {
+					for (Map.Entry<String, CmfStore<?>> entry : this.cmfStores.entrySet()) {
+						String n = entry.getKey();
+						CmfStore<?> s = entry.getValue();
+						try {
+							s.close();
+						} catch (Exception e) {
+							this.log.warn("Exception caught closing CmfObjectStore {}[{}]", n,
+								s.getClass().getCanonicalName(), e);
+						}
+
+						CmfStorePrep prep = this.cmfPreps.get(n);
+						if (prep == null) {
+							continue;
+						}
+						try {
+							prep.close();
+						} catch (Exception e) {
+							this.log.warn("Exception caught cleaning up the CmfStorePrep for CmfObjectStore {}[{}]", n,
+								s.getClass().getCanonicalName(), e);
+						}
 					}
 
-					CmfStorePrep prep = this.cmfPreps.get(n);
-					if (prep == null) {
-						continue;
+					for (CmfStoreFactory<?> f : this.factories.values()) {
+						try {
+							f.close();
+						} catch (Exception e) {
+							this.log.warn("Exception caught closing Factory [{}]", f.getClass().getCanonicalName(), e);
+						}
 					}
-					try {
-						prep.close();
-					} catch (Exception e) {
-						this.log.warn("Exception caught cleaning up the CmfStorePrep for CmfObjectStore {}[{}]", n,
-							s.getClass().getCanonicalName(), e);
-					}
+				} finally {
+					this.cmfStores.clear();
+					this.cmfPreps.clear();
+					this.factories.clear();
+					this.configurations.clear();
 				}
-
-				for (CmfStoreFactory<?> f : this.factories.values()) {
-					try {
-						f.close();
-					} catch (Exception e) {
-						this.log.warn("Exception caught closing Factory [{}]", f.getClass().getCanonicalName(), e);
-					}
-				}
-			} finally {
-				this.cmfStores.clear();
-				this.cmfPreps.clear();
-				this.factories.clear();
-				this.configurations.clear();
-				this.lock.writeLock().unlock();
 			}
 		}
 	}
 
 	private static final Logger LOG = LoggerFactory.getLogger(CmfStores.class);
-
-	private static final ReadWriteLock LOCK = new ReentrantReadWriteLock();
+	private static final BaseShareableLockable LOCK = new BaseShareableLockable();
 	private static CmfStores OBJECT_STORES = null;
 	private static CmfStores CONTENT_STORES = null;
 
@@ -296,8 +324,7 @@ public final class CmfStores {
 	}
 
 	public static void initialize(boolean configOnly) {
-		CmfStores.LOCK.writeLock().lock();
-		try {
+		try (MutexAutoLock lock = CmfStores.LOCK.autoMutexLock()) {
 			// If we're already initialized, dump out
 			if ((CmfStores.OBJECT_STORES != null) || (CmfStores.CONTENT_STORES != null)) { return; }
 
@@ -340,8 +367,6 @@ public final class CmfStores {
 					CmfStores.CONTENT_STORES.initStores(config, cfg.getContentStores());
 				}
 			}
-		} finally {
-			CmfStores.LOCK.writeLock().unlock();
 		}
 	}
 
@@ -354,9 +379,8 @@ public final class CmfStores {
 	}
 
 	private static boolean doClose() {
-		CmfStores.LOCK.writeLock().lock();
 		boolean ret = false;
-		try {
+		try (MutexAutoLock lock = CmfStores.LOCK.autoMutexLock()) {
 			if (CmfStores.OBJECT_STORES != null) {
 				CmfStores.OBJECT_STORES.closeInstance();
 				CmfStores.OBJECT_STORES = null;
@@ -368,8 +392,6 @@ public final class CmfStores {
 				ret = true;
 			}
 			return ret;
-		} finally {
-			CmfStores.LOCK.writeLock().unlock();
 		}
 	}
 
@@ -389,64 +411,51 @@ public final class CmfStores {
 
 	public static CmfObjectStore<?> createObjectStore(StoreConfiguration configuration)
 		throws CmfStorageException, DuplicateCmfStoreException {
+		return CmfStores.createObjectStore(configuration, null);
+	}
+
+	public static CmfObjectStore<?> createObjectStore(StoreConfiguration configuration, CmfStore<?> parent)
+		throws CmfStorageException, DuplicateCmfStoreException {
 		CmfStores.initialize();
-		CmfStores.LOCK.readLock().lock();
-		try {
-			return CmfObjectStore.class.cast(CmfStores.assertValid(CmfStores.OBJECT_STORES).createStore(configuration));
-		} finally {
-			CmfStores.LOCK.readLock().unlock();
+		try (SharedAutoLock lock = CmfStores.LOCK.autoSharedLock()) {
+			return CmfObjectStore.class
+				.cast(CmfStores.assertValid(CmfStores.OBJECT_STORES).createStore(configuration, parent));
 		}
 	}
 
 	public static CmfContentStore<?, ?> createContentStore(StoreConfiguration configuration)
 		throws CmfStorageException, DuplicateCmfStoreException {
+		return CmfStores.createContentStore(configuration, null);
+	}
+
+	public static CmfContentStore<?, ?> createContentStore(StoreConfiguration configuration, CmfStore<?> parent)
+		throws CmfStorageException, DuplicateCmfStoreException {
 		CmfStores.initialize();
-		CmfStores.LOCK.readLock().lock();
-		try {
+		try (SharedAutoLock lock = CmfStores.LOCK.autoSharedLock()) {
 			return CmfContentStore.class
-				.cast(CmfStores.assertValid(CmfStores.CONTENT_STORES).createStore(configuration));
-		} finally {
-			CmfStores.LOCK.readLock().unlock();
+				.cast(CmfStores.assertValid(CmfStores.CONTENT_STORES).createStore(configuration, parent));
 		}
 	}
 
 	public static StoreConfiguration getObjectStoreConfiguration(String name) {
 		CmfStores.initialize();
-		CmfStores.LOCK.readLock().lock();
-		try {
-			return CmfStores.assertValid(CmfStores.OBJECT_STORES).getConfiguration(name);
-		} finally {
-			CmfStores.LOCK.readLock().unlock();
-		}
+		return CmfStores.LOCK.shareLocked(() -> CmfStores.assertValid(CmfStores.OBJECT_STORES).getConfiguration(name));
 	}
 
 	public static CmfObjectStore<?> getObjectStore(String name) {
 		CmfStores.initialize();
-		CmfStores.LOCK.readLock().lock();
-		try {
-			return CmfObjectStore.class.cast(CmfStores.assertValid(CmfStores.OBJECT_STORES).getStore(name));
-		} finally {
-			CmfStores.LOCK.readLock().unlock();
-		}
+		return CmfStores.LOCK.shareLocked(
+			() -> CmfObjectStore.class.cast(CmfStores.assertValid(CmfStores.OBJECT_STORES).getStore(name)));
 	}
 
 	public static StoreConfiguration getContentStoreConfiguration(String name) {
 		CmfStores.initialize();
-		CmfStores.LOCK.readLock().lock();
-		try {
-			return CmfStores.assertValid(CmfStores.CONTENT_STORES).getConfiguration(name);
-		} finally {
-			CmfStores.LOCK.readLock().unlock();
-		}
+		return CmfStores.LOCK.shareLocked(() -> CmfStores.assertValid(CmfStores.CONTENT_STORES).getConfiguration(name));
 	}
 
 	public static CmfContentStore<?, ?> getContentStore(String name) {
 		CmfStores.initialize();
-		CmfStores.LOCK.readLock().lock();
-		try {
-			return CmfContentStore.class.cast(CmfStores.assertValid(CmfStores.CONTENT_STORES).getStore(name));
-		} finally {
-			CmfStores.LOCK.readLock().unlock();
-		}
+		return CmfStores.LOCK.shareLocked(
+			() -> CmfContentStore.class.cast(CmfStores.assertValid(CmfStores.CONTENT_STORES).getStore(name)));
 	}
 }

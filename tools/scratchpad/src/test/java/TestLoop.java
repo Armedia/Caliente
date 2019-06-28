@@ -1,3 +1,30 @@
+
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software.
+ *
+ * If the software was purchased under a paid Caliente license, the terms of
+ * the paid license agreement will prevail.  Otherwise, the software is
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,14 +39,14 @@ import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.text.StringSubstitutor;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
+import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.calienteng.EventRegistration;
-import com.armedia.commons.dfc.pool.DfcSessionPool;
-import com.armedia.commons.dfc.util.DctmQuery;
-import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
@@ -43,7 +70,7 @@ public class TestLoop {
 
 	private static DfcSessionPool POOL = null;
 
-	// @BeforeClass
+	// @BeforeAll
 	public static void setUpBeforeClass() throws Exception {
 		if (TestLoop.POOL == null) {
 			TestLoop.POOL = new DfcSessionPool("documentum", "dmadmin2", "ArM3D!A");
@@ -52,7 +79,7 @@ public class TestLoop {
 		}
 	}
 
-	// @AfterClass
+	// @AfterAll
 	public static void tearDownAfterClass() throws Exception {
 		if (TestLoop.POOL != null) {
 			try {
@@ -237,8 +264,8 @@ public class TestLoop {
 		try {
 			boolean unregister = false;
 			Map<String, String> parameters = new HashMap<>();
-			parameters.put("objectId", DfUtils.quoteString(id.getId()));
-			try (DctmQuery query = new DctmQuery(session,
+			parameters.put("objectId", DfcUtils.quoteString(id.getId()));
+			try (DfcQuery query = new DfcQuery(session,
 				StringSubstitutor.replace(TestLoop.GET_STATUS_DQL, parameters))) {
 				if (!query.hasNext()) {
 					// No chronicle...can't delete the watch!
@@ -309,14 +336,14 @@ public class TestLoop {
 
 			final int depth = StringUtils.countMatches(objectPath, "/");
 			Map<String, String> parameters = new HashMap<>();
-			parameters.put("chronicleId", DfUtils.quoteString(obj.getChronicleId().getId()));
-			parameters.put("objectId", DfUtils.quoteString(obj.getObjectId().getId()));
+			parameters.put("chronicleId", DfcUtils.quoteString(obj.getChronicleId().getId()));
+			parameters.put("objectId", DfcUtils.quoteString(obj.getObjectId().getId()));
 			parameters.put("type", String.valueOf(archetype));
-			parameters.put("path", DfUtils.quoteString(objectPath));
-			parameters.put("name", DfUtils.quoteString(so.getObjectName()));
-			parameters.put("mtime", DfUtils.quoteString(modifiedStr));
+			parameters.put("path", DfcUtils.quoteString(objectPath));
+			parameters.put("name", DfcUtils.quoteString(so.getObjectName()));
+			parameters.put("mtime", DfcUtils.quoteString(modifiedStr));
 			parameters.put("depth", String.valueOf(depth));
-			try (DctmQuery query = new DctmQuery(session,
+			try (DfcQuery query = new DfcQuery(session,
 				StringSubstitutor.replace(TestLoop.INSERT_STATUS_DQL, parameters))) {
 				if (query.hasNext()) {
 					int inserted = query.next().getInt("rows_inserted");
@@ -330,7 +357,7 @@ public class TestLoop {
 				}
 			}
 
-			try (DctmQuery query = new DctmQuery(session,
+			try (DfcQuery query = new DfcQuery(session,
 				StringSubstitutor.replace(TestLoop.INSERT_VERSION_DQL, parameters))) {
 				if (query.hasNext()) {
 					int inserted = query.next().getInt("rows_inserted");
@@ -369,11 +396,11 @@ public class TestLoop {
 		final IDfSession session = cabinet.getSession();
 		final String dql = String.format(
 			"select r_object_id from dm_sysobject (ALL) where folder(ID(%s), DESCEND) and ( type(dm_document) or type(dm_folder) )",
-			DfUtils.quoteString(cabinet.getObjectId().getId()));
+			DfcUtils.quoteString(cabinet.getObjectId().getId()));
 		boolean ok = false;
 		final IDfLocalTransaction tx = session.beginTransEx();
 		try {
-			try (DctmQuery query = new DctmQuery(session, dql)) {
+			try (DfcQuery query = new DfcQuery(session, dql)) {
 				String[] types = {
 					"dm_folder", "dm_document"
 				};
@@ -423,9 +450,9 @@ public class TestLoop {
 				payloads.clear();
 
 				this.log.info("Checking for events...");
-				try (DctmQuery query = new DctmQuery(session,
+				try (DfcQuery query = new DfcQuery(session,
 					String.format("select r_object_id from dmi_queue_item where delete_flag != 1 and message = %s",
-						DfUtils.quoteString(TestLoop.CALIENTE_STR)))) {
+						DfcUtils.quoteString(TestLoop.CALIENTE_STR)))) {
 					item: while (query.hasNext()) {
 						IDfId id = query.next().getId("r_object_id");
 						final IDfQueueItem i;
@@ -466,14 +493,14 @@ public class TestLoop {
 
 						switch (event) {
 							case dm_destroy:
-								Assert.assertNull(o);
+								Assertions.assertNull(o);
 								payloads.add(new Payload(i));
 								break;
 							case dm_checkin:
 							case dm_save:
 							case dm_unlink:
 							case dm_link:
-								Assert.assertNotNull(o);
+								Assertions.assertNotNull(o);
 								if (IDfFolder.class.isInstance(o) || IDfDocument.class.isInstance(o)) {
 									IDfSysObject so = IDfSysObject.class.cast(o);
 									// Identify the object
@@ -500,9 +527,9 @@ public class TestLoop {
 						final IDfSysObject so = payload.object;
 						if (so == null) {
 							// Object must be deleted
-							new DctmQuery(session,
+							new DfcQuery(session,
 								String.format("delete from dm_dbo.caliente_status where r_object_id = %s",
-									DfUtils.quoteString(payload.objectId.getId())));
+									DfcUtils.quoteString(payload.objectId.getId())));
 						} else {
 							// Object needs to be created or updated
 							// Identify the object
@@ -523,8 +550,8 @@ public class TestLoop {
 							}
 
 							final String dateStr = DateFormatUtils.format(payload.date.getDate(), datePattern, utc);
-							this.log.info("Event #{}: [{}] from [{}] at [{}]{}",
-								LazyFormatter.lazyFormat("%08d", ++current), payload.event, path, dateStr, Tools.NL);
+							this.log.info("Event #{}: [{}] from [{}] at [{}]{}", LazyFormatter.of("%08d", ++current),
+								payload.event, path, dateStr, Tools.NL);
 
 							if (dateStr.hashCode() != utc.hashCode()) {
 								continue;
@@ -538,12 +565,12 @@ public class TestLoop {
 								// TODO: What if the new name/path means it shouldn't be watched
 								// anymore?
 								Map<String, String> parameters = new HashMap<>();
-								parameters.put("name", DfUtils.quoteString(so.getObjectName()));
-								parameters.put("path", DfUtils.quoteString(path));
-								parameters.put("mtime", DfUtils.quoteString(dateStr));
+								parameters.put("name", DfcUtils.quoteString(so.getObjectName()));
+								parameters.put("path", DfcUtils.quoteString(path));
+								parameters.put("mtime", DfcUtils.quoteString(dateStr));
 								parameters.put("depth", String.valueOf(StringUtils.countMatches(path, "/")));
-								parameters.put("chronicleId", DfUtils.quoteString(so.getChronicleId().getId()));
-								try (DctmQuery updateResult = new DctmQuery(session,
+								parameters.put("chronicleId", DfcUtils.quoteString(so.getChronicleId().getId()));
+								try (DfcQuery updateResult = new DfcQuery(session,
 									StringSubstitutor.replace(TestLoop.UPDATE_STATUS_SQL, parameters))) {
 									updateResult.forEachRemaining((o) -> {
 										String dump = o.dump();

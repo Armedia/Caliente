@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.store;
 
 import java.io.File;
@@ -12,6 +38,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperation<?>> extends CmfStore<OPERATION> {
 
@@ -281,6 +308,10 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 	}
 
+	public CmfContentStore(CmfStore<?> parent) {
+		super(parent, "content");
+	}
+
 	protected abstract boolean isSupported(LOCATOR locator);
 
 	public abstract boolean isSupportsFileAccess();
@@ -297,14 +328,14 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		if (locator == null) { throw new IllegalArgumentException("Must provide a locator string"); }
 		// Short-cut, no need to luck if we won't do anything
 		if (!isSupportsFileAccess()) { return null; }
-		return shareLocked(() -> {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			assertOpen();
 			File f = doGetFile(locator);
 			if (f == null) {
 				throw new IllegalStateException("doGetFile() returned null - did you forget to override the method?");
 			}
 			return f.getCanonicalFile();
-		});
+		}
 	}
 
 	private void ensureParentExists(File f) throws IOException {

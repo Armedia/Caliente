@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
 		<artifactId>caliente</artifactId>
-		<version>3.8.0</version>
+		<version>3.8.1</version>
 		<relativePath>../../../pom.xml</relativePath>
 	</parent>
 
@@ -31,12 +31,6 @@
 			<groupId>com.armedia.caliente.tools</groupId>
 			<artifactId>caliente-tools-dfc</artifactId>
 			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.commons</groupId>
-			<artifactId>dfc-session-pool</artifactId>
 			<scope>compile</scope>
 		</dependency>
 

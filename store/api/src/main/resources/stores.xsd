@@ -61,6 +61,7 @@
 
 	<xsd:complexType name="store.t">
 		<xsd:sequence>
+			<xsd:element name="parent" type="tns:id_string.t" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="type" type="tns:class_name.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="prep" type="tns:class_name.t" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="settings" type="tns:settings.t" minOccurs="0" maxOccurs="1"/>

@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import java.sql.Connection;
@@ -7,8 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.sql.DataSource;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -24,16 +48,17 @@ import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.commons.dslocator.DataSourceDescriptor;
-import com.armedia.commons.dslocator.DataSourceLocator;
+import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
+import com.armedia.caliente.tools.datasource.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.concurrent.ShareableLockable;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSource.t", propOrder = {
 	"url", "driver", "user", "password", "settings",
 })
-public class MetadataSource implements ShareableLockable {
+public class MetadataSource extends BaseShareableLockable {
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -57,15 +82,7 @@ public class MetadataSource implements ShareableLockable {
 	protected String name;
 
 	@XmlTransient
-	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-
-	@XmlTransient
 	private DataSource dataSource = null;
-
-	@Override
-	public ReadWriteLock getShareableLock() {
-		return this.rwLock;
-	}
 
 	public String getUrl() {
 		return this.url;
@@ -135,7 +152,6 @@ public class MetadataSource implements ShareableLockable {
 
 	public void initialize() throws Exception {
 		shareLockedUpgradable(() -> this.dataSource, Objects::isNull, (e) -> {
-			if (this.dataSource != null) { return; }
 			Map<String, String> settingsMap = getSettingsMap();
 
 			String url = StringUtils.strip(getUrl());
@@ -145,7 +161,7 @@ public class MetadataSource implements ShareableLockable {
 			setValue("driver", getDriver(), settingsMap);
 			setValue("user", getUser(), settingsMap);
 
-			String password = StringUtils.strip(getPassword());
+			String password = getPassword();
 			// TODO: Potentially try to decrypt the password...
 			setValue("password", password, settingsMap);
 
@@ -170,12 +186,12 @@ public class MetadataSource implements ShareableLockable {
 	}
 
 	public Connection getConnection() throws SQLException {
-		return shareLocked(() -> {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			if (this.dataSource == null) {
 				throw new IllegalStateException(String.format("The datasource [%s] is not yet initialized", this.name));
 			}
 			return this.dataSource.getConnection();
-		});
+		}
 	}
 
 	public void close() {

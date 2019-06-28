@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software. 
+ *  
+ * If the software was purchased under a paid Caliente license, the terms of 
+ * the paid license agreement will prevail.  Otherwise, the software is 
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *   
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.engine.importer;
 
 import java.io.File;
@@ -240,7 +266,7 @@ public abstract class ImportEngine<//
 										session.rollback();
 									}
 									this.listenerDelegator.objectImportFailed(this.importState.jobId, next, t);
-									if (this.batch.strategy.isBatchFailRemainder()) {
+									if (this.batch.strategy.isFailBatchOnError()) {
 										// If we're supposed to kill the batch, fail all
 										// the other objects
 										failBatch = true;
@@ -318,9 +344,9 @@ public abstract class ImportEngine<//
 		@Override
 		public String toString() {
 			return String.format(
-				"Batch [type=%s, id=%s, status=%s, strategy.parallel=%s, strategy.failRemainder=%s, contents=%s]",
-				this.type, this.id, this.status, this.strategy.isParallelCapable(),
-				this.strategy.isBatchFailRemainder(), this.contents);
+				"Batch [type=%s, id=%s, status=%s, strategy.parallel=%s, strategy.failBatchOnError=%s, contents=%s]",
+				this.type, this.id, this.status, this.strategy.isParallelCapable(), this.strategy.isFailBatchOnError(),
+				this.contents);
 		}
 	}
 
@@ -586,10 +612,7 @@ public abstract class ImportEngine<//
 		final CmfObjectStore<?> objectStore = importState.objectStore;
 		final CfgTools settings = importState.cfg;
 
-		final int threadCount;
-		synchronized (this) {
-			threadCount = getThreadCount(settings);
-		}
+		final int threadCount = getThreadCount(settings);
 
 		final SynchronizedCounter workerCounter = new SynchronizedCounter();
 		final ExecutorService parallelExecutor = newExecutor(threadCount);

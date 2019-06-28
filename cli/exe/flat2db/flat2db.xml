@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flat-2-db>
+<!--
+<flat-2-db xmlns="http://www.armedia.com/ns/caliente/flat2db" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/flat2db src/main/resources/flat2db.xsd ">
+-->
+	<data-sources>
+		<data-source id="1" type="pooled">
+			<properties />
+			<startup>
+				<sql>xx</sql>
+				<changeset>sdfasdf</changeset>
+				<rollback-changeset by="tag">1234214</rollback-changeset>
+				<sql-script>sdfsdf</sql-script>
+			</startup>
+			<on-insert>
+				<sql>asdfsadf</sql>
+				<sql-script>sdfasdf</sql-script>
+			</on-insert>
+			<on-error />
+			<shutdown />
+		</data-source>
+		<data-source id="2" type="pooled">
+			<properties />
+			<startup>
+				<sql>xx</sql>
+				<changeset>sdfasdf</changeset>
+				<rollback-changeset by="tag">1234214</rollback-changeset>
+				<sql-script>sdfsdf</sql-script>
+			</startup>
+			<on-insert>
+				<sql>asdfsadf</sql>
+				<sql-script>sdfasdf</sql-script>
+			</on-insert>
+			<on-error />
+			<shutdown />
+		</data-source>
+	</data-sources>
+	<structures>
+		<structure extends="xxx" id="111">
+			<header>
+				<column>
+					<name>column-1</name>
+					<data-type>DATE</data-type>
+					<value>2134</value>
+				</column>
+			</header>
+			<range>
+				<first>133</first>
+				<count>33</count>
+			</range>
+			<filter lang="jexl">filter</filter>
+		</structure>
+		<structure extends="xxx" id="222">
+			<header>
+				<column>
+					<name>column-1</name>
+					<data-type>DATE</data-type>
+					<value>2134</value>
+				</column>
+			</header>
+			<range>
+				<first>133</first>
+				<count>33</count>
+			</range>
+			<filter lang="jexl">filter</filter>
+		</structure>
+		<default>222</default>
+	</structures>
+	<files>
+		<file>s</file>
+	</files>
+	<mappings>
+		<mapping>x</mapping>
+	</mappings>
+</flat-2-db>

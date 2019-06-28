@@ -1,6 +1,33 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (c) 2010 - 2019 Armedia LLC
+ * %%
+ * This file is part of the Caliente software.
+ *
+ * If the software was purchased under a paid Caliente license, the terms of
+ * the paid license agreement will prevail.  Otherwise, the software is
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.tools.alfresco.bi;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -29,9 +56,9 @@ import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItemVersion;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.ResourceLoader;
-import com.armedia.commons.utilities.XmlTools;
+import com.armedia.commons.utilities.xml.XmlTools;
 
-class BulkImportManagerTest {
+public class BulkImportManagerTest {
 
 	private static Path BULK_IMPORT_ROOT = Paths.get("alfresco-bulk-import");
 	private static Path MODEL_DIRECTORY = BulkImportManagerTest.BULK_IMPORT_ROOT.resolve("content-models");
@@ -40,9 +67,13 @@ class BulkImportManagerTest {
 	private static Path FILE_INDEX = BulkImportManagerTest.BULK_IMPORT_ROOT.resolve("scan.files.xml");
 	private static Path FOLDER_INDEX = BulkImportManagerTest.BULK_IMPORT_ROOT.resolve("scan.folders.xml");
 
-	private final Path CWD = Paths.get(".").normalize().toAbsolutePath();
+	private final Path CWD;
 
 	private final Random rand = new Random(System.nanoTime());
+
+	BulkImportManagerTest() throws IOException {
+		this.CWD = Paths.get(".").toRealPath();
+	}
 
 	private Path buildRandomPath() {
 		Path p = null;
@@ -58,7 +89,7 @@ class BulkImportManagerTest {
 	}
 
 	@Test
-	void testBulkImportManager() {
+	public void testBulkImportManager() throws Exception {
 		BulkImportManager bim = null;
 		Path p = null;
 
@@ -79,59 +110,59 @@ class BulkImportManagerTest {
 	}
 
 	@Test
-	void testGetContentPathScanIndexItemVersion() {
+	public void testGetContentPathScanIndexItemVersion() {
 	}
 
 	@Test
-	void testGetContentPathPath() {
+	public void testGetContentPathPath() {
 	}
 
 	@Test
-	void testGetArtificialFolderPath() {
+	public void testGetArtificialFolderPath() {
 	}
 
 	@Test
-	void testGetMetadataPathScanIndexItemVersion() {
+	public void testGetMetadataPathScanIndexItemVersion() {
 	}
 
 	@Test
-	void testGetMetadataPathPath() {
+	public void testGetMetadataPathPath() {
 	}
 
 	@Test
-	void testGetBulkImportRoot() {
+	public void testGetBulkImportRoot() {
 	}
 
 	@Test
-	void testGetIndexFilePath() {
+	public void testGetIndexFilePath() {
 	}
 
 	@Test
-	void testGetManifestPath() {
+	public void testGetManifestPath() {
 	}
 
 	@Test
-	void testOpenManifestWriterCharsetBoolean() {
+	public void testOpenManifestWriterCharsetBoolean() {
 	}
 
 	@Test
-	void testOpenManifestWriterBoolean() {
+	public void testOpenManifestWriterBoolean() {
 	}
 
 	@Test
-	void testOpenManifestWriterCharset() {
+	public void testOpenManifestWriterCharset() {
 	}
 
 	@Test
-	void testOpenManifestReaderCharset() {
+	public void testOpenManifestReaderCharset() {
 	}
 
 	@Test
-	void testOpenManifestReader() {
+	public void testOpenManifestReader() {
 	}
 
 	@Test
-	void testVerifyPaths() {
+	public void testVerifyPaths() throws Exception {
 		BulkImportManager bim = null;
 		// Generate a few random paths
 		List<Path> paths = new ArrayList<>();
@@ -141,7 +172,7 @@ class BulkImportManagerTest {
 
 		for (Path p : paths) {
 			bim = new BulkImportManager(p);
-			p = p.normalize().toAbsolutePath();
+			p = p.toRealPath();
 
 			Path other = bim.getBasePath();
 			Assertions.assertEquals(p, other);
@@ -177,11 +208,10 @@ class BulkImportManagerTest {
 	}
 
 	@Test
-	void testScanAndMarshal() throws Exception {
+	public void testScanAndMarshal() throws Exception {
 
 		// Find the XML file(s)
-		Unmarshaller u = XmlTools.getUnmarshaller(null, ScanIndex.class, ScanIndexItem.class,
-			ScanIndexItemVersion.class);
+		Unmarshaller u = XmlTools.getUnmarshaller(ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class);
 		Marshaller m = XmlTools.getMarshaller(ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class);
 		URL url = ResourceLoader.getResourceOrFile("classpath:/alfresco-bulk-import/scan.folders.xml");
 		File f = new File(url.toURI());
@@ -219,9 +249,9 @@ class BulkImportManagerTest {
 					Path absolute = bim.calculateMetadataPath(contentPath);
 					Path relative = bim.getBasePath().relativize(absolute);
 					Assertions.assertTrue(metadataPath.endsWith(relative),
-						LazyFormatter.lazyFormat("[%s] vs. [%s]", metadataPath, relative));
+						LazyFormatter.of("[%s] vs. [%s]", metadataPath, relative));
 					Assertions.assertTrue(metadataPath.startsWith(bim.getBasePath()),
-						LazyFormatter.lazyFormat("[%s] vs. [%s]", metadataPath, bim.getBasePath()));
+						LazyFormatter.of("[%s] vs. [%s]", metadataPath, bim.getBasePath()));
 					Assertions.assertEquals(bim.getBasePath().resolve(relative), metadataPath);
 					Assertions.assertEquals(v.getMetadata(), FilenameUtils.separatorsToUnix(relative.toString()));
 				}
@@ -281,9 +311,9 @@ class BulkImportManagerTest {
 						Path absolute = bim.calculateMetadataPath(contentPath);
 						Path relative = bim.getBasePath().relativize(absolute);
 						Assertions.assertTrue(metadataPath.endsWith(relative),
-							LazyFormatter.lazyFormat("[%s] vs. [%s]", metadataPath, relative));
+							LazyFormatter.of("[%s] vs. [%s]", metadataPath, relative));
 						Assertions.assertTrue(metadataPath.startsWith(bim.getBasePath()),
-							LazyFormatter.lazyFormat("[%s] vs. [%s]", metadataPath, bim.getBasePath()));
+							LazyFormatter.of("[%s] vs. [%s]", metadataPath, bim.getBasePath()));
 						Assertions.assertEquals(bim.getBasePath().resolve(relative), metadataPath);
 						Assertions.assertEquals(v.getMetadata(), FilenameUtils.separatorsToUnix(relative.toString()));
 					}
