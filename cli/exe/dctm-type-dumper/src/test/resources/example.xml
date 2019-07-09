@@ -1,0 +1,524 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!DOCTYPE types>
+<types>
+	<type name="dmi_expr_code" super="dm_sysobject">
+		<attribute name="parent_id" type="3" />
+		<attribute name="i_type_name" type="2" length="32" />
+	</type>
+	<type name="dmi_0300270f800001d2">
+		<attribute name="annotation_name" type="2" repeating="true" qualified="false" length="255" />
+		<attribute name="module_name" type="2" repeating="true" qualified="false" length="255" />
+		<attribute name="annotation_metadata" type="2" repeating="true" qualified="false" length="1024" />
+		<attribute name="i_partition" type="1" />
+	</type>
+	<type name="dmi_0300270f800001d3">
+		<attribute name="constraint_name" type="2" repeating="true" qualified="false" length="255" />
+		<attribute name="module_name" type="2" repeating="true" qualified="false" length="255" />
+		<attribute name="constraint_metadata" type="2" repeating="true" qualified="false" length="1024" />
+		<attribute name="i_partition" type="1" />
+	</type>
+	<type name="dmi_0300270f800001d4">
+		<attribute name="event_identifier" type="2" repeating="true" qualified="false" length="255" />
+		<attribute name="listener_id" type="3" repeating="true" qualified="false" />
+		<attribute name="i_partition" type="1" />
+	</type>
+	<type name="dmi_0300270f800001d5">
+		<attribute name="attribute_name" type="2" length="92" />
+		<attribute name="is_source_attribute" type="0" />
+		<attribute name="i_partition" type="1" />
+	</type>
+	<type name="dmi_0300270f800001d6">
+		<attribute name="logical_version" type="2" length="32" />
+		<attribute name="i_partition" type="1" />
+	</type>
+	<type name="dmi_0300270f800001d7">
+		<attribute name="placeholder_name" type="2" length="255" />
+		<attribute name="smart_object_id" type="3" />
+		<attribute name="i_partition" type="1" />
+	</type>
+	<type name="dmi_0300270f800001d8">
+		<attribute name="smart_object_id" type="3" />
+		<attribute name="phldr_name" type="2" repeating="true" qualified="false" length="255" />
+		<attribute name="phldr_is_required" type="0" repeating="true" qualified="false" />
+		<attribute name="phldr_constraint_set_id" type="3" repeating="true" qualified="false" />
+		<attribute name="phldr_relationship_name" type="2" repeating="true" qualified="false" length="255" />
+		<attribute name="phldr_role_name" type="2" repeating="true" qualified="false" length="255" />
+		<attribute name="phldr_metadata" type="2" repeating="true" qualified="false" length="1024" />
+		<attribute name="i_partition" type="1" />
+	</type>
+	<type name="dmi_0300270f800001d9">
+		<attribute name="relation_type" type="2" length="32" />
+		<attribute name="relation_subtype" type="2" length="27" />
+		<attribute name="is_shared" type="0" />
+		<attribute name="i_partition" type="1" />
+	</type>
+	<type name="dmi_0300270f800001da">
+		<attribute name="model_id" type="3" />
+		<attribute name="phldr_name" type="2" repeating="true" qualified="false" length="255" />
+		<attribute name="phldr_neighbor_id" type="3" repeating="true" qualified="false" />
+		<attribute name="member_logical_name" type="2" repeating="true" length="1024" />
+		<attribute name="member_id" type="3" repeating="true" />
+		<attribute name="model_version" type="2" qualified="false" length="255" />
+		<attribute name="i_partition" type="1" />
+	</type>
+	<type name="dmi_audittrail_attrs">
+		<attribute name="audit_obj_id" type="3" />
+		<attribute name="attribute_list" type="2" repeating="true" length="2000" />
+		<attribute name="attribute_list_old" type="2" repeating="true" length="1000" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_audittrail_asp_attrs" super="dmi_audittrail_attrs">
+		<attribute name="aspect_name" type="2" repeating="true" length="64" />
+		<attribute name="aspect_id" type="3" repeating="true" />
+	</type>
+	<type name="dmi_change_record">
+		<attribute name="type_change_count" type="1" />
+		<attribute name="storage_change_count" type="1" />
+		<attribute name="reinit_change_count" type="1" />
+		<attribute name="cache_change_count" type="1" />
+		<attribute name="sys_change_count" type="1" />
+		<attribute name="dd_change_count" type="1" />
+		<attribute name="group_change_count" type="1" />
+		<attribute name="user_change_count" type="1" />
+		<attribute name="audit_purge_change_count" type="1" />
+		<attribute name="jms_config_change_count" type="1" />
+		<attribute name="ldap_config_change_count" type="1" />
+		<attribute name="dormancy_change_count" type="1" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_dd_common_info">
+		<attribute name="nls_key" type="2" length="5" />
+		<attribute name="business_policy_id" type="3" />
+		<attribute name="state_name" type="2" length="32" />
+		<attribute name="type_name" type="2" length="32" />
+		<attribute name="resync_needed" type="0" />
+		<attribute name="label_text" type="2" length="64" />
+		<attribute name="help_text" type="2" length="255" />
+		<attribute name="comment_text" type="2" length="255" />
+		<attribute name="is_searchable" type="0" />
+		<attribute name="ignore_constraints" type="0" />
+		<attribute name="life_cycle" type="1" />
+		<attribute name="val_constraint" type="3" repeating="true" />
+		<attribute name="val_constraint_enf" type="1" repeating="true" />
+		<attribute name="val_constraint_dep" type="2" repeating="true" length="32" />
+		<attribute name="val_constraint_msg" type="2" repeating="true" length="255" />
+		<attribute name="constraint_dep_usr" type="0" />
+		<attribute name="unique_keys" type="3" repeating="true" />
+		<attribute name="unique_key_enfs" type="1" repeating="true" />
+		<attribute name="unique_key_msgs" type="2" repeating="true" length="255" />
+		<attribute name="foreign_keys" type="3" repeating="true" />
+		<attribute name="foreign_key_enfs" type="1" repeating="true" />
+		<attribute name="foreign_key_msgs" type="2" repeating="true" length="255" />
+		<attribute name="primary_key" type="3" />
+		<attribute name="primary_key_enf" type="1" />
+		<attribute name="primary_key_msg" type="2" length="255" />
+		<attribute name="map_display_string" type="2" repeating="true" length="128" />
+		<attribute name="map_data_string" type="2" repeating="true" length="128" />
+		<attribute name="map_description" type="2" repeating="true" length="255" />
+		<attribute name="i_label_text" type="0" />
+		<attribute name="i_help_text" type="0" />
+		<attribute name="i_comment_text" type="0" />
+		<attribute name="i_is_searchable" type="0" />
+		<attribute name="i_ignore_constraints" type="0" />
+		<attribute name="i_life_cycle" type="0" />
+		<attribute name="i_val_constraint" type="1" />
+		<attribute name="i_val_constraint_enf" type="1" />
+		<attribute name="i_val_constraint_dep" type="1" />
+		<attribute name="i_val_constraint_msg" type="1" />
+		<attribute name="i_constraint_dep_usr" type="0" />
+		<attribute name="i_unique_keys" type="1" />
+		<attribute name="i_unique_key_enfs" type="1" />
+		<attribute name="i_unique_key_msgs" type="1" />
+		<attribute name="i_foreign_keys" type="1" />
+		<attribute name="i_foreign_key_enfs" type="1" />
+		<attribute name="i_foreign_key_msgs" type="1" />
+		<attribute name="i_primary_key" type="0" />
+		<attribute name="i_primary_key_enf" type="0" />
+		<attribute name="i_primary_key_msg" type="0" />
+		<attribute name="i_dd_flags" type="1" repeating="true" />
+		<attribute name="i_map_display_string" type="1" />
+		<attribute name="i_map_data_string" type="1" />
+		<attribute name="i_map_description" type="1" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_dd_attr_info" super="dmi_dd_common_info">
+		<attribute name="attr_name" type="2" length="32" />
+		<attribute name="default_value" type="3" repeating="true" />
+		<attribute name="ignore_immutable" type="0" />
+		<attribute name="not_null" type="0" />
+		<attribute name="not_null_enf" type="1" />
+		<attribute name="not_null_msg" type="2" length="255" />
+		<attribute name="cond_value_assist" type="3" />
+		<attribute name="value_assist_dep" type="2" repeating="true" length="32" />
+		<attribute name="value_assist_dep_usr" type="0" />
+		<attribute name="cond_computed_expr" type="3" />
+		<attribute name="computed_expr_dep" type="2" repeating="true" length="32" />
+		<attribute name="computed_dep_usr" type="0" />
+		<attribute name="allowed_search_ops" type="1" repeating="true" />
+		<attribute name="default_search_op" type="1" />
+		<attribute name="default_search_arg" type="2" length="255" />
+		<attribute name="read_only" type="0" />
+		<attribute name="reference_kind" type="1" />
+		<attribute name="is_required" type="0" />
+		<attribute name="is_hidden" type="0" />
+		<attribute name="format_pattern" type="2" length="64" />
+		<attribute name="format_pattern_tag" type="1" />
+		<attribute name="def_value_length" type="1" />
+		<attribute name="category_name" type="2" length="64" />
+		<attribute name="domain_type" type="1" />
+		<attribute name="domain_length" type="1" />
+		<attribute name="super_domain_name" type="2" length="32" />
+		<attribute name="super_domain_id" type="3" />
+		<attribute name="default_expr_value" type="2" repeating="true" length="255" />
+		<attribute name="default_expr_kind" type="1" repeating="true" />
+		<attribute name="default_expr_builtin" type="1" repeating="true" />
+		<attribute name="i_default_value" type="1" />
+		<attribute name="i_ignore_immutable" type="0" />
+		<attribute name="i_not_null" type="0" />
+		<attribute name="i_not_null_enf" type="0" />
+		<attribute name="i_not_null_msg" type="0" />
+		<attribute name="i_cond_value_assist" type="0" />
+		<attribute name="i_value_assist_dep" type="1" />
+		<attribute name="i_value_assist_dep_usr" type="0" />
+		<attribute name="i_cond_computed_expr" type="0" />
+		<attribute name="i_computed_expr_dep" type="1" />
+		<attribute name="i_computed_dep_usr" type="0" />
+		<attribute name="i_allowed_search_ops" type="1" />
+		<attribute name="i_default_search_op" type="0" />
+		<attribute name="i_default_search_arg" type="0" />
+		<attribute name="i_read_only" type="0" />
+		<attribute name="i_reference_kind" type="0" />
+		<attribute name="i_is_required" type="0" />
+		<attribute name="i_is_hidden" type="0" />
+		<attribute name="i_format_pattern" type="0" />
+		<attribute name="i_format_pattern_tag" type="0" />
+		<attribute name="i_def_value_length" type="0" />
+		<attribute name="i_category_name" type="0" />
+		<attribute name="i_domain_type" type="0" />
+		<attribute name="i_domain_length" type="0" />
+		<attribute name="i_super_domain_name" type="0" />
+		<attribute name="i_super_domain_id" type="0" />
+		<attribute name="i_default_expr_value" type="1" />
+		<attribute name="i_default_expr_kind" type="1" />
+		<attribute name="i_default_expr_builtin" type="1" />
+	</type>
+	<type name="dmi_dd_type_info" super="dmi_dd_common_info">
+		<attribute name="default_policy_id" type="3" />
+		<attribute name="policy_ver_label" type="2" length="32" />
+		<attribute name="icon_index" type="1" />
+		<attribute name="attr_domain_name" type="2" repeating="true" length="32" />
+		<attribute name="attr_domain_id" type="3" repeating="true" />
+		<attribute name="comp_classifier" type="2" repeating="true" length="128" />
+		<attribute name="qual_comp_id" type="3" repeating="true" />
+		<attribute name="r_has_unique_key" type="0" repeating="true" />
+		<attribute name="r_has_foreign_key" type="0" repeating="true" />
+		<attribute name="r_has_primary_key" type="0" repeating="true" />
+		<attribute name="r_has_not_null" type="0" repeating="true" />
+		<attribute name="r_has_check" type="0" repeating="true" />
+		<attribute name="r_has_constraint" type="0" repeating="true" />
+		<attribute name="r_has_default" type="0" repeating="true" />
+		<attribute name="r_has_value_assist" type="0" repeating="true" />
+		<attribute name="r_has_dependency" type="0" repeating="true" />
+		<attribute name="r_has_ignore_immutable" type="0" repeating="true" />
+		<attribute name="i_default_policy_id" type="0" />
+		<attribute name="i_policy_ver_label" type="0" />
+		<attribute name="i_icon_index" type="0" />
+		<attribute name="i_attr_domain_name" type="1" />
+		<attribute name="i_attr_domain_id" type="1" />
+		<attribute name="i_comp_classifier" type="1" />
+		<attribute name="i_qual_comp_id" type="1" />
+		<attribute name="auditable_sysevents" type="2" repeating="true" length="64" />
+		<attribute name="auditable_appevents" type="2" repeating="true" length="64" />
+		<attribute name="i_auditable_sysevents" type="1" />
+		<attribute name="i_auditable_appevents" type="1" />
+		<attribute name="scope_config" type="3" repeating="true" />
+		<attribute name="i_scope_config" type="1" />
+	</type>
+	<type name="dmi_dist_comp_record">
+		<attribute name="epoch_number" type="1" repeating="true" />
+		<attribute name="is_addition" type="0" repeating="true" />
+		<attribute name="component_id" type="3" repeating="true" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_dump_object_record">
+		<attribute name="object_id" type="3" />
+		<attribute name="dump_object" type="3" />
+		<attribute name="version" type="1" />
+		<attribute name="extra_data_dumped" type="0" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_index">
+		<attribute name="index_type" type="3" />
+		<attribute name="is_unique" type="0" />
+		<attribute name="name" type="2" length="64" />
+		<attribute name="attr_count" type="1" />
+		<attribute name="repeating" type="0" />
+		<attribute name="use_id_col" type="0" />
+		<attribute name="use_pos_col" type="0" />
+		<attribute name="attribute" type="1" repeating="true" />
+		<attribute name="data_space" type="2" length="32" />
+		<attribute name="rebuilding" type="0" />
+		<attribute name="use_tag" type="1" repeating="true" />
+		<attribute name="is_descending" type="0" repeating="true" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_linkrecord">
+		<attribute name="parent_id" type="3" />
+		<attribute name="component_id" type="3" />
+		<attribute name="data_ticket" type="1" />
+		<attribute name="other_ticket" type="1" />
+		<attribute name="session_count" type="1" />
+		<attribute name="session_id" type="3" repeating="true" />
+		<attribute name="format_id" type="3" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_load_object_record">
+		<attribute name="load_object" type="3" />
+		<attribute name="new_id" type="3" />
+		<attribute name="old_id" type="3" />
+		<attribute name="is_synonym" type="0" />
+		<attribute name="extra_pos" type="1" />
+		<attribute name="order_no" type="1" />
+		<attribute name="object_type" type="2" length="40" />
+		<attribute name="old_exists" type="0" />
+		<attribute name="update_done" type="0" />
+		<attribute name="extra_offset" type="2" length="20" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_otherfile">
+		<attribute name="data_ticket" type="1" />
+		<attribute name="protocol" type="1" />
+		<attribute name="r_storage_ticket" type="1" />
+		<attribute name="i_partition" type="1" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_package">
+		<attribute name="r_workflow_id" type="3" />
+		<attribute name="r_act_seqno" type="1" />
+		<attribute name="r_port_name" type="2" length="16" />
+		<attribute name="r_package_name" type="2" length="128" />
+		<attribute name="r_package_type" type="2" length="40" />
+		<attribute name="i_package_order" type="1" />
+		<attribute name="i_package_oprtn" type="2" length="64" />
+		<attribute name="i_acceptance_date" type="4" />
+		<attribute name="r_package_flag" type="1" />
+		<attribute name="r_component_id" type="3" repeating="true" />
+		<attribute name="r_note_writer" type="2" repeating="true" length="255" />
+		<attribute name="r_note_id" type="3" repeating="true" />
+		<attribute name="r_note_flag" type="1" repeating="true" />
+		<attribute name="r_package_id" type="3" repeating="true" />
+		<attribute name="r_package_label" type="2" repeating="true" length="32" />
+		<attribute name="r_component_chron_id" type="3" repeating="true" />
+		<attribute name="r_component_name" type="2" repeating="true" length="80" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_queue_item">
+		<attribute name="name" type="2" length="255" />
+		<attribute name="stamp" type="3" />
+		<attribute name="sent_by" type="2" length="255" />
+		<attribute name="date_sent" type="4" />
+		<attribute name="due_date" type="4" />
+		<attribute name="event" type="2" length="64" />
+		<attribute name="item_name" type="2" length="255" />
+		<attribute name="item_id" type="3" />
+		<attribute name="item_type" type="2" length="32" />
+		<attribute name="content_type" type="2" length="32" />
+		<attribute name="message" type="2" length="800" />
+		<attribute name="router_id" type="3" />
+		<attribute name="supervisor_name" type="2" length="255" />
+		<attribute name="task_number" type="2" length="5" />
+		<attribute name="task_name" type="2" length="128" />
+		<attribute name="task_type" type="2" length="10" />
+		<attribute name="task_state" type="2" length="10" />
+		<attribute name="dependency_type" type="2" length="10" />
+		<attribute name="next_tasks_type" type="2" length="10" />
+		<attribute name="instruction_page" type="1" />
+		<attribute name="plan_start_date" type="4" />
+		<attribute name="actual_start_date" type="4" />
+		<attribute name="read_flag" type="0" />
+		<attribute name="delete_flag" type="0" />
+		<attribute name="priority" type="1" />
+		<attribute name="position" type="5" />
+		<attribute name="dequeued_by" type="2" length="255" />
+		<attribute name="dequeued_date" type="4" />
+		<attribute name="sign_off_required" type="0" />
+		<attribute name="sign_off_user" type="2" length="255" />
+		<attribute name="sign_off_date" type="4" />
+		<attribute name="a_content_type" type="2" length="32" />
+		<attribute name="a_operations" type="2" length="16" />
+		<attribute name="source_docbase" type="2" length="120" />
+		<attribute name="target_docbase" type="2" length="120" />
+		<attribute name="remote_pending" type="0" />
+		<attribute name="source_event" type="3" />
+		<attribute name="source_stamp" type="1" />
+		<attribute name="task_subject" type="2" length="512" />
+		<attribute name="i_event_flags" type="1" />
+		<attribute name="event_detail" type="2" length="2000" />
+		<attribute name="i_partition" type="1" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_recovery">
+		<attribute name="proc_name" type="2" length="64" />
+		<attribute name="recovery_parameter" type="3" />
+		<attribute name="creation_date" type="4" />
+		<attribute name="retry_attempts" type="1" />
+		<attribute name="client_state" type="2" length="255" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_registry">
+		<attribute name="user_name" type="2" length="255" />
+		<attribute name="registered_id" type="3" />
+		<attribute name="event" type="2" length="64" />
+		<attribute name="oneshot" type="0" />
+		<attribute name="sendmail" type="0" />
+		<attribute name="priority" type="1" />
+		<attribute name="message" type="2" length="255" />
+		<attribute name="is_audittrail" type="0" />
+		<attribute name="controlling_app" type="2" length="32" />
+		<attribute name="policy_id" type="3" />
+		<attribute name="policy_state" type="2" length="32" />
+		<attribute name="audit_subtypes" type="0" />
+		<attribute name="a_authentication" type="1" />
+		<attribute name="audit_attr_names" type="2" repeating="true" length="40" />
+		<attribute name="sign_audit" type="0" />
+		<attribute name="a_esignature_required" type="1" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_sequence">
+		<attribute name="i_last_no" type="1" />
+		<attribute name="i_low_water_mark" type="1" />
+		<attribute name="i_high_water_mark" type="1" />
+		<attribute name="i_in_use" type="0" />
+		<attribute name="i_low_mask" type="1" />
+		<attribute name="i_high_mask" type="1" />
+		<attribute name="i_current_mask" type="1" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_session">
+		<attribute name="next_transaction" type="1" />
+		<attribute name="has_quit" type="0" />
+		<attribute name="has_paused" type="0" />
+		<attribute name="stopped_time" type="4" />
+		<attribute name="log_object" type="3" />
+		<attribute name="sequence_start" type="1" repeating="true" />
+		<attribute name="sequence_end" type="1" repeating="true" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_subcontent">
+		<attribute name="parent_id" type="3" />
+		<attribute name="i_contents" type="2" repeating="true" length="4000" />
+		<attribute name="i_contents_size" type="1" repeating="true" />
+		<attribute name="is_other" type="0" />
+		<attribute name="i_partition" type="1" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_transactionlog">
+		<attribute name="trans_number" type="1" repeating="true" />
+		<attribute name="log_entry" type="2" repeating="true" length="255" />
+		<attribute name="on_commit" type="0" repeating="true" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_type_info">
+		<attribute name="r_type_id" type="3" />
+		<attribute name="r_type_name" type="2" length="27" />
+		<attribute name="default_storage" type="3" />
+		<attribute name="default_owner_permit" type="1" />
+		<attribute name="default_group_permit" type="1" />
+		<attribute name="default_world_permit" type="1" />
+		<attribute name="default_group" type="2" length="255" />
+		<attribute name="r_supertype" type="2" repeating="true" length="27" />
+		<attribute name="acl_domain" type="2" length="255" />
+		<attribute name="acl_name" type="2" length="32" />
+		<attribute name="ftindex_attrs" type="2" repeating="true" length="27" />
+		<attribute name="r_orig_declaration" type="0" repeating="true" />
+		<attribute name="locally_managed" type="0" repeating="true" />
+		<attribute name="type_override" type="3" />
+		<attribute name="i_type_features" type="1" />
+		<attribute name="type_version" type="1" />
+		<attribute name="default_aspects" type="2" repeating="true" length="255" />
+		<attribute name="type_cache_vstamp" type="1" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_vstamp">
+		<attribute name="i_application" type="2" length="64" />
+		<attribute name="i_stamp" type="1" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_wf_attachment">
+		<attribute name="r_workflow_id" type="3" />
+		<attribute name="r_component_id" type="3" />
+		<attribute name="r_component_name" type="2" length="80" />
+		<attribute name="r_component_type" type="2" length="40" />
+		<attribute name="r_creator_name" type="2" length="255" />
+		<attribute name="r_creation_date" type="4" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_wf_timer">
+		<attribute name="r_timer_name" type="2" length="64" />
+		<attribute name="r_workflow_id" type="3" />
+		<attribute name="r_act_name" type="2" length="128" />
+		<attribute name="r_act_seqno" type="1" />
+		<attribute name="r_act_id" type="3" />
+		<attribute name="r_timer" type="4" />
+		<attribute name="r_start_time" type="4" />
+		<attribute name="r_timer_type" type="1" />
+		<attribute name="r_action_id" type="3" />
+		<attribute name="r_action_index" type="1" />
+		<attribute name="r_calendar_id" type="3" />
+		<attribute name="i_calendar_status" type="1" />
+		<attribute name="r_is_initialized" type="1" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+	<type name="dmi_workitem">
+		<attribute name="r_workflow_id" type="3" />
+		<attribute name="r_act_seqno" type="1" />
+		<attribute name="r_performer_name" type="2" length="255" />
+		<attribute name="r_creation_date" type="4" />
+		<attribute name="r_due_date" type="4" />
+		<attribute name="r_priority" type="1" />
+		<attribute name="r_auto_method_id" type="3" />
+		<attribute name="return_value" type="1" />
+		<attribute name="r_exec_result_id" type="3" />
+		<attribute name="r_exec_launch" type="0" />
+		<attribute name="r_exec_time_out" type="0" />
+		<attribute name="r_exec_os_error" type="2" length="255" />
+		<attribute name="r_output_port" type="2" repeating="true" length="16" />
+		<attribute name="r_ext_performer" type="2" repeating="true" length="255" />
+		<attribute name="r_runtime_state" type="1" />
+		<attribute name="r_queue_item_id" type="3" />
+		<attribute name="r_act_def_id" type="3" />
+		<attribute name="r_sign_off_req" type="0" />
+		<attribute name="r_launch_timeout" type="4" />
+		<attribute name="a_wq_name" type="2" length="32" />
+		<attribute name="a_wq_flag" type="1" />
+		<attribute name="a_wq_policy_id" type="3" />
+		<attribute name="a_wq_doc_profile" type="2" length="64" />
+		<attribute name="a_held_by" type="2" length="32" />
+		<attribute name="user_time" type="1" />
+		<attribute name="user_cost" type="5" />
+		<attribute name="r_exec_retried_count" type="1" />
+		<attribute name="r_next_retry_date" type="4" />
+		<attribute name="r_handling_instruction" type="1" />
+		<attribute name="r_target_task_id" type="3" />
+		<attribute name="a_control_instruction" type="2" length="32" />
+		<attribute name="i_is_replica" type="0" />
+		<attribute name="i_vstamp" type="1" />
+	</type>
+</types>
