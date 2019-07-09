@@ -8,7 +8,7 @@
     </node>
     <node name="schemas">
       <node name="schema-1">
-        <attribute name="location" value="platform:/resource/caliente-cli-dctm-type-dumper/src/main/resources/ticket-decoder.xsd"/>
+        <attribute name="location" value="platform:/resource/caliente-cli-dctm-type-dumper/src/main/resources/type-dumper.xsd"/>
       </node>
     </node>
   </facet>
