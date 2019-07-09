@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd" targetNamespace="http://www.armedia.com/ns/caliente/tools/type-dumper"
+	xmlns:tns="http://www.armedia.com/ns/caliente/tools/type-dumper" elementFormDefault="qualified" attributeFormDefault="unqualified"
+	xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.0">
+
+	<xsd:simpleType name="name.t">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+			<xsd:pattern value="[a-zA-Z][a-zA-Z_0-9]*" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="attributeType.t">
+		<xsd:restriction base="xsd:int">
+			<xsd:minInclusive value="0" />
+			<xsd:maxInclusive value="5" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="length.t">
+		<xsd:restriction base="xsd:int">
+			<xsd:minInclusive value="0" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:complexType name="attribute.t">
+		<xsd:attribute name="name" type="tns:name.t" use="required" />
+		<xsd:attribute name="type" type="tns:attributeType.t" use="required" />
+		<xsd:attribute name="repeating" type="xsd:boolean" use="optional" default="false" />
+		<xsd:attribute name="qualified" type="xsd:boolean" use="optional" default="true" />
+		<xsd:attribute name="length" type="tns:length.t" use="optional" />
+	</xsd:complexType>
+
+	<xsd:complexType name="type.t">
+		<xsd:sequence>
+			<xsd:element name="attribute" type="tns:attribute.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+		<xsd:attribute name="name" type="tns:name.t" use="required" />
+		<xsd:attribute name="super" type="tns:name.t" use="optional" />
+	</xsd:complexType>
+
+	<xsd:complexType name="types.t">
+		<xsd:sequence>
+			<xsd:element name="type" type="tns:type.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:element name="type" type="tns:type.t" />
+	<xsd:element name="types" type="tns:types.t" />
+</xsd:schema>
