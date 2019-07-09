@@ -98,8 +98,9 @@ public class DctmTypeDumper {
 			final PooledWorkers<IDfSession, String> extractors = new PooledWorkers<>();
 			final ConcurrentMap<String, IDfType> types = new ConcurrentHashMap<>();
 			final CheckedConsumer<IDfType, DfException> typeConsumer = (t) -> {
-				this.log.debug("Found {}", t.getName());
-				types.put(calculateHierarchy(t), t);
+				String hierarchy = calculateHierarchy(t);
+				this.log.info("Found {}", hierarchy);
+				types.put(hierarchy, t);
 			};
 			final Predicate<String> typeFilter = (typeName) -> true;
 
