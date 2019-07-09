@@ -50,6 +50,7 @@ import com.armedia.commons.utilities.xml.XmlTools;
 import com.ctc.wstx.api.WstxOutputProperties;
 import com.ctc.wstx.stax.WstxOutputFactory;
 import com.documentum.fc.client.IDfType;
+import com.documentum.fc.common.DfException;
 
 import javanet.staxutils.IndentingXMLStreamWriter;
 
@@ -108,10 +109,15 @@ public class XmlTypePersistor extends BaseShareableLockable implements TypePersi
 		}
 	}
 
+	public Object renderType(IDfType type) throws DfException {
+		// TODO: Render the XML representation for the type
+		return null;
+	}
+
 	@Override
 	public void persist(IDfType type) throws Exception {
 		if (type != null) {
-			mutexLocked(() -> this.marshaller.marshal(type, this.xml));
+			mutexLocked(() -> this.marshaller.marshal(renderType(type), this.xml));
 		}
 	}
 
