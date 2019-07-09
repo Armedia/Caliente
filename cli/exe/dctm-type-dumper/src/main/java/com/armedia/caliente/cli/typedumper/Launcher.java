@@ -75,6 +75,8 @@ public class Launcher extends AbstractLauncher {
 			.addFrom( //
 				Option.unwrap(CLIParam.values()) //
 			) //
+			.setMinArguments(0)//
+			.setMaxArguments(-1) //
 		;
 	}
 
@@ -132,6 +134,6 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		return new DctmTypeDumper(this.dfcLaunchHelper, this.threadsLaunchHelper).run(baseValues);
+		return new DctmTypeDumper(this.dfcLaunchHelper, this.threadsLaunchHelper).run(baseValues, positionals);
 	}
 }

@@ -27,6 +27,7 @@
 package com.armedia.caliente.cli.typedumper;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -76,7 +77,7 @@ public class DctmTypeDumper {
 		return FileNameTools.reconstitute(l, false, false);
 	}
 
-	protected int run(OptionValues cli) throws Exception {
+	protected int run(OptionValues cli, Collection<String> positionals) throws Exception {
 		// final boolean debug = cli.isPresent(CLIParam.debug);
 		final PersistenceFormat format = cli.getEnum(PersistenceFormat.class, CLIParam.format);
 		final File target = Tools.canonicalize(new File(cli.getString(CLIParam.target)));
@@ -112,19 +113,33 @@ public class DctmTypeDumper {
 			this.console.info("Starting the type search...");
 			extractors.start(extractorLogic, Math.max(1, threads), "Extractor", true);
 			final IDfSession session = pool.acquireSession();
-			final String dql = "select super_name, name from dm_type order by 1, 2";
-			try (DfcQuery typeQuery = new DfcQuery(session, dql, DfcQuery.Type.DF_EXECREAD_QUERY)) {
-				typeQuery.forEachRemaining((t) -> extractors.addWorkItem(t.getString("name")));
+			try {
+				if (positionals.isEmpty()) {
+					final String dql = "select super_name, name from dm_type order by 1, 2";
+					try (DfcQuery typeQuery = new DfcQuery(session, dql, DfcQuery.Type.DF_EXECREAD_QUERY)) {
+						typeQuery.forEachRemaining((t) -> extractors.addWorkItem(t.getString("name")));
+					} finally {
+						extractors.waitForCompletion();
+						this.console.info("Type search completed, found {} types", types.size());
+					}
+				} else {
+					for (String typeName : positionals) {
+						IDfType type = session.getType(typeName);
+						if (type == null) {
+							this.log.warn("Type [{}] does not exist", typeName);
+						} else {
+							extractors.addWorkItem(typeName);
+						}
+					}
+				}
 			} finally {
-				extractors.waitForCompletion();
-				this.console.info("Type search completed, found {} types", types.size());
 				pool.releaseSession(session);
 			}
 
 			// The key is a hierarchical representation of the type's inheritance, so we
 			// can easily order them in the correct sequence
 			Set<String> typeOrder = new TreeSet<>(types.keySet());
-
+			// Now, persist the types...
 			try (TypePersistor persistor = format.newPersistor()) {
 				persistor.initialize(target);
 				for (String type : typeOrder) {
