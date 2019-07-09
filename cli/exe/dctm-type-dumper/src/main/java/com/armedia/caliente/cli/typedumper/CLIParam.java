@@ -39,20 +39,11 @@ public enum CLIParam implements Supplier<Option> {
 			.setDescription("Enable increased logging for debugging") //
 	), //
 
-	re_match(
+	exclude(
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
-			.setArgumentName("regular-expression") //
-			.setDescription("A regular expression that will be used to select which types that will be dumped") //
-	),
-	//
-
-	match(
-		new OptionImpl() //
-			.setArgumentLimits(1, -1) //
-			.setArgumentName("glob-expression") //
-			.setDescription(
-				"A 'glob' (wildcard) expression that will be used to select which types that will be dumped") //
+			.setArgumentName("filter") //
+			.setDescription("A name, glob, or regular expression that will be used to exclude types from the dump") //
 	),
 	//
 

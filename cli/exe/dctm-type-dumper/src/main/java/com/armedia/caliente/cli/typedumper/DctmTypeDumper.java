@@ -36,6 +36,8 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +49,7 @@ import com.armedia.caliente.tools.dfc.DfcCrypto;
 import com.armedia.caliente.tools.dfc.DfcQuery;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.FileNameTools;
+import com.armedia.commons.utilities.Globber;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.function.CheckedConsumer;
@@ -55,6 +58,8 @@ import com.documentum.fc.client.IDfType;
 import com.documentum.fc.common.DfException;
 
 public class DctmTypeDumper {
+
+	private static final Pattern LITERAL_PARSER = Pattern.compile("^[a-z]\\w+$", Pattern.CASE_INSENSITIVE);
 
 	private final Logger console = LoggerFactory.getLogger("console");
 	private final Logger log = LoggerFactory.getLogger(getClass());
@@ -75,6 +80,42 @@ public class DctmTypeDumper {
 		}
 		Collections.reverse(l);
 		return FileNameTools.reconstitute(l, false, false);
+	}
+
+	private boolean isLiteral(String s) {
+		return DctmTypeDumper.LITERAL_PARSER.matcher(s).matches();
+	}
+
+	private boolean isRegex(String s) {
+		// Does it start with, and end with a slash, and compile as a RegEx?
+		return (s.length() > 2) && s.startsWith("/") && s.endsWith("/");
+	}
+
+	private Predicate<String> compileFilter(Collection<String> excludes) {
+		final Collection<Pattern> patterns = new LinkedList<>();
+
+		for (String e : excludes) {
+			// Is it a literal? (i.e. only valid type name characters)
+			final Pattern p;
+			if (isLiteral(e)) {
+				p = Pattern.compile(String.format("^\\Q%s\\E$", e), Pattern.CASE_INSENSITIVE);
+			} else if (isRegex(e)) {
+				e = e.substring(1);
+				e = e.substring(0, e.length() - 1);
+				p = Pattern.compile(String.format("^%s$", e), Pattern.CASE_INSENSITIVE);
+			} else {
+				p = Globber.asPattern(e, Pattern.CASE_INSENSITIVE);
+			}
+			patterns.add(p);
+		}
+		if (patterns.isEmpty()) { return null; }
+		return (s) -> {
+			for (Pattern p : patterns) {
+				Matcher m = p.matcher(s);
+				if (m.matches()) { return true; }
+			}
+			return false;
+		};
 	}
 
 	protected int run(OptionValues cli, Collection<String> positionals) throws Exception {
@@ -98,12 +139,14 @@ public class DctmTypeDumper {
 		try {
 			final PooledWorkers<IDfSession, String> extractors = new PooledWorkers<>();
 			final ConcurrentMap<String, IDfType> types = new ConcurrentHashMap<>();
+			final ConcurrentMap<String, String> typeNames = new ConcurrentHashMap<>();
 			final CheckedConsumer<IDfType, DfException> typeConsumer = (t) -> {
 				String hierarchy = calculateHierarchy(t);
 				this.console.info("Found {}", hierarchy);
 				types.put(hierarchy, t);
+				typeNames.put(t.getName(), hierarchy);
 			};
-			final Predicate<String> typeFilter = (typeName) -> true;
+			final Predicate<String> typeFilter = compileFilter(cli.getStrings(CLIParam.exclude));
 
 			final ExtractorLogic extractorLogic = new ExtractorLogic(pool //
 				, typeConsumer //
@@ -114,23 +157,24 @@ public class DctmTypeDumper {
 			extractors.start(extractorLogic, Math.max(1, threads), "Extractor", true);
 			final IDfSession session = pool.acquireSession();
 			try {
-				if (positionals.isEmpty()) {
-					final String dql = "select super_name, name from dm_type order by 1, 2";
-					try (DfcQuery typeQuery = new DfcQuery(session, dql, DfcQuery.Type.DF_EXECREAD_QUERY)) {
-						typeQuery.forEachRemaining((t) -> extractors.addWorkItem(t.getString("name")));
-					} finally {
-						extractors.waitForCompletion();
-						this.console.info("Type search completed, found {} types", types.size());
-					}
-				} else {
-					for (String typeName : positionals) {
-						IDfType type = session.getType(typeName);
-						if (type == null) {
-							this.log.warn("Type [{}] does not exist", typeName);
-						} else {
-							extractors.addWorkItem(typeName);
+				final String dql = "select super_name, name from dm_type order by 1, 2";
+				try (DfcQuery typeQuery = new DfcQuery(session, dql, DfcQuery.Type.DF_EXECREAD_QUERY)) {
+					typeQuery.forEachRemaining((t) -> extractors.addWorkItem(t.getString("name")));
+				} finally {
+					extractors.waitForCompletion();
+					this.console.info("Type search completed, found {} types", types.size());
+				}
+				if (!positionals.isEmpty()) {
+					// First, apply the "includes" filters
+					Predicate<String> includePredicate = compileFilter(positionals);
+					Collection<String> removes = new LinkedList<>();
+					for (String typeName : typeNames.keySet()) {
+						if (!includePredicate.test(typeName)) {
+							removes.add(typeName);
+							types.remove(typeNames.get(typeName));
 						}
 					}
+					removes.forEach(typeNames::remove);
 				}
 			} finally {
 				pool.releaseSession(session);
