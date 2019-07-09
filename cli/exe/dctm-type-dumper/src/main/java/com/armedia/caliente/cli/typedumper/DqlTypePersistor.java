@@ -30,12 +30,26 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.documentum.fc.client.IDfType;
+import com.documentum.fc.common.IDfAttr;
 
 public class DqlTypePersistor extends BaseShareableLockable implements TypePersistor {
+
+	private static final String NL = String.format("%n");
+	private static final String HEADER = "BEGIN TYPE DUMPS";
+	private static final String FOOTER = "END TYPE DUMPS";
+	private static final String BIG_DIVIDER = StringUtils.repeat('-', 80);
+	private static final String SMALL_DIVIDER = StringUtils.repeat('-', 60);
+
+	private static final String pad(String message, String divider, int extra) {
+		int padLength = (divider.length() - message.length() - Math.max(0, extra));
+		return message + StringUtils.repeat(' ', Math.max(0, padLength));
+	}
 
 	private PrintWriter out = null;
 
@@ -45,9 +59,9 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 		try (MutexAutoLock lock = autoMutexLock()) {
 			this.out = new PrintWriter(new FileWriter(finalTarget));
 			this.out.printf("" + //
-				"/**********************************************************/%n" + //
-				"/* BEGIN TYPE DUMPS                                       */%n" + //
-				"/**********************************************************/%n" //
+				DqlTypePersistor.BIG_DIVIDER + "%n" + //
+				"-- " + DqlTypePersistor.pad(DqlTypePersistor.HEADER, DqlTypePersistor.BIG_DIVIDER, 6) + " --%n" + //
+				DqlTypePersistor.BIG_DIVIDER + "%n" //
 			);
 			this.out.flush();
 		}
@@ -57,13 +71,85 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 	public void persist(IDfType type) throws Exception {
 		if (type == null) { return; }
 		try (MutexAutoLock lock = autoMutexLock()) {
-			// TODO: Render the DQL For the type
 			String extendsClause = "";
-			IDfType superType = type.getSuperType();
+			final IDfType superType = type.getSuperType();
+
+			final StringBuilder dql = new StringBuilder();
+			final int attrCount = type.getInt("attr_count");
+			final int startPosition = type.getInt("start_pos");
+			final boolean parens = (startPosition < attrCount);
+
+			String typeDecl = String.format("BEGIN TYPE: %s", type.getName());
 			if (superType != null) {
-				extendsClause = String.format(" (extends %s)", superType.getName());
+				String msg = String.format("   EXTENDS: %s", superType.getName());
+				extendsClause = "-- " + DqlTypePersistor.pad(msg, DqlTypePersistor.SMALL_DIVIDER, 6) + " --%n";
 			}
-			this.out.printf("Found type %s%s%n", type.getName(), extendsClause);
+			this.out.printf("%n" + DqlTypePersistor.SMALL_DIVIDER + "%n" + //
+				"-- " + DqlTypePersistor.pad(typeDecl, DqlTypePersistor.SMALL_DIVIDER, 6) + " --%n" + //
+				extendsClause + //
+				DqlTypePersistor.SMALL_DIVIDER + "%n" //
+			);
+
+			dql.append("create type \"").append(type.getName()).append("\"");
+			if (parens) {
+				dql.append("(").append(DqlTypePersistor.NL);
+			}
+			for (int i = startPosition; i < attrCount; i++) {
+				// If we're not the first, we need a comma
+				final String attrName = type.getRepeatingString("attr_name", i);
+				final int attrType = type.getRepeatingInt("attr_type", i);
+				final boolean attrRepeating = type.getRepeatingBoolean("attr_repeating", i);
+				final int attrQualified = type.getRepeatingInt("attr_restriction", i);
+				if (i > startPosition) {
+					dql.append(",").append(DqlTypePersistor.NL);
+				}
+				dql.append("\t").append(attrName).append("\t");
+				switch (attrType) {
+					case IDfAttr.DM_BOOLEAN:
+						dql.append("boolean");
+						break;
+					case IDfAttr.DM_INTEGER:
+						dql.append("integer");
+						break;
+					case IDfAttr.DM_STRING:
+						final int attrLength = type.getRepeatingInt("attr_length", i);
+						dql.append("string(").append(attrLength).append(")");
+						break;
+					case IDfAttr.DM_ID:
+						dql.append("id");
+						break;
+					case IDfAttr.DM_TIME:
+						dql.append("date");
+						break;
+					case IDfAttr.DM_DOUBLE:
+						dql.append("double");
+						break;
+					case IDfAttr.DM_UNDEFINED:
+						dql.append("undefined");
+						break;
+					default:
+						break;
+				}
+				if (attrRepeating) {
+					dql.append(" repeating");
+				}
+				if (attrQualified != 0) {
+					dql.append(" not qualified");
+				}
+			}
+			if (parens) {
+				dql.append(DqlTypePersistor.NL).append(")");
+			}
+
+			dql.append(" with supertype ").append((superType != null) ? superType.getName() : "null").append(" publish")
+				.append(DqlTypePersistor.NL).append("go");
+
+			this.out.printf("%s%n", dql);
+
+			this.out.printf("%n" + DqlTypePersistor.SMALL_DIVIDER + "%n" + //
+				"-- " + DqlTypePersistor.pad("END TYPE", DqlTypePersistor.SMALL_DIVIDER, 6) + " --%n" + //
+				DqlTypePersistor.SMALL_DIVIDER + "%n" //
+			);
 		}
 	}
 
@@ -71,9 +157,9 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 	public void close() throws Exception {
 		try (MutexAutoLock lock = autoMutexLock()) {
 			this.out.printf("" + //
-				"/**********************************************************/%n" + //
-				"/* END TYPE DUMPS                                         */%n" + //
-				"/**********************************************************/%n" //
+				DqlTypePersistor.BIG_DIVIDER + "%n" + //
+				"-- " + DqlTypePersistor.pad(DqlTypePersistor.FOOTER, DqlTypePersistor.BIG_DIVIDER, 6) + " --%n" + //
+				DqlTypePersistor.BIG_DIVIDER + "%n" //
 			);
 			this.out.flush();
 			this.out.close();
