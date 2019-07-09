@@ -58,6 +58,12 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 		if (type == null) { return; }
 		try (MutexAutoLock lock = autoMutexLock()) {
 			// TODO: Render the DQL For the type
+			String extendsClause = "";
+			IDfType superType = type.getSuperType();
+			if (superType != null) {
+				extendsClause = String.format(" (extends %s)", superType.getName());
+			}
+			this.out.printf("Found type %s%s%n", type.getName(), extendsClause);
 		}
 	}
 
