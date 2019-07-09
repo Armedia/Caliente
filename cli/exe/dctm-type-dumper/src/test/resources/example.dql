@@ -1,0 +1,845 @@
+--------------------------------------------------------------------------------
+-- BEGIN TYPE DUMPS                                                           --
+--------------------------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_expr_code                              --
+--    EXTENDS: dm_sysobject                               --
+------------------------------------------------------------
+create type "dmi_expr_code"(
+	parent_id	id,
+	i_type_name	string(32)
+) with supertype dm_sysobject publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_0300270f800001d2                       --
+------------------------------------------------------------
+create type "dmi_0300270f800001d2"(
+	annotation_name	string(255) repeating not qualified,
+	module_name	string(255) repeating not qualified,
+	annotation_metadata	string(1024) repeating not qualified,
+	i_partition	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_0300270f800001d3                       --
+------------------------------------------------------------
+create type "dmi_0300270f800001d3"(
+	constraint_name	string(255) repeating not qualified,
+	module_name	string(255) repeating not qualified,
+	constraint_metadata	string(1024) repeating not qualified,
+	i_partition	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_0300270f800001d4                       --
+------------------------------------------------------------
+create type "dmi_0300270f800001d4"(
+	event_identifier	string(255) repeating not qualified,
+	listener_id	id repeating not qualified,
+	i_partition	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_0300270f800001d5                       --
+------------------------------------------------------------
+create type "dmi_0300270f800001d5"(
+	attribute_name	string(92),
+	is_source_attribute	boolean,
+	i_partition	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_0300270f800001d6                       --
+------------------------------------------------------------
+create type "dmi_0300270f800001d6"(
+	logical_version	string(32),
+	i_partition	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_0300270f800001d7                       --
+------------------------------------------------------------
+create type "dmi_0300270f800001d7"(
+	placeholder_name	string(255),
+	smart_object_id	id,
+	i_partition	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_0300270f800001d8                       --
+------------------------------------------------------------
+create type "dmi_0300270f800001d8"(
+	smart_object_id	id,
+	phldr_name	string(255) repeating not qualified,
+	phldr_is_required	boolean repeating not qualified,
+	phldr_constraint_set_id	id repeating not qualified,
+	phldr_relationship_name	string(255) repeating not qualified,
+	phldr_role_name	string(255) repeating not qualified,
+	phldr_metadata	string(1024) repeating not qualified,
+	i_partition	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_0300270f800001d9                       --
+------------------------------------------------------------
+create type "dmi_0300270f800001d9"(
+	relation_type	string(32),
+	relation_subtype	string(27),
+	is_shared	boolean,
+	i_partition	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_0300270f800001da                       --
+------------------------------------------------------------
+create type "dmi_0300270f800001da"(
+	model_id	id,
+	phldr_name	string(255) repeating not qualified,
+	phldr_neighbor_id	id repeating not qualified,
+	member_logical_name	string(1024) repeating,
+	member_id	id repeating,
+	model_version	string(255) not qualified,
+	i_partition	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_audittrail_attrs                       --
+------------------------------------------------------------
+create type "dmi_audittrail_attrs"(
+	audit_obj_id	id,
+	attribute_list	string(2000) repeating,
+	attribute_list_old	string(1000) repeating,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_audittrail_asp_attrs                   --
+--    EXTENDS: dmi_audittrail_attrs                       --
+------------------------------------------------------------
+create type "dmi_audittrail_asp_attrs"(
+	aspect_name	string(64) repeating,
+	aspect_id	id repeating
+) with supertype dmi_audittrail_attrs publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_change_record                          --
+------------------------------------------------------------
+create type "dmi_change_record"(
+	type_change_count	integer,
+	storage_change_count	integer,
+	reinit_change_count	integer,
+	cache_change_count	integer,
+	sys_change_count	integer,
+	dd_change_count	integer,
+	group_change_count	integer,
+	user_change_count	integer,
+	audit_purge_change_count	integer,
+	jms_config_change_count	integer,
+	ldap_config_change_count	integer,
+	dormancy_change_count	integer,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_dd_common_info                         --
+------------------------------------------------------------
+create type "dmi_dd_common_info"(
+	nls_key	string(5),
+	business_policy_id	id,
+	state_name	string(32),
+	type_name	string(32),
+	resync_needed	boolean,
+	label_text	string(64),
+	help_text	string(255),
+	comment_text	string(255),
+	is_searchable	boolean,
+	ignore_constraints	boolean,
+	life_cycle	integer,
+	val_constraint	id repeating,
+	val_constraint_enf	integer repeating,
+	val_constraint_dep	string(32) repeating,
+	val_constraint_msg	string(255) repeating,
+	constraint_dep_usr	boolean,
+	unique_keys	id repeating,
+	unique_key_enfs	integer repeating,
+	unique_key_msgs	string(255) repeating,
+	foreign_keys	id repeating,
+	foreign_key_enfs	integer repeating,
+	foreign_key_msgs	string(255) repeating,
+	primary_key	id,
+	primary_key_enf	integer,
+	primary_key_msg	string(255),
+	map_display_string	string(128) repeating,
+	map_data_string	string(128) repeating,
+	map_description	string(255) repeating,
+	i_label_text	boolean,
+	i_help_text	boolean,
+	i_comment_text	boolean,
+	i_is_searchable	boolean,
+	i_ignore_constraints	boolean,
+	i_life_cycle	boolean,
+	i_val_constraint	integer,
+	i_val_constraint_enf	integer,
+	i_val_constraint_dep	integer,
+	i_val_constraint_msg	integer,
+	i_constraint_dep_usr	boolean,
+	i_unique_keys	integer,
+	i_unique_key_enfs	integer,
+	i_unique_key_msgs	integer,
+	i_foreign_keys	integer,
+	i_foreign_key_enfs	integer,
+	i_foreign_key_msgs	integer,
+	i_primary_key	boolean,
+	i_primary_key_enf	boolean,
+	i_primary_key_msg	boolean,
+	i_dd_flags	integer repeating,
+	i_map_display_string	integer,
+	i_map_data_string	integer,
+	i_map_description	integer,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_dd_attr_info                           --
+--    EXTENDS: dmi_dd_common_info                         --
+------------------------------------------------------------
+create type "dmi_dd_attr_info"(
+	attr_name	string(32),
+	default_value	id repeating,
+	ignore_immutable	boolean,
+	not_null	boolean,
+	not_null_enf	integer,
+	not_null_msg	string(255),
+	cond_value_assist	id,
+	value_assist_dep	string(32) repeating,
+	value_assist_dep_usr	boolean,
+	cond_computed_expr	id,
+	computed_expr_dep	string(32) repeating,
+	computed_dep_usr	boolean,
+	allowed_search_ops	integer repeating,
+	default_search_op	integer,
+	default_search_arg	string(255),
+	read_only	boolean,
+	reference_kind	integer,
+	is_required	boolean,
+	is_hidden	boolean,
+	format_pattern	string(64),
+	format_pattern_tag	integer,
+	def_value_length	integer,
+	category_name	string(64),
+	domain_type	integer,
+	domain_length	integer,
+	super_domain_name	string(32),
+	super_domain_id	id,
+	default_expr_value	string(255) repeating,
+	default_expr_kind	integer repeating,
+	default_expr_builtin	integer repeating,
+	i_default_value	integer,
+	i_ignore_immutable	boolean,
+	i_not_null	boolean,
+	i_not_null_enf	boolean,
+	i_not_null_msg	boolean,
+	i_cond_value_assist	boolean,
+	i_value_assist_dep	integer,
+	i_value_assist_dep_usr	boolean,
+	i_cond_computed_expr	boolean,
+	i_computed_expr_dep	integer,
+	i_computed_dep_usr	boolean,
+	i_allowed_search_ops	integer,
+	i_default_search_op	boolean,
+	i_default_search_arg	boolean,
+	i_read_only	boolean,
+	i_reference_kind	boolean,
+	i_is_required	boolean,
+	i_is_hidden	boolean,
+	i_format_pattern	boolean,
+	i_format_pattern_tag	boolean,
+	i_def_value_length	boolean,
+	i_category_name	boolean,
+	i_domain_type	boolean,
+	i_domain_length	boolean,
+	i_super_domain_name	boolean,
+	i_super_domain_id	boolean,
+	i_default_expr_value	integer,
+	i_default_expr_kind	integer,
+	i_default_expr_builtin	integer
+) with supertype dmi_dd_common_info publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_dd_type_info                           --
+--    EXTENDS: dmi_dd_common_info                         --
+------------------------------------------------------------
+create type "dmi_dd_type_info"(
+	default_policy_id	id,
+	policy_ver_label	string(32),
+	icon_index	integer,
+	attr_domain_name	string(32) repeating,
+	attr_domain_id	id repeating,
+	comp_classifier	string(128) repeating,
+	qual_comp_id	id repeating,
+	r_has_unique_key	boolean repeating,
+	r_has_foreign_key	boolean repeating,
+	r_has_primary_key	boolean repeating,
+	r_has_not_null	boolean repeating,
+	r_has_check	boolean repeating,
+	r_has_constraint	boolean repeating,
+	r_has_default	boolean repeating,
+	r_has_value_assist	boolean repeating,
+	r_has_dependency	boolean repeating,
+	r_has_ignore_immutable	boolean repeating,
+	i_default_policy_id	boolean,
+	i_policy_ver_label	boolean,
+	i_icon_index	boolean,
+	i_attr_domain_name	integer,
+	i_attr_domain_id	integer,
+	i_comp_classifier	integer,
+	i_qual_comp_id	integer,
+	auditable_sysevents	string(64) repeating,
+	auditable_appevents	string(64) repeating,
+	i_auditable_sysevents	integer,
+	i_auditable_appevents	integer,
+	scope_config	id repeating,
+	i_scope_config	integer
+) with supertype dmi_dd_common_info publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_dist_comp_record                       --
+------------------------------------------------------------
+create type "dmi_dist_comp_record"(
+	epoch_number	integer repeating,
+	is_addition	boolean repeating,
+	component_id	id repeating,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_dump_object_record                     --
+------------------------------------------------------------
+create type "dmi_dump_object_record"(
+	object_id	id,
+	dump_object	id,
+	version	integer,
+	extra_data_dumped	boolean,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_index                                  --
+------------------------------------------------------------
+create type "dmi_index"(
+	index_type	id,
+	is_unique	boolean,
+	name	string(64),
+	attr_count	integer,
+	repeating	boolean,
+	use_id_col	boolean,
+	use_pos_col	boolean,
+	attribute	integer repeating,
+	data_space	string(32),
+	rebuilding	boolean,
+	use_tag	integer repeating,
+	is_descending	boolean repeating,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_linkrecord                             --
+------------------------------------------------------------
+create type "dmi_linkrecord"(
+	parent_id	id,
+	component_id	id,
+	data_ticket	integer,
+	other_ticket	integer,
+	session_count	integer,
+	session_id	id repeating,
+	format_id	id,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_load_object_record                     --
+------------------------------------------------------------
+create type "dmi_load_object_record"(
+	load_object	id,
+	new_id	id,
+	old_id	id,
+	is_synonym	boolean,
+	extra_pos	integer,
+	order_no	integer,
+	object_type	string(40),
+	old_exists	boolean,
+	update_done	boolean,
+	extra_offset	string(20),
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_otherfile                              --
+------------------------------------------------------------
+create type "dmi_otherfile"(
+	data_ticket	integer,
+	protocol	integer,
+	r_storage_ticket	integer,
+	i_partition	integer,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_package                                --
+------------------------------------------------------------
+create type "dmi_package"(
+	r_workflow_id	id,
+	r_act_seqno	integer,
+	r_port_name	string(16),
+	r_package_name	string(128),
+	r_package_type	string(40),
+	i_package_order	integer,
+	i_package_oprtn	string(64),
+	i_acceptance_date	date,
+	r_package_flag	integer,
+	r_component_id	id repeating,
+	r_note_writer	string(255) repeating,
+	r_note_id	id repeating,
+	r_note_flag	integer repeating,
+	r_package_id	id repeating,
+	r_package_label	string(32) repeating,
+	r_component_chron_id	id repeating,
+	r_component_name	string(80) repeating,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_queue_item                             --
+------------------------------------------------------------
+create type "dmi_queue_item"(
+	name	string(255),
+	stamp	id,
+	sent_by	string(255),
+	date_sent	date,
+	due_date	date,
+	event	string(64),
+	item_name	string(255),
+	item_id	id,
+	item_type	string(32),
+	content_type	string(32),
+	message	string(800),
+	router_id	id,
+	supervisor_name	string(255),
+	task_number	string(5),
+	task_name	string(128),
+	task_type	string(10),
+	task_state	string(10),
+	dependency_type	string(10),
+	next_tasks_type	string(10),
+	instruction_page	integer,
+	plan_start_date	date,
+	actual_start_date	date,
+	read_flag	boolean,
+	delete_flag	boolean,
+	priority	integer,
+	position	double,
+	dequeued_by	string(255),
+	dequeued_date	date,
+	sign_off_required	boolean,
+	sign_off_user	string(255),
+	sign_off_date	date,
+	a_content_type	string(32),
+	a_operations	string(16),
+	source_docbase	string(120),
+	target_docbase	string(120),
+	remote_pending	boolean,
+	source_event	id,
+	source_stamp	integer,
+	task_subject	string(512),
+	i_event_flags	integer,
+	event_detail	string(2000),
+	i_partition	integer,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_recovery                               --
+------------------------------------------------------------
+create type "dmi_recovery"(
+	proc_name	string(64),
+	recovery_parameter	id,
+	creation_date	date,
+	retry_attempts	integer,
+	client_state	string(255),
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_registry                               --
+------------------------------------------------------------
+create type "dmi_registry"(
+	user_name	string(255),
+	registered_id	id,
+	event	string(64),
+	oneshot	boolean,
+	sendmail	boolean,
+	priority	integer,
+	message	string(255),
+	is_audittrail	boolean,
+	controlling_app	string(32),
+	policy_id	id,
+	policy_state	string(32),
+	audit_subtypes	boolean,
+	a_authentication	integer,
+	audit_attr_names	string(40) repeating,
+	sign_audit	boolean,
+	a_esignature_required	integer,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_sequence                               --
+------------------------------------------------------------
+create type "dmi_sequence"(
+	i_last_no	integer,
+	i_low_water_mark	integer,
+	i_high_water_mark	integer,
+	i_in_use	boolean,
+	i_low_mask	integer,
+	i_high_mask	integer,
+	i_current_mask	integer,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_session                                --
+------------------------------------------------------------
+create type "dmi_session"(
+	next_transaction	integer,
+	has_quit	boolean,
+	has_paused	boolean,
+	stopped_time	date,
+	log_object	id,
+	sequence_start	integer repeating,
+	sequence_end	integer repeating,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_subcontent                             --
+------------------------------------------------------------
+create type "dmi_subcontent"(
+	parent_id	id,
+	i_contents	string(4000) repeating,
+	i_contents_size	integer repeating,
+	is_other	boolean,
+	i_partition	integer,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_transactionlog                         --
+------------------------------------------------------------
+create type "dmi_transactionlog"(
+	trans_number	integer repeating,
+	log_entry	string(255) repeating,
+	on_commit	boolean repeating,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_type_info                              --
+------------------------------------------------------------
+create type "dmi_type_info"(
+	r_type_id	id,
+	r_type_name	string(27),
+	default_storage	id,
+	default_owner_permit	integer,
+	default_group_permit	integer,
+	default_world_permit	integer,
+	default_group	string(255),
+	r_supertype	string(27) repeating,
+	acl_domain	string(255),
+	acl_name	string(32),
+	ftindex_attrs	string(27) repeating,
+	r_orig_declaration	boolean repeating,
+	locally_managed	boolean repeating,
+	type_override	id,
+	i_type_features	integer,
+	type_version	integer,
+	default_aspects	string(255) repeating,
+	type_cache_vstamp	integer,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_vstamp                                 --
+------------------------------------------------------------
+create type "dmi_vstamp"(
+	i_application	string(64),
+	i_stamp	integer,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_wf_attachment                          --
+------------------------------------------------------------
+create type "dmi_wf_attachment"(
+	r_workflow_id	id,
+	r_component_id	id,
+	r_component_name	string(80),
+	r_component_type	string(40),
+	r_creator_name	string(255),
+	r_creation_date	date,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_wf_timer                               --
+------------------------------------------------------------
+create type "dmi_wf_timer"(
+	r_timer_name	string(64),
+	r_workflow_id	id,
+	r_act_name	string(128),
+	r_act_seqno	integer,
+	r_act_id	id,
+	r_timer	date,
+	r_start_time	date,
+	r_timer_type	integer,
+	r_action_id	id,
+	r_action_index	integer,
+	r_calendar_id	id,
+	i_calendar_status	integer,
+	r_is_initialized	integer,
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- BEGIN TYPE: dmi_workitem                               --
+------------------------------------------------------------
+create type "dmi_workitem"(
+	r_workflow_id	id,
+	r_act_seqno	integer,
+	r_performer_name	string(255),
+	r_creation_date	date,
+	r_due_date	date,
+	r_priority	integer,
+	r_auto_method_id	id,
+	return_value	integer,
+	r_exec_result_id	id,
+	r_exec_launch	boolean,
+	r_exec_time_out	boolean,
+	r_exec_os_error	string(255),
+	r_output_port	string(16) repeating,
+	r_ext_performer	string(255) repeating,
+	r_runtime_state	integer,
+	r_queue_item_id	id,
+	r_act_def_id	id,
+	r_sign_off_req	boolean,
+	r_launch_timeout	date,
+	a_wq_name	string(32),
+	a_wq_flag	integer,
+	a_wq_policy_id	id,
+	a_wq_doc_profile	string(64),
+	a_held_by	string(32),
+	user_time	integer,
+	user_cost	double,
+	r_exec_retried_count	integer,
+	r_next_retry_date	date,
+	r_handling_instruction	integer,
+	r_target_task_id	id,
+	a_control_instruction	string(32),
+	i_is_replica	boolean,
+	i_vstamp	integer
+) with supertype null publish
+go
+
+------------------------------------------------------------
+-- END TYPE                                               --
+------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- END TYPE DUMPS                                                             --
+--------------------------------------------------------------------------------
