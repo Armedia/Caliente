@@ -39,8 +39,8 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
-import com.armedia.caliente.cli.typedumper.xml.Content;
-import com.armedia.caliente.cli.typedumper.xml.Rendition;
+import com.armedia.caliente.cli.typedumper.xml.Attribute;
+import com.armedia.caliente.cli.typedumper.xml.Type;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
@@ -102,16 +102,15 @@ public class XmlTypePersistor extends BaseShareableLockable implements TypePersi
 			this.xml.writeStartElement(rootElement);
 			writer.flush();
 
-			this.marshaller = XmlTools.getMarshaller("type-dumper.xsd", Content.class, Rendition.class);
+			this.marshaller = XmlTools.getMarshaller("type-dumper.xsd", Type.class, Attribute.class);
 			this.marshaller.setProperty(Marshaller.JAXB_ENCODING, Charset.defaultCharset().name());
 			this.marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 			this.marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 		}
 	}
 
-	public Object renderType(IDfType type) throws DfException {
-		// TODO: Render the XML representation for the type
-		return null;
+	public Type renderType(IDfType type) throws DfException {
+		return new Type(type);
 	}
 
 	@Override
