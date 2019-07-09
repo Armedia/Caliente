@@ -68,7 +68,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, String, Ex
 		if (typeName == null) { return; }
 		final IDfLocalTransaction tx = DfcUtils.openTransaction(session);
 		try {
-			if ((this.typeFilter == null) || !this.typeFilter.test(typeName)) {
+			if ((this.typeFilter == null) || this.typeFilter.test(typeName)) {
 				IDfType type = session.getType(typeName);
 				if (type == null) { return; }
 				this.typeConsumer.acceptChecked(type);

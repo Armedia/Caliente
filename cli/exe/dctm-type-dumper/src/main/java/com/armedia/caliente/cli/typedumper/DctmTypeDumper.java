@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -91,10 +92,12 @@ public class DctmTypeDumper {
 		return (s.length() > 2) && s.startsWith("/") && s.endsWith("/");
 	}
 
-	private Predicate<String> compileFilter(Collection<String> excludes) {
+	private Predicate<String> compileMatcher(Collection<String> patternStrings) {
+		if ((patternStrings == null) || patternStrings.isEmpty()) { return null; }
+
 		final Collection<Pattern> patterns = new LinkedList<>();
 
-		for (String e : excludes) {
+		for (String e : patternStrings) {
 			// Is it a literal? (i.e. only valid type name characters)
 			final Pattern p;
 			if (isLiteral(e)) {
@@ -146,11 +149,27 @@ public class DctmTypeDumper {
 				types.put(hierarchy, t);
 				typeNames.put(t.getName(), hierarchy);
 			};
-			final Predicate<String> typeFilter = compileFilter(cli.getStrings(CLIParam.exclude));
+
+			final Predicate<String> included = compileMatcher(positionals);
+			final Predicate<String> excluded = compileMatcher(cli.getStrings(CLIParam.exclude));
+			final Predicate<String> predicate;
+			if ((included != null) && (excluded != null)) {
+				// Accept only those that match the inclusions, but don't match the exclusions
+				predicate = included.and(excluded.negate());
+			} else if (included != null) {
+				// Accept only those that match the inclusions
+				predicate = included;
+			} else if (excluded != null) {
+				// Accept only those that don't match the exclusions
+				predicate = excluded.negate();
+			} else {
+				// Accept all
+				predicate = Objects::nonNull;
+			}
 
 			final ExtractorLogic extractorLogic = new ExtractorLogic(pool //
 				, typeConsumer //
-				, typeFilter //
+				, predicate //
 			);
 
 			this.console.info("Starting the type search...");
@@ -164,6 +183,7 @@ public class DctmTypeDumper {
 					extractors.waitForCompletion();
 					this.console.info("Type search completed, found {} types", types.size());
 				}
+				/*
 				if (!positionals.isEmpty()) {
 					// First, apply the "includes" filters
 					Predicate<String> includePredicate = compileFilter(positionals);
@@ -176,6 +196,7 @@ public class DctmTypeDumper {
 					}
 					removes.forEach(typeNames::remove);
 				}
+				*/
 			} finally {
 				pool.releaseSession(session);
 			}
