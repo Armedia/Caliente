@@ -3,7 +3,7 @@
 # #%L
 # Armedia Caliente
 # %%
-# Copyright (c) 2010 - 2019 Armedia LLC
+# Copyright (C) 2013 - 2019 Armedia, LLC
 # %%
 # This file is part of the Caliente software.
 #
