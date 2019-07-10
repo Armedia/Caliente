@@ -77,10 +77,6 @@ public class Launcher extends AbstractLauncher {
 		return "caliente-validator";
 	}
 
-	public static final void main(String... args) {
-		System.exit(new Launcher().launch(args));
-	}
-
 	@Override
 	protected int run(OptionValues cli, String command, OptionValues commandValues, Collection<String> positionals)
 		throws Exception {

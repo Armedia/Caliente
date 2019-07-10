@@ -30,12 +30,12 @@ import java.io.File;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.cli.Launcher;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionParseResult;
@@ -47,15 +47,9 @@ import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.caliente.cli.help.HelpRenderer;
-import com.armedia.caliente.cli.launcher.log.LogConfigurator;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class AbstractLauncher {
-
-	static {
-		// Make sure this is called as early as possible
-		ClasspathPatcher.init();
-	}
 
 	private static final Option HELP_OPTION = new OptionImpl() //
 		.setShortOpt('?') //
@@ -65,12 +59,10 @@ public abstract class AbstractLauncher {
 		.setDescription("Display this help message") //
 	;
 
-	private static final Logger BOOT_LOG = LogConfigurator.getBootLogger();
-
 	private static final String[] NO_ARGS = {};
 
-	protected Logger log = AbstractLauncher.BOOT_LOG;
-	protected Logger console = AbstractLauncher.BOOT_LOG;
+	protected Logger log = Launcher.BOOT_LOG;
+	protected Logger console = Launcher.BOOT_LOG;
 
 	protected final File userDir;
 	protected final File homeDir;
@@ -91,9 +83,8 @@ public abstract class AbstractLauncher {
 	/**
 	 * <p>
 	 * Process the OptionParseResult. If an error occurs, a {@link CommandLineProcessingException}
-	 * will be raised, and the invocation to {@link #launch(String...)} will return the value
-	 * obtained from that exception's {@link CommandLineProcessingException#getReturnValue()
-	 * getReturnValue()}.
+	 * will be raised, and the exit result will be set to the value obtained from that exception's
+	 * {@link CommandLineProcessingException#getReturnValue() getReturnValue()}.
 	 * </p>
 	 *
 	 * @throws CommandLineProcessingException
@@ -104,8 +95,8 @@ public abstract class AbstractLauncher {
 		Collection<String> positionals) throws CommandLineProcessingException {
 	}
 
-	protected final int launch(String... args) {
-		return launch(AbstractLauncher.HELP_OPTION, args);
+	protected Option getHelpOption() {
+		return AbstractLauncher.HELP_OPTION;
 	}
 
 	protected abstract String getProgramName();
@@ -132,11 +123,8 @@ public abstract class AbstractLauncher {
 
 	protected abstract OptionScheme getOptionScheme();
 
-	protected final int launch(Supplier<Option> helpOption, String... args) {
-		return launch(Option.unwrap(helpOption), args);
-	}
-
-	protected final int launch(Option helpOption, String... args) {
+	public int launch(String... args) {
+		final Option helpOption = getHelpOption();
 		final OptionScheme optionScheme;
 		try {
 			optionScheme = getOptionScheme();

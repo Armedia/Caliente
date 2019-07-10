@@ -49,16 +49,9 @@ import com.armedia.commons.utilities.Tools;
 
 public class Launcher extends AbstractLauncher {
 
-	public static final void main(String... args) {
-		System.exit(new Launcher().launch(args));
-	}
-
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper();
-
-	private Launcher() {
-	}
 
 	@Override
 	protected OptionScheme getOptionScheme() {

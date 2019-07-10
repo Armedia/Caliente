@@ -84,7 +84,7 @@ public abstract class ClasspathPatcher {
 	};
 	private static final URL[] NO_URLS = {};
 	private static final URL NULL_URL = null;
-	private static volatile URLClassLoader CL = null;
+	private static volatile ClassLoader CL = null;
 	private static volatile Consumer<URL> ADD_URL = null;
 	private static final Set<String> ADDED = new LinkedHashSet<>();
 	private static final ShareableLockable LOCK = new BaseShareableLockable();
@@ -93,13 +93,12 @@ public abstract class ClasspathPatcher {
 		ClasspathPatcher.init();
 	}
 
-	public static final void init() {
-		"".hashCode();
-		ClasspathPatcher.LOCK.shareLockedUpgradable(() -> ClasspathPatcher.CL, Objects::isNull,
+	public static final ClassLoader init() {
+		return ClasspathPatcher.LOCK.shareLockedUpgradable(() -> ClasspathPatcher.CL, Objects::isNull,
 			ClasspathPatcher::initCl);
 	}
 
-	private static void initCl(ClassLoader oldCl) {
+	private static ClassLoader initCl(ClassLoader oldCl) {
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		URLClassLoader ucl = Tools.cast(URLClassLoader.class, cl);
 		ClasspathPatcher.ADD_URL = ClasspathPatcher.getConsumer(ucl);
@@ -110,6 +109,7 @@ public abstract class ClasspathPatcher {
 			ClasspathPatcher.ADD_URL = newCl::addURL;
 		}
 		ClasspathPatcher.CL = ucl;
+		return ClasspathPatcher.CL;
 	}
 
 	private static Consumer<URL> getConsumer(final ClassLoader ucl) {
@@ -212,12 +212,15 @@ public abstract class ClasspathPatcher {
 		if (u == null) { throw new IllegalArgumentException("Must provide a URL to add to the classpath"); }
 		Boolean ret = ClasspathPatcher.LOCK.shareLockedUpgradable(() -> !ClasspathPatcher.ADDED.contains(u.toString()),
 			() -> {
-				try {
-					ClasspathPatcher.ADD_URL.accept(u);
-					return ClasspathPatcher.ADDED.add(u.toString());
-				} catch (Throwable t) {
-					throw new IOException(String.format("Failed to add the URL [%s] to the classloader", u), t);
+				if (ClasspathPatcher.ADD_URL != null) {
+					try {
+						ClasspathPatcher.ADD_URL.accept(u);
+						return ClasspathPatcher.ADDED.add(u.toString());
+					} catch (Throwable t) {
+						throw new IOException(String.format("Failed to add the URL [%s] to the classloader", u), t);
+					}
 				}
+				return Boolean.FALSE;
 			});
 		return ((ret != null) && ret.booleanValue());
 	}

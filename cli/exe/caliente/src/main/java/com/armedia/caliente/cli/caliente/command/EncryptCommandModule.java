@@ -37,7 +37,7 @@ import java.util.List;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.Launcher;
+import com.armedia.caliente.cli.caliente.launcher.Caliente;
 import com.armedia.caliente.engine.TransferEngineFactory;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
@@ -53,7 +53,7 @@ public class EncryptCommandModule extends CommandModule<TransferEngineFactory<?,
 		if (c != null) {
 			crypt.add(c);
 		}
-		crypt.add(Launcher.CRYPTO);
+		crypt.add(Caliente.CRYPTO);
 		return Tools.freezeCollection(crypt);
 	}
 
