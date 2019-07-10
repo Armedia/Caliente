@@ -63,7 +63,8 @@ public abstract class Launcher {
 			int ret = 0;
 			try {
 				Method launch = l.getClass().getMethod("launch", String[].class);
-				Object r = launch.invoke(args);
+				Object a = args;
+				Object r = launch.invoke(l, a);
 				ret = Integer.class.cast(r).intValue();
 			} catch (Throwable t) {
 				Launcher.BOOT_LOG.error("Failed to launch from {}", l.getClass().getCanonicalName(), t);
