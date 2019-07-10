@@ -36,16 +36,20 @@ import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.launcher.log.LogConfigurator;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 
-public abstract class Launcher {
+public final class Main {
 
 	static {
 		// Make sure this is called as early as possible
 		ClasspathPatcher.init();
 	}
 
+	private Main() {
+		// So we can't instantiate
+	}
+
 	public static final Logger BOOT_LOG = LogConfigurator.getBootLogger();
 
-	public static final void main(String... args) throws Throwable {
+	public static final void main(String... args) {
 		// First things first, find the first launcher
 		ClassLoader cl = ClasspathPatcher.init();
 		Class<AbstractExecutable> launcherClass = AbstractExecutable.class;
@@ -59,24 +63,24 @@ public abstract class Launcher {
 		if (c.isEmpty()) {
 			// KABOOM! No launcher found!
 			result = 1;
-			Launcher.BOOT_LOG.error("No launcher instances were found");
+			Main.BOOT_LOG.error("No launcher instances were found");
 			if (!exceptions.isEmpty()) {
-				Launcher.BOOT_LOG.error("{} matching launchers were found, but failed to load:");
-				exceptions.forEach((e) -> Launcher.BOOT_LOG.error("Failed Launcher", e));
+				Main.BOOT_LOG.error("{} matching launchers were found, but failed to load:");
+				exceptions.forEach((e) -> Main.BOOT_LOG.error("Failed Launcher", e));
 			}
 		} else {
 			AbstractExecutable executable = c.get(0);
-			Launcher.BOOT_LOG.debug("The executable is of type {}", executable.getClass().getCanonicalName());
+			Main.BOOT_LOG.debug("The executable is of type {}", executable.getClass().getCanonicalName());
 			int ret = 0;
 			try {
 				ret = executable.execute(args);
 			} catch (Throwable t) {
-				Launcher.BOOT_LOG.error("Failed to execute from {}", executable.getClass().getCanonicalName(), t);
+				Main.BOOT_LOG.error("Failed to execute from {}", executable.getClass().getCanonicalName(), t);
 				ret = 1;
 			}
 			result = ret;
 		}
-		Launcher.BOOT_LOG.debug("Exiting with result = {}", result);
+		Main.BOOT_LOG.debug("Exiting with result = {}", result);
 		System.exit(result);
 	}
 }

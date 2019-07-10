@@ -60,8 +60,8 @@ public abstract class AbstractExecutable {
 
 	private static final String[] NO_ARGS = {};
 
-	protected Logger log = Launcher.BOOT_LOG;
-	protected Logger console = Launcher.BOOT_LOG;
+	protected Logger log = Main.BOOT_LOG;
+	protected Logger console = Main.BOOT_LOG;
 
 	protected final File userDir;
 	protected final File homeDir;
