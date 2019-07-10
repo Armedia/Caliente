@@ -94,18 +94,22 @@ public abstract class ClasspathPatcher {
 	}
 
 	public static final void init() {
-		ClasspathPatcher.LOCK.shareLockedUpgradable(() -> ClasspathPatcher.CL, Objects::isNull, (oldCl) -> {
-			ClassLoader cl = Thread.currentThread().getContextClassLoader();
-			URLClassLoader ucl = Tools.cast(URLClassLoader.class, cl);
-			ClasspathPatcher.ADD_URL = ClasspathPatcher.getConsumer(ucl);
-			if (ClasspathPatcher.ADD_URL == null) {
-				final CPCL newCl = new CPCL(ClasspathPatcher.NO_URLS, cl);
-				ucl = newCl;
-				Thread.currentThread().setContextClassLoader(newCl);
-				ClasspathPatcher.ADD_URL = newCl::addURL;
-			}
-			ClasspathPatcher.CL = ucl;
-		});
+		"".hashCode();
+		ClasspathPatcher.LOCK.shareLockedUpgradable(() -> ClasspathPatcher.CL, Objects::isNull,
+			ClasspathPatcher::initCl);
+	}
+
+	private static void initCl(ClassLoader oldCl) {
+		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		URLClassLoader ucl = Tools.cast(URLClassLoader.class, cl);
+		ClasspathPatcher.ADD_URL = ClasspathPatcher.getConsumer(ucl);
+		if (ClasspathPatcher.ADD_URL == null) {
+			final CPCL newCl = new CPCL(ClasspathPatcher.NO_URLS, cl);
+			ucl = newCl;
+			Thread.currentThread().setContextClassLoader(newCl);
+			ClasspathPatcher.ADD_URL = newCl::addURL;
+		}
+		ClasspathPatcher.CL = ucl;
 	}
 
 	private static Consumer<URL> getConsumer(final ClassLoader ucl) {
