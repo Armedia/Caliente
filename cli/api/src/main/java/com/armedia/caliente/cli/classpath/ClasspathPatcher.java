@@ -112,11 +112,11 @@ public abstract class ClasspathPatcher {
 		return ClasspathPatcher.CL;
 	}
 
-	private static Consumer<URL> getConsumer(final ClassLoader ucl) {
+	private static Consumer<URL> getConsumer(final URLClassLoader ucl) {
 		if (ucl == null) { return null; }
 		Class<? extends ClassLoader> clclass = ucl.getClass();
 		try {
-			Method method = clclass.getDeclaredMethod("addURL", ClasspathPatcher.PARAMETERS);
+			Method method = URLClassLoader.class.getDeclaredMethod("addURL", ClasspathPatcher.PARAMETERS);
 			try {
 				method.setAccessible(true);
 			} catch (SecurityException e) {
