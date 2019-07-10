@@ -59,10 +59,10 @@ public enum CLIParam implements Supplier<Option> {
 		new OptionImpl() //
 			.setShortOpt('c') //
 			.setArgumentLimits(1) //
-			.setDefault(String.valueOf(Scratchpad.DEFAULT_TESTS)) //
+			.setDefault(String.valueOf(Entrypoint.DEFAULT_TESTS)) //
 			.setArgumentName("tests") //
 			.setDescription("The number of test objects to create") //
-			.setValueFilter(new IntegerValueFilter(Scratchpad.MIN_TESTS)) //
+			.setValueFilter(new IntegerValueFilter(Entrypoint.MIN_TESTS)) //
 	); //
 
 	//

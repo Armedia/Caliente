@@ -48,7 +48,7 @@ import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.caliente.cli.help.HelpRenderer;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class AbstractExecutable {
+public abstract class AbstractEntrypoint {
 
 	private static final Option HELP_OPTION = new OptionImpl() //
 		.setShortOpt('?') //
@@ -66,7 +66,7 @@ public abstract class AbstractExecutable {
 	protected final File userDir;
 	protected final File homeDir;
 
-	protected AbstractExecutable() {
+	protected AbstractEntrypoint() {
 		String userDir = System.getProperty("user.dir");
 		if (StringUtils.isEmpty(userDir)) {
 			userDir = ".";
@@ -95,7 +95,7 @@ public abstract class AbstractExecutable {
 	}
 
 	protected Option getHelpOption() {
-		return AbstractExecutable.HELP_OPTION;
+		return AbstractEntrypoint.HELP_OPTION;
 	}
 
 	protected abstract String getProgramName();
@@ -133,7 +133,7 @@ public abstract class AbstractExecutable {
 		}
 
 		if (args == null) {
-			args = AbstractExecutable.NO_ARGS;
+			args = AbstractEntrypoint.NO_ARGS;
 		}
 
 		OptionParseResult result = null;

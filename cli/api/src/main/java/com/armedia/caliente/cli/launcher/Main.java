@@ -52,12 +52,12 @@ public final class Main {
 	public static final void main(String... args) {
 		// First things first, find the first launcher
 		ClassLoader cl = ClasspathPatcher.init();
-		Class<AbstractExecutable> launcherClass = AbstractExecutable.class;
-		PluggableServiceLocator<AbstractExecutable> loader = new PluggableServiceLocator<>(launcherClass, cl);
+		Class<AbstractEntrypoint> launcherClass = AbstractEntrypoint.class;
+		PluggableServiceLocator<AbstractEntrypoint> loader = new PluggableServiceLocator<>(launcherClass, cl);
 		final List<Throwable> exceptions = new ArrayList<>();
 		loader.setHideErrors(false);
 		loader.setErrorListener((c, e) -> exceptions.add(e));
-		List<AbstractExecutable> c = new LinkedList<>();
+		List<AbstractEntrypoint> c = new LinkedList<>();
 		loader.getAll().forEachRemaining(c::add);
 		final int result;
 		if (c.isEmpty()) {
@@ -69,7 +69,7 @@ public final class Main {
 				exceptions.forEach((e) -> Main.BOOT_LOG.error("Failed Launcher", e));
 			}
 		} else {
-			AbstractExecutable executable = c.get(0);
+			AbstractEntrypoint executable = c.get(0);
 			Main.BOOT_LOG.debug("The executable is of type {}", executable.getClass().getCanonicalName());
 			int ret = 0;
 			try {

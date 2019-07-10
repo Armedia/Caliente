@@ -24,45 +24,54 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.cli.usermapper;
+package com.armedia.caliente.cli.flat2db;
 
 import java.util.Collection;
+import java.util.Date;
+
+import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.launcher.AbstractExecutable;
-import com.armedia.caliente.cli.utils.DfcLaunchHelper;
-import com.armedia.caliente.cli.utils.LibLaunchHelper;
+import com.armedia.caliente.cli.launcher.AbstractEntrypoint;
+import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 
-public class Launcher extends AbstractExecutable {
+public class Entrypoint extends AbstractEntrypoint {
+	private static final int MIN_THREADS = 1;
+	private static final int DEFAULT_THREADS = Math.min(16, Runtime.getRuntime().availableProcessors() * 2);
+	private static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors() * 3);
 
-	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
-	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
+	private static final String REPORT_MARKER_FORMAT = "yyyyMMdd-HHmmss";
+
+	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper(Entrypoint.MIN_THREADS,
+		Entrypoint.DEFAULT_THREADS, Entrypoint.MAX_THREADS);
 
 	@Override
 	protected String getProgramName() {
-		return "caliente-usermapper";
+		return "caliente-flat2db";
+	}
+
+	@Override
+	protected int execute(OptionValues cli, String command, OptionValues commandValues, Collection<String> positionals)
+		throws Exception {
+		final String reportMarker = DateFormatUtils.format(new Date(), Entrypoint.REPORT_MARKER_FORMAT);
+		System.setProperty("logName", String.format("%s-%s", getProgramName(), reportMarker));
+		return 0;
 	}
 
 	@Override
 	protected OptionScheme getOptionScheme() {
 		return new OptionScheme(getProgramName()) //
 			.addGroup( //
-				this.libLaunchHelper.asGroup() //
-			) //
-			.addGroup( //
-				this.dfcLaunchHelper.asGroup() //
+				this.threadsLaunchHelper.asGroup() //
 			) //
 			.addFrom( //
 				Option.unwrap(CLIParam.values()) //
 			) //
+			.setArgumentName("configuration-file") //
+			.setMinArguments(1) //
+			.setMaxArguments(1) //
 		;
-	}
-
-	@Override
-	protected int execute(OptionValues baseValues, String command, OptionValues commandValies,
-		Collection<String> positionals) throws Exception {
-		return new UserMapper(this.dfcLaunchHelper).run(baseValues);
 	}
 }

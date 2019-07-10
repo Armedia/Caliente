@@ -41,12 +41,12 @@ import org.slf4j.Logger;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.launcher.AbstractExecutable;
+import com.armedia.caliente.cli.launcher.AbstractEntrypoint;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.PooledWorkers;
 
-public class Launcher extends AbstractExecutable {
+public class Entrypoint extends AbstractEntrypoint {
 	private static final int MIN_THREADS = 1;
 	private static final int DEFAULT_THREADS = Math.min(16, Runtime.getRuntime().availableProcessors() * 2);
 	private static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors() * 3);
@@ -69,8 +69,8 @@ public class Launcher extends AbstractExecutable {
 		return true;
 	}
 
-	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper(Launcher.MIN_THREADS,
-		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
+	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper(Entrypoint.MIN_THREADS,
+		Entrypoint.DEFAULT_THREADS, Entrypoint.MAX_THREADS);
 
 	@Override
 	protected String getProgramName() {
@@ -80,13 +80,13 @@ public class Launcher extends AbstractExecutable {
 	@Override
 	protected int execute(OptionValues cli, String command, OptionValues commandValues, Collection<String> positionals)
 		throws Exception {
-		final String reportMarker = DateFormatUtils.format(new Date(), Launcher.REPORT_MARKER_FORMAT);
+		final String reportMarker = DateFormatUtils.format(new Date(), Entrypoint.REPORT_MARKER_FORMAT);
 		System.setProperty("logName", String.format("%s-%s", getProgramName(), reportMarker));
 
 		final File biFile = new File(cli.getString(CLIParam.bulk_import)).getCanonicalFile();
-		if (!Launcher.verifyPath(this.log, biFile, "bulk import")) { return 1; }
+		if (!Entrypoint.verifyPath(this.log, biFile, "bulk import")) { return 1; }
 		final File beFile = new File(cli.getString(CLIParam.bulk_export)).getCanonicalFile();
-		if (!Launcher.verifyPath(this.log, beFile, "bulk export")) { return 1; }
+		if (!Entrypoint.verifyPath(this.log, beFile, "bulk export")) { return 1; }
 
 		final String reportDirStr = cli.getString(CLIParam.report_dir, System.getProperty("user.dir"));
 		File reportDir = new File(reportDirStr);
