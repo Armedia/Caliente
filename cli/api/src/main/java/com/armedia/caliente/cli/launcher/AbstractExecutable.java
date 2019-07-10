@@ -35,7 +35,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.Launcher;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionParseResult;
@@ -49,7 +48,7 @@ import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.caliente.cli.help.HelpRenderer;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class AbstractLauncher {
+public abstract class AbstractExecutable {
 
 	private static final Option HELP_OPTION = new OptionImpl() //
 		.setShortOpt('?') //
@@ -67,7 +66,7 @@ public abstract class AbstractLauncher {
 	protected final File userDir;
 	protected final File homeDir;
 
-	protected AbstractLauncher() {
+	protected AbstractExecutable() {
 		String userDir = System.getProperty("user.dir");
 		if (StringUtils.isEmpty(userDir)) {
 			userDir = ".";
@@ -96,7 +95,7 @@ public abstract class AbstractLauncher {
 	}
 
 	protected Option getHelpOption() {
-		return AbstractLauncher.HELP_OPTION;
+		return AbstractExecutable.HELP_OPTION;
 	}
 
 	protected abstract String getProgramName();
@@ -123,7 +122,7 @@ public abstract class AbstractLauncher {
 
 	protected abstract OptionScheme getOptionScheme();
 
-	public int launch(String... args) {
+	public int execute(String... args) {
 		final Option helpOption = getHelpOption();
 		final OptionScheme optionScheme;
 		try {
@@ -134,7 +133,7 @@ public abstract class AbstractLauncher {
 		}
 
 		if (args == null) {
-			args = AbstractLauncher.NO_ARGS;
+			args = AbstractExecutable.NO_ARGS;
 		}
 
 		OptionParseResult result = null;
@@ -216,7 +215,7 @@ public abstract class AbstractLauncher {
 		}
 
 		try {
-			int ret = run(result.getOptionValues(), result.getCommand(), result.getCommandValues(),
+			int ret = execute(result.getOptionValues(), result.getCommand(), result.getCommandValues(),
 				result.getPositionals());
 			showFooter(this.console, ret);
 			return ret;
@@ -238,6 +237,6 @@ public abstract class AbstractLauncher {
 		log.error("Exception caught", e);
 	}
 
-	protected abstract int run(OptionValues baseValues, String command, OptionValues commandValues,
+	protected abstract int execute(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception;
 }

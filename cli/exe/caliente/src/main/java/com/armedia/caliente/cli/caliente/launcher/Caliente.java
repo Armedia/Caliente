@@ -65,7 +65,7 @@ import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.DynamicOptionsException;
 import com.armedia.caliente.cli.filter.StringValueFilter;
-import com.armedia.caliente.cli.launcher.AbstractLauncher;
+import com.armedia.caliente.cli.launcher.AbstractExecutable;
 import com.armedia.caliente.cli.launcher.CommandLineProcessingException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
@@ -81,7 +81,7 @@ import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 
-public class Caliente extends AbstractLauncher {
+public class Caliente extends AbstractExecutable {
 
 	/**
 	 * Read the Caliente version... is this the cleanest way?
@@ -634,7 +634,7 @@ public class Caliente extends AbstractLauncher {
 	}
 
 	@Override
-	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
+	protected int execute(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
 
 		try {

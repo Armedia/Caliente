@@ -24,10 +24,10 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.cli;
+package com.armedia.caliente.cli.launcher;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -45,33 +45,18 @@ public abstract class Launcher {
 
 	public static final Logger BOOT_LOG = LogConfigurator.getBootLogger();
 
-	private static final String LAUNCHER_CLASSNAME = "com.armedia.caliente.cli.launcher.AbstractLauncher";
-
 	public static final void main(String... args) throws Throwable {
 		// First things first, find the first launcher
 		ClassLoader cl = ClasspathPatcher.init();
-		Thread.currentThread().setContextClassLoader(cl);
-		Class<?> launcherClass = cl.loadClass(Launcher.LAUNCHER_CLASSNAME);
-		PluggableServiceLocator<?> launchers = new PluggableServiceLocator<>(launcherClass, cl);
+		Class<AbstractExecutable> launcherClass = AbstractExecutable.class;
+		PluggableServiceLocator<AbstractExecutable> loader = new PluggableServiceLocator<>(launcherClass, cl);
 		final List<Throwable> exceptions = new ArrayList<>();
-		launchers.setHideErrors(false);
-		launchers.setErrorListener((c, e) -> exceptions.add(e));
-		Object l = launchers.getFirst();
+		loader.setHideErrors(false);
+		loader.setErrorListener((c, e) -> exceptions.add(e));
+		List<AbstractExecutable> c = new LinkedList<>();
+		loader.getAll().forEachRemaining(c::add);
 		final int result;
-		if (l != null) {
-			Launcher.BOOT_LOG.debug("The launcher is of type {}", l.getClass().getCanonicalName());
-			int ret = 0;
-			try {
-				Method launch = l.getClass().getMethod("launch", String[].class);
-				Object a = args;
-				Object r = launch.invoke(l, a);
-				ret = Integer.class.cast(r).intValue();
-			} catch (Throwable t) {
-				Launcher.BOOT_LOG.error("Failed to launch from {}", l.getClass().getCanonicalName(), t);
-				ret = 1;
-			}
-			result = ret;
-		} else {
+		if (c.isEmpty()) {
 			// KABOOM! No launcher found!
 			result = 1;
 			Launcher.BOOT_LOG.error("No launcher instances were found");
@@ -79,6 +64,17 @@ public abstract class Launcher {
 				Launcher.BOOT_LOG.error("{} matching launchers were found, but failed to load:");
 				exceptions.forEach((e) -> Launcher.BOOT_LOG.error("Failed Launcher", e));
 			}
+		} else {
+			AbstractExecutable executable = c.get(0);
+			Launcher.BOOT_LOG.debug("The executable is of type {}", executable.getClass().getCanonicalName());
+			int ret = 0;
+			try {
+				ret = executable.execute(args);
+			} catch (Throwable t) {
+				Launcher.BOOT_LOG.error("Failed to execute from {}", executable.getClass().getCanonicalName(), t);
+				ret = 1;
+			}
+			result = ret;
 		}
 		Launcher.BOOT_LOG.debug("Exiting with result = {}", result);
 		System.exit(result);

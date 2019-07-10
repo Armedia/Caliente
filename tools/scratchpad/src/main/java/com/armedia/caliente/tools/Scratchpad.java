@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.launcher.AbstractLauncher;
+import com.armedia.caliente.cli.launcher.AbstractExecutable;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
@@ -57,7 +57,7 @@ import com.armedia.commons.utilities.function.CheckedSupplier;
  *
  *
  */
-public class Scratchpad extends AbstractLauncher {
+public class Scratchpad extends AbstractExecutable {
 
 	static final int MIN_TESTS = 1000;
 	static final int DEFAULT_TESTS = 10000;
@@ -119,7 +119,7 @@ public class Scratchpad extends AbstractLauncher {
 	}
 
 	@Override
-	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
+	protected int execute(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
 		final int threads = this.threadsLaunchHelper.getThreads(baseValues, 10);
 		final int tests = baseValues.getInteger(CLIParam.test_count);

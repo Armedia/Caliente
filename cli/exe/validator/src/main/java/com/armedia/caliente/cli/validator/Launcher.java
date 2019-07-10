@@ -41,12 +41,12 @@ import org.slf4j.Logger;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.launcher.AbstractLauncher;
+import com.armedia.caliente.cli.launcher.AbstractExecutable;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.PooledWorkers;
 
-public class Launcher extends AbstractLauncher {
+public class Launcher extends AbstractExecutable {
 	private static final int MIN_THREADS = 1;
 	private static final int DEFAULT_THREADS = Math.min(16, Runtime.getRuntime().availableProcessors() * 2);
 	private static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors() * 3);
@@ -78,7 +78,7 @@ public class Launcher extends AbstractLauncher {
 	}
 
 	@Override
-	protected int run(OptionValues cli, String command, OptionValues commandValues, Collection<String> positionals)
+	protected int execute(OptionValues cli, String command, OptionValues commandValues, Collection<String> positionals)
 		throws Exception {
 		final String reportMarker = DateFormatUtils.format(new Date(), Launcher.REPORT_MARKER_FORMAT);
 		System.setProperty("logName", String.format("%s-%s", getProgramName(), reportMarker));
