@@ -79,9 +79,6 @@ public abstract class ClasspathPatcher {
 	}
 
 	private static final Logger LOG = LoggerFactory.getLogger(ClasspathPatcher.class);
-	private static final Class<?>[] PARAMETERS = new Class[] {
-		URL.class
-	};
 	private static final URL[] NO_URLS = {};
 	private static final URL NULL_URL = null;
 	private static volatile ClassLoader CL = null;
@@ -112,11 +109,27 @@ public abstract class ClasspathPatcher {
 		return ClasspathPatcher.CL;
 	}
 
+	private static Method findMethodRecursively(Class<?> c, String name, Class<?>... parameterTypes) {
+		while (c != null) {
+			try {
+				return c.getDeclaredMethod(name, parameterTypes);
+			} catch (NoSuchMethodException e) {
+				// That's ok...the parent might succeed
+			} catch (SecurityException e) {
+				return null;
+			}
+			c = c.getSuperclass();
+		}
+		return null;
+	}
+
 	private static Consumer<URL> getConsumer(final URLClassLoader ucl) {
 		if (ucl == null) { return null; }
 		Class<? extends ClassLoader> clclass = ucl.getClass();
 		try {
-			Method method = URLClassLoader.class.getDeclaredMethod("addURL", ClasspathPatcher.PARAMETERS);
+			Method method = ClasspathPatcher.findMethodRecursively(clclass, "addURL", URL.class);
+			if (method == null) { return null; }
+
 			try {
 				method.setAccessible(true);
 			} catch (SecurityException e) {
