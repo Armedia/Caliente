@@ -27,7 +27,7 @@
 package com.armedia.caliente.cli.launcher;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -57,21 +57,14 @@ public final class Main {
 		final List<Throwable> exceptions = new ArrayList<>();
 		loader.setHideErrors(false);
 		loader.setErrorListener((c, e) -> exceptions.add(e));
-		List<AbstractEntrypoint> c = new LinkedList<>();
-		loader.getAll().forEachRemaining(c::add);
+		Iterator<AbstractEntrypoint> it = loader.getAll();
 		final int result;
-		if (c.isEmpty()) {
-			// KABOOM! No launcher found!
-			result = 1;
-			Main.BOOT_LOG.error("No entrypoints were found");
-			if (!exceptions.isEmpty()) {
-				Main.BOOT_LOG.error("{} possible entrypoints were found, but failed to load:");
-				exceptions.forEach((e) -> Main.BOOT_LOG.error("Failed Entrypoint", e));
-			}
-		} else {
-			AbstractEntrypoint entrypoint = c.get(0);
-			Main.BOOT_LOG.debug("The entrypoint to {} is of type {}", entrypoint.getName(),
+		if (it.hasNext()) {
+			AbstractEntrypoint entrypoint = it.next();
+			Main.BOOT_LOG.debug("Using entrypoint for {} (of type {})", entrypoint.getName(),
 				entrypoint.getClass().getCanonicalName());
+			it.forEachRemaining((e) -> Main.BOOT_LOG.debug("*** IGNORING entrypoint for {} (of type {})", e.getName(),
+				e.getClass().getCanonicalName()));
 			int ret = 0;
 			try {
 				ret = entrypoint.execute(args);
@@ -81,6 +74,14 @@ public final class Main {
 				ret = 1;
 			}
 			result = ret;
+		} else {
+			// KABOOM! No launcher found!
+			result = 1;
+			Main.BOOT_LOG.error("No viable entrypoints were found");
+			if (!exceptions.isEmpty()) {
+				Main.BOOT_LOG.error("{} possible entrypoints were found, but failed to load:", exceptions.size());
+				exceptions.forEach((e) -> Main.BOOT_LOG.error("Failed Entrypoint", e));
+			}
 		}
 		Main.BOOT_LOG.debug("Exiting with result = {}", result);
 		System.exit(result);
