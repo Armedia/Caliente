@@ -48,7 +48,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		Entrypoint.DEFAULT_THREADS, Entrypoint.MAX_THREADS);
 
 	@Override
-	protected String getProgramName() {
+	public String getName() {
 		return "caliente-flat2db";
 	}
 
@@ -56,13 +56,13 @@ public class Entrypoint extends AbstractEntrypoint {
 	protected int execute(OptionValues cli, String command, OptionValues commandValues, Collection<String> positionals)
 		throws Exception {
 		final String reportMarker = DateFormatUtils.format(new Date(), Entrypoint.REPORT_MARKER_FORMAT);
-		System.setProperty("logName", String.format("%s-%s", getProgramName(), reportMarker));
+		System.setProperty("logName", String.format("%s-%s", getName(), reportMarker));
 		return 0;
 	}
 
 	@Override
 	protected OptionScheme getOptionScheme() {
-		return new OptionScheme(getProgramName()) //
+		return new OptionScheme(getName()) //
 			.addGroup( //
 				this.threadsLaunchHelper.asGroup() //
 			) //

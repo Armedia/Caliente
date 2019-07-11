@@ -50,7 +50,7 @@ public class Entrypoint extends AbstractEntrypoint {
 
 	@Override
 	protected OptionScheme getOptionScheme() {
-		return new OptionScheme(getProgramName()) //
+		return new OptionScheme(getName()) //
 			.addGroup( //
 				this.libLaunchHelper.asGroup() //
 			) //
@@ -64,7 +64,7 @@ public class Entrypoint extends AbstractEntrypoint {
 	}
 
 	@Override
-	protected String getProgramName() {
+	public String getName() {
 		return "caliente-filenamemapper";
 	}
 

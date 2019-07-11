@@ -41,13 +41,13 @@ public class Entrypoint extends AbstractEntrypoint {
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 
 	@Override
-	protected String getProgramName() {
+	public String getName() {
 		return "caliente-usermapper";
 	}
 
 	@Override
 	protected OptionScheme getOptionScheme() {
-		return new OptionScheme(getProgramName()) //
+		return new OptionScheme(getName()) //
 			.addGroup( //
 				this.libLaunchHelper.asGroup() //
 			) //

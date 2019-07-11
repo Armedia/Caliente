@@ -63,19 +63,21 @@ public final class Main {
 		if (c.isEmpty()) {
 			// KABOOM! No launcher found!
 			result = 1;
-			Main.BOOT_LOG.error("No launcher instances were found");
+			Main.BOOT_LOG.error("No entrypoints were found");
 			if (!exceptions.isEmpty()) {
-				Main.BOOT_LOG.error("{} matching launchers were found, but failed to load:");
-				exceptions.forEach((e) -> Main.BOOT_LOG.error("Failed Launcher", e));
+				Main.BOOT_LOG.error("{} possible entrypoints were found, but failed to load:");
+				exceptions.forEach((e) -> Main.BOOT_LOG.error("Failed Entrypoint", e));
 			}
 		} else {
-			AbstractEntrypoint executable = c.get(0);
-			Main.BOOT_LOG.debug("The executable is of type {}", executable.getClass().getCanonicalName());
+			AbstractEntrypoint entrypoint = c.get(0);
+			Main.BOOT_LOG.debug("The entrypoint to {} is of type {}", entrypoint.getName(),
+				entrypoint.getClass().getCanonicalName());
 			int ret = 0;
 			try {
-				ret = executable.execute(args);
+				ret = entrypoint.execute(args);
 			} catch (Throwable t) {
-				Main.BOOT_LOG.error("Failed to execute from {}", executable.getClass().getCanonicalName(), t);
+				Main.BOOT_LOG.error("Failed to launch {} from the entrypoint class {}", entrypoint.getName(),
+					entrypoint.getClass().getCanonicalName(), t);
 				ret = 1;
 			}
 			result = ret;

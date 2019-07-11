@@ -98,7 +98,7 @@ public abstract class AbstractEntrypoint {
 		return AbstractEntrypoint.HELP_OPTION;
 	}
 
-	protected abstract String getProgramName();
+	public abstract String getName();
 
 	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) {
@@ -140,7 +140,7 @@ public abstract class AbstractEntrypoint {
 		try {
 			result = parseArguments(helpOption, optionScheme, args);
 		} catch (HelpRequestedException e) {
-			HelpRenderer.renderHelp(getProgramName(), e, System.err);
+			HelpRenderer.renderHelp(getName(), e, System.err);
 			return 1;
 		} catch (CommandLineSyntaxException e) {
 			HelpRenderer.renderError("ERROR", e, System.err);

@@ -141,14 +141,14 @@ public class Entrypoint extends AbstractEntrypoint {
 	}
 
 	@Override
-	protected String getProgramName() {
+	public String getName() {
 		return "caliente";
 	}
 
 	@Override
 	protected OptionScheme getOptionScheme() {
 
-		final CommandScheme scheme = new CommandScheme(getProgramName(), true);
+		final CommandScheme scheme = new CommandScheme(getName(), true);
 		for (CalienteCommand d : CalienteCommand.values()) {
 			Command c = new Command(d.getTitle(), d.getAliases()) {
 
