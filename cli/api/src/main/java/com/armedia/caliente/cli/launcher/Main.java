@@ -52,11 +52,11 @@ public final class Main {
 	public static final void main(String... args) {
 		// First things first, find the first launcher
 		ClassLoader cl = ClasspathPatcher.init();
-		Class<AbstractEntrypoint> launcherClass = AbstractEntrypoint.class;
-		PluggableServiceLocator<AbstractEntrypoint> loader = new PluggableServiceLocator<>(launcherClass, cl);
+		PluggableServiceLocator<AbstractEntrypoint> loader = new PluggableServiceLocator<>(AbstractEntrypoint.class, cl);
 		final List<Throwable> exceptions = new ArrayList<>();
 		loader.setHideErrors(false);
 		loader.setErrorListener((c, e) -> exceptions.add(e));
+
 		Iterator<AbstractEntrypoint> it = loader.getAll();
 		final int result;
 		if (it.hasNext()) {
