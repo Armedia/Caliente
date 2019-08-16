@@ -120,7 +120,7 @@
 	</xsd:complexType>
 
 	<xsd:complexType name="conditionDebug.t">
-		<xsd:choice minOccurs="1" maxOccurs="1">
+		<xsd:choice minOccurs="0" maxOccurs="1">
 			<xsd:group ref="tns:groupingConditions" />
 			<xsd:group ref="tns:checkConditions" />
 		</xsd:choice>
