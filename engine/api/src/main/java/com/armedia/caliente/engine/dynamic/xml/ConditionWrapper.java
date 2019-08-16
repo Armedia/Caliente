@@ -39,6 +39,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.xml.conditions.CheckExpression;
 import com.armedia.caliente.engine.dynamic.xml.conditions.CustomCheck;
 import com.armedia.caliente.engine.dynamic.xml.conditions.CustomScript;
+import com.armedia.caliente.engine.dynamic.xml.conditions.Debug;
 import com.armedia.caliente.engine.dynamic.xml.conditions.GroupAnd;
 import com.armedia.caliente.engine.dynamic.xml.conditions.GroupNand;
 import com.armedia.caliente.engine.dynamic.xml.conditions.GroupNor;
@@ -76,6 +77,9 @@ import com.armedia.caliente.engine.dynamic.xml.conditions.IsVariableValue;
 public class ConditionWrapper implements Condition {
 
 	@XmlElements({
+		// The debugger element
+		@XmlElement(name = "debug", type = Debug.class), //
+
 		// First, the groups
 		@XmlElement(name = "and", type = GroupAnd.class), //
 		@XmlElement(name = "or", type = GroupOr.class), //

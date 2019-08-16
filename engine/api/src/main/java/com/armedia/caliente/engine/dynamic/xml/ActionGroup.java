@@ -45,6 +45,7 @@ import com.armedia.caliente.engine.dynamic.xml.actions.AttributeRename;
 import com.armedia.caliente.engine.dynamic.xml.actions.AttributeReplace;
 import com.armedia.caliente.engine.dynamic.xml.actions.AttributeSet;
 import com.armedia.caliente.engine.dynamic.xml.actions.CustomAction;
+import com.armedia.caliente.engine.dynamic.xml.actions.Debug;
 import com.armedia.caliente.engine.dynamic.xml.actions.EndTransformation;
 import com.armedia.caliente.engine.dynamic.xml.actions.LoadExternalMetadata;
 import com.armedia.caliente.engine.dynamic.xml.actions.MapAttributeValue;
@@ -75,6 +76,10 @@ import com.armedia.caliente.engine.dynamic.xml.actions.VariableSet;
 public class ActionGroup extends ConditionalAction {
 
 	@XmlElements({
+		// The debugger element
+		@XmlElement(name = "debug", type = Debug.class), //
+
+		// The polymorphic children...
 		@XmlElement(name = "group", type = ActionGroup.class), //
 		@XmlElement(name = "map-subtype", type = MapSubtype.class), //
 		@XmlElement(name = "map-original-subtype", type = MapOriginalSubtype.class), //
