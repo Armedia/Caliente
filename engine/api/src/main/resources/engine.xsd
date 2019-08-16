@@ -119,6 +119,13 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="conditionDebug.t">
+		<xsd:choice minOccurs="1" maxOccurs="1">
+			<xsd:group ref="tns:groupingConditions" />
+			<xsd:group ref="tns:checkConditions" />
+		</xsd:choice>
+	</xsd:complexType>
+
 	<xsd:complexType name="conditionGroupNot.t">
 		<xsd:choice minOccurs="1" maxOccurs="1">
 			<xsd:group ref="tns:groupingConditions" />
@@ -355,6 +362,7 @@
 			<xsd:element name="nor" type="tns:conditionGroupNor.t" />
 			<xsd:element name="xnor" type="tns:conditionGroupXnor.t" />
 			<xsd:element name="oneof" type="tns:conditionGroupOneof.t" />
+			<xsd:element name="debug" type="tns:conditionDebug.t" />
 		</xsd:choice>
 	</xsd:group>
 
