@@ -71,6 +71,14 @@ import com.armedia.commons.utilities.Tools;
 
 public class AttributeMapper {
 
+	private static final AttributeMappings DEFAULT_MAPPINGS;
+	static {
+		DEFAULT_MAPPINGS = new AttributeMappings();
+		MappingSet common = new MappingSet();
+		common.setResidualsMode(ResidualsMode.INCLUDE);
+		AttributeMapper.DEFAULT_MAPPINGS.setCommonMappings(common);
+	}
+
 	private static final Pattern NS_PARSER = Pattern.compile("^([^:]+):(.+)$");
 
 	private static final XmlInstances<AttributeMappings> INSTANCES = new XmlInstances<>(AttributeMappings.class);
@@ -130,10 +138,8 @@ public class AttributeMapper {
 		throws XmlInstanceException, XmlNotFoundException {
 		this.constructedTypeFactory = Objects.requireNonNull(constructedTypeFactory,
 			"Must provide a non-null SchemaService instance");
-		AttributeMappings xml = AttributeMapper.INSTANCES.getInstance(xmlSource);
-		if (xml == null) {
-			xml = new AttributeMappings();
-		}
+		AttributeMappings xml = Tools.coalesce(AttributeMapper.INSTANCES.getInstance(xmlSource),
+			AttributeMapper.DEFAULT_MAPPINGS);
 		MappingSet commonMappings = xml.getCommonMappings();
 
 		List<BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>>> renderers = new ArrayList<>();
@@ -146,10 +152,8 @@ public class AttributeMapper {
 					renderers.add(r);
 				}
 			}
-			if (!renderers.isEmpty()) {
-				commonRenderers = new MappingRendererSet("<common>", commonMappings.getSeparator(),
-					commonMappings.getResidualsMode(), renderers);
-			}
+			commonRenderers = new MappingRendererSet("<common>", commonMappings.getSeparator(),
+				commonMappings.getResidualsMode(), renderers);
 		}
 		this.commonRenderers = commonRenderers;
 
