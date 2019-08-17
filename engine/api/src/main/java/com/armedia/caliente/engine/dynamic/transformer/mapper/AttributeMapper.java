@@ -78,15 +78,9 @@ public class AttributeMapper {
 	public static AttributeMapper getAttributeMapper(SchemaService schemaService, String location,
 		String residualsPrefix, boolean failIfMissing) throws AttributeMappingException {
 		try {
-			try {
-				AttributeMappings attributeMappings = AttributeMapper.INSTANCES.getInstance(location);
-				if (attributeMappings == null) { return null; }
-				return new AttributeMapper(new ConstructedTypeFactory(schemaService), location, residualsPrefix);
-			} catch (final XmlNotFoundException e) {
-				if (!failIfMissing) { return null; }
-				throw e;
-			}
+			return new AttributeMapper(new ConstructedTypeFactory(schemaService), location, residualsPrefix);
 		} catch (Exception e) {
+			if (!failIfMissing) { return null; }
 			String pre = "";
 			String post = "";
 			if (location == null) {
