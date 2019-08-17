@@ -40,7 +40,7 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class DynamicObject {
+public abstract class DynamicObject implements MutableScriptableObjectFacade<DynamicValue> {
 
 	protected final Map<String, DynamicValue> attributes = new TreeMap<>();
 	protected final Map<String, DynamicValue> privateProperties = new TreeMap<>();
@@ -48,48 +48,64 @@ public abstract class DynamicObject {
 	private String subtype = null;
 	private String name = null;
 
+	@Override
 	public abstract String getObjectId();
 
+	@Override
 	public abstract String getHistoryId();
 
+	@Override
 	public abstract boolean isHistoryCurrent();
 
+	@Override
 	public abstract CmfObject.Archetype getType();
 
+	@Override
 	public abstract String getLabel();
 
+	@Override
 	public abstract String getOriginalSubtype();
 
+	@Override
 	public String getSubtype() {
 		return Tools.coalesce(this.subtype, getOriginalSubtype());
 	}
 
+	@Override
 	public DynamicObject setSubtype(String subtype) {
 		this.subtype = subtype;
 		return this;
 	}
 
+	@Override
 	public String getName() {
 		return Tools.coalesce(this.name, getOriginalName());
 	}
 
+	@Override
 	public DynamicObject setName(String name) {
 		this.name = name;
 		return this;
 	}
 
+	@Override
 	public abstract Set<String> getOriginalSecondarySubtypes();
 
+	@Override
 	public abstract Set<String> getSecondarySubtypes();
 
+	@Override
 	public abstract int getDependencyTier();
 
+	@Override
 	public abstract String getOriginalName();
 
+	@Override
 	public Map<String, DynamicValue> getAtt() {
 		return this.attributes;
 	}
 
+	@Override
 	public Map<String, DynamicValue> getPriv() {
 		return this.privateProperties;
 	}

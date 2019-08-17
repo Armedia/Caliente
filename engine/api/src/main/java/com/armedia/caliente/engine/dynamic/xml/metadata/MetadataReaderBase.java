@@ -55,12 +55,8 @@ import org.apache.commons.text.StringSubstitutor;
 
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataException;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.function.CheckedConsumer;
@@ -206,28 +202,8 @@ public abstract class MetadataReaderBase extends BaseShareableLockable implement
 		return expression.evaluate((ctx) -> {
 			final Bindings bindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
 			if (object != null) {
-				CmfAttributeTranslator<V> translator = object.getTranslator();
-				Map<String, Object> attributes = new HashMap<>();
-				for (CmfAttribute<V> att : object.getAttributes()) {
-					Object value = null;
-					if (att.hasValues()) {
-						CmfValueCodec<V> codec = translator.getCodec(att.getType());
-						value = att.getType().getValue(codec.encode(att.getValue()));
-					}
-					attributes.put(att.getName(), value);
-				}
-				Map<String, Object> properties = new HashMap<>();
-				for (CmfProperty<V> prop : object.getProperties()) {
-					Object value = null;
-					if (prop.hasValues()) {
-						CmfValueCodec<V> codec = translator.getCodec(prop.getType());
-						value = prop.getType().getValue(codec.encode(prop.getValue()));
-					}
-					attributes.put(prop.getName(), value);
-				}
-				bindings.put("att", attributes);
-				bindings.put("prop", properties);
-				bindings.put("obj", object);
+				bindings.put("baseObj", object);
+				bindings.put("obj", new MetadataObjectFacade<>(object));
 			}
 			if (sqlName != null) {
 				bindings.put("sqlName", sqlName);

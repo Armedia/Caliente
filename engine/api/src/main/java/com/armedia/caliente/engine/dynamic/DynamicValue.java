@@ -41,7 +41,7 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 
-public class DynamicValue extends CmfBaseSetting {
+public class DynamicValue extends CmfBaseSetting implements MutableScriptablePropertyFacade {
 
 	private final List<Object> values = new ArrayList<>();
 	private Object value = null;
@@ -103,6 +103,7 @@ public class DynamicValue extends CmfBaseSetting {
 		}
 	}
 
+	@Override
 	public boolean isEmpty() {
 		Object value = null;
 		if (isMultivalued()) {
@@ -118,6 +119,7 @@ public class DynamicValue extends CmfBaseSetting {
 		return StringUtils.isEmpty(Tools.toString(value));
 	}
 
+	@Override
 	public Object getValue() {
 		if (!isMultivalued()) { return this.value; }
 		List<Object> values = getValues();
@@ -171,6 +173,7 @@ public class DynamicValue extends CmfBaseSetting {
 		return this;
 	}
 
+	@Override
 	public List<Object> getValues() {
 		if (!isMultivalued()) {
 			List<Object> ret = new ArrayList<>(1);
@@ -180,6 +183,7 @@ public class DynamicValue extends CmfBaseSetting {
 		return this.values;
 	}
 
+	@Override
 	public int getSize() {
 		return (!isMultivalued() ? 1 : this.values.size());
 	}
