@@ -69,6 +69,7 @@ public class Debug extends ConditionalAction {
 
 	@Override
 	protected final void executeAction(DynamicElementContext ctx) throws ActionException {
+		// Allow for debugging of the child action elements...
 		for (Action action : getActions()) {
 			if (action != null) {
 				action.apply(ctx);
