@@ -356,18 +356,19 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		object.setAttribute(att);
 		object.setProperty(prop);
 
-		prop = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfValue.Type.STRING, false);
-		object.setProperty(prop);
 		try {
-			prop.setValue(calculateParentTreeIds(file));
+			object.setProperty(new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfValue.Type.STRING,
+				calculateParentTreeIds(file)));
 		} catch (IOException e) {
 			throw new ExportException(
 				String.format("Failed to calculate the parent path IDs for [%s]", file.getAbsolutePath()), e);
 		}
 
-		prop = new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING, true);
-		prop.setValue(new CmfValue(this.object.getPortableParentPath()));
-		object.setProperty(prop);
+		object.setProperty(new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING,
+			new CmfValue(this.object.getPortableParentPath())));
+
+		object.setProperty(new CmfProperty<>(IntermediateProperty.FULL_PATH, CmfValue.Type.STRING,
+			new CmfValue(this.object.getPortableFullPath())));
 
 		if (this.object.isFolder()) {
 			// If this is a folder, the path is set to its full, relative path

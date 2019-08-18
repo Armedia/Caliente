@@ -50,6 +50,7 @@ public enum IntermediateProperty implements Supplier<String>, CmfEncodeableName 
 	CONTENT_STREAM_ID(PropertyIds.CONTENT_STREAM_ID, CmfValue.Type.STRING),
 
 	// Non-CMIS properties
+	FULL_PATH(CmfValue.Type.STRING),
 	PARENT_TREE_IDS(CmfValue.Type.STRING),
 	LATEST_PARENT_TREE_IDS(CmfValue.Type.STRING),
 	ACL_ID(CmfValue.Type.ID),
