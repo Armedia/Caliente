@@ -617,38 +617,54 @@ public abstract class ExportEngine<//
 		}
 	}
 
+	/**
+	 * Detect the type of search to conduct, or {@code null} if this search pattern isn't supported.
+	 *
+	 * @return the type of search to conduct, or {@code null} if this search pattern isn't
+	 *         supported.
+	 */
+	protected SearchType detectSearchType(String source) {
+		if (source == null) { return null; }
+		if (source.startsWith("%")) { return SearchType.KEY; }
+		if (source.startsWith("/")) { return SearchType.PATH; }
+		return SearchType.QUERY;
+	}
+
 	private Stream<ExportTarget> getExportTargets(SESSION session, String source, DELEGATE_FACTORY delegateFactory)
 		throws Exception {
-		Stream<ExportTarget> ret = null;
-		if (source.startsWith("%")) {
-			if (!this.supportedSearches.contains(SearchType.KEY)) {
-				throw new ExportException(
-					String.format("This engine doesn't support searches by key - found [%s] as the source", source));
-			}
-
-			// SearchKey!
-			final String searchKey = StringUtils.strip(source.substring(1));
-			if (StringUtils.isEmpty(searchKey)) {
-				throw new ExportException(
-					String.format("Invalid search key [%s] - no object can be found with an empty key"));
-			}
-			ret = findExportTargetsBySearchKey(session, this.settings, delegateFactory, searchKey);
-		} else //
-		if (source.startsWith("/")) {
-			if (!this.supportedSearches.contains(SearchType.PATH)) {
-				throw new ExportException(
-					String.format("This engine doesn't support searches by path - found [%s] as the source", source));
-			}
-			// CMS Path!
-			ret = findExportTargetsByPath(session, this.settings, delegateFactory, source);
-		} else {
-			if (!this.supportedSearches.contains(SearchType.QUERY)) {
-				throw new ExportException(
-					String.format("This engine doesn't support searches by query - found [%s] as the source", source));
-			}
-			// Query string!
-			ret = findExportTargetsByQuery(session, this.settings, delegateFactory, source);
+		final SearchType searchType = detectSearchType(source);
+		if (searchType == null) {
+			throw new ExportException(
+				String.format("This engine doesn't know how to search for exportable objects using [%s]", source));
 		}
+
+		if (!this.supportedSearches.contains(searchType)) {
+			throw new ExportException(String.format("This engine doesn't support searches by %s (from the source [%s])",
+				searchType.name().toLowerCase(), source));
+		}
+
+		Stream<ExportTarget> ret = null;
+		switch (searchType) {
+			case KEY:
+				// SearchKey!
+				final String searchKey = StringUtils.strip(source.substring(1));
+				if (StringUtils.isEmpty(searchKey)) {
+					throw new ExportException(
+						String.format("Invalid search key [%s] - no object can be found with an empty key"));
+				}
+				ret = findExportTargetsBySearchKey(session, this.settings, delegateFactory, searchKey);
+				break;
+			case PATH:
+				// CMS Path!
+				ret = findExportTargetsByPath(session, this.settings, delegateFactory, source);
+				break;
+			case QUERY:
+				// Query string!
+				ret = findExportTargetsByQuery(session, this.settings, delegateFactory, source);
+			default:
+				break;
+		}
+
 		if (ret != null) {
 			if (ret.isParallel()) {
 				// Switch to sequential mode - we're doing our own parallelism here
