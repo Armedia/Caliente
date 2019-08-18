@@ -186,9 +186,10 @@ public class LocalFile {
 
 	@Override
 	public String toString() {
+		String type = (this.folder ? "dir" : this.regularFile ? "file" : "<unknown>");
 		return String.format(
-			"LocalFile [root=%s, absoluteFile=%s, relativeFile=%s, safePath=%s, fullPath=%s, parentPath=%s, name=%s, pathCount=%s]",
-			this.root, this.absoluteFile, this.relativeFile, this.safePath, this.fullPath, this.parentPath, this.name,
-			this.pathCount);
+			"LocalFile [root=%s, absoluteFile=%s, relativeFile=%s, type=%s, link=%s, safePath=%s, fullPath=%s, parentPath=%s, name=%s, pathCount=%s]",
+			this.root, this.absoluteFile, this.relativeFile, type, this.symbolicLink, this.safePath, this.fullPath,
+			this.parentPath, this.name, this.pathCount);
 	}
 }
