@@ -271,8 +271,8 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 				if (serializer != null) {
 					for (CmfValue value : attribute) {
 						attValue[2] = v;
-						attValue[3] = value.isNull();
-						if (!value.isNull()) {
+						if ((value != null) && !value.isNull()) {
+							attValue[3] = false;
 							try {
 								attValue[4] = serializer.serialize(value);
 							} catch (ParseException e) {
@@ -282,6 +282,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 									e);
 							}
 						} else {
+							attValue[3] = true;
 							attValue[4] = JdbcObjectStore.NULL;
 						}
 						attributeValueParameters.add(attValue.clone());
