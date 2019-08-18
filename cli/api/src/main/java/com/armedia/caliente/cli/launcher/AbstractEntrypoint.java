@@ -2,19 +2,19 @@
  * #%L
  * Armedia Caliente
  * %%
- * Copyright (c) 2010 - 2019 Armedia LLC
+ * Copyright (C) 2013 - 2019 Armedia, LLC
  * %%
- * This file is part of the Caliente software. 
- *  
- * If the software was purchased under a paid Caliente license, the terms of 
- * the paid license agreement will prevail.  Otherwise, the software is 
+ * This file is part of the Caliente software.
+ *
+ * If the software was purchased under a paid Caliente license, the terms of
+ * the paid license agreement will prevail.  Otherwise, the software is
  * provided under the following open source license terms:
  *
  * Caliente is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *   
+ *
  * Caliente is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -30,7 +30,6 @@ import java.io.File;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -47,10 +46,9 @@ import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.caliente.cli.help.HelpRenderer;
-import com.armedia.caliente.cli.launcher.log.LogConfigurator;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class AbstractLauncher {
+public abstract class AbstractEntrypoint {
 
 	private static final Option HELP_OPTION = new OptionImpl() //
 		.setShortOpt('?') //
@@ -60,22 +58,15 @@ public abstract class AbstractLauncher {
 		.setDescription("Display this help message") //
 	;
 
-	private static final Logger BOOT_LOG = LogConfigurator.getBootLogger();
-
 	private static final String[] NO_ARGS = {};
 
-	static {
-		// Make sure this is called as early as possible
-		ClasspathPatcher.init();
-	}
-
-	protected Logger log = AbstractLauncher.BOOT_LOG;
-	protected Logger console = AbstractLauncher.BOOT_LOG;
+	protected Logger log = Main.BOOT_LOG;
+	protected Logger console = Main.BOOT_LOG;
 
 	protected final File userDir;
 	protected final File homeDir;
 
-	protected AbstractLauncher() {
+	protected AbstractEntrypoint() {
 		String userDir = System.getProperty("user.dir");
 		if (StringUtils.isEmpty(userDir)) {
 			userDir = ".";
@@ -91,9 +82,8 @@ public abstract class AbstractLauncher {
 	/**
 	 * <p>
 	 * Process the OptionParseResult. If an error occurs, a {@link CommandLineProcessingException}
-	 * will be raised, and the invocation to {@link #launch(String...)} will return the value
-	 * obtained from that exception's {@link CommandLineProcessingException#getReturnValue()
-	 * getReturnValue()}.
+	 * will be raised, and the exit result will be set to the value obtained from that exception's
+	 * {@link CommandLineProcessingException#getReturnValue() getReturnValue()}.
 	 * </p>
 	 *
 	 * @throws CommandLineProcessingException
@@ -104,11 +94,11 @@ public abstract class AbstractLauncher {
 		Collection<String> positionals) throws CommandLineProcessingException {
 	}
 
-	protected final int launch(String... args) {
-		return launch(AbstractLauncher.HELP_OPTION, args);
+	protected Option getHelpOption() {
+		return AbstractEntrypoint.HELP_OPTION;
 	}
 
-	protected abstract String getProgramName();
+	public abstract String getName();
 
 	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) {
@@ -132,11 +122,8 @@ public abstract class AbstractLauncher {
 
 	protected abstract OptionScheme getOptionScheme();
 
-	protected final int launch(Supplier<Option> helpOption, String... args) {
-		return launch(Option.unwrap(helpOption), args);
-	}
-
-	protected final int launch(Option helpOption, String... args) {
+	public int execute(String... args) {
+		final Option helpOption = getHelpOption();
 		final OptionScheme optionScheme;
 		try {
 			optionScheme = getOptionScheme();
@@ -146,14 +133,14 @@ public abstract class AbstractLauncher {
 		}
 
 		if (args == null) {
-			args = AbstractLauncher.NO_ARGS;
+			args = AbstractEntrypoint.NO_ARGS;
 		}
 
 		OptionParseResult result = null;
 		try {
 			result = parseArguments(helpOption, optionScheme, args);
 		} catch (HelpRequestedException e) {
-			HelpRenderer.renderHelp(getProgramName(), e, System.err);
+			HelpRenderer.renderHelp(getName(), e, System.err);
 			return 1;
 		} catch (CommandLineSyntaxException e) {
 			HelpRenderer.renderError("ERROR", e, System.err);
@@ -228,7 +215,7 @@ public abstract class AbstractLauncher {
 		}
 
 		try {
-			int ret = run(result.getOptionValues(), result.getCommand(), result.getCommandValues(),
+			int ret = execute(result.getOptionValues(), result.getCommand(), result.getCommandValues(),
 				result.getPositionals());
 			showFooter(this.console, ret);
 			return ret;
@@ -250,6 +237,6 @@ public abstract class AbstractLauncher {
 		log.error("Exception caught", e);
 	}
 
-	protected abstract int run(OptionValues baseValues, String command, OptionValues commandValues,
+	protected abstract int execute(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception;
 }

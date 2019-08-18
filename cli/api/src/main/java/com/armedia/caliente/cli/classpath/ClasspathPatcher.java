@@ -2,7 +2,7 @@
  * #%L
  * Armedia Caliente
  * %%
- * Copyright (c) 2010 - 2019 Armedia LLC
+ * Copyright (C) 2013 - 2019 Armedia, LLC
  * %%
  * This file is part of the Caliente software.
  *
@@ -79,12 +79,9 @@ public abstract class ClasspathPatcher {
 	}
 
 	private static final Logger LOG = LoggerFactory.getLogger(ClasspathPatcher.class);
-	private static final Class<?>[] PARAMETERS = new Class[] {
-		URL.class
-	};
 	private static final URL[] NO_URLS = {};
 	private static final URL NULL_URL = null;
-	private static volatile URLClassLoader CL = null;
+	private static volatile ClassLoader CL = null;
 	private static volatile Consumer<URL> ADD_URL = null;
 	private static final Set<String> ADDED = new LinkedHashSet<>();
 	private static final ShareableLockable LOCK = new BaseShareableLockable();
@@ -93,26 +90,46 @@ public abstract class ClasspathPatcher {
 		ClasspathPatcher.init();
 	}
 
-	public static final void init() {
-		ClasspathPatcher.LOCK.shareLockedUpgradable(() -> ClasspathPatcher.CL, Objects::isNull, (oldCl) -> {
-			ClassLoader cl = Thread.currentThread().getContextClassLoader();
-			URLClassLoader ucl = Tools.cast(URLClassLoader.class, cl);
-			ClasspathPatcher.ADD_URL = ClasspathPatcher.getConsumer(ucl);
-			if (ClasspathPatcher.ADD_URL == null) {
-				final CPCL newCl = new CPCL(ClasspathPatcher.NO_URLS, cl);
-				ucl = newCl;
-				Thread.currentThread().setContextClassLoader(newCl);
-				ClasspathPatcher.ADD_URL = newCl::addURL;
-			}
-			ClasspathPatcher.CL = ucl;
-		});
+	public static final ClassLoader init() {
+		return ClasspathPatcher.LOCK.shareLockedUpgradable(() -> ClasspathPatcher.CL, Objects::isNull,
+			ClasspathPatcher::initCl);
 	}
 
-	private static Consumer<URL> getConsumer(final ClassLoader ucl) {
+	private static ClassLoader initCl(ClassLoader oldCl) {
+		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		URLClassLoader ucl = Tools.cast(URLClassLoader.class, cl);
+		ClasspathPatcher.ADD_URL = ClasspathPatcher.getConsumer(ucl);
+		if (ClasspathPatcher.ADD_URL == null) {
+			final CPCL newCl = new CPCL(ClasspathPatcher.NO_URLS, cl);
+			ucl = newCl;
+			Thread.currentThread().setContextClassLoader(newCl);
+			ClasspathPatcher.ADD_URL = newCl::addURL;
+		}
+		ClasspathPatcher.CL = ucl;
+		return ClasspathPatcher.CL;
+	}
+
+	private static Method findMethodRecursively(Class<?> c, String name, Class<?>... parameterTypes) {
+		while (c != null) {
+			try {
+				return c.getDeclaredMethod(name, parameterTypes);
+			} catch (NoSuchMethodException e) {
+				// That's ok...the parent might succeed
+			} catch (SecurityException e) {
+				return null;
+			}
+			c = c.getSuperclass();
+		}
+		return null;
+	}
+
+	private static Consumer<URL> getConsumer(final URLClassLoader ucl) {
 		if (ucl == null) { return null; }
 		Class<? extends ClassLoader> clclass = ucl.getClass();
 		try {
-			Method method = clclass.getDeclaredMethod("addURL", ClasspathPatcher.PARAMETERS);
+			Method method = ClasspathPatcher.findMethodRecursively(clclass, "addURL", URL.class);
+			if (method == null) { return null; }
+
 			try {
 				method.setAccessible(true);
 			} catch (SecurityException e) {
@@ -208,12 +225,15 @@ public abstract class ClasspathPatcher {
 		if (u == null) { throw new IllegalArgumentException("Must provide a URL to add to the classpath"); }
 		Boolean ret = ClasspathPatcher.LOCK.shareLockedUpgradable(() -> !ClasspathPatcher.ADDED.contains(u.toString()),
 			() -> {
-				try {
-					ClasspathPatcher.ADD_URL.accept(u);
-					return ClasspathPatcher.ADDED.add(u.toString());
-				} catch (Throwable t) {
-					throw new IOException(String.format("Failed to add the URL [%s] to the classloader", u), t);
+				if (ClasspathPatcher.ADD_URL != null) {
+					try {
+						ClasspathPatcher.ADD_URL.accept(u);
+						return ClasspathPatcher.ADDED.add(u.toString());
+					} catch (Throwable t) {
+						throw new IOException(String.format("Failed to add the URL [%s] to the classloader", u), t);
+					}
 				}
+				return Boolean.FALSE;
 			});
 		return ((ret != null) && ret.booleanValue());
 	}

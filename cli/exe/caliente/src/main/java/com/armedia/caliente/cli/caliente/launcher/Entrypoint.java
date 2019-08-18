@@ -2,19 +2,19 @@
  * #%L
  * Armedia Caliente
  * %%
- * Copyright (c) 2010 - 2019 Armedia LLC
+ * Copyright (C) 2013 - 2019 Armedia, LLC
  * %%
- * This file is part of the Caliente software. 
- *  
- * If the software was purchased under a paid Caliente license, the terms of 
- * the paid license agreement will prevail.  Otherwise, the software is 
+ * This file is part of the Caliente software.
+ *
+ * If the software was purchased under a paid Caliente license, the terms of
+ * the paid license agreement will prevail.  Otherwise, the software is
  * provided under the following open source license terms:
  *
  * Caliente is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *   
+ *
  * Caliente is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandScheme;
+import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
@@ -64,7 +65,7 @@ import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.DynamicOptionsException;
 import com.armedia.caliente.cli.filter.StringValueFilter;
-import com.armedia.caliente.cli.launcher.AbstractLauncher;
+import com.armedia.caliente.cli.launcher.AbstractEntrypoint;
 import com.armedia.caliente.cli.launcher.CommandLineProcessingException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
@@ -80,7 +81,7 @@ import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 
-public class Launcher extends AbstractLauncher {
+public class Entrypoint extends AbstractEntrypoint {
 
 	/**
 	 * Read the Caliente version... is this the cleanest way?
@@ -104,10 +105,6 @@ public class Launcher extends AbstractLauncher {
 
 	public static final CmfCrypt CRYPTO = new CmfCrypt();
 	public static final String STORE_PROP_CONTENT_LOCATION_REQUIRED = "caliente.content.location.required";
-
-	public static final void main(String... args) {
-		System.exit(new Launcher().launch(CLIParam.help, args));
-	}
 
 	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";
 	private static final Path DEFAULT_DATA_PATH = Paths.get("caliente");
@@ -136,17 +133,22 @@ public class Launcher extends AbstractLauncher {
 
 	private boolean directFsMode = false;
 
-	private String contentOrganizer = Launcher.DEFAULT_STREAMS_ORGANIZER;
+	private String contentOrganizer = Entrypoint.DEFAULT_STREAMS_ORGANIZER;
 
 	@Override
-	protected String getProgramName() {
+	protected Option getHelpOption() {
+		return CLIParam.help.option;
+	}
+
+	@Override
+	public String getName() {
 		return "caliente";
 	}
 
 	@Override
 	protected OptionScheme getOptionScheme() {
 
-		final CommandScheme scheme = new CommandScheme(getProgramName(), true);
+		final CommandScheme scheme = new CommandScheme(getName(), true);
 		for (CalienteCommand d : CalienteCommand.values()) {
 			Command c = new Command(d.getTitle(), d.getAliases()) {
 
@@ -158,13 +160,13 @@ public class Launcher extends AbstractLauncher {
 						if (!helpRequested) { throw new DynamicOptionsException(this, err); }
 					}
 
-					if (DynamicEngineOptions.class.isInstance(Launcher.this.engineInterface)) {
-						DynamicEngineOptions.class.cast(Launcher.this.engineInterface)
-							.getDynamicOptions(Launcher.this.command.getDescriptor(), this);
+					if (DynamicEngineOptions.class.isInstance(Entrypoint.this.engineInterface)) {
+						DynamicEngineOptions.class.cast(Entrypoint.this.engineInterface)
+							.getDynamicOptions(Entrypoint.this.command.getDescriptor(), this);
 					}
-					if (DynamicCommandOptions.class.isInstance(Launcher.this.command)) {
-						DynamicCommandOptions.class.cast(Launcher.this.command)
-							.getDynamicOptions(Launcher.this.engineInterface.getName(), this);
+					if (DynamicCommandOptions.class.isInstance(Entrypoint.this.command)) {
+						DynamicCommandOptions.class.cast(Entrypoint.this.command)
+							.getDynamicOptions(Entrypoint.this.engineInterface.getName(), this);
 					}
 				}
 
@@ -237,7 +239,7 @@ public class Launcher extends AbstractLauncher {
 		if (baseValues.isPresent(CLIParam.data)) {
 			path = baseValues.getString(CLIParam.data);
 		} else {
-			path = Launcher.DEFAULT_DATA_PATH.toString();
+			path = Entrypoint.DEFAULT_DATA_PATH.toString();
 		}
 
 		File f = newCanonicalFile(path);
@@ -256,7 +258,7 @@ public class Launcher extends AbstractLauncher {
 		if (baseValues.isPresent(CLIParam.db)) {
 			path = baseValues.getString(CLIParam.db);
 		} else {
-			path = new File(this.baseDataLocation, Launcher.DEFAULT_DB_PATH).getAbsolutePath();
+			path = new File(this.baseDataLocation, Entrypoint.DEFAULT_DB_PATH).getAbsolutePath();
 		}
 
 		File f = newCanonicalFile(path);
@@ -296,7 +298,7 @@ public class Launcher extends AbstractLauncher {
 		throws CommandLineProcessingException {
 		final boolean contentLocationWasGiven = commandValues.isPresent(CLIParam.streams);
 		final File calculatedContentLocation = Tools
-			.canonicalize(new File(this.baseDataLocation, Launcher.DEFAULT_STREAMS_PATH));
+			.canonicalize(new File(this.baseDataLocation, Entrypoint.DEFAULT_STREAMS_PATH));
 		final File contentLocation;
 		if (contentLocationWasGiven) {
 			contentLocation = newCanonicalFile(commandValues.getString(CLIParam.streams));
@@ -315,7 +317,7 @@ public class Launcher extends AbstractLauncher {
 		if (!contentLocationWasGiven) {
 			try {
 				final CmfValue contentLocationRequired = objectStore
-					.getProperty(Launcher.STORE_PROP_CONTENT_LOCATION_REQUIRED);
+					.getProperty(Entrypoint.STORE_PROP_CONTENT_LOCATION_REQUIRED);
 				if ((contentLocationRequired != null) && contentLocationRequired.asBoolean()) {
 					throw new CommandLineProcessingException(1, String.format(
 						"This extraction doesn't seem to bundle with the content streams; you must provide the required option to point out its location (usually %s)",
@@ -324,7 +326,7 @@ public class Launcher extends AbstractLauncher {
 			} catch (CmfStorageException e) {
 				throw new CommandLineProcessingException(1,
 					String.format("Failed to query the property %s from the Object Store",
-						Launcher.STORE_PROP_CONTENT_LOCATION_REQUIRED),
+						Entrypoint.STORE_PROP_CONTENT_LOCATION_REQUIRED),
 					e);
 			}
 		}
@@ -343,12 +345,12 @@ public class Launcher extends AbstractLauncher {
 			final boolean contentLocationRequired = !contentInDefaultLocation
 				|| this.command.isContentStreamsExternal(commandValues);
 			try {
-				objectStore.setProperty(Launcher.STORE_PROP_CONTENT_LOCATION_REQUIRED,
+				objectStore.setProperty(Entrypoint.STORE_PROP_CONTENT_LOCATION_REQUIRED,
 					new CmfValue(contentLocationRequired));
 			} catch (CmfStorageException e) {
 				throw new CommandLineProcessingException(1,
 					String.format("Failed to store the property %s into the Object Store",
-						Launcher.STORE_PROP_CONTENT_LOCATION_REQUIRED),
+						Entrypoint.STORE_PROP_CONTENT_LOCATION_REQUIRED),
 					e);
 			}
 		}
@@ -380,7 +382,7 @@ public class Launcher extends AbstractLauncher {
 		} else {
 			if (StringUtils.isBlank(contentOrganizer)) {
 				contentOrganizer = Tools.coalesce(this.command.getContentOrganizerName(commandValues),
-					Launcher.DEFAULT_STREAMS_ORGANIZER);
+					Entrypoint.DEFAULT_STREAMS_ORGANIZER);
 			}
 			this.contentOrganizer = contentOrganizer;
 			applyStoreProperties(cfg,
@@ -403,7 +405,7 @@ public class Launcher extends AbstractLauncher {
 		if (baseValues.isPresent(CLIParam.log_dir)) {
 			path = baseValues.getString(CLIParam.log_dir);
 		} else {
-			path = new File(this.baseDataLocation, Launcher.DEFAULT_LOG_PATH).getAbsolutePath();
+			path = new File(this.baseDataLocation, Entrypoint.DEFAULT_LOG_PATH).getAbsolutePath();
 		}
 
 		File f = newCanonicalFile(path);
@@ -463,7 +465,7 @@ public class Launcher extends AbstractLauncher {
 
 	protected boolean applyStoreProperties(StoreConfiguration cfg, Properties properties) {
 		if ((properties == null) || properties.isEmpty()) { return false; }
-		String storeType = properties.getProperty(Launcher.STORE_TYPE_PROPERTY);
+		String storeType = properties.getProperty(Entrypoint.STORE_TYPE_PROPERTY);
 		if (!StringUtils.isEmpty(storeType)) {
 			cfg.setType(storeType);
 		}
@@ -618,7 +620,7 @@ public class Launcher extends AbstractLauncher {
 
 		// Now, get the logs via SLF4J, which is what we'll be using moving forward...
 		final Logger console = LoggerFactory.getLogger("console");
-		console.info("Launching Caliente v{} {} mode for engine {}{}", Launcher.VERSION, command, engine, Tools.NL);
+		console.info("Launching Caliente v{} {} mode for engine {}{}", Entrypoint.VERSION, command, engine, Tools.NL);
 		Runtime runtime = Runtime.getRuntime();
 		console.info("Current heap size: {} MB", runtime.totalMemory() / 1024 / 1024);
 		console.info("Maximum heap size: {} MB", runtime.maxMemory() / 1024 / 1024);
@@ -628,11 +630,11 @@ public class Launcher extends AbstractLauncher {
 
 	@Override
 	protected void showBanner(Logger log) {
-		log.info("Caliente CLI v{}", Launcher.VERSION);
+		log.info("Caliente CLI v{}", Entrypoint.VERSION);
 	}
 
 	@Override
-	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
+	protected int execute(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
 
 		try {
@@ -651,7 +653,7 @@ public class Launcher extends AbstractLauncher {
 				if (writeProperties) {
 					Map<String, CmfValue> properties = new TreeMap<>();
 					properties.put(String.format(format, "engine"), new CmfValue(engineName));
-					properties.put(String.format(format, "version"), new CmfValue(Launcher.VERSION));
+					properties.put(String.format(format, "version"), new CmfValue(Entrypoint.VERSION));
 					properties.put(String.format(format, "start"), new CmfValue(new Date()));
 					objectStore.setProperties(properties);
 				}
