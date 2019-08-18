@@ -29,26 +29,23 @@ package com.armedia.caliente.engine.local.exporter;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Stack;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalFile;
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.ArrayIterator;
+import com.armedia.commons.utilities.CloseableIterator;
 
-public class LocalRecursiveIterator implements Iterator<ExportTarget> {
+public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private class RecursiveState {
 		private final File base;
 		private Iterator<File> childIterator = null;
-		private LocalFile next = null;
 		private int fileCount = 0;
 		private int folderCount = 0;
 		private boolean completed = false;
@@ -75,11 +72,9 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 	}
 
 	@Override
-	public boolean hasNext() {
+	protected Result findNext() throws Exception {
 		recursion: while (!this.stateStack.isEmpty()) {
 			RecursiveState state = this.stateStack.peek();
-			if (state.next != null) { return true; }
-
 			// No next yet, go looking for it...
 			final File current = state.base;
 			if (state.childIterator == null) {
@@ -112,48 +107,42 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 					}
 
 					try {
-						state.next = new LocalFile(this.root, f.getPath());
+						LocalFile next = new LocalFile(this.root, f.getPath());
+						state.fileCount++;
+						return found(next);
 					} catch (IOException e) {
 						throw new RuntimeException(
 							String.format("Failed to relativize the path [%s] from [%s]", f, this.root), e);
 					}
-					state.fileCount++;
-					return true;
 				}
 			}
+
+			// We're done with this folder, so whatever happens we're removing it from the stack
+			this.stateStack.pop();
+
+			// If this was the root search element, we return nothing b/c we're done here...
+			if (this.stateStack.isEmpty()) { return null; }
 
 			// If we're not excluding empty folders, and this is an empty folder, then we queue it
 			// up for retrieval...but we only do it once
 			if (!state.completed) {
 				state.completed = true;
-				if (!this.excludeEmptyFolders && ((state.fileCount | state.folderCount) == 0)) {
+				if (!this.excludeEmptyFolders || ((state.fileCount | state.folderCount) != 0)) {
 					File f = state.base;
 					try {
-						state.next = new LocalFile(this.root, f.getPath());
+						return found(new LocalFile(this.root, f.getPath()));
 					} catch (IOException e) {
 						throw new RuntimeException(
 							String.format("Failed to relativize the path [%s] from [%s]", f, this.root), e);
 					}
-					return true;
 				}
 			}
-			this.stateStack.pop();
 		}
-		return false;
+		// No more recursions... we're done!
+		return null;
 	}
 
 	@Override
-	public ExportTarget next() {
-		if (!hasNext()) { throw new NoSuchElementException(); }
-		RecursiveState state = this.stateStack.peek();
-		LocalFile ret = state.next;
-		state.next = null;
-		return new ExportTarget(ret.getAbsolute().isFile() ? CmfObject.Archetype.DOCUMENT : CmfObject.Archetype.FOLDER,
-			ret.getId(), ret.getSafePath());
-	}
-
-	@Override
-	public void remove() {
-		throw new UnsupportedOperationException();
+	protected void doClose() throws Exception {
 	}
 }
