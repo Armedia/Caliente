@@ -45,18 +45,15 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "filter.t", propOrder = {
+@XmlType(name = "filterDebug.t", propOrder = {
 	"actions"
 })
-public class Filter extends ConditionalAction {
+public class Debug extends ConditionalAction {
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@XmlElements({
-		// The debug element
-		@XmlElement(name = "debug", type = Debug.class), //
-
 		// The polymorphic elements...
 		@XmlElement(name = "reject-object", type = ObjectReject.class), //
 		@XmlElement(name = "accept-object", type = ObjectAccept.class), //
