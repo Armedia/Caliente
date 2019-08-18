@@ -27,7 +27,6 @@
 package com.armedia.caliente.engine.local.exporter;
 
 import java.io.File;
-import java.util.Iterator;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -35,7 +34,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.armedia.caliente.engine.local.common.LocalFile;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 
 public class LocalRecursiveIteratorTest {
@@ -66,9 +64,10 @@ public class LocalRecursiveIteratorTest {
 		};
 		for (File f : files) {
 			System.out.printf("Running on [%s]%n", f);
-			Iterator<LocalFile> it = new LocalRecursiveIterator(new LocalRoot(f), false);
-			while (it.hasNext()) {
-				System.out.printf("\t%s%n", it.next());
+			try (LocalRecursiveIterator it = new LocalRecursiveIterator(new LocalRoot(f), false)) {
+				while (it.hasNext()) {
+					System.out.printf("\t%s%n", it.next());
+				}
 			}
 		}
 	}
