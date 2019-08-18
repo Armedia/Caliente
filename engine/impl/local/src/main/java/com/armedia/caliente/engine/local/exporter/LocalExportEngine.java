@@ -27,6 +27,7 @@
 package com.armedia.caliente.engine.local.exporter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -57,6 +58,12 @@ public class LocalExportEngine extends
 	}
 
 	@Override
+	protected SearchType detectSearchType(String source) {
+		if (source == null) { return null; }
+		return SearchType.PATH;
+	}
+
+	@Override
 	protected Stream<ExportTarget> findExportTargetsByQuery(LocalRoot session, CfgTools configuration,
 		LocalExportDelegateFactory factory, String query) throws Exception {
 		throw new Exception("Local Export doesn't support queries");
@@ -71,6 +78,10 @@ public class LocalExportEngine extends
 	@Override
 	protected Stream<ExportTarget> findExportTargetsByPath(LocalRoot session, CfgTools configuration,
 		LocalExportDelegateFactory factory, String path) throws Exception {
+		File f = session.getFile();
+		if (!f.exists()) {
+			throw new FileNotFoundException(String.format("Failed to find a file or folder at [%s]", f));
+		}
 		return StreamTools
 			.of(new LocalRecursiveIterator(session, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)));
 	}
