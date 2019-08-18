@@ -418,6 +418,15 @@
 						<createDependencyReducedPom>false</createDependencyReducedPom>
 						<shadedArtifactAttached>true</shadedArtifactAttached>
 						<shadedClassifierName>exe</shadedClassifierName>
+						<transformers>
+							<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+								<mainClass>com.armedia.caliente.cli.launcher.Main</mainClass>
+							</transformer>
+							<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+							<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
+								<addHeader>false</addHeader>
+							</transformer>
+						</transformers>
 					</configuration>
 				</plugin>
 				<plugin>

@@ -2,7 +2,7 @@
  * #%L
  * Armedia Caliente
  * %%
- * Copyright (c) 2010 - 2019 Armedia LLC
+ * Copyright (C) 2013 - 2019 Armedia, LLC
  * %%
  * This file is part of the Caliente software.
  *
@@ -41,12 +41,12 @@ import org.slf4j.Logger;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.launcher.AbstractLauncher;
+import com.armedia.caliente.cli.launcher.AbstractEntrypoint;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.PooledWorkers;
 
-public class Launcher extends AbstractLauncher {
+public class Entrypoint extends AbstractEntrypoint {
 	private static final int MIN_THREADS = 1;
 	private static final int DEFAULT_THREADS = Math.min(16, Runtime.getRuntime().availableProcessors() * 2);
 	private static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors() * 3);
@@ -69,28 +69,24 @@ public class Launcher extends AbstractLauncher {
 		return true;
 	}
 
-	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper(Launcher.MIN_THREADS,
-		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
+	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper(Entrypoint.MIN_THREADS,
+		Entrypoint.DEFAULT_THREADS, Entrypoint.MAX_THREADS);
 
 	@Override
-	protected String getProgramName() {
+	public String getName() {
 		return "caliente-validator";
 	}
 
-	public static final void main(String... args) {
-		System.exit(new Launcher().launch(args));
-	}
-
 	@Override
-	protected int run(OptionValues cli, String command, OptionValues commandValues, Collection<String> positionals)
+	protected int execute(OptionValues cli, String command, OptionValues commandValues, Collection<String> positionals)
 		throws Exception {
-		final String reportMarker = DateFormatUtils.format(new Date(), Launcher.REPORT_MARKER_FORMAT);
-		System.setProperty("logName", String.format("%s-%s", getProgramName(), reportMarker));
+		final String reportMarker = DateFormatUtils.format(new Date(), Entrypoint.REPORT_MARKER_FORMAT);
+		System.setProperty("logName", String.format("%s-%s", getName(), reportMarker));
 
 		final File biFile = new File(cli.getString(CLIParam.bulk_import)).getCanonicalFile();
-		if (!Launcher.verifyPath(this.log, biFile, "bulk import")) { return 1; }
+		if (!Entrypoint.verifyPath(this.log, biFile, "bulk import")) { return 1; }
 		final File beFile = new File(cli.getString(CLIParam.bulk_export)).getCanonicalFile();
-		if (!Launcher.verifyPath(this.log, beFile, "bulk export")) { return 1; }
+		if (!Entrypoint.verifyPath(this.log, beFile, "bulk export")) { return 1; }
 
 		final String reportDirStr = cli.getString(CLIParam.report_dir, System.getProperty("user.dir"));
 		File reportDir = new File(reportDirStr);
@@ -164,7 +160,7 @@ public class Launcher extends AbstractLauncher {
 
 	@Override
 	protected OptionScheme getOptionScheme() {
-		return new OptionScheme(getProgramName()) //
+		return new OptionScheme(getName()) //
 			.addGroup( //
 				this.threadsLaunchHelper.asGroup() //
 			) //

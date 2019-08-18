@@ -2,19 +2,19 @@
  * #%L
  * Armedia Caliente
  * %%
- * Copyright (c) 2010 - 2019 Armedia LLC
+ * Copyright (C) 2013 - 2019 Armedia, LLC
  * %%
- * This file is part of the Caliente software. 
- *  
- * If the software was purchased under a paid Caliente license, the terms of 
- * the paid license agreement will prevail.  Otherwise, the software is 
+ * This file is part of the Caliente software.
+ *
+ * If the software was purchased under a paid Caliente license, the terms of
+ * the paid license agreement will prevail.  Otherwise, the software is
  * provided under the following open source license terms:
  *
  * Caliente is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *   
+ *
  * Caliente is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -36,7 +36,7 @@ import java.util.List;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.Launcher;
+import com.armedia.caliente.cli.caliente.launcher.Entrypoint;
 import com.armedia.caliente.engine.TransferEngineFactory;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
@@ -53,7 +53,7 @@ public class DecryptCommandModule extends CommandModule<TransferEngineFactory<?,
 		if (c != null) {
 			crypt.add(c);
 		}
-		crypt.add(Launcher.CRYPTO);
+		crypt.add(Entrypoint.CRYPTO);
 		return Tools.freezeCollection(crypt);
 	}
 

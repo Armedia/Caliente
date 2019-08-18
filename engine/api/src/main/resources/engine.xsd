@@ -119,6 +119,13 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="conditionDebug.t">
+		<xsd:choice minOccurs="0" maxOccurs="1">
+			<xsd:group ref="tns:groupingConditions" />
+			<xsd:group ref="tns:checkConditions" />
+		</xsd:choice>
+	</xsd:complexType>
+
 	<xsd:complexType name="conditionGroupNot.t">
 		<xsd:choice minOccurs="1" maxOccurs="1">
 			<xsd:group ref="tns:groupingConditions" />
@@ -355,6 +362,7 @@
 			<xsd:element name="nor" type="tns:conditionGroupNor.t" />
 			<xsd:element name="xnor" type="tns:conditionGroupXnor.t" />
 			<xsd:element name="oneof" type="tns:conditionGroupOneof.t" />
+			<xsd:element name="debug" type="tns:conditionDebug.t" />
 		</xsd:choice>
 	</xsd:group>
 
@@ -757,6 +765,12 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="actionDebug.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:group name="actions">
 		<xsd:choice>
 			<xsd:element name="abort-transformation" type="tns:actionAbortTransformation.t" />
@@ -766,6 +780,7 @@
 			<xsd:element name="copy-attribute" type="tns:actionCopyAttribute.t" />
 			<xsd:element name="copy-variable" type="tns:actionCopyVariable.t" />
 			<xsd:element name="custom-action" type="tns:actionCustomAction.t" />
+			<xsd:element name="debug" type="tns:actionDebug.t" />
 			<xsd:element name="end-transformation" type="tns:actionEndTransformation.t" />
 			<xsd:element name="group" type="tns:actionGroup.t" />
 			<xsd:element name="load-external-metadata" type="tns:actionLoadExternalMetadata.t" />
