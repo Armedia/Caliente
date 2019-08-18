@@ -256,6 +256,9 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		CmfProperty<IDfValue> paths = new CmfProperty<>(IntermediateProperty.PATH,
 			DctmDataType.DF_STRING.getStoredType(), true);
 		properties.add(paths);
+		CmfProperty<IDfValue> fullPaths = new CmfProperty<>(IntermediateProperty.FULL_PATH,
+			DctmDataType.DF_STRING.getStoredType(), true);
+		properties.add(fullPaths);
 		CmfProperty<IDfValue> parents = new CmfProperty<>(IntermediateProperty.PARENT_ID,
 			DctmDataType.DF_ID.getStoredType(), true);
 		properties.add(parents);
@@ -281,7 +284,9 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		// Calculate the parent paths in the correct order... r_folder_path may have a different
 		// order in some documentum instances
 		for (List<String> p : calculateAllPaths(ctx.getSession(), object)) {
-			paths.addValue(DfValueFactory.of(FileNameTools.reconstitute(p, true, false, '/')));
+			String path = FileNameTools.reconstitute(p, true, false, '/');
+			paths.addValue(DfValueFactory.of(path));
+			fullPaths.addValue(DfValueFactory.of(String.format("%s/%s", path, object.getObjectName())));
 		}
 
 		if (!aclInheritedSet) {

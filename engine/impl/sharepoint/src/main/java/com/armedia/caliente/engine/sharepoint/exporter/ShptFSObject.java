@@ -125,6 +125,8 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			}
 			object.setProperty(new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING, true,
 				Collections.singleton(new CmfValue(path))));
+			object.setProperty(new CmfProperty<>(IntermediateProperty.FULL_PATH, CmfValue.Type.STRING, true,
+				Collections.singleton(new CmfValue(String.format("%s/%s", path, object.getName())))));
 		}
 		return true;
 	}
