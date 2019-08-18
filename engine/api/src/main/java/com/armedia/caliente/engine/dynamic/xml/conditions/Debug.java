@@ -42,16 +42,13 @@ public class Debug extends ConditionWrapper {
 
 	@Override
 	public boolean check(DynamicElementContext ctx) throws ConditionException {
+		// This only exists so we can latch on a debugger easily
 		final Condition condition = getCondition();
-		if (condition == null) { return true; }
-		// This only exists so we can latch on a debugger to this point
-		boolean result = condition.check(ctx);
-		if (result) {
-			// Stop here if true
-			this.hashCode();
+		final boolean result;
+		if (condition != null) {
+			result = condition.check(ctx);
 		} else {
-			// Stop here if false
-			this.hashCode();
+			result = true;
 		}
 		return result;
 	}
