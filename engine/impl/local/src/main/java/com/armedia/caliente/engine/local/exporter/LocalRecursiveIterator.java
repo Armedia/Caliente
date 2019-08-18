@@ -117,11 +117,17 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 				}
 			}
 
+			// We're done with this folder, so whatever happens we're removing it from the stack
+			this.stateStack.pop();
+
+			// If this was the root search element, we return nothing b/c we're done here...
+			if (this.stateStack.isEmpty()) { return null; }
+
 			// If we're not excluding empty folders, and this is an empty folder, then we queue it
 			// up for retrieval...but we only do it once
 			if (!state.completed) {
 				state.completed = true;
-				if (!this.excludeEmptyFolders && ((state.fileCount | state.folderCount) == 0)) {
+				if (!this.excludeEmptyFolders || ((state.fileCount | state.folderCount) != 0)) {
 					File f = state.base;
 					try {
 						return found(new LocalFile(this.root, f.getPath()));
@@ -131,7 +137,6 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 					}
 				}
 			}
-			this.stateStack.pop();
 		}
 		// No more recursions... we're done!
 		return null;
