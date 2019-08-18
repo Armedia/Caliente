@@ -849,10 +849,10 @@
 	<xsd:complexType name="filter.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
-				<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+				<xsd:choice minOccurs="0" maxOccurs="unbounded">
 					<xsd:group ref="tns:filterActions" />
 					<xsd:element name="debug" type="tns:filterDebug.t" />
-				</xsd:sequence>
+				</xsd:choice>
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
