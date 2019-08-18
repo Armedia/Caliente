@@ -2,7 +2,7 @@
  * #%L
  * Armedia Caliente
  * %%
- * Copyright (c) 2010 - 2019 Armedia LLC
+ * Copyright (C) 2013 - 2019 Armedia, LLC
  * %%
  * This file is part of the Caliente software.
  *
@@ -65,7 +65,7 @@ import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.DynamicOptionsException;
 import com.armedia.caliente.cli.filter.StringValueFilter;
-import com.armedia.caliente.cli.launcher.AbstractExecutable;
+import com.armedia.caliente.cli.launcher.AbstractEntrypoint;
 import com.armedia.caliente.cli.launcher.CommandLineProcessingException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
@@ -81,7 +81,7 @@ import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 
-public class Caliente extends AbstractExecutable {
+public class Entrypoint extends AbstractEntrypoint {
 
 	/**
 	 * Read the Caliente version... is this the cleanest way?
@@ -133,7 +133,7 @@ public class Caliente extends AbstractExecutable {
 
 	private boolean directFsMode = false;
 
-	private String contentOrganizer = Caliente.DEFAULT_STREAMS_ORGANIZER;
+	private String contentOrganizer = Entrypoint.DEFAULT_STREAMS_ORGANIZER;
 
 	@Override
 	protected Option getHelpOption() {
@@ -141,14 +141,14 @@ public class Caliente extends AbstractExecutable {
 	}
 
 	@Override
-	protected String getProgramName() {
+	public String getName() {
 		return "caliente";
 	}
 
 	@Override
 	protected OptionScheme getOptionScheme() {
 
-		final CommandScheme scheme = new CommandScheme(getProgramName(), true);
+		final CommandScheme scheme = new CommandScheme(getName(), true);
 		for (CalienteCommand d : CalienteCommand.values()) {
 			Command c = new Command(d.getTitle(), d.getAliases()) {
 
@@ -160,13 +160,13 @@ public class Caliente extends AbstractExecutable {
 						if (!helpRequested) { throw new DynamicOptionsException(this, err); }
 					}
 
-					if (DynamicEngineOptions.class.isInstance(Caliente.this.engineInterface)) {
-						DynamicEngineOptions.class.cast(Caliente.this.engineInterface)
-							.getDynamicOptions(Caliente.this.command.getDescriptor(), this);
+					if (DynamicEngineOptions.class.isInstance(Entrypoint.this.engineInterface)) {
+						DynamicEngineOptions.class.cast(Entrypoint.this.engineInterface)
+							.getDynamicOptions(Entrypoint.this.command.getDescriptor(), this);
 					}
-					if (DynamicCommandOptions.class.isInstance(Caliente.this.command)) {
-						DynamicCommandOptions.class.cast(Caliente.this.command)
-							.getDynamicOptions(Caliente.this.engineInterface.getName(), this);
+					if (DynamicCommandOptions.class.isInstance(Entrypoint.this.command)) {
+						DynamicCommandOptions.class.cast(Entrypoint.this.command)
+							.getDynamicOptions(Entrypoint.this.engineInterface.getName(), this);
 					}
 				}
 
@@ -239,7 +239,7 @@ public class Caliente extends AbstractExecutable {
 		if (baseValues.isPresent(CLIParam.data)) {
 			path = baseValues.getString(CLIParam.data);
 		} else {
-			path = Caliente.DEFAULT_DATA_PATH.toString();
+			path = Entrypoint.DEFAULT_DATA_PATH.toString();
 		}
 
 		File f = newCanonicalFile(path);
@@ -258,7 +258,7 @@ public class Caliente extends AbstractExecutable {
 		if (baseValues.isPresent(CLIParam.db)) {
 			path = baseValues.getString(CLIParam.db);
 		} else {
-			path = new File(this.baseDataLocation, Caliente.DEFAULT_DB_PATH).getAbsolutePath();
+			path = new File(this.baseDataLocation, Entrypoint.DEFAULT_DB_PATH).getAbsolutePath();
 		}
 
 		File f = newCanonicalFile(path);
@@ -298,7 +298,7 @@ public class Caliente extends AbstractExecutable {
 		throws CommandLineProcessingException {
 		final boolean contentLocationWasGiven = commandValues.isPresent(CLIParam.streams);
 		final File calculatedContentLocation = Tools
-			.canonicalize(new File(this.baseDataLocation, Caliente.DEFAULT_STREAMS_PATH));
+			.canonicalize(new File(this.baseDataLocation, Entrypoint.DEFAULT_STREAMS_PATH));
 		final File contentLocation;
 		if (contentLocationWasGiven) {
 			contentLocation = newCanonicalFile(commandValues.getString(CLIParam.streams));
@@ -317,7 +317,7 @@ public class Caliente extends AbstractExecutable {
 		if (!contentLocationWasGiven) {
 			try {
 				final CmfValue contentLocationRequired = objectStore
-					.getProperty(Caliente.STORE_PROP_CONTENT_LOCATION_REQUIRED);
+					.getProperty(Entrypoint.STORE_PROP_CONTENT_LOCATION_REQUIRED);
 				if ((contentLocationRequired != null) && contentLocationRequired.asBoolean()) {
 					throw new CommandLineProcessingException(1, String.format(
 						"This extraction doesn't seem to bundle with the content streams; you must provide the required option to point out its location (usually %s)",
@@ -326,7 +326,7 @@ public class Caliente extends AbstractExecutable {
 			} catch (CmfStorageException e) {
 				throw new CommandLineProcessingException(1,
 					String.format("Failed to query the property %s from the Object Store",
-						Caliente.STORE_PROP_CONTENT_LOCATION_REQUIRED),
+						Entrypoint.STORE_PROP_CONTENT_LOCATION_REQUIRED),
 					e);
 			}
 		}
@@ -345,12 +345,12 @@ public class Caliente extends AbstractExecutable {
 			final boolean contentLocationRequired = !contentInDefaultLocation
 				|| this.command.isContentStreamsExternal(commandValues);
 			try {
-				objectStore.setProperty(Caliente.STORE_PROP_CONTENT_LOCATION_REQUIRED,
+				objectStore.setProperty(Entrypoint.STORE_PROP_CONTENT_LOCATION_REQUIRED,
 					new CmfValue(contentLocationRequired));
 			} catch (CmfStorageException e) {
 				throw new CommandLineProcessingException(1,
 					String.format("Failed to store the property %s into the Object Store",
-						Caliente.STORE_PROP_CONTENT_LOCATION_REQUIRED),
+						Entrypoint.STORE_PROP_CONTENT_LOCATION_REQUIRED),
 					e);
 			}
 		}
@@ -382,7 +382,7 @@ public class Caliente extends AbstractExecutable {
 		} else {
 			if (StringUtils.isBlank(contentOrganizer)) {
 				contentOrganizer = Tools.coalesce(this.command.getContentOrganizerName(commandValues),
-					Caliente.DEFAULT_STREAMS_ORGANIZER);
+					Entrypoint.DEFAULT_STREAMS_ORGANIZER);
 			}
 			this.contentOrganizer = contentOrganizer;
 			applyStoreProperties(cfg,
@@ -405,7 +405,7 @@ public class Caliente extends AbstractExecutable {
 		if (baseValues.isPresent(CLIParam.log_dir)) {
 			path = baseValues.getString(CLIParam.log_dir);
 		} else {
-			path = new File(this.baseDataLocation, Caliente.DEFAULT_LOG_PATH).getAbsolutePath();
+			path = new File(this.baseDataLocation, Entrypoint.DEFAULT_LOG_PATH).getAbsolutePath();
 		}
 
 		File f = newCanonicalFile(path);
@@ -465,7 +465,7 @@ public class Caliente extends AbstractExecutable {
 
 	protected boolean applyStoreProperties(StoreConfiguration cfg, Properties properties) {
 		if ((properties == null) || properties.isEmpty()) { return false; }
-		String storeType = properties.getProperty(Caliente.STORE_TYPE_PROPERTY);
+		String storeType = properties.getProperty(Entrypoint.STORE_TYPE_PROPERTY);
 		if (!StringUtils.isEmpty(storeType)) {
 			cfg.setType(storeType);
 		}
@@ -620,7 +620,7 @@ public class Caliente extends AbstractExecutable {
 
 		// Now, get the logs via SLF4J, which is what we'll be using moving forward...
 		final Logger console = LoggerFactory.getLogger("console");
-		console.info("Launching Caliente v{} {} mode for engine {}{}", Caliente.VERSION, command, engine, Tools.NL);
+		console.info("Launching Caliente v{} {} mode for engine {}{}", Entrypoint.VERSION, command, engine, Tools.NL);
 		Runtime runtime = Runtime.getRuntime();
 		console.info("Current heap size: {} MB", runtime.totalMemory() / 1024 / 1024);
 		console.info("Maximum heap size: {} MB", runtime.maxMemory() / 1024 / 1024);
@@ -630,7 +630,7 @@ public class Caliente extends AbstractExecutable {
 
 	@Override
 	protected void showBanner(Logger log) {
-		log.info("Caliente CLI v{}", Caliente.VERSION);
+		log.info("Caliente CLI v{}", Entrypoint.VERSION);
 	}
 
 	@Override
@@ -653,7 +653,7 @@ public class Caliente extends AbstractExecutable {
 				if (writeProperties) {
 					Map<String, CmfValue> properties = new TreeMap<>();
 					properties.put(String.format(format, "engine"), new CmfValue(engineName));
-					properties.put(String.format(format, "version"), new CmfValue(Caliente.VERSION));
+					properties.put(String.format(format, "version"), new CmfValue(Entrypoint.VERSION));
 					properties.put(String.format(format, "start"), new CmfValue(new Date()));
 					objectStore.setProperties(properties);
 				}

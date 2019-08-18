@@ -2,7 +2,7 @@
  * #%L
  * Armedia Caliente
  * %%
- * Copyright (c) 2010 - 2019 Armedia LLC
+ * Copyright (C) 2013 - 2019 Armedia, LLC
  * %%
  * This file is part of the Caliente software.
  *
@@ -24,7 +24,7 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.cli.history;
+package com.armedia.caliente.cli.bulkdel;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,34 +32,28 @@ import java.util.Collection;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.launcher.AbstractExecutable;
+import com.armedia.caliente.cli.launcher.AbstractEntrypoint;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
-import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 
-public class Launcher extends AbstractExecutable {
+public class Entrypoint extends AbstractEntrypoint {
 
-	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
-	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper();
+	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 
 	@Override
 	protected OptionScheme getOptionScheme() {
-		return new OptionScheme(getProgramName()) //
+		return new OptionScheme(getName()) //
 			.addGroup( //
 				this.libLaunchHelper.asGroup() //
 			) //
 			.addGroup( //
 				this.dfcLaunchHelper.asGroup() //
 			) //
-			.addGroup( //
-				this.threadsLaunchHelper.asGroup() //
-			) //
 			.addFrom( //
 				Option.unwrap(CLIParam.values()) //
 			) //
-			.setMinArguments(1) //
 		;
 	}
 
@@ -70,13 +64,13 @@ public class Launcher extends AbstractExecutable {
 	}
 
 	@Override
-	protected String getProgramName() {
-		return "caliente-history";
+	public String getName() {
+		return "caliente-bulk-deleter";
 	}
 
 	@Override
-	protected int execute(OptionValues baseValues, String command, OptionValues commandValues,
+	protected int execute(OptionValues baseValues, String command, OptionValues commandValies,
 		Collection<String> positionals) throws Exception {
-		return new History(this.dfcLaunchHelper, this.threadsLaunchHelper).run(baseValues, positionals);
+		return new BulkDel(this.dfcLaunchHelper).run(baseValues);
 	}
 }

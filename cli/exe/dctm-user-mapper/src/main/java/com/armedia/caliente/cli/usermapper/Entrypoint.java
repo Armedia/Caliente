@@ -2,7 +2,7 @@
  * #%L
  * Armedia Caliente
  * %%
- * Copyright (c) 2010 - 2019 Armedia LLC
+ * Copyright (C) 2013 - 2019 Armedia, LLC
  * %%
  * This file is part of the Caliente software.
  *
@@ -24,27 +24,30 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.cli.bulkdel;
+package com.armedia.caliente.cli.usermapper;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.launcher.AbstractExecutable;
-import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
+import com.armedia.caliente.cli.launcher.AbstractEntrypoint;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 
-public class Launcher extends AbstractExecutable {
+public class Entrypoint extends AbstractEntrypoint {
 
-	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
+	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
+
+	@Override
+	public String getName() {
+		return "caliente-usermapper";
+	}
 
 	@Override
 	protected OptionScheme getOptionScheme() {
-		return new OptionScheme(getProgramName()) //
+		return new OptionScheme(getName()) //
 			.addGroup( //
 				this.libLaunchHelper.asGroup() //
 			) //
@@ -58,19 +61,8 @@ public class Launcher extends AbstractExecutable {
 	}
 
 	@Override
-	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionValues baseValues, String command,
-		OptionValues commandValies, Collection<String> positionals) {
-		return Arrays.asList(this.libLaunchHelper, this.dfcLaunchHelper);
-	}
-
-	@Override
-	protected String getProgramName() {
-		return "caliente-bulk-deleter";
-	}
-
-	@Override
 	protected int execute(OptionValues baseValues, String command, OptionValues commandValies,
 		Collection<String> positionals) throws Exception {
-		return new BulkDel(this.dfcLaunchHelper).run(baseValues);
+		return new UserMapper(this.dfcLaunchHelper).run(baseValues);
 	}
 }

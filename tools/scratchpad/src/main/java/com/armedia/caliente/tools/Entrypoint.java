@@ -2,7 +2,7 @@
  * #%L
  * Armedia Caliente
  * %%
- * Copyright (c) 2010 - 2019 Armedia LLC
+ * Copyright (C) 2013 - 2019 Armedia, LLC
  * %%
  * This file is part of the Caliente software.
  *
@@ -24,14 +24,16 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.cli.typedumper;
+package com.armedia.caliente.tools;
 
 import java.io.File;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+
+import javax.jcr.Repository;
 
 import org.apache.log4j.xml.DOMConfigurator;
 import org.slf4j.Logger;
@@ -40,37 +42,35 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.launcher.AbstractExecutable;
+import com.armedia.caliente.cli.launcher.AbstractEntrypoint;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
+import com.armedia.caliente.content.JcrOakTest;
+import com.armedia.caliente.content.MongoRepository;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.CheckedSupplier;
 
-public class Launcher extends AbstractExecutable {
+/**
+ * This class is used as a testbed to run quick'n'dirty DFC test programs
+ *
+ *
+ *
+ */
+public class Entrypoint extends AbstractEntrypoint {
+
+	static final int MIN_TESTS = 1000;
+	static final int DEFAULT_TESTS = 10000;
 
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
-	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
+	// private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper();
 
 	@Override
-	protected OptionScheme getOptionScheme() {
-		return new OptionScheme(getProgramName()) //
-			.addGroup( //
-				this.libLaunchHelper.asGroup() //
-			) //
-			.addGroup( //
-				this.dfcLaunchHelper.asGroup() //
-			) //
-			.addGroup( //
-				this.threadsLaunchHelper.asGroup() //
-			) //
-			.addFrom( //
-				Option.unwrap(CLIParam.values()) //
-			) //
-			.setMinArguments(0)//
-			.setMaxArguments(-1) //
-		;
+	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionValues baseValues, String command,
+		OptionValues commandValies, Collection<String> positionals) {
+		// return Arrays.asList(this.dfcLaunchHelper);
+		return Collections.emptyList();
 	}
 
 	@Override
@@ -114,19 +114,37 @@ public class Launcher extends AbstractExecutable {
 	}
 
 	@Override
-	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionValues baseValues, String command,
-		OptionValues commandValies, Collection<String> positionals) {
-		return Arrays.asList(this.libLaunchHelper, this.dfcLaunchHelper);
-	}
-
-	@Override
-	protected String getProgramName() {
-		return "caliente-type-dumper";
+	public String getName() {
+		return "Caliente Scratchpad";
 	}
 
 	@Override
 	protected int execute(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		return new DctmTypeDumper(this.dfcLaunchHelper, this.threadsLaunchHelper).run(baseValues, positionals);
+		final int threads = this.threadsLaunchHelper.getThreads(baseValues, 10);
+		final int tests = baseValues.getInteger(CLIParam.test_count);
+		final CheckedSupplier<Repository, Exception> repository = new MongoRepository();
+		new JcrOakTest(threads, tests, repository).call();
+		return 0;
+	}
+
+	@Override
+	protected OptionScheme getOptionScheme() {
+		return new OptionScheme(getName()) //
+			.addGroup( //
+				this.libLaunchHelper.asGroup() //
+			) //
+			/*
+			.addGroup( //
+				this.dfcLaunchHelper.asGroup() //
+			) //
+			*/
+			.addGroup( //
+				this.threadsLaunchHelper.asGroup() //
+			) //
+			.addFrom( //
+				Option.unwrap(CLIParam.values()) //
+			) //
+		;
 	}
 }

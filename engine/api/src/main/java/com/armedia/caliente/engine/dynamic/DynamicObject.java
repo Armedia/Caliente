@@ -2,19 +2,19 @@
  * #%L
  * Armedia Caliente
  * %%
- * Copyright (c) 2010 - 2019 Armedia LLC
+ * Copyright (C) 2013 - 2019 Armedia, LLC
  * %%
- * This file is part of the Caliente software. 
- *  
- * If the software was purchased under a paid Caliente license, the terms of 
- * the paid license agreement will prevail.  Otherwise, the software is 
+ * This file is part of the Caliente software.
+ *
+ * If the software was purchased under a paid Caliente license, the terms of
+ * the paid license agreement will prevail.  Otherwise, the software is
  * provided under the following open source license terms:
  *
  * Caliente is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *   
+ *
  * Caliente is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -40,7 +40,7 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class DynamicObject {
+public abstract class DynamicObject implements MutableScriptableObjectFacade<DynamicValue> {
 
 	protected final Map<String, DynamicValue> attributes = new TreeMap<>();
 	protected final Map<String, DynamicValue> privateProperties = new TreeMap<>();
@@ -48,48 +48,64 @@ public abstract class DynamicObject {
 	private String subtype = null;
 	private String name = null;
 
+	@Override
 	public abstract String getObjectId();
 
+	@Override
 	public abstract String getHistoryId();
 
+	@Override
 	public abstract boolean isHistoryCurrent();
 
+	@Override
 	public abstract CmfObject.Archetype getType();
 
+	@Override
 	public abstract String getLabel();
 
+	@Override
 	public abstract String getOriginalSubtype();
 
+	@Override
 	public String getSubtype() {
 		return Tools.coalesce(this.subtype, getOriginalSubtype());
 	}
 
+	@Override
 	public DynamicObject setSubtype(String subtype) {
 		this.subtype = subtype;
 		return this;
 	}
 
+	@Override
 	public String getName() {
 		return Tools.coalesce(this.name, getOriginalName());
 	}
 
+	@Override
 	public DynamicObject setName(String name) {
 		this.name = name;
 		return this;
 	}
 
+	@Override
 	public abstract Set<String> getOriginalSecondarySubtypes();
 
+	@Override
 	public abstract Set<String> getSecondarySubtypes();
 
+	@Override
 	public abstract int getDependencyTier();
 
+	@Override
 	public abstract String getOriginalName();
 
+	@Override
 	public Map<String, DynamicValue> getAtt() {
 		return this.attributes;
 	}
 
+	@Override
 	public Map<String, DynamicValue> getPriv() {
 		return this.privateProperties;
 	}

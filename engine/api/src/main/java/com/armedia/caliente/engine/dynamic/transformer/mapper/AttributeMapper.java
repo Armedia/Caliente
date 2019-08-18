@@ -2,19 +2,19 @@
  * #%L
  * Armedia Caliente
  * %%
- * Copyright (c) 2010 - 2019 Armedia LLC
+ * Copyright (C) 2013 - 2019 Armedia, LLC
  * %%
- * This file is part of the Caliente software. 
- *  
- * If the software was purchased under a paid Caliente license, the terms of 
- * the paid license agreement will prevail.  Otherwise, the software is 
+ * This file is part of the Caliente software.
+ *
+ * If the software was purchased under a paid Caliente license, the terms of
+ * the paid license agreement will prevail.  Otherwise, the software is
  * provided under the following open source license terms:
  *
  * Caliente is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *   
+ *
  * Caliente is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -71,6 +71,14 @@ import com.armedia.commons.utilities.Tools;
 
 public class AttributeMapper {
 
+	private static final AttributeMappings DEFAULT_MAPPINGS;
+	static {
+		DEFAULT_MAPPINGS = new AttributeMappings();
+		MappingSet common = new MappingSet();
+		common.setResidualsMode(ResidualsMode.INCLUDE);
+		AttributeMapper.DEFAULT_MAPPINGS.setCommonMappings(common);
+	}
+
 	private static final Pattern NS_PARSER = Pattern.compile("^([^:]+):(.+)$");
 
 	private static final XmlInstances<AttributeMappings> INSTANCES = new XmlInstances<>(AttributeMappings.class);
@@ -78,15 +86,9 @@ public class AttributeMapper {
 	public static AttributeMapper getAttributeMapper(SchemaService schemaService, String location,
 		String residualsPrefix, boolean failIfMissing) throws AttributeMappingException {
 		try {
-			try {
-				AttributeMappings attributeMappings = AttributeMapper.INSTANCES.getInstance(location);
-				if (attributeMappings == null) { return null; }
-				return new AttributeMapper(new ConstructedTypeFactory(schemaService), location, residualsPrefix);
-			} catch (final XmlNotFoundException e) {
-				if (!failIfMissing) { return null; }
-				throw e;
-			}
+			return new AttributeMapper(new ConstructedTypeFactory(schemaService), location, residualsPrefix);
 		} catch (Exception e) {
+			if (!failIfMissing) { return null; }
 			String pre = "";
 			String post = "";
 			if (location == null) {
@@ -136,10 +138,8 @@ public class AttributeMapper {
 		throws XmlInstanceException, XmlNotFoundException {
 		this.constructedTypeFactory = Objects.requireNonNull(constructedTypeFactory,
 			"Must provide a non-null SchemaService instance");
-		AttributeMappings xml = AttributeMapper.INSTANCES.getInstance(xmlSource);
-		if (xml == null) {
-			xml = new AttributeMappings();
-		}
+		AttributeMappings xml = Tools.coalesce(AttributeMapper.INSTANCES.getInstance(xmlSource),
+			AttributeMapper.DEFAULT_MAPPINGS);
 		MappingSet commonMappings = xml.getCommonMappings();
 
 		List<BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>>> renderers = new ArrayList<>();
@@ -152,10 +152,8 @@ public class AttributeMapper {
 					renderers.add(r);
 				}
 			}
-			if (!renderers.isEmpty()) {
-				commonRenderers = new MappingRendererSet("<common>", commonMappings.getSeparator(),
-					commonMappings.getResidualsMode(), renderers);
-			}
+			commonRenderers = new MappingRendererSet("<common>", commonMappings.getSeparator(),
+				commonMappings.getResidualsMode(), renderers);
 		}
 		this.commonRenderers = commonRenderers;
 

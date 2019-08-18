@@ -2,7 +2,7 @@
  * #%L
  * Armedia Caliente
  * %%
- * Copyright (c) 2010 - 2019 Armedia LLC
+ * Copyright (C) 2013 - 2019 Armedia, LLC
  * %%
  * This file is part of the Caliente software.
  *
@@ -27,7 +27,7 @@
 package com.armedia.caliente.cli.launcher;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -36,47 +36,54 @@ import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.launcher.log.LogConfigurator;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 
-public abstract class Launcher {
+public final class Main {
 
 	static {
 		// Make sure this is called as early as possible
 		ClasspathPatcher.init();
 	}
 
+	private Main() {
+		// So we can't instantiate
+	}
+
 	public static final Logger BOOT_LOG = LogConfigurator.getBootLogger();
 
-	public static final void main(String... args) throws Throwable {
+	public static final void main(String... args) {
 		// First things first, find the first launcher
 		ClassLoader cl = ClasspathPatcher.init();
-		Class<AbstractExecutable> launcherClass = AbstractExecutable.class;
-		PluggableServiceLocator<AbstractExecutable> loader = new PluggableServiceLocator<>(launcherClass, cl);
+		PluggableServiceLocator<AbstractEntrypoint> loader = new PluggableServiceLocator<>(AbstractEntrypoint.class, cl);
 		final List<Throwable> exceptions = new ArrayList<>();
 		loader.setHideErrors(false);
 		loader.setErrorListener((c, e) -> exceptions.add(e));
-		List<AbstractExecutable> c = new LinkedList<>();
-		loader.getAll().forEachRemaining(c::add);
+
+		Iterator<AbstractEntrypoint> it = loader.getAll();
 		final int result;
-		if (c.isEmpty()) {
-			// KABOOM! No launcher found!
-			result = 1;
-			Launcher.BOOT_LOG.error("No launcher instances were found");
-			if (!exceptions.isEmpty()) {
-				Launcher.BOOT_LOG.error("{} matching launchers were found, but failed to load:");
-				exceptions.forEach((e) -> Launcher.BOOT_LOG.error("Failed Launcher", e));
-			}
-		} else {
-			AbstractExecutable executable = c.get(0);
-			Launcher.BOOT_LOG.debug("The executable is of type {}", executable.getClass().getCanonicalName());
+		if (it.hasNext()) {
+			AbstractEntrypoint entrypoint = it.next();
+			Main.BOOT_LOG.debug("Using entrypoint for {} (of type {})", entrypoint.getName(),
+				entrypoint.getClass().getCanonicalName());
+			it.forEachRemaining((e) -> Main.BOOT_LOG.debug("*** IGNORING entrypoint for {} (of type {})", e.getName(),
+				e.getClass().getCanonicalName()));
 			int ret = 0;
 			try {
-				ret = executable.execute(args);
+				ret = entrypoint.execute(args);
 			} catch (Throwable t) {
-				Launcher.BOOT_LOG.error("Failed to execute from {}", executable.getClass().getCanonicalName(), t);
+				Main.BOOT_LOG.error("Failed to launch {} from the entrypoint class {}", entrypoint.getName(),
+					entrypoint.getClass().getCanonicalName(), t);
 				ret = 1;
 			}
 			result = ret;
+		} else {
+			// KABOOM! No launcher found!
+			result = 1;
+			Main.BOOT_LOG.error("No viable entrypoints were found");
+			if (!exceptions.isEmpty()) {
+				Main.BOOT_LOG.error("{} possible entrypoints were found, but failed to load:", exceptions.size());
+				exceptions.forEach((e) -> Main.BOOT_LOG.error("Failed Entrypoint", e));
+			}
 		}
-		Launcher.BOOT_LOG.debug("Exiting with result = {}", result);
+		Main.BOOT_LOG.debug("Exiting with result = {}", result);
 		System.exit(result);
 	}
 }

@@ -88,17 +88,6 @@
 						<goals>
 							<goal>shade</goal>
 						</goals>
-						<configuration>
-							<transformers>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.armedia.caliente.cli.launcher.Launcher</mainClass>
-								</transformer>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
-									<addHeader>false</addHeader>
-								</transformer>
-							</transformers>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>

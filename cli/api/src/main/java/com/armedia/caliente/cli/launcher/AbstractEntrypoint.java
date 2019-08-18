@@ -2,7 +2,7 @@
  * #%L
  * Armedia Caliente
  * %%
- * Copyright (c) 2010 - 2019 Armedia LLC
+ * Copyright (C) 2013 - 2019 Armedia, LLC
  * %%
  * This file is part of the Caliente software.
  *
@@ -48,7 +48,7 @@ import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.caliente.cli.help.HelpRenderer;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class AbstractExecutable {
+public abstract class AbstractEntrypoint {
 
 	private static final Option HELP_OPTION = new OptionImpl() //
 		.setShortOpt('?') //
@@ -60,13 +60,13 @@ public abstract class AbstractExecutable {
 
 	private static final String[] NO_ARGS = {};
 
-	protected Logger log = Launcher.BOOT_LOG;
-	protected Logger console = Launcher.BOOT_LOG;
+	protected Logger log = Main.BOOT_LOG;
+	protected Logger console = Main.BOOT_LOG;
 
 	protected final File userDir;
 	protected final File homeDir;
 
-	protected AbstractExecutable() {
+	protected AbstractEntrypoint() {
 		String userDir = System.getProperty("user.dir");
 		if (StringUtils.isEmpty(userDir)) {
 			userDir = ".";
@@ -95,10 +95,10 @@ public abstract class AbstractExecutable {
 	}
 
 	protected Option getHelpOption() {
-		return AbstractExecutable.HELP_OPTION;
+		return AbstractEntrypoint.HELP_OPTION;
 	}
 
-	protected abstract String getProgramName();
+	public abstract String getName();
 
 	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) {
@@ -133,14 +133,14 @@ public abstract class AbstractExecutable {
 		}
 
 		if (args == null) {
-			args = AbstractExecutable.NO_ARGS;
+			args = AbstractEntrypoint.NO_ARGS;
 		}
 
 		OptionParseResult result = null;
 		try {
 			result = parseArguments(helpOption, optionScheme, args);
 		} catch (HelpRequestedException e) {
-			HelpRenderer.renderHelp(getProgramName(), e, System.err);
+			HelpRenderer.renderHelp(getName(), e, System.err);
 			return 1;
 		} catch (CommandLineSyntaxException e) {
 			HelpRenderer.renderError("ERROR", e, System.err);
