@@ -94,6 +94,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		throws ExportException {
 		CmfProperty<CmfValue> parents = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfValue.Type.ID, true);
 		CmfProperty<CmfValue> paths = new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING, true);
+		CmfProperty<CmfValue> fullPaths = new CmfProperty<>(IntermediateProperty.FULL_PATH, CmfValue.Type.STRING, true);
 		final String rootPath = ctx.getSession().getRootFolder().getName();
 		for (Folder f : object.getParents()) {
 			try {
@@ -104,10 +105,13 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 					this.object.getType(), this.object.getId()), e);
 			}
 			for (String p : f.getPaths()) {
-				paths.addValue(new CmfValue(String.format("/%s%s", rootPath, p)));
+				String path = String.format("/%s%s", rootPath, p);
+				paths.addValue(new CmfValue(path));
+				fullPaths.addValue(new CmfValue(String.format("%s/%s", path, object.getName())));
 			}
 		}
 		marshaled.setProperty(paths);
+		marshaled.setProperty(fullPaths);
 		marshaled.setProperty(parents);
 	}
 

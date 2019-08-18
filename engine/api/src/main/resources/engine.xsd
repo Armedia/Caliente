@@ -765,12 +765,6 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionDebug.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:conditionalAction.t" />
-		</xsd:complexContent>
-	</xsd:complexType>
-
 	<xsd:group name="actions">
 		<xsd:choice>
 			<xsd:element name="abort-transformation" type="tns:actionAbortTransformation.t" />
@@ -780,7 +774,6 @@
 			<xsd:element name="copy-attribute" type="tns:actionCopyAttribute.t" />
 			<xsd:element name="copy-variable" type="tns:actionCopyVariable.t" />
 			<xsd:element name="custom-action" type="tns:actionCustomAction.t" />
-			<xsd:element name="debug" type="tns:actionDebug.t" />
 			<xsd:element name="end-transformation" type="tns:actionEndTransformation.t" />
 			<xsd:element name="group" type="tns:actionGroup.t" />
 			<xsd:element name="load-external-metadata" type="tns:actionLoadExternalMetadata.t" />
@@ -807,19 +800,23 @@
 		</xsd:choice>
 	</xsd:group>
 
-	<xsd:group name="filterActions">
-		<xsd:choice>
-			<xsd:element name="accept-object" type="tns:filterAcceptObject.t" />
-			<xsd:element name="reject-object" type="tns:filterRejectObject.t" />
-		</xsd:choice>
-	</xsd:group>
+	<xsd:complexType name="actionDebug.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:choice minOccurs="0" maxOccurs="unbounded">
+					<xsd:group ref="tns:actions" />
+				</xsd:choice>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
 
 	<xsd:complexType name="actionGroup.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
-				<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+				<xsd:choice minOccurs="0" maxOccurs="unbounded">
 					<xsd:group ref="tns:actions" />
-				</xsd:sequence>
+					<xsd:element name="debug" type="tns:actionDebug.t" />
+				</xsd:choice>
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
@@ -832,11 +829,29 @@
 		</xsd:complexType>
 	</xsd:element>
 
+	<xsd:group name="filterActions">
+		<xsd:choice>
+			<xsd:element name="accept-object" type="tns:filterAcceptObject.t" />
+			<xsd:element name="reject-object" type="tns:filterRejectObject.t" />
+		</xsd:choice>
+	</xsd:group>
+
+	<xsd:complexType name="filterDebug.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+					<xsd:group ref="tns:filterActions" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="filter.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence minOccurs="0" maxOccurs="unbounded">
 					<xsd:group ref="tns:filterActions" />
+					<xsd:element name="debug" type="tns:filterDebug.t" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>

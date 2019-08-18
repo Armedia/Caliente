@@ -163,6 +163,10 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 			new CmfValue(Tools.coalesce(path, StringUtils.EMPTY)));
 		properties.add(p);
 
+		p = new CmfProperty<>(IntermediateProperty.FULL_PATH, CmfValue.Type.STRING,
+			new CmfValue(String.format("%s/%s", Tools.coalesce(path, StringUtils.EMPTY), object.getName())));
+		properties.add(p);
+
 		p = new CmfProperty<>(IntermediateProperty.IS_REFERENCE, CmfValue.Type.BOOLEAN,
 			new CmfValue(object.isShortcut()));
 		properties.add(p);
