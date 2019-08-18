@@ -28,6 +28,7 @@
 package com.armedia.caliente.engine.dynamic.xml.actions;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -99,7 +100,8 @@ public class Debug extends ConditionalAction {
 	@Override
 	protected final void executeAction(DynamicElementContext ctx) throws ActionException {
 		// Allow for debugging of the child action elements...
-		for (Action action : getActions()) {
+		Collection<Action> actions = getActions();
+		for (Action action : actions) {
 			if (action != null) {
 				action.apply(ctx);
 			}
