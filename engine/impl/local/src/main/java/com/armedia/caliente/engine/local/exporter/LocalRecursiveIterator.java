@@ -35,13 +35,11 @@ import java.util.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalFile;
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.ArrayIterator;
 
-public class LocalRecursiveIterator implements Iterator<ExportTarget> {
+public class LocalRecursiveIterator implements Iterator<LocalFile> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -143,13 +141,12 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 	}
 
 	@Override
-	public ExportTarget next() {
+	public LocalFile next() {
 		if (!hasNext()) { throw new NoSuchElementException(); }
 		RecursiveState state = this.stateStack.peek();
 		LocalFile ret = state.next;
 		state.next = null;
-		return new ExportTarget(ret.getAbsolute().isFile() ? CmfObject.Archetype.DOCUMENT : CmfObject.Archetype.FOLDER,
-			ret.getId(), ret.getSafePath());
+		return ret;
 	}
 
 	@Override
