@@ -34,16 +34,48 @@ public class CmfAttribute<VALUE> extends CmfProperty<VALUE> {
 		super(pattern);
 	}
 
+	public CmfAttribute(CmfEncodeableName name, CmfValue.Type type) {
+		super(name, type);
+	}
+
 	public CmfAttribute(CmfEncodeableName name, CmfValue.Type type, boolean multivalue) {
 		super(name, type, multivalue);
+	}
+
+	public CmfAttribute(CmfEncodeableName name, CmfValue.Type type, VALUE value) {
+		super(name, type, value);
+	}
+
+	public CmfAttribute(CmfEncodeableName name, CmfValue.Type type, Collection<VALUE> values) {
+		super(name, type, values);
+	}
+
+	public CmfAttribute(CmfEncodeableName name, CmfValue.Type type, boolean multivalue, VALUE value) {
+		super(name, type, multivalue, value);
 	}
 
 	public CmfAttribute(CmfEncodeableName name, CmfValue.Type type, boolean multivalue, Collection<VALUE> values) {
 		super(name, type, multivalue, values);
 	}
 
+	public CmfAttribute(String name, CmfValue.Type type) {
+		super(name, type);
+	}
+
+	public CmfAttribute(String name, CmfValue.Type type, VALUE value) {
+		super(name, type, value);
+	}
+
+	public CmfAttribute(String name, CmfValue.Type type, Collection<VALUE> values) {
+		super(name, type, values);
+	}
+
 	public CmfAttribute(String name, CmfValue.Type type, boolean multivalue) {
 		super(name, type, multivalue);
+	}
+
+	public CmfAttribute(String name, CmfValue.Type type, boolean multivalue, VALUE value) {
+		super(name, type, multivalue, value);
 	}
 
 	public CmfAttribute(String name, CmfValue.Type type, boolean multivalue, Collection<VALUE> values) {
