@@ -75,7 +75,7 @@ public class AttributeMapper {
 	static {
 		DEFAULT_MAPPINGS = new AttributeMappings();
 		MappingSet common = new MappingSet();
-		common.setResidualsMode(ResidualsMode.INCLUDE);
+		common.setResidualsMode(ResidualsMode.EXCLUDE);
 		AttributeMapper.DEFAULT_MAPPINGS.setCommonMappings(common);
 	}
 
