@@ -24,7 +24,7 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine.dynamic.xml.filter;
+package com.armedia.caliente.engine.dynamic.xml;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +42,9 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.dynamic.Action;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
-import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
+import com.armedia.caliente.engine.dynamic.xml.filter.Debug;
+import com.armedia.caliente.engine.dynamic.xml.filter.ObjectAccept;
+import com.armedia.caliente.engine.dynamic.xml.filter.ObjectReject;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "filter.t", propOrder = {

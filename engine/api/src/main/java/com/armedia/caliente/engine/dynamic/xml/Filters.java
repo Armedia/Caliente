@@ -40,8 +40,6 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import javax.xml.stream.XMLStreamReader;
 
-import com.armedia.caliente.engine.dynamic.xml.filter.Filter;
-
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
 	"filters", "defaultOutcome"
