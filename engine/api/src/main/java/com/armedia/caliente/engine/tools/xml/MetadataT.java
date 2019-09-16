@@ -50,6 +50,7 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.CmfObjectArchetypeAdapter;
 
+@XmlSchema("engine.xsd")
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "metadata.t", propOrder = {
 	"archetype", "id", "searchKey", "number", "name", "label", "parentIds", "dependencyTier", "historyId",

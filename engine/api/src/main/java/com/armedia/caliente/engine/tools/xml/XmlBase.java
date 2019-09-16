@@ -25,7 +25,7 @@
  * #L%
  *******************************************************************************/
 
-package com.armedia.caliente.engine.dynamic.xml;
+package com.armedia.caliente.engine.tools.xml;
 
 import java.io.InputStream;
 import java.io.OutputStream;

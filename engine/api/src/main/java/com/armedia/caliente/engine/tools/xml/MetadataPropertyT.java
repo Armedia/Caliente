@@ -45,6 +45,7 @@ import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
+@XmlSchema("engine.xsd")
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "metadataProperty.t", propOrder = {
 	"values"

@@ -46,6 +46,8 @@ import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.engine.tools.xml.XmlBase;
+import com.armedia.caliente.engine.tools.xml.XmlSchema;
 import com.armedia.commons.utilities.ResourceLoader;
 import com.armedia.commons.utilities.ResourceLoaderException;
 import com.armedia.commons.utilities.Tools;

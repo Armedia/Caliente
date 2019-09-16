@@ -43,6 +43,8 @@ import javax.xml.stream.XMLStreamReader;
 import com.armedia.caliente.engine.dynamic.Action;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.tools.xml.XmlBase;
+import com.armedia.caliente.engine.tools.xml.XmlSchema;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {

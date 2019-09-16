@@ -36,6 +36,7 @@ import javax.xml.bind.annotation.XmlValue;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 
+@XmlSchema("engine.xsd")
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "objectRef.t", propOrder = {
 	"id"

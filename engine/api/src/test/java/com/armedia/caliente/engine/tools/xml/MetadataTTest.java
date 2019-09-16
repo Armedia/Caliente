@@ -29,7 +29,6 @@ package com.armedia.caliente.engine.tools.xml;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URI;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -39,9 +38,6 @@ import java.util.LinkedList;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -54,7 +50,6 @@ import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValue.Type;
-import com.armedia.commons.utilities.xml.XmlTools;
 
 public class MetadataTTest {
 
@@ -157,24 +152,14 @@ public class MetadataTTest {
 
 	@Test
 	public void testMarshalling() throws Exception {
-		Class<?>[] c = {
-			MetadataT.class, MetadataPropertyT.class, ObjectRefT.class
-		};
-		String schema = "engine.xsd";
-		Marshaller m = XmlTools.getMarshaller(schema, c);
-		Unmarshaller u = XmlTools.getUnmarshaller(schema, c);
-
-		m.setProperty(Marshaller.JAXB_ENCODING, Charset.defaultCharset().name());
-		m.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
-		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 
 		StringWriter sw = new StringWriter();
 
-		m.marshal(new MetadataT(MetadataTTest.OBJECT), sw);
+		XmlBase.storeToXML(new MetadataT(MetadataTTest.OBJECT), sw, true);
 		sw.flush();
 		System.out.print(sw);
 
-		MetadataT metadata = MetadataT.class.cast(u.unmarshal(new StringReader(sw.toString())));
+		MetadataT metadata = XmlBase.loadFromXML(MetadataT.class, new StringReader(sw.toString()));
 		CmfObject<CmfValue> o = metadata.getObject();
 		Assertions.assertSame(MetadataTTest.OBJECT.getType(), o.getType());
 		Assertions.assertEquals(MetadataTTest.OBJECT.getId(), o.getId());
