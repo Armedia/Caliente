@@ -150,9 +150,7 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 		// error from DFC, and therefore specialized code is required to handle it
 		List<CmfProperty<CmfValue>> properties = new ArrayList<>();
 		getDataProperties(ctx, properties, typedObject);
-		for (CmfProperty<CmfValue> property : properties) {
-			object.setProperty(property);
-		}
+		properties.forEach(object::setProperty);
 		return true;
 	}
 
