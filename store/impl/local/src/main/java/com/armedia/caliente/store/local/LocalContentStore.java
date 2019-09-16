@@ -89,14 +89,14 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	private static final String SCHEME_FIXED = "fixed";
 	private static final String SCHEME_SAFE = "safe";
 
-	private static final Set<String> SUPPORTED;
+	private static final Set<String> SUPPORTED_SCHEMES;
 
 	static {
 		Set<String> s = new HashSet<>();
 		s.add(LocalContentStore.SCHEME_RAW);
 		s.add(LocalContentStore.SCHEME_FIXED);
 		s.add(LocalContentStore.SCHEME_SAFE);
-		SUPPORTED = Tools.freezeSet(s);
+		SUPPORTED_SCHEMES = Tools.freezeSet(s);
 	}
 
 	private class LocalHandle extends Handle {
@@ -285,7 +285,7 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 
 	@Override
 	protected boolean isSupported(URI locator) {
-		return LocalContentStore.SUPPORTED.contains(locator.getScheme());
+		return LocalContentStore.SUPPORTED_SCHEMES.contains(locator.getScheme());
 	}
 
 	protected String safeEncode(String str) {
