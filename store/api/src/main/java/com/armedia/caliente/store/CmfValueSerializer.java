@@ -26,16 +26,20 @@
  *******************************************************************************/
 package com.armedia.caliente.store;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
+import com.armedia.caliente.store.CmfValue.Type;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.codec.CheckedCodec;
 
@@ -142,7 +146,56 @@ public enum CmfValueSerializer implements CheckedCodec<CmfValue, String, ParseEx
 			return new CmfValue(DateUtils.parseDate(str, this.PATTERN));
 		}
 
-	};
+	},
+	URI(CmfValue.Type.URI) {
+
+		@Override
+		public String doSerialize(CmfValue value) throws ParseException {
+			if (value.isNull()) { return null; }
+			return value.toString();
+		}
+
+		@Override
+		public CmfValue doDeserialize(String str) throws ParseException {
+			try {
+				return new CmfValue(new URI(str));
+			} catch (URISyntaxException e) {
+				throw new ParseException(
+					String.format("The string [%s] could not be parsed as a URI: %s", str, e.getMessage()), 0);
+			}
+		}
+
+	},
+	HTML(CmfValue.Type.HTML) {
+
+		@Override
+		public String doSerialize(CmfValue value) throws ParseException {
+			if (value.isNull()) { return null; }
+			return value.toString();
+		}
+
+		@Override
+		public CmfValue doDeserialize(String str) throws ParseException {
+			return new CmfValue(Type.HTML, str);
+		}
+
+	},
+	BASE64_BINARY(CmfValue.Type.BASE64_BINARY) {
+
+		@Override
+		public String doSerialize(CmfValue value) throws ParseException {
+			if (value.isNull()) { return null; }
+			return Base64.encodeBase64String(value.asBinary());
+		}
+
+		@Override
+		public CmfValue doDeserialize(String str) throws ParseException {
+			return new CmfValue(Type.BASE64_BINARY, Base64.decodeBase64(str));
+		}
+
+	},
+	//
+	;
 
 	private CmfValue.Type type;
 	private final boolean supportsEmptyString;
