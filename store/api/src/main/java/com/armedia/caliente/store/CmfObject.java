@@ -179,13 +179,15 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 		}
 		this.number = number;
 		this.name = name;
-		this.parentIds = Tools.freezeCollection(new ArrayList<>(parentIds));
+		this.parentIds = (parentIds != null ? Tools.freezeCollection(new ArrayList<>(parentIds))
+			: Collections.emptyList());
 		this.dependencyTier = dependencyTier;
 		this.historyId = Tools.coalesce(historyId, id);
 		this.historyCurrent = (historyId == null ? true : historyCurrent);
 		this.label = label;
 		this.subtype = subtype;
-		this.secondaries = Tools.freezeSet(new LinkedHashSet<>(secondaries));
+		this.secondaries = (secondaries != null ? Tools.freezeSet(new LinkedHashSet<>(secondaries))
+			: Collections.emptySet());
 		this.translator = translator;
 	}
 
