@@ -30,6 +30,7 @@ package com.armedia.caliente.engine.tools.xml;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -74,14 +75,30 @@ public class MetadataPropertyT {
 		CmfValueSerializer serializer = CmfValueSerializer.get(this.type);
 		if (p.hasValues()) {
 			this.values = new ArrayList<>(p.getValueCount());
-			p.getValues().stream().map((t) -> {
+			p.getValues().stream().map((val) -> {
 				try {
-					return serializer.encode(t);
+					return serializer.encode(val);
 				} catch (ParseException e) {
 					throw new RuntimeException(e);
 				}
 			}).forEach(this.values::add);
 		}
+	}
+
+	public CmfProperty<CmfValue> getProperty() {
+		CmfProperty<CmfValue> ret = new CmfProperty<>(this.name, this.type, this.multivalue);
+		if (this.values != null) {
+			CmfValueSerializer serializer = CmfValueSerializer.get(this.type);
+			Consumer<CmfValue> c = (this.multivalue ? ret::addValue : ret::setValue);
+			this.values.stream().map((str) -> {
+				try {
+					return serializer.decode(str);
+				} catch (ParseException e) {
+					throw new RuntimeException(e);
+				}
+			}).forEach(c);
+		}
+		return ret;
 	}
 
 	public List<String> getValues() {

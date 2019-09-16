@@ -56,6 +56,10 @@ public class ObjectRefT {
 		this.id = ref.getId();
 	}
 
+	public CmfObjectRef getObjectRef() {
+		return new CmfObjectRef(this.archetype, this.id);
+	}
+
 	public CmfObject.Archetype getArchetype() {
 		return this.archetype;
 	}

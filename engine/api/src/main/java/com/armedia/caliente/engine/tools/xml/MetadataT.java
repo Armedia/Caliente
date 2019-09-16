@@ -28,7 +28,10 @@
 package com.armedia.caliente.engine.tools.xml;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -39,14 +42,18 @@ import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectRef;
+import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.CmfObjectArchetypeAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "metadata.t", propOrder = {
-	"archetype", "id", "searchKey", "number", "name", "parentIds", "dependencyTier", "historyId", "historyCurrent",
-	"subtype", "secondarySubtypes", "attributes", "properties"
+	"archetype", "id", "searchKey", "number", "name", "label", "parentIds", "dependencyTier", "historyId",
+	"historyCurrent", "subtype", "secondarySubtypes", "attributes", "properties"
 })
 @XmlRootElement(name = "metadata")
 public class MetadataT {
@@ -68,6 +75,9 @@ public class MetadataT {
 
 	@XmlElement(name = "name", required = true)
 	protected String name;
+
+	@XmlElement(name = "label", required = true)
+	protected String label;
 
 	@XmlElementWrapper(name = "parents")
 	@XmlElement(name = "ref", required = true)
@@ -108,6 +118,7 @@ public class MetadataT {
 		this.searchKey = o.getSearchKey();
 		this.number = o.getNumber();
 		this.name = o.getName();
+		this.label = o.getLabel();
 		if (!o.getParentReferences().isEmpty()) {
 			this.parentIds = new ArrayList<>(o.getParentReferences().size());
 			o.getParentReferences().stream().map((r) -> new ObjectRefT(r)).forEach(this.parentIds::add);
@@ -127,6 +138,33 @@ public class MetadataT {
 			this.properties = new ArrayList<>(o.getPropertyCount());
 			o.getProperties().stream().map((p) -> new MetadataPropertyT(p)).forEach(this.properties::add);
 		}
+	}
+
+	public CmfObject<CmfValue> getObject() {
+		Collection<CmfObjectRef> parentIds = null;
+		if (this.parentIds != null) {
+			parentIds = new ArrayList<>(this.parentIds.size());
+			this.parentIds.stream().map(ObjectRefT::getObjectRef).forEach(parentIds::add);
+		}
+		Set<String> secondaries = null;
+		if (this.secondarySubtypes != null) {
+			secondaries = new LinkedHashSet<>(this.secondarySubtypes);
+		}
+		CmfObject<CmfValue> obj = new CmfObject<>(CmfAttributeTranslator.CMFVALUE_TRANSLATOR, this.archetype, this.id,
+			this.name, parentIds, this.searchKey, this.dependencyTier, this.historyId, this.historyCurrent, this.label,
+			this.subtype, secondaries, this.number);
+		if (this.attributes != null) {
+			for (MetadataPropertyT p : this.attributes) {
+				CmfProperty<CmfValue> P = p.getProperty();
+				CmfAttribute<CmfValue> att = new CmfAttribute<>(P.getName(), P.getType(), P.isMultivalued());
+				att.setValues(P.getValues());
+				obj.setAttribute(att);
+			}
+		}
+		if (this.properties != null) {
+			this.properties.stream().map(MetadataPropertyT::getProperty).forEach(obj::setProperty);
+		}
+		return obj;
 	}
 
 	protected <T> List<T> getList(List<T> l) {
