@@ -445,6 +445,40 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	@Override
+	protected OutputStream getOutputStream(LocalStoreOperation op, URI locator) throws CmfStorageException {
+		final File f;
+		try {
+			f = getFile(locator);
+		} catch (IOException e) {
+			throw new CmfStorageException(String.format("Failed to identify the file for [%s]", locator), e);
+		}
+		f.getParentFile().mkdirs(); // Create the parents, if needed
+
+		boolean created;
+		try {
+			created = f.createNewFile();
+		} catch (IOException e) {
+			throw new CmfStorageException(String.format("Failed to create the file at [%s]", f), e);
+		}
+		if (!created) {
+			if (this.failOnCollisions) {
+				throw new CmfStorageException(String.format(
+					"Filename collision detected for target file [%s] - a file already exists at that location",
+					f.getAbsolutePath()));
+			}
+			if (!f.exists()) {
+				throw new CmfStorageException(
+					String.format("Failed to create the non-existent target file [%s]", f.getAbsolutePath()));
+			}
+		}
+		try {
+			return new FileOutputStream(f);
+		} catch (FileNotFoundException e) {
+			throw new CmfStorageException(String.format("Failed to open the output stream to the file at [%s]", f), e);
+		}
+	}
+
+	@Override
 	protected boolean isExists(LocalStoreOperation op, URI locator) throws CmfStorageException {
 		final File f;
 		try {
