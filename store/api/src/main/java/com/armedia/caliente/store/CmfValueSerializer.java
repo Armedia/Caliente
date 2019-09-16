@@ -127,7 +127,7 @@ public enum CmfValueSerializer implements CheckedCodec<CmfValue, String, ParseEx
 		}
 
 	},
-	TIME(CmfValue.Type.DATETIME) {
+	DATETIME(CmfValue.Type.DATETIME) {
 
 		private final String PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
 
