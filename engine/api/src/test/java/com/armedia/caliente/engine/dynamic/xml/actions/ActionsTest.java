@@ -24,7 +24,7 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine.xml.actions;
+package com.armedia.caliente.engine.dynamic.xml.actions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,6 +41,8 @@ import org.junit.jupiter.api.Test;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
+import com.armedia.caliente.engine.dynamic.transformer.TestObjectContext;
+import com.armedia.caliente.engine.dynamic.transformer.TestObjectFacade;
 import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.engine.dynamic.xml.RegularExpression;
@@ -54,8 +56,6 @@ import com.armedia.caliente.engine.dynamic.xml.actions.SecondarySubtypeRemove;
 import com.armedia.caliente.engine.dynamic.xml.actions.SecondarySubtypeReplace;
 import com.armedia.caliente.engine.dynamic.xml.actions.SubtypeReplace;
 import com.armedia.caliente.engine.dynamic.xml.actions.SubtypeSet;
-import com.armedia.caliente.engine.transform.TestObjectContext;
-import com.armedia.caliente.engine.transform.TestObjectFacade;
 import com.armedia.caliente.store.CmfValue;
 
 public class ActionsTest {

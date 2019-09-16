@@ -24,7 +24,7 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine.xml;
+package com.armedia.caliente.engine.dynamic.xml;
 
 import java.io.IOException;
 import java.io.InputStream;

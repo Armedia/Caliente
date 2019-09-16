@@ -24,7 +24,7 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine.transform;
+package com.armedia.caliente.engine.dynamic.transformer;
 
 import java.util.Collection;
 import java.util.Collections;

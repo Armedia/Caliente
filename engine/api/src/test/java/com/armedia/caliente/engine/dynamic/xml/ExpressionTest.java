@@ -24,7 +24,7 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine.xml;
+package com.armedia.caliente.engine.dynamic.xml;
 
 import java.util.Random;
 import java.util.Set;
@@ -39,8 +39,8 @@ import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
+import com.armedia.caliente.engine.dynamic.transformer.TestObjectContext;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.engine.transform.TestObjectContext;
 import com.armedia.caliente.store.CmfValue;
 
 public class ExpressionTest {

@@ -24,7 +24,7 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine.xml.extmeta;
+package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import java.net.URL;
 import java.util.Collections;
