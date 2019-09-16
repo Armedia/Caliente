@@ -29,10 +29,12 @@ package com.armedia.caliente.engine.tools;
 import java.util.List;
 
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
+import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfProperty;
 
 public class LocalVersionedOrganizer extends LocalOrganizer {
 
@@ -52,8 +54,12 @@ public class LocalVersionedOrganizer extends LocalOrganizer {
 		final List<String> container = super.calculateContainerSpec(translator, object, info);
 
 		// Next step: add the object name
-		CmfAttribute<?> name = object.getAttribute(
-			translator.getAttributeNameMapper().decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
+		CmfProperty<?> name = object.getProperty(IntermediateProperty.HEAD_NAME);
+		if (name == null) {
+			name = object.getAttribute(
+				translator.getAttributeNameMapper().decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
+		}
+
 		final String objectName;
 		if (name == null) {
 			objectName = object.getName();

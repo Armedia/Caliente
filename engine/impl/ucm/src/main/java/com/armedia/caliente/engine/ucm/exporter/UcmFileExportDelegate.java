@@ -148,6 +148,13 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			versionCount = history.getRevisionCount();
 			versionIndex = this.object.getRevisionNumber();
 			versionHeadIndex = history.getLastRevision().getRevisionId();
+
+			try {
+				properties.add(new CmfProperty<>(IntermediateProperty.HEAD_NAME, IntermediateProperty.HEAD_NAME.type,
+					new CmfValue(ctx.getSession().getFileRevision(history.getLastRevision()).getName())));
+			} catch (Exception e) {
+				throw new ExportException("Failed to find the last revision information", e);
+			}
 		}
 
 		properties.add(new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION, CmfValue.Type.BOOLEAN,

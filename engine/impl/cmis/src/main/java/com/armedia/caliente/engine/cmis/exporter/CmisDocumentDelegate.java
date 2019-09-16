@@ -141,16 +141,23 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			}
 			object.setAttribute(antecedentId);
 		}
-		CmfAttribute<CmfValue> current = new CmfAttribute<>(IntermediateAttribute.IS_LATEST_VERSION,
-			CmfValue.Type.BOOLEAN, false);
-		current.setValue(new CmfValue(this.object.isLatestVersion()));
-		object.setAttribute(current);
+		object.setAttribute(new CmfAttribute<>(IntermediateAttribute.IS_LATEST_VERSION, CmfValue.Type.BOOLEAN,
+			new CmfValue(this.object.isLatestVersion())));
 
-		CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
-			CmfValue.Type.BOOLEAN, false);
-		versionTreeRoot.setValue(
-			new CmfValue((this.antecedentId == null) || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)));
-		object.setProperty(versionTreeRoot);
+		Document headVersion = this.object;
+		if (!this.object.isLatestVersion()) {
+			headVersion = this.successors.get(this.successors.size() - 1);
+		}
+		object.setProperty(new CmfProperty<>(IntermediateProperty.HEAD_NAME, CmfValue.Type.STRING,
+			new CmfValue(headVersion.getName())));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT, CmfValue.Type.BOOLEAN,
+			new CmfValue((this.antecedentId == null) || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY))));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX, CmfValue.Type.INTEGER,
+			new CmfValue(this.previous.size())));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, CmfValue.Type.INTEGER,
+			new CmfValue(this.previous.size() + this.successors.size() + 1)));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, CmfValue.Type.INTEGER,
+			new CmfValue(this.previous.size() + this.successors.size())));
 
 		if (!this.object.isLatestVersion()) {
 			marshalParentsAndPaths(ctx, object, this.object.getObjectOfLatestVersion(false));

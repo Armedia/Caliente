@@ -304,10 +304,31 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			}
 		}
 
-		CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
-			CmfValue.Type.BOOLEAN, false);
-		versionTreeRoot.setValue(new CmfValue(isRoot || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)));
-		object.setProperty(versionTreeRoot);
+		ShptFile headVersion = null;
+		if (this.isHistoryCurrent()) {
+			headVersion = this;
+		} else {
+			for (ShptFile f : this.successors) {
+				if (f.isHistoryCurrent()) {
+					headVersion = f;
+					break;
+				}
+			}
+			if (headVersion == null) {
+				throw new ExportException(String.format("Failed to find the current version for [%s]", getLabel()));
+			}
+		}
+
+		object.setProperty(new CmfProperty<>(IntermediateProperty.HEAD_NAME, CmfValue.Type.STRING,
+			new CmfValue(headVersion.getName())));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT, CmfValue.Type.BOOLEAN,
+			new CmfValue(isRoot || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY))));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, CmfValue.Type.INTEGER,
+			new CmfValue(this.predecessors.size() + this.successors.size() + 1)));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX, CmfValue.Type.INTEGER,
+			new CmfValue(this.predecessors.size())));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, CmfValue.Type.INTEGER,
+			new CmfValue(this.predecessors.size() + this.successors.size())));
 
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.VERSION.name, CmfValue.Type.STRING, true, versionNames));
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.VERSION_TREE.name, CmfValue.Type.ID, false,
