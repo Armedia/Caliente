@@ -1121,19 +1121,19 @@
 	</xsd:element>
 
 	<xsd:complexType name="metadataSubtypes.t">
-		<xsd:sequence minOccurs="1" maxOccurs="unbounded">
+		<xsd:sequence minOccurs="0" maxOccurs="unbounded">
 			<xsd:element name="subtype" type="xsd:string" />
 		</xsd:sequence>
 	</xsd:complexType>
 
 	<xsd:complexType name="metadataParents.t">
-		<xsd:sequence minOccurs="1" maxOccurs="unbounded">
+		<xsd:sequence minOccurs="0" maxOccurs="unbounded">
 			<xsd:element name="ref" type="tns:objectRef.t" />
 		</xsd:sequence>
 	</xsd:complexType>
 
 	<xsd:complexType name="metadataProperty.t">
-		<xsd:sequence minOccurs="1" maxOccurs="unbounded">
+		<xsd:sequence minOccurs="0" maxOccurs="unbounded">
 			<xsd:element name="value" type="xsd:string" />
 		</xsd:sequence>
 		<xsd:attribute name="name" type="tns:noSpaces.t" use="required" />
@@ -1155,7 +1155,7 @@
 			<xsd:element name="number" type="xsd:nonNegativeInteger" minOccurs="1" />
 			<xsd:element name="name" type="xsd:string" minOccurs="1" />
 			<xsd:element name="label" type="xsd:string" minOccurs="1" />
-			<xsd:element name="parents" type="tns:metadataParents.t">
+			<xsd:element name="parents" type="tns:metadataParents.t" minOccurs="0">
 				<xsd:unique name="uniqueParentId">
 					<xsd:selector xpath="tns:id"/>
 					<xsd:field xpath="."/>
@@ -1165,19 +1165,19 @@
 			<xsd:element name="historyId" type="tns:noSpaces.t" minOccurs="1" />
 			<xsd:element name="historyCurrent" type="xsd:boolean" minOccurs="1" />
 			<xsd:element name="subtype" type="xsd:string" minOccurs="1" />
-			<xsd:element name="secondarySubtypes" type="tns:metadataSubtypes.t">
+			<xsd:element name="secondarySubtypes" type="tns:metadataSubtypes.t" minOccurs="0">
 				<xsd:unique name="uniqueSubtypeName">
 					<xsd:selector xpath="tns:subtype"/>
 					<xsd:field xpath="."/>
 				</xsd:unique>
 			</xsd:element>
-			<xsd:element name="attributes" type="tns:metadataPropertyContainer.t">
+			<xsd:element name="attributes" type="tns:metadataPropertyContainer.t" minOccurs="0">
 				<xsd:unique name="uniqueAttributeName">
 					<xsd:selector xpath="tns:entry"/>
 					<xsd:field xpath="@name"/>
 				</xsd:unique>
 			</xsd:element>
-			<xsd:element name="cmfProperties" type="tns:metadataPropertyContainer.t">
+			<xsd:element name="cmfProperties" type="tns:metadataPropertyContainer.t" minOccurs="0">
 				<xsd:unique name="uniqueCmfPropertyName">
 					<xsd:selector xpath="tns:entry"/>
 					<xsd:field xpath="@name"/>
@@ -1186,6 +1186,5 @@
 		</xsd:all>
 	</xsd:complexType>
 
-	<xsd:element name="metadata" type="tns:metadata.t">
-	</xsd:element>
+	<xsd:element name="metadata" type="tns:metadata.t" />
 </xsd:schema>
