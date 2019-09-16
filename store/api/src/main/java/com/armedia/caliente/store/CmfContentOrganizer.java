@@ -37,6 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.function.LazySupplier;
@@ -216,6 +217,10 @@ public abstract class CmfContentOrganizer {
 		if (object == null) { throw new IllegalArgumentException("Must provide a CMF object"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide a valid Content Information object"); }
 		return calculateLocation(translator, object, info);
+	}
+
+	public void configure(CfgTools settings) {
+		// By default, do nothing
 	}
 
 	protected final Location newLocation(List<String> containerSpec, String baseName, String extension,

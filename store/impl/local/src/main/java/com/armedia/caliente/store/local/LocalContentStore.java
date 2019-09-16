@@ -195,8 +195,7 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 				currentOrganizerName = getProperty("strategy");
 			}
 			if ((currentOrganizerName != null) && !currentOrganizerName.isNull()) {
-				CmfContentOrganizer savedOrganizer = CmfContentOrganizer
-					.getOrganizer(currentOrganizerName.asString());
+				CmfContentOrganizer savedOrganizer = CmfContentOrganizer.getOrganizer(currentOrganizerName.asString());
 				if (savedOrganizer != null) {
 					organizer = savedOrganizer;
 					storeOrganizerName = false;
@@ -205,6 +204,7 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		}
 		this.organizer = organizer;
 		if (this.organizer == null) { throw new IllegalArgumentException("Must provide a content organizer"); }
+		this.organizer.configure(settings);
 		if (storeOrganizerName) {
 			setProperty("organizer", new CmfValue(organizer.getName()));
 		}
