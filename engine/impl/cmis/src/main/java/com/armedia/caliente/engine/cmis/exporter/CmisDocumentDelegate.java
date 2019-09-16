@@ -136,17 +136,23 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			try {
 				antecedentId.setValue(new CmfValue(CmfValue.Type.ID, Object.class.cast(this.antecedentId)));
 			} catch (ParseException e) {
-				throw new ExportException(String.format("Failed to create an object ID value for [%s] for %s",
-					this.antecedentId, getType(), getLabel(), getObjectId()));
+				throw new ExportException(String.format("Failed to create an object ID value from [%s] for %s",
+					this.antecedentId, object.getDescription()));
 			}
 			object.setAttribute(antecedentId);
 		}
 		object.setAttribute(new CmfAttribute<>(IntermediateAttribute.IS_LATEST_VERSION, CmfValue.Type.BOOLEAN,
 			new CmfValue(this.object.isLatestVersion())));
 
-		Document headVersion = this.object;
-		if (!this.object.isLatestVersion()) {
-			headVersion = this.successors.get(this.successors.size() - 1);
+		Document headVersion = null;
+		if (this.object.isLatestVersion()) {
+			headVersion = this.object;
+		} else {
+			headVersion = this.successors.stream().filter(Document::isLatestVersion).findFirst().orElse(null);
+			if (headVersion == null) {
+				throw new ExportException(
+					String.format("Failed to find the latest version for [%s]", object.getDescription()));
+			}
 		}
 		object.setProperty(new CmfProperty<>(IntermediateProperty.HEAD_NAME, CmfValue.Type.STRING,
 			new CmfValue(headVersion.getName())));

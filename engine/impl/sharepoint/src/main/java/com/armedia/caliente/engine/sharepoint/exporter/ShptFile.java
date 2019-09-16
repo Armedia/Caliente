@@ -275,8 +275,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 					try {
 						f = new ShptFile(this.factory, service, new ShptVersion(this.object.getFile(), v), antecedent);
 					} catch (Exception ex) {
-						throw new ExportException(String.format(
-							"Failed to construct a new ShptVersion instance for [%s](%s)", getLabel(), v.getId()), ex);
+						throw new ExportException(String.format("Failed to construct a new ShptVersion instance for %s",
+							object.getDescription()), ex);
 					}
 					tgt.add(f);
 					antecedent = f;
@@ -299,8 +299,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 				}
 				isRoot = (antecedentId == null);
 			} catch (ShptSessionException e) {
-				throw new ExportException(
-					String.format("Failed to retrieve file versions for [%s]", this.object.getServerRelativeUrl()), e);
+				throw new ExportException(String.format("Failed to retrieve file versions from [%s] for %s",
+					this.object.getServerRelativeUrl(), object.getDescription()), e);
 			}
 		}
 
@@ -308,14 +308,10 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		if (this.isHistoryCurrent()) {
 			headVersion = this;
 		} else {
-			for (ShptFile f : this.successors) {
-				if (f.isHistoryCurrent()) {
-					headVersion = f;
-					break;
-				}
-			}
+			headVersion = this.successors.stream().filter(ShptFile::isHistoryCurrent).findFirst().orElse(null);
 			if (headVersion == null) {
-				throw new ExportException(String.format("Failed to find the current version for [%s]", getLabel()));
+				throw new ExportException(
+					String.format("Failed to find the current version for %s", object.getDescription()));
 			}
 		}
 
