@@ -286,10 +286,11 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		 * <p>
 		 * Returns an {@link OutputStream} that can be used to write to the actual content file,
 		 * creating a new stream if it doesn't exist. If the underlying content store doesn't
-		 * support the modification or creation of new content streams, {@code null} will be
-		 * returned. Please note that the stream <b>must</b> be {@link OutputStream#close() closed}
-		 * properly, or this will leave dangling locks which can cause other issues. Use of the
-		 * {@code try-with-resources} construct is highly recommended for safety.
+		 * support the modification or creation of new content streams, a
+		 * {@link CmfStorageException} will be raised . Please note that the stream <b>must</b> be
+		 * {@link OutputStream#close() closed} properly, or this will leave dangling locks which can
+		 * cause other issues. Use of the {@code try-with-resources} construct is highly recommended
+		 * for safety.
 		 * </p>
 		 * <p>
 		 * All {@link CmfContentStore} implementations <b>must</b> support this functionality.
@@ -545,6 +546,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		final Lock lock = acquireSharedLock();
 		final OPERATION op;
 
+		boolean ok = false;
 		try {
 			if (isSupportsFileAccess()) {
 				op = null;
@@ -572,15 +574,13 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 				op = newOperation(false);
 				out = getOutputStream(op, locator);
 			}
+			ok = true;
 		} finally {
-			// Release the lock if we exited early
-			if (out == null) {
+			if (!ok) {
 				lock.unlock();
 			}
 		}
 
-		// If there was no output stream, then we return null just like specified
-		if (out == null) { return null; }
 		return new FilterOutputStream(out) {
 			final boolean tx = ((op != null) && op.begin());
 			boolean ok = true;
