@@ -19,6 +19,14 @@
 		</xsd:restriction>
 	</xsd:simpleType>
 
+	<xsd:complexType name="objectRef.t">
+		<xsd:simpleContent>
+			<xsd:extension base="tns:noSpaces.t">
+				<xsd:attribute name="type" type="tns:cmfType.t" use="required" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="expression.t">
 		<xsd:simpleContent>
 			<xsd:extension base="xsd:string">
@@ -1120,7 +1128,7 @@
 
 	<xsd:complexType name="metadataParents.t">
 		<xsd:sequence minOccurs="1" maxOccurs="unbounded">
-			<xsd:element name="id" type="tns:noSpaces.t" />
+			<xsd:element name="ref" type="tns:objectRef.t" />
 		</xsd:sequence>
 	</xsd:complexType>
 

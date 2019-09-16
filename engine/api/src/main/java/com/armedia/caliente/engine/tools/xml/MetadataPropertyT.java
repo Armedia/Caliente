@@ -27,6 +27,7 @@
 
 package com.armedia.caliente.engine.tools.xml;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +40,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.store.CmfValueCodec;
+import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
@@ -66,13 +67,20 @@ public class MetadataPropertyT {
 
 	}
 
-	public MetadataPropertyT(CmfValueCodec<String> codec, CmfProperty<CmfValue> p) {
+	public MetadataPropertyT(CmfProperty<CmfValue> p) {
 		this.name = p.getName();
 		this.type = p.getType();
 		this.multivalue = p.isMultivalued();
+		CmfValueSerializer serializer = CmfValueSerializer.get(this.type);
 		if (p.hasValues()) {
 			this.values = new ArrayList<>(p.getValueCount());
-			p.getValues().stream().map(codec::decode).forEach(this.values::add);
+			p.getValues().stream().map((t) -> {
+				try {
+					return serializer.encode(t);
+				} catch (ParseException e) {
+					throw new RuntimeException(e);
+				}
+			}).forEach(this.values::add);
 		}
 	}
 

@@ -37,8 +37,9 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.codec.CheckedCodec;
 
-public enum CmfValueSerializer {
+public enum CmfValueSerializer implements CheckedCodec<CmfValue, String, ParseException> {
 	//
 	BOOLEAN(CmfValue.Type.BOOLEAN) {
 
@@ -51,7 +52,6 @@ public enum CmfValueSerializer {
 		public CmfValue doDeserialize(String str) {
 			return new CmfValue(Boolean.valueOf(str));
 		}
-
 	},
 	INTEGER(CmfValue.Type.INTEGER) {
 
@@ -177,6 +177,11 @@ public enum CmfValueSerializer {
 		return value.asString();
 	}
 
+	@Override
+	public String encode(CmfValue v) throws ParseException {
+		return serialize(v);
+	}
+
 	public final CmfValue deserialize(String str) throws ParseException {
 		// If the empty string isn't a valid serialization for this value type, and
 		// the string is empty, then just return the NULL value
@@ -187,6 +192,11 @@ public enum CmfValueSerializer {
 
 	protected CmfValue doDeserialize(String str) throws ParseException {
 		return new CmfValue(str);
+	}
+
+	@Override
+	public CmfValue decode(String e) throws ParseException {
+		return deserialize(e);
 	}
 
 	private static Map<CmfValue.Type, CmfValueSerializer> MAP = null;

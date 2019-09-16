@@ -501,6 +501,14 @@ public abstract class ExportEngine<//
 			final Long ret = objectStore.storeObject(encoded);
 			marshaled.copyNumber(encoded); // PATCH: make sure the object number is always copied
 
+			// TODO: Maybe support storing a companion metadata file?
+			{
+				CmfContentStream metadata = new CmfContentStream(0, "$metadata$", 0, null);
+				metadata.setExtension("xml");
+				CmfContentStore<?, ?>.Handle h = streamStore.getHandle(getTranslator(), marshaled, metadata);
+				// TODO: render the XML version of the object
+			}
+
 			if (ret == null) {
 				// Should be impossible, but still guard against it
 				if (this.log.isTraceEnabled()) {

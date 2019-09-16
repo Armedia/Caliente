@@ -71,8 +71,8 @@ public class MetadataT {
 	protected String name;
 
 	@XmlElementWrapper(name = "parents")
-	@XmlElement(name = "id", required = true)
-	protected List<String> parentIds;
+	@XmlElement(name = "ref", required = true)
+	protected List<ObjectRefT> parentIds;
 
 	@XmlElement(name = "dependencyTier", required = true)
 	@XmlSchemaType(name = "nonNegativeInteger")
@@ -111,8 +111,7 @@ public class MetadataT {
 		this.name = o.getName();
 		if (!o.getParentReferences().isEmpty()) {
 			this.parentIds = new ArrayList<>(o.getParentReferences().size());
-			// TODO: Is this correct?
-			o.getParentReferences().stream().map((r) -> r.getId()).forEach(this.parentIds::add);
+			o.getParentReferences().stream().map((r) -> new ObjectRefT(r)).forEach(this.parentIds::add);
 		}
 		this.dependencyTier = o.getDependencyTier();
 		this.historyId = o.getHistoryId();
@@ -123,11 +122,11 @@ public class MetadataT {
 		}
 		if (o.getAttributeCount() > 0) {
 			this.attributes = new ArrayList<>(o.getAttributeCount());
-			o.getAttributes().stream().map((a) -> new MetadataPropertyT(codec, a)).forEach(this.attributes::add);
+			o.getAttributes().stream().map((a) -> new MetadataPropertyT(a)).forEach(this.attributes::add);
 		}
 		if (o.getPropertyCount() > 0) {
 			this.properties = new ArrayList<>(o.getPropertyCount());
-			o.getProperties().stream().map((p) -> new MetadataPropertyT(codec, p)).forEach(this.properties::add);
+			o.getProperties().stream().map((p) -> new MetadataPropertyT(p)).forEach(this.properties::add);
 		}
 	}
 
@@ -176,7 +175,7 @@ public class MetadataT {
 		this.name = name;
 	}
 
-	public List<String> getParentIds() {
+	public List<ObjectRefT> getParentIds() {
 		return this.parentIds = getList(this.parentIds);
 	}
 
