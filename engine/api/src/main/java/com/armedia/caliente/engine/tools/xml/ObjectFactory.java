@@ -25,7 +25,7 @@
  * #L%
  *******************************************************************************/
 
-package com.armedia.caliente.engine.dynamic.xml;
+package com.armedia.caliente.engine.tools.xml;
 
 import javax.xml.bind.annotation.XmlRegistry;
 

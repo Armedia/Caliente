@@ -17,13 +17,6 @@
  * You should have received a copy of the GNU Lesser General Public License along with Caliente. If
  * not, see <http://www.gnu.org/licenses/>. #L%
  *******************************************************************************/
-@XmlSchema(namespace = ObjectFactory.NAMESPACE, elementFormDefault = XmlNsForm.QUALIFIED, xmlns = {
-	@XmlNs(prefix = "", namespaceURI = ObjectFactory.NAMESPACE)
-})
-package com.armedia.caliente.engine.dynamic.xml.metadata;
 
-import javax.xml.bind.annotation.XmlNs;
-import javax.xml.bind.annotation.XmlNsForm;
-import javax.xml.bind.annotation.XmlSchema;
-
-import com.armedia.caliente.engine.tools.xml.ObjectFactory;
+@javax.xml.bind.annotation.XmlSchema(namespace = ObjectFactory.NAMESPACE, elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
+package com.armedia.caliente.engine.tools.xml;
