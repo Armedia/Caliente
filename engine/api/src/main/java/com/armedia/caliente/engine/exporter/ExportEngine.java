@@ -27,6 +27,7 @@
 package com.armedia.caliente.engine.exporter;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.Collections;
@@ -60,6 +61,8 @@ import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
+import com.armedia.caliente.engine.tools.xml.MetadataT;
+import com.armedia.caliente.engine.tools.xml.XmlBase;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
@@ -501,12 +504,26 @@ public abstract class ExportEngine<//
 			final Long ret = objectStore.storeObject(encoded);
 			marshaled.copyNumber(encoded); // PATCH: make sure the object number is always copied
 
-			// TODO: Maybe support storing a companion metadata file?
-			{
-				CmfContentStream metadata = new CmfContentStream(0, "$metadata$", 0, null);
-				metadata.setExtension("xml");
-				CmfContentStore<?, ?>.Handle h = streamStore.getHandle(getTranslator(), marshaled, metadata);
-				// TODO: render the XML version of the object
+			// TODO: Make this configurable...
+			switch (encoded.getType()) {
+				case DOCUMENT:
+				case FOLDER:
+					try {
+						CmfContentStream metadata = new CmfContentStream(0, "$metadata$", 0, null);
+						metadata.setExtension("xml");
+						CmfContentStore<?, ?>.Handle h = streamStore.getHandle(getTranslator(), marshaled, metadata);
+						try (OutputStream out = h.getOutputStream()) {
+							if (out != null) {
+								XmlBase.storeToXML(new MetadataT(encoded), out);
+							}
+						}
+					} catch (Exception e) {
+						throw new ExportException(String.format("Failed to marshal the XML-formatted metadata for %s",
+							marshaled.getDescription()), e);
+					}
+					break;
+				default:
+					break;
 			}
 
 			if (ret == null) {
