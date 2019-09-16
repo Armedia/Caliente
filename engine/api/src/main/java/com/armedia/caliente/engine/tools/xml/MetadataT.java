@@ -41,7 +41,6 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.caliente.store.xml.CmfObjectArchetypeAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -103,7 +102,7 @@ public class MetadataT {
 
 	}
 
-	public MetadataT(CmfObject<CmfValue> o, CmfValueCodec<String> codec) {
+	public MetadataT(CmfObject<CmfValue> o) {
 		this.archetype = o.getType();
 		this.id = o.getId();
 		this.searchKey = o.getSearchKey();
