@@ -33,7 +33,6 @@ package com.armedia.caliente.store;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -124,8 +123,8 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 	private final String label;
 	private final String subtype;
 	private final Set<String> secondaries;
-	private final Map<String, CmfAttribute<VALUE>> attributes = new HashMap<>();
-	private final Map<String, CmfProperty<VALUE>> properties = new HashMap<>();
+	private final Map<String, CmfAttribute<VALUE>> attributes = new LinkedHashMap<>();
+	private final Map<String, CmfProperty<VALUE>> properties = new LinkedHashMap<>();
 	private final CmfAttributeTranslator<VALUE> translator;
 	private final LazySupplier<String> description = new LazySupplier<>(this::renderDescription);
 	private final LazySupplier<String> string = new LazySupplier<>(this::renderString);
