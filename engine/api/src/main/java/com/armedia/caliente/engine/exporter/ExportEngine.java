@@ -511,6 +511,7 @@ public abstract class ExportEngine<//
 					try {
 						CmfContentStream metadata = new CmfContentStream(0, "$metadata$", 0, null);
 						metadata.setExtension("xml");
+						metadata.setProperty(CmfContentStream.BASENAME, "metadata");
 						CmfContentStore<?, ?>.Handle h = streamStore.getHandle(getTranslator(), marshaled, metadata);
 						try (OutputStream out = h.getOutputStream()) {
 							if (out != null) {

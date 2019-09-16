@@ -28,12 +28,15 @@ package com.armedia.caliente.engine.tools;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.caliente.store.CmfProperty;
 
 public class LocalVersionedOrganizer extends LocalOrganizer {
@@ -60,28 +63,34 @@ public class LocalVersionedOrganizer extends LocalOrganizer {
 				translator.getAttributeNameMapper().decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
 		}
 
-		final String objectName;
+		String objectName = null;
 		if (name == null) {
 			objectName = object.getName();
 		} else {
 			objectName = name.getValue().toString();
 		}
+		if (StringUtils.isEmpty(objectName)) {
+			// Uh-oh ... an empty filename!!! Can't have that!!
+			objectName = String.format("[history-%s]", object.getHistoryId());
+		}
 		container.add(objectName);
 
 		// Finally, add the version number, appending "CURRENT" if it's the current version
-		String versionLabel = null;
-		CmfAttribute<?> version = object.getAttribute(translator.getAttributeNameMapper()
-			.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL));
-		if (version == null) {
-			versionLabel = "0.0";
-		} else {
-			versionLabel = version.getValue().toString();
-		}
+		if (object.getType() == Archetype.DOCUMENT) {
+			String versionLabel = null;
+			CmfAttribute<?> version = object.getAttribute(translator.getAttributeNameMapper()
+				.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL));
+			if (version == null) {
+				versionLabel = "0.0";
+			} else {
+				versionLabel = version.getValue().toString();
+			}
 
-		if (object.isHistoryCurrent()) {
-			versionLabel += ",CURRENT";
+			if (object.isHistoryCurrent()) {
+				versionLabel += ",CURRENT";
+			}
+			container.add(versionLabel);
 		}
-		container.add(versionLabel);
 
 		return container;
 	}
@@ -89,7 +98,9 @@ public class LocalVersionedOrganizer extends LocalOrganizer {
 	@Override
 	protected <T> String calculateBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentStream info) {
-		return super.calculateDescriptor(translator, object, info);
+		String baseName = info.getProperty(CmfContentStream.BASENAME);
+		if (!StringUtils.isEmpty(baseName)) { return baseName; }
+		return String.format("%s.(page#%08x)", info.getRenditionIdentifier(), info.getRenditionPage());
 	}
 
 	@Override
