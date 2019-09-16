@@ -195,10 +195,10 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 				currentOrganizerName = getProperty("strategy");
 			}
 			if ((currentOrganizerName != null) && !currentOrganizerName.isNull()) {
-				CmfContentOrganizer currentOrganizer = CmfContentOrganizer
+				CmfContentOrganizer savedOrganizer = CmfContentOrganizer
 					.getOrganizer(currentOrganizerName.asString());
-				if (currentOrganizer != null) {
-					organizer = currentOrganizer;
+				if (savedOrganizer != null) {
+					organizer = savedOrganizer;
 					storeOrganizerName = false;
 				}
 			}
