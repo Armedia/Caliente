@@ -48,9 +48,6 @@ public abstract class ExportContextFactory< //
 	ENGINE extends ExportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?, ?> //
 > extends TransferContextFactory<SESSION, VALUE, CONTEXT, ENGINE> {
 
-	private static final Set<CmfObject.Archetype> DEFAULT_ALLOWED_METADATA = Tools
-		.freezeSet(EnumSet.of(CmfObject.Archetype.FOLDER, CmfObject.Archetype.DOCUMENT));
-
 	private final Set<CmfObject.Archetype> companionMetadata;
 
 	protected ExportContextFactory(ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?> objectStore,
@@ -80,7 +77,7 @@ public abstract class ExportContextFactory< //
 	}
 
 	protected Set<CmfObject.Archetype> getAllowedCompanionMetadata() {
-		return ExportContextFactory.DEFAULT_ALLOWED_METADATA;
+		return EnumSet.of(CmfObject.Archetype.FOLDER, CmfObject.Archetype.DOCUMENT);
 	}
 
 	public final boolean isSupportsCompanionMetadata(CmfObject.Archetype type) {
