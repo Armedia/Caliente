@@ -37,8 +37,17 @@ import org.junit.jupiter.api.Test;
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
-import com.armedia.caliente.engine.dynamic.TestObjectContext;
+import com.armedia.caliente.engine.dynamic.transformer.TestObjectContext;
 import com.armedia.caliente.engine.dynamic.xml.ConditionTools;
+import com.armedia.caliente.engine.dynamic.xml.conditions.ConditionGroup;
+import com.armedia.caliente.engine.dynamic.xml.conditions.GroupAnd;
+import com.armedia.caliente.engine.dynamic.xml.conditions.GroupNand;
+import com.armedia.caliente.engine.dynamic.xml.conditions.GroupNor;
+import com.armedia.caliente.engine.dynamic.xml.conditions.GroupNot;
+import com.armedia.caliente.engine.dynamic.xml.conditions.GroupOneof;
+import com.armedia.caliente.engine.dynamic.xml.conditions.GroupOr;
+import com.armedia.caliente.engine.dynamic.xml.conditions.GroupXnor;
+import com.armedia.caliente.engine.dynamic.xml.conditions.GroupXor;
 
 public class GroupConditionTest {
 
@@ -226,10 +235,24 @@ public class GroupConditionTest {
 	public void testNot() throws ConditionException {
 		GroupNot not = new GroupNot();
 		final DynamicElementContext ctx = new TestObjectContext();
+		not.setCondition(null);
+		Assertions.assertTrue(not.check(ctx));
 		not.setCondition(ConditionTools.COND_FALSE);
 		Assertions.assertTrue(not.check(ctx));
 		not.setCondition(ConditionTools.COND_TRUE);
 		Assertions.assertFalse(not.check(ctx));
+	}
+
+	@Test
+	public void testDebug() throws ConditionException {
+		Debug debug = new Debug();
+		final DynamicElementContext ctx = new TestObjectContext();
+		debug.setCondition(null);
+		Assertions.assertTrue(debug.check(ctx));
+		debug.setCondition(ConditionTools.COND_FALSE);
+		Assertions.assertFalse(debug.check(ctx));
+		debug.setCondition(ConditionTools.COND_TRUE);
+		Assertions.assertTrue(debug.check(ctx));
 	}
 
 	@Test

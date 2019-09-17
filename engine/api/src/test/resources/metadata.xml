@@ -1,0 +1,51 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<metadata xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
+	<archetype>DOCUMENT</archetype>
+	<id>...</id>
+	<searchKey>...</searchKey>
+	<number>1</number>
+	<name>...</name>
+	<label>.....</label>
+	<parents>
+		<ref type="FOLDER">..1.</ref>
+		<ref type="FOLDER">..2.</ref>
+		<ref type="FOLDER">..3.</ref>
+		<ref type="FOLDER">..4.</ref>
+	</parents>
+	<dependencyTier>5</dependencyTier>
+	<historyId>...</historyId>
+	<historyCurrent>false</historyCurrent>
+	<subtype>...</subtype>
+	<secondarySubtypes>
+		<subtype>..1.</subtype>
+		<subtype>..2.</subtype>
+		<subtype>..3.</subtype>
+		<subtype>..4.</subtype>
+	</secondarySubtypes>
+	<attributes>
+		<entry name="..." type="STRING" multivalue="true">
+			<value>${string-serialized}</value>
+			<value>${string-serialized}</value>
+			<value>${string-serialized}</value>
+			<value>${string-serialized}</value>
+			<value>${string-serialized}</value>
+		</entry>
+	</attributes>
+	<cmfProperties>
+		<entry name="..1." type="INTEGER" multivalue="false">
+			<value>${string-serialized}</value>
+			<value>${string-serialized}</value>
+			<value>${string-serialized}</value>
+			<value>${string-serialized}</value>
+			<value>${string-serialized}</value>
+		</entry>
+		<entry name="..2." type="INTEGER" multivalue="false">
+			<value>${string-serialized}</value>
+			<value>${string-serialized}</value>
+			<value>${string-serialized}</value>
+			<value>${string-serialized}</value>
+			<value>${string-serialized}</value>
+		</entry>
+	</cmfProperties>
+</metadata>

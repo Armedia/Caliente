@@ -24,14 +24,8 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
+package com.armedia.caliente.engine.dynamic.xml.actions;
 
-package com.armedia.caliente.engine.dynamic.xml;
-
-import javax.xml.bind.annotation.XmlRegistry;
-
-@XmlRegistry
-public class ObjectFactory {
-
-	public static final String NAMESPACE = "http://www.armedia.com/ns/caliente/engine";
+public class BaseActionTest {
 
 }

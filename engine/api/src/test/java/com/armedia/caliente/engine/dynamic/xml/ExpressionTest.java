@@ -39,7 +39,8 @@ import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
-import com.armedia.caliente.engine.dynamic.TestObjectContext;
+import com.armedia.caliente.engine.dynamic.transformer.TestObjectContext;
+import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.store.CmfValue;
 
 public class ExpressionTest {

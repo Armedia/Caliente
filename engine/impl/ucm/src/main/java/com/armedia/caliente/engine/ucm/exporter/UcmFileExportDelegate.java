@@ -129,10 +129,9 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 	protected boolean getDataProperties(UcmExportContext ctx, Collection<CmfProperty<CmfValue>> properties,
 		UcmFile object) throws ExportException {
 		if (!super.getDataProperties(ctx, properties, object)) { return false; }
-		CmfProperty<CmfValue> p = null;
 
-		p = new CmfProperty<>(IntermediateProperty.IS_UNFILED, CmfValue.Type.BOOLEAN, new CmfValue(object.isUnfiled()));
-		properties.add(p);
+		properties.add(new CmfProperty<>(IntermediateProperty.IS_UNFILED, CmfValue.Type.BOOLEAN,
+			new CmfValue(object.isUnfiled())));
 
 		final boolean newestVersion;
 		final int versionCount;
@@ -149,23 +148,26 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			versionCount = history.getRevisionCount();
 			versionIndex = this.object.getRevisionNumber();
 			versionHeadIndex = history.getLastRevision().getRevisionId();
+
+			try {
+				properties.add(new CmfProperty<>(IntermediateProperty.HEAD_NAME, IntermediateProperty.HEAD_NAME.type,
+					new CmfValue(ctx.getSession().getFileRevision(history.getLastRevision()).getName())));
+			} catch (Exception e) {
+				throw new ExportException("Failed to find the last revision information", e);
+			}
 		}
 
-		p = new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION, CmfValue.Type.BOOLEAN,
-			new CmfValue(newestVersion));
-		properties.add(p);
+		properties.add(new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION, CmfValue.Type.BOOLEAN,
+			new CmfValue(newestVersion)));
 
-		p = new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
-			new CmfValue(versionCount));
-		properties.add(p);
+		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
+			new CmfValue(versionCount)));
 
-		p = new CmfProperty<>(IntermediateProperty.VERSION_INDEX, IntermediateProperty.VERSION_INDEX.type,
-			new CmfValue(versionIndex));
-		properties.add(p);
+		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_INDEX, IntermediateProperty.VERSION_INDEX.type,
+			new CmfValue(versionIndex)));
 
-		p = new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, IntermediateProperty.VERSION_HEAD_INDEX.type,
-			new CmfValue(versionHeadIndex));
-		properties.add(p);
+		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
+			IntermediateProperty.VERSION_HEAD_INDEX.type, new CmfValue(versionHeadIndex)));
 
 		return true;
 	}
@@ -179,7 +181,8 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 		if (this.object.isShortcut()) { return antecedents; }
 
 		// Harvest all revisions until we reach this one, then stop harvesting altogether
-		for (UcmRevision r : getHistory(ctx)) {
+		final UcmFileHistory history = getHistory(ctx);
+		for (UcmRevision r : history) {
 			if (r.getRevisionId() == this.object.getRevisionNumber()) {
 				break;
 			}

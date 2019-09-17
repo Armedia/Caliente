@@ -85,4 +85,7 @@ public class ExportContext< //
 		return this.referrents.pop();
 	}
 
+	public final boolean isSupportsCompanionMetadata(CmfObject.Archetype type) {
+		return getFactory().isSupportsCompanionMetadata(type);
+	}
 }
