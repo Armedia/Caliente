@@ -27,7 +27,6 @@
 package com.armedia.caliente.engine.local.importer;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -36,14 +35,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
-import com.armedia.caliente.engine.tools.LocalVersionedOrganizer;
-import com.armedia.caliente.engine.tools.xml.MetadataT;
-import com.armedia.caliente.engine.tools.xml.XmlBase;
-import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
@@ -88,12 +82,6 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 			} catch (IOException e) {
 				throw new ImportException(String.format("Failed to obtain the content file for %s, content [%s]",
 					this.cmfObject.getDescription(), info), e);
-			}
-
-			if (this.factory.isIncludeAllStreams()) {
-				String baseName = LocalVersionedOrganizer.getBaseName(this.cmfObject.getTranslator(), this.cmfObject,
-					info);
-				targetFile = new File(originalTarget, baseName);
 			}
 
 			File parent = targetFile.getParentFile();
