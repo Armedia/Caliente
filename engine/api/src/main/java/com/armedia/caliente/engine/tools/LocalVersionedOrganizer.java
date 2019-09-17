@@ -98,9 +98,7 @@ public class LocalVersionedOrganizer extends LocalOrganizer {
 	@Override
 	protected <T> String calculateBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentStream info) {
-		String baseName = info.getProperty(CmfContentStream.BASENAME);
-		if (!StringUtils.isEmpty(baseName)) { return baseName; }
-		return String.format("%s.(page#%08x)", info.getRenditionIdentifier(), info.getRenditionPage());
+		return LocalVersionedOrganizer.getBaseName(translator, object, info);
 	}
 
 	@Override
@@ -108,5 +106,12 @@ public class LocalVersionedOrganizer extends LocalOrganizer {
 		CmfContentStream info) {
 		// There is no descriptor in this scheme ...
 		return "";
+	}
+
+	public static <T> String getBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentStream info) {
+		String baseName = info.getProperty(CmfContentStream.BASENAME);
+		if (!StringUtils.isEmpty(baseName)) { return baseName; }
+		return String.format("%s.(page#%08x)", info.getRenditionIdentifier(), info.getRenditionPage());
 	}
 }
