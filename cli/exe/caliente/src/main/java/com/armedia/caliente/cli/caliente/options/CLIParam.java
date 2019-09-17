@@ -26,6 +26,7 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.caliente.options;
 
+import java.util.EnumSet;
 import java.util.function.Supplier;
 
 import com.armedia.caliente.cli.Option;
@@ -325,6 +326,18 @@ public enum CLIParam implements Supplier<Option> {
 			.setArgumentName("type") //
 			.setValueFilter(new EnumValueFilter<>(false, CmfObject.Archetype.class)) //
 			.setDescription("The object types to include in the manifest (not specified = all types)") //
+	), //
+
+	metadata_xml( //
+		new OptionImpl() //
+			.setArgumentLimits(1, 2) //
+			.setValueSep(',') //
+			.setArgumentName("object-type") //
+			.setValueFilter(new EnumValueFilter<>(false, CmfObject.Archetype.class,
+				EnumSet.of(CmfObject.Archetype.DATASTORE, CmfObject.Archetype.USER, CmfObject.Archetype.GROUP,
+					CmfObject.Archetype.ACL, CmfObject.Archetype.TYPE, CmfObject.Archetype.FORMAT))) //
+			.setDescription(
+				"Object types for which companion metadata (metadata.xml) files should be generated on export") //
 	), //
 
 	no_filename_map( //
