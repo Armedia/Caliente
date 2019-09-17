@@ -59,8 +59,8 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 		try {
 			targetFile = getTargetFile(ctx);
 		} catch (IOException e) {
-			throw new ImportException(String.format("Failed to calculate the target file for document [%s](%s)",
-				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			throw new ImportException(
+				String.format("Failed to calculate the target file for %s", this.cmfObject.getDescription()), e);
 		}
 
 		File parent = targetFile.getParentFile();
@@ -72,20 +72,18 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 		try {
 			created = targetFile.createNewFile();
 		} catch (IOException e) {
-			throw new ImportException(String.format("Failed to create the new file [%s] for DOCUMENT [%s](%s)",
-				targetFile.getAbsolutePath(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			throw new ImportException(String.format("Failed to create the new file [%s] for %s",
+				targetFile.getAbsolutePath(), this.cmfObject.getDescription()), e);
 		}
 
 		if (!created) {
 			if (!targetFile.isFile()) {
-				throw new ImportException(
-					String.format("Failed to create the file (and parents) at [%s] for document [%s](%s)", targetFile,
-						this.cmfObject.getLabel(), this.cmfObject.getId()));
+				throw new ImportException(String.format("Failed to create the file (and parents) at [%s] for %s",
+					targetFile, this.cmfObject.getDescription()));
 			}
 			if (!targetFile.exists()) {
-				throw new ImportException(
-					String.format("A non-file object already exists at [%s] for document [%s](%s)", targetFile,
-						this.cmfObject.getLabel(), this.cmfObject.getId()));
+				throw new ImportException(String.format("A non-file object already exists at [%s] for %s", targetFile,
+					this.cmfObject.getDescription()));
 			}
 
 			if (this.factory.isFailOnCollisions()) {
@@ -99,10 +97,8 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 						new ImportOutcome(ImportResult.DUPLICATE, getNewId(targetFile), targetFile.getAbsolutePath()));
 				}
 			} catch (Exception e) {
-				throw new ImportException(
-					String.format("Failed to validate the dates and owners at [%s] for document [%s](%s)", targetFile,
-						this.cmfObject.getLabel(), this.cmfObject.getId()),
-					e);
+				throw new ImportException(String.format("Failed to validate the dates and owners at [%s] for %s",
+					this.cmfObject.getDescription()), e);
 			}
 		}
 
@@ -112,8 +108,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 			contents = ctx.getContentStreams(this.cmfObject);
 		} catch (Exception e) {
 			throw new ImportException(
-				String.format("Failed to obtain the list of content streams for document [%s](%s)",
-					this.cmfObject.getLabel(), this.cmfObject.getId()),
+				String.format("Failed to obtain the list of content streams for %s", this.cmfObject.getDescription()),
 				e);
 		}
 
@@ -131,18 +126,16 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 				try {
 					Files.copy(src.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				} catch (IOException e) {
-					throw new ImportException(
-						String.format("Failed to copy the contents from [%s] to [%s] for document [%s](%s)", src,
-							targetFile, this.cmfObject.getLabel(), this.cmfObject.getId()),
-						e);
+					throw new ImportException(String.format("Failed to copy the contents from [%s] to [%s] for %s", src,
+						targetFile, this.cmfObject.getDescription()), e);
 				}
 			} else {
 				try (InputStream in = h.openInput()) {
 					Files.copy(in, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				} catch (IOException e) {
 					throw new ImportException(
-						String.format("Failed to copy the default content object into [%s] for document [%s](%s)",
-							targetFile, this.cmfObject.getLabel(), this.cmfObject.getId()),
+						String.format("Failed to copy the default content object into [%s] for %s", targetFile,
+							this.cmfObject.getDescription()),
 						e);
 				}
 			}
@@ -151,10 +144,8 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 		try {
 			applyAttributes(targetFile, translator);
 		} catch (Exception e) {
-			throw new ImportException(
-				String.format("Failed to apply attributes to the target file [%s] for %s [%s](%s)", targetFile,
-					this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()),
-				e);
+			throw new ImportException(String.format("Failed to apply attributes to the target file [%s] for %s",
+				targetFile, this.cmfObject.getDescription()), e);
 		}
 		return Collections.singleton(new ImportOutcome(created ? ImportResult.CREATED : ImportResult.UPDATED,
 			getNewId(targetFile), targetFile.getAbsolutePath()));
