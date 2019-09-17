@@ -31,7 +31,8 @@ import com.armedia.caliente.store.CmfValue;
 
 public enum ExportSetting implements TransferEngineSetting {
 	//
-	FROM(CmfValue.Type.STRING),
+	FROM(CmfValue.Type.STRING), //
+	METADATA_XML(CmfValue.Type.BOOLEAN, Boolean.FALSE), //
 	//
 	;
 
