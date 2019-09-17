@@ -26,14 +26,19 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.exporter;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
 public abstract class ExportContextFactory< //
 	SESSION, //
@@ -43,9 +48,41 @@ public abstract class ExportContextFactory< //
 	ENGINE extends ExportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?, ?> //
 > extends TransferContextFactory<SESSION, VALUE, CONTEXT, ENGINE> {
 
+	private final Set<CmfObject.Archetype> companionMetadata;
+
 	protected ExportContextFactory(ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?> objectStore,
 		CmfContentStore<?, ?> contentStore, Logger output, WarningTracker tracker) throws Exception {
 		super(engine, settings, session, objectStore, contentStore, null, output, tracker);
+
+		Set<CmfObject.Archetype> companionMetadata = EnumSet.noneOf(CmfObject.Archetype.class);
+		if (contentStore.isSupportsFileAccess()) {
+			if (settings.hasValue(ExportSetting.METADATA_XML)) {
+				for (CmfObject.Archetype t : settings.getEnums(ExportSetting.METADATA_XML, CmfObject.Archetype.class,
+					(o, e) -> null)) {
+					if (t != null) {
+						companionMetadata.add(t);
+					}
+				}
+			}
+		}
+		Set<CmfObject.Archetype> allowedCompanionMetadata = getAllowedCompanionMetadata();
+		if ((allowedCompanionMetadata != null) && !allowedCompanionMetadata.isEmpty()) {
+			companionMetadata.retainAll(allowedCompanionMetadata);
+		}
+		if (this.log.isDebugEnabled()) {
+			this.log.debug("Companion metadata that will be generated for this context factory instance ({}): {}",
+				getClass().getSimpleName(), companionMetadata);
+		}
+		this.companionMetadata = Tools.freezeSet(companionMetadata);
+	}
+
+	protected Set<CmfObject.Archetype> getAllowedCompanionMetadata() {
+		return EnumSet.of(CmfObject.Archetype.FOLDER, CmfObject.Archetype.DOCUMENT);
+	}
+
+	public final boolean isSupportsCompanionMetadata(CmfObject.Archetype type) {
+		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
+		return !this.companionMetadata.contains(type);
 	}
 
 	@Override
