@@ -77,6 +77,11 @@ public abstract class AbstractCopyRenameValue extends ConditionalAction {
 		String to = StringUtils.strip(Tools.toString(ActionTools.eval(getTo(), ctx)));
 		if (StringUtils.isEmpty(to)) { throw new ActionException("No name expression given for element to create"); }
 
+		if (StringUtils.equals(from, to)) {
+			// Nothing to do here...
+			return;
+		}
+
 		final Map<String, DynamicValue> values = getCandidateValues(ctx);
 		DynamicValue src = values.get(Tools.toString(from));
 		if (src != null) {

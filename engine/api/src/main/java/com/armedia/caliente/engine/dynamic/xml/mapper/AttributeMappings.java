@@ -36,7 +36,7 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.dynamic.xml.XmlSchema;
+import com.armedia.caliente.engine.tools.xml.XmlSchema;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "attributeMappings.t", propOrder = {

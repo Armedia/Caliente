@@ -78,6 +78,7 @@ public class CLIGroup {
 		.add(CLIParam.direct_fs) //
 		.add(CLIParam.manifest_outcomes_export) //
 		.add(CLIParam.from) //
+		.add(CLIParam.metadata_xml) //
 	;
 
 	public static final OptionGroup IMPORT_COMMON = new OptionGroupImpl("Common Import") //

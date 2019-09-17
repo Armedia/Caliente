@@ -204,10 +204,8 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 			// error from DFC, and therefore specialized code is required to handle it
 			List<CmfProperty<IDfValue>> properties = new ArrayList<>();
 			getDataProperties(ctx, properties, typedObject);
-			for (CmfProperty<IDfValue> property : properties) {
-				// This mechanism overwrites properties, and intentionally so
-				object.setProperty(property);
-			}
+			// This mechanism overwrites properties, and intentionally so
+			properties.forEach(object::setProperty);
 
 			return true;
 		} catch (DfException e) {

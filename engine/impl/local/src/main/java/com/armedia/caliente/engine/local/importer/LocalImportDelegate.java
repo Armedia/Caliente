@@ -353,4 +353,24 @@ public abstract class LocalImportDelegate extends
 			aclView.getAcl();
 		}
 	}
+
+	/*
+	protected void saveCompanionMetadata() {
+		try {
+			CmfContentStream metadata = new CmfContentStream(0, "$metadata$", 0, null);
+			metadata.setExtension("xml");
+			metadata.setProperty(CmfContentStream.BASENAME, "metadata");
+			CmfContentStore<?, ?>.Handle h = streamStore.getHandle(getTranslator(), marshaled, metadata);
+			try (OutputStream out = h.getOutputStream()) {
+				if (out != null) {
+					XmlBase.storeToXML(new MetadataT(encoded), out);
+				}
+			}
+		} catch (Exception e) {
+			throw new ExportException(
+				String.format("Failed to marshal the XML-formatted metadata for %s", marshaled.getDescription()), e);
+		}
+		break;
+	}
+	*/
 }
