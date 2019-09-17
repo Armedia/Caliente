@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
-import com.armedia.caliente.engine.dynamic.TestObjectContext;
+import com.armedia.caliente.engine.dynamic.transformer.TestObjectContext;
 
 public class ConditionalActionTest {
 

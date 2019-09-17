@@ -25,13 +25,55 @@
  * #L%
  *******************************************************************************/
 
-package com.armedia.caliente.engine.dynamic.xml;
+package com.armedia.caliente.engine.tools.xml;
 
-import javax.xml.bind.annotation.XmlRegistry;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
 
-@XmlRegistry
-public class ObjectFactory {
+import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectRef;
 
-	public static final String NAMESPACE = "http://www.armedia.com/ns/caliente/engine";
+@XmlSchema("engine.xsd")
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "objectRef.t", propOrder = {
+	"id"
+})
+public class ObjectRefT {
 
+	@XmlAttribute(name = "type", required = true)
+	protected CmfObject.Archetype archetype;
+
+	@XmlValue
+	protected String id;
+
+	public ObjectRefT() {
+	}
+
+	public ObjectRefT(CmfObjectRef ref) {
+		this.archetype = ref.getType();
+		this.id = ref.getId();
+	}
+
+	public CmfObjectRef getObjectRef() {
+		return new CmfObjectRef(this.archetype, this.id);
+	}
+
+	public CmfObject.Archetype getArchetype() {
+		return this.archetype;
+	}
+
+	public void setArchetype(CmfObject.Archetype archetype) {
+		this.archetype = archetype;
+	}
+
+	public String getId() {
+		return this.id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
 }

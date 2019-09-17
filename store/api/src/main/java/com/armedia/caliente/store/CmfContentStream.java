@@ -41,6 +41,7 @@ import com.armedia.commons.utilities.Tools;
 public final class CmfContentStream implements Comparable<CmfContentStream> {
 
 	public static final String DEFAULT_RENDITION = "$main$";
+	public static final String BASENAME = "$basename$";
 
 	private final String renditionIdentifier;
 	private final int renditionPage;

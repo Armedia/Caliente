@@ -27,6 +27,8 @@
 package com.armedia.caliente.engine.exporter;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,6 +46,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import javax.xml.bind.JAXBException;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -60,6 +64,9 @@ import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
+import com.armedia.caliente.engine.tools.xml.MetadataT;
+import com.armedia.caliente.engine.tools.xml.XmlBase;
+import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
@@ -511,6 +518,23 @@ public abstract class ExportEngine<//
 
 			if (this.log.isDebugEnabled()) {
 				this.log.debug("Executing supplemental storage for {}", logLabel);
+			}
+
+			if (ctx.isSupportsCompanionMetadata(type)) {
+				CmfContentStream md = new CmfContentStream(0, "metadata", 1);
+				md.setProperty(CmfContentStream.BASENAME, "metadata." + type.name());
+				md.setExtension("xml");
+				CmfContentStore<?, ?>.Handle h = streamStore.getHandle(CmfAttributeTranslator.CMFVALUE_TRANSLATOR,
+					encoded, md);
+				try (OutputStream out = h.getOutputStream()) {
+					XmlBase.storeToXML(new MetadataT(encoded), out);
+				} catch (JAXBException e) {
+					this.log.warn("Failed to construct the XML companion metadata for {}", marshaled.getDescription(),
+						e);
+				} catch (IOException e) {
+					this.log.warn("Failed to write out the XML companion metadata for {}", marshaled.getDescription(),
+						e);
+				}
 			}
 
 			try {

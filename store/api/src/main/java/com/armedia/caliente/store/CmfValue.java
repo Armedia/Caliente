@@ -30,6 +30,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.EnumMap;
@@ -117,6 +118,15 @@ public final class CmfValue {
 			protected Object doGetValue(CmfValue value) {
 				return value.asBinary();
 			}
+
+			@Override
+			protected boolean equals(Object a, Object b) {
+				if (a == b) { return true; }
+				if ((a == null) || (b == null)) { return false; }
+				if (!(a instanceof byte[])) { return false; }
+				if (!(b instanceof byte[])) { return false; }
+				return Arrays.equals((byte[]) a, (byte[]) b);
+			}
 		},
 		OTHER("oth") {
 			@Override
@@ -179,6 +189,10 @@ public final class CmfValue {
 						value.getDataType(), name()),
 					e);
 			}
+		}
+
+		protected boolean equals(Object a, Object b) {
+			return Tools.equals(a, b);
 		}
 
 		protected abstract Object doGetValue(CmfValue value) throws Exception;
@@ -416,7 +430,7 @@ public final class CmfValue {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		CmfValue other = CmfValue.class.cast(obj);
 		if (this.type != other.type) { return false; }
-		if (!Tools.equals(this.value, other.value)) { return false; }
+		if (!this.type.equals(this.value, other.value)) { return false; }
 		return true;
 	}
 

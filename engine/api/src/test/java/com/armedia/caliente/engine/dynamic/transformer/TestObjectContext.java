@@ -24,55 +24,27 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine.exporter;
+package com.armedia.caliente.engine.dynamic.transformer;
 
-import com.armedia.caliente.engine.TransferEngineSetting;
-import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.store.CmfValueMapper;
 
-public enum ExportSetting implements TransferEngineSetting {
-	//
-	FROM(CmfValue.Type.STRING), //
-	METADATA_XML(CmfValue.Type.BOOLEAN, Boolean.FALSE), //
-	//
-	;
+public class TestObjectContext extends DynamicElementContext {
 
-	private final String label;
-	private final Object defaultValue;
-	private final CmfValue.Type type;
-	private final boolean required;
+	private final TestObjectFacade object;
 
-	private ExportSetting(CmfValue.Type type) {
-		this(type, null);
+	public TestObjectContext() {
+		this(new TestAttributeMapper());
 	}
 
-	private ExportSetting(CmfValue.Type type, Object defaultValue) {
-		this(type, defaultValue, false);
-	}
-
-	private ExportSetting(CmfValue.Type type, Object defaultValue, boolean required) {
-		this.label = name().toLowerCase();
-		this.defaultValue = defaultValue;
-		this.type = type;
-		this.required = required;
+	public TestObjectContext(CmfValueMapper mapper) {
+		super(null, new TestObjectFacade(), mapper, null);
+		this.object = TestObjectFacade.class.cast(super.getDynamicObject());
 	}
 
 	@Override
-	public final String getLabel() {
-		return this.label;
+	public TestObjectFacade getDynamicObject() {
+		return this.object;
 	}
 
-	@Override
-	public final Object getDefaultValue() {
-		return this.defaultValue;
-	}
-
-	@Override
-	public CmfValue.Type getType() {
-		return this.type;
-	}
-
-	@Override
-	public boolean isRequired() {
-		return this.required;
-	}
 }

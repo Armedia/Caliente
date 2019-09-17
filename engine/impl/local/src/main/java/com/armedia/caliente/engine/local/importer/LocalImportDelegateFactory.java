@@ -40,12 +40,24 @@ public class LocalImportDelegateFactory
 	extends ImportDelegateFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportEngine> {
 
 	private final boolean includeAllVersions;
+	private final boolean includeAllStreams;
+	private final boolean includeMetadata;
 	private final boolean failOnCollisions;
 
 	public LocalImportDelegateFactory(LocalImportEngine engine, CfgTools configuration) throws IOException {
 		super(engine, configuration);
 		this.includeAllVersions = configuration.getBoolean(LocalSetting.INCLUDE_ALL_VERSIONS);
+		this.includeAllStreams = configuration.getBoolean(LocalSetting.INCLUDE_ALL_STREAMS);
+		this.includeMetadata = configuration.getBoolean(LocalSetting.INCLUDE_METADATA);
 		this.failOnCollisions = configuration.getBoolean(LocalSetting.FAIL_ON_COLLISIONS);
+	}
+
+	public final boolean isIncludeMetadata() {
+		return this.includeMetadata;
+	}
+
+	public final boolean isIncludeAllStreams() {
+		return this.includeAllStreams;
 	}
 
 	public final boolean isIncludeAllVersions() {

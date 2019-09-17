@@ -24,18 +24,14 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine.dynamic.xml;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+package com.armedia.caliente.engine.tools.xml;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+import javax.xml.bind.annotation.XmlRegistry;
 
-@Retention(RUNTIME)
-@Target({
-	TYPE
-})
-public @interface XmlSchema {
-	String value() default XmlBase.DEFAULT_SCHEMA;
+@XmlRegistry
+public class ObjectFactory {
+
+	public static final String NAMESPACE = "http://www.armedia.com/ns/caliente/engine";
+
 }

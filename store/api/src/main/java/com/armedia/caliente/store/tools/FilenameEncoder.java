@@ -30,7 +30,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -43,6 +46,7 @@ public final class FilenameEncoder {
 
 	private static final String WIN_INVALID_CHARS = "<>:\\|?*\"";
 	private static final Map<Character, String> WIN_ENCODER;
+	private static final Set<String> WIN_RESERVED;
 
 	static {
 		Map<Character, String> m = new HashMap<>();
@@ -62,6 +66,18 @@ public final class FilenameEncoder {
 			m.put(Character.valueOf((char) i), String.format("%%%02X", i));
 		}
 		WIN_ENCODER = Tools.freezeMap(m);
+
+		// Also invalid are CON, PRN, AUX, NUL, COM[1-9], LPT[1-9], CLOCK$
+		Set<String> s = new TreeSet<>();
+		s.add("con");
+		s.add("prn");
+		s.add("aux");
+		s.add("nul");
+		for (int i = 0; i < 9; i++) {
+			s.add("com" + i);
+			s.add("lpt" + i);
+		}
+		WIN_RESERVED = Tools.freezeSet(new LinkedHashSet<>(s));
 	}
 
 	public static String safeEncodeChar(Character c, boolean forWindows) {
@@ -85,7 +101,9 @@ public final class FilenameEncoder {
 			str = str.replaceAll("([\\.\\s])$", "$1_"); // Can't end with a dot or a space
 			str = str.replaceAll("^(\\\\s)", "_$1"); // Can't begin with a space
 
-			// Also invalid are CON, PRN, AUX, NUL, COM[1-9], LPT[1-9], CLOCK$
+			if (FilenameEncoder.WIN_RESERVED.contains(str.toLowerCase())) {
+				str = "_" + str;
+			}
 		}
 		return str;
 	}
