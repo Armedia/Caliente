@@ -74,6 +74,7 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 		settings.put(TransferSetting.LATEST_ONLY.getLabel(),
 			commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIParam.direct_fs));
 		settings.put(ExportSetting.FROM.getLabel(), commandValues.getStrings(CLIParam.from));
+		settings.put(ExportSetting.METADATA_XML.getLabel(), commandValues.getStrings(CLIParam.metadata_xml));
 		return true;
 	}
 

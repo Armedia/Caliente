@@ -30,15 +30,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.function.CheckedRunnable;
 
 public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperation<?>> extends CmfStore<OPERATION> {
 
@@ -265,10 +268,29 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 		/**
 		 * <p>
+		 * Sets the stream's contents to the data contained in the given {@link InputStream},
+		 * returning the number of bytes actually written out.
+		 * </p>
+		 * <p>
+		 * All {@link CmfContentStore} implementations <b>must</b> support this functionality.
+		 * </p>
+		 *
+		 * @return the number of bytes written out
+		 * @throws CmfStorageException
+		 */
+		public final long setContents(InputStream in) throws CmfStorageException {
+			return CmfContentStore.this.setContents(this.locator, in);
+		}
+
+		/**
+		 * <p>
 		 * Returns an {@link OutputStream} that can be used to write to the actual content file,
 		 * creating a new stream if it doesn't exist. If the underlying content store doesn't
-		 * support the modification or creation of new content streams, {@code null} will be
-		 * returned.
+		 * support the modification or creation of new content streams, a
+		 * {@link CmfStorageException} will be raised . Please note that the stream <b>must</b> be
+		 * {@link OutputStream#close() closed} properly, or this will leave dangling locks which can
+		 * cause other issues. Use of the {@code try-with-resources} construct is highly recommended
+		 * for safety.
 		 * </p>
 		 * <p>
 		 * All {@link CmfContentStore} implementations <b>must</b> support this functionality.
@@ -277,8 +299,8 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		 * @return an {@link OutputStream} that can be used to write to the actual content file
 		 * @throws CmfStorageException
 		 */
-		public final long setContents(InputStream in) throws CmfStorageException {
-			return CmfContentStore.this.setContents(this.locator, in);
+		public final OutputStream getOutputStream() throws CmfStorageException {
+			return CmfContentStore.this.getOutputStream(this.locator);
 		}
 
 		/**
@@ -460,26 +482,30 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 		// First, let's try a shortcut
 		if (isSupportsFileAccess()) {
-			final File f;
-			try {
-				f = getFile(locator);
-			} catch (IOException e) {
-				throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator), e);
-			}
-			try {
-				ensureParentExists(f);
-			} catch (IOException e) {
-				throw new CmfStorageException(
-					String.format("Failed to create the requisite directory structure for locator [%s]", locator), e);
-			}
-			try (OutputStream out = new FileOutputStream(f)) {
-				return IOUtils.copyLarge(in, out);
-			} catch (FileNotFoundException e) {
-				throw new CmfStorageException(
-					String.format("Failed to open an output stream to the file [%s]", f.getAbsolutePath()), e);
-			} catch (IOException e) {
-				throw new CmfStorageException(
-					String.format("Failed to copy the content from the file [%s]", f.getAbsolutePath()), e);
+			try (SharedAutoLock lock = autoSharedLock()) {
+				final File f;
+				try {
+					f = getFile(locator);
+				} catch (IOException e) {
+					throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator),
+						e);
+				}
+				try {
+					ensureParentExists(f);
+				} catch (IOException e) {
+					throw new CmfStorageException(
+						String.format("Failed to create the requisite directory structure for locator [%s]", locator),
+						e);
+				}
+				try (OutputStream out = new FileOutputStream(f)) {
+					return IOUtils.copyLarge(in, out);
+				} catch (FileNotFoundException e) {
+					throw new CmfStorageException(
+						String.format("Failed to open an output stream to the file [%s]", f.getAbsolutePath()), e);
+				} catch (IOException e) {
+					throw new CmfStorageException(
+						String.format("Failed to copy the content from the file [%s]", f.getAbsolutePath()), e);
+				}
 			}
 		}
 
@@ -509,6 +535,114 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	protected abstract long setContents(OPERATION operation, LOCATOR locator, InputStream in)
 		throws CmfStorageException;
+
+	protected final OutputStream getOutputStream(LOCATOR locator) throws CmfStorageException {
+		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		assertOpen();
+		validateLocator(locator);
+
+		// First, let's try a shortcut
+		OutputStream out = null;
+		final Lock lock = acquireSharedLock();
+		final OPERATION op;
+
+		boolean ok = false;
+		try {
+			if (isSupportsFileAccess()) {
+				op = null;
+				final File f;
+				try {
+					f = getFile(locator);
+				} catch (IOException e) {
+					throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator),
+						e);
+				}
+				try {
+					ensureParentExists(f);
+				} catch (IOException e) {
+					throw new CmfStorageException(
+						String.format("Failed to create the requisite directory structure for locator [%s]", locator),
+						e);
+				}
+				try {
+					out = new FileOutputStream(f);
+				} catch (FileNotFoundException e) {
+					throw new CmfStorageException(
+						String.format("Failed to open an output stream to the file [%s]", f.getAbsolutePath()), e);
+				}
+			} else {
+				op = newOperation(false);
+				out = getOutputStream(op, locator);
+			}
+			ok = true;
+		} finally {
+			if (!ok) {
+				lock.unlock();
+			}
+		}
+
+		return new FilterOutputStream(out) {
+			final boolean tx = ((op != null) && op.begin());
+			boolean ok = true;
+
+			private <T extends Throwable> void doWork(CheckedRunnable<T> r) throws T {
+				boolean o = false;
+				try {
+					r.runChecked();
+					o = true;
+				} finally {
+					this.ok &= o;
+				}
+			}
+
+			@Override
+			public void write(int b) throws IOException {
+				doWork(() -> super.write(b));
+			}
+
+			@Override
+			public void write(byte[] b) throws IOException {
+				doWork(() -> super.write(b));
+			}
+
+			@Override
+			public void write(byte[] b, int off, int len) throws IOException {
+				doWork(() -> super.write(b, off, len));
+			}
+
+			@Override
+			public void flush() throws IOException {
+				doWork(super::flush);
+			}
+
+			@Override
+			public void close() throws IOException {
+				try {
+					doWork(super::close);
+					if (this.tx && this.ok) {
+						doWork(op::commit);
+					}
+				} catch (CmfOperationException e) {
+					this.ok = false;
+					CmfContentStore.this.log
+						.warn("Failed to commit the transaction for setting the content for locator [{}]", locator, e);
+				} finally {
+					if (this.tx && !this.ok) {
+						try {
+							op.rollback();
+						} catch (CmfStorageException e) {
+							CmfContentStore.this.log.warn(
+								"Failed to rollback the transaction for setting the content for locator [{}]", locator,
+								e);
+						}
+					}
+					lock.unlock();
+				}
+			}
+		};
+	}
+
+	protected abstract OutputStream getOutputStream(OPERATION operation, LOCATOR locator) throws CmfStorageException;
 
 	protected final boolean isExists(LOCATOR locator) throws CmfStorageException {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }

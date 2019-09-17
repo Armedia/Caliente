@@ -33,7 +33,6 @@ package com.armedia.caliente.store;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -124,8 +123,8 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 	private final String label;
 	private final String subtype;
 	private final Set<String> secondaries;
-	private final Map<String, CmfAttribute<VALUE>> attributes = new HashMap<>();
-	private final Map<String, CmfProperty<VALUE>> properties = new HashMap<>();
+	private final Map<String, CmfAttribute<VALUE>> attributes = new LinkedHashMap<>();
+	private final Map<String, CmfProperty<VALUE>> properties = new LinkedHashMap<>();
 	private final CmfAttributeTranslator<VALUE> translator;
 	private final LazySupplier<String> description = new LazySupplier<>(this::renderDescription);
 	private final LazySupplier<String> string = new LazySupplier<>(this::renderString);
@@ -179,13 +178,15 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 		}
 		this.number = number;
 		this.name = name;
-		this.parentIds = Tools.freezeCollection(new ArrayList<>(parentIds));
+		this.parentIds = (parentIds != null ? Tools.freezeCollection(new ArrayList<>(parentIds))
+			: Collections.emptyList());
 		this.dependencyTier = dependencyTier;
 		this.historyId = Tools.coalesce(historyId, id);
 		this.historyCurrent = (historyId == null ? true : historyCurrent);
 		this.label = label;
 		this.subtype = subtype;
-		this.secondaries = Tools.freezeSet(new LinkedHashSet<>(secondaries));
+		this.secondaries = (secondaries != null ? Tools.freezeSet(new LinkedHashSet<>(secondaries))
+			: Collections.emptySet());
 		this.translator = translator;
 	}
 

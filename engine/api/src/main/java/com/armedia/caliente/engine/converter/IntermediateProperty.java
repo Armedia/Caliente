@@ -83,6 +83,7 @@ public enum IntermediateProperty implements Supplier<String>, CmfEncodeableName 
 	IS_REFERENCE(CmfValue.Type.BOOLEAN),
 	REF_TARGET(CmfValue.Type.STRING),
 	REF_VERSION(CmfValue.Type.STRING),
+	HEAD_NAME(CmfValue.Type.STRING),
 	//
 	;
 

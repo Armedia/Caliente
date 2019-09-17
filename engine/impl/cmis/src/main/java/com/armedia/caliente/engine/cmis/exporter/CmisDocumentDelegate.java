@@ -136,21 +136,34 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			try {
 				antecedentId.setValue(new CmfValue(CmfValue.Type.ID, Object.class.cast(this.antecedentId)));
 			} catch (ParseException e) {
-				throw new ExportException(String.format("Failed to create an object ID value for [%s] for %s",
-					this.antecedentId, getType(), getLabel(), getObjectId()));
+				throw new ExportException(String.format("Failed to create an object ID value from [%s] for %s",
+					this.antecedentId, object.getDescription()));
 			}
 			object.setAttribute(antecedentId);
 		}
-		CmfAttribute<CmfValue> current = new CmfAttribute<>(IntermediateAttribute.IS_LATEST_VERSION,
-			CmfValue.Type.BOOLEAN, false);
-		current.setValue(new CmfValue(this.object.isLatestVersion()));
-		object.setAttribute(current);
+		object.setAttribute(new CmfAttribute<>(IntermediateAttribute.IS_LATEST_VERSION, CmfValue.Type.BOOLEAN,
+			new CmfValue(this.object.isLatestVersion())));
 
-		CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
-			CmfValue.Type.BOOLEAN, false);
-		versionTreeRoot.setValue(
-			new CmfValue((this.antecedentId == null) || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)));
-		object.setProperty(versionTreeRoot);
+		Document headVersion = null;
+		if (this.object.isLatestVersion()) {
+			headVersion = this.object;
+		} else {
+			headVersion = this.successors.stream().filter(Document::isLatestVersion).findFirst().orElse(null);
+			if (headVersion == null) {
+				throw new ExportException(
+					String.format("Failed to find the latest version for [%s]", object.getDescription()));
+			}
+		}
+		object.setProperty(new CmfProperty<>(IntermediateProperty.HEAD_NAME, CmfValue.Type.STRING,
+			new CmfValue(headVersion.getName())));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT, CmfValue.Type.BOOLEAN,
+			new CmfValue((this.antecedentId == null) || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY))));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX, CmfValue.Type.INTEGER,
+			new CmfValue(this.previous.size())));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, CmfValue.Type.INTEGER,
+			new CmfValue(this.previous.size() + this.successors.size() + 1)));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, CmfValue.Type.INTEGER,
+			new CmfValue(this.previous.size() + this.successors.size())));
 
 		if (!this.object.isLatestVersion()) {
 			marshalParentsAndPaths(ctx, object, this.object.getObjectOfLatestVersion(false));
