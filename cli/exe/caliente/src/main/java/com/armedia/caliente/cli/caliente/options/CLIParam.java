@@ -334,8 +334,7 @@ public enum CLIParam implements Supplier<Option> {
 			.setValueSep(',') //
 			.setArgumentName("object-type") //
 			.setValueFilter(new EnumValueFilter<>(false, CmfObject.Archetype.class,
-				EnumSet.of(CmfObject.Archetype.DATASTORE, CmfObject.Archetype.USER, CmfObject.Archetype.GROUP,
-					CmfObject.Archetype.ACL, CmfObject.Archetype.TYPE, CmfObject.Archetype.FORMAT))) //
+				EnumSet.complementOf(EnumSet.of(CmfObject.Archetype.DOCUMENT, CmfObject.Archetype.FOLDER)))) //
 			.setDescription(
 				"Object types for which companion metadata (metadata.xml) files should be generated on export") //
 	), //
