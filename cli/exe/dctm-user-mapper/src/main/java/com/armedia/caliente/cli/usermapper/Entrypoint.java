@@ -26,12 +26,14 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.usermapper;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractEntrypoint;
+import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 
@@ -41,8 +43,9 @@ public class Entrypoint extends AbstractEntrypoint {
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 
 	@Override
-	public String getName() {
-		return "caliente-usermapper";
+	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionValues baseValues, String command,
+		OptionValues commandValies, Collection<String> positionals) {
+		return Arrays.asList(this.libLaunchHelper, this.dfcLaunchHelper);
 	}
 
 	@Override
@@ -58,6 +61,11 @@ public class Entrypoint extends AbstractEntrypoint {
 				Option.unwrap(CLIParam.values()) //
 			) //
 		;
+	}
+
+	@Override
+	public String getName() {
+		return "caliente-usermapper";
 	}
 
 	@Override

@@ -80,7 +80,7 @@ public class DctmTypeDumper {
 			t = t.getSuperType();
 		}
 		Collections.reverse(l);
-		return FileNameTools.reconstitute(l, false, false);
+		return FileNameTools.reconstitute(l, false, false, '/');
 	}
 
 	private boolean isLiteral(String s) {
