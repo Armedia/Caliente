@@ -97,7 +97,7 @@ public class EncryptCommandModule extends CommandModule<TransferEngineFactory<?,
 				if (pass == null) { return 1; }
 				password = new String(pass);
 				try {
-					System.out.printf("Encrypted Value (in brackets) = [%s]%n", password, encrypt(crypt, password));
+					System.out.printf("Encrypted Value (in brackets) = [%s]%n", encrypt(crypt, password));
 				} catch (CalienteException e) {
 					throw new CalienteException("Failed to encrypt the password value", e);
 				}
