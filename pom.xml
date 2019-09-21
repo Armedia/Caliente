@@ -32,7 +32,7 @@
 	</developers>
 
 	<scm>
-		<connection>scm:git:git@gitlab.armedia.com:caliente/caliente.git</connection>
+		<connection>scm:git:git@github.com:Armedia/Caliente.git</connection>
 	</scm>
 
 	<properties>
