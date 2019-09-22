@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.validation.Schema;
@@ -100,7 +99,7 @@ public class XmlImportDelegateFactory
 		}
 
 		Class<?> targetClass = target.getClass();
-		Marshaller m = JAXBContext.newInstance(targetClass).createMarshaller();
+		Marshaller m = XmlTools.getContext(targetClass).createMarshaller();
 		m.setSchema(XmlImportDelegateFactory.SCHEMA);
 		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 		m.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
