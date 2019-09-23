@@ -504,6 +504,11 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 	@Override
 	protected int loadObjects(JdbcOperation operation, final CmfObject.Archetype type, Collection<String> ids,
 		CmfObjectHandler<CmfValue> handler) throws CmfStorageException {
+		return loadObjects(operation, type, handler, ids, false);
+	}
+
+	protected int loadObjects(JdbcOperation operation, final CmfObject.Archetype type,
+		CmfObjectHandler<CmfValue> handler, Collection<String> ids, boolean useHistoryIds) throws CmfStorageException {
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
 
@@ -526,7 +531,11 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 					}
 				} else {
 					limitByIDs = true;
-					objectPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECTS_BY_ID));
+					final JdbcDialect.Query query = (useHistoryIds //
+						? JdbcDialect.Query.LOAD_OBJECTS_BY_HISTORY_ID
+						: JdbcDialect.Query.LOAD_OBJECTS_BY_ID //
+					);
+					objectPS = connection.prepareStatement(translateQuery(query));
 				}
 
 				secondariesPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_SECONDARIES));
@@ -746,7 +755,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 
 	@Override
 	protected int fixObjectNames(final JdbcOperation operation, final CmfNameFixer<CmfValue> nameFixer,
-		CmfObject.Archetype type, Set<String> ids) throws CmfStorageException {
+		CmfObject.Archetype type, Set<String> historyIds) throws CmfStorageException {
 		final AtomicInteger result = new AtomicInteger(0);
 		CmfObject.Archetype[] types = {
 			type
@@ -759,7 +768,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 				continue;
 			}
 
-			loadObjects(operation, currentType, ids, new CmfObjectHandler<CmfValue>() {
+			loadObjects(operation, currentType, new CmfObjectHandler<CmfValue>() {
 				@Override
 				public boolean newTier(int tierNumber) throws CmfStorageException {
 					return true;
@@ -774,7 +783,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 				public boolean handleObject(CmfObject<CmfValue> obj) throws CmfStorageException {
 					final String oldName = obj.getName();
 					final String newName = nameFixer.fixName(obj);
-					if ((newName != null) && !Tools.equals(oldName, newName)) {
+					if (!StringUtils.isEmpty(newName) && !Tools.equals(oldName, newName)) {
 						renameObject(operation, obj, newName);
 						result.incrementAndGet();
 						try {
@@ -784,6 +793,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 							JdbcObjectStore.this.log.warn(
 								"Exception caught while invoking the nameFixed() callback for {}", obj.getDescription(),
 								e);
+							if (nameFixer.handleException(e)) { return false; }
 						}
 					}
 					return true;
@@ -803,7 +813,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 				public boolean endTier(int tierNum, boolean ok) throws CmfStorageException {
 					return true;
 				}
-			});
+			}, historyIds, true);
 
 		}
 		return result.get();
@@ -1723,48 +1733,6 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 		String q = translateOptionalQuery(query);
 		if (q == null) { throw new IllegalStateException(String.format("Required query [%s] is missing", query)); }
 		return q;
-	}
-
-	@Override
-	protected Map<CmfObject.Archetype, Map<String, String>> getRenameMappings(JdbcOperation operation)
-		throws CmfStorageException {
-		final Connection c = operation.getConnection();
-		final QueryRunner qr = JdbcTools.getQueryRunner();
-		try {
-			return qr.query(c, translateQuery(JdbcDialect.Query.LOAD_RENAME_MAPPINGS), (rs) -> {
-				Map<CmfObject.Archetype, Map<String, String>> ret = new EnumMap<>(CmfObject.Archetype.class);
-				while (rs.next()) {
-					String id = rs.getString("object_id");
-					if (rs.wasNull()) {
-						continue;
-					}
-					String name = rs.getString("new_name");
-					if (rs.wasNull()) {
-						continue;
-					}
-
-					CmfObjectRef ref = JdbcTools.decodeDatabaseId(id);
-					Map<String, String> m = ret.get(ref.getType());
-					if (m == null) {
-						m = new HashMap<>();
-						ret.put(ref.getType(), m);
-					}
-
-					m.put(ref.getId(), name);
-				}
-
-				// Freeze the maps
-				Map<CmfObject.Archetype, Map<String, String>> frozen = new EnumMap<>(CmfObject.Archetype.class);
-				for (CmfObject.Archetype t : ret.keySet()) {
-					Map<String, String> m = ret.get(t);
-					frozen.put(t, Tools.freezeMap(m, true));
-				}
-				ret = Tools.freezeMap(frozen);
-				return ret;
-			});
-		} catch (SQLException e) {
-			throw new CmfStorageException("Failed to retrieve the next cached target in the given result set", e);
-		}
 	}
 
 	@Override

@@ -81,10 +81,6 @@ public enum CLIParam implements Supplier<Option> {
 				+ "\"${name}${fixChar}${id}\"") //
 			.setDefault("${name}${fixChar}${id}") //
 	), //
-	historical(
-		new OptionImpl() //
-			.setDescription("Apply the fix for all versions, using the name from the CURRENT version") //
-	), //
 	target(
 		new OptionImpl() //
 			.setMinArguments(1) //

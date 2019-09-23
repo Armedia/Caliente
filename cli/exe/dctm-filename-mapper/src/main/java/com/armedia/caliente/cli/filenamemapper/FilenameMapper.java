@@ -248,7 +248,6 @@ class FilenameMapper {
 			final FilenameDeduplicator deduplicator = new FilenameDeduplicator(this.idValidator,
 				cli.isPresent(CLIParam.ignore_case));
 
-			final String entryIdAttribute = (cli.isPresent(CLIParam.historical) ? "i_chronicle_id" : "r_object_id");
 			IDfSession session = dfcPool.acquireSession();
 			final Runtime runtime = Runtime.getRuntime();
 			final Properties finalMap = new Properties();
@@ -271,7 +270,7 @@ class FilenameMapper {
 						while (query.hasNext()) {
 							IDfTypedObject o = query.next();
 							final boolean folderIdRepeating = o.isAttrRepeating("i_folder_id");
-							String entryId = o.getString(entryIdAttribute);
+							String entryId = o.getString("i_chronicle_id");
 							String name = o.getString("object_name");
 
 							// First things first: make sure the filename is fixed

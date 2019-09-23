@@ -66,7 +66,6 @@ import com.armedia.caliente.engine.tools.DefaultNameFixer;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectHandler;
@@ -549,7 +548,6 @@ public abstract class ImportEngine<//
 				continue;
 			}
 			output.info("Trying to {} {} {} names...", verb, mappings.size(), t.name());
-			// TODO: The keys may not be object-ID based ... fix the generated table?
 			final int fixes = objectStore.fixObjectNames(nameFixer, t, mappings.keySet());
 			output.info("Modified {} {} objects", fixes, t.name());
 		}
@@ -883,10 +881,6 @@ public abstract class ImportEngine<//
 
 	protected boolean abortImport(CmfObject.Archetype type, long errors) {
 		return false;
-	}
-
-	protected CmfNameFixer<VALUE> getNameFixer(Logger output) {
-		return null;
 	}
 
 	protected abstract SchemaService newSchemaService(SESSION session) throws SchemaServiceException;

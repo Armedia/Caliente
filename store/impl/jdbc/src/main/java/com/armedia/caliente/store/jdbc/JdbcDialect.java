@@ -364,6 +364,9 @@ public abstract class JdbcDialect {
 		LOAD_OBJECTS_BY_ID( //
 			null),
 
+		LOAD_OBJECTS_BY_HISTORY_ID( //
+			null),
+
 		LOAD_OBJECT_NAMES_BY_ID( //
 			null),
 
