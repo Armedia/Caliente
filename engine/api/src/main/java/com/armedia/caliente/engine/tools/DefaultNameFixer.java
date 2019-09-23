@@ -42,7 +42,7 @@ public class DefaultNameFixer implements CmfNameFixer<CmfValue> {
 				final String T = matcher.group(1);
 				final CmfObject.Archetype t;
 				try {
-					t = CmfObject.Archetype.valueOf(T);
+					t = CmfObject.Archetype.decode(T);
 				} catch (Exception e) {
 					if (DefaultNameFixer.LOG != null) {
 						DefaultNameFixer.LOG.warn("Unsupported object type found [{}] in key [{}] (value = [{}])", T,
