@@ -59,7 +59,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
-import org.apache.commons.text.StringTokenizer;
 
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
@@ -362,37 +361,6 @@ public class AlfImportDelegateFactory
 		} catch (Exception e) {
 			throw new ImportException(String.format("Failed to serialize the file to XML: %s", item), e);
 		}
-	}
-
-	@SuppressWarnings("unused")
-	private final String resolveFixedNames(final AlfImportContext ctx, String cmsPath, Path idPath)
-		throws ImportException {
-		if ((idPath != null) && (idPath.getNameCount() > 0)) {
-			// First things first: tokenize each of them
-			final int nameCount = idPath.getNameCount();
-			List<String> names = new StringTokenizer(cmsPath, '/').getTokenList();
-			if (names.size() > nameCount) {
-				// WTF?!?
-				throw new ImportException(String.format(
-					"The CMS path [%s] has a more components than the ID path [%s] - this is an export error", cmsPath,
-					idPath.toString()));
-			}
-
-			// We will only resolve however many components are present in the CMS path
-			StringBuilder b = new StringBuilder();
-			for (int i = 0; i < names.size(); i++) {
-				final String folderId = idPath.getName(i).toString();
-				String folderName = names.get(i);
-				// If we're still resolving valid IDs...
-				final String altName = ctx.getAlternateName(CmfObject.Archetype.FOLDER, folderId);
-				if ((altName != null) && !Tools.equals(altName, folderName)) {
-					folderName = altName;
-				}
-				(i > 0 ? b.append('/') : b).append(folderName);
-			}
-			cmsPath = b.toString();
-		}
-		return cmsPath;
 	}
 
 	private final String resolveTreeIds(final AlfImportContext ctx, String cmsPath) throws ImportException {

@@ -55,10 +55,6 @@ public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImport
 			streamStore, batchPosition);
 	}
 
-	public final String getAlternateName(CmfObject.Archetype type, String id) throws ImportException {
-		return getFactory().getAlternateName(type, id);
-	}
-
 	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean current)
 		throws ImportException {
 		return getFactory().getObjectNames(refs, current);
