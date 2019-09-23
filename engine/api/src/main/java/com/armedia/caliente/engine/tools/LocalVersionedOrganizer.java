@@ -38,10 +38,13 @@ import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.tools.FilenameFixer;
 
 public class LocalVersionedOrganizer extends LocalOrganizer {
 
 	public static final String NAME = "versionedlocalfs";
+
+	private final FilenameFixer fixer = new FilenameFixer(true);
 
 	public LocalVersionedOrganizer() {
 		super(LocalVersionedOrganizer.NAME);
@@ -57,21 +60,33 @@ public class LocalVersionedOrganizer extends LocalOrganizer {
 		final List<String> container = super.calculateContainerSpec(translator, object, info);
 
 		// Next step: add the object name
-		CmfProperty<?> name = object.getProperty(IntermediateProperty.HEAD_NAME);
-		if (name == null) {
-			name = object.getAttribute(
-				translator.getAttributeNameMapper().decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
+		String objectName = null;
+		CmfProperty<?> name = null;
+
+		if (StringUtils.isEmpty(objectName)) {
+			name = object.getProperty(IntermediateProperty.HEAD_NAME);
+			if (name != null) {
+				objectName = name.getValue().toString();
+			}
 		}
 
-		String objectName = null;
-		if (name == null) {
-			objectName = object.getName();
-		} else {
-			objectName = name.getValue().toString();
+		if (StringUtils.isEmpty(objectName)) {
+			name = object.getAttribute(
+				translator.getAttributeNameMapper().decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
+			if (name != null) {
+				objectName = name.getValue().toString();
+			}
 		}
+
+		if (StringUtils.isEmpty(objectName)) {
+			objectName = object.getName();
+		}
+
 		if (StringUtils.isEmpty(objectName)) {
 			// Uh-oh ... an empty filename!!! Can't have that!!
 			objectName = String.format("[history-%s]", object.getHistoryId());
+		} else {
+			objectName = this.fixer.fixName(objectName);
 		}
 		container.add(objectName);
 
