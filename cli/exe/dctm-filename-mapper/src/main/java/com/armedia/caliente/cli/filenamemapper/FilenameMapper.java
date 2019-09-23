@@ -67,7 +67,7 @@ class FilenameMapper {
 	private static final String DEFAULT_DEDUP_PATTERN = "${name}${fixChar}${id}";
 
 	private static final String ALL_DQL = //
-		"         select r_object_id, object_name, i_folder_id " + //
+		"         select i_chronicle_id, r_object_id, object_name, i_folder_id " + //
 			"       from dm_sysobject " + //
 			"      where not folder('/Integration', DESCEND) " + //
 			"        and not folder('/dm_bof_registry', DESCEND) " + //
@@ -248,6 +248,7 @@ class FilenameMapper {
 			final FilenameDeduplicator deduplicator = new FilenameDeduplicator(this.idValidator,
 				cli.isPresent(CLIParam.ignore_case));
 
+			final boolean historical = cli.isPresent(CLIParam.historical);
 			IDfSession session = dfcPool.acquireSession();
 			final Runtime runtime = Runtime.getRuntime();
 			final Properties finalMap = new Properties();
@@ -270,7 +271,7 @@ class FilenameMapper {
 						while (query.hasNext()) {
 							IDfTypedObject o = query.next();
 							final boolean folderIdRepeating = o.isAttrRepeating("i_folder_id");
-							String entryId = o.getString("r_object_id");
+							String entryId = o.getString(historical ? "i_chronicle_id" : "r_object_id");
 							String name = o.getString("object_name");
 
 							// First things first: make sure the filename is fixed
