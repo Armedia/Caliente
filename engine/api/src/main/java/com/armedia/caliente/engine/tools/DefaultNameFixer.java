@@ -103,11 +103,12 @@ public class DefaultNameFixer implements CmfNameFixer<CmfValue> {
 		// to override whatever was originally set for this object
 		if (StringUtils.isEmpty(fixedName)) {
 			Map<String, String> mappings = getMappings(dataObject.getType());
-			if ((mappings == null) || mappings.isEmpty()) { return null; }
-			fixedName = mappings.get(dataObject.getId());
-			if (fixedName == null) {
-				// No fix for the specific object? What about the history as a whole?
-				fixedName = mappings.get(dataObject.getHistoryId());
+			if ((mappings != null) && !mappings.isEmpty()) {
+				fixedName = mappings.get(dataObject.getId());
+				if (fixedName == null) {
+					// No fix for the specific object? What about the history as a whole?
+					fixedName = mappings.get(dataObject.getHistoryId());
+				}
 			}
 		}
 		if (StringUtils.isEmpty(fixedName)) {
