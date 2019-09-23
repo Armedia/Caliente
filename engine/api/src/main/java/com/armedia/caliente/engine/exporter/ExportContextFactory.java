@@ -98,12 +98,7 @@ public abstract class ExportContextFactory< //
 				}
 			}
 		}
-		this.nameFixer = new DefaultNameFixer(p) {
-			@Override
-			public void nameFixed(CmfObject<CmfValue> dataObject, String oldName, String newName) {
-				// TODO: Output a message?
-			}
-		};
+		this.nameFixer = new DefaultNameFixer(p);
 	}
 
 	protected Set<CmfObject.Archetype> getAllowedCompanionMetadata() {
