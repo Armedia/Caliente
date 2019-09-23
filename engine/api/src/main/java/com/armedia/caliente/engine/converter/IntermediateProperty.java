@@ -84,6 +84,7 @@ public enum IntermediateProperty implements Supplier<String>, CmfEncodeableName 
 	REF_TARGET(CmfValue.Type.STRING),
 	REF_VERSION(CmfValue.Type.STRING),
 	HEAD_NAME(CmfValue.Type.STRING),
+	FIXED_NAME(CmfValue.Type.STRING),
 	//
 	;
 
