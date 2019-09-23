@@ -21,48 +21,63 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class DefaultNameFixer implements CmfNameFixer<CmfValue> {
+public class DefaultNameFixer implements CmfNameFixer<CmfValue> {
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private static final Logger LOG = LoggerFactory.getLogger(CmfNameFixer.class);
 	private static final Pattern MAP_KEY_PARSER = Pattern.compile("^\\s*([^#\\s]+)\\s*#\\s*(.+)\\s*$");
 
+	private final Logger output;
 	private final Map<CmfObject.Archetype, Map<String, String>> idMap;
 
-	public DefaultNameFixer(Properties p) {
+	private static Map<CmfObject.Archetype, Map<String, String>> parseProperties(Properties p) {
 		Set<CmfObject.Archetype> keys = EnumSet.noneOf(CmfObject.Archetype.class);
 		Map<CmfObject.Archetype, Map<String, String>> idMap = new EnumMap<>(CmfObject.Archetype.class);
-		for (String key : p.stringPropertyNames()) {
-			final String fixedName = p.getProperty(key);
-			Matcher matcher = DefaultNameFixer.MAP_KEY_PARSER.matcher(key);
-			if (!matcher.matches()) {
-				continue;
+		if ((p != null) && !p.isEmpty()) {
+			for (String key : p.stringPropertyNames()) {
+				final String fixedName = p.getProperty(key);
+				Matcher matcher = DefaultNameFixer.MAP_KEY_PARSER.matcher(key);
+				if (!matcher.matches()) {
+					continue;
+				}
+				final String T = matcher.group(1);
+				final CmfObject.Archetype t;
+				try {
+					t = CmfObject.Archetype.valueOf(T);
+				} catch (Exception e) {
+					if (DefaultNameFixer.LOG != null) {
+						DefaultNameFixer.LOG.warn("Unsupported object type found [{}] in key [{}] (value = [{}])", T,
+							key, fixedName, e);
+					}
+					continue;
+				}
+				final String id = matcher.group(2);
+				Map<String, String> m = idMap.get(t);
+				if (m == null) {
+					m = new TreeMap<>();
+					idMap.put(t, m);
+					keys.add(t);
+				}
+				m.put(id, fixedName);
 			}
-			final String T = matcher.group(1);
-			final CmfObject.Archetype t;
-			try {
-				t = CmfObject.Archetype.valueOf(T);
-			} catch (Exception e) {
-				this.log.warn("Unsupported object type found [{}] in key [{}] (value = [{}])", T, key, fixedName, e);
-				continue;
-			}
-			final String id = matcher.group(2);
-			Map<String, String> m = idMap.get(t);
-			if (m == null) {
-				m = new TreeMap<>();
-				idMap.put(t, m);
-				keys.add(t);
-			}
-			m.put(id, fixedName);
 		}
 		for (CmfObject.Archetype t : keys) {
 			Map<String, String> m = idMap.get(t);
 			m = Tools.freezeMap(m);
 			idMap.put(t, m);
 		}
-		this.idMap = Tools.freezeMap(idMap);
+		return idMap;
 	}
 
-	public DefaultNameFixer(Map<CmfObject.Archetype, Map<String, String>> idMap) {
+	public DefaultNameFixer(Properties p) {
+		this(null, p);
+	}
+
+	public DefaultNameFixer(Logger output, Properties p) {
+		this(output, DefaultNameFixer.parseProperties(p));
+	}
+
+	public DefaultNameFixer(Logger output, Map<CmfObject.Archetype, Map<String, String>> idMap) {
+		this.output = output;
 		this.idMap = Tools.freezeMap(idMap, true);
 	}
 
@@ -102,6 +117,12 @@ public abstract class DefaultNameFixer implements CmfNameFixer<CmfValue> {
 			}
 		}
 		return fixedName;
+	}
+
+	@Override
+	public void nameFixed(CmfObject<CmfValue> dataObject, String oldName, String newName) {
+		this.output.info("Renamed {} with ID[{}] from [{}] to [{}]", dataObject.getType(), dataObject.getId(), oldName,
+			newName);
 	}
 
 	@Override
