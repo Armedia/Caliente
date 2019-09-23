@@ -54,6 +54,7 @@ import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferException;
+import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
@@ -635,11 +636,11 @@ public abstract class ImportEngine<//
 				}
 			}
 
-			if (!settings.getBoolean(ImportSetting.NO_FILENAME_MAP)) {
+			if (!settings.getBoolean(TransferSetting.NO_FILENAME_MAP)) {
 				final Properties p = new Properties();
 				final boolean loaded;
 				try {
-					loaded = MappingTools.loadMap(this.log, settings, ImportSetting.FILENAME_MAP, p);
+					loaded = MappingTools.loadMap(this.log, settings, TransferSetting.FILENAME_MAP, p);
 				} catch (TransferException e) {
 					throw new ImportException(e.getMessage(), e.getCause());
 				}

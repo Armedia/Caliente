@@ -53,6 +53,8 @@ public enum TransferSetting implements TransferEngineSetting {
 			return PrincipalType.GROUP.getDefaultMappingFile();
 		}
 	},
+	NO_FILENAME_MAP(CmfValue.Type.BOOLEAN, false),
+	FILENAME_MAP(CmfValue.Type.STRING),
 	//
 	;
 

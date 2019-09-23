@@ -35,8 +35,8 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.TransferException;
+import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
-import com.armedia.caliente.engine.importer.ImportSetting;
 import com.armedia.caliente.engine.tools.DefaultNameFixer;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfContentStore;
@@ -86,10 +86,10 @@ public abstract class ExportContextFactory< //
 		this.companionMetadata = Tools.freezeSet(companionMetadata);
 
 		final Properties p = new Properties();
-		if (settings.hasValue(ImportSetting.FILENAME_MAP)) {
+		if (!settings.getBoolean(TransferSetting.NO_FILENAME_MAP)) {
 			boolean loaded = false;
 			try {
-				loaded = MappingTools.loadMap(this.log, settings, ImportSetting.FILENAME_MAP, p);
+				loaded = MappingTools.loadMap(this.log, settings, TransferSetting.FILENAME_MAP, p);
 			} catch (TransferException e) {
 				throw new ExportException(e.getMessage(), e.getCause());
 			} finally {
