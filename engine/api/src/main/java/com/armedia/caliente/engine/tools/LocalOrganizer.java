@@ -39,11 +39,14 @@ import com.armedia.caliente.store.CmfContentOrganizer;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.tools.FilenameFixer;
 import com.armedia.commons.utilities.FileNameTools;
 
 public class LocalOrganizer extends CmfContentOrganizer {
 
 	public static final String NAME = "localfs";
+
+	private final FilenameFixer fixer = new FilenameFixer(true);
 
 	public LocalOrganizer() {
 		super(LocalOrganizer.NAME);
@@ -79,12 +82,48 @@ public class LocalOrganizer extends CmfContentOrganizer {
 		return ret;
 	}
 
+	protected <T> String getLeafName(CmfAttributeTranslator<T> translator, CmfObject<T> object) {
+		String objectName = null;
+		CmfProperty<?> name = null;
+
+		if (StringUtils.isEmpty(objectName)) {
+			name = object.getProperty(IntermediateProperty.FIXED_NAME);
+			if (name != null) {
+				objectName = name.getValue().toString();
+			}
+		}
+
+		if (StringUtils.isEmpty(objectName)) {
+			name = object.getProperty(IntermediateProperty.HEAD_NAME);
+			if (name != null) {
+				objectName = name.getValue().toString();
+			}
+		}
+
+		if (StringUtils.isEmpty(objectName)) {
+			name = object.getAttribute(
+				translator.getAttributeNameMapper().decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
+			if (name != null) {
+				objectName = name.getValue().toString();
+			}
+		}
+
+		if (StringUtils.isEmpty(objectName)) {
+			objectName = object.getName();
+		}
+
+		if (StringUtils.isEmpty(objectName)) {
+			// Uh-oh ... an empty filename!!! Can't have that!!
+			objectName = String.format("[history-%s]", object.getHistoryId());
+		} else {
+			objectName = this.fixer.fixName(objectName);
+		}
+		return objectName;
+	}
+
 	protected <T> String calculateBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentStream info) {
-		CmfAttribute<?> name = object.getAttribute(
-			translator.getAttributeNameMapper().decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
-		if (name == null) { return object.getName(); }
-		return name.getValue().toString();
+		return getLeafName(translator, object);
 	}
 
 	protected <T> String calculateExtension(CmfAttributeTranslator<T> translator, CmfObject<T> object,

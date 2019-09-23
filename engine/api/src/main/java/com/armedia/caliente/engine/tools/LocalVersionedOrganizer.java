@@ -31,20 +31,15 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
-import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObject.Archetype;
-import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.tools.FilenameFixer;
 
 public class LocalVersionedOrganizer extends LocalOrganizer {
 
 	public static final String NAME = "versionedlocalfs";
-
-	private final FilenameFixer fixer = new FilenameFixer(true);
 
 	public LocalVersionedOrganizer() {
 		super(LocalVersionedOrganizer.NAME);
@@ -60,35 +55,7 @@ public class LocalVersionedOrganizer extends LocalOrganizer {
 		final List<String> container = super.calculateContainerSpec(translator, object, info);
 
 		// Next step: add the object name
-		String objectName = null;
-		CmfProperty<?> name = null;
-
-		if (StringUtils.isEmpty(objectName)) {
-			name = object.getProperty(IntermediateProperty.HEAD_NAME);
-			if (name != null) {
-				objectName = name.getValue().toString();
-			}
-		}
-
-		if (StringUtils.isEmpty(objectName)) {
-			name = object.getAttribute(
-				translator.getAttributeNameMapper().decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
-			if (name != null) {
-				objectName = name.getValue().toString();
-			}
-		}
-
-		if (StringUtils.isEmpty(objectName)) {
-			objectName = object.getName();
-		}
-
-		if (StringUtils.isEmpty(objectName)) {
-			// Uh-oh ... an empty filename!!! Can't have that!!
-			objectName = String.format("[history-%s]", object.getHistoryId());
-		} else {
-			objectName = this.fixer.fixName(objectName);
-		}
-		container.add(objectName);
+		container.add(getLeafName(translator, object));
 
 		// Finally, add the version number, appending "CURRENT" if it's the current version
 		if (object.getType() == Archetype.DOCUMENT) {
