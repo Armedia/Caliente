@@ -41,6 +41,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -882,45 +883,20 @@ public abstract class ExportEngine<//
 					final SESSION session = baseSession.get();
 					Collection<String> sources = exportState.cfg.getStrings(ExportSetting.FROM);
 
-					// Does it support multiple sources?
-					if (sources.size() > 1) {
-						if (!this.supportsMultipleSources) {
-							throw new ExportException(String.format(
-								"This engine doesn't support multiple export sources, please use only one (found %d)",
-								sources.size()));
+					final AtomicBoolean first = new AtomicBoolean(true);
+					scanner.iterator(sources).forEachRemaining((line) -> {
+						if (!this.supportsMultipleSources && !first.get()) {
+							this.log.warn("This engine doesn't support multiple export sources, ignoring [{}]", line);
+							return;
 						}
-
-						scanner.iterator(sources).forEachRemaining((line) -> {
-							sourceCounter.set(0);
-							currentSource.set(line);
-							listener.sourceSearchStarted(line);
-							try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
-								s.forEach(submitter);
-							} catch (Exception e) {
-								thrown.set(e);
-							} finally {
-								try {
-									if (thrown.get() == null) {
-										listener.sourceSearchCompleted(line, sourceCounter.get(), totalCounter.get());
-									} else {
-										listener.sourceSearchFailed(line, sourceCounter.get(), totalCounter.get(),
-											thrown.get());
-									}
-								} finally {
-									thrown.set(null);
-								}
-							}
-						});
-					} else {
-						final String line = scanner.iterator(sources).next();
+						first.set(false);
 						sourceCounter.set(0);
 						currentSource.set(line);
 						listener.sourceSearchStarted(line);
 						try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
 							s.forEach(submitter);
-						} catch (final Exception e) {
+						} catch (Exception e) {
 							thrown.set(e);
-							throw e;
 						} finally {
 							try {
 								if (thrown.get() == null) {
@@ -933,7 +909,7 @@ public abstract class ExportEngine<//
 								thrown.set(null);
 							}
 						}
-					}
+					});
 				} catch (Exception e) {
 					thrown.set(e);
 					throw new ExportException("Failed to retrieve the objects to export", e);
