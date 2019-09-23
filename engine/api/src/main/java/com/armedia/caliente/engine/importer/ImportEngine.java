@@ -582,7 +582,12 @@ public abstract class ImportEngine<//
 
 				@Override
 				public String fixName(CmfObject<CmfValue> dataObject) throws CmfStorageException {
-					return mappings.get(dataObject.getId());
+					String result = mappings.get(dataObject.getId());
+					if (result == null) {
+						// No fix for the specific object? What about the history as a whole?
+						result = mappings.get(dataObject.getHistoryId());
+					}
+					return result;
 				}
 
 				@Override
