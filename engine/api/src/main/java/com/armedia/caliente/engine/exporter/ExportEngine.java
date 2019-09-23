@@ -905,7 +905,7 @@ public abstract class ExportEngine<//
 							}
 						});
 					} else {
-						final String line = sources.iterator().next();
+						final String line = scanner.iterator(sources).next();
 						sourceCounter.set(0);
 						currentSource.set(line);
 						listener.sourceSearchStarted(line);
