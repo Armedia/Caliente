@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.TransferContext;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 /**
@@ -78,6 +79,10 @@ public class ExportContext< //
 	public final ExportTarget getReferrent() {
 		if (this.referrents.isEmpty()) { return null; }
 		return this.referrents.peek();
+	}
+
+	public final String getFixedName(CmfObject<CmfValue> object) {
+		return getFactory().getFixedName(object);
 	}
 
 	ExportTarget popReferrent() {

@@ -34,5 +34,11 @@ public interface CmfNameFixer<VALUE> {
 
 	public void nameFixed(CmfObject<VALUE> dataObject, String oldName, String newName);
 
-	public boolean handleException(Exception e);
+	public default boolean handleException(Exception e) {
+		return false;
+	}
+
+	public default boolean isEmpty() {
+		return false;
+	}
 }

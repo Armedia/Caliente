@@ -27,16 +27,22 @@
 package com.armedia.caliente.engine.exporter;
 
 import java.util.EnumSet;
+import java.util.Properties;
 import java.util.Set;
 
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
+import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.importer.ImportSetting;
+import com.armedia.caliente.engine.tools.DefaultNameFixer;
+import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
@@ -50,7 +56,9 @@ public abstract class ExportContextFactory< //
 
 	protected static final Set<CmfObject.Archetype> DEFAULT_ALLOWED_METADATA = Tools
 		.freezeSet(EnumSet.of(CmfObject.Archetype.FOLDER, CmfObject.Archetype.DOCUMENT));
+
 	private final Set<CmfObject.Archetype> companionMetadata;
+	private final DefaultNameFixer nameFixer;
 
 	protected ExportContextFactory(ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?> objectStore,
 		CmfContentStore<?, ?> contentStore, Logger output, WarningTracker tracker) throws Exception {
@@ -76,6 +84,26 @@ public abstract class ExportContextFactory< //
 				getClass().getSimpleName(), companionMetadata);
 		}
 		this.companionMetadata = Tools.freezeSet(companionMetadata);
+
+		final Properties p = new Properties();
+		if (settings.hasValue(ImportSetting.FILENAME_MAP)) {
+			boolean loaded = false;
+			try {
+				loaded = MappingTools.loadMap(this.log, settings, ImportSetting.FILENAME_MAP, p);
+			} catch (TransferException e) {
+				throw new ExportException(e.getMessage(), e.getCause());
+			} finally {
+				if (!loaded) {
+					p.clear();
+				}
+			}
+		}
+		this.nameFixer = new DefaultNameFixer(p) {
+			@Override
+			public void nameFixed(CmfObject<CmfValue> dataObject, String oldName, String newName) {
+				// TODO: Output a message?
+			}
+		};
 	}
 
 	protected Set<CmfObject.Archetype> getAllowedCompanionMetadata() {
@@ -85,6 +113,10 @@ public abstract class ExportContextFactory< //
 	public final boolean isSupportsCompanionMetadata(CmfObject.Archetype type) {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		return this.companionMetadata.contains(type);
+	}
+
+	public final String getFixedName(CmfObject<CmfValue> object) {
+		return this.nameFixer.fixName(object);
 	}
 
 	@Override

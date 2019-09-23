@@ -60,6 +60,7 @@ import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
@@ -75,6 +76,7 @@ import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfObjectStore.LockStatus;
 import com.armedia.caliente.store.CmfObjectStore.StoreStatus;
+import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
@@ -495,6 +497,11 @@ public abstract class ExportEngine<//
 			}
 
 			CmfObject<CmfValue> encoded = getTranslator().encodeObject(marshaled);
+			String remediatedName = ctx.getFixedName(encoded);
+			if (!StringUtils.isEmpty(remediatedName)) {
+				encoded.setProperty(new CmfProperty<>(IntermediateProperty.FIXED_NAME, CmfValue.Type.STRING, false,
+					new CmfValue(remediatedName)));
+			}
 			if (transformer != null) {
 				try {
 					encoded = transformer.transform(objectStore.getValueMapper(),
