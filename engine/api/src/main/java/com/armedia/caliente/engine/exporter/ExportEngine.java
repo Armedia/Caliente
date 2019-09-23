@@ -856,69 +856,57 @@ public abstract class ExportEngine<//
 				final AtomicLong sourceCounter = new AtomicLong(0);
 				final AtomicLong totalCounter = new AtomicLong(0);
 				final AtomicReference<Exception> thrown = new AtomicReference<>(null);
-				try {
 
-					final Consumer<ExportTarget> submitter = (target) -> {
-						if (target == null) { return; }
-						if (target.isNull()) {
-							ExportEngine.this.log.warn("Skipping a null target: {}", target);
-							return;
-						}
+				final Consumer<ExportTarget> submitter = (target) -> {
+					if (target == null) { return; }
+					if (target.isNull()) {
+						ExportEngine.this.log.warn("Skipping a null target: {}", target);
+						return;
+					}
 
-						final long cTotal = totalCounter.incrementAndGet();
-						final long cSource = sourceCounter.incrementAndGet();
-						if ((cSource % reportCount) == 0) {
-							listener.sourceSearchMilestone(currentSource.get(), cSource, cTotal);
-						}
-						try {
-							worker.addWorkItem(target);
-						} catch (InterruptedException e) {
-							throw new RuntimeException(String.format("Interrupted while trying to queue up %s", target),
-								e);
-						}
-					};
+					final long cTotal = totalCounter.incrementAndGet();
+					final long cSource = sourceCounter.incrementAndGet();
+					if ((cSource % reportCount) == 0) {
+						listener.sourceSearchMilestone(currentSource.get(), cSource, cTotal);
+					}
+					try {
+						worker.addWorkItem(target);
+					} catch (InterruptedException e) {
+						throw new RuntimeException(String.format("Interrupted while trying to queue up %s", target), e);
+					}
+				};
 
-					LineScanner scanner = new LineScanner();
-					final SESSION session = baseSession.get();
-					Collection<String> sources = exportState.cfg.getStrings(ExportSetting.FROM);
+				LineScanner scanner = new LineScanner();
+				final SESSION session = baseSession.get();
+				Collection<String> sources = exportState.cfg.getStrings(ExportSetting.FROM);
 
-					try (Stream<String> stream = scanner.iterator(sources).stream()) {
-						if (!this.supportsMultipleSources) {
-							this.log.warn(
-								"This engine doesn't support multiple export sources, this export will only cover the first non-recurring source encountered");
-							stream.limit(1);
-						}
-						stream.forEach((line) -> {
-							sourceCounter.set(0);
-							currentSource.set(line);
-							listener.sourceSearchStarted(line);
-							try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
-								s.forEach(submitter);
-							} catch (Exception e) {
-								thrown.set(e);
-							} finally {
-								try {
-									if (thrown.get() == null) {
-										listener.sourceSearchCompleted(line, sourceCounter.get(), totalCounter.get());
-									} else {
-										listener.sourceSearchFailed(line, sourceCounter.get(), totalCounter.get(),
-											thrown.get());
-									}
-								} finally {
-									thrown.set(null);
+				try (Stream<String> stream = scanner.iterator(sources).stream()) {
+					if (!this.supportsMultipleSources) {
+						this.log.warn(
+							"This engine doesn't support multiple export sources, this export will only cover the first non-recurring source encountered");
+						stream.limit(1);
+					}
+					stream.forEach((line) -> {
+						sourceCounter.set(0);
+						currentSource.set(line);
+						listener.sourceSearchStarted(line);
+						try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
+							s.forEach(submitter);
+						} catch (Exception e) {
+							thrown.set(e);
+						} finally {
+							try {
+								if (thrown.get() == null) {
+									listener.sourceSearchCompleted(line, sourceCounter.get(), totalCounter.get());
+								} else {
+									listener.sourceSearchFailed(line, sourceCounter.get(), totalCounter.get(),
+										thrown.get());
 								}
+							} finally {
+								thrown.set(null);
 							}
-						});
-					}
-				} catch (Exception e) {
-					thrown.set(e);
-					throw new ExportException("Failed to retrieve the objects to export", e);
-				} finally {
-					if (thrown.get() == null) {
-						listener.searchCompleted(totalCounter.get());
-					} else {
-						listener.searchFailed(totalCounter.get(), thrown.get());
-					}
+						}
+					});
 				}
 			} finally {
 				List<ExportTarget> l = worker.waitForCompletion();
