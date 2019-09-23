@@ -41,6 +41,7 @@ import org.apache.commons.text.StringSubstitutor;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.FSEntry;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.FilenameCollisionResolver;
 import com.armedia.caliente.store.CmfObjectRef;
+import com.armedia.caliente.tools.FilenameFixer;
 import com.armedia.commons.utilities.Tools;
 
 public class NewFilenameMapper {
