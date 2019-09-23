@@ -9,12 +9,15 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObject.Archetype;
+import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
@@ -80,14 +83,25 @@ public abstract class DefaultNameFixer implements CmfNameFixer<CmfValue> {
 	@Override
 	public final String fixName(CmfObject<CmfValue> dataObject) {
 		if (dataObject == null) { return null; }
-		Map<String, String> mappings = getMappings(dataObject.getType());
-		if ((mappings == null) || mappings.isEmpty()) { return null; }
-		String result = mappings.get(dataObject.getId());
-		if (result == null) {
-			// No fix for the specific object? What about the history as a whole?
-			result = mappings.get(dataObject.getHistoryId());
+		String fixedName = null;
+		// Doing the mapping first, and then the property allows us
+		// to override whatever was originally set for this object
+		if (StringUtils.isEmpty(fixedName)) {
+			Map<String, String> mappings = getMappings(dataObject.getType());
+			if ((mappings == null) || mappings.isEmpty()) { return null; }
+			fixedName = mappings.get(dataObject.getId());
+			if (fixedName == null) {
+				// No fix for the specific object? What about the history as a whole?
+				fixedName = mappings.get(dataObject.getHistoryId());
+			}
 		}
-		return result;
+		if (StringUtils.isEmpty(fixedName)) {
+			CmfProperty<CmfValue> prop = dataObject.getProperty(IntermediateProperty.FIXED_NAME);
+			if ((prop != null) && prop.hasValues()) {
+				fixedName = prop.getValue().asString();
+			}
+		}
+		return fixedName;
 	}
 
 	@Override
