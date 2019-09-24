@@ -368,7 +368,7 @@ public abstract class ExportEngine<//
 					this.log.debug("Exporting {} (from the main search)", logLabel);
 				}
 			}
-			final CmfObject<VALUE> marshaled = sourceObject.marshal(ctx, referrentTarget);
+			CmfObject<VALUE> marshaled = sourceObject.marshal(ctx, referrentTarget);
 			if (marshaled == null) { return new Result(ExportSkipReason.SKIPPED); }
 			// For now, only filter "leaf" objects (i.e. with no referrent, which means they were
 			// explicitly requested). In the (near) future, we'll add an option to allow filtering
@@ -574,7 +574,14 @@ public abstract class ExportEngine<//
 			}
 
 			final Long ret = objectStore.storeObject(encoded);
-			marshaled.copyNumber(encoded); // PATCH: make sure the object number is always copied
+			// Make sure we copy everything over was stored
+			// TODO: This should be optimized away by only requiring one encoding pass for
+			// storage, and adding all the extra stuff to the main object (marshaled),
+			// but doing that requires surgery we don't have time to make right now. One way
+			// to do this is to use decodeProperty/decodeAttribute, and add a listener to the
+			// transformer to detect which properties/attributes were modified during transformation
+			// so their values can be synchronized over. For now, let's just play it safe...
+			marshaled = getTranslator().decodeObject(encoded);
 
 			if (ret == null) {
 				// Should be impossible, but still guard against it
