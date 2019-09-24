@@ -107,7 +107,7 @@ public class LocalExportEngine extends
 			String id = LocalCommon.calculateId(path);
 			if (StringUtils.equals(id, folderId)) { return FileNameTools.basename(path); }
 			// Move up one level...
-			path = path.substring(0, path.lastIndexOf('/'));
+			path = FileNameTools.dirname(path, '/');
 		}
 		return null;
 	}
