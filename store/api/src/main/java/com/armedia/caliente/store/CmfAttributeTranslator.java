@@ -43,6 +43,12 @@ public abstract class CmfAttributeTranslator<VALUE> {
 			super(Function.identity(), type.getNull(), CmfValue::isNull, Function.identity(), type.getNull(),
 				CmfValue::isNull);
 		}
+
+		@Override
+		public Object getValue(CmfValue v) {
+			if (v == null) { return null; }
+			return v.asObject();
+		}
 	}
 
 	public static final CmfAttributeNameMapper NULL_MAPPER = new CmfAttributeNameMapper();

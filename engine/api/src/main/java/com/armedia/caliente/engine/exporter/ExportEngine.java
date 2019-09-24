@@ -574,27 +574,19 @@ public abstract class ExportEngine<//
 				ConcurrentTools.createIfAbsent(this.idFolderNames, marshaled.getId(), (folderId) -> str);
 			}
 
-			CmfObject<CmfValue> encoded = translator.encodeObject(marshaled);
-
 			if (transformer != null) {
 				try {
-					encoded = transformer.transform(objectStore.getValueMapper(),
-						getTranslator().getAttributeNameMapper(), null, encoded);
+					marshaled = transformer.transform(objectStore.getValueMapper(),
+						getTranslator().getAttributeNameMapper(), null, marshaled);
 				} catch (TransformerException e) {
 					throw new ExportException(String.format("Transformation failed for %s", marshaled.getDescription()),
 						e);
 				}
 			}
 
+			CmfObject<CmfValue> encoded = translator.encodeObject(marshaled);
 			final Long ret = objectStore.storeObject(encoded);
-			// Make sure we copy everything over was stored
-			// TODO: This should be optimized away by only requiring one encoding pass for
-			// storage, and adding all the extra stuff to the main object (marshaled),
-			// but doing that requires surgery we don't have time to make right now. One way
-			// to do this is to use decodeProperty/decodeAttribute, and add a listener to the
-			// transformer to detect which properties/attributes were modified during transformation
-			// so their values can be synchronized over. For now, let's just play it safe...
-			marshaled = getTranslator().decodeObject(encoded);
+			marshaled.copyNumber(encoded);
 
 			if (ret == null) {
 				// Should be impossible, but still guard against it

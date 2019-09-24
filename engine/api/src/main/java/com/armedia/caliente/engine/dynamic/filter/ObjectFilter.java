@@ -96,7 +96,7 @@ public class ObjectFilter extends BaseShareableLockable {
 		Objects.requireNonNull(cmfObject, "Must provide an object to filter");
 		try (SharedAutoLock lock = autoSharedLock()) {
 			if (this.closed) { throw new ObjectFilterException("This object filter is already closed"); }
-			DynamicElementContext ctx = new DynamicElementContext(cmfObject, new DefaultDynamicObject(cmfObject),
+			DynamicElementContext<?> ctx = new DynamicElementContext<>(cmfObject, new DefaultDynamicObject(cmfObject),
 				mapper, null);
 			for (Filter f : this.activeFilters) {
 				try {

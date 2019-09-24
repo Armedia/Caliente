@@ -38,7 +38,6 @@ import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.ImmutableElementContext;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfValue;
 
 @XmlTransient
 public abstract class ConditionalElement {
@@ -63,21 +62,21 @@ public abstract class ConditionalElement {
 		return this;
 	}
 
-	protected final boolean checkCondition(DynamicElementContext ctx) throws ConditionException {
+	protected final boolean checkCondition(DynamicElementContext<?> ctx) throws ConditionException {
 		final Condition condition = getCondition();
 		if (condition == null) { return true; }
-		ImmutableElementContext immutable = null;
+		ImmutableElementContext<?> immutable = null;
 		if (ImmutableElementContext.class.isInstance(ctx)) {
 			// Small tweak in hopes of optimization...
 			immutable = ImmutableElementContext.class.cast(ctx);
 		} else {
-			immutable = new ImmutableElementContext(ctx);
+			immutable = new ImmutableElementContext<>(ctx);
 		}
 		return condition.check(immutable);
 	}
 
-	protected final String getObjectDescription(DynamicElementContext ctx) {
-		CmfObject<CmfValue> obj = ctx.getBaseObject();
+	protected final String getObjectDescription(DynamicElementContext<?> ctx) {
+		CmfObject<?> obj = ctx.getBaseObject();
 		if (obj == null) { return null; }
 		return obj.getDescription();
 	}

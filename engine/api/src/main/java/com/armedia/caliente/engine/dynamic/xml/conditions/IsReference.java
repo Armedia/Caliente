@@ -42,7 +42,7 @@ import com.armedia.commons.utilities.Tools;
 public class IsReference implements Condition {
 
 	@Override
-	public boolean check(DynamicElementContext ctx) {
+	public boolean check(DynamicElementContext<?> ctx) {
 		DynamicValue v = ctx.getDynamicObject().getPriv().get(IntermediateProperty.IS_REFERENCE.encode());
 		if (v == null) { return false; }
 		return Tools.toBoolean(v);

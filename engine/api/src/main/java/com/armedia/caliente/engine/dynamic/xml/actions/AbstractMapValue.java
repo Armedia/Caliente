@@ -81,7 +81,7 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 		this.defVal = defaultValue;
 	}
 
-	protected boolean mapValue(DynamicElementContext ctx, CmfValue.Type type, Object candidate,
+	protected boolean mapValue(DynamicElementContext<?> ctx, CmfValue.Type type, Object candidate,
 		AtomicReference<Object> result) throws ActionException {
 
 		// Apply the comparison to each value in the typed value, and if there's a
@@ -117,7 +117,7 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 	}
 
 	@Override
-	protected void executeAction(DynamicElementContext ctx, DynamicValue candidate) throws ActionException {
+	protected void executeAction(DynamicElementContext<?> ctx, DynamicValue candidate) throws ActionException {
 		// Shortcut - avoid any work if no work can be done...
 		if (candidate.isEmpty()) { return; }
 

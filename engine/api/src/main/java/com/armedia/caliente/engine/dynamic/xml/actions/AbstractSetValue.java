@@ -81,7 +81,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		this.value = value;
 	}
 
-	protected abstract DynamicValue createValue(DynamicElementContext ctx, String name, CmfValue.Type type,
+	protected abstract DynamicValue createValue(DynamicElementContext<?> ctx, String name, CmfValue.Type type,
 		boolean multivalue);
 
 	private Iterable<?> toIterable(Object o) {
@@ -105,7 +105,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 	}
 
 	@Override
-	protected final void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected final void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 		Object name = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (name == null) { throw new ActionException("No name expression given for variable definition"); }
 

@@ -93,7 +93,7 @@ public class HasValueMapping implements Condition {
 	}
 
 	@Override
-	public boolean check(DynamicElementContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext<?> ctx) throws ConditionException {
 		CmfObject.Archetype type = getType();
 		if (type == null) { throw new ConditionException("No type given to find the mappings with"); }
 

@@ -39,7 +39,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 public class IsLatestVersion implements Condition {
 
 	@Override
-	public boolean check(DynamicElementContext ctx) {
+	public boolean check(DynamicElementContext<?> ctx) {
 		return ctx.getDynamicObject().isHistoryCurrent();
 	}
 

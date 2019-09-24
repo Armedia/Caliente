@@ -46,7 +46,9 @@ import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataException;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -66,7 +68,11 @@ public class LoadExternalMetadata extends ConditionalAction {
 	}
 
 	@Override
-	protected void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext<?> ctx) throws ActionException {
+		executeActionTyped(ctx);
+	}
+
+	protected <V> void executeActionTyped(DynamicElementContext<V> ctx) throws ActionException {
 		for (ExternalMetadataSet metadataSource : getMetadataSets()) {
 			if (metadataSource == null) {
 				continue;
@@ -84,7 +90,7 @@ public class LoadExternalMetadata extends ConditionalAction {
 			}
 
 			final boolean override = metadataSource.isOverride();
-			final Map<String, CmfAttribute<CmfValue>> externalAttributes;
+			final Map<String, CmfAttribute<V>> externalAttributes;
 			try {
 				externalAttributes = ctx.getAttributeValues(ctx.getBaseObject(), setName);
 			} catch (ExternalMetadataException e) {
@@ -103,14 +109,17 @@ public class LoadExternalMetadata extends ConditionalAction {
 			}
 
 			Map<String, DynamicValue> currentAttributes = ctx.getDynamicObject().getAtt();
+			CmfAttributeTranslator<V> translator = ctx.getBaseObject().getTranslator();
 			for (String attributeName : externalAttributes.keySet()) {
 				if (override || !currentAttributes.containsKey(attributeName)) {
-					final CmfAttribute<CmfValue> external = externalAttributes.get(attributeName);
-					final DynamicValue newAttribute = new DynamicValue(external);
+					final CmfAttribute<V> external = externalAttributes.get(attributeName);
+					final DynamicValue newAttribute = new DynamicValue(external, translator);
 					currentAttributes.put(attributeName, newAttribute);
 					final List<Object> newValues = new ArrayList<>(external.getValueCount());
-					for (CmfValue v : external) {
-						newValues.add(v.asObject());
+					CmfValueCodec<V> codec = translator.getCodec(external.getType());
+					for (V v : external) {
+						// TODO: Optimize this!!
+						newValues.add(codec.encode(v).asObject());
 					}
 					newAttribute.setValues(newValues);
 				}

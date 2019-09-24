@@ -32,6 +32,6 @@ import javax.xml.bind.annotation.XmlTransient;
 @FunctionalInterface
 public interface Action {
 
-	public void apply(DynamicElementContext ctx) throws ActionException;
+	public void apply(DynamicElementContext<?> ctx) throws ActionException;
 
 }

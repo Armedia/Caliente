@@ -37,7 +37,7 @@ class ConditionTools {
 	private ConditionTools() {
 	}
 
-	public static Object eval(Expression e, DynamicElementContext ctx) throws ConditionException {
+	public static Object eval(Expression e, DynamicElementContext<?> ctx) throws ConditionException {
 		try {
 			return Expression.eval(e, ctx);
 		} catch (ScriptException ex) {

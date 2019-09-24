@@ -58,7 +58,7 @@ public class IsType implements Condition {
 	}
 
 	@Override
-	public boolean check(DynamicElementContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext<?> ctx) throws ConditionException {
 		CmfObject.Archetype type = getValue();
 		if (type == null) { throw new ConditionException("No type value to check against"); }
 		// We can use == because this is an enum

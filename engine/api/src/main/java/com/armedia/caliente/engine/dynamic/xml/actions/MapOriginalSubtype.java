@@ -40,7 +40,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 public class MapOriginalSubtype extends AbstractMapSubtype {
 
 	@Override
-	protected Object getCandidate(DynamicElementContext ctx) {
+	protected Object getCandidate(DynamicElementContext<?> ctx) {
 		return ctx.getBaseObject().getSubtype();
 	}
 

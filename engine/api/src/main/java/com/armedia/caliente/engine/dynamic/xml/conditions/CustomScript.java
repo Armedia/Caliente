@@ -52,7 +52,7 @@ public class CustomScript extends AbstractExpressionCondition {
 	}
 
 	@Override
-	public boolean check(DynamicElementContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext<?> ctx) throws ConditionException {
 		Object result = ConditionTools.eval(this, ctx);
 		// No result? No problem! It's a "false"!
 		if (result == null) { return false; }

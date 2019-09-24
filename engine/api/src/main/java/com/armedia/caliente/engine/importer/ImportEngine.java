@@ -537,7 +537,7 @@ public abstract class ImportEngine<//
 		// objects require fixing, we don't sweep the whole table, but instead submit
 		// the IDs that we want fixed.
 
-		DefaultNameFixer nameFixer = new DefaultNameFixer(output, p);
+		DefaultNameFixer<CmfValue> nameFixer = new DefaultNameFixer<>(output, p);
 		if (nameFixer.isEmpty()) {
 			output.info("Static name fix map is empty, will not {} any object names", verb);
 			return;

@@ -115,12 +115,12 @@ public abstract class ConditionGroup implements Condition {
 	}
 
 	@Override
-	public final boolean check(DynamicElementContext ctx) throws ConditionException {
+	public final boolean check(DynamicElementContext<?> ctx) throws ConditionException {
 		// If there are no elements, then we simply return true
 		List<Condition> elements = sanitizeElements(getElements());
 		if ((elements == null) || elements.isEmpty()) { return true; }
 		return check(elements, ctx);
 	}
 
-	protected abstract boolean check(List<Condition> elements, DynamicElementContext ctx) throws ConditionException;
+	protected abstract boolean check(List<Condition> elements, DynamicElementContext<?> ctx) throws ConditionException;
 }

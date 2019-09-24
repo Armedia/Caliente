@@ -76,7 +76,7 @@ public class SecondarySubtypeRemove extends ConditionalAction {
 	}
 
 	@Override
-	protected void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 		String comparand = StringUtils.strip(Tools.toString(ActionTools.eval(getName(), ctx)));
 		if (StringUtils.isEmpty(comparand)) { return; }
 

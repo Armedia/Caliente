@@ -40,7 +40,7 @@ import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 public class ObjectAccept extends ConditionalAction {
 
 	@Override
-	protected void executeAction(DynamicElementContext ctx) {
+	protected void executeAction(DynamicElementContext<?> ctx) {
 		throw new ProcessingCompletedException();
 	}
 
