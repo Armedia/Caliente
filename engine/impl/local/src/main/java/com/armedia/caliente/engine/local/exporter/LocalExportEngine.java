@@ -86,8 +86,14 @@ public class LocalExportEngine extends
 		return StreamTools
 			.of(new LocalRecursiveIterator(session, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)))
 			.map((localFile) -> new ExportTarget(
-				localFile.getAbsolute().isFile() ? CmfObject.Archetype.DOCUMENT : CmfObject.Archetype.FOLDER, localFile.getId(),
-				localFile.getSafePath()));
+				localFile.getAbsolute().isFile() ? CmfObject.Archetype.DOCUMENT : CmfObject.Archetype.FOLDER,
+				localFile.getId(), localFile.getSafePath()));
+	}
+
+	@Override
+	protected String findFolderName(LocalRoot session, String folderId, Object ecmObject) {
+		// TODO: Work upwards from the full path until we have a match...
+		return null;
 	}
 
 	@Override

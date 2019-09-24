@@ -99,6 +99,12 @@ public class ShptExportEngine extends
 	}
 
 	@Override
+	protected String findFolderName(ShptSession session, String folderId, Object ecmObject) {
+		// TODO: Work upwards from the full path until we have a match...
+		return null;
+	}
+
+	@Override
 	protected CmfValue getValue(CmfValue.Type type, Object value) {
 		return CmfValue.newValue(type, value);
 	}

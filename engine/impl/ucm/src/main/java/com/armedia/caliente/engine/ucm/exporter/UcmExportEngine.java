@@ -152,6 +152,12 @@ public class UcmExportEngine extends
 	}
 
 	@Override
+	protected String findFolderName(UcmSession session, String folderId, Object ecmObject) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
 	protected CmfValue getValue(CmfValue.Type type, Object value) {
 		return CmfValue.newValue(type, value);
 	}

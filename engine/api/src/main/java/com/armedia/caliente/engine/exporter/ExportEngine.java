@@ -291,12 +291,13 @@ public abstract class ExportEngine<//
 		}
 	}
 
-	protected String getFixedFolderName(CONTEXT ctx, CmfObject<VALUE> object, String folderId) throws ExportException {
+	protected String getFixedFolderName(CONTEXT ctx, CmfObject<VALUE> object, String folderId, Object ecmObject)
+		throws ExportException {
 		try {
 			return ConcurrentTools.createIfAbsent(this.idFolderNames, folderId, (id) -> {
 				String name = ctx.getFixedName(CmfObject.Archetype.FOLDER, folderId, folderId);
 				if (!StringUtils.isBlank(name)) { return name; }
-				return findFolderName(ctx.getSession(), folderId);
+				return findFolderName(ctx.getSession(), folderId, ecmObject);
 			});
 		} catch (Exception e) {
 			throw new ExportException(
@@ -304,13 +305,10 @@ public abstract class ExportEngine<//
 		}
 	}
 
-	protected String findFolderName(SESSION session, String folderId) throws Exception {
-		// TODO: This needs fixing - when extracting without folders (i.e. documents-only),
-		// we need a mechanism to resolve these names...
-		throw new AbstractMethodError("This method needs implementing!");
-	}
+	protected abstract String findFolderName(SESSION session, String folderId, Object ecmObject);
 
-	protected Collection<VALUE> calculateFixedPath(CONTEXT ctx, CmfObject<VALUE> object) throws ExportException {
+	protected Collection<VALUE> calculateFixedPath(CONTEXT ctx, CmfObject<VALUE> object, Object ecmObject)
+		throws ExportException {
 		CmfProperty<VALUE> parentPathIds = object.getProperty(IntermediateProperty.PARENT_TREE_IDS);
 		if ((parentPathIds == null) || !parentPathIds.hasValues()) { return Collections.emptyList(); }
 
@@ -320,7 +318,7 @@ public abstract class ExportEngine<//
 				List<String> ids = FileNameTools.tokenize(idPath, '/');
 				List<String> names = new ArrayList<>(ids.size());
 				for (String id : ids) {
-					String name = getFixedFolderName(ctx, object, id);
+					String name = getFixedFolderName(ctx, object, id, ecmObject);
 					if (name == null) {
 						throw new ExportException(
 							String.format("Did not cache the folder name for the folder with ID [%s]", id));
@@ -566,7 +564,7 @@ public abstract class ExportEngine<//
 				}
 			}
 			marshaled.setProperty(new CmfProperty<>(IntermediateProperty.FIXED_PATH, CmfValue.Type.STRING, true,
-				calculateFixedPath(ctx, marshaled)));
+				calculateFixedPath(ctx, marshaled, sourceObject.getEcmObject())));
 
 			if (marshaled.getType() == CmfObject.Archetype.FOLDER) {
 				// Let's be smart here - cache the final name for folders as we scan through them
