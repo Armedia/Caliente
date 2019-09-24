@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.TransferContext;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 /**
@@ -85,7 +84,7 @@ public class ExportContext< //
 		return getFactory().getFixedName(type, objectId, historyId);
 	}
 
-	public final String getFixedName(CmfObject<CmfValue> object) {
+	public final String getFixedName(CmfObject<VALUE> object) {
 		return getFactory().getFixedName(object);
 	}
 

@@ -18,10 +18,9 @@ import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
-public class DefaultNameFixer implements CmfNameFixer<CmfValue> {
+public class DefaultNameFixer<VALUE> implements CmfNameFixer<VALUE> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(CmfNameFixer.class);
 	private static final Pattern MAP_KEY_PARSER = Pattern.compile("^\\s*([^#\\s]+)\\s*#\\s*(.+)\\s*$");
@@ -112,20 +111,20 @@ public class DefaultNameFixer implements CmfNameFixer<CmfValue> {
 	}
 
 	@Override
-	public final String fixName(CmfObject<CmfValue> dataObject) {
+	public final String fixName(CmfObject<VALUE> dataObject) {
 		if (dataObject == null) { return null; }
 		String fixedName = fixName(dataObject.getType(), dataObject.getId(), dataObject.getHistoryId());
 		if (StringUtils.isEmpty(fixedName)) {
-			CmfProperty<CmfValue> prop = dataObject.getProperty(IntermediateProperty.FIXED_NAME);
+			CmfProperty<VALUE> prop = dataObject.getProperty(IntermediateProperty.FIXED_NAME);
 			if ((prop != null) && prop.hasValues()) {
-				fixedName = prop.getValue().asString();
+				fixedName = prop.getValue().toString();
 			}
 		}
 		return fixedName;
 	}
 
 	@Override
-	public void nameFixed(CmfObject<CmfValue> dataObject, String oldName, String newName) {
+	public void nameFixed(CmfObject<VALUE> dataObject, String oldName, String newName) {
 		this.output.info("Renamed {} with ID[{}] from [{}] to [{}]", dataObject.getType(), dataObject.getId(), oldName,
 			newName);
 	}

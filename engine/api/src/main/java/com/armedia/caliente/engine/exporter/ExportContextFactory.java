@@ -42,7 +42,6 @@ import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
@@ -58,7 +57,7 @@ public abstract class ExportContextFactory< //
 		.freezeSet(EnumSet.of(CmfObject.Archetype.FOLDER, CmfObject.Archetype.DOCUMENT));
 
 	private final Set<CmfObject.Archetype> companionMetadata;
-	private final DefaultNameFixer nameFixer;
+	private final DefaultNameFixer<VALUE> nameFixer;
 
 	protected ExportContextFactory(ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?> objectStore,
 		CmfContentStore<?, ?> contentStore, Logger output, WarningTracker tracker) throws Exception {
@@ -98,7 +97,7 @@ public abstract class ExportContextFactory< //
 				}
 			}
 		}
-		this.nameFixer = new DefaultNameFixer(p);
+		this.nameFixer = new DefaultNameFixer<>(p);
 	}
 
 	protected Set<CmfObject.Archetype> getAllowedCompanionMetadata() {
@@ -114,7 +113,7 @@ public abstract class ExportContextFactory< //
 		return this.nameFixer.fixName(type, objectId, historyId);
 	}
 
-	public final String getFixedName(CmfObject<CmfValue> object) {
+	public final String getFixedName(CmfObject<VALUE> object) {
 		return this.nameFixer.fixName(object);
 	}
 

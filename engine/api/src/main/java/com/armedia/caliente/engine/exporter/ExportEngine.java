@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationHandler;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -80,6 +81,7 @@ import com.armedia.caliente.store.CmfObjectStore.StoreStatus;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValue.Type;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.PooledWorkers;
@@ -289,8 +291,7 @@ public abstract class ExportEngine<//
 		}
 	}
 
-	protected String getFixedFolderName(CONTEXT ctx, CmfObject<CmfValue> object, String folderId)
-		throws ExportException {
+	protected String getFixedFolderName(CONTEXT ctx, CmfObject<VALUE> object, String folderId) throws ExportException {
 		try {
 			return ConcurrentTools.createIfAbsent(this.idFolderNames, folderId, (id) -> {
 				String name = ctx.getFixedName(CmfObject.Archetype.FOLDER, folderId, folderId);
@@ -309,13 +310,13 @@ public abstract class ExportEngine<//
 		throw new AbstractMethodError("This method needs implementing!");
 	}
 
-	protected Collection<CmfValue> calculateFixedPath(CONTEXT ctx, CmfObject<CmfValue> object) throws ExportException {
-		CmfProperty<CmfValue> parentPathIds = object.getProperty(IntermediateProperty.PARENT_TREE_IDS);
+	protected Collection<VALUE> calculateFixedPath(CONTEXT ctx, CmfObject<VALUE> object) throws ExportException {
+		CmfProperty<VALUE> parentPathIds = object.getProperty(IntermediateProperty.PARENT_TREE_IDS);
 		if ((parentPathIds == null) || !parentPathIds.hasValues()) { return Collections.emptyList(); }
 
-		Collection<CmfValue> values = new ArrayList<>(parentPathIds.getValueCount());
-		for (CmfValue v : parentPathIds) {
-			final String fixed = ConcurrentTools.createIfAbsent(this.idPathFixes, v.asString(), (idPath) -> {
+		Collection<VALUE> values = new ArrayList<>(parentPathIds.getValueCount());
+		for (VALUE v : parentPathIds) {
+			final String fixed = ConcurrentTools.createIfAbsent(this.idPathFixes, v.toString(), (idPath) -> {
 				List<String> ids = FileNameTools.tokenize(idPath, '/');
 				List<String> names = new ArrayList<>(ids.size());
 				for (String id : ids) {
@@ -328,7 +329,13 @@ public abstract class ExportEngine<//
 				}
 				return FileNameTools.reconstitute(names, true, false, '/');
 			});
-			values.add(new CmfValue(fixed));
+			try {
+				values.add(object.getTranslator().getValue(Type.STRING, fixed));
+			} catch (ParseException e) {
+				// Should never happen...but still
+				throw new ExportException(String.format("Failed to encode the String value [%s] as a STRING for %s",
+					fixed, object.getDescription()));
+			}
 		}
 		return values;
 	}
@@ -545,23 +552,29 @@ public abstract class ExportEngine<//
 					e);
 			}
 
-			CmfObject<CmfValue> encoded = getTranslator().encodeObject(marshaled);
-
-			String finalName = ctx.getFixedName(encoded);
+			final CmfAttributeTranslator<VALUE> translator = getTranslator();
+			String finalName = ctx.getFixedName(marshaled);
 			if (StringUtils.isEmpty(finalName)) {
-				finalName = encoded.getName();
+				finalName = marshaled.getName();
 			} else {
-				encoded.setProperty(new CmfProperty<>(IntermediateProperty.FIXED_NAME, CmfValue.Type.STRING, false,
-					new CmfValue(finalName)));
+				try {
+					marshaled.setProperty(new CmfProperty<>(IntermediateProperty.FIXED_NAME, CmfValue.Type.STRING,
+						false, translator.getValue(Type.STRING, finalName)));
+				} catch (ParseException e) {
+					throw new ExportException(String.format("Failed to encode the String value [%s] as a STRING for %s",
+						finalName, marshaled.getDescription()));
+				}
 			}
-			encoded.setProperty(new CmfProperty<>(IntermediateProperty.FIXED_PATH, CmfValue.Type.STRING, true,
-				calculateFixedPath(ctx, encoded)));
+			marshaled.setProperty(new CmfProperty<>(IntermediateProperty.FIXED_PATH, CmfValue.Type.STRING, true,
+				calculateFixedPath(ctx, marshaled)));
 
 			if (marshaled.getType() == CmfObject.Archetype.FOLDER) {
 				// Let's be smart here - cache the final name for folders as we scan through them
 				final String str = finalName; // B/c it's needed for the lambda
 				ConcurrentTools.createIfAbsent(this.idFolderNames, marshaled.getId(), (folderId) -> str);
 			}
+
+			CmfObject<CmfValue> encoded = translator.encodeObject(marshaled);
 
 			if (transformer != null) {
 				try {
