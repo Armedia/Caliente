@@ -85,7 +85,9 @@ public abstract class SessionFactory<SESSION> extends BaseShareableLockable
 		try {
 			this.pool.returnObject(session);
 		} catch (Exception e) {
-			// TODO: log it...
+			if (this.log.isDebugEnabled()) {
+				this.log.warn("Failed to return a released session into the pool", e);
+			}
 		}
 	}
 
