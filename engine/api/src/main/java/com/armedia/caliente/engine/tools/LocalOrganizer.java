@@ -71,7 +71,7 @@ public class LocalOrganizer extends CmfContentOrganizer {
 		CmfContentStream info) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
-		CmfProperty<T> paths = object.getProperty(IntermediateProperty.PATH);
+		CmfProperty<T> paths = object.getProperty(IntermediateProperty.FIXED_PATH);
 
 		List<String> ret = new ArrayList<>();
 		if ((paths != null) && paths.hasValues()) {
