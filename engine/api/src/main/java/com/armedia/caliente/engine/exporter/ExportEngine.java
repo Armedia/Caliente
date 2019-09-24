@@ -295,9 +295,11 @@ public abstract class ExportEngine<//
 		throws ExportException {
 		try {
 			return ConcurrentTools.createIfAbsent(this.idFolderNames, folderId, (id) -> {
-				String name = ctx.getFixedName(CmfObject.Archetype.FOLDER, folderId, folderId);
+				String name = ctx.getFixedName(CmfObject.Archetype.FOLDER, id, id);
 				if (!StringUtils.isBlank(name)) { return name; }
-				return findFolderName(ctx.getSession(), folderId, ecmObject);
+				name = findFolderName(ctx.getSession(), id, ecmObject);
+				if (!StringUtils.isBlank(name)) { return name; }
+				throw new Exception(String.format("Could not find the folder with ID [%s] to retrieve its name", id));
 			});
 		} catch (Exception e) {
 			throw new ExportException(
