@@ -118,8 +118,7 @@ public class LoadExternalMetadata extends ConditionalAction {
 					final List<Object> newValues = new ArrayList<>(external.getValueCount());
 					CmfValueCodec<V> codec = translator.getCodec(external.getType());
 					for (V v : external) {
-						// TODO: Optimize this!!
-						newValues.add(codec.encode(v).asObject());
+						newValues.add(codec.getValue(v));
 					}
 					newAttribute.setValues(newValues);
 				}
