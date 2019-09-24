@@ -172,7 +172,7 @@ public class MetadataFromDDL extends MetadataReaderBase {
 							// deserialize the value or not... should we also make this bit
 							// configurable?
 							if (!rs.wasNull()) {
-								finalValue = codec.decode(new CmfValue(attribute.getType(), value));
+								finalValue = translator.getValue(attribute.getType(), value);
 							}
 							attribute.addValue(finalValue);
 						}
