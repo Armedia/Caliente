@@ -164,7 +164,6 @@ public class ImportManifest extends DefaultImportEngineListener {
 
 	@Override
 	public void objectImportStarted(UUID jobId, CmfObject<?> object) {
-		// TODO Auto-generated method stub
 		super.objectImportStarted(jobId, object);
 	}
 
