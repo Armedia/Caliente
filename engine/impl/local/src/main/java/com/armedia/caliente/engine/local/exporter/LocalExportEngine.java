@@ -30,12 +30,15 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.stream.Stream;
 
+import org.apache.commons.codec.binary.StringUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.caliente.engine.local.common.LocalCommon;
+import com.armedia.caliente.engine.local.common.LocalFile;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionFactory;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
@@ -48,6 +51,7 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.StreamTools;
 
 public class LocalExportEngine extends
@@ -92,7 +96,19 @@ public class LocalExportEngine extends
 
 	@Override
 	protected String findFolderName(LocalRoot session, String folderId, Object ecmObject) {
-		// TODO: Work upwards from the full path until we have a match...
+		LocalFile localFile = LocalFile.class.cast(ecmObject);
+		String path = localFile.getPortableFullPath();
+		if (!localFile.isFolder()) {
+			// Remove the last component of the path
+			path = FileNameTools.dirname(path, '/');
+		}
+
+		while (path.length() > 1) {
+			String id = LocalCommon.calculateId(path);
+			if (StringUtils.equals(id, folderId)) { return FileNameTools.basename(path); }
+			// Move up one level...
+			path = path.substring(0, path.lastIndexOf('/'));
+		}
 		return null;
 	}
 
