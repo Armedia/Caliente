@@ -291,20 +291,22 @@ public abstract class ExportEngine<//
 
 	protected String getFixedFolderName(CONTEXT ctx, CmfObject<CmfValue> object, String folderId)
 		throws ExportException {
-		return ConcurrentTools.createIfAbsent(this.idFolderNames, folderId, (id) -> {
-			String name = ctx.getFixedName(CmfObject.Archetype.FOLDER, folderId, folderId);
-			if (!StringUtils.isBlank(name)) { return name; }
+		try {
+			return ConcurrentTools.createIfAbsent(this.idFolderNames, folderId, (id) -> {
+				String name = ctx.getFixedName(CmfObject.Archetype.FOLDER, folderId, folderId);
+				if (!StringUtils.isBlank(name)) { return name; }
+				return findFolderName(ctx.getSession(), folderId);
+			});
+		} catch (Exception e) {
+			throw new ExportException(
+				String.format("Can't calculate the folder name for folder with ID [%s] - please fix this!", folderId));
+		}
+	}
 
-			// Get the object's full path, and return the last component
-			CmfProperty<CmfValue> pathProp = object.getProperty(IntermediateProperty.PATH);
-			if (pathProp == null) {
-				throw new ExportException(String.format("No %s property stored for %s", object.getDescription()));
-			}
-			if (!pathProp.hasValues()) { return ""; }
-			List<String> l = FileNameTools.tokenize(pathProp.getValue().asString(), '/');
-			if (l.isEmpty()) { return ""; }
-			return l.get(l.size() - 1);
-		});
+	protected String findFolderName(SESSION session, String folderId) throws Exception {
+		// TODO: This needs fixing - when extracting without folders (i.e. documents-only),
+		// we need a mechanism to resolve these names...
+		throw new AbstractMethodError("This method needs implementing!");
 	}
 
 	protected Collection<CmfValue> calculateFixedPath(CONTEXT ctx, CmfObject<CmfValue> object) throws ExportException {
@@ -316,7 +318,7 @@ public abstract class ExportEngine<//
 			final String fixed = ConcurrentTools.createIfAbsent(this.idPathFixes, v.asString(), (idPath) -> {
 				List<String> ids = FileNameTools.tokenize(idPath, '/');
 				List<String> names = new ArrayList<>(ids.size());
-				for (String id : FileNameTools.tokenize(idPath, '/')) {
+				for (String id : ids) {
 					String name = getFixedFolderName(ctx, object, id);
 					if (name == null) {
 						throw new ExportException(
