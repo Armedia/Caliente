@@ -153,8 +153,12 @@ public class UcmExportEngine extends
 
 	@Override
 	protected String findFolderName(UcmSession session, String folderId, Object ecmObject) {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			UcmFolder folder = session.getFolder(new URI(folderId));
+			return (folder != null ? folder.getName() : null);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	@Override
