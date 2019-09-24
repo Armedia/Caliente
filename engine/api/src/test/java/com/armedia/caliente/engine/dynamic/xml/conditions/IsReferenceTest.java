@@ -5,6 +5,5 @@ import org.junit.jupiter.api.Test;
 public class IsReferenceTest {
 	@Test
 	public void test() {
-		// TODO: Implement this test
 	}
 }
