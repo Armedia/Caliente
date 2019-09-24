@@ -168,9 +168,6 @@ public class MetadataFromDDL extends MetadataReaderBase {
 							CmfValueCodec<V> codec = translator.getCodec(attribute.getType());
 							V finalValue = codec.getNullValue();
 							Object value = getValue(rs, column, attribute.getType());
-							// TODO: Use the structure information to determine if we need to
-							// deserialize the value or not... should we also make this bit
-							// configurable?
 							if (!rs.wasNull()) {
 								finalValue = translator.getValue(attribute.getType(), value);
 							}
