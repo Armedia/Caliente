@@ -81,6 +81,10 @@ public class ExportContext< //
 		return this.referrents.peek();
 	}
 
+	public final String getFixedName(CmfObject.Archetype type, String objectId, String historyId) {
+		return getFactory().getFixedName(type, objectId, historyId);
+	}
+
 	public final String getFixedName(CmfObject<CmfValue> object) {
 		return getFactory().getFixedName(object);
 	}

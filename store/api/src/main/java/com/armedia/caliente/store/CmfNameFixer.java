@@ -30,7 +30,9 @@ public interface CmfNameFixer<VALUE> {
 
 	public boolean supportsType(CmfObject.Archetype type);
 
-	public String fixName(CmfObject<VALUE> dataObject) throws CmfStorageException;
+	public String fixName(CmfObject.Archetype type, String objectId, String historyId);
+
+	public String fixName(CmfObject<VALUE> dataObject);
 
 	public void nameFixed(CmfObject<VALUE> dataObject, String oldName, String newName);
 

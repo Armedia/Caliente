@@ -110,6 +110,10 @@ public abstract class ExportContextFactory< //
 		return this.companionMetadata.contains(type);
 	}
 
+	public final String getFixedName(CmfObject.Archetype type, String objectId, String historyId) {
+		return this.nameFixer.fixName(type, objectId, historyId);
+	}
+
 	public final String getFixedName(CmfObject<CmfValue> object) {
 		return this.nameFixer.fixName(object);
 	}

@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationHandler;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -80,9 +81,11 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ConcurrentTools;
 import com.armedia.commons.utilities.line.LineScanner;
 
 public abstract class ExportEngine<//
@@ -134,6 +137,8 @@ public abstract class ExportEngine<//
 	private final boolean supportsMultipleSources;
 	private final Set<SearchType> supportedSearches;
 	private final Result unsupportedResult = new Result(ExportSkipReason.UNSUPPORTED);
+	private final ConcurrentMap<String, String> idPathFixes = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, String> idFolderNames = new ConcurrentHashMap<>();
 
 	private class ExportListenerPropagator extends ListenerPropagator<ExportResult> implements InvocationHandler {
 
@@ -282,6 +287,48 @@ public abstract class ExportEngine<//
 			if (e instanceof CmfStorageException) { throw CmfStorageException.class.cast(e); }
 			throw RuntimeException.class.cast(e);
 		}
+	}
+
+	protected String getFixedFolderName(CONTEXT ctx, CmfObject<CmfValue> object, String folderId)
+		throws ExportException {
+		return ConcurrentTools.createIfAbsent(this.idFolderNames, folderId, (id) -> {
+			String name = ctx.getFixedName(CmfObject.Archetype.FOLDER, folderId, folderId);
+			if (!StringUtils.isBlank(name)) { return name; }
+
+			// Get the object's full path, and return the last component
+			CmfProperty<CmfValue> pathProp = object.getProperty(IntermediateProperty.PATH);
+			if (pathProp == null) {
+				throw new ExportException(String.format("No %s property stored for %s", object.getDescription()));
+			}
+			if (!pathProp.hasValues()) { return ""; }
+			List<String> l = FileNameTools.tokenize(pathProp.getValue().asString(), '/');
+			if (l.isEmpty()) { return ""; }
+			return l.get(l.size() - 1);
+		});
+	}
+
+	protected Collection<CmfValue> calculateFixedPath(CONTEXT ctx, CmfObject<CmfValue> object) throws ExportException {
+		CmfProperty<CmfValue> parentPathIds = object.getProperty(IntermediateProperty.PARENT_TREE_IDS);
+		if ((parentPathIds == null) || !parentPathIds.hasValues()) { return Collections.emptyList(); }
+
+		Collection<CmfValue> values = new ArrayList<>(parentPathIds.getValueCount());
+		for (CmfValue v : parentPathIds) {
+			final String fixed = ConcurrentTools.createIfAbsent(this.idPathFixes, v.asString(), (idPath) -> {
+				List<String> ids = FileNameTools.tokenize(idPath, '/');
+				List<String> names = new ArrayList<>(ids.size());
+				for (String id : FileNameTools.tokenize(idPath, '/')) {
+					String name = getFixedFolderName(ctx, object, id);
+					if (name == null) {
+						throw new ExportException(
+							String.format("Did not cache the folder name for the folder with ID [%s]", id));
+					}
+					names.add(name);
+				}
+				return FileNameTools.reconstitute(names, true, false, '/');
+			});
+			values.add(new CmfValue(fixed));
+		}
+		return values;
 	}
 
 	private Result doExportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
@@ -497,11 +544,23 @@ public abstract class ExportEngine<//
 			}
 
 			CmfObject<CmfValue> encoded = getTranslator().encodeObject(marshaled);
-			String remediatedName = ctx.getFixedName(encoded);
-			if (!StringUtils.isEmpty(remediatedName)) {
+
+			String finalName = ctx.getFixedName(encoded);
+			if (StringUtils.isEmpty(finalName)) {
+				finalName = encoded.getName();
+			} else {
 				encoded.setProperty(new CmfProperty<>(IntermediateProperty.FIXED_NAME, CmfValue.Type.STRING, false,
-					new CmfValue(remediatedName)));
+					new CmfValue(finalName)));
 			}
+			encoded.setProperty(new CmfProperty<>(IntermediateProperty.FIXED_PATH, CmfValue.Type.STRING, true,
+				calculateFixedPath(ctx, encoded)));
+
+			if (marshaled.getType() == CmfObject.Archetype.FOLDER) {
+				// Let's be smart here - cache the final name for folders as we scan through them
+				final String str = finalName; // B/c it's needed for the lambda
+				ConcurrentTools.createIfAbsent(this.idFolderNames, marshaled.getId(), (folderId) -> str);
+			}
+
 			if (transformer != null) {
 				try {
 					encoded = transformer.transform(objectStore.getValueMapper(),

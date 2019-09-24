@@ -96,21 +96,25 @@ public class DefaultNameFixer implements CmfNameFixer<CmfValue> {
 	}
 
 	@Override
-	public final String fixName(CmfObject<CmfValue> dataObject) {
-		if (dataObject == null) { return null; }
+	public final String fixName(CmfObject.Archetype type, String objectId, String historyId) {
 		String fixedName = null;
 		// Doing the mapping first, and then the property allows us
 		// to override whatever was originally set for this object
-		if (StringUtils.isEmpty(fixedName)) {
-			Map<String, String> mappings = getMappings(dataObject.getType());
-			if ((mappings != null) && !mappings.isEmpty()) {
-				fixedName = mappings.get(dataObject.getId());
-				if (fixedName == null) {
-					// No fix for the specific object? What about the history as a whole?
-					fixedName = mappings.get(dataObject.getHistoryId());
-				}
+		Map<String, String> mappings = getMappings(type);
+		if ((mappings != null) && !mappings.isEmpty()) {
+			fixedName = mappings.get(objectId);
+			if (fixedName == null) {
+				// No fix for the specific object? What about the history as a whole?
+				fixedName = mappings.get(historyId);
 			}
 		}
+		return fixedName;
+	}
+
+	@Override
+	public final String fixName(CmfObject<CmfValue> dataObject) {
+		if (dataObject == null) { return null; }
+		String fixedName = fixName(dataObject.getType(), dataObject.getId(), dataObject.getHistoryId());
 		if (StringUtils.isEmpty(fixedName)) {
 			CmfProperty<CmfValue> prop = dataObject.getProperty(IntermediateProperty.FIXED_NAME);
 			if ((prop != null) && prop.hasValues()) {
