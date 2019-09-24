@@ -43,7 +43,7 @@ public abstract class CmfAttributeTranslator<VALUE> {
 			super(Function.identity(), type.getNull(), CmfValue::isNull, Function.identity(), type.getNull(),
 				CmfValue::isNull);
 		}
-	};
+	}
 
 	public static final CmfAttributeNameMapper NULL_MAPPER = new CmfAttributeNameMapper();
 
@@ -96,6 +96,33 @@ public abstract class CmfAttributeTranslator<VALUE> {
 
 	public abstract VALUE getValue(CmfValue.Type type, Object value) throws ParseException;
 
+	public final CmfAttribute<VALUE> decodeAttribute(CmfObject.Archetype type, CmfAttribute<CmfValue> att) {
+		String attName = this.nameMapper.decodeAttributeName(type, att.getName());
+		CmfAttribute<VALUE> newAtt = new CmfAttribute<>(attName, att.getType(), att.isMultivalued());
+		CmfValueCodec<VALUE> codec = getCodec(att.getType());
+		if (newAtt.isMultivalued()) {
+			for (CmfValue v : att) {
+				newAtt.addValue(codec.decode(v));
+			}
+		} else {
+			newAtt.setValue(codec.decode(att.getValue()));
+		}
+		return newAtt;
+	}
+
+	public final CmfProperty<VALUE> decodeProperty(CmfProperty<CmfValue> prop) {
+		CmfProperty<VALUE> newProp = new CmfProperty<>(prop.getName(), prop.getType(), prop.isMultivalued());
+		CmfValueCodec<VALUE> codec = getCodec(prop.getType());
+		if (newProp.isMultivalued()) {
+			for (CmfValue v : prop) {
+				newProp.addValue(codec.decode(v));
+			}
+		} else {
+			newProp.setValue(codec.decode(prop.getValue()));
+		}
+		return newProp;
+	}
+
 	public final CmfObject<VALUE> decodeObject(CmfObject<CmfValue> obj) {
 		// Can we optimize this if there are no changes needed?
 		if (this.valueClass.equals(CmfValue.class) && (this.nameMapper == CmfAttributeTranslator.NULL_MAPPER)) {
@@ -120,33 +147,41 @@ public abstract class CmfAttributeTranslator<VALUE> {
 		);
 
 		for (CmfAttribute<CmfValue> att : obj.getAttributes()) {
-			String attName = this.nameMapper.decodeAttributeName(newObj.getType(), att.getName());
-			CmfAttribute<VALUE> newAtt = new CmfAttribute<>(attName, att.getType(), att.isMultivalued());
-			CmfValueCodec<VALUE> codec = getCodec(att.getType());
-			if (newAtt.isMultivalued()) {
-				for (CmfValue v : att) {
-					newAtt.addValue(codec.decode(v));
-				}
-			} else {
-				newAtt.setValue(codec.decode(att.getValue()));
-			}
-			newObj.setAttribute(newAtt);
+			newObj.setAttribute(decodeAttribute(newObj.getType(), att));
 		}
 
 		for (CmfProperty<CmfValue> prop : obj.getProperties()) {
-			CmfProperty<VALUE> newProp = new CmfProperty<>(prop.getName(), prop.getType(), prop.isMultivalued());
-			CmfValueCodec<VALUE> codec = getCodec(prop.getType());
-			if (newProp.isMultivalued()) {
-				for (CmfValue v : prop) {
-					newProp.addValue(codec.decode(v));
-				}
-			} else {
-				newProp.setValue(codec.decode(prop.getValue()));
-			}
-			newObj.setProperty(newProp);
+			newObj.setProperty(decodeProperty(prop));
 		}
 
 		return newObj;
+	}
+
+	public final CmfAttribute<CmfValue> encodeAttribute(CmfObject.Archetype type, CmfAttribute<VALUE> att) {
+		String attName = this.nameMapper.encodeAttributeName(type, att.getName());
+		CmfAttribute<CmfValue> newAtt = new CmfAttribute<>(attName, att.getType(), att.isMultivalued());
+		CmfValueCodec<VALUE> codec = getCodec(att.getType());
+		if (newAtt.isMultivalued()) {
+			for (VALUE v : att) {
+				newAtt.addValue(codec.encode(v));
+			}
+		} else {
+			newAtt.setValue(codec.encode(att.getValue()));
+		}
+		return newAtt;
+	}
+
+	public final CmfProperty<CmfValue> encodeProperty(CmfProperty<VALUE> prop) {
+		CmfProperty<CmfValue> newProp = new CmfProperty<>(prop.getName(), prop.getType(), prop.isMultivalued());
+		CmfValueCodec<VALUE> codec = getCodec(prop.getType());
+		if (newProp.isMultivalued()) {
+			for (VALUE v : prop) {
+				newProp.addValue(codec.encode(v));
+			}
+		} else {
+			newProp.setValue(codec.encode(prop.getValue()));
+		}
+		return newProp;
 	}
 
 	public final CmfObject<CmfValue> encodeObject(CmfObject<VALUE> obj) {
@@ -173,30 +208,11 @@ public abstract class CmfAttributeTranslator<VALUE> {
 		);
 
 		for (CmfAttribute<VALUE> att : obj.getAttributes()) {
-			String attName = this.nameMapper.encodeAttributeName(newObj.getType(), att.getName());
-			CmfAttribute<CmfValue> newAtt = new CmfAttribute<>(attName, att.getType(), att.isMultivalued());
-			CmfValueCodec<VALUE> codec = getCodec(att.getType());
-			if (newAtt.isMultivalued()) {
-				for (VALUE v : att) {
-					newAtt.addValue(codec.encode(v));
-				}
-			} else {
-				newAtt.setValue(codec.encode(att.getValue()));
-			}
-			newObj.setAttribute(newAtt);
+			newObj.setAttribute(encodeAttribute(newObj.getType(), att));
 		}
 
 		for (CmfProperty<VALUE> prop : obj.getProperties()) {
-			CmfProperty<CmfValue> newProp = new CmfProperty<>(prop.getName(), prop.getType(), prop.isMultivalued());
-			CmfValueCodec<VALUE> codec = getCodec(prop.getType());
-			if (newProp.isMultivalued()) {
-				for (VALUE v : prop) {
-					newProp.addValue(codec.encode(v));
-				}
-			} else {
-				newProp.setValue(codec.encode(prop.getValue()));
-			}
-			newObj.setProperty(newProp);
+			newObj.setProperty(encodeProperty(prop));
 		}
 
 		return newObj;
