@@ -953,12 +953,13 @@ public abstract class ExportEngine<//
 				final SESSION session = baseSession.get();
 				Collection<String> sources = exportState.cfg.getStrings(ExportSetting.FROM);
 
-				try (Stream<String> stream = scanner.iterator(sources).stream()) {
-					if (!this.supportsMultipleSources) {
-						this.log.warn(
-							"This engine doesn't support multiple export sources, this export will only cover the first non-recurring source encountered");
-						stream.limit(1);
-					}
+				Stream<String> baseStream = scanner.iterator(sources).stream();
+				if (!this.supportsMultipleSources) {
+					this.log.warn(
+						"This engine doesn't support multiple export sources, this export will only cover the first non-recurring source encountered");
+					baseStream = baseStream.limit(1);
+				}
+				try (Stream<String> stream = baseStream) {
 					stream.forEach((line) -> {
 						sourceCounter.set(0);
 						currentSource.set(line);
