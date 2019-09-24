@@ -34,12 +34,14 @@ import java.io.File;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
+import org.apache.commons.codec.binary.StringUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.caliente.engine.sharepoint.ShptCommon;
 import com.armedia.caliente.engine.sharepoint.ShptException;
 import com.armedia.caliente.engine.sharepoint.ShptSession;
 import com.armedia.caliente.engine.sharepoint.ShptSessionException;
@@ -53,6 +55,7 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.StreamTools;
 
 /**
@@ -100,7 +103,19 @@ public class ShptExportEngine extends
 
 	@Override
 	protected String findFolderName(ShptSession session, String folderId, Object ecmObject) {
-		// TODO: Work upwards from the full path until we have a match...
+		ShptFSObject<?> object = ShptFSObject.class.cast(ecmObject);
+		String path = object.getServerRelativeUrl();
+		if (!ShptFolder.class.isInstance(object)) {
+			// Remove the last component of the path
+			path = FileNameTools.dirname(path, '/');
+		}
+
+		while (path.length() > 1) {
+			String id = ShptCommon.calculateId(path);
+			if (StringUtils.equals(id, folderId)) { return FileNameTools.basename(path); }
+			// Move up one level...
+			path = FileNameTools.dirname(path, '/');
+		}
 		return null;
 	}
 
