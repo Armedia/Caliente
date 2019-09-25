@@ -43,6 +43,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -83,6 +85,7 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValue.Type;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.DelayedSupplier;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.PooledWorkersLogic;
@@ -204,7 +207,7 @@ public abstract class ExportEngine<//
 	private Result exportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> referrent,
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject, final CONTEXT ctx,
-		final ExportListener listener, final ConcurrentMap<ExportTarget, ExportOperation> statusMap)
+		final ExportListener listener, final ConcurrentMap<ExportTarget, DelayedSupplier<ExportOperation>> statusMap)
 		throws ExportException, CmfStorageException {
 		final ExportTarget target = sourceObject.getExportTarget();
 		try {
@@ -235,7 +238,8 @@ public abstract class ExportEngine<//
 						// We got the lock, which means we create the locker object
 						this.log.trace("Locked {} for storage", targetLogLabel);
 						thisStatus = new ExportOperation(target, targetLogLabel, referrentTarget, referrentLogLabel);
-						statusMap.put(target, thisStatus);
+						ConcurrentTools.createIfAbsent(statusMap, target, (t) -> new DelayedSupplier<>())
+							.set(thisStatus);
 						break;
 
 					case ALREADY_LOCKED: // fall-through
@@ -343,7 +347,7 @@ public abstract class ExportEngine<//
 	private Result doExportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> referrent, final ExportTarget target,
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject, final CONTEXT ctx,
-		final ExportListener listener, final ConcurrentMap<ExportTarget, ExportOperation> statusMap,
+		final ExportListener listener, final ConcurrentMap<ExportTarget, DelayedSupplier<ExportOperation>> statusMap,
 		final ExportOperation thisStatus) throws ExportException, CmfStorageException {
 
 		boolean success = false;
@@ -418,6 +422,8 @@ public abstract class ExportEngine<//
 					// Duplicate requirement - don't export again
 					continue;
 				}
+				ConcurrentTools.createIfAbsent(statusMap, requirement.getExportTarget(),
+					(k) -> new DelayedSupplier<>());
 				final Result r;
 				try {
 					r = exportObject(exportState, transformer, filter, sourceObject, requirement, ctx, listener,
@@ -465,7 +471,19 @@ public abstract class ExportEngine<//
 				for (ExportTarget requirement : waitTargets) {
 					// We need to wait for each of these to be stored...so find their lock object
 					// and listen on it...?
-					ExportOperation status = statusMap.get(requirement);
+					DelayedSupplier<ExportOperation> synchronizer = statusMap.get(requirement);
+					ExportOperation status;
+					try {
+						status = synchronizer.get(5, TimeUnit.SECONDS);
+					} catch (TimeoutException e) {
+						throw new ExportException(String.format(
+							"Timed out waiting for the synchronizer to be added for requirement [%s] of %s",
+							requirement, logLabel), e);
+					} catch (InterruptedException e) {
+						throw new ExportException(String.format(
+							"Interrupted waiting for the synchronizer to be added for requirement [%s] of %s",
+							requirement, logLabel), e);
+					}
 					if (status == null) {
 						throw new ExportException(
 							String.format("No export status found for requirement [%s] of %s", requirement, logLabel));
@@ -800,7 +818,7 @@ public abstract class ExportEngine<//
 		}
 		final ExportListenerPropagator listenerDelegator = new ExportListenerPropagator(objectCounter);
 		final ExportEngineListener listener = listenerDelegator.getListenerProxy();
-		final ConcurrentMap<ExportTarget, ExportOperation> statusMap = new ConcurrentHashMap<>();
+		final ConcurrentMap<ExportTarget, DelayedSupplier<ExportOperation>> statusMap = new ConcurrentHashMap<>();
 
 		final PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget, Exception> logic = new PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget, Exception>() {
 
