@@ -51,7 +51,8 @@ public class CsvContentPersistor extends BaseShareableLockable implements Conten
 		final File finalTarget = Tools.canonicalize(target);
 		try (MutexAutoLock lock = autoMutexLock()) {
 			this.out = new PrintWriter(new FileWriter(finalTarget));
-			this.out.printf("R_OBJECT_ID,DOCUMENTUM_PATH,LENGTH,FORMAT,CONTENT_STORE_PATH%n");
+			this.out.printf(
+				"R_OBJECT_ID,I_CHRONICLE_ID,R_VERSION_LABEL,HAS_FOLDER,DOCUMENTUM_PATH,LENGTH,FORMAT,CONTENT_STORE_PATH%n");
 			this.out.flush();
 		}
 	}
@@ -78,8 +79,11 @@ public class CsvContentPersistor extends BaseShareableLockable implements Conten
 			path = "";
 		}
 		try (MutexAutoLock lock = autoMutexLock()) {
-			this.out.printf("%s,%s,%d,%s,%s%n", //
+			this.out.printf("%s,%s,%s,%s,%s,%d,%s,%s%n", //
 				StringEscapeUtils.escapeCsv(content.getId()), //
+				StringEscapeUtils.escapeCsv(content.getHistoryId()), //
+				StringEscapeUtils.escapeCsv(content.getVersion()), //
+				content.isCurrent(), //
 				StringEscapeUtils.escapeCsv(path), //
 				page.getLength(), //
 				StringEscapeUtils.escapeCsv(rendition.getFormat()), //

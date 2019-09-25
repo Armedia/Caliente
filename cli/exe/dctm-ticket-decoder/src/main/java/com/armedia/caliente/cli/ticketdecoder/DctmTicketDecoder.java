@@ -186,7 +186,7 @@ public class DctmTicketDecoder {
 						submittedCounter.get(), failedSubmissions.size());
 				} finally {
 					extractors.waitForCompletion();
-					this.console.info("Object retrieval is complete, waiting for XML generation to finish...");
+					this.console.info("Object retrieval is complete, waiting for the document rendering to finish...");
 					if (persistenceThread != null) {
 						running.set(false);
 						persistenceThread.interrupt();
