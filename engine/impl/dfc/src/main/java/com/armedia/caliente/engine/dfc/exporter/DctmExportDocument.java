@@ -386,6 +386,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 
 			final int dataTicket = content.getDataTicket();
 			info.setProperty(DctmAttributes.DATA_TICKET, String.valueOf(dataTicket));
+			info.setProperty(DctmAttributes.DATA_TICKET + "_hex", String.format("%08x", dataTicket));
 
 			String dataTicketPath = DfcUtils.decodeDataTicket(dataStoreId, dataTicket, '/');
 			if (!StringUtils.isEmpty(info.getExtension())) {
