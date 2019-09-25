@@ -122,7 +122,6 @@ public class DctmTicketDecoder {
 				, cli.getStrings(CLIParam.prefer_rendition) //
 			);
 
-			;
 			final AtomicLong submittedCounter = new AtomicLong(0);
 			final AtomicLong outputCounter = new AtomicLong(0);
 			final Collection<Pair<IDfId, Exception>> failedSubmissions = new ShareableCollection<>(new LinkedList<>());
