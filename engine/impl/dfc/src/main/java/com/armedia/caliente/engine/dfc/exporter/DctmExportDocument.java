@@ -378,20 +378,20 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			info.setFileName(objectName);
 			info.setLength(content.getContentSize());
 
-			info.setProperty("dctm:document_id", document.getObjectId().getId());
-			info.setProperty("dctm:content_id", contentId.getId());
+			info.setProperty("document_id", document.getObjectId().getId());
+			info.setProperty("content_id", contentId.getId());
 
 			final String dataStoreId = content.getStorageId().getId();
-			info.setProperty("dctm:data_store", dataStoreId);
+			info.setProperty("data_store", dataStoreId);
 
 			final int dataTicket = content.getDataTicket();
-			info.setProperty("dctm:data_ticket", String.valueOf(dataTicket));
+			info.setProperty("data_ticket", String.valueOf(dataTicket));
 
 			String dataTicketPath = DfcUtils.decodeDataTicket(dataStoreId, dataTicket, '/');
 			if (!StringUtils.isEmpty(info.getExtension())) {
 				dataTicketPath += "." + info.getExtension();
 			}
-			info.setProperty("dctm:data_ticket_path", dataTicketPath);
+			info.setProperty("data_ticket_path", dataTicketPath);
 
 			info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
 			info.setProperty(DctmAttributes.SET_CLIENT, content.getString(DctmAttributes.SET_CLIENT));
