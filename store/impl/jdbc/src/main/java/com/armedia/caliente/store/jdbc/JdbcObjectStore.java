@@ -1561,7 +1561,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 		List<Object[]> contents = new ArrayList<>();
 		List<Object[]> properties = new ArrayList<>();
 		Object[] cArr = new Object[9];
-		Object[] pArr = new Object[6];
+		Object[] pArr = new Object[4];
 		for (CmfContentStream i : content) {
 			// First, the content record...
 			cArr[0] = objectId;
@@ -1584,7 +1584,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 				}
 				pArr[2] = s;
 				pArr[3] = i.getProperty(s);
-				if (pArr[5] == null) {
+				if (pArr[3] == null) {
 					continue;
 				}
 				properties.add(pArr.clone());
