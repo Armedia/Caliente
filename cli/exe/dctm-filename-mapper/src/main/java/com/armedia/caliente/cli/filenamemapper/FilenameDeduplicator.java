@@ -50,6 +50,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.TriFunction;
 
 public class FilenameDeduplicator {
 
@@ -87,11 +88,6 @@ public class FilenameDeduplicator {
 			if (b == null) { return 1; }
 			return canonicalize(a).compareTo(canonicalize(b));
 		}
-	}
-
-	@FunctionalInterface
-	public static interface FilenameCollisionResolver {
-		public String generateUniqueName(CmfObjectRef entryId, String currentName, long count);
 	}
 
 	public class FSObject {
@@ -409,11 +405,12 @@ public class FilenameDeduplicator {
 		return count;
 	}
 
-	public synchronized long fixConflicts(FilenameCollisionResolver resolver) {
+	public synchronized long fixConflicts(TriFunction<CmfObjectRef, String, Long, String> resolver) {
 		return fixConflicts(resolver, null);
 	}
 
-	public synchronized long fixConflicts(FilenameCollisionResolver resolver, Comparator<FSEntry> comparator) {
+	public synchronized long fixConflicts(TriFunction<CmfObjectRef, String, Long, String> resolver,
+		Comparator<FSEntry> comparator) {
 		long count = 0;
 		nextConflict: while (!this.conflictContainers.isEmpty()) {
 			int deltas = 0;
@@ -440,7 +437,7 @@ public class FilenameDeduplicator {
 					}
 					for (FSEntry e : l) {
 						final String oldName = e.newName;
-						String newName = resolver.generateUniqueName(e.id, e.newName, count);
+						String newName = resolver.apply(e.id, e.newName, count);
 						if (e.setName(newName)) {
 							count++;
 							deltas++;
