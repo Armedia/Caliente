@@ -378,6 +378,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			info.setFileName(objectName);
 			info.setLength(content.getContentSize());
 
+			info.setProperty("document_id", document.getObjectId().getId());
+			info.setProperty("content_id", contentId.getId());
 			info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
 			info.setProperty(DctmAttributes.SET_CLIENT, content.getString(DctmAttributes.SET_CLIENT));
 			info.setProperty(DctmAttributes.SET_TIME,
