@@ -347,22 +347,34 @@ class FilenameMapper {
 					resolverMap.put("fixChar",
 						Tools.coalesce(fixer != null ? fixer.getFixChar() : null, FilenameMapper.DEFAULT_FIX_CHAR)
 							.toString());
-					long fixes = deduplicator.fixConflicts((CmfObjectRef entryId, String currentName, long count) -> {
+					long fixes = deduplicator.fixConflicts((CmfObjectRef entryId, String currentName, Long count) -> {
 						// Empty names get modified into their object IDs...
 						if (StringUtils.isEmpty(currentName)) {
 							currentName = entryId.getId();
 						}
-						resolverMap.put("typeName", entryId.getType().name());
-						resolverMap.put("typeOrdinal", entryId.getType().ordinal());
-						resolverMap.put("id", entryId.getId());
-						resolverMap.put("name", currentName);
-						resolverMap.put("count", count);
-						String newName = StringSubstitutor.replace(resolverPattern, resolverMap);
-						if (fixer != null) {
-							// Make sure we use a clean name...
-							newName = fixer.fixName(newName);
+						retry: while (true) {
+							resolverMap.put("typeName", entryId.getType().name());
+							resolverMap.put("typeOrdinal", entryId.getType().ordinal());
+							resolverMap.put("id", entryId.getId());
+							resolverMap.put("name", currentName);
+							resolverMap.put("count", count);
+							String newName = StringSubstitutor.replace(resolverPattern, resolverMap);
+							if (fixer != null) {
+								// Make sure we use a clean name...
+								String fixedName = fixer.fixName(newName);
+								int lengthDiff = newName.length() - fixedName.length();
+								if (lengthDiff > 0) {
+									// If the fixed name is shorter than the new name, then it means
+									// we have a length problem in the fix and we need a different
+									// approach. So we truncate the original name by as many
+									// characters as necessary, and try again
+									currentName = currentName.substring(0, currentName.length() - lengthDiff);
+									continue retry;
+								}
+								newName = fixedName;
+							}
+							return newName;
 						}
-						return newName;
 					});
 					this.log.info("Conflicts fixed: {}", fixes);
 					deduplicator.processRenamedEntries((entryId, entryName) -> {
