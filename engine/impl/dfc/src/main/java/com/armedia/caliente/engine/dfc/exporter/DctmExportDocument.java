@@ -391,20 +391,20 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 				info, marshaled.getDescription(), e);
 		}
 
+		if (skipContent) { return info; }
+
+		// CmfStore the content in the filesystem
+		CmfContentStore<?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, info);
 		try {
-			// CmfStore the content in the filesystem
-			CmfContentStore<?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, info);
-			if (!skipContent) {
-				if (contentHandle.getSourceStore().isSupportsFileAccess()) {
-					document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, info.getRenditionPage(),
-						info.getModifier(), false);
-				} else {
-					// Doesn't support file-level, so we (sadly) use stream-level transfers
-					try (InputStream in = document.getContentEx3(format, info.getRenditionPage(), info.getModifier(),
-						false)) {
-						// Don't pull the content until we're sure we can put it somewhere...
-						contentHandle.setContents(in);
-					}
+			if (contentHandle.getSourceStore().isSupportsFileAccess()) {
+				document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, info.getRenditionPage(),
+					info.getModifier(), false);
+			} else {
+				// Doesn't support file-level, so we (sadly) use stream-level transfers
+				try (InputStream in = document.getContentEx3(format, info.getRenditionPage(), info.getModifier(),
+					false)) {
+					// Don't pull the content until we're sure we can put it somewhere...
+					contentHandle.setContents(in);
 				}
 			}
 		} catch (Exception e) {
