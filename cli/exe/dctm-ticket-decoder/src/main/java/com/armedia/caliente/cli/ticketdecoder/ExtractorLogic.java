@@ -72,7 +72,6 @@ import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.function.CheckedPredicate;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfFolder;
-import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -419,29 +418,6 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		}
 	}
 
-	public String getExtension(IDfSession session, IDfId format) throws DfException {
-		if ((format == null) || format.isNull() || !format.isObjectId()) { return null; }
-		IDfPersistentObject obj = session.getObject(format);
-		if (!obj.isInstanceOf("dm_format")) { return null; }
-		IDfFormat f = IDfFormat.class.cast(obj);
-		return f.getDOSExtension();
-	}
-
-	public String getFileStoreLocation(IDfSession session, IDfContent content) throws DfException {
-		try {
-			IDfPersistentObject obj = session.getObject(content.getStorageId());
-			String root = obj.getString("root");
-			if (!StringUtils.isBlank(root)) {
-				obj = session.getObjectByQualification(
-					String.format("dm_location where object_name = %s", DfcUtils.quoteString(root)));
-				if ((obj != null) && obj.hasAttr("file_system_path")) { return obj.getString("file_system_path"); }
-			}
-			return String.format("(no-path-for-store-%s)", content.getStorageId());
-		} catch (DfIdNotFoundException e) {
-			return String.format("(store-%s-not-found)", content.getStorageId());
-		}
-	}
-
 	private Integer calculatePriority(Rendition rendition, RenditionIndexGroup indexer) {
 		if (this.renditionPrioritizer == null) { return null; }
 		return this.renditionPrioritizer.apply(rendition, indexer);
@@ -502,7 +478,6 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		try (DfcQuery query = new DfcQuery(session, String.format(dql, DfcUtils.quoteString(id.getId())),
 			DfcQuery.Type.DF_EXECREAD_QUERY)) {
 
-			final String prefix = DfcUtils.getDocbasePrefix(session);
 			Rendition rendition = null;
 			while (query.hasNext()) {
 				final IDfId contentId = query.next().getId("r_object_id");
@@ -515,15 +490,6 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 						contentId, id, e);
 					continue;
 				}
-				String streamPath = DfcUtils.decodeDataTicket(prefix, content.getDataTicket(), '/');
-				String extension = getExtension(session, content.getFormatId());
-				if (StringUtils.isBlank(extension)) {
-					extension = StringUtils.EMPTY;
-				} else {
-					extension = String.format(".%s", extension);
-				}
-
-				final String pathPrefix = getFileStoreLocation(session, content);
 
 				if ((rendition == null) || !rendition.matches(content)) {
 					saveRendition(target, rendition);
@@ -539,7 +505,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 					.setNumber(content.getInt("page")) //
 					.setLength(content.getContentSize()) //
 					.setHash(content.getContentHash()) //
-					.setPath(String.format("%s/%s%s", pathPrefix.replace('\\', '/'), streamPath, extension)));
+					.setPath(DfcUtils.getContentLocation(session, content)));
 			}
 			saveRendition(target, rendition);
 			return maxRendition;

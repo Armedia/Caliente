@@ -51,17 +51,21 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.StreamTools;
 import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfTypedObject;
+import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfList;
 
 public class DfcUtils {
@@ -157,6 +161,7 @@ public class DfcUtils {
 		DF_PERMIT_VERSION(IDfACL.DF_PERMIT_VERSION, IDfACL.DF_PERMIT_VERSION_STR),
 		DF_PERMIT_WRITE(IDfACL.DF_PERMIT_WRITE, IDfACL.DF_PERMIT_WRITE_STR),
 		DF_PERMIT_DELETE(IDfACL.DF_PERMIT_DELETE, IDfACL.DF_PERMIT_DELETE_STR);
+
 		private final int num;
 		private final String str;
 
@@ -176,6 +181,7 @@ public class DfcUtils {
 		DF_EXTENDED_RESTRICTION(IDfPermit.DF_EXTENDED_RESTRICTION, IDfPermit.DF_EXTENDED_RESTRICTION_STR),
 		DF_REQUIRED_GROUP(IDfPermit.DF_REQUIRED_GROUP, IDfPermit.DF_REQUIRED_GROUP_STR),
 		DF_REQUIRED_GROUP_SET(IDfPermit.DF_REQUIRED_GROUP_SET, IDfPermit.DF_REQUIRED_GROUP_SET_STR);
+
 		private final int num;
 		private final String str;
 
@@ -775,5 +781,41 @@ public class DfcUtils {
 			(i > 0 ? result.append(sep) : result).append(dataTicketHex.substring(i, i + 2));
 		}
 		return result.toString();
+	}
+
+	public static String getExtension(IDfSession session, IDfId format) throws DfException {
+		if ((format == null) || format.isNull() || !format.isObjectId()) { return null; }
+		IDfPersistentObject obj = session.getObject(format);
+		if (!obj.isInstanceOf("dm_format")) { return null; }
+		IDfFormat f = IDfFormat.class.cast(obj);
+		return f.getDOSExtension();
+	}
+
+	public static String getFileStoreRoot(IDfSession session, IDfContent content) throws DfException {
+		try {
+			IDfPersistentObject obj = session.getObject(content.getStorageId());
+			String root = obj.getString("root");
+			if (!StringUtils.isBlank(root)) {
+				obj = session.getObjectByQualification(
+					String.format("dm_location where object_name = %s", DfcUtils.quoteString(root)));
+				if ((obj != null) && obj.hasAttr("file_system_path")) { return obj.getString("file_system_path"); }
+			}
+			return String.format("(no-path-for-store-%s)", content.getStorageId());
+		} catch (DfIdNotFoundException e) {
+			return String.format("(store-%s-not-found)", content.getStorageId());
+		}
+	}
+
+	public static String getContentLocation(IDfSession session, IDfContent content) throws DfException {
+		final String prefix = DfcUtils.getDocbasePrefix(session);
+		String streamPath = DfcUtils.decodeDataTicket(prefix, content.getDataTicket(), '/');
+		String extension = DfcUtils.getExtension(session, content.getFormatId());
+		if (StringUtils.isBlank(extension)) {
+			extension = StringUtils.EMPTY;
+		} else {
+			extension = String.format(".%s", extension);
+		}
+		final String pathPrefix = DfcUtils.getFileStoreRoot(session, content);
+		return String.format("%s/%s%s", pathPrefix.replace('\\', '/'), streamPath, extension);
 	}
 }
