@@ -424,6 +424,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 				}
 			}
 		} catch (Exception e) {
+			info.setProperty("error_message", Tools.dumpStackTrace(e));
 			this.log.error("Failed to store the content stream {} for {}", info, marshaled.getDescription(), e);
 		}
 		return info;
