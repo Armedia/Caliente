@@ -44,12 +44,12 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ConcurrentTools;
 import com.armedia.commons.utilities.function.TriFunction;
 
 public class FilenameDeduplicator {
@@ -391,7 +391,7 @@ public class FilenameDeduplicator {
 	}
 
 	private FSEntryContainer getContainer(final CmfObjectRef id) {
-		return ConcurrentUtils.createIfAbsentUnchecked(this.containers, id, () -> new FSEntryContainer(id));
+		return ConcurrentTools.createIfAbsent(this.containers, id, (i) -> new FSEntryContainer(i));
 	}
 
 	public synchronized long renameAllEntries(BiFunction<CmfObjectRef, String, String> renamer) {
@@ -482,8 +482,7 @@ public class FilenameDeduplicator {
 		if (!this.idValidator.test(containerId)) { return null; }
 		if (!this.idValidator.test(entryId)) { return null; }
 		final FSEntryContainer container = getContainer(containerId);
-		FSEntry entry = ConcurrentUtils.createIfAbsentUnchecked(this.allEntries, entryId,
-			() -> new FSEntry(entryId, name));
+		FSEntry entry = ConcurrentTools.createIfAbsent(this.allEntries, entryId, (id) -> new FSEntry(id, name));
 		entry.addParent(container);
 		container.addChild(entry);
 		return entry;
