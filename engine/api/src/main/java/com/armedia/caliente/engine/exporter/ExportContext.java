@@ -68,7 +68,13 @@ public class ExportContext< //
 	}
 
 	public boolean shouldWaitForRequirement(CmfObject.Archetype referrent, CmfObject.Archetype referenced) {
-		return false;
+		switch (referrent) {
+			case FOLDER:
+			case DOCUMENT:
+				return (referenced == CmfObject.Archetype.FOLDER);
+			default:
+				return false;
+		}
 	}
 
 	public final boolean isReferrentLoop(ExportTarget referrent) {

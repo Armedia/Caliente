@@ -53,17 +53,6 @@ class DctmExportContext extends ExportContext<IDfSession, IDfValue, DctmExportCo
 		this.specialValues = factory.getSpecialValues();
 	}
 
-	@Override
-	public boolean shouldWaitForRequirement(CmfObject.Archetype referrent, CmfObject.Archetype referenced) {
-		switch (referrent) {
-			case FOLDER:
-			case DOCUMENT:
-				return (referenced == CmfObject.Archetype.FOLDER);
-			default:
-				return false;
-		}
-	}
-
 	public final boolean isSpecialGroup(String group) {
 		return this.specialValues.isSpecialGroup(group);
 	}
