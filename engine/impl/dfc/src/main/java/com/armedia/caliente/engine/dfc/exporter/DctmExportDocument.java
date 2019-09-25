@@ -63,6 +63,7 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.DfcVersion;
 import com.armedia.caliente.tools.dfc.DfcVersionHistory;
 import com.armedia.caliente.tools.dfc.DfcVersionNumber;
@@ -278,7 +279,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			+ "select dcs.r_object_id " //
 			+ "  from dmr_content_r dcr, dmr_content_s dcs " //
 			+ " where dcr.r_object_id = dcs.r_object_id " //
-			+ "   and dcr.parent_id = '%s' " //
+			+ "   and dcr.parent_id = %s " //
 			// If we're not including renditions, then we only want rendition #0 since that's the
 			// primary content stream.
 			+ (includeRenditions ? "" : "   and dcs.rendition = 0 ") //
@@ -292,7 +293,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		final boolean ignoreContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		Collection<Supplier<CmfContentStream>> suppliers = new ArrayList<>(pageCount);
 		for (int i = 0; i < pageCount; i++) {
-			try (DfcQuery query = new DfcQuery(session, String.format(dql, parentId, i),
+			try (DfcQuery query = new DfcQuery(session, String.format(dql, DfcUtils.quoteString(parentId), i),
 				DfcQuery.Type.DF_EXECREAD_QUERY)) {
 				while (query.hasNext()) {
 					final IDfId contentId = query.next().getId(DctmAttributes.R_OBJECT_ID);
