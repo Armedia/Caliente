@@ -299,8 +299,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 					final IDfId contentId = query.next().getId(DctmAttributes.R_OBJECT_ID);
 					if (!processed.add(contentId.getId())) {
 						ctx.trackWarning(marshaled,
-							"Duplicate content node detected for %s [%s](%s) - content ID [%s] is a duplicate",
-							marshaled.getType().name(), marshaled.getLabel(), marshaled.getId(), contentId.getId());
+							"Duplicate content node detected for %s - content ID [%s] is a duplicate",
+							marshaled.getDescription(), contentId.getId());
 						continue;
 					}
 
