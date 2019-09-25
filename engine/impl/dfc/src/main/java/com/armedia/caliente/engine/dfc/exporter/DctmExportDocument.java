@@ -388,11 +388,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			info.setProperty(DctmAttributes.DATA_TICKET, String.valueOf(dataTicket));
 			info.setProperty(DctmAttributes.DATA_TICKET + "_hex", String.format("%08x", dataTicket));
 
-			String dataTicketPath = DfcUtils.decodeDataTicket(dataStoreId, dataTicket, '/');
-			if (!StringUtils.isEmpty(info.getExtension())) {
-				dataTicketPath += "." + info.getExtension();
-			}
-			info.setProperty(DctmAttributes.DATA_TICKET + "_path", dataTicketPath);
+			info.setProperty(DctmAttributes.DATA_TICKET + "_path", DfcUtils.getContentLocation(session, content));
 
 			info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
 			info.setProperty(DctmAttributes.SET_CLIENT, content.getString(DctmAttributes.SET_CLIENT));
