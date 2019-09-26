@@ -26,10 +26,10 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.dynamic;
 
-import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 
-public class TestObjectContext extends DynamicElementContext {
+public class TestObjectContext extends DynamicElementContext<CmfValue> {
 
 	private final TestObjectFacade object;
 

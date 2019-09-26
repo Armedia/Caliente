@@ -154,6 +154,17 @@ public class CmisExportEngine extends
 	}
 
 	@Override
+	protected String findFolderName(Session session, String folderId, Object ecmObject) {
+		try {
+			CmisObject folder = session.getObject(folderId);
+			folder.refresh();
+			return folder.getName();
+		} catch (CmisObjectNotFoundException e) {
+			return null;
+		}
+	}
+
+	@Override
 	protected Stream<ExportTarget> findExportTargetsByQuery(Session session, CfgTools configuration,
 		CmisExportDelegateFactory factory, String query) throws Exception {
 		return StreamTools.of(getQueryIterator(session, query));

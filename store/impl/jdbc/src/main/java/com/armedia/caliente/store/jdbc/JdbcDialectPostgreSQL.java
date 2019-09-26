@@ -45,6 +45,14 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 			" order by o.tier_id, o.history_id, o.object_number" //
 	;
 
+	private static final String LOAD_OBJECTS_BY_HISTORY_ID = //
+		"       select o.*, n.new_name " + //
+			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+			"    where o.object_type = ? " + //
+			"      and o.history_id = any ( ? ) " + //
+			" order by o.tier_id, o.history_id, o.object_number" //
+	;
+
 	private static final String LOAD_OBJECTS_BY_ID_CURRENT = //
 		"       select o.*, n.new_name " + //
 			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
@@ -116,6 +124,8 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 		switch (sql) {
 			case LOAD_OBJECTS_BY_ID:
 				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID;
+			case LOAD_OBJECTS_BY_HISTORY_ID:
+				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_HISTORY_ID;
 			case LOAD_OBJECTS_BY_ID_CURRENT:
 				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID_CURRENT;
 			case LOAD_OBJECT_NAMES_BY_ID:

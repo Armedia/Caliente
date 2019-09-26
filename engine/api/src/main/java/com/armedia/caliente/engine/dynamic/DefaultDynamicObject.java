@@ -33,22 +33,21 @@ import java.util.Set;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfValue;
 
 public class DefaultDynamicObject extends DynamicObject {
 
-	private final CmfObject<CmfValue> object;
+	private final CmfObject<?> object;
 	private final Set<String> secondaries;
 
-	public DefaultDynamicObject(CmfObject<CmfValue> object) {
+	public <VALUE> DefaultDynamicObject(CmfObject<VALUE> object) {
 		Objects.requireNonNull(object, "Must provide a CmfObject to pattern this instance on");
 		this.object = object;
-		for (CmfAttribute<CmfValue> att : object.getAttributes()) {
-			this.attributes.put(att.getName(), new DynamicValue(att));
+		for (CmfAttribute<VALUE> att : object.getAttributes()) {
+			this.attributes.put(att.getName(), new DynamicValue(att, object.getTranslator()));
 		}
 
-		for (CmfProperty<CmfValue> prop : object.getProperties()) {
-			this.privateProperties.put(prop.getName(), new DynamicValue(prop));
+		for (CmfProperty<VALUE> prop : object.getProperties()) {
+			this.privateProperties.put(prop.getName(), new DynamicValue(prop, object.getTranslator()));
 		}
 
 		this.secondaries = new LinkedHashSet<>(object.getSecondarySubtypes());

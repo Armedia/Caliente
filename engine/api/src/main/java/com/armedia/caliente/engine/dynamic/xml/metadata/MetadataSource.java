@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.dynamic.xml.metadata;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -196,8 +198,29 @@ public class MetadataSource extends BaseShareableLockable {
 
 	public void close() {
 		shareLockedUpgradable(() -> this.dataSource, Objects::nonNull, (e) -> {
-			// TODO: is there any uninitialization we should be doing here?
-			this.dataSource = null;
+			try {
+				// We do it like this since this is faster than reflection
+				if (AutoCloseable.class.isInstance(this.dataSource)) {
+					AutoCloseable.class.cast(this.dataSource).close();
+				} else {
+					// No dice on the static linking, does it have a public void close() method?
+					Method m = null;
+					try {
+						m = this.dataSource.getClass().getMethod("close");
+					} catch (Exception ex) {
+						// Do nothing...
+					}
+					if ((m != null) && Modifier.isPublic(m.getModifiers())) {
+						m.invoke(this.dataSource);
+					}
+				}
+			} catch (Exception ex) {
+				if (this.log.isDebugEnabled()) {
+					this.log.warn("Failed to close the DataSource for metadataSource {}", this.name, ex);
+				}
+			} finally {
+				this.dataSource = null;
+			}
 		});
 	}
 }

@@ -25,6 +25,20 @@
 		<appender-ref ref="default" />
 	</appender>
 
+	<appender name="error" class="org.apache.log4j.FileAppender">
+		<param name="File" value="${logName}.err" />
+		<param name="ImmediateFlush" value="true" />
+		<param name="Append" value="true" />
+		<param name="Threshold" value="trace" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n" />
+		</layout>
+	</appender>
+	<appender name="error.async" class="org.apache.log4j.AsyncAppender">
+		<param name="BufferSize" value="10240" />
+		<appender-ref ref="error" />
+	</appender>
+
 	<logger name="com.armedia.caliente.cli.ticketdecoder">
 		<level value="INFO"/>
 	</logger>
@@ -32,6 +46,11 @@
 	<logger name="console">
 		<level value="INFO" />
 		<appender-ref ref="stdout.async" />
+	</logger>
+
+	<logger name="errors">
+		<level value="ERROR" />
+		<appender-ref ref="error.async" />
 	</logger>
 
 	<root>

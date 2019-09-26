@@ -26,11 +26,12 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.ticketdecoder;
 
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.filter.EnumValueFilter;
+import com.armedia.caliente.cli.filter.RegexValueFilter;
 
 public enum CLIParam implements Supplier<Option> {
 	//
@@ -47,15 +48,6 @@ public enum CLIParam implements Supplier<Option> {
 				"A JEXL 3 expression that will be boiled down to TRUE (non-0 number, non-null result, etc) or FALSE (null result, 0-number) which will be used to select which object(s) are included in the output. The content object can be referenced as 'content'") //
 	),
 	//
-
-	format( //
-		new OptionImpl() //
-			.setRequired(true) //
-			.setArgumentLimits(1) //
-			.setArgumentName("format") //
-			.setDescription("The output format") //
-			.setValueFilter(new EnumValueFilter<>(false, PersistenceFormat.class)) //
-	), //
 
 	from( //
 		new OptionImpl() //
@@ -80,6 +72,16 @@ public enum CLIParam implements Supplier<Option> {
 			.setArgumentName("configuration") //
 			.setDescription(
 				"The Log4j configuration (XML format) to use instead of the default (can reference ${logName} from --log)") //
+	), //
+
+	output(
+		new OptionImpl() //
+			.setRequired(true) //
+			.setArgumentLimits(1, -1) //
+			.setArgumentName("format@target-file") //
+			.setValueFilter(new RegexValueFilter(DctmTicketDecoder.OUTPUT_PARSER, String.format(
+				"The file to which output will be written, and the format in which it will be written (supported formats are %s, case-insensitive)",
+				Arrays.toString(PersistenceFormat.values())))) //
 	), //
 
 	prefer_rendition(
@@ -109,14 +111,6 @@ public enum CLIParam implements Supplier<Option> {
 				"A JEXL 3 expression that will be boiled down to TRUE (non-0 number, non-null result, etc) or FALSE (null result, 0-number) which will be used to select which rendition(s) are included in the output. The rendition object can be referenced as 'rendition'") //
 	),
 	//
-
-	target(
-		new OptionImpl() //
-			.setRequired(true) //
-			.setArgumentLimits(1) //
-			.setArgumentName("target-file") //
-			.setDescription("The file to which output will be written") //
-	), //
 
 	//
 	;

@@ -57,9 +57,11 @@ import com.armedia.caliente.tools.dfc.DfcQuery;
 import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.DfObjectNotFoundException;
+import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
+import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
@@ -149,6 +151,18 @@ public class DctmExportEngine extends
 			return DctmExportTools.getExportTarget(t);
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to construct an ExportTarget instance", e);
+		}
+	}
+
+	@Override
+	protected String findFolderName(IDfSession session, String folderId, Object ecmObject) {
+		try {
+			IDfFolder folder = session.getFolderBySpecification(folderId);
+			if (folder == null) { return null; }
+			return folder.getObjectName();
+		} catch (DfException e) {
+			this.log.warn("Failed to locate the folder with ID[{}]", folderId, e);
+			return null;
 		}
 	}
 

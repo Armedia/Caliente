@@ -43,7 +43,7 @@ import com.armedia.caliente.engine.dynamic.DynamicValue;
 public class MapVariableValue extends AbstractMapValue {
 
 	@Override
-	protected final Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx) {
+	protected final Map<String, DynamicValue> getCandidateValues(DynamicElementContext<?> ctx) {
 		return ctx.getVariables();
 	}
 

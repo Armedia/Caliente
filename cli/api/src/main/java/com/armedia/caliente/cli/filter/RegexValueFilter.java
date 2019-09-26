@@ -26,6 +26,7 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.filter;
 
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -45,8 +46,28 @@ public class RegexValueFilter extends OptionValueFilter {
 		this(caseSensitive, regex, null);
 	}
 
+	public RegexValueFilter(String regex, String description) {
+		this(true, regex, description);
+	}
+
 	public RegexValueFilter(boolean caseSensitive, String regex, String description) {
-		this.pattern = Pattern.compile(regex, caseSensitive ? 0 : Pattern.CASE_INSENSITIVE);
+		this(caseSensitive, Pattern.compile(regex, caseSensitive ? 0 : Pattern.CASE_INSENSITIVE), description);
+	}
+
+	public RegexValueFilter(Pattern pattern) {
+		this(true, pattern, null);
+	}
+
+	public RegexValueFilter(boolean caseSensitive, Pattern pattern) {
+		this(caseSensitive, pattern, null);
+	}
+
+	public RegexValueFilter(Pattern pattern, String description) {
+		this(true, pattern, description);
+	}
+
+	public RegexValueFilter(boolean caseSensitive, Pattern pattern, String description) {
+		this.pattern = Objects.requireNonNull(pattern, "Must provide a regular expression pattern to use");
 		if (StringUtils.isBlank(description)) {
 			description = String.format("a string that matches the regex /%s/%s", this.pattern.pattern(),
 				caseSensitive ? "" : " (case insensitively)");

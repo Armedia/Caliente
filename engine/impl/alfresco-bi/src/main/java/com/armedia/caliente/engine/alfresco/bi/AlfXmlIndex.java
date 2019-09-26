@@ -52,6 +52,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.xml.XmlTools;
 
 public class AlfXmlIndex implements Closeable {
 
@@ -96,7 +97,7 @@ public class AlfXmlIndex implements Closeable {
 	}
 
 	protected JAXBContext getJAXBContext(Class<?>... classes) throws JAXBException {
-		return JAXBContext.newInstance(classes);
+		return XmlTools.getContext(classes);
 	}
 
 	protected Marshaller getMarshaller(JAXBContext context) throws JAXBException {

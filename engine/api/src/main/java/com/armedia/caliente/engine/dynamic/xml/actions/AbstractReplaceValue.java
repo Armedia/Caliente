@@ -82,7 +82,7 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 	}
 
 	@Override
-	protected final void executeAction(DynamicElementContext ctx, DynamicValue candidate) throws ActionException {
+	protected final void executeAction(DynamicElementContext<?> ctx, DynamicValue candidate) throws ActionException {
 		RegularExpression regexBase = getRegex();
 		final String regex = Tools.toString(ActionTools.eval(regexBase, ctx));
 		if (regex == null) { throw new ActionException("No regular expression given to check against"); }

@@ -181,7 +181,8 @@ public class MetadataSet extends BaseShareableLockable {
 								object.getDescription()),
 							e);
 					} else {
-						// TODO: Log this exception anyway...
+						this.log.warn("Failed to load the external metadata for set [{}] for {}", this.id,
+							object.getDescription(), e);
 					}
 				}
 

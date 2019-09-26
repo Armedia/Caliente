@@ -152,6 +152,16 @@ public class UcmExportEngine extends
 	}
 
 	@Override
+	protected String findFolderName(UcmSession session, String folderId, Object ecmObject) {
+		try {
+			UcmFolder folder = session.getFolder(new URI(folderId));
+			return (folder != null ? folder.getName() : null);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	@Override
 	protected CmfValue getValue(CmfValue.Type type, Object value) {
 		return CmfValue.newValue(type, value);
 	}

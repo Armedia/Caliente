@@ -48,7 +48,7 @@ public abstract class ConditionalAction extends ConditionalElement implements Ac
 	}
 
 	@Override
-	public final void apply(DynamicElementContext ctx) throws ActionException {
+	public final void apply(DynamicElementContext<?> ctx) throws ActionException {
 		if (isSkippable()) { return; }
 		try {
 			if (checkCondition(ctx)) {
@@ -60,5 +60,5 @@ public abstract class ConditionalAction extends ConditionalElement implements Ac
 		}
 	}
 
-	protected abstract void executeAction(DynamicElementContext ctx) throws ActionException;
+	protected abstract void executeAction(DynamicElementContext<?> ctx) throws ActionException;
 }

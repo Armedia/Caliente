@@ -93,6 +93,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	protected void marshalParentsAndPaths(CmisExportContext ctx, CmfObject<CmfValue> marshaled, T object)
 		throws ExportException {
 		CmfProperty<CmfValue> parents = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfValue.Type.ID, true);
+		CmfProperty<CmfValue> parentIds = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfValue.Type.STRING,
+			true);
 		CmfProperty<CmfValue> paths = new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING, true);
 		CmfProperty<CmfValue> fullPaths = new CmfProperty<>(IntermediateProperty.FULL_PATH, CmfValue.Type.STRING, true);
 		final String rootPath = ctx.getSession().getRootFolder().getName();
@@ -109,9 +111,11 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				paths.addValue(new CmfValue(path));
 				fullPaths.addValue(new CmfValue(String.format("%s/%s", path, object.getName())));
 			}
+			// TODO: Calculate the parentTreeID values
 		}
 		marshaled.setProperty(paths);
 		marshaled.setProperty(fullPaths);
+		marshaled.setProperty(parentIds);
 		marshaled.setProperty(parents);
 	}
 

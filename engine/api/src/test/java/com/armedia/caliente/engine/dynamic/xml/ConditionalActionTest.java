@@ -40,11 +40,11 @@ public class ConditionalActionTest {
 	@Test
 	public void testConditionalAction() throws ActionException {
 		final AtomicInteger executed = new AtomicInteger(0);
-		final DynamicElementContext ctx = new TestObjectContext();
+		final DynamicElementContext<?> ctx = new TestObjectContext();
 
 		ConditionalAction action = new ConditionalAction() {
 			@Override
-			protected void executeAction(DynamicElementContext ctx) throws ActionException {
+			protected void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 				executed.incrementAndGet();
 			}
 		};

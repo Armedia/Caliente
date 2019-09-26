@@ -58,7 +58,7 @@ public class SecondarySubtypeAdd extends ConditionalAction {
 	}
 
 	@Override
-	protected void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 		String secondary = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (StringUtils.isEmpty(secondary)) { return; }
 

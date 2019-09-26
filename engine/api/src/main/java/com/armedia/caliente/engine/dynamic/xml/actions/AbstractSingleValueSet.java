@@ -50,10 +50,10 @@ public abstract class AbstractSingleValueSet extends ConditionalAction {
 		this.name = name;
 	}
 
-	protected abstract void setNewValue(DynamicElementContext ctx, String newValue) throws ActionException;
+	protected abstract void setNewValue(DynamicElementContext<?> ctx, String newValue) throws ActionException;
 
 	@Override
-	protected final void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected final void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 		String newValue = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (newValue == null) { throw new ActionException("No value given to set"); }
 		setNewValue(ctx, newValue);

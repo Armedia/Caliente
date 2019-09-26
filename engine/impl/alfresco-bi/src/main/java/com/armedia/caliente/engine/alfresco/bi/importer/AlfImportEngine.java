@@ -48,7 +48,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
@@ -70,10 +69,8 @@ import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.alfresco.bi.BulkImportManager;
@@ -83,70 +80,6 @@ import com.armedia.commons.utilities.xml.XmlTools;
 
 public class AlfImportEngine extends
 	ImportEngine<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportContextFactory, AlfImportDelegateFactory, AlfImportEngineFactory> {
-
-	private final class NameFixer implements CmfNameFixer<CmfValue> {
-
-		private final String forbidden = "[\"*\\\\><?/:|]";
-
-		private long renamed = 0;
-		private long visited = 0;
-
-		private final Logger output;
-
-		private NameFixer(Logger output) {
-			if (output == null) {
-				output = LoggerFactory.getLogger(getClass());
-			}
-			this.output = output;
-		}
-
-		@Override
-		public String fixName(CmfObject<CmfValue> dataObject) throws CmfStorageException {
-			this.visited++;
-			final String originalName = getObjectName(dataObject);
-			String newName = originalName;
-
-			// File names may not contain any of the following characters: "*\><?/:|
-			newName = newName.replaceAll(this.forbidden, "_");
-
-			// File names may not end in one or more dots (.)
-			newName = newName.replaceAll("\\.$", "_");
-
-			// File names may not end in one or more spaces
-			newName = newName.replaceAll("\\s$", "_");
-
-			if (!Tools.equals(originalName, newName)) {
-				this.renamed++;
-			}
-
-			if ((this.visited % 1000) == 0) {
-				this.output.info("Analyzed {} names, fixed {} so far", this.visited, this.renamed);
-			}
-			return newName;
-		}
-
-		@Override
-		public boolean handleException(Exception e) {
-			return false;
-		}
-
-		@Override
-		public boolean supportsType(CmfObject.Archetype type) {
-			switch (type) {
-				case DOCUMENT:
-				case FOLDER:
-					return true;
-				default:
-					return false;
-			}
-		}
-
-		@Override
-		public void nameFixed(CmfObject<CmfValue> dataObject, String oldName, String newName) {
-			this.output.info("Renamed {} with ID[{}] from [{}] to [{}]", dataObject.getType(), dataObject.getId(),
-				oldName, newName);
-		}
-	};
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -447,11 +380,6 @@ public class AlfImportEngine extends
 	@Override
 	protected AlfImportDelegateFactory newDelegateFactory(AlfRoot session, CfgTools cfg) throws Exception {
 		return new AlfImportDelegateFactory(this, cfg);
-	}
-
-	@Override
-	protected CmfNameFixer<CmfValue> getNameFixer(Logger output) {
-		return new NameFixer(output);
 	}
 
 	protected String getObjectName(CmfObject<CmfValue> object) {

@@ -81,10 +81,10 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 		this.cardinality = value;
 	}
 
-	protected abstract Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx);
+	protected abstract Map<String, DynamicValue> getCandidateValues(DynamicElementContext<?> ctx);
 
 	@Override
-	public boolean check(DynamicElementContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext<?> ctx) throws ConditionException {
 		Expression nameExp = getName();
 		Object name = ConditionTools.eval(nameExp, ctx);
 		if (name == null) { throw new ConditionException("No name was given for the candidate value check"); }

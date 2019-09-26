@@ -41,7 +41,7 @@ import com.armedia.caliente.engine.dynamic.DynamicValue;
 public class IsFirstVersion implements Condition {
 
 	@Override
-	public boolean check(DynamicElementContext ctx) {
+	public boolean check(DynamicElementContext<?> ctx) {
 		DynamicValue index = ctx.getDynamicObject().getPriv().get(IntermediateProperty.VERSION_INDEX.encode());
 		Object v = ((index != null) && !index.isEmpty() ? index.getValue() : null);
 		if (v == null) { return true; }
