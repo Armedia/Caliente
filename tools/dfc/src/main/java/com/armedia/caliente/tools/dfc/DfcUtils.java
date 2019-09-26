@@ -835,9 +835,11 @@ public class DfcUtils {
 		if (StringUtils.isBlank(extension)) {
 			extension = StringUtils.EMPTY;
 		} else {
-			extension = String.format(".%s", extension);
+			// Faster than String.format()
+			extension = "." + extension;
 		}
 		String pathPrefix = DfcUtils.getFileStoreRoot(session, content);
-		return String.format("%s%s%s%s", pathPrefix, sep, streamPath, extension);
+		// This is more efficient than String.format()
+		return pathPrefix + sep + streamPath + extension;
 	}
 }
