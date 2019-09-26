@@ -121,32 +121,59 @@ public class DfcUtils {
 
 	public static enum DbType {
 		//
-		ORACLE("^.*\\.Oracle$"), //
-		MSSQL("^.*\\.SQLServer$"), //
+		ORACLE, //
+		SQLSERVER, //
+		// DB2, // TODO: Enable this when we support DB2
+		//
+		;
+
+		public static DbType decode(String dbtype) {
+			return DbType.valueOf(StringUtils.upperCase(dbtype));
+		}
+
+		public static DbType decode(IDfSession session) throws DfException {
+			return DbType
+				.decode(Objects.requireNonNull(session, "Must provide a session to check against").getDBMSName());
+		}
+
+		public static DbType decode(IDfTypedObject object) throws DfException {
+			return DbType.decode(Objects.requireNonNull(object, "Must provide an object to check with").getSession());
+		}
+	}
+
+	public static enum Platform {
+		//
+		LINUX("Linux"), //
+		WINDOWS("Win(32|64)"), //
+		// SOLARIS("Solaris"), // TODO: Enable when we support Solaris
+		// AIX("AIX"), // TODO: Enable when we support AIX
 		//
 		;
 
 		private final Pattern pattern;
 
-		private DbType(String pattern) {
+		private Platform(String pattern) {
 			this.pattern = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 		}
 
-		public final boolean matches(String serverVersion) {
-			if (serverVersion == null) {
+		public static Platform decode(String serverVersionString) {
+			if (serverVersionString == null) {
 				throw new IllegalArgumentException("Must provide a server version string to examine");
 			}
-			return this.pattern.matcher(serverVersion).matches();
+			for (Platform p : Platform.values()) {
+				if (p.pattern.matcher(serverVersionString).find()) { return p; }
+			}
+			throw new IllegalArgumentException(
+				String.format("No supported platform could be decoded from [%s]", serverVersionString));
 		}
 
-		public final boolean matches(IDfSession session) throws DfException {
-			if (session == null) { throw new IllegalArgumentException("Must provide a session to examine"); }
-			return matches(session.getServerVersion());
+		public static Platform decode(IDfSession session) throws DfException {
+			return Platform
+				.decode(Objects.requireNonNull(session, "Must provide a session to check from").getServerVersion());
 		}
 
-		public final boolean matches(IDfTypedObject object) throws DfException {
-			if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
-			return matches(object.getSession());
+		public static Platform decode(IDfTypedObject object) throws DfException {
+			return Platform.decode(Objects.requireNonNull(object, "Must provide an object to check with").getSession());
 		}
 	}
 
@@ -267,30 +294,18 @@ public class DfcUtils {
 		}
 	}
 
-	public static DbType getDbType(IDfSession session) throws DfException {
-		if (session == null) {
-			throw new IllegalArgumentException("Must provide a session to identify the database from");
-		}
-		final String serverVersion = session.getServerVersion();
-		for (DbType type : DbType.values()) {
-			if (type.matches(serverVersion)) { return type; }
-		}
-		throw new UnsupportedOperationException(String
-			.format("Failed to identify a supported database from the server version string [%s]", serverVersion));
-	}
-
 	public static String generateSqlDateClause(Date date, IDfSession session) throws DfException {
 		// First, output to the "netural" format
 		final String dateString = DateFormatUtils.formatUTC(date, DfcConstant.JAVA_SQL_DATETIME_PATTERN);
 		// Now, select the database format string
 		final String ret;
-		DbType dbType = DfcUtils.getDbType(session);
+		DbType dbType = DbType.decode(session);
 		switch (dbType) {
 			case ORACLE:
 				ret = String.format("TO_DATE(%s, %s)", DfcUtils.quoteStringForSql(dateString),
 					DfcUtils.ORACLE_DATETIME_PATTERN);
 				break;
-			case MSSQL:
+			case SQLSERVER:
 				ret = String.format("CONVERT(DATETIME, %s, %d)", DfcUtils.quoteStringForSql(dateString),
 					DfcConstant.MSSQL_DATETIME_PATTERN);
 				break;
@@ -815,7 +830,15 @@ public class DfcUtils {
 		} else {
 			extension = String.format(".%s", extension);
 		}
-		final String pathPrefix = DfcUtils.getFileStoreRoot(session, content);
-		return String.format("%s/%s%s", pathPrefix.replace('\\', '/'), streamPath, extension);
+		String pathPrefix = DfcUtils.getFileStoreRoot(session, content);
+		final char sep;
+		if (Platform.decode(session) == Platform.WINDOWS) {
+			sep = '\\';
+			streamPath = streamPath.replace('/', sep);
+		} else {
+			sep = '/';
+			pathPrefix = pathPrefix.replace('\\', sep);
+		}
+		return String.format("%s%s%s%s", pathPrefix, sep, streamPath, extension);
 	}
 }
