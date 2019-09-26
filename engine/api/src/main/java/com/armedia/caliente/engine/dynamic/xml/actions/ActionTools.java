@@ -37,7 +37,7 @@ class ActionTools {
 	private ActionTools() {
 	}
 
-	public static Object eval(Expression e, DynamicElementContext ctx) throws ActionException {
+	public static Object eval(Expression e, DynamicElementContext<?> ctx) throws ActionException {
 		try {
 			return Expression.eval(e, ctx);
 		} catch (ScriptException ex) {

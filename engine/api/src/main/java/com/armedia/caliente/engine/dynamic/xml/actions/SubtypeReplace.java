@@ -40,12 +40,12 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 public class SubtypeReplace extends AbstractSingleReplace {
 
 	@Override
-	protected String getOldValue(DynamicElementContext ctx) {
+	protected String getOldValue(DynamicElementContext<?> ctx) {
 		return ctx.getDynamicObject().getSubtype();
 	}
 
 	@Override
-	protected void setNewValue(DynamicElementContext ctx, String newValue) {
+	protected void setNewValue(DynamicElementContext<?> ctx, String newValue) {
 		ctx.getDynamicObject().setSubtype(newValue);
 	}
 }

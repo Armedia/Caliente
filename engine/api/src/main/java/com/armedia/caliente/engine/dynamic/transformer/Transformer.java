@@ -40,7 +40,6 @@ import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
 import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
@@ -90,28 +89,31 @@ public class Transformer extends BaseShareableLockable {
 		this.attributeMapper = attributeMapper;
 	}
 
-	private DynamicElementContext createContext(CmfValueMapper mapper, CmfObject<CmfValue> object) {
-		return new DynamicElementContext(object, new DefaultDynamicObject(object), mapper, this.metadataLoader);
+	private <VALUE> DynamicElementContext<VALUE> createContext(CmfValueMapper mapper, CmfObject<VALUE> object) {
+		return new DynamicElementContext<>(object, new DefaultDynamicObject(object), mapper, this.metadataLoader);
 	}
 
-	public CmfObject<CmfValue> transform(CmfValueMapper mapper, final CmfAttributeNameMapper nameMapper,
-		SchemaService schemaService, CmfObject<CmfValue> object) throws TransformerException {
+	public <VALUE> CmfObject<VALUE> transform(CmfValueMapper mapper, final CmfAttributeNameMapper nameMapper,
+		SchemaService schemaService, CmfObject<VALUE> object) throws TransformerException {
 		try (SharedAutoLock lock = autoSharedLock()) {
 			if (this.closed) { throw new TransformerException("This transformer instance is already closed"); }
-			if (this.transformations == null) { return object; }
-			DynamicElementContext ctx = createContext(mapper, object);
+			if ((this.transformations == null) && (this.attributeMapper == null)) { return object; }
+			DynamicElementContext<VALUE> ctx = createContext(mapper, object);
 			try {
-				try {
-					this.transformations.apply(ctx);
-				} catch (ProcessingCompletedException e) {
-					// Do nothing - this is simply our shortcut for stopping the transformation work
-					// in its tracks
+				if (this.transformations != null) {
+					try {
+						this.transformations.apply(ctx);
+					} catch (ProcessingCompletedException e) {
+						// Do nothing - this is simply our shortcut for stopping the transformation
+						// work in its tracks
+					}
 				}
 
 				final DynamicObject dynamic = ctx.getDynamicObject();
 				if (this.attributeMapper != null) {
 					try {
-						this.attributeMapper.renderMappedAttributes(schemaService, dynamic, nameMapper);
+						this.attributeMapper.renderMappedAttributes(schemaService, dynamic,
+							object.getTranslator().getAttributeNameMapper());
 					} catch (SchemaServiceException e) {
 						throw new TransformerException(
 							String.format("Failed to apply the attribute mappings for %s", object.getDescription()), e);
@@ -128,7 +130,7 @@ public class Transformer extends BaseShareableLockable {
 		}
 	}
 
-	private void destroyContext(DynamicElementContext ctx) {
+	private void destroyContext(DynamicElementContext<?> ctx) {
 		// Clean things out... to help the GC...
 		ctx.getDynamicObject().getAtt().clear();
 		ctx.getDynamicObject().getPriv().clear();

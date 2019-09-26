@@ -43,7 +43,7 @@ import com.armedia.caliente.engine.dynamic.DynamicValue;
 public class IsCalientePropertyValue extends AbstractAttributeCalientePropertyVariableValueCheck {
 
 	@Override
-	protected Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx) {
+	protected Map<String, DynamicValue> getCandidateValues(DynamicElementContext<?> ctx) {
 		return ctx.getDynamicObject().getPriv();
 	}
 

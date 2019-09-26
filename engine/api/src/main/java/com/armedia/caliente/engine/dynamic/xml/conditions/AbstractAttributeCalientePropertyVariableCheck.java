@@ -43,12 +43,12 @@ public abstract class AbstractAttributeCalientePropertyVariableCheck extends Abs
 
 	private static final DynamicValue NULL = null;
 
-	protected abstract Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx);
+	protected abstract Map<String, DynamicValue> getCandidateValues(DynamicElementContext<?> ctx);
 
 	protected abstract boolean check(DynamicValue candidate);
 
 	@Override
-	public final boolean check(DynamicElementContext ctx) throws ConditionException {
+	public final boolean check(DynamicElementContext<?> ctx) throws ConditionException {
 		final String comparand = Tools.toString(ConditionTools.eval(this, ctx));
 		final Comparison comparison = getComparison();
 		final Map<String, DynamicValue> values = getCandidateValues(ctx);

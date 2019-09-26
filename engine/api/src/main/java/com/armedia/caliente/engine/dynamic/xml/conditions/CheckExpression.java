@@ -158,7 +158,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 	}
 
 	@Override
-	public boolean check(DynamicElementContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext<?> ctx) throws ConditionException {
 		final CmfValue.Type type = getType();
 		Expression leftExp = getLeft();
 		Object leftVal = ConditionTools.eval(leftExp, ctx);

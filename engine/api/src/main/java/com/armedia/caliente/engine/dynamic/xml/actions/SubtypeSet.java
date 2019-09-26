@@ -43,7 +43,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 public class SubtypeSet extends AbstractSingleValueSet {
 
 	@Override
-	protected void setNewValue(DynamicElementContext ctx, String newValue) throws ActionException {
+	protected void setNewValue(DynamicElementContext<?> ctx, String newValue) throws ActionException {
 		newValue = StringUtils.strip(newValue);
 		if (StringUtils.isEmpty(newValue)) { throw new ActionException("Empty value given to set"); }
 		ctx.getDynamicObject().setSubtype(newValue);

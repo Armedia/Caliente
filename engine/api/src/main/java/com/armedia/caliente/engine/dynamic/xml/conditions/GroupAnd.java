@@ -43,7 +43,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 public class GroupAnd extends ConditionGroup {
 
 	@Override
-	protected boolean check(List<Condition> elements, DynamicElementContext ctx) throws ConditionException {
+	protected boolean check(List<Condition> elements, DynamicElementContext<?> ctx) throws ConditionException {
 		for (Condition c : elements) {
 			Objects.requireNonNull(c, "Null conditional elements are not allowed");
 			if (!c.check(ctx)) { return false; }

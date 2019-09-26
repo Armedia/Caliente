@@ -95,7 +95,7 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 
 	public abstract E getType();
 
-	protected abstract String getMappedLabel(DynamicElementContext ctx) throws ActionException;
+	protected abstract String getMappedLabel(DynamicElementContext<?> ctx) throws ActionException;
 
 	protected abstract CmfObject.Archetype getMappingType(E type);
 
@@ -107,13 +107,13 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 		this.cardinality = cardinality;
 	}
 
-	private String mapValue(DynamicElementContext ctx, CmfObject.Archetype mappingType, String mappingName,
+	private String mapValue(DynamicElementContext<?> ctx, CmfObject.Archetype mappingType, String mappingName,
 		String sourceValue, CmfValue.Type targetType) throws ActionException {
 		Mapping m = ctx.getAttributeMapper().getTargetMapping(mappingType, mappingName, sourceValue);
 		return (m != null ? m.getTargetValue() : null);
 	}
 
-	private void applyMapping(DynamicElementContext ctx, CmfObject.Archetype type, String mappingName,
+	private void applyMapping(DynamicElementContext<?> ctx, CmfObject.Archetype type, String mappingName,
 		DynamicValue candidate) throws ActionException {
 
 		if (!candidate.isMultivalued()) {
@@ -159,7 +159,7 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 	}
 
 	@Override
-	protected void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 		final CmfObject.Archetype type = Tools.coalesce(getMappingType(getType()), ctx.getDynamicObject().getType());
 		final String comparand = Tools.toString(ActionTools.eval(getAttributeName(), ctx));
 		if (comparand == null) { throw new ActionException("No comparand given to check the name against"); }

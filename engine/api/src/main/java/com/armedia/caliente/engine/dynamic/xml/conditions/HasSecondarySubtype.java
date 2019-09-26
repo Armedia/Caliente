@@ -41,7 +41,7 @@ import com.armedia.caliente.store.CmfValue;
 public class HasSecondarySubtype extends AbstractExpressionComparison {
 
 	@Override
-	public boolean check(DynamicElementContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext<?> ctx) throws ConditionException {
 		Object secondary = ConditionTools.eval(this, ctx);
 		if (secondary == null) { return false; }
 		final Comparison comp = getComparison();

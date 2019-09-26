@@ -59,7 +59,7 @@ public class CustomAction extends ConditionalAction {
 	}
 
 	@Override
-	protected void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 		String className = Tools.toString(ActionTools.eval(getClassName(), ctx));
 		if (className == null) { throw new ActionException("No classname given to insantiate"); }
 

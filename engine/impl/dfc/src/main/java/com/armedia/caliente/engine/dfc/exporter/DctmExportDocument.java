@@ -63,6 +63,7 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.DfcVersion;
 import com.armedia.caliente.tools.dfc.DfcVersionHistory;
 import com.armedia.caliente.tools.dfc.DfcVersionNumber;
@@ -278,7 +279,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			+ "select dcs.r_object_id " //
 			+ "  from dmr_content_r dcr, dmr_content_s dcs " //
 			+ " where dcr.r_object_id = dcs.r_object_id " //
-			+ "   and dcr.parent_id = '%s' " //
+			+ "   and dcr.parent_id = %s " //
 			// If we're not including renditions, then we only want rendition #0 since that's the
 			// primary content stream.
 			+ (includeRenditions ? "" : "   and dcs.rendition = 0 ") //
@@ -292,14 +293,14 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		final boolean ignoreContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		Collection<Supplier<CmfContentStream>> suppliers = new ArrayList<>(pageCount);
 		for (int i = 0; i < pageCount; i++) {
-			try (DfcQuery query = new DfcQuery(session, String.format(dql, parentId, i),
+			try (DfcQuery query = new DfcQuery(session, String.format(dql, DfcUtils.quoteString(parentId), i),
 				DfcQuery.Type.DF_EXECREAD_QUERY)) {
 				while (query.hasNext()) {
 					final IDfId contentId = query.next().getId(DctmAttributes.R_OBJECT_ID);
 					if (!processed.add(contentId.getId())) {
 						ctx.trackWarning(marshaled,
-							"Duplicate content node detected for %s [%s](%s) - content ID [%s] is a duplicate",
-							marshaled.getType().name(), marshaled.getLabel(), marshaled.getId(), contentId.getId());
+							"Duplicate content node detected for %s - content ID [%s] is a duplicate",
+							marshaled.getDescription(), contentId.getId());
 						continue;
 					}
 
@@ -377,6 +378,18 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			info.setFileName(objectName);
 			info.setLength(content.getContentSize());
 
+			info.setProperty("document_id", document.getObjectId().getId());
+			info.setProperty("content_id", contentId.getId());
+
+			final String dataStoreId = content.getStorageId().getId();
+			info.setProperty("storage_id", dataStoreId);
+
+			final int dataTicket = content.getDataTicket();
+			info.setProperty(DctmAttributes.DATA_TICKET, String.valueOf(dataTicket));
+			info.setProperty(DctmAttributes.DATA_TICKET + "_hex", String.format("%08x", dataTicket));
+
+			info.setProperty(DctmAttributes.DATA_TICKET + "_path", DfcUtils.getContentLocation(session, content));
+
 			info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
 			info.setProperty(DctmAttributes.SET_CLIENT, content.getString(DctmAttributes.SET_CLIENT));
 			info.setProperty(DctmAttributes.SET_TIME,
@@ -390,23 +403,24 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 				info, marshaled.getDescription(), e);
 		}
 
+		if (skipContent) { return info; }
+
+		// CmfStore the content in the filesystem
+		CmfContentStore<?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, info);
 		try {
-			// CmfStore the content in the filesystem
-			CmfContentStore<?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, info);
-			if (!skipContent) {
-				if (contentHandle.getSourceStore().isSupportsFileAccess()) {
-					document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, info.getRenditionPage(),
-						info.getModifier(), false);
-				} else {
-					// Doesn't support file-level, so we (sadly) use stream-level transfers
-					try (InputStream in = document.getContentEx3(format, info.getRenditionPage(), info.getModifier(),
-						false)) {
-						// Don't pull the content until we're sure we can put it somewhere...
-						contentHandle.setContents(in);
-					}
+			if (contentHandle.getSourceStore().isSupportsFileAccess()) {
+				document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, info.getRenditionPage(),
+					info.getModifier(), false);
+			} else {
+				// Doesn't support file-level, so we (sadly) use stream-level transfers
+				try (InputStream in = document.getContentEx3(format, info.getRenditionPage(), info.getModifier(),
+					false)) {
+					// Don't pull the content until we're sure we can put it somewhere...
+					contentHandle.setContents(in);
 				}
 			}
 		} catch (Exception e) {
+			info.setProperty("error_message", Tools.dumpStackTrace(e));
 			this.log.error("Failed to store the content stream {} for {}", info, marshaled.getDescription(), e);
 		}
 		return info;

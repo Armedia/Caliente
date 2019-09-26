@@ -166,7 +166,7 @@ public class MetadataFromSQL extends MetadataReaderBase {
 							// column in the result set
 							Object value = getValue(rs, columnIndex, attribute.getType());
 							if (!rs.wasNull()) {
-								finalValue = codec.decode(new CmfValue(attribute.getType(), value));
+								finalValue = translator.getValue(attribute.getType(), value);
 							}
 							attribute.addValue(finalValue);
 

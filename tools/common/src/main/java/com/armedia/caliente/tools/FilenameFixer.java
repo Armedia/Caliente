@@ -24,7 +24,7 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.cli.filenamemapper;
+package com.armedia.caliente.tools;
 
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;

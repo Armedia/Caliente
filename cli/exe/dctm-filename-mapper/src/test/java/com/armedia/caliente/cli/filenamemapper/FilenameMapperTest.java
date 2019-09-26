@@ -33,6 +33,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.armedia.caliente.tools.FilenameFixer;
 import com.armedia.commons.utilities.Tools;
 
 public class FilenameMapperTest {

@@ -93,7 +93,7 @@ public class ValueMappingSet extends ConditionalAction {
 	}
 
 	@Override
-	protected void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 		CmfObject.Archetype type = getType();
 		if (type == null) { throw new ActionException("Must provide a type name to associate the mapping with"); }
 		String name = Tools.toString(ActionTools.eval(getName(), ctx));

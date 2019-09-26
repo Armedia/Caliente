@@ -148,7 +148,7 @@ public class ConditionWrapper implements Condition {
 	}
 
 	@Override
-	public boolean check(DynamicElementContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext<?> ctx) throws ConditionException {
 		return hasCondition() && getCondition().check(ctx);
 	}
 }

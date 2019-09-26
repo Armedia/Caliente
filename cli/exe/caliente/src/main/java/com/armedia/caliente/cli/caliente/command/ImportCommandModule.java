@@ -72,8 +72,6 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 		settings.put(ImportSetting.TARGET_LOCATION.getLabel(), commandValues.getString(CLIParam.target, "/"));
 		settings.put(ImportSetting.TRIM_PREFIX.getLabel(), commandValues.getInteger(CLIParam.trim_path, 0));
 		settings.put(ImportSetting.RESTRICT_TO.getLabel(), commandValues.getStrings(CLIParam.restrict_to));
-		settings.put(ImportSetting.NO_FILENAME_MAP.getLabel(), commandValues.isPresent(CLIParam.no_filename_map));
-		settings.put(ImportSetting.FILENAME_MAP.getLabel(), commandValues.getString(CLIParam.filename_map));
 		settings.put(ImportSetting.VALIDATE_REQUIREMENTS.getLabel(),
 			commandValues.isPresent(CLIParam.validate_requirements));
 		return super.preConfigure(state, commandValues, settings);

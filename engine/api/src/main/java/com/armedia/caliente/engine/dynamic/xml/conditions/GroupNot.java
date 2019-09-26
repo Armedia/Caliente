@@ -41,7 +41,7 @@ import com.armedia.caliente.engine.dynamic.xml.ConditionWrapper;
 public class GroupNot extends ConditionWrapper {
 
 	@Override
-	public boolean check(DynamicElementContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext<?> ctx) throws ConditionException {
 		final Condition condition = getCondition();
 		if (condition == null) { return true; }
 		return !condition.check(ctx);
