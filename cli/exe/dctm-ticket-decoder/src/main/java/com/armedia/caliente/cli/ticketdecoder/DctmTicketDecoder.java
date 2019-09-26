@@ -36,9 +36,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -49,7 +46,6 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,80 +89,30 @@ public class DctmTicketDecoder {
 		return new PredicateContentFinder(pool, scannedIds, source, consumer);
 	}
 
-	private ContentPersistor initializePersistor(PersistenceFormat format, File target) throws Exception {
-		ContentPersistor p = Objects.requireNonNull(format).newPersistor(Objects.requireNonNull(target));
-		p.initialize();
-		return p;
+	private ContentPersistor buildPersistor(PersistenceFormat format, File target) throws Exception {
+		return Objects.requireNonNull(format).newPersistor(Objects.requireNonNull(target));
 	}
 
-	private ContentPersistor initializePersistor(Map<PersistenceFormat, File> outputInfo) throws Exception {
+	private ContentPersistor buildPersistor(Map<PersistenceFormat, File> outputInfo) throws Exception {
 		if (outputInfo.size() == 1) {
 			Map.Entry<PersistenceFormat, File> e = outputInfo.entrySet().iterator().next();
-			return initializePersistor(e.getKey(), e.getValue());
+			return buildPersistor(e.getKey(), e.getValue());
 		}
 
 		// Ok...so we have multiple persistors. We'll need one thread per initialized persistor...
-		final Collection<Triple<PersistenceFormat, File, ContentPersistor>> persistors = new ArrayList<>();
+		final Collection<ContentPersistor> persistors = new ArrayList<>();
+		final ThreadGroup threadGroup = new ThreadGroup("AsyncPersistors");
 		for (PersistenceFormat format : outputInfo.keySet()) {
 			File target = outputInfo.get(format);
 			try {
-				persistors.add(Triple.of(format, target, initializePersistor(format, target)));
+				persistors.add(new AsyncContentPersistorWrapper(threadGroup, format.newPersistor(target)));
 			} catch (Exception e) {
 				this.console.error("Failed to initialize the {} persistor to [{}]", format.name(), target, e);
 				continue;
 			}
 		}
 
-		final Map<PersistenceFormat, Future<?>> futures = new EnumMap<>(PersistenceFormat.class);
-		final ExecutorService executor = Executors.newFixedThreadPool(persistors.size());
-		final Map<PersistenceFormat, BlockingQueue<Content>> queues = new EnumMap<>(PersistenceFormat.class);
-
-		persistors.forEach((t) -> {
-			futures.put(t.getLeft(), executor.submit(() -> {
-				// Do the actual work of polling its queue
-				return null;
-			}));
-		});
-
-		return new ContentPersistor() {
-
-			@Override
-			public void persist(Content content) {
-				// Push it to each queue, which in turn feeds each persistor
-				for (PersistenceFormat format : queues.keySet()) {
-					BlockingQueue<Content> q = queues.get(format);
-					try {
-						q.put(content);
-					} catch (InterruptedException e) {
-						DctmTicketDecoder.this.log.error("Interrupted feeding the {} queue, content = {}", format,
-							content);
-					}
-				}
-			}
-
-			@Override
-			public void close() throws Exception {
-				// Stop each polling thread
-
-				persistors.forEach((t) -> {
-					PersistenceFormat format = t.getLeft();
-					File target = t.getMiddle();
-					ContentPersistor persistor = t.getRight();
-					try {
-						persistor.close();
-					} catch (Exception e) {
-						DctmTicketDecoder.this.log.warn("Exception caught trying to close the {} persistor to [{}]",
-							format, target, e);
-					}
-				});
-
-				// Stop the executors
-				for (PersistenceFormat format : queues.keySet()) {
-					BlockingQueue<Content> q = queues.get(format);
-					q.put(null);
-				}
-			}
-		};
+		return new DelegatingContentPersistor(persistors);
 	}
 
 	protected int run(OptionValues cli) throws Exception {
@@ -237,8 +183,8 @@ public class DctmTicketDecoder {
 			final Collection<Pair<IDfId, Exception>> failedSubmissions = new ShareableCollection<>(new LinkedList<>());
 			final Collection<Pair<Content, Exception>> failedOutput = new ShareableCollection<>(new LinkedList<>());
 
-			try (ContentPersistor persistor = initializePersistor(outputInfo)) {
-
+			try (ContentPersistor persistor = buildPersistor(outputInfo)) {
+				persistor.initialize();
 				final Set<String> submittedSources = new HashSet<>();
 				this.console.info("Starting the background searches...");
 				extractors.start(extractorLogic, Math.max(1, threads), "Extractor", true);
