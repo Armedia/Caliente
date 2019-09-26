@@ -30,8 +30,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
-import org.apache.commons.text.StringEscapeUtils;
-
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.ticketdecoder.xml.Page;
 import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
@@ -48,7 +46,6 @@ public class CsvContentPersistor extends BaseShareableLockable implements Conten
 	private static final Page NULL_PAGE = new Page().setPath("");
 
 	private static final CsvFormatter FORMAT = new CsvFormatter(true, //
-		"NUMBER", //
 		"R_OBJECT_ID", //
 		"I_CHRONICLE_ID", //
 		"R_VERSION_LABEL", //
@@ -93,16 +90,16 @@ public class CsvContentPersistor extends BaseShareableLockable implements Conten
 		}
 		try (MutexAutoLock lock = autoMutexLock()) {
 			this.out.printf(CsvContentPersistor.FORMAT.render( //
-				StringEscapeUtils.escapeCsv(content.getId()), //
-				StringEscapeUtils.escapeCsv(content.getHistoryId()), //
-				StringEscapeUtils.escapeCsv(content.getVersion()), //
+				content.getId(), //
+				content.getHistoryId(), //
+				content.getVersion(), //
 				content.isCurrent(), //
-				StringEscapeUtils.escapeCsv(path), //
+				path, //
 				page.getContentId(), //
 				page.getLength(), //
-				StringEscapeUtils.escapeCsv(rendition.getFormat()), //
-				StringEscapeUtils.escapeCsv(page.getPath()) //
-			));
+				rendition.getFormat()), //
+				page.getPath() //
+			);
 			this.out.flush();
 		}
 	}
