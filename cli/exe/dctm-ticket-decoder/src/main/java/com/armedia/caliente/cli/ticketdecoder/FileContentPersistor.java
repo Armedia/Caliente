@@ -26,6 +26,7 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.ticketdecoder;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
@@ -63,7 +64,7 @@ public abstract class FileContentPersistor extends ContentPersistor {
 
 	@Override
 	protected void startup() throws Exception {
-		this.out = new FileWriter(this.target);
+		this.out = new BufferedWriter(new FileWriter(this.target));
 	}
 
 	@Override
