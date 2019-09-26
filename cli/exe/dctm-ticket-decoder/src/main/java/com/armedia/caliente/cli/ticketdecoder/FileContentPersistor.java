@@ -62,9 +62,13 @@ public abstract class FileContentPersistor extends ContentPersistor {
 		return this.name;
 	}
 
+	protected Writer buildWriter() throws Exception {
+		return new BufferedWriter(new FileWriter(this.target));
+	}
+
 	@Override
 	protected void startup() throws Exception {
-		this.out = new BufferedWriter(new FileWriter(this.target));
+		this.out = buildWriter();
 	}
 
 	@Override
