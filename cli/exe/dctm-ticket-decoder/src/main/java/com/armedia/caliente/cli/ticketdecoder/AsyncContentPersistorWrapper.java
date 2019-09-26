@@ -11,12 +11,12 @@ public final class AsyncContentPersistorWrapper extends ContentPersistor {
 
 	private static final Content ENDER = new Content();
 
+	private final BlockingQueue<Content> queue = new LinkedBlockingQueue<>();
+	private final AtomicBoolean running = new AtomicBoolean(false);
 	private final String name;
 	private final ContentPersistor persistor;
 	private final ThreadGroup threadGroup;
 	private Thread thread = null;
-	private final AtomicBoolean running = new AtomicBoolean(false);
-	private final BlockingQueue<Content> queue = new LinkedBlockingQueue<>();
 
 	public AsyncContentPersistorWrapper(String name, ContentPersistor persistor) {
 		this(null, name, persistor);
