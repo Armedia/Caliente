@@ -127,8 +127,8 @@ public class DfcUtils {
 		//
 		;
 
-		public static DbType decode(String dbtype) {
-			return DbType.valueOf(StringUtils.upperCase(dbtype));
+		public static DbType decode(String dbmsName) {
+			return DbType.valueOf(StringUtils.upperCase(dbmsName));
 		}
 
 		public static DbType decode(IDfSession session) throws DfException {
