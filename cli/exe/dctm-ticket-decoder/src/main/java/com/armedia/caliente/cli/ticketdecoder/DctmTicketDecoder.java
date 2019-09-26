@@ -69,6 +69,7 @@ public class DctmTicketDecoder {
 
 	private final Logger console = LoggerFactory.getLogger("console");
 	private final Logger log = LoggerFactory.getLogger(getClass());
+	private final ThreadGroup threadGroup = new ThreadGroup("AsyncPersistors");
 
 	private final DfcLaunchHelper dfcLaunchHelper;
 	private final ThreadsLaunchHelper threadHelper;
@@ -97,11 +98,10 @@ public class DctmTicketDecoder {
 
 		// Ok...so we have multiple persistors. We'll need one thread per initialized persistor...
 		final Collection<ContentPersistor> persistors = new ArrayList<>();
-		final ThreadGroup threadGroup = new ThreadGroup("AsyncPersistors");
 		for (PersistenceFormat format : outputInfo.keySet()) {
 			File target = outputInfo.get(format);
 			try {
-				persistors.add(new AsyncContentPersistorWrapper(threadGroup, format.newPersistor(target)));
+				persistors.add(new AsyncContentPersistorWrapper(this.threadGroup, format.newPersistor(target)));
 			} catch (Exception e) {
 				this.console.error("Failed to initialize the {} persistor to [{}]", format.name(), target, e);
 				continue;
@@ -173,9 +173,10 @@ public class DctmTicketDecoder {
 			final AtomicLong outputCounter = new AtomicLong(0);
 			final Collection<Pair<IDfId, Exception>> failedSubmissions = new ShareableCollection<>(new LinkedList<>());
 
-			try {
-				try (ContentPersistor persistor = new AsyncContentPersistorWrapper(buildPersistor(outputInfo))) {
-					persistor.initialize();
+			try (ContentPersistor persistor = new AsyncContentPersistorWrapper(this.threadGroup,
+				buildPersistor(outputInfo))) {
+				persistor.initialize();
+				try {
 					final Set<String> submittedSources = new HashSet<>();
 					this.console.info("Starting the background searches...");
 					extractors.start(new ExtractorLogic(pool //
