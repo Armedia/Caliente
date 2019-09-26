@@ -63,12 +63,16 @@ public abstract class FileContentPersistor extends ContentPersistor {
 	}
 
 	protected Writer buildWriter() throws Exception {
-		return new BufferedWriter(new FileWriter(this.target));
+		return new FileWriter(this.target);
+	}
+
+	protected Writer wrapWriter(Writer w) throws Exception {
+		return new BufferedWriter(w);
 	}
 
 	@Override
 	protected void startup() throws Exception {
-		this.out = buildWriter();
+		this.out = wrapWriter(buildWriter());
 	}
 
 	@Override
