@@ -26,31 +26,68 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.ticketdecoder;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
 import java.util.Objects;
-import java.util.function.Function;
 
 import org.apache.commons.lang3.StringUtils;
 
-public enum PersistenceFormat {
-	//
-	CSV(CsvContentPersistor::new), //
-	XML(XmlContentPersistor::new), //
-	//
-	;
+public abstract class FileContentPersistor extends ContentPersistor {
+	private static final String BASE_NAME = "File";
 
-	private final Function<File, ? extends ContentPersistor> constructor;
+	private final String name;
 
-	private PersistenceFormat(Function<File, ? extends ContentPersistor> constructor) {
-		this.constructor = Objects.requireNonNull(constructor, "Must provide a non-null constructor");
+	protected Writer out = null;
+
+	public FileContentPersistor(File target) {
+		this(target, FileContentPersistor.BASE_NAME);
 	}
 
-	public ContentPersistor newPersistor(File target) {
-		return this.constructor.apply(target);
+	public FileContentPersistor(File target, String baseName) {
+		super(Objects.requireNonNull(target));
+		if (StringUtils.isBlank(baseName)) {
+			baseName = FileContentPersistor.BASE_NAME;
+		}
+		if (this.target != null) {
+			this.name = String.format("%s [%s]", baseName, target);
+		} else {
+			this.name = baseName;
+		}
 	}
 
-	public static PersistenceFormat decode(String value) {
-		if (value == null) { return null; }
-		return PersistenceFormat.valueOf(StringUtils.upperCase(value));
+	@Override
+	public final String getName() {
+		return this.name;
+	}
+
+	protected Writer buildWriter() throws Exception {
+		return new FileWriter(this.target);
+	}
+
+	protected Writer wrapWriter(Writer w) throws Exception {
+		return new BufferedWriter(w);
+	}
+
+	@Override
+	protected void startup() throws Exception {
+		this.out = wrapWriter(buildWriter());
+	}
+
+	@Override
+	protected void cleanup() throws Exception {
+		if (this.out != null) {
+			try {
+				this.out.close();
+			} finally {
+				this.out = null;
+			}
+		}
+	}
+
+	@Override
+	public String toString() {
+		return this.name;
 	}
 }

@@ -38,4 +38,6 @@ import com.armedia.commons.utilities.codec.Codec;
  */
 public interface CmfValueCodec<VALUE> extends Codec<VALUE, CmfValue> {
 
+	public Object getValue(VALUE v);
+
 }

@@ -40,7 +40,6 @@ import org.junit.jupiter.api.Test;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.transformer.TestObjectContext;
-import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.store.CmfValue;
 
 public class ExpressionTest {
@@ -57,7 +56,7 @@ public class ExpressionTest {
 
 	@Test
 	public void testValue() throws Exception {
-		DynamicElementContext ctx = new TestObjectContext();
+		DynamicElementContext<?> ctx = new TestObjectContext();
 		Expression e = null;
 
 		e = new Expression();
@@ -117,7 +116,7 @@ public class ExpressionTest {
 			languages.addAll(f.getNames());
 		}
 
-		DynamicElementContext ctx = new TestObjectContext();
+		DynamicElementContext<?> ctx = new TestObjectContext();
 
 		Expression.eval(null, null);
 

@@ -93,15 +93,15 @@ public enum CLIParam implements Supplier<Option> {
 			.setArgumentLimits(1) //
 			.setArgumentName("base-data-directory") //
 			.setRequired(true) //
-			.setDescription("The directory to use as the root for all storage (except if --db or --content are used)") //
+			.setDescription("The directory to use as the root for all storage (except if --db or --streams are used)") //
 	), //
 
 	db( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
-			.setArgumentName("metadata-directory-or-config") //
+			.setArgumentName("metadata-directory-or-config-file") //
 			.setDescription(
-				"The directory into which the metadata database will be stored, or the XML file that describes the store configuration") //
+				"The directory into which the metadata database will be stored, or as per the XML file that describes the store configuration") //
 	), //
 
 	direct_fs( //
@@ -417,9 +417,9 @@ public enum CLIParam implements Supplier<Option> {
 	streams( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
-			.setArgumentName("stream-directory-or-config") //
+			.setArgumentName("stream-directory-or-config-file") //
 			.setDescription(
-				"The directory into which the content streams will be stored (if omitted, it will be placed in the 'content' subdirectory of the Database directory), or the XML file that describes the store configuration") //
+				"The directory into which the content streams will be stored (if omitted, it will be placed in the 'streams' subdirectory of the Database directory), or as per the XML file that describes the store configuration") //
 	), //
 
 	target( //

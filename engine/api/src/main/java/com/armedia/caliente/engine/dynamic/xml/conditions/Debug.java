@@ -41,7 +41,7 @@ import com.armedia.caliente.engine.dynamic.xml.ConditionWrapper;
 public class Debug extends ConditionWrapper {
 
 	@Override
-	public boolean check(DynamicElementContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext<?> ctx) throws ConditionException {
 		// This only exists so we can latch on a debugger easily
 		final Condition condition = getCondition();
 		final boolean result;

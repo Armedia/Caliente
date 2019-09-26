@@ -5,6 +5,5 @@ import org.junit.jupiter.api.Test;
 public class IsCalientePropertyValueTest {
 	@Test
 	public void test() {
-		// TODO: Implement this test
 	}
 }

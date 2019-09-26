@@ -30,6 +30,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationHandler;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -41,6 +43,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -60,6 +64,7 @@ import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
@@ -75,12 +80,17 @@ import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfObjectStore.LockStatus;
 import com.armedia.caliente.store.CmfObjectStore.StoreStatus;
+import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValue.Type;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.DelayedSupplier;
+import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ConcurrentTools;
 import com.armedia.commons.utilities.line.LineScanner;
 
 public abstract class ExportEngine<//
@@ -132,6 +142,8 @@ public abstract class ExportEngine<//
 	private final boolean supportsMultipleSources;
 	private final Set<SearchType> supportedSearches;
 	private final Result unsupportedResult = new Result(ExportSkipReason.UNSUPPORTED);
+	private final ConcurrentMap<String, String> idPathFixes = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, String> idFolderNames = new ConcurrentHashMap<>();
 
 	private class ExportListenerPropagator extends ListenerPropagator<ExportResult> implements InvocationHandler {
 
@@ -195,7 +207,7 @@ public abstract class ExportEngine<//
 	private Result exportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> referrent,
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject, final CONTEXT ctx,
-		final ExportListener listener, final ConcurrentMap<ExportTarget, ExportOperation> statusMap)
+		final ExportListener listener, final ConcurrentMap<ExportTarget, DelayedSupplier<ExportOperation>> statusMap)
 		throws ExportException, CmfStorageException {
 		final ExportTarget target = sourceObject.getExportTarget();
 		try {
@@ -226,7 +238,8 @@ public abstract class ExportEngine<//
 						// We got the lock, which means we create the locker object
 						this.log.trace("Locked {} for storage", targetLogLabel);
 						thisStatus = new ExportOperation(target, targetLogLabel, referrentTarget, referrentLogLabel);
-						statusMap.put(target, thisStatus);
+						ConcurrentTools.createIfAbsent(statusMap, target, (t) -> new DelayedSupplier<>())
+							.set(thisStatus);
 						break;
 
 					case ALREADY_LOCKED: // fall-through
@@ -282,10 +295,59 @@ public abstract class ExportEngine<//
 		}
 	}
 
+	protected String getFixedFolderName(CONTEXT ctx, CmfObject<VALUE> object, String folderId, Object ecmObject)
+		throws ExportException {
+		try {
+			return ConcurrentTools.createIfAbsent(this.idFolderNames, folderId, (id) -> {
+				String name = ctx.getFixedName(CmfObject.Archetype.FOLDER, id, id);
+				if (!StringUtils.isBlank(name)) { return name; }
+				name = findFolderName(ctx.getSession(), id, ecmObject);
+				if (!StringUtils.isBlank(name)) { return name; }
+				throw new Exception(String.format("Could not find the folder with ID [%s] to retrieve its name", id));
+			});
+		} catch (Exception e) {
+			throw new ExportException(
+				String.format("Can't calculate the folder name for folder with ID [%s] - please fix this!", folderId));
+		}
+	}
+
+	protected abstract String findFolderName(SESSION session, String folderId, Object ecmObject);
+
+	protected Collection<VALUE> calculateFixedPath(CONTEXT ctx, CmfObject<VALUE> object, Object ecmObject)
+		throws ExportException {
+		CmfProperty<VALUE> parentPathIds = object.getProperty(IntermediateProperty.PARENT_TREE_IDS);
+		if ((parentPathIds == null) || !parentPathIds.hasValues()) { return Collections.emptyList(); }
+
+		Collection<VALUE> values = new ArrayList<>(parentPathIds.getValueCount());
+		for (VALUE v : parentPathIds) {
+			final String fixed = ConcurrentTools.createIfAbsent(this.idPathFixes, v.toString(), (idPath) -> {
+				List<String> ids = FileNameTools.tokenize(idPath, '/');
+				List<String> names = new ArrayList<>(ids.size());
+				for (String id : ids) {
+					String name = getFixedFolderName(ctx, object, id, ecmObject);
+					if (name == null) {
+						throw new ExportException(
+							String.format("Did not cache the folder name for the folder with ID [%s]", id));
+					}
+					names.add(name);
+				}
+				return FileNameTools.reconstitute(names, true, false, '/');
+			});
+			try {
+				values.add(object.getTranslator().getValue(Type.STRING, fixed));
+			} catch (ParseException e) {
+				// Should never happen...but still
+				throw new ExportException(String.format("Failed to encode the String value [%s] as a STRING for %s",
+					fixed, object.getDescription()));
+			}
+		}
+		return values;
+	}
+
 	private Result doExportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> referrent, final ExportTarget target,
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject, final CONTEXT ctx,
-		final ExportListener listener, final ConcurrentMap<ExportTarget, ExportOperation> statusMap,
+		final ExportListener listener, final ConcurrentMap<ExportTarget, DelayedSupplier<ExportOperation>> statusMap,
 		final ExportOperation thisStatus) throws ExportException, CmfStorageException {
 
 		boolean success = false;
@@ -317,7 +379,7 @@ public abstract class ExportEngine<//
 					this.log.debug("Exporting {} (from the main search)", logLabel);
 				}
 			}
-			final CmfObject<VALUE> marshaled = sourceObject.marshal(ctx, referrentTarget);
+			CmfObject<VALUE> marshaled = sourceObject.marshal(ctx, referrentTarget);
 			if (marshaled == null) { return new Result(ExportSkipReason.SKIPPED); }
 			// For now, only filter "leaf" objects (i.e. with no referrent, which means they were
 			// explicitly requested). In the (near) future, we'll add an option to allow filtering
@@ -360,6 +422,8 @@ public abstract class ExportEngine<//
 					// Duplicate requirement - don't export again
 					continue;
 				}
+				ConcurrentTools.createIfAbsent(statusMap, requirement.getExportTarget(),
+					(k) -> new DelayedSupplier<>());
 				final Result r;
 				try {
 					r = exportObject(exportState, transformer, filter, sourceObject, requirement, ctx, listener,
@@ -407,7 +471,19 @@ public abstract class ExportEngine<//
 				for (ExportTarget requirement : waitTargets) {
 					// We need to wait for each of these to be stored...so find their lock object
 					// and listen on it...?
-					ExportOperation status = statusMap.get(requirement);
+					DelayedSupplier<ExportOperation> synchronizer = statusMap.get(requirement);
+					ExportOperation status;
+					try {
+						status = synchronizer.get(5, TimeUnit.SECONDS);
+					} catch (TimeoutException e) {
+						throw new ExportException(String.format(
+							"Timed out waiting for the synchronizer to be added for requirement [%s] of %s",
+							requirement, logLabel), e);
+					} catch (InterruptedException e) {
+						throw new ExportException(String.format(
+							"Interrupted waiting for the synchronizer to be added for requirement [%s] of %s",
+							requirement, logLabel), e);
+					}
 					if (status == null) {
 						throw new ExportException(
 							String.format("No export status found for requirement [%s] of %s", requirement, logLabel));
@@ -494,19 +570,41 @@ public abstract class ExportEngine<//
 					e);
 			}
 
-			CmfObject<CmfValue> encoded = getTranslator().encodeObject(marshaled);
+			final CmfAttributeTranslator<VALUE> translator = getTranslator();
+			String finalName = ctx.getFixedName(marshaled);
+			if (StringUtils.isEmpty(finalName)) {
+				finalName = marshaled.getName();
+			} else {
+				try {
+					marshaled.setProperty(new CmfProperty<>(IntermediateProperty.FIXED_NAME, CmfValue.Type.STRING,
+						false, translator.getValue(Type.STRING, finalName)));
+				} catch (ParseException e) {
+					throw new ExportException(String.format("Failed to encode the String value [%s] as a STRING for %s",
+						finalName, marshaled.getDescription()));
+				}
+			}
+			marshaled.setProperty(new CmfProperty<>(IntermediateProperty.FIXED_PATH, CmfValue.Type.STRING, true,
+				calculateFixedPath(ctx, marshaled, sourceObject.getEcmObject())));
+
+			if (marshaled.getType() == CmfObject.Archetype.FOLDER) {
+				// Let's be smart here - cache the final name for folders as we scan through them
+				final String str = finalName; // B/c it's needed for the lambda
+				ConcurrentTools.createIfAbsent(this.idFolderNames, marshaled.getId(), (folderId) -> str);
+			}
+
 			if (transformer != null) {
 				try {
-					encoded = transformer.transform(objectStore.getValueMapper(),
-						getTranslator().getAttributeNameMapper(), null, encoded);
+					marshaled = transformer.transform(objectStore.getValueMapper(),
+						getTranslator().getAttributeNameMapper(), null, marshaled);
 				} catch (TransformerException e) {
 					throw new ExportException(String.format("Transformation failed for %s", marshaled.getDescription()),
 						e);
 				}
 			}
 
+			CmfObject<CmfValue> encoded = translator.encodeObject(marshaled);
 			final Long ret = objectStore.storeObject(encoded);
-			marshaled.copyNumber(encoded); // PATCH: make sure the object number is always copied
+			marshaled.copyNumber(encoded);
 
 			if (ret == null) {
 				// Should be impossible, but still guard against it
@@ -720,7 +818,7 @@ public abstract class ExportEngine<//
 		}
 		final ExportListenerPropagator listenerDelegator = new ExportListenerPropagator(objectCounter);
 		final ExportEngineListener listener = listenerDelegator.getListenerProxy();
-		final ConcurrentMap<ExportTarget, ExportOperation> statusMap = new ConcurrentHashMap<>();
+		final ConcurrentMap<ExportTarget, DelayedSupplier<ExportOperation>> statusMap = new ConcurrentHashMap<>();
 
 		final PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget, Exception> logic = new PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget, Exception>() {
 
@@ -849,71 +947,45 @@ public abstract class ExportEngine<//
 				final AtomicLong sourceCounter = new AtomicLong(0);
 				final AtomicLong totalCounter = new AtomicLong(0);
 				final AtomicReference<Exception> thrown = new AtomicReference<>(null);
-				try {
 
-					final Consumer<ExportTarget> submitter = (target) -> {
-						if (target == null) { return; }
-						if (target.isNull()) {
-							ExportEngine.this.log.warn("Skipping a null target: {}", target);
-							return;
-						}
+				final Consumer<ExportTarget> submitter = (target) -> {
+					if (target == null) { return; }
+					if (target.isNull()) {
+						ExportEngine.this.log.warn("Skipping a null target: {}", target);
+						return;
+					}
 
-						final long cTotal = totalCounter.incrementAndGet();
-						final long cSource = sourceCounter.incrementAndGet();
-						if ((cSource % reportCount) == 0) {
-							listener.sourceSearchMilestone(currentSource.get(), cSource, cTotal);
-						}
-						try {
-							worker.addWorkItem(target);
-						} catch (InterruptedException e) {
-							throw new RuntimeException(String.format("Interrupted while trying to queue up %s", target),
-								e);
-						}
-					};
+					final long cTotal = totalCounter.incrementAndGet();
+					final long cSource = sourceCounter.incrementAndGet();
+					if ((cSource % reportCount) == 0) {
+						listener.sourceSearchMilestone(currentSource.get(), cSource, cTotal);
+					}
+					try {
+						worker.addWorkItem(target);
+					} catch (InterruptedException e) {
+						throw new RuntimeException(String.format("Interrupted while trying to queue up %s", target), e);
+					}
+				};
 
-					LineScanner scanner = new LineScanner();
-					final SESSION session = baseSession.get();
-					Collection<String> sources = exportState.cfg.getStrings(ExportSetting.FROM);
+				LineScanner scanner = new LineScanner();
+				final SESSION session = baseSession.get();
+				Collection<String> sources = exportState.cfg.getStrings(ExportSetting.FROM);
 
-					// Does it support multiple sources?
-					if (sources.size() > 1) {
-						if (!this.supportsMultipleSources) {
-							throw new ExportException(String.format(
-								"This engine doesn't support multiple export sources, please use only one (found %d)",
-								sources.size()));
-						}
-
-						scanner.iterator(sources).forEachRemaining((line) -> {
-							sourceCounter.set(0);
-							currentSource.set(line);
-							listener.sourceSearchStarted(line);
-							try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
-								s.forEach(submitter);
-							} catch (Exception e) {
-								thrown.set(e);
-							} finally {
-								try {
-									if (thrown.get() == null) {
-										listener.sourceSearchCompleted(line, sourceCounter.get(), totalCounter.get());
-									} else {
-										listener.sourceSearchFailed(line, sourceCounter.get(), totalCounter.get(),
-											thrown.get());
-									}
-								} finally {
-									thrown.set(null);
-								}
-							}
-						});
-					} else {
-						final String line = sources.iterator().next();
+				Stream<String> baseStream = scanner.iterator(sources).stream();
+				if (!this.supportsMultipleSources) {
+					this.log.warn(
+						"This engine doesn't support multiple export sources, this export will only cover the first non-recurring source encountered");
+					baseStream = baseStream.limit(1);
+				}
+				try (Stream<String> stream = baseStream) {
+					stream.forEach((line) -> {
 						sourceCounter.set(0);
 						currentSource.set(line);
 						listener.sourceSearchStarted(line);
 						try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
 							s.forEach(submitter);
-						} catch (final Exception e) {
+						} catch (Exception e) {
 							thrown.set(e);
-							throw e;
 						} finally {
 							try {
 								if (thrown.get() == null) {
@@ -926,16 +998,7 @@ public abstract class ExportEngine<//
 								thrown.set(null);
 							}
 						}
-					}
-				} catch (Exception e) {
-					thrown.set(e);
-					throw new ExportException("Failed to retrieve the objects to export", e);
-				} finally {
-					if (thrown.get() == null) {
-						listener.searchCompleted(totalCounter.get());
-					} else {
-						listener.searchFailed(totalCounter.get(), thrown.get());
-					}
+					});
 				}
 			} finally {
 				List<ExportTarget> l = worker.waitForCompletion();

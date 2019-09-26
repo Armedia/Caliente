@@ -93,7 +93,7 @@ public class ValueMappingClear extends ConditionalAction {
 	}
 
 	@Override
-	protected void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 		final CmfObject.Archetype type = Tools.coalesce(getType(), ctx.getDynamicObject().getType());
 		String name = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (name == null) { throw new ActionException("Must provide a mapping name"); }

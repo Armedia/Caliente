@@ -69,16 +69,16 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 		this.name = value;
 	}
 
-	protected abstract Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx);
+	protected abstract Map<String, DynamicValue> getCandidateValues(DynamicElementContext<?> ctx);
 
-	protected abstract void executeAction(DynamicElementContext ctx, DynamicValue candidate) throws ActionException;
+	protected abstract void executeAction(DynamicElementContext<?> ctx, DynamicValue candidate) throws ActionException;
 
 	protected boolean failShort() {
 		return false;
 	}
 
 	@Override
-	protected final void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected final void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 		if (failShort()) { return; }
 		final String comparand = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (comparand == null) { throw new ActionException("No comparand given to check the name against"); }

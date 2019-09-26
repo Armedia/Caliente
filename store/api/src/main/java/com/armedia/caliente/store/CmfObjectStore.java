@@ -570,23 +570,23 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	}
 
 	public final int fixObjectNames(final CmfNameFixer<CmfValue> nameFixer, final CmfObject.Archetype type,
-		Set<String> ids) throws CmfStorageException {
+		Set<String> historyIds) throws CmfStorageException {
 		if (nameFixer == null) {
 			throw new IllegalArgumentException("Must provide name fixer to fix the object names");
 		}
-		if (ids != null) {
+		if (historyIds != null) {
 			if (type == null) {
 				throw new CmfStorageException("Submitted a set of IDs without an object type - this is not supported");
 			}
 			// Short-circuit - avoid doing anything if there's nothing to do
-			if (ids.isEmpty()) { return 0; }
+			if (historyIds.isEmpty()) { return 0; }
 		}
 
 		return runConcurrently((operation) -> {
 			boolean ok = false;
 			final boolean tx = operation.begin();
 			try {
-				int ret = fixObjectNames(operation, nameFixer, type, ids);
+				int ret = fixObjectNames(operation, nameFixer, type, historyIds);
 				if (tx) {
 					operation.commit();
 				}
@@ -605,7 +605,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	}
 
 	protected abstract int fixObjectNames(OPERATION operation, CmfNameFixer<CmfValue> nameFixer,
-		CmfObject.Archetype type, Set<String> ids) throws CmfStorageException;
+		CmfObject.Archetype type, Set<String> historyIds) throws CmfStorageException;
 
 	public final void scanObjectTree(final TriConsumer<CmfObjectRef, CmfObjectRef, String> scanner)
 		throws CmfStorageException {
@@ -941,26 +941,6 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	}
 
 	protected abstract void clearAllObjects(OPERATION operation) throws CmfStorageException;
-
-	public final Map<CmfObject.Archetype, Map<String, String>> getRenameMappings() throws CmfStorageException {
-		return runConcurrently((operation) -> {
-			final boolean tx = operation.begin();
-			try {
-				return getRenameMappings(operation);
-			} finally {
-				if (tx) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn("Failed to rollback the transaction for retrieving all rename mappings", e);
-					}
-				}
-			}
-		});
-	}
-
-	protected abstract Map<CmfObject.Archetype, Map<String, String>> getRenameMappings(OPERATION operation)
-		throws CmfStorageException;
 
 	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean latest)
 		throws CmfStorageException {

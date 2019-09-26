@@ -114,7 +114,7 @@ public class PrincipalMappingApply extends ConditionalAction {
 		this.fallback = fallback;
 	}
 
-	private String performMapping(DynamicElementContext ctx, String oldString) throws ActionException {
+	private String performMapping(DynamicElementContext<?> ctx, String oldString) throws ActionException {
 		String newString = getType().mapName(ctx.getAttributeMapper(), oldString);
 		if (newString == null) {
 			// Try a fallback value
@@ -124,7 +124,7 @@ public class PrincipalMappingApply extends ConditionalAction {
 		return newString;
 	}
 
-	private void applyMapping(DynamicElementContext ctx, DynamicValue candidate) throws ActionException {
+	private void applyMapping(DynamicElementContext<?> ctx, DynamicValue candidate) throws ActionException {
 
 		if (!candidate.isMultivalued()) {
 			// Cardinality is irrelevant...
@@ -165,7 +165,7 @@ public class PrincipalMappingApply extends ConditionalAction {
 	}
 
 	@Override
-	protected void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 		final Comparison comparison = getComparison();
 
 		for (Expression name : getNames()) {

@@ -71,7 +71,7 @@ public abstract class AbstractMapSubtype extends ConditionalAction {
 		return (getDefaultValue() == null) && getCases().isEmpty();
 	}
 
-	protected final Object mapSubtype(DynamicElementContext ctx, Object candidate) throws ActionException {
+	protected final Object mapSubtype(DynamicElementContext<?> ctx, Object candidate) throws ActionException {
 
 		// Apply the comparison to each value in the typed value, and if there's a
 		// match, apply the replacement and move on to the next value
@@ -99,10 +99,10 @@ public abstract class AbstractMapSubtype extends ConditionalAction {
 		return null;
 	}
 
-	protected abstract Object getCandidate(DynamicElementContext ctx);
+	protected abstract Object getCandidate(DynamicElementContext<?> ctx);
 
 	@Override
-	protected final void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected final void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 		// Shortcut - avoid any work if no work can be done...
 		if (failShort()) { return; }
 

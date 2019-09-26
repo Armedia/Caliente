@@ -40,7 +40,7 @@ import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 public class ObjectReject extends ConditionalAction {
 
 	@Override
-	protected void executeAction(DynamicElementContext ctx) {
+	protected void executeAction(DynamicElementContext<?> ctx) {
 		throw new ObjectRejectedByFilterException(
 			String.format("Explicitly rejected processing %s", ctx.getBaseObject().getDescription()));
 	}

@@ -44,12 +44,13 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ConcurrentTools;
+import com.armedia.commons.utilities.function.TriFunction;
 
 public class FilenameDeduplicator {
 
@@ -87,11 +88,6 @@ public class FilenameDeduplicator {
 			if (b == null) { return 1; }
 			return canonicalize(a).compareTo(canonicalize(b));
 		}
-	}
-
-	@FunctionalInterface
-	public static interface FilenameCollisionResolver {
-		public String generateUniqueName(CmfObjectRef entryId, String currentName, long count);
 	}
 
 	public class FSObject {
@@ -395,7 +391,7 @@ public class FilenameDeduplicator {
 	}
 
 	private FSEntryContainer getContainer(final CmfObjectRef id) {
-		return ConcurrentUtils.createIfAbsentUnchecked(this.containers, id, () -> new FSEntryContainer(id));
+		return ConcurrentTools.createIfAbsent(this.containers, id, (i) -> new FSEntryContainer(i));
 	}
 
 	public synchronized long renameAllEntries(BiFunction<CmfObjectRef, String, String> renamer) {
@@ -409,11 +405,12 @@ public class FilenameDeduplicator {
 		return count;
 	}
 
-	public synchronized long fixConflicts(FilenameCollisionResolver resolver) {
+	public synchronized long fixConflicts(TriFunction<CmfObjectRef, String, Long, String> resolver) {
 		return fixConflicts(resolver, null);
 	}
 
-	public synchronized long fixConflicts(FilenameCollisionResolver resolver, Comparator<FSEntry> comparator) {
+	public synchronized long fixConflicts(TriFunction<CmfObjectRef, String, Long, String> resolver,
+		Comparator<FSEntry> comparator) {
 		long count = 0;
 		nextConflict: while (!this.conflictContainers.isEmpty()) {
 			int deltas = 0;
@@ -440,7 +437,7 @@ public class FilenameDeduplicator {
 					}
 					for (FSEntry e : l) {
 						final String oldName = e.newName;
-						String newName = resolver.generateUniqueName(e.id, e.newName, count);
+						String newName = resolver.apply(e.id, e.newName, count);
 						if (e.setName(newName)) {
 							count++;
 							deltas++;
@@ -485,8 +482,7 @@ public class FilenameDeduplicator {
 		if (!this.idValidator.test(containerId)) { return null; }
 		if (!this.idValidator.test(entryId)) { return null; }
 		final FSEntryContainer container = getContainer(containerId);
-		FSEntry entry = ConcurrentUtils.createIfAbsentUnchecked(this.allEntries, entryId,
-			() -> new FSEntry(entryId, name));
+		FSEntry entry = ConcurrentTools.createIfAbsent(this.allEntries, entryId, (id) -> new FSEntry(id, name));
 		entry.addParent(container);
 		container.addChild(entry);
 		return entry;

@@ -39,12 +39,12 @@ import com.armedia.caliente.store.CmfValue;
 public class IsName extends AbstractSingleValueComparison {
 
 	@Override
-	protected CmfValue.Type getCandidateType(DynamicElementContext ctx) {
+	protected CmfValue.Type getCandidateType(DynamicElementContext<?> ctx) {
 		return CmfValue.Type.STRING;
 	}
 
 	@Override
-	protected Object getCandidateValue(DynamicElementContext ctx) {
+	protected Object getCandidateValue(DynamicElementContext<?> ctx) {
 		return ctx.getDynamicObject().getName();
 	}
 

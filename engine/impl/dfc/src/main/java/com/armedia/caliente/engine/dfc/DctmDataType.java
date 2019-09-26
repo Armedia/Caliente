@@ -430,6 +430,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 
 	protected abstract IDfValue doDecode(CmfValue value);
 
+	@Override
 	public final Object getValue(IDfValue value) {
 		if (value == null) {
 			value = getNullValue();

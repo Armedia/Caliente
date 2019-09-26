@@ -38,7 +38,7 @@ import com.armedia.caliente.engine.dynamic.DynamicValue;
 public class VariableRename extends VariableCopy {
 
 	@Override
-	protected void storeValue(DynamicElementContext ctx, DynamicValue src, DynamicValue copy) {
+	protected void storeValue(DynamicElementContext<?> ctx, DynamicValue src, DynamicValue copy) {
 		ctx.getVariables().remove(src.getName());
 		super.storeValue(ctx, src, copy);
 	}

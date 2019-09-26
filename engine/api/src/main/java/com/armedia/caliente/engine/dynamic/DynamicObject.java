@@ -27,17 +27,15 @@
 package com.armedia.caliente.engine.dynamic;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class DynamicObject implements MutableScriptableObjectFacade<DynamicValue> {
@@ -110,8 +108,8 @@ public abstract class DynamicObject implements MutableScriptableObjectFacade<Dyn
 		return this.privateProperties;
 	}
 
-	public CmfObject<CmfValue> applyChanges(CmfObject<CmfValue> object) throws TransformerException {
-		CmfObject<CmfValue> newObject = new CmfObject<>(//
+	public <VALUE> CmfObject<VALUE> applyChanges(CmfObject<VALUE> object) throws TransformerException {
+		CmfObject<VALUE> newObject = new CmfObject<>(//
 			object.getTranslator(), //
 			getType(), //
 			getObjectId(), //
@@ -126,14 +124,14 @@ public abstract class DynamicObject implements MutableScriptableObjectFacade<Dyn
 			object.getNumber() //
 		);
 		// Create the list of attributes to copy...
-		Collection<CmfAttribute<CmfValue>> attributeList = new ArrayList<>(this.attributes.size());
+		CmfAttributeTranslator<VALUE> translator = object.getTranslator();
 		for (String s : this.attributes.keySet()) {
 			DynamicValue v = this.attributes.get(s);
-			CmfAttribute<CmfValue> a = new CmfAttribute<>(v.getName(), v.getType(), v.isMultivalued());
-			if (a.isMultivalued()) {
+			CmfAttribute<VALUE> newAttribute = new CmfAttribute<>(v.getName(), v.getType(), v.isMultivalued());
+			if (newAttribute.isMultivalued()) {
 				for (Object o : v.getValues()) {
 					try {
-						a.addValue(new CmfValue(v.getType(), o));
+						newAttribute.addValue(translator.getValue(v.getType(), o));
 					} catch (ParseException e) {
 						throw new TransformerException(
 							String.format("Failed to convert the %s value [%s] into a %s for attribute [%s]",
@@ -144,7 +142,7 @@ public abstract class DynamicObject implements MutableScriptableObjectFacade<Dyn
 			} else {
 				Object o = v.getValue();
 				try {
-					a.setValue(new CmfValue(v.getType(), o));
+					newAttribute.setValue(translator.getValue(v.getType(), o));
 				} catch (ParseException e) {
 					throw new TransformerException(
 						String.format("Failed to convert the %s value [%s] into a %s for attribute [%s]",
@@ -152,18 +150,17 @@ public abstract class DynamicObject implements MutableScriptableObjectFacade<Dyn
 						e);
 				}
 			}
-			attributeList.add(a);
+			newObject.setAttribute(newAttribute);
 		}
 
 		// Create the list of properties to copy...
-		Collection<CmfProperty<CmfValue>> propertyList = new ArrayList<>(this.privateProperties.size());
 		for (String s : this.privateProperties.keySet()) {
 			DynamicValue v = this.privateProperties.get(s);
-			CmfProperty<CmfValue> p = new CmfProperty<>(v.getName(), v.getType(), v.isMultivalued());
+			CmfProperty<VALUE> p = new CmfProperty<>(v.getName(), v.getType(), v.isMultivalued());
 			if (p.isMultivalued()) {
 				for (Object o : v.getValues()) {
 					try {
-						p.addValue(new CmfValue(v.getType(), o));
+						p.addValue(translator.getValue(v.getType(), o));
 					} catch (ParseException e) {
 						throw new TransformerException(
 							String.format("Failed to convert the %s value [%s] into a %s for property [%s]",
@@ -174,7 +171,7 @@ public abstract class DynamicObject implements MutableScriptableObjectFacade<Dyn
 			} else {
 				Object o = v.getValue();
 				try {
-					p.setValue(new CmfValue(v.getType(), o));
+					p.setValue(translator.getValue(v.getType(), o));
 				} catch (ParseException e) {
 					throw new TransformerException(
 						String.format("Failed to convert the %s value [%s] into a %s for property [%s]",
@@ -182,12 +179,8 @@ public abstract class DynamicObject implements MutableScriptableObjectFacade<Dyn
 						e);
 				}
 			}
-			propertyList.add(p);
+			newObject.setProperty(p);
 		}
-
-		// Do the actual copying...
-		newObject.setAttributes(attributeList);
-		newObject.setProperties(propertyList);
 
 		return newObject;
 	}

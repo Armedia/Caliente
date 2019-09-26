@@ -68,7 +68,13 @@ public class ExportContext< //
 	}
 
 	public boolean shouldWaitForRequirement(CmfObject.Archetype referrent, CmfObject.Archetype referenced) {
-		return false;
+		switch (referrent) {
+			case FOLDER:
+			case DOCUMENT:
+				return (referenced == CmfObject.Archetype.FOLDER);
+			default:
+				return false;
+		}
 	}
 
 	public final boolean isReferrentLoop(ExportTarget referrent) {
@@ -78,6 +84,14 @@ public class ExportContext< //
 	public final ExportTarget getReferrent() {
 		if (this.referrents.isEmpty()) { return null; }
 		return this.referrents.peek();
+	}
+
+	public final String getFixedName(CmfObject.Archetype type, String objectId, String historyId) {
+		return getFactory().getFixedName(type, objectId, historyId);
+	}
+
+	public final String getFixedName(CmfObject<VALUE> object) {
+		return getFactory().getFixedName(object);
 	}
 
 	ExportTarget popReferrent() {

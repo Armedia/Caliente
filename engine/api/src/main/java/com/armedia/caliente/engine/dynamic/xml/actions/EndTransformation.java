@@ -40,7 +40,7 @@ import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 public class EndTransformation extends ConditionalAction {
 
 	@Override
-	protected void executeAction(DynamicElementContext ctx) {
+	protected void executeAction(DynamicElementContext<?> ctx) {
 		throw new ProcessingCompletedException();
 	}
 

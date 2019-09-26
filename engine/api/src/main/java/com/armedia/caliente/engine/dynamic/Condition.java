@@ -32,6 +32,6 @@ import javax.xml.bind.annotation.XmlTransient;
 @FunctionalInterface
 public interface Condition {
 
-	public boolean check(DynamicElementContext ctx) throws ConditionException;
+	public boolean check(DynamicElementContext<?> ctx) throws ConditionException;
 
 }

@@ -42,12 +42,12 @@ import com.armedia.caliente.engine.dynamic.DynamicValue;
 public class VariableCopy extends AbstractCopyRenameValue {
 
 	@Override
-	protected Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx) {
+	protected Map<String, DynamicValue> getCandidateValues(DynamicElementContext<?> ctx) {
 		return ctx.getVariables();
 	}
 
 	@Override
-	protected void storeValue(DynamicElementContext ctx, DynamicValue src, DynamicValue copy) {
+	protected void storeValue(DynamicElementContext<?> ctx, DynamicValue src, DynamicValue copy) {
 		ctx.getVariables().put(copy.getName(), copy);
 	}
 

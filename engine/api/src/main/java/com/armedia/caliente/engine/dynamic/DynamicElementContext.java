@@ -39,24 +39,23 @@ import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataException;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 
-public class DynamicElementContext implements Consumer<ScriptContext> {
+public class DynamicElementContext<VALUE> implements Consumer<ScriptContext> {
 
-	private final CmfObject<CmfValue> baseObject;
+	private final CmfObject<VALUE> baseObject;
 	private final DynamicObject dynamicObject;
 	private final CmfValueMapper mapper;
 	private final ExternalMetadataLoader metadataLoader;
 
 	private final Map<String, DynamicValue> variables;
 
-	public DynamicElementContext(CmfObject<CmfValue> baseObject, DynamicObject dynamicObject, CmfValueMapper mapper,
+	public DynamicElementContext(CmfObject<VALUE> baseObject, DynamicObject dynamicObject, CmfValueMapper mapper,
 		ExternalMetadataLoader metadataLoader) {
 		this(baseObject, dynamicObject, mapper, metadataLoader, null);
 	}
 
-	protected DynamicElementContext(CmfObject<CmfValue> baseObject, DynamicObject dynamicObject, CmfValueMapper mapper,
+	protected DynamicElementContext(CmfObject<VALUE> baseObject, DynamicObject dynamicObject, CmfValueMapper mapper,
 		ExternalMetadataLoader metadataLoader, Map<String, DynamicValue> variables) {
 		this.baseObject = baseObject;
 		this.dynamicObject = dynamicObject;
@@ -68,7 +67,7 @@ public class DynamicElementContext implements Consumer<ScriptContext> {
 		this.metadataLoader = metadataLoader;
 	}
 
-	public CmfObject<CmfValue> getBaseObject() {
+	public CmfObject<VALUE> getBaseObject() {
 		return this.baseObject;
 	}
 
@@ -88,13 +87,13 @@ public class DynamicElementContext implements Consumer<ScriptContext> {
 		return this.mapper;
 	}
 
-	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, Collection<String> sourceNames)
+	public Map<String, CmfAttribute<VALUE>> getAttributeValues(CmfObject<VALUE> object, Collection<String> sourceNames)
 		throws ExternalMetadataException {
 		if (this.metadataLoader == null) { return new HashMap<>(); }
 		return this.metadataLoader.getAttributeValues(object, sourceNames);
 	}
 
-	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, String sourceName)
+	public Map<String, CmfAttribute<VALUE>> getAttributeValues(CmfObject<VALUE> object, String sourceName)
 		throws ExternalMetadataException {
 		if (this.metadataLoader == null) { return new HashMap<>(); }
 		return this.metadataLoader.getAttributeValues(object, sourceName);
