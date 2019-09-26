@@ -97,9 +97,9 @@ public class CsvContentPersistor extends BaseShareableLockable implements Conten
 				path, //
 				page.getContentId(), //
 				page.getLength(), //
-				rendition.getFormat()), //
+				rendition.getFormat(), //
 				page.getPath() //
-			);
+			));
 			this.out.flush();
 		}
 	}
