@@ -43,7 +43,7 @@ import com.armedia.commons.utilities.Tools;
 public class CustomCheck extends AbstractExpressionCondition {
 
 	@Override
-	public boolean check(DynamicElementContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext<?> ctx) throws ConditionException {
 		String className = Tools.toString(ConditionTools.eval(this, ctx));
 		if (className == null) {
 			throw new ConditionException(

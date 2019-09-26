@@ -46,6 +46,7 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
+import com.armedia.caliente.tools.FilenameFixer;
 import com.armedia.caliente.tools.dfc.DfcCrypto;
 import com.armedia.caliente.tools.dfc.DfcQuery;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
@@ -66,7 +67,7 @@ class FilenameMapper {
 	private static final String DEFAULT_DEDUP_PATTERN = "${name}${fixChar}${id}";
 
 	private static final String ALL_DQL = //
-		"         select r_object_id, object_name, i_folder_id " + //
+		"         select i_chronicle_id, r_object_id, object_name, i_folder_id " + //
 			"       from dm_sysobject " + //
 			"      where not folder('/Integration', DESCEND) " + //
 			"        and not folder('/dm_bof_registry', DESCEND) " + //
@@ -269,7 +270,7 @@ class FilenameMapper {
 						while (query.hasNext()) {
 							IDfTypedObject o = query.next();
 							final boolean folderIdRepeating = o.isAttrRepeating("i_folder_id");
-							String entryId = o.getString("r_object_id");
+							String entryId = o.getString("i_chronicle_id");
 							String name = o.getString("object_name");
 
 							// First things first: make sure the filename is fixed
@@ -346,22 +347,34 @@ class FilenameMapper {
 					resolverMap.put("fixChar",
 						Tools.coalesce(fixer != null ? fixer.getFixChar() : null, FilenameMapper.DEFAULT_FIX_CHAR)
 							.toString());
-					long fixes = deduplicator.fixConflicts((CmfObjectRef entryId, String currentName, long count) -> {
+					long fixes = deduplicator.fixConflicts((CmfObjectRef entryId, String currentName, Long count) -> {
 						// Empty names get modified into their object IDs...
 						if (StringUtils.isEmpty(currentName)) {
 							currentName = entryId.getId();
 						}
-						resolverMap.put("typeName", entryId.getType().name());
-						resolverMap.put("typeOrdinal", entryId.getType().ordinal());
-						resolverMap.put("id", entryId.getId());
-						resolverMap.put("name", currentName);
-						resolverMap.put("count", count);
-						String newName = StringSubstitutor.replace(resolverPattern, resolverMap);
-						if (fixer != null) {
-							// Make sure we use a clean name...
-							newName = fixer.fixName(newName);
+						retry: while (true) {
+							resolverMap.put("typeName", entryId.getType().name());
+							resolverMap.put("typeOrdinal", entryId.getType().ordinal());
+							resolverMap.put("id", entryId.getId());
+							resolverMap.put("name", currentName);
+							resolverMap.put("count", count);
+							String newName = StringSubstitutor.replace(resolverPattern, resolverMap);
+							if (fixer != null) {
+								// Make sure we use a clean name...
+								String fixedName = fixer.fixName(newName);
+								int lengthDiff = newName.length() - fixedName.length();
+								if (lengthDiff > 0) {
+									// If the fixed name is shorter than the new name, then it means
+									// we have a length problem in the fix and we need a different
+									// approach. So we truncate the original name by as many
+									// characters as necessary, and try again
+									currentName = currentName.substring(0, currentName.length() - lengthDiff);
+									continue retry;
+								}
+								newName = fixedName;
+							}
+							return newName;
 						}
-						return newName;
 					});
 					this.log.info("Conflicts fixed: {}", fixes);
 					deduplicator.processRenamedEntries((entryId, entryName) -> {

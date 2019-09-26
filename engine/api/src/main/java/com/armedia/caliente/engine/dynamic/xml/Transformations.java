@@ -65,7 +65,7 @@ public final class Transformations implements Action {
 	}
 
 	@Override
-	public void apply(DynamicElementContext ctx) throws ActionException {
+	public void apply(DynamicElementContext<?> ctx) throws ActionException {
 		for (Action action : getElements()) {
 			if (action != null) {
 				action.apply(ctx);

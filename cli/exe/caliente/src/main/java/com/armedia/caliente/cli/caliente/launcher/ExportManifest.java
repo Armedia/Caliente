@@ -45,6 +45,7 @@ import com.armedia.caliente.engine.exporter.ExportState;
 import com.armedia.caliente.engine.importer.ImportRestriction;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectSearchSpec;
+import com.armedia.caliente.tools.CsvFormatter;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -57,7 +58,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 
 	private static final Long NULL = Long.valueOf(-1);
 
-	private static final ManifestFormatter FORMAT = new ManifestFormatter("NUMBER", //
+	private static final CsvFormatter FORMAT = new CsvFormatter("NUMBER", //
 		"DATE", //
 		"TYPE", //
 		"TIER", //

@@ -27,23 +27,26 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.tools.dfc.DfcCrypto;
@@ -60,8 +63,13 @@ import com.documentum.fc.common.IDfId;
 
 public class DctmTicketDecoder {
 
+	protected static final Pattern OUTPUT_PARSER = Pattern.compile("^([^@]+)(?:@(.+))?$");
+
+	private static final String DEFAULT_TARGET = "content-tickets";
+
 	private final Logger console = LoggerFactory.getLogger("console");
 	private final Logger log = LoggerFactory.getLogger(getClass());
+	private final ThreadGroup threadGroup = new ThreadGroup("AsyncPersistors");
 
 	private final DfcLaunchHelper dfcLaunchHelper;
 	private final ThreadsLaunchHelper threadHelper;
@@ -78,17 +86,71 @@ public class DctmTicketDecoder {
 		return new PredicateContentFinder(pool, scannedIds, source, consumer);
 	}
 
+	private ContentPersistor buildPersistor(PersistenceFormat format, File target) throws Exception {
+		return Objects.requireNonNull(format).newPersistor(Objects.requireNonNull(target));
+	}
+
+	private ContentPersistor buildPersistor(Map<PersistenceFormat, File> outputInfo) throws Exception {
+		if (outputInfo.size() == 1) {
+			Map.Entry<PersistenceFormat, File> e = outputInfo.entrySet().iterator().next();
+			return buildPersistor(e.getKey(), e.getValue());
+		}
+
+		// Ok...so we have multiple persistors. We'll need one thread per initialized persistor...
+		final Collection<ContentPersistor> persistors = new ArrayList<>();
+		for (PersistenceFormat format : outputInfo.keySet()) {
+			File target = outputInfo.get(format);
+			try {
+				persistors.add(new AsyncContentPersistorWrapper(this.threadGroup, format.newPersistor(target)));
+			} catch (Exception e) {
+				this.console.error("Failed to initialize the {} persistor to [{}]", format.name(), target, e);
+				continue;
+			}
+		}
+
+		return new DelegatingContentPersistor(persistors);
+	}
+
 	protected int run(OptionValues cli) throws Exception {
 		// final boolean debug = cli.isPresent(CLIParam.debug);
 		final Collection<String> sources = cli.getStrings(CLIParam.from);
-		final PersistenceFormat format = cli.getEnum(PersistenceFormat.class, CLIParam.format);
-		final File target = Tools.canonicalize(new File(cli.getString(CLIParam.target)));
+
+		Map<PersistenceFormat, File> outputInfo = new EnumMap<>(PersistenceFormat.class);
+		for (String o : cli.getStrings(CLIParam.output)) {
+			Matcher m = DctmTicketDecoder.OUTPUT_PARSER.matcher(o);
+			if (!m.matches()) {
+				// How is this possible?
+			}
+			final PersistenceFormat format;
+			try {
+				format = PersistenceFormat.decode(m.group(1));
+			} catch (IllegalArgumentException e) {
+				this.console.error("Invalid output format [{}] given", m.group(1));
+				continue;
+			}
+			String target = m.group(2);
+			if (outputInfo.containsKey(format)) {
+				File f = outputInfo.get(format);
+				this.console.warn("Duplicate output format {} - already writing it to [{}] - will not output to [{}]",
+					format, f, target);
+				continue;
+			}
+
+			if (StringUtils.isEmpty(target)) {
+				target = String.format("%s.%s", DctmTicketDecoder.DEFAULT_TARGET, format.name().toLowerCase());
+			}
+			File file = Tools.canonicalize(new File(target));
+			outputInfo.put(format, file);
+		}
+		if (outputInfo.isEmpty()) {
+			this.console.error("No valid outputs found, cannot continue");
+			return 1;
+		}
+		outputInfo = Tools.freezeMap(outputInfo);
+
 		final String docbase = this.dfcLaunchHelper.getDfcDocbase(cli);
 		final String user = this.dfcLaunchHelper.getDfcUser(cli);
 		final String password = this.dfcLaunchHelper.getDfcPassword(cli);
-		final int threads = this.threadHelper.getThreads(cli);
-
-		final CloseableIterator<String> sourceIterator = new LineScanner().iterator(sources);
 
 		final DfcSessionPool pool;
 		try {
@@ -98,76 +160,42 @@ public class DctmTicketDecoder {
 			return 1;
 		}
 
-		final BlockingQueue<Content> contents = new LinkedBlockingQueue<>();
-		final AtomicBoolean running = new AtomicBoolean(true);
-		Thread persistenceThread = null;
+		final int threads = this.threadHelper.getThreads(cli);
+		final CloseableIterator<String> sourceIterator = new LineScanner().iterator(sources);
 
 		final Set<String> scannedIds = new ShareableSet<>(new HashSet<>());
 
 		int ret = 1;
 		try (Stream<String> sourceStream = sourceIterator.stream()) {
 			final PooledWorkers<IDfSession, IDfId> extractors = new PooledWorkers<>();
-			final Consumer<Content> queueConsumer = (c) -> {
-				try {
-					this.log.debug("Queueing {}", c);
-					contents.put(c);
-				} catch (InterruptedException e) {
-					this.log.error("Failed to queue Content object {}", c, e);
-				}
-			};
-			final ExtractorLogic extractorLogic = new ExtractorLogic(pool //
-				, queueConsumer //
-				, cli.getString(CLIParam.content_filter) //
-				, cli.getString(CLIParam.rendition_filter) //
-				, cli.getStrings(CLIParam.prefer_rendition) //
-			);
 
-			;
 			final AtomicLong submittedCounter = new AtomicLong(0);
 			final AtomicLong outputCounter = new AtomicLong(0);
 			final Collection<Pair<IDfId, Exception>> failedSubmissions = new ShareableCollection<>(new LinkedList<>());
-			final Collection<Pair<Content, Exception>> failedOutput = new ShareableCollection<>(new LinkedList<>());
-			try (ContentPersistor persistor = format.newPersistor()) {
-				persistor.initialize(target);
 
-				final Set<String> submittedSources = new HashSet<>();
-				this.console.info("Starting the background searches...");
-				extractors.start(extractorLogic, Math.max(1, threads), "Extractor", true);
+			try (ContentPersistor persistor = new AsyncContentPersistorWrapper(this.threadGroup,
+				buildPersistor(outputInfo))) {
+				persistor.initialize();
 				try {
-					persistenceThread = new Thread(() -> {
-						while (true) {
-							final Content c;
-							try {
-								if (running.get()) {
-									c = contents.take();
-								} else {
-									c = contents.poll();
-								}
-								if (c == null) { return; }
-							} catch (InterruptedException e) {
-								continue;
-							}
-							this.console.info("{}", c);
-							try {
-								persistor.persist(c);
-								outputCounter.incrementAndGet();
-							} catch (Exception e) {
-								failedOutput.add(Pair.of(c, e));
-								this.log.error("Failed to output the content object {}", c, e);
-							}
-						}
-					});
-					persistenceThread.setDaemon(true);
-					running.set(true);
-					persistenceThread.start();
-
+					final Set<String> submittedSources = new HashSet<>();
+					this.console.info("Starting the background searches...");
+					extractors.start(new ExtractorLogic(pool //
+						, (c) -> {
+							this.console.info("Persisting {}", c);
+							persistor.persist(c);
+							outputCounter.incrementAndGet();
+						} //
+						, cli.getString(CLIParam.content_filter) //
+						, cli.getString(CLIParam.rendition_filter) //
+						, cli.getStrings(CLIParam.prefer_rendition) //
+					), Math.max(1, threads), "Extractor", true);
 					sourceStream //
 						.filter((source) -> submittedSources.add(source)) //
 						.forEach((source) -> {
 							try {
 								buildContentFinder(pool, scannedIds, source, (id) -> {
 									try {
-										this.log.debug("Submitting {}", id);
+										this.console.info("Submitting {}", id);
 										extractors.addWorkItem(id);
 										submittedCounter.incrementAndGet();
 									} catch (InterruptedException e) {
@@ -187,33 +215,19 @@ public class DctmTicketDecoder {
 						submittedCounter.get(), failedSubmissions.size());
 				} finally {
 					extractors.waitForCompletion();
-					this.console.info("Object retrieval is complete, waiting for XML generation to finish...");
-					if (persistenceThread != null) {
-						running.set(false);
-						persistenceThread.interrupt();
+					this.console.info("Object retrieval is complete, will wait for the generators to finish");
+				}
+			} finally {
+				this.console.info("Generated a total of {} content elements of the {} submitted", outputCounter.get(),
+					submittedCounter.get());
+				try {
+					if (!failedSubmissions.isEmpty()) {
+						this.log.error("SUBMISSION ERRORS:");
+						failedSubmissions
+							.forEach((p) -> this.log.error("Failed to submit the ID {}", p.getLeft(), p.getRight()));
 					}
-					persistenceThread.join();
-
-					this.console.info("Generated a total of {} content elements ({} failed) from the {} submitted",
-						outputCounter.get(), failedOutput.size(), submittedCounter.get());
-					try {
-						if (!failedSubmissions.isEmpty()) {
-							this.log.error("SUBMISSION ERRORS:");
-							failedSubmissions.forEach(
-								(p) -> this.log.error("Failed to submit the ID {}", p.getLeft(), p.getRight()));
-						}
-					} catch (Exception e) {
-						this.log.error("UNABLE TO LOG {} SUBMISSION ERRORS", failedSubmissions.size());
-					}
-					try {
-						if (!failedOutput.isEmpty()) {
-							this.log.error("OUTPUT ERRORS:");
-							failedOutput.forEach(
-								(p) -> this.log.error("Failed to output content {}", p.getLeft(), p.getRight()));
-						}
-					} catch (Exception e) {
-						this.log.error("UNABLE TO LOG {} OUTPUT ERRORS", failedSubmissions.size());
-					}
+				} catch (Exception e) {
+					this.log.error("UNABLE TO LOG {} SUBMISSION ERRORS", failedSubmissions.size());
 				}
 			}
 			ret = 0;

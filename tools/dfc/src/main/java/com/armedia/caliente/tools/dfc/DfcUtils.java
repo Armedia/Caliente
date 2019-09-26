@@ -51,17 +51,21 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.StreamTools;
 import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfTypedObject;
+import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfList;
 
 public class DfcUtils {
@@ -117,32 +121,65 @@ public class DfcUtils {
 
 	public static enum DbType {
 		//
-		ORACLE("^.*\\.Oracle$"), //
-		MSSQL("^.*\\.SQLServer$"), //
+		ORACLE, //
+		SQLSERVER, //
+		// DB2, // TODO: Enable this when we support DB2
+		//
+		;
+
+		public static DbType decode(String dbmsName) {
+			return DbType.valueOf(StringUtils.upperCase(dbmsName));
+		}
+
+		public static DbType decode(IDfSession session) throws DfException {
+			return DbType
+				.decode(Objects.requireNonNull(session, "Must provide a session to check against").getDBMSName());
+		}
+
+		public static DbType decode(IDfTypedObject object) throws DfException {
+			return DbType.decode(Objects.requireNonNull(object, "Must provide an object to check with").getSession());
+		}
+	}
+
+	public static enum Platform {
+		//
+		LINUX("Linux"), //
+		WINDOWS("Win(32|64)", '\\'), //
+		// SOLARIS("Solaris"), // TODO: Enable when we support Solaris
+		// AIX("AIX"), // TODO: Enable when we support AIX
 		//
 		;
 
 		private final Pattern pattern;
+		private final char sep;
 
-		private DbType(String pattern) {
-			this.pattern = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+		private Platform(String pattern) {
+			this(pattern, '/');
 		}
 
-		public final boolean matches(String serverVersion) {
-			if (serverVersion == null) {
+		private Platform(String pattern, char sep) {
+			this.pattern = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+			this.sep = sep;
+		}
+
+		public static Platform decode(String serverVersionString) {
+			if (serverVersionString == null) {
 				throw new IllegalArgumentException("Must provide a server version string to examine");
 			}
-			return this.pattern.matcher(serverVersion).matches();
+			for (Platform p : Platform.values()) {
+				if (p.pattern.matcher(serverVersionString).find()) { return p; }
+			}
+			throw new IllegalArgumentException(
+				String.format("No supported platform could be decoded from [%s]", serverVersionString));
 		}
 
-		public final boolean matches(IDfSession session) throws DfException {
-			if (session == null) { throw new IllegalArgumentException("Must provide a session to examine"); }
-			return matches(session.getServerVersion());
+		public static Platform decode(IDfSession session) throws DfException {
+			return Platform
+				.decode(Objects.requireNonNull(session, "Must provide a session to check from").getServerVersion());
 		}
 
-		public final boolean matches(IDfTypedObject object) throws DfException {
-			if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
-			return matches(object.getSession());
+		public static Platform decode(IDfTypedObject object) throws DfException {
+			return Platform.decode(Objects.requireNonNull(object, "Must provide an object to check with").getSession());
 		}
 	}
 
@@ -157,6 +194,7 @@ public class DfcUtils {
 		DF_PERMIT_VERSION(IDfACL.DF_PERMIT_VERSION, IDfACL.DF_PERMIT_VERSION_STR),
 		DF_PERMIT_WRITE(IDfACL.DF_PERMIT_WRITE, IDfACL.DF_PERMIT_WRITE_STR),
 		DF_PERMIT_DELETE(IDfACL.DF_PERMIT_DELETE, IDfACL.DF_PERMIT_DELETE_STR);
+
 		private final int num;
 		private final String str;
 
@@ -176,6 +214,7 @@ public class DfcUtils {
 		DF_EXTENDED_RESTRICTION(IDfPermit.DF_EXTENDED_RESTRICTION, IDfPermit.DF_EXTENDED_RESTRICTION_STR),
 		DF_REQUIRED_GROUP(IDfPermit.DF_REQUIRED_GROUP, IDfPermit.DF_REQUIRED_GROUP_STR),
 		DF_REQUIRED_GROUP_SET(IDfPermit.DF_REQUIRED_GROUP_SET, IDfPermit.DF_REQUIRED_GROUP_SET_STR);
+
 		private final int num;
 		private final String str;
 
@@ -261,30 +300,18 @@ public class DfcUtils {
 		}
 	}
 
-	public static DbType getDbType(IDfSession session) throws DfException {
-		if (session == null) {
-			throw new IllegalArgumentException("Must provide a session to identify the database from");
-		}
-		final String serverVersion = session.getServerVersion();
-		for (DbType type : DbType.values()) {
-			if (type.matches(serverVersion)) { return type; }
-		}
-		throw new UnsupportedOperationException(String
-			.format("Failed to identify a supported database from the server version string [%s]", serverVersion));
-	}
-
 	public static String generateSqlDateClause(Date date, IDfSession session) throws DfException {
 		// First, output to the "netural" format
 		final String dateString = DateFormatUtils.formatUTC(date, DfcConstant.JAVA_SQL_DATETIME_PATTERN);
 		// Now, select the database format string
 		final String ret;
-		DbType dbType = DfcUtils.getDbType(session);
+		DbType dbType = DbType.decode(session);
 		switch (dbType) {
 			case ORACLE:
 				ret = String.format("TO_DATE(%s, %s)", DfcUtils.quoteStringForSql(dateString),
 					DfcUtils.ORACLE_DATETIME_PATTERN);
 				break;
-			case MSSQL:
+			case SQLSERVER:
 				ret = String.format("CONVERT(DATETIME, %s, %d)", DfcUtils.quoteStringForSql(dateString),
 					DfcConstant.MSSQL_DATETIME_PATTERN);
 				break;
@@ -775,5 +802,44 @@ public class DfcUtils {
 			(i > 0 ? result.append(sep) : result).append(dataTicketHex.substring(i, i + 2));
 		}
 		return result.toString();
+	}
+
+	public static String getExtension(IDfSession session, IDfId format) throws DfException {
+		if ((format == null) || format.isNull() || !format.isObjectId()) { return null; }
+		IDfPersistentObject obj = session.getObject(format);
+		if (!obj.isInstanceOf("dm_format")) { return null; }
+		IDfFormat f = IDfFormat.class.cast(obj);
+		return f.getDOSExtension();
+	}
+
+	public static String getFileStoreRoot(IDfSession session, IDfContent content) throws DfException {
+		try {
+			IDfPersistentObject obj = session.getObject(content.getStorageId());
+			String root = obj.getString("root");
+			if (!StringUtils.isBlank(root)) {
+				obj = session.getObjectByQualification(
+					String.format("dm_location where object_name = %s", DfcUtils.quoteString(root)));
+				if ((obj != null) && obj.hasAttr("file_system_path")) { return obj.getString("file_system_path"); }
+			}
+			return String.format("(no-path-for-store-%s)", content.getStorageId());
+		} catch (DfIdNotFoundException e) {
+			return String.format("(store-%s-not-found)", content.getStorageId());
+		}
+	}
+
+	public static String getContentLocation(IDfSession session, IDfContent content) throws DfException {
+		final String prefix = DfcUtils.getDocbasePrefix(session);
+		final char sep = Platform.decode(session).sep;
+		String streamPath = DfcUtils.decodeDataTicket(prefix, content.getDataTicket(), sep);
+		String extension = DfcUtils.getExtension(session, content.getFormatId());
+		if (StringUtils.isBlank(extension)) {
+			extension = StringUtils.EMPTY;
+		} else {
+			// Faster than String.format()
+			extension = "." + extension;
+		}
+		String pathPrefix = DfcUtils.getFileStoreRoot(session, content);
+		// This is more efficient than String.format()
+		return pathPrefix + sep + streamPath + extension;
 	}
 }

@@ -27,21 +27,87 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
 import java.io.File;
+import java.util.concurrent.locks.ReadWriteLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
+import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.ShareableLockable;
 
-@FunctionalInterface
-public interface ContentPersistor extends AutoCloseable {
+public abstract class ContentPersistor extends BaseShareableLockable implements AutoCloseable {
 
-	public default void initialize(File target) throws Exception {
-		// do nothing by default
+	protected final Logger log = LoggerFactory.getLogger(getClass());
+	protected final Logger error = LoggerFactory.getLogger("errors");
+	protected final Logger console = LoggerFactory.getLogger("console");
+
+	private boolean initialized = false;
+
+	protected final File target;
+
+	protected ContentPersistor(File target) {
+		this.target = Tools.canonicalize(target);
 	}
 
-	public void persist(Content content) throws Exception;
+	public ContentPersistor(ReadWriteLock rwLock, File target) {
+		super(rwLock);
+		this.target = Tools.canonicalize(target);
+	}
+
+	public ContentPersistor(ShareableLockable lockable, File target) {
+		super(lockable);
+		this.target = Tools.canonicalize(target);
+	}
+
+	public final void initialize() throws Exception {
+		try (MutexAutoLock lock = autoMutexLock()) {
+			if (this.initialized) {
+				throw new IllegalStateException("This persistor is already initialized!! Close it first!");
+			}
+			try {
+				startup();
+				this.initialized = true;
+			} finally {
+				if (!this.initialized) {
+					cleanup();
+				}
+			}
+		}
+	}
+
+	protected String getName() {
+		return toString();
+	}
+
+	protected abstract void startup() throws Exception;
+
+	public final void persist(Content content) {
+		if (content == null) { return; }
+		try {
+			mutexLocked(() -> persistContent(content));
+		} catch (Exception e) {
+			this.error.error("Failed to persist the content object {}", content, e);
+		}
+	}
+
+	protected abstract void persistContent(Content content) throws Exception;
 
 	@Override
-	public default void close() throws Exception {
-		// Do nothing by default
+	public final void close() {
+		try (MutexAutoLock lock = autoMutexLock()) {
+			if (!this.initialized) { return; }
+			try {
+				cleanup();
+			} finally {
+				this.initialized = false;
+			}
+		} catch (Exception e) {
+			this.error.warn("Failed to close this persistor", e);
+		}
 	}
 
+	protected abstract void cleanup() throws Exception;
 }

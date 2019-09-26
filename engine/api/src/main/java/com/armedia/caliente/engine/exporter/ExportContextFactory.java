@@ -27,13 +27,18 @@
 package com.armedia.caliente.engine.exporter;
 
 import java.util.EnumSet;
+import java.util.Properties;
 import java.util.Set;
 
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
+import com.armedia.caliente.engine.TransferException;
+import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.tools.DefaultNameFixer;
+import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
@@ -50,7 +55,9 @@ public abstract class ExportContextFactory< //
 
 	protected static final Set<CmfObject.Archetype> DEFAULT_ALLOWED_METADATA = Tools
 		.freezeSet(EnumSet.of(CmfObject.Archetype.FOLDER, CmfObject.Archetype.DOCUMENT));
+
 	private final Set<CmfObject.Archetype> companionMetadata;
+	private final DefaultNameFixer<VALUE> nameFixer;
 
 	protected ExportContextFactory(ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?> objectStore,
 		CmfContentStore<?, ?> contentStore, Logger output, WarningTracker tracker) throws Exception {
@@ -76,6 +83,21 @@ public abstract class ExportContextFactory< //
 				getClass().getSimpleName(), companionMetadata);
 		}
 		this.companionMetadata = Tools.freezeSet(companionMetadata);
+
+		final Properties p = new Properties();
+		if (!settings.getBoolean(TransferSetting.NO_FILENAME_MAP)) {
+			boolean loaded = false;
+			try {
+				loaded = MappingTools.loadMap(this.log, settings, TransferSetting.FILENAME_MAP, p);
+			} catch (TransferException e) {
+				throw new ExportException(e.getMessage(), e.getCause());
+			} finally {
+				if (!loaded) {
+					p.clear();
+				}
+			}
+		}
+		this.nameFixer = new DefaultNameFixer<>(p);
 	}
 
 	protected Set<CmfObject.Archetype> getAllowedCompanionMetadata() {
@@ -85,6 +107,14 @@ public abstract class ExportContextFactory< //
 	public final boolean isSupportsCompanionMetadata(CmfObject.Archetype type) {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		return this.companionMetadata.contains(type);
+	}
+
+	public final String getFixedName(CmfObject.Archetype type, String objectId, String historyId) {
+		return this.nameFixer.fixName(type, objectId, historyId);
+	}
+
+	public final String getFixedName(CmfObject<VALUE> object) {
+		return this.nameFixer.fixName(object);
 	}
 
 	@Override

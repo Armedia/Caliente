@@ -29,14 +29,12 @@ package com.armedia.caliente.engine.importer;
 import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
-import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -44,8 +42,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -58,6 +54,7 @@ import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferException;
+import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
@@ -66,10 +63,10 @@ import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaService;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
+import com.armedia.caliente.engine.tools.DefaultNameFixer;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectHandler;
@@ -302,8 +299,6 @@ public abstract class ImportEngine<//
 			}
 		}
 	}
-
-	private static final Pattern MAP_KEY_PARSER = Pattern.compile("^\\s*([^#\\s]+)\\s*#\\s*(.+)\\s*$");
 
 	private static enum BatchStatus {
 		//
@@ -542,60 +537,17 @@ public abstract class ImportEngine<//
 		// objects require fixing, we don't sweep the whole table, but instead submit
 		// the IDs that we want fixed.
 
-		Map<CmfObject.Archetype, Map<String, String>> idMap = new EnumMap<>(CmfObject.Archetype.class);
-		for (String key : p.stringPropertyNames()) {
-			final String fixedName = p.getProperty(key);
-			Matcher matcher = ImportEngine.MAP_KEY_PARSER.matcher(key);
-			if (!matcher.matches()) {
-				continue;
-			}
-			final String T = matcher.group(1);
-			final CmfObject.Archetype t;
-			try {
-				t = CmfObject.Archetype.valueOf(T);
-			} catch (Exception e) {
-				this.log.warn("Unsupported object type found [{}] in key [{}] (value = [{}])", T, key, fixedName, e);
-				continue;
-			}
-			final String id = matcher.group(2);
-			Map<String, String> m = idMap.get(t);
-			if (m == null) {
-				m = new TreeMap<>();
-				idMap.put(t, m);
-			}
-			m.put(id, fixedName);
-		}
-
-		if (idMap.isEmpty()) {
+		DefaultNameFixer<CmfValue> nameFixer = new DefaultNameFixer<>(output, p);
+		if (nameFixer.isEmpty()) {
 			output.info("Static name fix map is empty, will not {} any object names", verb);
 			return;
 		}
 
-		for (final CmfObject.Archetype t : idMap.keySet()) {
-			final Map<String, String> mappings = idMap.get(t);
-			CmfNameFixer<CmfValue> nameFixer = new CmfNameFixer<CmfValue>() {
-
-				@Override
-				public boolean supportsType(CmfObject.Archetype type) {
-					return (type == t);
-				}
-
-				@Override
-				public String fixName(CmfObject<CmfValue> dataObject) throws CmfStorageException {
-					return mappings.get(dataObject.getId());
-				}
-
-				@Override
-				public boolean handleException(Exception e) {
-					return false;
-				}
-
-				@Override
-				public void nameFixed(CmfObject<CmfValue> dataObject, String oldName, String newName) {
-					output.info("Renamed {} with ID[{}] from [{}] to [{}]", dataObject.getType(), dataObject.getId(),
-						oldName, newName);
-				}
-			};
+		for (final CmfObject.Archetype t : CmfObject.Archetype.values()) {
+			Map<String, String> mappings = nameFixer.getMappings(t);
+			if ((mappings == null) || mappings.isEmpty()) {
+				continue;
+			}
 			output.info("Trying to {} {} {} names...", verb, mappings.size(), t.name());
 			final int fixes = objectStore.fixObjectNames(nameFixer, t, mappings.keySet());
 			output.info("Modified {} {} objects", fixes, t.name());
@@ -684,11 +636,11 @@ public abstract class ImportEngine<//
 				}
 			}
 
-			if (!settings.getBoolean(ImportSetting.NO_FILENAME_MAP)) {
+			if (!settings.getBoolean(TransferSetting.NO_FILENAME_MAP)) {
 				final Properties p = new Properties();
 				final boolean loaded;
 				try {
-					loaded = MappingTools.loadMap(this.log, settings, ImportSetting.FILENAME_MAP, p);
+					loaded = MappingTools.loadMap(this.log, settings, TransferSetting.FILENAME_MAP, p);
 				} catch (TransferException e) {
 					throw new ImportException(e.getMessage(), e.getCause());
 				}
@@ -930,10 +882,6 @@ public abstract class ImportEngine<//
 
 	protected boolean abortImport(CmfObject.Archetype type, long errors) {
 		return false;
-	}
-
-	protected CmfNameFixer<VALUE> getNameFixer(Logger output) {
-		return null;
 	}
 
 	protected abstract SchemaService newSchemaService(SESSION session) throws SchemaServiceException;

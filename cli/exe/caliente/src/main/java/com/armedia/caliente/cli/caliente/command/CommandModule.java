@@ -129,6 +129,8 @@ public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory
 		settings.put(TransferSetting.LATEST_ONLY.getLabel(), commandValues.isPresent(CLIParam.no_versions));
 		settings.put(TransferSetting.NO_RENDITIONS.getLabel(), commandValues.isPresent(CLIParam.no_renditions));
 		settings.put(TransferSetting.TRANSFORMATION.getLabel(), commandValues.getString(CLIParam.transformations));
+		settings.put(TransferSetting.NO_FILENAME_MAP.getLabel(), commandValues.isPresent(CLIParam.no_filename_map));
+		settings.put(TransferSetting.FILENAME_MAP.getLabel(), commandValues.getString(CLIParam.filename_map));
 
 		int threads = commandValues.getInteger(CLIParam.threads);
 		threads = Tools.ensureBetween(ThreadsLaunchHelper.DEFAULT_MIN_THREADS, threads,

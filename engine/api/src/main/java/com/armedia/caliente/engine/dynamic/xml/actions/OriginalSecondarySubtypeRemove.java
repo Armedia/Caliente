@@ -42,7 +42,7 @@ import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 public class OriginalSecondarySubtypeRemove extends ConditionalAction {
 
 	@Override
-	protected void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 		Set<String> originals = ctx.getDynamicObject().getOriginalSecondarySubtypes();
 		ctx.getDynamicObject().getSecondarySubtypes().removeAll(originals);
 	}

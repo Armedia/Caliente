@@ -28,7 +28,6 @@ package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -46,20 +45,9 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.function.CheckedLazySupplier;
 
 public class AlfImportContextFactory
 	extends ImportContextFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine, File> {
-
-	private final CheckedLazySupplier<Map<CmfObject.Archetype, Map<String, String>>, ImportException> renameMap = new CheckedLazySupplier<>(
-		() -> {
-			try {
-				return getObjectStore().getRenameMappings();
-			} catch (final CmfStorageException e) {
-				this.log.error("Failed to load the renamer map from the object store", e);
-				throw new ImportException(e);
-			}
-		}, Collections.emptyMap());
 
 	protected AlfImportContextFactory(AlfImportEngine engine, CfgTools settings, AlfRoot root,
 		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, Transformer transformer, Logger output,
@@ -87,11 +75,6 @@ public class AlfImportContextFactory
 	protected AlfImportContext constructContext(String rootId, CmfObject.Archetype rootType, AlfRoot session,
 		int batchPosition) {
 		final CmfObjectStore<?> store = getObjectStore();
-		try {
-			this.renameMap.getChecked();
-		} catch (Exception e) {
-			// Ignore it - already logged
-		}
 		return new AlfImportContext(this, getSettings(), rootId, rootType, session, getOutput(), getWarningTracker(),
 			getTransformer(), getEngine().getTranslator(), store, getContentStore(), batchPosition);
 	}
@@ -104,22 +87,6 @@ public class AlfImportContextFactory
 	@Override
 	protected String calculateProductVersion(AlfRoot session) throws Exception {
 		return "1.0";
-	}
-
-	private Map<CmfObject.Archetype, Map<String, String>> getRenameMap() throws ImportException {
-		try {
-			return this.renameMap.getChecked();
-		} catch (Exception e) {
-			throw new ImportException("Failed to load the renamer map from the object store", e);
-		}
-	}
-
-	public final String getAlternateName(CmfObject.Archetype type, String id) throws ImportException {
-		Map<CmfObject.Archetype, Map<String, String>> renameMap = getRenameMap();
-		if ((renameMap == null) || renameMap.isEmpty()) { return null; }
-		Map<String, String> m = renameMap.get(type);
-		if ((m == null) || m.isEmpty()) { return null; }
-		return m.get(id);
 	}
 
 	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean current)

@@ -34,7 +34,7 @@ import com.armedia.commons.utilities.function.CheckedConsumer;
 @FunctionalInterface
 public interface Action extends CheckedConsumer<DynamicElementContext, ActionException> {
 
-	public void apply(DynamicElementContext ctx) throws ActionException;
+	public void apply(DynamicElementContext<?> ctx) throws ActionException;
 
 	@Override
 	public default void acceptChecked(DynamicElementContext ctx) throws ActionException {

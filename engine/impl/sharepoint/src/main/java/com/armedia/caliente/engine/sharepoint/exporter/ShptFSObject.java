@@ -39,13 +39,13 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.sharepoint.ShptAttributes;
+import com.armedia.caliente.engine.sharepoint.ShptCommon;
 import com.armedia.caliente.engine.sharepoint.ShptSession;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.FileNameTools;
-import com.armedia.commons.utilities.Tools;
 
 /**
  *
@@ -63,8 +63,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 
 	@Override
 	protected String calculateObjectId(ShptSession session, T object) {
-		String searchKey = calculateServerRelativeUrl(session, object);
-		return String.format("%08X", Tools.hashTool(searchKey, null, searchKey));
+		return ShptCommon.calculateId(calculateServerRelativeUrl(session, object));
 	}
 
 	@Override

@@ -86,6 +86,10 @@ public abstract class ExportDelegate< //
 		if (this.subType == null) { throw new IllegalStateException("calculateSubType() may not return null"); }
 	}
 
+	public final ECM_OBJECT getEcmObject() {
+		return this.object;
+	}
+
 	public final ExportTarget getExportTarget() {
 		return this.exportTarget;
 	}

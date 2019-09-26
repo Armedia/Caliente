@@ -73,7 +73,7 @@ public class Filter extends ConditionalAction {
 	}
 
 	@Override
-	protected final void executeAction(DynamicElementContext ctx) throws ActionException {
+	protected final void executeAction(DynamicElementContext<?> ctx) throws ActionException {
 		for (Action action : getActions()) {
 			if (action != null) {
 				action.apply(ctx);

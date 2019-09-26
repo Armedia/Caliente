@@ -42,7 +42,7 @@ import com.armedia.caliente.store.CmfValue;
 public class VariableSet extends AbstractSetValue {
 
 	@Override
-	protected DynamicValue createValue(DynamicElementContext ctx, String name, CmfValue.Type type, boolean multivalue) {
+	protected DynamicValue createValue(DynamicElementContext<?> ctx, String name, CmfValue.Type type, boolean multivalue) {
 		DynamicValue member = new DynamicValue(name, type, multivalue);
 		ctx.getVariables().put(name, member);
 		return member;

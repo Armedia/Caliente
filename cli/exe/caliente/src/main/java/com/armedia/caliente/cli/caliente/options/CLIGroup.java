@@ -71,6 +71,8 @@ public class CLIGroup {
 		.add(CLIParam.skip_content) //
 		.add(CLIParam.threads) //
 		.add(CLIParam.transformations) //
+		.add(CLIParam.no_filename_map) //
+		.add(CLIParam.filename_map) //
 	;
 
 	public static final OptionGroup EXPORT_COMMON = new OptionGroupImpl("Common Export") //
@@ -83,10 +85,8 @@ public class CLIGroup {
 
 	public static final OptionGroup IMPORT_COMMON = new OptionGroupImpl("Common Import") //
 		.addFrom(CLIGroup.IMPORT_EXPORT_COMMON.getOptions()) //
-		.add(CLIParam.filename_map) //
 		.add(CLIParam.group_map) //
 		.add(CLIParam.manifest_outcomes_import) //
-		.add(CLIParam.no_filename_map) //
 		.add(CLIParam.restrict_to) //
 		.add(CLIParam.role_map) //
 		.add(CLIParam.target) //

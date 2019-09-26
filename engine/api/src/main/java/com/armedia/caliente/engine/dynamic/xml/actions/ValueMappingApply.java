@@ -61,7 +61,7 @@ public class ValueMappingApply extends AbstractValueMappingApply<CmfObject.Arche
 	}
 
 	@Override
-	protected String getMappedLabel(DynamicElementContext ctx) throws ActionException {
+	protected String getMappedLabel(DynamicElementContext<?> ctx) throws ActionException {
 		return Tools.toString(ActionTools.eval(getMappingName(), ctx));
 	}
 
