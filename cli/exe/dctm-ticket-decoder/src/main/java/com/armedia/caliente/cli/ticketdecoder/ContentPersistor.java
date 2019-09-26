@@ -78,6 +78,10 @@ public abstract class ContentPersistor extends BaseShareableLockable implements 
 		}
 	}
 
+	protected String getName() {
+		return toString();
+	}
+
 	protected abstract void startup() throws Exception;
 
 	public final void persist(Content content) {

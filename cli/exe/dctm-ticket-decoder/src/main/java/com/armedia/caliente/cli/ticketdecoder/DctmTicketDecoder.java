@@ -94,8 +94,8 @@ public class DctmTicketDecoder {
 	}
 
 	private ContentPersistor initializePersistor(PersistenceFormat format, File target) throws Exception {
-		ContentPersistor p = Objects.requireNonNull(format).newPersistor();
-		p.initialize(Objects.requireNonNull(target));
+		ContentPersistor p = Objects.requireNonNull(format).newPersistor(Objects.requireNonNull(target));
+		p.initialize();
 		return p;
 	}
 

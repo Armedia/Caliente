@@ -11,20 +11,20 @@ public final class AsyncContentPersistorWrapper extends ContentPersistor {
 
 	private final BlockingQueue<Content> queue = new LinkedBlockingQueue<>();
 	private final AtomicBoolean running = new AtomicBoolean(false);
-	private final String name;
 	private final ContentPersistor persistor;
 	private final ThreadGroup threadGroup;
+	private final String name;
 	private Thread thread = null;
 
-	public AsyncContentPersistorWrapper(String name, ContentPersistor persistor) {
-		this(null, name, persistor);
+	public AsyncContentPersistorWrapper(ContentPersistor persistor) {
+		this(null, persistor);
 	}
 
-	public AsyncContentPersistorWrapper(ThreadGroup threadGroup, String name, ContentPersistor persistor) {
+	public AsyncContentPersistorWrapper(ThreadGroup threadGroup, ContentPersistor persistor) {
 		super(null);
-		this.name = Objects.requireNonNull(name, "Must give a name to this persistor");
 		this.persistor = Objects.requireNonNull(persistor, "Must provide a content persistor to wrap");
 		this.threadGroup = threadGroup;
+		this.name = String.format("AsyncWrapper for [%s]", persistor.getName());
 	}
 
 	@Override
@@ -71,6 +71,11 @@ public final class AsyncContentPersistorWrapper extends ContentPersistor {
 				this.error.error("{} failed to output the content object {}", this.name, c, e);
 			}
 		}
+	}
+
+	@Override
+	protected String getName() {
+		return this.name;
 	}
 
 	@Override

@@ -8,7 +8,7 @@ import java.util.Objects;
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.commons.utilities.Tools;
 
-public class DelegatingContentPersistor extends ContentPersistor {
+public final class DelegatingContentPersistor extends ContentPersistor {
 
 	private final Collection<ContentPersistor> delegates;
 	private final Collection<ContentPersistor> active = new LinkedList<>();
@@ -27,7 +27,7 @@ public class DelegatingContentPersistor extends ContentPersistor {
 				persistor.initialize();
 				this.active.add(persistor);
 			} catch (Exception e) {
-				this.error.error("Failed to initialize the persistor {}", persistor, e);
+				this.error.error("Failed to initialize the persistor {}", persistor.getName(), e);
 			}
 		}
 	}

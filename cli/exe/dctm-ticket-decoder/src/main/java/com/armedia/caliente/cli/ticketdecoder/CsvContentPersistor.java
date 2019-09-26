@@ -27,10 +27,7 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.Objects;
 
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
@@ -39,10 +36,8 @@ import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.caliente.tools.CsvFormatter;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 
-public class CsvContentPersistor extends ContentPersistor {
-
-	private Writer out = null;
-
+public class CsvContentPersistor extends FileContentPersistor {
+	private static final String BASE_NAME = "CSV";
 	private static final Rendition NULL_RENDITION = new Rendition();
 	private static final Page NULL_PAGE = new Page().setPath("");
 
@@ -59,12 +54,12 @@ public class CsvContentPersistor extends ContentPersistor {
 	);
 
 	public CsvContentPersistor(File target) {
-		super(Objects.requireNonNull(target));
+		super(Objects.requireNonNull(target), CsvContentPersistor.BASE_NAME);
 	}
 
 	@Override
 	protected void startup() throws Exception {
-		this.out = new PrintWriter(new FileWriter(this.target));
+		super.startup();
 		this.out.write(CsvContentPersistor.FORMAT.renderHeaders());
 		this.out.flush();
 	}
@@ -105,17 +100,6 @@ public class CsvContentPersistor extends ContentPersistor {
 			this.out.flush();
 		} catch (IOException e) {
 			this.error.error("Failed to persist the content object {}", content, e);
-		}
-	}
-
-	@Override
-	public void cleanup() throws Exception {
-		if (this.out != null) {
-			try {
-				this.out.close();
-			} finally {
-				this.out = null;
-			}
 		}
 	}
 }

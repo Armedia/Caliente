@@ -27,8 +27,6 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
@@ -50,8 +48,9 @@ import com.ctc.wstx.stax.WstxOutputFactory;
 
 import javanet.staxutils.IndentingXMLStreamWriter;
 
-public class XmlContentPersistor extends ContentPersistor {
+public class XmlContentPersistor extends FileContentPersistor {
 
+	private static final String BASE_NAME = "XML";
 	private static final CheckedLazySupplier<XMLOutputFactory, XMLStreamException> OUTPUT_FACTORY = new CheckedLazySupplier<>(
 		() -> {
 			WstxOutputFactory factory = new WstxOutputFactory();
@@ -74,17 +73,16 @@ public class XmlContentPersistor extends ContentPersistor {
 			return factory;
 		});
 
-	private OutputStream out = null;
 	private XMLStreamWriter xml = null;
 	private Marshaller marshaller = null;
 
 	public XmlContentPersistor(File target) {
-		super(Objects.requireNonNull(target));
+		super(Objects.requireNonNull(target), XmlContentPersistor.BASE_NAME);
 	}
 
 	@Override
 	protected void startup() throws Exception {
-		this.out = new FileOutputStream(this.target);
+		super.startup();
 
 		XMLOutputFactory factory = XmlContentPersistor.OUTPUT_FACTORY.get();
 		XMLStreamWriter writer = factory.createXMLStreamWriter(this.out);
@@ -119,10 +117,6 @@ public class XmlContentPersistor extends ContentPersistor {
 			this.xml.close();
 			this.xml = null;
 		}
-		if (this.out != null) {
-			this.out.flush();
-			this.out.close();
-			this.out = null;
-		}
+		super.cleanup();
 	}
 }
