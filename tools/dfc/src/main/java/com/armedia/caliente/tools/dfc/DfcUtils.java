@@ -144,16 +144,22 @@ public class DfcUtils {
 	public static enum Platform {
 		//
 		LINUX("Linux"), //
-		WINDOWS("Win(32|64)"), //
+		WINDOWS("Win(32|64)", '\\'), //
 		// SOLARIS("Solaris"), // TODO: Enable when we support Solaris
 		// AIX("AIX"), // TODO: Enable when we support AIX
 		//
 		;
 
 		private final Pattern pattern;
+		private final char sep;
 
 		private Platform(String pattern) {
+			this(pattern, '/');
+		}
+
+		private Platform(String pattern, char sep) {
 			this.pattern = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+			this.sep = sep;
 		}
 
 		public static Platform decode(String serverVersionString) {
@@ -823,7 +829,8 @@ public class DfcUtils {
 
 	public static String getContentLocation(IDfSession session, IDfContent content) throws DfException {
 		final String prefix = DfcUtils.getDocbasePrefix(session);
-		String streamPath = DfcUtils.decodeDataTicket(prefix, content.getDataTicket(), '/');
+		final char sep = Platform.decode(session).sep;
+		String streamPath = DfcUtils.decodeDataTicket(prefix, content.getDataTicket(), sep);
 		String extension = DfcUtils.getExtension(session, content.getFormatId());
 		if (StringUtils.isBlank(extension)) {
 			extension = StringUtils.EMPTY;
@@ -831,14 +838,6 @@ public class DfcUtils {
 			extension = String.format(".%s", extension);
 		}
 		String pathPrefix = DfcUtils.getFileStoreRoot(session, content);
-		final char sep;
-		if (Platform.decode(session) == Platform.WINDOWS) {
-			sep = '\\';
-			streamPath = streamPath.replace('/', sep);
-		} else {
-			sep = '/';
-			pathPrefix = pathPrefix.replace('\\', sep);
-		}
 		return String.format("%s%s%s%s", pathPrefix, sep, streamPath, extension);
 	}
 }
