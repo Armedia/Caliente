@@ -181,6 +181,7 @@ public class DctmTicketDecoder {
 					this.console.info("Starting the background searches...");
 					extractors.start(new ExtractorLogic(pool //
 						, (c) -> {
+							this.console.info("Persisting {}", c);
 							persistor.persist(c);
 							outputCounter.incrementAndGet();
 						} //
@@ -194,7 +195,7 @@ public class DctmTicketDecoder {
 							try {
 								buildContentFinder(pool, scannedIds, source, (id) -> {
 									try {
-										this.log.debug("Submitting {}", id);
+										this.console.info("Submitting {}", id);
 										extractors.addWorkItem(id);
 										submittedCounter.incrementAndGet();
 									} catch (InterruptedException e) {
