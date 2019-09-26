@@ -32,6 +32,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
+import java.util.Objects;
 
 import javax.xml.bind.Marshaller;
 import javax.xml.namespace.NamespaceContext;
@@ -42,9 +43,6 @@ import javax.xml.stream.XMLStreamWriter;
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.caliente.tools.xml.XmlProperties;
-import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
-import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.function.CheckedLazySupplier;
 import com.armedia.commons.utilities.xml.XmlTools;
 import com.ctc.wstx.api.WstxOutputProperties;
@@ -52,7 +50,7 @@ import com.ctc.wstx.stax.WstxOutputFactory;
 
 import javanet.staxutils.IndentingXMLStreamWriter;
 
-public class XmlContentPersistor extends BaseShareableLockable implements ContentPersistor {
+public class XmlContentPersistor extends ContentPersistor {
 
 	private static final CheckedLazySupplier<XMLOutputFactory, XMLStreamException> OUTPUT_FACTORY = new CheckedLazySupplier<>(
 		() -> {
@@ -80,48 +78,51 @@ public class XmlContentPersistor extends BaseShareableLockable implements Conten
 	private XMLStreamWriter xml = null;
 	private Marshaller marshaller = null;
 
-	@Override
-	public void initialize(final File target) throws Exception {
-		final File finalTarget = Tools.canonicalize(target);
-		try (MutexAutoLock lock = autoMutexLock()) {
-			this.out = new FileOutputStream(finalTarget);
-
-			XMLOutputFactory factory = XmlContentPersistor.OUTPUT_FACTORY.get();
-			XMLStreamWriter writer = factory.createXMLStreamWriter(this.out);
-			this.xml = new IndentingXMLStreamWriter(writer) {
-				@Override
-				public NamespaceContext getNamespaceContext() {
-					return XmlProperties.NO_NAMESPACES;
-				}
-			};
-			this.xml.writeStartDocument(Charset.defaultCharset().name(), "1.1");
-			String rootElement = "contents";
-			this.xml.writeDTD(String.format("<!DOCTYPE %s>", rootElement));
-			this.xml.writeStartElement(rootElement);
-			writer.flush();
-
-			this.marshaller = XmlTools.getMarshaller("ticket-decoder.xsd", Content.class, Rendition.class);
-			this.marshaller.setProperty(Marshaller.JAXB_ENCODING, Charset.defaultCharset().name());
-			this.marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
-			this.marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		}
+	public XmlContentPersistor(File target) {
+		super(Objects.requireNonNull(target));
 	}
 
 	@Override
-	public void persist(Content content) throws Exception {
-		if (content != null) {
-			mutexLocked(() -> this.marshaller.marshal(content, this.xml));
-		}
+	protected void startup() throws Exception {
+		this.out = new FileOutputStream(this.target);
+
+		XMLOutputFactory factory = XmlContentPersistor.OUTPUT_FACTORY.get();
+		XMLStreamWriter writer = factory.createXMLStreamWriter(this.out);
+		this.xml = new IndentingXMLStreamWriter(writer) {
+			@Override
+			public NamespaceContext getNamespaceContext() {
+				return XmlProperties.NO_NAMESPACES;
+			}
+		};
+		this.xml.writeStartDocument(Charset.defaultCharset().name(), "1.1");
+		String rootElement = "contents";
+		this.xml.writeDTD(String.format("<!DOCTYPE %s>", rootElement));
+		this.xml.writeStartElement(rootElement);
+		this.xml.flush();
+
+		this.marshaller = XmlTools.getMarshaller("ticket-decoder.xsd", Content.class, Rendition.class);
+		this.marshaller.setProperty(Marshaller.JAXB_ENCODING, Charset.defaultCharset().name());
+		this.marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+		this.marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	}
 
 	@Override
-	public void close() throws Exception {
-		try (MutexAutoLock lock = autoMutexLock()) {
+	protected void persistContent(Content content) throws Exception {
+		this.marshaller.marshal(content, this.xml);
+	}
+
+	@Override
+	protected void cleanup() throws Exception {
+		if (this.xml != null) {
 			this.xml.flush();
 			this.xml.writeEndDocument();
 			this.xml.close();
+			this.xml = null;
+		}
+		if (this.out != null) {
 			this.out.flush();
 			this.out.close();
+			this.out = null;
 		}
 	}
 }

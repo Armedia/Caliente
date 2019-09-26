@@ -28,19 +28,20 @@ package com.armedia.caliente.cli.ticketdecoder;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Writer;
+import java.util.Objects;
 
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.ticketdecoder.xml.Page;
 import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.caliente.tools.CsvFormatter;
-import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 
-public class CsvContentPersistor extends BaseShareableLockable implements ContentPersistor {
+public class CsvContentPersistor extends ContentPersistor {
 
-	private PrintWriter out = null;
+	private Writer out = null;
 
 	private static final Rendition NULL_RENDITION = new Rendition();
 	private static final Page NULL_PAGE = new Page().setPath("");
@@ -57,18 +58,19 @@ public class CsvContentPersistor extends BaseShareableLockable implements Conten
 		"CONTENT_STORE_PATH" //
 	);
 
-	@Override
-	public void initialize(final File target) throws Exception {
-		final File finalTarget = Tools.canonicalize(target);
-		try (MutexAutoLock lock = autoMutexLock()) {
-			this.out = new PrintWriter(new FileWriter(finalTarget));
-			this.out.printf(CsvContentPersistor.FORMAT.renderHeaders());
-			this.out.flush();
-		}
+	public CsvContentPersistor(File target) {
+		super(Objects.requireNonNull(target));
 	}
 
 	@Override
-	public void persist(Content content) throws Exception {
+	protected void startup() throws Exception {
+		this.out = new PrintWriter(new FileWriter(this.target));
+		this.out.write(CsvContentPersistor.FORMAT.renderHeaders());
+		this.out.flush();
+	}
+
+	@Override
+	protected void persistContent(Content content) {
 		if (content == null) { return; }
 		final Rendition rendition;
 		if (!content.getRenditions().isEmpty()) {
@@ -89,7 +91,7 @@ public class CsvContentPersistor extends BaseShareableLockable implements Conten
 			path = "";
 		}
 		try (MutexAutoLock lock = autoMutexLock()) {
-			this.out.printf(CsvContentPersistor.FORMAT.render( //
+			this.out.write(CsvContentPersistor.FORMAT.render( //
 				content.getId(), //
 				content.getHistoryId(), //
 				content.getVersion(), //
@@ -101,14 +103,19 @@ public class CsvContentPersistor extends BaseShareableLockable implements Conten
 				page.getPath() //
 			));
 			this.out.flush();
+		} catch (IOException e) {
+			this.error.error("Failed to persist the content object {}", content, e);
 		}
 	}
 
 	@Override
-	public void close() throws Exception {
-		try (MutexAutoLock lock = autoMutexLock()) {
-			this.out.flush();
-			this.out.close();
+	public void cleanup() throws Exception {
+		if (this.out != null) {
+			try {
+				this.out.close();
+			} finally {
+				this.out = null;
+			}
 		}
 	}
 }

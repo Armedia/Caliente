@@ -26,22 +26,24 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.ticketdecoder;
 
+import java.io.File;
 import java.util.Objects;
+import java.util.function.Function;
 
 public enum PersistenceFormat {
 	//
-	CSV(CsvContentPersistor.class), //
-	XML(XmlContentPersistor.class), //
+	CSV(CsvContentPersistor::new), //
+	XML(XmlContentPersistor::new), //
 	//
 	;
 
-	private final Class<? extends ContentPersistor> persistor;
+	private final Function<File, ? extends ContentPersistor> constructor;
 
-	private PersistenceFormat(Class<? extends ContentPersistor> persistor) {
-		this.persistor = Objects.requireNonNull(persistor, "Must provide a non-null persistor class");
+	private PersistenceFormat(Function<File, ? extends ContentPersistor> constructor) {
+		this.constructor = Objects.requireNonNull(constructor, "Must provide a non-null constructor");
 	}
 
-	public ContentPersistor newPersistor() throws Exception {
-		return this.persistor.newInstance();
+	public ContentPersistor newPersistor(File target) {
+		return this.constructor.apply(target);
 	}
 }

@@ -27,18 +27,29 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +71,10 @@ import com.documentum.fc.common.IDfId;
 
 public class DctmTicketDecoder {
 
+	protected static final Pattern OUTPUT_PARSER = Pattern.compile("^([^@]+)(?:@(.+))?$");
+
+	private static final String DEFAULT_TARGET = "content-tickets";
+
 	private final Logger console = LoggerFactory.getLogger("console");
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -78,11 +93,106 @@ public class DctmTicketDecoder {
 		return new PredicateContentFinder(pool, scannedIds, source, consumer);
 	}
 
+	private ContentPersistor initializePersistor(PersistenceFormat format, File target) throws Exception {
+		ContentPersistor p = Objects.requireNonNull(format).newPersistor();
+		p.initialize(Objects.requireNonNull(target));
+		return p;
+	}
+
+	private ContentPersistor initializePersistor(Map<PersistenceFormat, File> outputInfo) throws Exception {
+		if (outputInfo.size() == 1) {
+			Map.Entry<PersistenceFormat, File> e = outputInfo.entrySet().iterator().next();
+			return initializePersistor(e.getKey(), e.getValue());
+		}
+
+		// Ok...so we have multiple persistors. We'll need one thread per initialized persistor...
+		final Collection<Triple<PersistenceFormat, File, ContentPersistor>> persistors = new ArrayList<>();
+		for (PersistenceFormat format : outputInfo.keySet()) {
+			File target = outputInfo.get(format);
+			try {
+				persistors.add(Triple.of(format, target, initializePersistor(format, target)));
+			} catch (Exception e) {
+				this.console.error("Failed to initialize the {} persistor to [{}]", format.name(), target, e);
+				continue;
+			}
+		}
+
+		final Map<PersistenceFormat, Future<?>> futures = new EnumMap<>(PersistenceFormat.class);
+		final ExecutorService executor = Executors.newFixedThreadPool(persistors.size());
+		final Map<PersistenceFormat, BlockingQueue<Content>> queues = new EnumMap<>(PersistenceFormat.class);
+
+		persistors.forEach((t) -> {
+			futures.put(t.getLeft(), executor.submit(() -> {
+				// Do the actual work of polling its queue
+				return null;
+			}));
+		});
+
+		return new ContentPersistor() {
+
+			@Override
+			public void persist(Content content) {
+				// Push it to each queue, which in turn feeds each persistor
+				for (PersistenceFormat format : queues.keySet()) {
+					BlockingQueue<Content> q = queues.get(format);
+					try {
+						q.put(content);
+					} catch (InterruptedException e) {
+						DctmTicketDecoder.this.log.error("Interrupted feeding the {} queue, content = {}", format,
+							content);
+					}
+				}
+			}
+
+			@Override
+			public void close() throws Exception {
+				// Stop each polling thread
+
+				persistors.forEach((t) -> {
+					PersistenceFormat format = t.getLeft();
+					File target = t.getMiddle();
+					ContentPersistor persistor = t.getRight();
+					try {
+						persistor.close();
+					} catch (Exception e) {
+						DctmTicketDecoder.this.log.warn("Exception caught trying to close the {} persistor to [{}]",
+							format, target, e);
+					}
+				});
+
+				// Stop the executors
+				for (PersistenceFormat format : queues.keySet()) {
+					BlockingQueue<Content> q = queues.get(format);
+					q.put(null);
+				}
+			}
+		};
+	}
+
 	protected int run(OptionValues cli) throws Exception {
 		// final boolean debug = cli.isPresent(CLIParam.debug);
 		final Collection<String> sources = cli.getStrings(CLIParam.from);
-		final PersistenceFormat format = cli.getEnum(PersistenceFormat.class, CLIParam.format);
-		final File target = Tools.canonicalize(new File(cli.getString(CLIParam.target)));
+
+		Map<PersistenceFormat, File> outputInfo = new EnumMap<>(PersistenceFormat.class);
+		for (String o : cli.getStrings(CLIParam.output)) {
+			Matcher m = DctmTicketDecoder.OUTPUT_PARSER.matcher(o);
+			PersistenceFormat format = PersistenceFormat.valueOf(StringUtils.lowerCase(m.group(1)));
+			String target = m.group(2);
+			if (outputInfo.containsKey(format)) {
+				File f = outputInfo.get(format);
+				this.console.warn("Duplicate output format {} - already writing it to [{}] - will not output to [{}]",
+					format, f, target);
+				continue;
+			}
+
+			if (StringUtils.isEmpty(target)) {
+				target = String.format("%s.%s", DctmTicketDecoder.DEFAULT_TARGET, format.name().toLowerCase());
+			}
+			File file = Tools.canonicalize(new File(target));
+			outputInfo.put(format, file);
+		}
+		outputInfo = Tools.freezeMap(outputInfo);
+
 		final String docbase = this.dfcLaunchHelper.getDfcDocbase(cli);
 		final String user = this.dfcLaunchHelper.getDfcUser(cli);
 		final String password = this.dfcLaunchHelper.getDfcPassword(cli);
@@ -126,8 +236,8 @@ public class DctmTicketDecoder {
 			final AtomicLong outputCounter = new AtomicLong(0);
 			final Collection<Pair<IDfId, Exception>> failedSubmissions = new ShareableCollection<>(new LinkedList<>());
 			final Collection<Pair<Content, Exception>> failedOutput = new ShareableCollection<>(new LinkedList<>());
-			try (ContentPersistor persistor = format.newPersistor()) {
-				persistor.initialize(target);
+
+			try (ContentPersistor persistor = initializePersistor(outputInfo)) {
 
 				final Set<String> submittedSources = new HashSet<>();
 				this.console.info("Starting the background searches...");
@@ -151,7 +261,6 @@ public class DctmTicketDecoder {
 								persistor.persist(c);
 								outputCounter.incrementAndGet();
 							} catch (Exception e) {
-								failedOutput.add(Pair.of(c, e));
 								this.log.error("Failed to output the content object {}", c, e);
 							}
 						}
@@ -203,15 +312,6 @@ public class DctmTicketDecoder {
 						}
 					} catch (Exception e) {
 						this.log.error("UNABLE TO LOG {} SUBMISSION ERRORS", failedSubmissions.size());
-					}
-					try {
-						if (!failedOutput.isEmpty()) {
-							this.log.error("OUTPUT ERRORS:");
-							failedOutput.forEach(
-								(p) -> this.log.error("Failed to output content {}", p.getLeft(), p.getRight()));
-						}
-					} catch (Exception e) {
-						this.log.error("UNABLE TO LOG {} OUTPUT ERRORS", failedSubmissions.size());
 					}
 				}
 			}
