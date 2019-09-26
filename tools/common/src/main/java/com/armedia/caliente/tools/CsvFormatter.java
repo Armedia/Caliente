@@ -31,16 +31,18 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 
 import com.armedia.commons.utilities.Tools;
 
 public class CsvFormatter {
 	public static final boolean DEFAULT_RENDER_TERMINATOR = false;
+	public static final Function<Object, String> DEFAULT_ENCODER = Tools::toString;
 	private static final String LF = String.format("%n");
 
+	private final Function<? super Object, String> encoder;
 	private final int columns;
 	private final List<String> headers;
 	private final boolean renderTerminator;
@@ -58,11 +60,37 @@ public class CsvFormatter {
 	}
 
 	public CsvFormatter(boolean renderTerminator, Collection<String> headers) {
+		this(CsvFormatter.DEFAULT_ENCODER, renderTerminator, headers);
+	}
+
+	public CsvFormatter(Function<? super Object, String> encoder, String... headers) {
+		this(encoder, CsvFormatter.DEFAULT_RENDER_TERMINATOR, headers);
+	}
+
+	public CsvFormatter(Function<? super Object, String> encoder, boolean renderTerminator, String... headers) {
+		this(encoder, renderTerminator, Arrays.asList(headers));
+	}
+
+	public CsvFormatter(Function<? super Object, String> encoder, Collection<String> headers) {
+		this(encoder, CsvFormatter.DEFAULT_RENDER_TERMINATOR, headers);
+	}
+
+	public CsvFormatter(Function<? super Object, String> encoder, boolean renderTerminator,
+		Collection<String> headers) {
+		this.encoder = Objects.requireNonNull(encoder, "Must provide a non-null encoder");
 		Objects.requireNonNull(headers, "Must provide a collection of header strings");
 		if (headers.isEmpty()) { throw new IllegalArgumentException("Header collection may not be empty"); }
 		this.headers = Tools.freezeList(new ArrayList<>(headers));
 		this.columns = headers.size();
 		this.renderTerminator = renderTerminator;
+	}
+
+	public final Function<Object, String> getEncoder() {
+		return this.encoder;
+	}
+
+	public final boolean isRenderTerminator() {
+		return this.renderTerminator;
 	}
 
 	public final int getColumns() {
@@ -91,13 +119,11 @@ public class CsvFormatter {
 		StringBuilder sb = new StringBuilder();
 		boolean first = true;
 		for (Object o : data) {
-			String str = Tools.toString(o);
-			if (str != null) {
-				str = StringEscapeUtils.escapeCsv(str);
-			}
-			if (StringUtils.isEmpty(str)) {
-				// Make sure we don't output garbage
+			String str = this.encoder.apply(o);
+			if (str == null) {
 				str = "";
+			} else {
+				str = StringEscapeUtils.escapeCsv(str);
 			}
 			if (!first) {
 				sb.append(',');
