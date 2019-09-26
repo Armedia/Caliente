@@ -107,6 +107,7 @@ public class XmlContentPersistor extends FileContentPersistor {
 	@Override
 	protected void persistContent(Content content) throws Exception {
 		this.marshaller.marshal(content, this.xml);
+		this.out.flush();
 	}
 
 	@Override
