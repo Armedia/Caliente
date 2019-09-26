@@ -2,6 +2,8 @@ package com.armedia.caliente.cli.ticketdecoder;
 
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -14,6 +16,7 @@ public final class AsyncContentPersistorWrapper extends ContentPersistor {
 	private final ContentPersistor persistor;
 	private final ThreadGroup threadGroup;
 	private final String name;
+	private final CyclicBarrier barrier = new CyclicBarrier(2);
 	private Thread thread = null;
 
 	public AsyncContentPersistorWrapper(ContentPersistor persistor) {
@@ -31,12 +34,13 @@ public final class AsyncContentPersistorWrapper extends ContentPersistor {
 	protected void startup() throws Exception {
 		this.persistor.initialize();
 		this.thread = (this.threadGroup != null //
-			? new Thread(this.threadGroup, this::run, String.format("Persistor-%s", this.name)) //
-			: new Thread(this::run, String.format("Persistor-%s", this.name)) //
+			? new Thread(this.threadGroup, this::run, String.format("Persistor-(%s)", this.name)) //
+			: new Thread(this::run, String.format("Persistor-(%s)", this.name)) //
 		);
 		this.thread.setDaemon(true);
 		this.running.set(true);
 		this.thread.start();
+		this.barrier.await();
 	}
 
 	@Override
@@ -52,10 +56,15 @@ public final class AsyncContentPersistorWrapper extends ContentPersistor {
 	}
 
 	protected void run() {
+		boolean first = true;
 		while (true) {
 			final Content c;
 			try {
 				if (this.running.get()) {
+					if (first) {
+						first = false;
+						this.barrier.await();
+					}
 					c = this.queue.take();
 				} else {
 					c = this.queue.poll();
@@ -63,6 +72,9 @@ public final class AsyncContentPersistorWrapper extends ContentPersistor {
 				if (c == null) { return; }
 			} catch (InterruptedException e) {
 				continue;
+			} catch (BrokenBarrierException e) {
+				this.error.error("Broken barrier in {}", this.name, e);
+				return;
 			}
 
 			try {

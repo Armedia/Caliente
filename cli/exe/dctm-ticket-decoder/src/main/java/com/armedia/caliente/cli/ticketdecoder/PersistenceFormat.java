@@ -30,6 +30,8 @@ import java.io.File;
 import java.util.Objects;
 import java.util.function.Function;
 
+import org.apache.commons.lang3.StringUtils;
+
 public enum PersistenceFormat {
 	//
 	CSV(CsvContentPersistor::new), //
@@ -45,5 +47,10 @@ public enum PersistenceFormat {
 
 	public ContentPersistor newPersistor(File target) {
 		return this.constructor.apply(target);
+	}
+
+	public static PersistenceFormat decode(String value) {
+		if (value == null) { return null; }
+		return PersistenceFormat.valueOf(StringUtils.upperCase(value));
 	}
 }

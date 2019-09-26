@@ -35,9 +35,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -50,7 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.tools.dfc.DfcCrypto;
@@ -122,7 +118,10 @@ public class DctmTicketDecoder {
 		Map<PersistenceFormat, File> outputInfo = new EnumMap<>(PersistenceFormat.class);
 		for (String o : cli.getStrings(CLIParam.output)) {
 			Matcher m = DctmTicketDecoder.OUTPUT_PARSER.matcher(o);
-			PersistenceFormat format = PersistenceFormat.valueOf(StringUtils.lowerCase(m.group(1)));
+			if (!m.matches()) {
+				// How is this possible?
+			}
+			PersistenceFormat format = PersistenceFormat.decode(m.group(1));
 			String target = m.group(2);
 			if (outputInfo.containsKey(format)) {
 				File f = outputInfo.get(format);
@@ -154,111 +153,67 @@ public class DctmTicketDecoder {
 			return 1;
 		}
 
-		final BlockingQueue<Content> contents = new LinkedBlockingQueue<>();
-		final AtomicBoolean running = new AtomicBoolean(true);
-		Thread persistenceThread = null;
-
 		final Set<String> scannedIds = new ShareableSet<>(new HashSet<>());
 
 		int ret = 1;
 		try (Stream<String> sourceStream = sourceIterator.stream()) {
 			final PooledWorkers<IDfSession, IDfId> extractors = new PooledWorkers<>();
-			final Consumer<Content> queueConsumer = (c) -> {
-				try {
-					this.log.debug("Queueing {}", c);
-					contents.put(c);
-				} catch (InterruptedException e) {
-					this.log.error("Failed to queue Content object {}", c, e);
-				}
-			};
-			final ExtractorLogic extractorLogic = new ExtractorLogic(pool //
-				, queueConsumer //
-				, cli.getString(CLIParam.content_filter) //
-				, cli.getString(CLIParam.rendition_filter) //
-				, cli.getStrings(CLIParam.prefer_rendition) //
-			);
 
 			final AtomicLong submittedCounter = new AtomicLong(0);
 			final AtomicLong outputCounter = new AtomicLong(0);
 			final Collection<Pair<IDfId, Exception>> failedSubmissions = new ShareableCollection<>(new LinkedList<>());
-			final Collection<Pair<Content, Exception>> failedOutput = new ShareableCollection<>(new LinkedList<>());
 
-			try (ContentPersistor persistor = buildPersistor(outputInfo)) {
+			try (ContentPersistor persistor = new AsyncContentPersistorWrapper(buildPersistor(outputInfo))) {
 				persistor.initialize();
 				final Set<String> submittedSources = new HashSet<>();
 				this.console.info("Starting the background searches...");
-				extractors.start(extractorLogic, Math.max(1, threads), "Extractor", true);
-				try {
-					persistenceThread = new Thread(() -> {
-						while (true) {
-							final Content c;
-							try {
-								if (running.get()) {
-									c = contents.take();
-								} else {
-									c = contents.poll();
+				extractors.start(new ExtractorLogic(pool //
+					, (c) -> {
+						persistor.persist(c);
+						outputCounter.incrementAndGet();
+					}, //
+					cli.getString(CLIParam.content_filter) //
+					, cli.getString(CLIParam.rendition_filter) //
+					, cli.getStrings(CLIParam.prefer_rendition) //
+				), Math.max(1, threads), "Extractor", true);
+				sourceStream //
+					.filter((source) -> submittedSources.add(source)) //
+					.forEach((source) -> {
+						try {
+							buildContentFinder(pool, scannedIds, source, (id) -> {
+								try {
+									this.log.debug("Submitting {}", id);
+									extractors.addWorkItem(id);
+									submittedCounter.incrementAndGet();
+								} catch (InterruptedException e) {
+									failedSubmissions.add(Pair.of(id, e));
+									this.log.error("Failed to add ID [{}] to the work queue", id, e);
 								}
-								if (c == null) { return; }
-							} catch (InterruptedException e) {
-								continue;
-							}
-							this.console.info("{}", c);
-							try {
-								persistor.persist(c);
-								outputCounter.incrementAndGet();
-							} catch (Exception e) {
-								this.log.error("Failed to output the content object {}", c, e);
-							}
+							}).call();
+						} catch (Exception e) {
+							this.log.error("Failed to search for elements from the source [{}]", source, e);
 						}
-					});
-					persistenceThread.setDaemon(true);
-					running.set(true);
-					persistenceThread.start();
+					}) //
+				;
+				this.console.info("Finished searching from {} source{}...", submittedSources.size(),
+					submittedSources.size() > 1 ? "s" : "");
+				this.console.info(
+					"Submitted a total of {} work items for extraction from ({} failed), waiting for generation to conclude...",
+					submittedCounter.get(), failedSubmissions.size());
+			} finally {
+				extractors.waitForCompletion();
+				this.console.info("Object retrieval is complete");
 
-					sourceStream //
-						.filter((source) -> submittedSources.add(source)) //
-						.forEach((source) -> {
-							try {
-								buildContentFinder(pool, scannedIds, source, (id) -> {
-									try {
-										this.log.debug("Submitting {}", id);
-										extractors.addWorkItem(id);
-										submittedCounter.incrementAndGet();
-									} catch (InterruptedException e) {
-										failedSubmissions.add(Pair.of(id, e));
-										this.log.error("Failed to add ID [{}] to the work queue", id, e);
-									}
-								}).call();
-							} catch (Exception e) {
-								this.log.error("Failed to search for elements from the source [{}]", source, e);
-							}
-						}) //
-					;
-					this.console.info("Finished searching from {} source{}...", submittedSources.size(),
-						submittedSources.size() > 1 ? "s" : "");
-					this.console.info(
-						"Submitted a total of {} work items for extraction from ({} failed), waiting for generation to conclude...",
-						submittedCounter.get(), failedSubmissions.size());
-				} finally {
-					extractors.waitForCompletion();
-					this.console.info("Object retrieval is complete, waiting for the document rendering to finish...");
-					if (persistenceThread != null) {
-						running.set(false);
-						persistenceThread.interrupt();
-						persistenceThread.join();
+				this.console.info("Generated a total of {} content elements of the {} submitted", outputCounter.get(),
+					submittedCounter.get());
+				try {
+					if (!failedSubmissions.isEmpty()) {
+						this.log.error("SUBMISSION ERRORS:");
+						failedSubmissions
+							.forEach((p) -> this.log.error("Failed to submit the ID {}", p.getLeft(), p.getRight()));
 					}
-
-					this.console.info("Generated a total of {} content elements ({} failed) from the {} submitted",
-						outputCounter.get(), failedOutput.size(), submittedCounter.get());
-					try {
-						if (!failedSubmissions.isEmpty()) {
-							this.log.error("SUBMISSION ERRORS:");
-							failedSubmissions.forEach(
-								(p) -> this.log.error("Failed to submit the ID {}", p.getLeft(), p.getRight()));
-						}
-					} catch (Exception e) {
-						this.log.error("UNABLE TO LOG {} SUBMISSION ERRORS", failedSubmissions.size());
-					}
+				} catch (Exception e) {
+					this.log.error("UNABLE TO LOG {} SUBMISSION ERRORS", failedSubmissions.size());
 				}
 			}
 			ret = 0;
