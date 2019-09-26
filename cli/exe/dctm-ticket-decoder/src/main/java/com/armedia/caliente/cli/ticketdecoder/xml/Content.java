@@ -29,6 +29,7 @@ package com.armedia.caliente.cli.ticketdecoder.xml;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -62,9 +63,15 @@ public class Content {
 	@XmlElement(name = "path", required = true)
 	protected List<String> paths;
 
-	@XmlElementWrapper(name = "renditions", required = true)
-	@XmlElement(name = "rendition", required = true)
+	@XmlElementWrapper(name = "renditions", required = false)
+	@XmlElement(name = "rendition", required = false)
 	protected List<Rendition> renditions;
+
+	protected void beforeMarshal(Marshaller m) {
+		if ((this.renditions != null) && this.renditions.isEmpty()) {
+			this.renditions = null;
+		}
+	}
 
 	public String getId() {
 		return this.id;

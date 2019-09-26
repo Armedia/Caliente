@@ -68,7 +68,7 @@
 
 	<xsd:complexType name="renditions.t">
 		<xsd:sequence>
-			<xsd:element name="rendition" type="tns:rendition.t" minOccurs="1" maxOccurs="unbounded" />
+			<xsd:element name="rendition" type="tns:rendition.t" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
 	</xsd:complexType>
 
