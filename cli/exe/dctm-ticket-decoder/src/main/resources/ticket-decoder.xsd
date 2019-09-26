@@ -81,7 +81,7 @@
 	<xsd:complexType name="content.t">
 		<xsd:sequence>
 			<xsd:element name="paths" type="tns:paths.t" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="renditions" type="tns:renditions.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="renditions" type="tns:renditions.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
 		<xsd:attribute name="id" type="tns:trimmed_string.t" use="required"/>
 		<xsd:attribute name="historyId" type="tns:trimmed_string.t" use="required"/>
