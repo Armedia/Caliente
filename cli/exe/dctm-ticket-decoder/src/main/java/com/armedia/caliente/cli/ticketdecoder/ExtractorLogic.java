@@ -502,6 +502,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 				}
 
 				rendition.getPages().add(new Page() //
+					.setContentId(content.getObjectId().getId()) //
 					.setNumber(content.getInt("page")) //
 					.setLength(content.getContentSize()) //
 					.setHash(content.getContentHash()) //
@@ -531,7 +532,6 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 			c.getRenditions().add(r);
 		}
 		return c;
-
 	}
 
 	@Override

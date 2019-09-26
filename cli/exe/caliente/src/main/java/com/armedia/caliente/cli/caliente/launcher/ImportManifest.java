@@ -46,6 +46,7 @@ import com.armedia.caliente.engine.importer.ImportRestriction;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.tools.CsvFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.ShareableList;
 
@@ -57,7 +58,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 
 	private final Logger manifestLog = LoggerFactory.getLogger("manifest");
 
-	private static final ManifestFormatter FORMAT = new ManifestFormatter( //
+	private static final CsvFormatter FORMAT = new CsvFormatter( //
 		"NUMBER", //
 		"DATE", //
 		"TYPE", //

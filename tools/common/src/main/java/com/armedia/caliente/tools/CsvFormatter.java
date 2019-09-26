@@ -24,7 +24,7 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.cli.caliente.launcher;
+package com.armedia.caliente.tools;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,23 +32,37 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-class ManifestFormatter {
+public class CsvFormatter {
+	public static final boolean DEFAULT_RENDER_TERMINATOR = false;
+	private static final String LF = String.format("%n");
+
 	private final int columns;
 	private final List<String> headers;
+	private final boolean renderTerminator;
 
-	ManifestFormatter(String... headers) {
-		this(Arrays.asList(headers));
+	public CsvFormatter(String... headers) {
+		this(CsvFormatter.DEFAULT_RENDER_TERMINATOR, headers);
 	}
 
-	ManifestFormatter(Collection<String> headers) {
+	public CsvFormatter(boolean renderTerminator, String... headers) {
+		this(renderTerminator, Arrays.asList(headers));
+	}
+
+	public CsvFormatter(Collection<String> headers) {
+		this(CsvFormatter.DEFAULT_RENDER_TERMINATOR, headers);
+	}
+
+	public CsvFormatter(boolean renderTerminator, Collection<String> headers) {
 		Objects.requireNonNull(headers, "Must provide a collection of header strings");
-		if (headers.isEmpty()) { throw new IllegalArgumentException("Header collection must not be empty"); }
+		if (headers.isEmpty()) { throw new IllegalArgumentException("Header collection may not be empty"); }
 		this.headers = Tools.freezeList(new ArrayList<>(headers));
 		this.columns = headers.size();
+		this.renderTerminator = renderTerminator;
 	}
 
 	public final int getColumns() {
@@ -81,11 +95,18 @@ class ManifestFormatter {
 			if (str != null) {
 				str = StringEscapeUtils.escapeCsv(str);
 			}
+			if (StringUtils.isEmpty(str)) {
+				// Make sure we don't output garbage
+				str = "";
+			}
 			if (!first) {
 				sb.append(',');
 			}
 			sb.append(str);
 			first = false;
+		}
+		if (this.renderTerminator) {
+			sb.append(CsvFormatter.LF);
 		}
 		return sb.toString();
 	}

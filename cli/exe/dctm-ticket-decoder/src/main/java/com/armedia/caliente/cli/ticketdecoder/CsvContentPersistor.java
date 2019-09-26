@@ -35,6 +35,7 @@ import org.apache.commons.text.StringEscapeUtils;
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.ticketdecoder.xml.Page;
 import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
+import com.armedia.caliente.tools.CsvFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
@@ -46,13 +47,25 @@ public class CsvContentPersistor extends BaseShareableLockable implements Conten
 	private static final Rendition NULL_RENDITION = new Rendition();
 	private static final Page NULL_PAGE = new Page().setPath("");
 
+	private static final CsvFormatter FORMAT = new CsvFormatter(true, //
+		"NUMBER", //
+		"R_OBJECT_ID", //
+		"I_CHRONICLE_ID", //
+		"R_VERSION_LABEL", //
+		"HAS_FOLDER", //
+		"DOCUMENTUM_PATH", //
+		"CONTENT_ID", //
+		"LENGTH", //
+		"FORMAT", //
+		"CONTENT_STORE_PATH" //
+	);
+
 	@Override
 	public void initialize(final File target) throws Exception {
 		final File finalTarget = Tools.canonicalize(target);
 		try (MutexAutoLock lock = autoMutexLock()) {
 			this.out = new PrintWriter(new FileWriter(finalTarget));
-			this.out.printf(
-				"R_OBJECT_ID,I_CHRONICLE_ID,R_VERSION_LABEL,HAS_FOLDER,DOCUMENTUM_PATH,LENGTH,FORMAT,CONTENT_STORE_PATH%n");
+			this.out.printf(CsvContentPersistor.FORMAT.renderHeaders());
 			this.out.flush();
 		}
 	}
@@ -79,16 +92,18 @@ public class CsvContentPersistor extends BaseShareableLockable implements Conten
 			path = "";
 		}
 		try (MutexAutoLock lock = autoMutexLock()) {
-			this.out.printf("%s,%s,%s,%s,%s,%d,%s,%s%n", //
+			this.out.printf(CsvContentPersistor.FORMAT.render( //
 				StringEscapeUtils.escapeCsv(content.getId()), //
 				StringEscapeUtils.escapeCsv(content.getHistoryId()), //
 				StringEscapeUtils.escapeCsv(content.getVersion()), //
 				content.isCurrent(), //
 				StringEscapeUtils.escapeCsv(path), //
+				page.getContentId(), //
 				page.getLength(), //
 				StringEscapeUtils.escapeCsv(rendition.getFormat()), //
 				StringEscapeUtils.escapeCsv(page.getPath()) //
-			);
+			));
+			this.out.flush();
 		}
 	}
 
