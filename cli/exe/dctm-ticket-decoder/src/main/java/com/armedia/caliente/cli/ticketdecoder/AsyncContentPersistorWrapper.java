@@ -112,4 +112,8 @@ public final class AsyncContentPersistorWrapper extends ContentPersistor {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return this.name;
+	}
 }

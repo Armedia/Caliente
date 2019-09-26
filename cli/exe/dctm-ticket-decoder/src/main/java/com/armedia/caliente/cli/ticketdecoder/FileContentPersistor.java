@@ -76,4 +76,9 @@ public abstract class FileContentPersistor extends ContentPersistor {
 			}
 		}
 	}
+
+	@Override
+	public String toString() {
+		return this.name;
+	}
 }

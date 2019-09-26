@@ -46,4 +46,8 @@ public final class DelegatingContentPersistor extends ContentPersistor {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return String.format("DelegatingContentPersistor %s", this.delegates);
+	}
 }
