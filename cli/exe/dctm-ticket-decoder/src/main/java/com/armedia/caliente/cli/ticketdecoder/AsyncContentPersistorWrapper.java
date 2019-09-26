@@ -9,8 +9,6 @@ import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 
 public final class AsyncContentPersistorWrapper extends ContentPersistor {
 
-	private static final Content ENDER = new Content();
-
 	private final BlockingQueue<Content> queue = new LinkedBlockingQueue<>();
 	private final AtomicBoolean running = new AtomicBoolean(false);
 	private final String name;
@@ -62,7 +60,7 @@ public final class AsyncContentPersistorWrapper extends ContentPersistor {
 				} else {
 					c = this.queue.poll();
 				}
-				if ((c == null) || (c == AsyncContentPersistorWrapper.ENDER)) { return; }
+				if (c == null) { return; }
 			} catch (InterruptedException e) {
 				continue;
 			}
@@ -79,7 +77,9 @@ public final class AsyncContentPersistorWrapper extends ContentPersistor {
 	protected void cleanup() {
 		this.running.set(false);
 		if (this.thread != null) {
-			this.thread.interrupt();
+			if (this.thread.getState() == Thread.State.WAITING) {
+				this.thread.interrupt();
+			}
 			try {
 				this.thread.join();
 			} catch (InterruptedException e) {
