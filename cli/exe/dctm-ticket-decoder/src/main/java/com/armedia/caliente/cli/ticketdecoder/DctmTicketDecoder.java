@@ -190,8 +190,8 @@ public class DctmTicketDecoder {
 					if (persistenceThread != null) {
 						running.set(false);
 						persistenceThread.interrupt();
+						persistenceThread.join();
 					}
-					persistenceThread.join();
 
 					this.console.info("Generated a total of {} content elements ({} failed) from the {} submitted",
 						outputCounter.get(), failedOutput.size(), submittedCounter.get());
