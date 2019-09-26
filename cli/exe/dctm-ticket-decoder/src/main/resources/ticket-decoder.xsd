@@ -48,6 +48,7 @@
 	<xsd:complexType name="page.t">
 		<xsd:simpleContent>
 			<xsd:extension base="xsd:string">
+				<xsd:attribute name="contentId" type="tns:trimmed_string.t" use="required" />
 				<xsd:attribute name="number" type="tns:longNumber.t" use="required" />
 				<xsd:attribute name="length" type="tns:longNumber.t" use="required" />
 				<xsd:attribute name="hash" type="tns:trimmed_string.t" use="optional" />

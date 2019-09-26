@@ -42,6 +42,9 @@ import com.armedia.commons.utilities.Tools;
 })
 public class Page {
 
+	@XmlAttribute(name = "contentId", required = true)
+	protected String contentId;
+
 	@XmlAttribute(name = "number", required = true)
 	protected long number;
 
@@ -53,6 +56,15 @@ public class Page {
 
 	@XmlValue
 	protected String path;
+
+	public String getContentId() {
+		return this.contentId;
+	}
+
+	public Page setContentId(String contentId) {
+		this.contentId = contentId;
+		return this;
+	}
 
 	public long getNumber() {
 		return this.number;
