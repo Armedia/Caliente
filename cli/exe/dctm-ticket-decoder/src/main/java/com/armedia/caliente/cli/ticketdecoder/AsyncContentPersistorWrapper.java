@@ -27,7 +27,7 @@ public final class AsyncContentPersistorWrapper extends ContentPersistor {
 		super(null);
 		this.persistor = Objects.requireNonNull(persistor, "Must provide a content persistor to wrap");
 		this.threadGroup = threadGroup;
-		this.name = String.format("AsyncWrapper for [%s]", persistor.getName());
+		this.name = String.format("AsyncWrapper-%s", persistor.getClass().getSimpleName());
 	}
 
 	@Override
