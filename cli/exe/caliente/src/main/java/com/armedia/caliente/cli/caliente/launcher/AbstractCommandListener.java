@@ -26,17 +26,26 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.caliente.launcher;
 
+import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 
-class AbstractCommandListener {
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+
+class AbstractCommandListener extends BaseShareableLockable {
 
 	protected static final Integer PROGRESS_INTERVAL = 5;
 
 	protected final Logger console;
 	protected final CalienteWarningTracker warningTracker;
 	protected final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
+	private volatile ScheduledExecutorService scheduler = null;
+	private ScheduledFuture<?> pingerFuture = null;
 
 	protected AbstractCommandListener(Logger console) {
 		this.console = console;
@@ -47,4 +56,29 @@ class AbstractCommandListener {
 		return this.warningTracker;
 	}
 
+	protected final void startPinger(Runnable r) {
+		if (r == null) { return; }
+		shareLockedUpgradable(() -> this.scheduler, Objects::isNull, (s) -> {
+			ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+			this.pingerFuture = scheduler.scheduleAtFixedRate(r, AbstractCommandListener.PROGRESS_INTERVAL,
+				AbstractCommandListener.PROGRESS_INTERVAL, TimeUnit.SECONDS);
+			return (this.scheduler = scheduler);
+		});
+	}
+
+	protected final void stopPinger() {
+		shareLockedUpgradable(() -> this.scheduler, Objects::nonNull, (s) -> {
+			this.pingerFuture.cancel(true);
+			try {
+				this.pingerFuture.get();
+			} catch (Exception e) {
+				// Do nothing...
+			} finally {
+				this.pingerFuture = null;
+				s.shutdownNow();
+				this.scheduler = null;
+			}
+			return null;
+		});
+	}
 }

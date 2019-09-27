@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 
@@ -52,8 +53,17 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 	private final Map<CmfObject.Archetype, AtomicLong> current = new HashMap<>();
 	private final Map<CmfObject.Archetype, AtomicLong> previous = new HashMap<>();
 
+	private final AtomicReference<CmfObject.Archetype> currentType = new AtomicReference<>(null);
+
 	public ImportCommandListener(Logger console) {
 		super(console);
+	}
+
+	private void showProgress() {
+		CmfObject.Archetype type = this.currentType.get();
+		if (type != null) {
+			showProgress(type);
+		}
 	}
 
 	private void showProgress(CmfObject.Archetype objectType) {
@@ -117,17 +127,18 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 			this.current.put(t, new AtomicLong(0));
 			this.previous.put(t, new AtomicLong(0));
 		}
+		this.currentType.set(null);
+		startPinger(this::showProgress);
 	}
 
 	@Override
 	public final void objectTypeImportStarted(UUID jobId, CmfObject.Archetype objectType, long totalObjects) {
-		showProgress(objectType);
+		this.currentType.compareAndSet(null, objectType);
 		this.console.info("Object import started for {} {} objects", totalObjects, objectType.name());
 	}
 
 	@Override
 	public final void objectImportStarted(UUID jobId, CmfObject<?> object) {
-		showProgress(object.getType());
 		this.console.info("Import started for {}", object.getDescription());
 	}
 
@@ -147,7 +158,6 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 				break;
 		}
 		this.console.info("Import completed for {}: {}{}", object.getDescription(), outcome.getResult().name(), suffix);
-		showProgress(object.getType());
 	}
 
 	@Override
@@ -155,7 +165,6 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
 		this.console.info("Import failed for {}", object.getDescription(), thrown);
-		showProgress(object.getType());
 	}
 
 	@Override
@@ -169,11 +178,14 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 			}
 			this.console.info(String.format("%-10s: %8d", r.name(), v.longValue()));
 		}
+		this.currentType.set(null);
 		showProgress(objectType);
 	}
 
 	@Override
 	public final void importFinished(UUID jobId, Map<ImportResult, Long> counters) {
+		this.currentType.set(null);
+		stopPinger();
 		this.console.info("Import process finished");
 		for (ImportResult r : ImportResult.values()) {
 			Long v = counters.get(r);
@@ -187,18 +199,15 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 
 	@Override
 	public void objectTierImportStarted(UUID jobId, CmfObject.Archetype objectType, int tier) {
-		showProgress(objectType);
 	}
 
 	@Override
 	public void objectHistoryImportStarted(UUID jobId, CmfObject.Archetype objectType, String historyId, int count) {
-		showProgress(objectType);
 	}
 
 	@Override
 	public void objectHistoryImportFinished(UUID jobId, CmfObject.Archetype objectType, String historyId,
 		Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
-		showProgress(objectType);
 	}
 
 	@Override
