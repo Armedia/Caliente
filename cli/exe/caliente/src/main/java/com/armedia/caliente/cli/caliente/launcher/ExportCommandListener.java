@@ -140,6 +140,7 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 
 	@Override
 	public void objectExportStarted(UUID jobId, CmfObjectSearchSpec object, CmfObjectSearchSpec referrent) {
+		startPinger(this::showProgress);
 		if (referrent == null) {
 			this.console.info("Object export started for {}", object.getShortLabel());
 		} else {
@@ -155,7 +156,6 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 			this.console.info("Export completed for {} as object #{}", object.getDescription(), objectNumber);
 			this.counter.increment(object.getType(), ExportResult.EXPORTED);
 		}
-		showProgress();
 	}
 
 	@Override
@@ -176,7 +176,6 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 			default:
 				break;
 		}
-		showProgress();
 	}
 
 	@Override
@@ -184,7 +183,6 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 		this.objectCounter.incrementAndGet();
 		this.counter.increment(object.getType(), ExportResult.FAILED);
 		this.console.warn("Object export failed for {}", object.getShortLabel(), thrown);
-		showProgress();
 	}
 
 	@Override
@@ -194,6 +192,7 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 
 	@Override
 	public final void exportFinished(UUID jobId, Map<CmfObject.Archetype, Long> summary) {
+		stopPinger();
 		showProgress(true);
 		this.console.info("");
 		this.console.info("Export Summary");
