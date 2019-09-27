@@ -98,6 +98,7 @@ public class LocalVersionedOrganizer extends LocalOrganizer {
 		if (!StringUtils.isEmpty(modifier)) {
 			modifier = "." + modifier;
 		}
-		return String.format("%s.(page#%08x)%s", info.getRenditionIdentifier(), info.getRenditionPage(), modifier);
+		return String.format("%08x.%s.(page#%08x)%s", info.getIndex(), info.getRenditionIdentifier(),
+			info.getRenditionPage(), modifier);
 	}
 }
