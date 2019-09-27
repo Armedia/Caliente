@@ -87,7 +87,7 @@ public class CsvContentPersistor extends FileContentPersistor {
 		}
 		try (MutexAutoLock lock = autoMutexLock()) {
 			this.out.write(CsvContentPersistor.FORMAT.render( //
-				content.getId(), //
+				content.getObjectId(), //
 				content.getHistoryId(), //
 				content.getVersion(), //
 				content.isCurrent(), //
