@@ -94,6 +94,10 @@ public class LocalVersionedOrganizer extends LocalOrganizer {
 		CmfContentStream info) {
 		String baseName = info.getProperty(CmfContentStream.BASENAME);
 		if (!StringUtils.isEmpty(baseName)) { return baseName; }
-		return String.format("%s.(page#%08x)", info.getRenditionIdentifier(), info.getRenditionPage());
+		String modifier = info.getModifier();
+		if (!StringUtils.isEmpty(modifier)) {
+			modifier = "." + modifier;
+		}
+		return String.format("%s.(page#%08x)%s", info.getRenditionIdentifier(), info.getRenditionPage(), modifier);
 	}
 }
