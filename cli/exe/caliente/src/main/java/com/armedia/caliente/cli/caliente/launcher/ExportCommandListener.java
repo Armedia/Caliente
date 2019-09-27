@@ -95,7 +95,6 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 	@Override
 	public void exportStarted(ExportState exportState) {
 		this.start.set(System.currentTimeMillis());
-		startPinger(this::showProgress);
 		this.console.info("Export process started with settings:{}{}\t{}{}{}", exportState.cfg);
 	}
 
@@ -141,6 +140,7 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 
 	@Override
 	public void objectExportStarted(UUID jobId, CmfObjectSearchSpec object, CmfObjectSearchSpec referrent) {
+		startPinger(this::showProgress);
 		if (referrent == null) {
 			this.console.info("Object export started for {}", object.getShortLabel());
 		} else {

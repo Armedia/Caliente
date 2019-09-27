@@ -60,7 +60,7 @@ class AbstractCommandListener extends BaseShareableLockable {
 		if (r == null) { return; }
 		shareLockedUpgradable(() -> this.scheduler, Objects::isNull, (s) -> {
 			ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-			this.pingerFuture = scheduler.scheduleAtFixedRate(r, AbstractCommandListener.PROGRESS_INTERVAL,
+			this.pingerFuture = scheduler.scheduleAtFixedRate(r, AbstractCommandListener.PROGRESS_INTERVAL * 3,
 				AbstractCommandListener.PROGRESS_INTERVAL, TimeUnit.SECONDS);
 			return (this.scheduler = scheduler);
 		});

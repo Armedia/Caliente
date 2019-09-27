@@ -128,12 +128,13 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 			this.previous.put(t, new AtomicLong(0));
 		}
 		this.currentType.set(null);
-		startPinger(this::showProgress);
 	}
 
 	@Override
 	public final void objectTypeImportStarted(UUID jobId, CmfObject.Archetype objectType, long totalObjects) {
-		this.currentType.compareAndSet(null, objectType);
+		if (this.currentType.compareAndSet(null, objectType)) {
+			startPinger(this::showProgress);
+		}
 		this.console.info("Object import started for {} {} objects", totalObjects, objectType.name());
 	}
 
