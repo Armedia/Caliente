@@ -28,22 +28,18 @@ package com.armedia.caliente.cli.ticketdecoder;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.ticketdecoder.xml.Page;
 import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.caliente.tools.CsvFormatter;
-import com.armedia.commons.utilities.Tools;
 
 public class CsvContentPersistor extends FileContentPersistor {
 	private static final String BASE_NAME = "CSV";
-	private static final Collection<Rendition> NULL_RENDITIONS = Tools
-		.freezeCollection(Collections.singleton(new Rendition()));
-	private static final Collection<Page> NULL_PAGES = Tools
-		.freezeCollection(Collections.singleton(new Page().setPath("")));
 
 	private static final CsvFormatter FORMAT = new CsvFormatter(true, //
 		"R_OBJECT_ID", //
@@ -82,15 +78,16 @@ public class CsvContentPersistor extends FileContentPersistor {
 		// together. This will lead to contention, but the organization
 		// of the file is more important
 		Collection<Rendition> renditions = content.getRenditions();
-		if ((renditions == null) || renditions.isEmpty()) {
-			renditions = CsvContentPersistor.NULL_RENDITIONS;
-		}
+		if ((renditions == null) || renditions.isEmpty()) { return; }
 		for (Rendition rendition : renditions) {
 			Collection<Page> pages = rendition.getPages();
 			if ((pages == null) || pages.isEmpty()) {
-				pages = CsvContentPersistor.NULL_PAGES;
+				continue;
 			}
 			for (Page page : pages) {
+				if (StringUtils.isEmpty(page.getContentId())) {
+					continue;
+				}
 				this.out.write(CsvContentPersistor.FORMAT.render( //
 					content.getObjectId(), //
 					content.getHistoryId(), //
