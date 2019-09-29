@@ -26,6 +26,7 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.typedumper;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -57,7 +58,7 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 	public void initialize(final File target) throws Exception {
 		final File finalTarget = Tools.canonicalize(target);
 		try (MutexAutoLock lock = autoMutexLock()) {
-			this.out = new PrintWriter(new FileWriter(finalTarget));
+			this.out = new PrintWriter(new BufferedWriter(new FileWriter(finalTarget)));
 			this.out.printf("" + //
 				DqlTypePersistor.BIG_DIVIDER + "%n" + //
 				"-- " + DqlTypePersistor.pad(DqlTypePersistor.HEADER, DqlTypePersistor.BIG_DIVIDER, 6) + " --%n" + //
@@ -68,7 +69,7 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 	}
 
 	@Override
-	public void persist(IDfType type) throws Exception {
+	public void persist(String hierarchy, IDfType type) throws Exception {
 		if (type == null) { return; }
 		try (MutexAutoLock lock = autoMutexLock()) {
 			String extendsClause = "";
@@ -82,6 +83,8 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 			String typeDecl = String.format("BEGIN TYPE: %s", type.getName());
 			if (superType != null) {
 				String msg = String.format("   EXTENDS: %s", superType.getName());
+				extendsClause = "-- " + DqlTypePersistor.pad(msg, DqlTypePersistor.SMALL_DIVIDER, 6) + " --%n";
+				msg = String.format("      TREE: %s", hierarchy);
 				extendsClause = "-- " + DqlTypePersistor.pad(msg, DqlTypePersistor.SMALL_DIVIDER, 6) + " --%n";
 			}
 			this.out.printf("%n" + DqlTypePersistor.SMALL_DIVIDER + "%n" + //
@@ -146,7 +149,7 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 
 			this.out.printf("%s%n", dql);
 
-			this.out.printf("%n" + DqlTypePersistor.SMALL_DIVIDER + "%n" + //
+			this.out.printf(DqlTypePersistor.SMALL_DIVIDER + "%n" + //
 				"-- " + DqlTypePersistor.pad("END TYPE", DqlTypePersistor.SMALL_DIVIDER, 6) + " --%n" + //
 				DqlTypePersistor.SMALL_DIVIDER + "%n" //
 			);
