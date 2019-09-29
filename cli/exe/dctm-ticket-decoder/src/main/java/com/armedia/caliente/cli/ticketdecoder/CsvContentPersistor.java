@@ -27,19 +27,19 @@
 package com.armedia.caliente.cli.ticketdecoder;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.ticketdecoder.xml.Page;
 import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.caliente.tools.CsvFormatter;
-import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 
 public class CsvContentPersistor extends FileContentPersistor {
 	private static final String BASE_NAME = "CSV";
-	private static final Rendition NULL_RENDITION = new Rendition();
-	private static final Page NULL_PAGE = new Page().setPath("");
 
 	private static final CsvFormatter FORMAT = new CsvFormatter(true, //
 		"R_OBJECT_ID", //
@@ -47,9 +47,9 @@ public class CsvContentPersistor extends FileContentPersistor {
 		"R_VERSION_LABEL", //
 		"HAS_FOLDER", //
 		"DOCUMENTUM_PATH", //
+		"FORMAT", //
 		"CONTENT_ID", //
 		"LENGTH", //
-		"FORMAT", //
 		"CONTENT_STORE_PATH" //
 	);
 
@@ -65,41 +65,42 @@ public class CsvContentPersistor extends FileContentPersistor {
 	}
 
 	@Override
-	protected void persistContent(Content content) {
+	protected void persistContent(Content content) throws Exception {
 		if (content == null) { return; }
-		final Rendition rendition;
-		if (!content.getRenditions().isEmpty()) {
-			rendition = content.getRenditions().get(0);
-		} else {
-			rendition = CsvContentPersistor.NULL_RENDITION;
-		}
-		final Page page;
-		if (!rendition.getPages().isEmpty()) {
-			page = rendition.getPages().get(0);
-		} else {
-			page = CsvContentPersistor.NULL_PAGE;
-		}
 		final String path;
-		if (!content.getPaths().isEmpty()) {
-			path = content.getPaths().get(0);
-		} else {
+		List<String> paths = content.getPaths();
+		if ((paths == null) || paths.isEmpty()) {
 			path = "";
+		} else {
+			path = paths.get(0);
 		}
-		try (MutexAutoLock lock = autoMutexLock()) {
-			this.out.write(CsvContentPersistor.FORMAT.render( //
-				content.getId(), //
-				content.getHistoryId(), //
-				content.getVersion(), //
-				content.isCurrent(), //
-				path, //
-				page.getContentId(), //
-				page.getLength(), //
-				rendition.getFormat(), //
-				page.getPath() //
-			));
-			this.out.flush();
-		} catch (IOException e) {
-			this.error.error("Failed to persist the content object {}", content, e);
+		// We lock high because we want all the output to be grouped
+		// together. This will lead to contention, but the organization
+		// of the file is more important
+		Collection<Rendition> renditions = content.getRenditions();
+		if ((renditions == null) || renditions.isEmpty()) { return; }
+		for (Rendition rendition : renditions) {
+			Collection<Page> pages = rendition.getPages();
+			if ((pages == null) || pages.isEmpty()) {
+				continue;
+			}
+			for (Page page : pages) {
+				if (StringUtils.isEmpty(page.getContentId())) {
+					continue;
+				}
+				this.out.write(CsvContentPersistor.FORMAT.render( //
+					content.getObjectId(), //
+					content.getHistoryId(), //
+					content.getVersion(), //
+					content.isCurrent(), //
+					path, //
+					rendition.getFormat(), //
+					page.getContentId(), //
+					page.getLength(), //
+					page.getPath() //
+				));
+				this.out.flush();
+			}
 		}
 	}
 }
