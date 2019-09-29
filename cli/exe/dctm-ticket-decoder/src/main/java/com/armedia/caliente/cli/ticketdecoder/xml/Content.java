@@ -47,8 +47,8 @@ import com.armedia.commons.utilities.Tools;
 @XmlRootElement(name = "content")
 public class Content {
 
-	@XmlAttribute(name = "id", required = true)
-	protected String id;
+	@XmlAttribute(name = "objectId", required = true)
+	protected String objectId;
 
 	@XmlAttribute(name = "historyId", required = true)
 	protected String historyId;
@@ -73,12 +73,12 @@ public class Content {
 		}
 	}
 
-	public String getId() {
-		return this.id;
+	public String getObjectId() {
+		return this.objectId;
 	}
 
-	public Content setId(String id) {
-		this.id = id;
+	public Content setObjectId(String objectId) {
+		this.objectId = objectId;
 		return this;
 	}
 
@@ -125,14 +125,14 @@ public class Content {
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.id, this.historyId, this.version, this.paths, this.renditions);
+		return Tools.hashTool(this, null, this.objectId, this.historyId, this.version, this.paths, this.renditions);
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		Content other = Content.class.cast(obj);
-		if (!Tools.equals(this.id, other.id)) { return false; }
+		if (!Tools.equals(this.objectId, other.objectId)) { return false; }
 		if (!Tools.equals(this.historyId, other.historyId)) { return false; }
 		if (!Tools.equals(this.version, other.version)) { return false; }
 		if (!Tools.equals(this.paths, other.paths)) { return false; }
@@ -142,7 +142,7 @@ public class Content {
 
 	@Override
 	public String toString() {
-		return String.format("Content [id=%s, historyId=%s, version=%s, current=%s, paths=%s, renditions=%s]", this.id,
-			this.historyId, this.version, isCurrent(), this.paths, this.renditions);
+		return String.format("Content [objectId=%s, historyId=%s, version=%s, current=%s, paths=%s, renditions=%s]",
+			this.objectId, this.historyId, this.version, isCurrent(), this.paths, this.renditions);
 	}
 }

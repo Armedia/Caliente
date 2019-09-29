@@ -517,7 +517,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		IDfSysObject document = getSysObject(session, id);
 		if (document == null) { return null; }
 		Content c = new Content() //
-			.setId(id.getId()) //
+			.setObjectId(id.getId()) //
 			.setHistoryId(document.getChronicleId().getId()) //
 			.setVersion(document.getVersionLabel(0)) //
 			.setCurrent(document.getHasFolder()) //
