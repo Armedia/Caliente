@@ -37,7 +37,7 @@ public interface TypePersistor extends AutoCloseable {
 		// do nothing by default
 	}
 
-	public void persist(IDfType type) throws Exception;
+	public void persist(String hierarchy, IDfType type) throws Exception;
 
 	@Override
 	public default void close() throws Exception {

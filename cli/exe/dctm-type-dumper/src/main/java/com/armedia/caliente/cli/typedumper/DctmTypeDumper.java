@@ -207,8 +207,8 @@ public class DctmTypeDumper {
 			// Now, persist the types...
 			try (TypePersistor persistor = format.newPersistor()) {
 				persistor.initialize(target);
-				for (String type : typeOrder) {
-					persistor.persist(types.get(type));
+				for (String hierarchy : typeOrder) {
+					persistor.persist(hierarchy, types.get(hierarchy));
 				}
 			}
 			ret = 0;
