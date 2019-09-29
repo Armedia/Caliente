@@ -30,6 +30,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -37,6 +39,7 @@ import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.documentum.fc.client.IDfType;
+import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 
 public class DqlTypePersistor extends BaseShareableLockable implements TypePersistor {
@@ -46,6 +49,22 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 	private static final String FOOTER = "END TYPE DUMPS";
 	private static final String BIG_DIVIDER = StringUtils.repeat('-', 80);
 	private static final String SMALL_DIVIDER = StringUtils.repeat('-', 60);
+
+	private static class Att {
+		private final String name;
+		private final int type;
+		private final boolean repeating;
+		private final int qualified;
+		private final int length;
+
+		public Att(IDfType t, int i) throws DfException {
+			this.name = t.getRepeatingString("attr_name", i);
+			this.type = t.getRepeatingInt("attr_type", i);
+			this.repeating = t.getRepeatingBoolean("attr_repeating", i);
+			this.qualified = t.getRepeatingInt("attr_restriction", i);
+			this.length = t.getRepeatingInt("attr_length", i);
+		}
+	}
 
 	private static final String pad(String message, String divider, int extra) {
 		int padLength = (divider.length() - message.length() - Math.max(0, extra));
@@ -97,17 +116,28 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 			if (parens) {
 				dql.append("(").append(DqlTypePersistor.NL);
 			}
+
+			int maxNameLength = 0;
+			final Collection<Att> attributes = new ArrayList<>(attrCount - startPosition);
 			for (int i = startPosition; i < attrCount; i++) {
+				Att att = new Att(type, i);
+				attributes.add(att);
+				maxNameLength = Math.max(maxNameLength, att.name.length());
+			}
+			// Round the length up to the next multiple of 4
+			maxNameLength += 3;
+			maxNameLength -= (maxNameLength % 4);
+
+			boolean first = true;
+			for (Att att : attributes) {
 				// If we're not the first, we need a comma
-				final String attrName = type.getRepeatingString("attr_name", i);
-				final int attrType = type.getRepeatingInt("attr_type", i);
-				final boolean attrRepeating = type.getRepeatingBoolean("attr_repeating", i);
-				final int attrQualified = type.getRepeatingInt("attr_restriction", i);
-				if (i > startPosition) {
+				if (!first) {
 					dql.append(",").append(DqlTypePersistor.NL);
 				}
-				dql.append("\t").append(attrName).append("\t");
-				switch (attrType) {
+				first = false;
+				String outName = att.name + StringUtils.repeat(' ', maxNameLength - att.name.length()) + " ";
+				dql.append("\t").append(outName);
+				switch (att.type) {
 					case IDfAttr.DM_BOOLEAN:
 						dql.append("boolean");
 						break;
@@ -115,7 +145,7 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 						dql.append("integer");
 						break;
 					case IDfAttr.DM_STRING:
-						final int attrLength = type.getRepeatingInt("attr_length", i);
+						final int attrLength = att.length;
 						dql.append("string(").append(attrLength).append(")");
 						break;
 					case IDfAttr.DM_ID:
@@ -133,10 +163,10 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 					default:
 						break;
 				}
-				if (attrRepeating) {
+				if (att.repeating) {
 					dql.append(" repeating");
 				}
-				if (attrQualified != 0) {
+				if (att.qualified != 0) {
 					dql.append(" not qualified");
 				}
 			}
