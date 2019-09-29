@@ -26,9 +26,10 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.typedumper;
 
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.io.FileWriter;
+import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
@@ -56,6 +57,8 @@ import javanet.staxutils.IndentingXMLStreamWriter;
 
 public class XmlTypePersistor extends BaseShareableLockable implements TypePersistor {
 
+	private static final String NL = String.format("%n");
+
 	private static final CheckedLazySupplier<XMLOutputFactory, XMLStreamException> OUTPUT_FACTORY = new CheckedLazySupplier<>(
 		() -> {
 			WstxOutputFactory factory = new WstxOutputFactory();
@@ -78,15 +81,16 @@ public class XmlTypePersistor extends BaseShareableLockable implements TypePersi
 			return factory;
 		});
 
-	private OutputStream out = null;
+	private Writer out = null;
 	private XMLStreamWriter xml = null;
 	private Marshaller marshaller = null;
+	private boolean first = false;
 
 	@Override
 	public void initialize(final File target) throws Exception {
 		final File finalTarget = Tools.canonicalize(target);
 		try (MutexAutoLock lock = autoMutexLock()) {
-			this.out = new FileOutputStream(finalTarget);
+			this.out = new BufferedWriter(new FileWriter(finalTarget));
 
 			XMLOutputFactory factory = XmlTypePersistor.OUTPUT_FACTORY.get();
 			XMLStreamWriter writer = factory.createXMLStreamWriter(this.out);
@@ -100,12 +104,14 @@ public class XmlTypePersistor extends BaseShareableLockable implements TypePersi
 			String rootElement = "types";
 			this.xml.writeDTD(String.format("<!DOCTYPE %s>", rootElement));
 			this.xml.writeStartElement(rootElement);
-			writer.flush();
+			this.xml.flush();
 
 			this.marshaller = XmlTools.getMarshaller("type-dumper.xsd", Type.class, Attribute.class);
 			this.marshaller.setProperty(Marshaller.JAXB_ENCODING, Charset.defaultCharset().name());
 			this.marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 			this.marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
+			this.first = true;
 		}
 	}
 
@@ -114,9 +120,23 @@ public class XmlTypePersistor extends BaseShareableLockable implements TypePersi
 	}
 
 	@Override
-	public void persist(IDfType type) throws Exception {
+	public void persist(String hierarchy, IDfType type) throws Exception {
 		if (type != null) {
-			mutexLocked(() -> this.marshaller.marshal(renderType(type), this.xml));
+			mutexLocked(() -> {
+				if (!this.first) {
+					this.out.write(XmlTypePersistor.NL);
+					this.out.flush();
+				}
+				this.first = false;
+				this.xml.writeComment(" BEGIN TYPE: " + type.getName() + " ");
+				if (type.getSuperType() != null) {
+					this.xml.writeComment("    EXTENDS: " + type.getSuperName() + " ");
+					this.xml.writeComment("       TREE: " + hierarchy + " ");
+				}
+				this.marshaller.marshal(renderType(type), this.xml);
+				this.xml.writeComment("   END TYPE: " + type.getName() + " ");
+				this.xml.flush();
+			});
 		}
 	}
 
