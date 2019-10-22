@@ -6,7 +6,7 @@
 	<description>A Caliente engine that supports reading from and writing to a Documentum instance using DFC</description>
 	<groupId>com.armedia.caliente.engine</groupId>
 	<artifactId>caliente-engine-dfc</artifactId>
-	<packaging>bundle</packaging>
+	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
@@ -81,23 +81,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<extensions>true</extensions>
-				<configuration>
-					<instructions>
-						<Bundle-Category></Bundle-Category>
-						<Bundle-Symbolic-Name>${project.groupId}.${project.artifactId}</Bundle-Symbolic-Name>
-						<!--
-						<Export-Package></Export-Package>
-						-->
-					</instructions>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>
