@@ -49,6 +49,7 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
@@ -194,7 +195,7 @@ public class Flat2Db extends BaseShareableLockable {
 				}
 				if (remarks != null) { return remarks; }
 
-				if (!Tools.equals(sourceValue, candidateValue)) {
+				if (!Objects.equals(sourceValue, candidateValue)) {
 					long diff = sourceValue.getTime() - candidateValue.getTime();
 					String sign = "";
 					if (diff < 0) {
@@ -230,7 +231,7 @@ public class Flat2Db extends BaseShareableLockable {
 		}
 
 		public String compareValues(String source, String candidate) {
-			if (Tools.equals(source, candidate)) { return null; }
+			if (Objects.equals(source, candidate)) { return null; }
 			return "VALUES ARE DIFFERENT";
 		}
 
@@ -544,7 +545,7 @@ public class Flat2Db extends BaseShareableLockable {
 		public final FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
 			return super.postVisitDirectory(dir, exc);
 		}
-	};
+	}
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -699,8 +700,8 @@ public class Flat2Db extends BaseShareableLockable {
 	private boolean checkTypes(final Path relativePath, Properties sourceData, Properties candidateData) {
 		String sourceType = sourceData.getProperty(Flat2Db.PROP_TYPE);
 		String candidateType = candidateData.getProperty(Flat2Db.PROP_TYPE);
-		if (Tools.equals(sourceType, candidateType)
-			|| Tools.equals(Flat2Db.REFERENCE_TYPE_MAPPING.get(candidateType), sourceType)) {
+		if (Objects.equals(sourceType, candidateType)
+			|| Objects.equals(Flat2Db.REFERENCE_TYPE_MAPPING.get(candidateType), sourceType)) {
 			return true;
 		}
 		reportFault(new TypeMismatchFault(relativePath, sourceType, candidateType));
@@ -922,7 +923,7 @@ public class Flat2Db extends BaseShareableLockable {
 			return false;
 		}
 
-		if (!Tools.equals(sourceChecksumValue, candidateChecksumValue)) {
+		if (!Objects.equals(sourceChecksumValue, candidateChecksumValue)) {
 			reportFault(new ContentMismatchFault(relativePath, sourceSize,
 				String.format("%s:%s", checksumType, sourceChecksumValue), candidateSize,
 				String.format("%s:%s", checksumType, candidateChecksumValue)));
