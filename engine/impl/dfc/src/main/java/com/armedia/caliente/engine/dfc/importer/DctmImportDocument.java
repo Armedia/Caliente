@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import javax.activation.MimeType;
 
@@ -107,10 +108,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		for (Iterator<IDfValue> it = path.iterator(); it.hasNext();) {
 			IDfValue v = it.next();
 			final String tgt = ctx.getTargetPath(v.asString());
-			if (Tools.equals("", tgt)) {
+			if (Objects.equals("", tgt)) {
 				it.remove();
 			}
-			if (Tools.equals("/", tgt)) {
+			if (Objects.equals("/", tgt)) {
 				it.remove();
 			}
 		}
@@ -468,7 +469,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
 		String sourceChronicleId = (att != null ? att.getValue().asId().getId() : null);
 		final boolean root = (((p != null) && p.hasValues() && p.getValue().asBoolean()) || (sourceChronicleId == null)
-			|| Tools.equals(this.cmfObject.getId(), sourceChronicleId));
+			|| Objects.equals(this.cmfObject.getId(), sourceChronicleId));
 		if (!root && !newObject) {
 			this.antecedentTemporaryPermission = new TemporaryPermission(context.getSession(), document,
 				IDfACL.DF_PERMIT_VERSION);
@@ -525,7 +526,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		fullFormat = Tools.coalesce(fullFormat, contentType);
 
 		if (renditionNumber == 0) {
-			if (!Tools.equals(fullFormat, contentType)) {
+			if (!Objects.equals(fullFormat, contentType)) {
 				fullFormat = contentType;
 			}
 			try {
@@ -541,7 +542,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 					e.getClass().getCanonicalName(), e.getMessage());
 				throw new ImportException(msg, e);
 			}
-		} else if (Tools.equals(contentType, fullFormat) && StringUtils.isEmpty(pageModifier)) {
+		} else if (Objects.equals(contentType, fullFormat) && StringUtils.isEmpty(pageModifier)) {
 			// If the rendition is of the same format as the main content, then we MUST skip it
 			final String msg = String.format("Skipped a rendition for document [%s](%s) -> {%s/%s/%s/%s}",
 				this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber, pageModifier);
@@ -638,7 +639,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 	protected String identifyFormat(IDfSession session, String aContentType, String extension) throws DfException {
 		// We have a mime type or format name ... try a format name first
 		// Shortcut - avoid checking if it's the default binary type (application/octet-stream)
-		if (Tools.equals(aContentType, DctmImportDocument.DEFAULT_BINARY_MIME)) { return null; }
+		if (Objects.equals(aContentType, DctmImportDocument.DEFAULT_BINARY_MIME)) { return null; }
 
 		// Not a format...must be a mime type
 

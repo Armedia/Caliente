@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -410,11 +411,11 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		File f = service.getFile(url);
 		if (f == null) { return null; }
 		String version = m.group(2);
-		if (Tools.equals(version, String.format("%d.%d", f.getMajorVersion(), f.getMinorVersion()))) {
+		if (Objects.equals(version, String.format("%d.%d", f.getMajorVersion(), f.getMinorVersion()))) {
 			return new ShptFile(factory, service, f);
 		}
 		for (FileVersion v : service.getFileVersions(url)) {
-			if (Tools.equals(version, v.getLabel())) { return new ShptFile(factory, service, f, v); }
+			if (Objects.equals(version, v.getLabel())) { return new ShptFile(factory, service, f, v); }
 		}
 		// Nothing found...
 		return null;

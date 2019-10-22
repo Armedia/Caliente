@@ -29,6 +29,7 @@ package com.armedia.calienteng;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Date;
+import java.util.Objects;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -101,7 +102,7 @@ public final class FileSpec implements Cloneable, Comparable<FileSpec>, Serializ
 	public boolean isSameFile(FileSpec other) {
 		if (other == null) { return false; }
 		if (other == this) { return true; }
-		return Tools.equals(this.uri.getPath(), other.uri.getPath()) && Tools.equals(this.type, other.type);
+		return Objects.equals(this.uri.getPath(), other.uri.getPath()) && Objects.equals(this.type, other.type);
 	}
 
 	@Override
@@ -109,11 +110,11 @@ public final class FileSpec implements Cloneable, Comparable<FileSpec>, Serializ
 		if (obj == this) { return true; }
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		FileSpec other = FileSpec.class.cast(obj);
-		if (!Tools.equals(this.uri, other.uri)) { return false; }
-		if (!Tools.equals(this.type, other.type)) { return false; }
-		if (!Tools.equals(this.timestamp, other.timestamp)) { return false; }
-		if (!Tools.equals(this.changeMarker, other.changeMarker)) { return false; }
-		if (!Tools.equals(this.version, other.version)) { return false; }
+		if (!Objects.equals(this.uri, other.uri)) { return false; }
+		if (!Objects.equals(this.type, other.type)) { return false; }
+		if (!Objects.equals(this.timestamp, other.timestamp)) { return false; }
+		if (!Objects.equals(this.changeMarker, other.changeMarker)) { return false; }
+		if (!Objects.equals(this.version, other.version)) { return false; }
 		return true;
 	}
 

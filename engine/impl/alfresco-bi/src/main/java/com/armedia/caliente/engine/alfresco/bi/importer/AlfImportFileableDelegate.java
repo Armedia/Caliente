@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -445,9 +446,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 						continue;
 					}
 
-					if (Tools.equals(accessor, "dm_owner")) {
+					if (Objects.equals(accessor, "dm_owner")) {
 						accessor = owner;
-					} else if (Tools.equals(accessor, "dm_group")) {
+					} else if (Objects.equals(accessor, "dm_group")) {
 						accessor = group;
 					}
 

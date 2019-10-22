@@ -27,11 +27,10 @@
 package com.armedia.caliente.engine.sharepoint;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.codec.digest.DigestUtils;
-
-import com.armedia.commons.utilities.Tools;
 
 public interface ShptCommon {
 
@@ -40,7 +39,7 @@ public interface ShptCommon {
 	public static final Set<String> TARGETS = Collections.singleton(ShptCommon.TARGET_NAME);
 
 	public static String calculateId(String portablePath) {
-		if ((portablePath == null) || Tools.equals("/", portablePath)) { return null; }
+		if ((portablePath == null) || Objects.equals("/", portablePath)) { return null; }
 		return DigestUtils.sha256Hex(portablePath);
 	}
 }

@@ -28,6 +28,7 @@ package com.armedia.caliente.store;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
@@ -91,20 +92,20 @@ public abstract class CmfValueMapper {
 			if (other == null) {
 				throw new IllegalArgumentException("Must provide another mapping to compare against");
 			}
-			if (!Tools.equals(this.objectType, other.objectType)) { return false; }
-			if (!Tools.equals(this.mappingName, other.mappingName)) { return false; }
+			if (!Objects.equals(this.objectType, other.objectType)) { return false; }
+			if (!Objects.equals(this.mappingName, other.mappingName)) { return false; }
 			return true;
 		}
 
 		public boolean isSameSource(Mapping other) {
 			if (!isSameTypeAndName(other)) { return false; }
-			if (!Tools.equals(this.sourceValue, other.sourceValue)) { return false; }
+			if (!Objects.equals(this.sourceValue, other.sourceValue)) { return false; }
 			return true;
 		}
 
 		public boolean isSameTarget(Mapping other) {
 			if (!isSameTypeAndName(other)) { return false; }
-			if (!Tools.equals(this.targetValue, other.targetValue)) { return false; }
+			if (!Objects.equals(this.targetValue, other.targetValue)) { return false; }
 			return true;
 		}
 
@@ -117,10 +118,10 @@ public abstract class CmfValueMapper {
 		public boolean equals(Object obj) {
 			if (!Tools.baseEquals(this, obj)) { return false; }
 			Mapping other = Mapping.class.cast(obj);
-			if (!Tools.equals(this.objectType, other.objectType)) { return false; }
-			if (!Tools.equals(this.mappingName, other.mappingName)) { return false; }
-			if (!Tools.equals(this.sourceValue, other.sourceValue)) { return false; }
-			if (!Tools.equals(this.targetValue, other.targetValue)) { return false; }
+			if (!Objects.equals(this.objectType, other.objectType)) { return false; }
+			if (!Objects.equals(this.mappingName, other.mappingName)) { return false; }
+			if (!Objects.equals(this.sourceValue, other.sourceValue)) { return false; }
+			if (!Objects.equals(this.targetValue, other.targetValue)) { return false; }
 			return true;
 		}
 

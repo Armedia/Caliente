@@ -27,6 +27,7 @@
 package com.armedia.caliente.engine.exporter;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
@@ -68,9 +69,9 @@ final class ExportHistoryLock implements Serializable {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		ExportHistoryLock other = ExportHistoryLock.class.cast(obj);
-		if (!Tools.equals(this.type, other.type)) { return false; }
-		if (!Tools.equals(this.historyId, other.historyId)) { return false; }
-		if (!Tools.equals(this.lockId, other.lockId)) { return false; }
+		if (!Objects.equals(this.type, other.type)) { return false; }
+		if (!Objects.equals(this.historyId, other.historyId)) { return false; }
+		if (!Objects.equals(this.lockId, other.lockId)) { return false; }
 		return true;
 	}
 

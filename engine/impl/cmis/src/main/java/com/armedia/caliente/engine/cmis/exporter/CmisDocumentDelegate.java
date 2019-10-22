@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Rendition;
@@ -79,13 +80,13 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		List<Document> succ = new ArrayList<>(all.size());
 
 		Document first = all.get(0);
-		if ((first.isPrivateWorkingCopy() == Boolean.TRUE) || Tools.equals("pwc", first.getVersionLabel())) {
+		if ((first.isPrivateWorkingCopy() == Boolean.TRUE) || Objects.equals("pwc", first.getVersionLabel())) {
 			all.remove(0);
 		}
 		Collections.reverse(all);
 		List<Document> tgt = prev;
 		for (Document d : all) {
-			if (Tools.equals(object.getId(), d.getId())) {
+			if (Objects.equals(object.getId(), d.getId())) {
 				tgt = succ;
 				continue;
 			}

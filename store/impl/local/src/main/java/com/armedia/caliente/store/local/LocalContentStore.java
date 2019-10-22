@@ -47,6 +47,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -358,7 +359,7 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 			List<String> sspParts = new ArrayList<>();
 			for (String s : rawPath) {
 				String S = safeEncode(s);
-				fixed |= !Tools.equals(s, S);
+				fixed |= !Objects.equals(s, S);
 				sspParts.add(S);
 			}
 			ssp = FileNameTools.reconstitute(sspParts, false, false, '/');

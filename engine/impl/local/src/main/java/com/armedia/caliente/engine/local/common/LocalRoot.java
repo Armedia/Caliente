@@ -28,6 +28,7 @@ package com.armedia.caliente.engine.local.common;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -94,7 +95,7 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		LocalRoot other = LocalRoot.class.cast(obj);
-		if (!Tools.equals(this.file, other.file)) { return false; }
+		if (!Objects.equals(this.file, other.file)) { return false; }
 		return true;
 	}
 

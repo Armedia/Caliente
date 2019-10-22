@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.alfresco.bi.importer.model;
 
+import java.util.Objects;
+
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.MandatoryDef;
 import com.armedia.commons.utilities.Tools;
 
@@ -70,11 +72,11 @@ public final class SchemaAttribute {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		SchemaAttribute other = SchemaAttribute.class.cast(obj);
-		if (!Tools.equals(this.name, other.name)) { return false; }
+		if (!Objects.equals(this.name, other.name)) { return false; }
 		if (this.type != other.type) { return false; }
 		if (this.mandatory != other.mandatory) { return false; }
 		if (this.multiple != other.multiple) { return false; }
-		if (!Tools.equals(this.declaration, other.declaration)) { return false; }
+		if (!Objects.equals(this.declaration, other.declaration)) { return false; }
 		return true;
 	}
 

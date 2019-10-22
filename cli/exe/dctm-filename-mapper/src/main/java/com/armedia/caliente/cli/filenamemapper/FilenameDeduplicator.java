@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -109,7 +110,7 @@ public class FilenameDeduplicator {
 			if (!Tools.baseEquals(this, obj)) { return false; }
 			FSObject other = FSObject.class.cast(obj);
 			if (getOuterType() != other.getOuterType()) { return false; }
-			if (!Tools.equals(this.id, other.id)) { return false; }
+			if (!Objects.equals(this.id, other.id)) { return false; }
 			return true;
 		}
 

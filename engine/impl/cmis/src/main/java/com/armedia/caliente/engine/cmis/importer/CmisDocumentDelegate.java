@@ -29,6 +29,7 @@ package com.armedia.caliente.engine.cmis.importer;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
@@ -192,7 +193,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	@Override
 	protected boolean isSameObject(Document existing) {
 		if (!super.isSameObject(existing)) { return false; }
-		return Tools.equals(existing.getVersionLabel(), this.versionLabel);
+		return Objects.equals(existing.getVersionLabel(), this.versionLabel);
 	}
 
 	@Override

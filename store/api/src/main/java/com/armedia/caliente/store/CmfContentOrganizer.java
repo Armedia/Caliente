@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -99,11 +100,11 @@ public abstract class CmfContentOrganizer {
 		public boolean equals(Object obj) {
 			if (!Tools.baseEquals(this, obj)) { return false; }
 			Location other = Location.class.cast(obj);
-			if (!Tools.equals(this.containerSpec, other.containerSpec)) { return false; }
-			if (!Tools.equals(this.baseName, other.baseName)) { return false; }
-			if (!Tools.equals(this.extension, other.extension)) { return false; }
-			if (!Tools.equals(this.descriptor, other.descriptor)) { return false; }
-			if (!Tools.equals(this.appendix, other.appendix)) { return false; }
+			if (!Objects.equals(this.containerSpec, other.containerSpec)) { return false; }
+			if (!Objects.equals(this.baseName, other.baseName)) { return false; }
+			if (!Objects.equals(this.extension, other.extension)) { return false; }
+			if (!Objects.equals(this.descriptor, other.descriptor)) { return false; }
+			if (!Objects.equals(this.appendix, other.appendix)) { return false; }
 			return true;
 		}
 

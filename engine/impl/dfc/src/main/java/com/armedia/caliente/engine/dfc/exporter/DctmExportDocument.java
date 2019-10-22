@@ -166,7 +166,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		for (DfcVersion<IDfSysObject> version : getVersionHistory(ctx, document)) {
 			IDfSysObject doc = version.getObject();
 			final IDfId id = doc.getObjectId();
-			if (Tools.equals(id.getId(), document.getObjectId().getId())) {
+			if (Objects.equals(id.getId(), document.getObjectId().getId())) {
 				// Once we've found the "reference" object in the history, we skip adding it
 				// since it will be added explicitly
 				if (!prior) {
@@ -220,7 +220,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		// not duplicate, but doing it like this helps us avoid o(n^2) performance
 		// which is BAAAD
 		boolean rootObject = false;
-		if (Tools.equals(marshaled.getId(), ctx.getRootObjectId())) {
+		if (Objects.equals(marshaled.getId(), ctx.getRootObjectId())) {
 			// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
 			int previousCount = 0;
 			for (IDfSysObject versionDoc : getVersions(ctx, true, document)) {
@@ -233,7 +233,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			rootObject = (previousCount == 0);
 		} else {
 			// If we're the first object in the version history, we mark ourselves as such.
-			rootObject = Tools.equals(document.getObjectId(),
+			rootObject = Objects.equals(document.getObjectId(),
 				getVersionHistory(ctx, document).getRootVersion().getId());
 		}
 		marshaled.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
@@ -253,7 +253,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		// There is no actual harm done, since the export engine is smart enough to
 		// not duplicate, but doing it like this helps us avoid o(n^2) performance
 		// which is BAAAD
-		if (Tools.equals(marshaled.getId(), ctx.getRootObjectId())) {
+		if (Objects.equals(marshaled.getId(), ctx.getRootObjectId())) {
 			// Now, also do the *SUBSEQUENT* versions...
 			for (IDfSysObject versionDoc : getVersions(ctx, false, document)) {
 				if (this.log.isDebugEnabled()) {

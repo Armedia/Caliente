@@ -49,6 +49,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -585,7 +586,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 							}
 
 							// Do the history checking
-							if (!Tools.equals(currentHistory, historyId)) {
+							if (!Objects.equals(currentHistory, historyId)) {
 								if (currentHistory != null) {
 									this.log.debug("CLOSE HISTORY: {}", currentHistory);
 									if (!handler.endHistory(currentHistory, true)) {
@@ -597,7 +598,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 								}
 
 								// Do the tier checking
-								if (!Tools.equals(currentTier, tierId)) {
+								if (!Objects.equals(currentTier, tierId)) {
 									if (currentTier != null) {
 										this.log.debug("CLOSE TIER: {}", currentTier);
 										if (!handler.endTier(currentTier, true)) {
@@ -783,7 +784,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 				public boolean handleObject(CmfObject<CmfValue> obj) throws CmfStorageException {
 					final String oldName = obj.getName();
 					final String newName = nameFixer.fixName(obj);
-					if (!StringUtils.isEmpty(newName) && !Tools.equals(oldName, newName)) {
+					if (!StringUtils.isEmpty(newName) && !Objects.equals(oldName, newName)) {
 						renameObject(operation, obj, newName);
 						result.incrementAndGet();
 						try {

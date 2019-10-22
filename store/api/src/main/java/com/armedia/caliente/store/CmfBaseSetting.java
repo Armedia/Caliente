@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.store;
 
+import java.util.Objects;
+
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
@@ -83,7 +85,7 @@ public class CmfBaseSetting implements CmfSetting, Comparable<CmfBaseSetting> {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		CmfBaseSetting other = CmfBaseSetting.class.cast(obj);
-		if (!Tools.equals(this.name, other.name)) { return false; }
+		if (!Objects.equals(this.name, other.name)) { return false; }
 		if (this.type != other.type) { return false; }
 		if (this.multivalue != other.multivalue) { return false; }
 		return true;

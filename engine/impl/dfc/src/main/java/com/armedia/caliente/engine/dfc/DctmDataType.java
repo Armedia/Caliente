@@ -31,7 +31,6 @@ import java.util.Objects;
 
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
-import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
@@ -350,7 +349,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 	 */
 	@Override
 	public boolean isNullValue(IDfValue v) {
-		return (v == null) || ((v.getDataType() == this.nullValue.getDataType()) && Tools.equals(v, this.nullValue));
+		return (v == null) || ((v.getDataType() == this.nullValue.getDataType()) && Objects.equals(v, this.nullValue));
 	}
 
 	/**

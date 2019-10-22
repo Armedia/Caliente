@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
@@ -179,8 +180,8 @@ public class LocalFile {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		LocalFile other = LocalFile.class.cast(obj);
-		if (!Tools.equals(this.root, other.root)) { return false; }
-		if (!Tools.equals(this.absoluteFile, other.absoluteFile)) { return false; }
+		if (!Objects.equals(this.root, other.root)) { return false; }
+		if (!Objects.equals(this.absoluteFile, other.absoluteFile)) { return false; }
 		return true;
 	}
 

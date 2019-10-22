@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.dynamic.transformer.mapper.schema;
 
+import java.util.Objects;
+
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
@@ -51,7 +53,7 @@ public final class AttributeDeclaration {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		AttributeDeclaration other = AttributeDeclaration.class.cast(obj);
-		if (!Tools.equals(this.name, other.name)) { return false; }
+		if (!Objects.equals(this.name, other.name)) { return false; }
 		if (this.type != other.type) { return false; }
 		if (this.required != other.required) { return false; }
 		if (this.multiple != other.multiple) { return false; }

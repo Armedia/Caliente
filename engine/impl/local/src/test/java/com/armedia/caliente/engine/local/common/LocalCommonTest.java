@@ -30,6 +30,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -98,7 +99,7 @@ class LocalCommonTest {
 				child2 = root.relativize(child2);
 				String portable2 = LocalCommon.getPortablePath(child2.toString());
 
-				if (Tools.equals(portable1, portable2)) {
+				if (Objects.equals(portable1, portable2)) {
 					Assertions.assertEquals(LocalCommon.calculateId(portable1), LocalCommon.calculateId(portable2));
 				} else {
 					Assertions.assertNotEquals(LocalCommon.calculateId(portable1), LocalCommon.calculateId(portable2));

@@ -39,6 +39,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -186,7 +187,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 
 		private boolean apply(IDfSysObject object, boolean grant) throws DfException {
-			if (!Tools.equals(this.objectId, object.getObjectId().getId())) {
+			if (!Objects.equals(this.objectId, object.getObjectId().getId())) {
 				throw new DfException(String.format("ERROR: Expected object with ID [%s] but got [%s] instead",
 					this.objectId, object.getObjectId().getId()));
 			}
@@ -332,7 +333,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			if (!Tools.baseEquals(this, obj)) { return false; }
 			ParentFolderAction other = ParentFolderAction.class.cast(obj);
 			if (this.link != other.link) { return false; }
-			if (!Tools.equals(this.parentId, other.parentId)) { return false; }
+			if (!Objects.equals(this.parentId, other.parentId)) { return false; }
 			return true;
 		}
 
@@ -1031,7 +1032,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			}
 
 			// Second match, is it the same as the first?
-			if (Tools.equals(existing.getObjectId().getId(), current.getObjectId().getId())) {
+			if (Objects.equals(existing.getObjectId().getId(), current.getObjectId().getId())) {
 				// Same as the first - we have no issue here
 				continue;
 			}
@@ -1186,7 +1187,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			if ((att != null) && att.hasValues()) {
 				dataStore = att.getValue().asString();
 			}
-			if (!StringUtils.isBlank(dataStore) && !Tools.equals(newObj.getStorageType(), dataStore)) {
+			if (!StringUtils.isBlank(dataStore) && !Objects.equals(newObj.getStorageType(), dataStore)) {
 				newObj.setStorageType(dataStore);
 			}
 		}

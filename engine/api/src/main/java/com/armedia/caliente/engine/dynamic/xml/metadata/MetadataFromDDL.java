@@ -32,6 +32,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -156,7 +157,7 @@ public class MetadataFromDDL extends MetadataReaderBase {
 						for (String column : localStructure.keySet()) {
 							final ColumnStructure structure = localStructure.get(column);
 
-							Tools.equals(structure.sqlType, structure.sqlTypeName); // to disable a
+							Objects.equals(structure.sqlType, structure.sqlTypeName); // to disable a
 																					// warning...
 							CmfAttribute<V> attribute = tempAtts.get(column);
 							if (attribute == null) {

@@ -29,6 +29,7 @@ package com.armedia.caliente.store;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.activation.MimeType;
@@ -88,7 +89,7 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 	}
 
 	public boolean isDefaultRendition() {
-		return Tools.equals(CmfContentStream.DEFAULT_RENDITION, this.renditionIdentifier);
+		return Objects.equals(CmfContentStream.DEFAULT_RENDITION, this.renditionIdentifier);
 	}
 
 	public String getRenditionIdentifier() {
@@ -213,7 +214,7 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		CmfContentStream other = CmfContentStream.class.cast(obj);
-		if (!Tools.equals(this.renditionIdentifier, other.renditionIdentifier)) { return false; }
+		if (!Objects.equals(this.renditionIdentifier, other.renditionIdentifier)) { return false; }
 		if (this.renditionPage != other.renditionPage) { return false; }
 		return true;
 	}

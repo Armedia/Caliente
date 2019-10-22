@@ -111,9 +111,9 @@ public class Type {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		Type other = Type.class.cast(obj);
-		if (!Tools.equals(this.name, other.name)) { return false; }
-		if (!Tools.equals(this.superName, other.superName)) { return false; }
-		if (!Tools.equals(this.attributes, other.attributes)) { return false; }
+		if (!Objects.equals(this.name, other.name)) { return false; }
+		if (!Objects.equals(this.superName, other.superName)) { return false; }
+		if (!Objects.equals(this.attributes, other.attributes)) { return false; }
 		return true;
 	}
 

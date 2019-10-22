@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.TreeMap;
 
@@ -336,7 +337,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		if (this.command.isShouldStoreContentLocationRequirement()) {
 			// These two will only be equals if --streams is not given, or --streams is given
 			// and its final canonical location matches the calculated default location
-			final boolean contentInDefaultLocation = Tools.equals(contentLocation, calculatedContentLocation);
+			final boolean contentInDefaultLocation = Objects.equals(contentLocation, calculatedContentLocation);
 
 			// The content location flag (--streams) will be required "downstream" (i.e. upon import
 			// of the data set being created) if the content streams were NOT stored in the

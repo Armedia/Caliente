@@ -369,9 +369,9 @@ public class UcmModel {
 
 		for (UcmExceptionData.Entry entry : entries) {
 			String op = entry.getTag();
-			if (Tools.equals(op, "csFldDoesNotExist") || //
-				Tools.equals(op, "csUnableToGetRevInfo2") || //
-				Tools.equals(op, "csGetFileUnableToFindRevision")) {
+			if (Objects.equals(op, "csFldDoesNotExist") || //
+				Objects.equals(op, "csUnableToGetRevInfo2") || //
+				Objects.equals(op, "csGetFileUnableToFindRevision")) {
 				// TODO: Maybe we have to index more error labels here?
 				return true;
 			}
@@ -565,7 +565,7 @@ public class UcmModel {
 		// There's an object...so stash it
 		cacheDataObject(data.get());
 
-		if (Tools.equals(UcmModel.NULL_URI, uri)) {
+		if (Objects.equals(UcmModel.NULL_URI, uri)) {
 			throw new UcmObjectNotFoundException(String.format("No object found at path [%s]", sanitizedPath),
 				thrown.get());
 		}
@@ -669,7 +669,7 @@ public class UcmModel {
 			}
 		}
 
-		if (Tools.equals(UcmModel.NULL_URI, uri)) {
+		if (Objects.equals(UcmModel.NULL_URI, uri)) {
 			throw new UcmObjectNotFoundException(String.format("No %s found with GUID [%s]", type.name(), guid),
 				thrown.get());
 		}

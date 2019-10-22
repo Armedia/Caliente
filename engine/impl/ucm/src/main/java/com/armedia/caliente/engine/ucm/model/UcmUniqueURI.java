@@ -69,7 +69,7 @@ public final class UcmUniqueURI implements Comparable<UcmUniqueURI>, Serializabl
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		UcmUniqueURI other = UcmUniqueURI.class.cast(obj);
-		if (!Tools.equals(this.uri, other.uri)) { return false; }
+		if (!Objects.equals(this.uri, other.uri)) { return false; }
 		return true;
 	}
 

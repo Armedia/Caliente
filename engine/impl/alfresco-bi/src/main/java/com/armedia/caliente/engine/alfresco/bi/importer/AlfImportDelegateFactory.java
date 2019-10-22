@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
@@ -295,7 +296,7 @@ public class AlfImportDelegateFactory
 
 	boolean mapUserLogin(String userName, String login) {
 		// Only add the mapping if the username is different from the login
-		if ((userName == null) || Tools.equals(userName, login)) { return false; }
+		if ((userName == null) || Objects.equals(userName, login)) { return false; }
 		if (login == null) {
 			this.userLoginMap.remove(userName);
 		} else {
@@ -632,7 +633,7 @@ public class AlfImportDelegateFactory
 	protected final void storeArtificialFolderToIndex(String artificialFolder) throws ImportException {
 		artificialFolder = FilenameUtils.normalize(artificialFolder, true);
 		if (StringUtils.isEmpty(artificialFolder)) { return; }
-		while (!Tools.equals(".", artificialFolder)) {
+		while (!Objects.equals(".", artificialFolder)) {
 			this.artificialFolders.add(artificialFolder);
 			artificialFolder = FileNameTools.dirname(artificialFolder, '/');
 		}

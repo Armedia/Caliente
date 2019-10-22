@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.cmis;
 
+import java.util.Objects;
+
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.commons.data.Acl;
 
@@ -72,7 +74,7 @@ public final class CmisAcl {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		CmisAcl other = CmisAcl.class.cast(obj);
 		if (this.sourceType != other.sourceType) { return false; }
-		if (!Tools.equals(this.sourceId, other.sourceId)) { return false; }
+		if (!Objects.equals(this.sourceId, other.sourceId)) { return false; }
 		return true;
 	}
 }

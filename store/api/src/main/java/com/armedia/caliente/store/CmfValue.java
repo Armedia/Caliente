@@ -38,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import org.apache.commons.codec.binary.Base64;
@@ -192,7 +193,7 @@ public final class CmfValue {
 		}
 
 		protected boolean equals(Object a, Object b) {
-			return Tools.equals(a, b);
+			return Objects.equals(a, b);
 		}
 
 		protected abstract Object doGetValue(CmfValue value) throws Exception;
