@@ -59,7 +59,7 @@ import com.armedia.caliente.engine.ucm.UcmConstants;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.function.CheckedSupplier;
+import com.armedia.commons.utilities.function.CheckedFunction;
 import com.armedia.commons.utilities.function.CheckedTriConsumer;
 
 import oracle.stellent.ridc.IdcClientException;
@@ -108,9 +108,6 @@ public class UcmModel {
 
 	// path -> HistoryURI
 	private final KeyLockableCache<String, URI> uriByPaths;
-
-	// GUID -> HistoryURI
-	private final KeyLockableCache<String, URI> uriByGUID;
 
 	// Child HistoryURI -> Parent HistoryURI
 	private final KeyLockableCache<URI, URI> parentByURI;
@@ -194,7 +191,6 @@ public class UcmModel {
 	public UcmModel(int objectCount) throws UcmServiceException {
 		objectCount = Tools.ensureBetween(UcmModel.MIN_OBJECT_COUNT, objectCount, UcmModel.MAX_OBJECT_COUNT);
 		this.uriByPaths = new KeyLockableCache<>(objectCount);
-		this.uriByGUID = new KeyLockableCache<>(objectCount);
 		this.parentByURI = new KeyLockableCache<>(objectCount);
 		this.childrenByURI = new KeyLockableCache<>(objectCount);
 		this.historyByURI = new KeyLockableCache<>(objectCount);
@@ -222,7 +218,7 @@ public class UcmModel {
 	}
 
 	protected <K extends Serializable, V> V createIfAbsentInCache(KeyLockableCache<K, V> cache, K key,
-		CheckedSupplier<V, Exception> initializer) {
+		CheckedFunction<K, V, Exception> initializer) {
 		try {
 			return cache.createIfAbsent(key, initializer);
 		} catch (Exception e) {
@@ -520,46 +516,43 @@ public class UcmModel {
 	}
 
 	protected URI resolvePath(final UcmSession s, String p) throws UcmServiceException, UcmObjectNotFoundException {
-		final String sanitizedPath = UcmModel.sanitizePath(p);
-		URI uri = this.uriByPaths.get(sanitizedPath);
+		String sanitizedPath = UcmModel.sanitizePath(p);
 		final AtomicReference<UcmFSObject> data = new AtomicReference<>(null);
 		final AtomicReference<Throwable> thrown = new AtomicReference<>(null);
-		if (uri == null) {
-			try {
-				uri = this.uriByPaths.createIfAbsent(sanitizedPath, () -> {
-					ServiceResponse response = null;
-					DataBinder responseData = null;
-					try {
-						response = s.callService("FLD_INFO", (binder) -> binder.putLocal("path", sanitizedPath));
-						responseData = response.getResponseAsBinder();
-					} catch (final IdcClientException e) {
-						if (isNotFoundException(e, "Exception caught retrieving the file at [%s]", sanitizedPath)) {
-							thrown.set(e);
-							return UcmModel.NULL_URI;
-						}
-						// This is a "regular" exception that we simply re-raise
-						throw e;
+		final URI uri;
+		try {
+			uri = this.uriByPaths.createIfAbsent(sanitizedPath, (path) -> {
+				ServiceResponse response = null;
+				DataBinder responseData = null;
+				try {
+					response = s.callService("FLD_INFO", (binder) -> binder.putLocal("path", path));
+					responseData = response.getResponseAsBinder();
+				} catch (final IdcClientException e) {
+					if (isNotFoundException(e, "Exception caught retrieving the file at [%s]", path)) {
+						thrown.set(e);
+						return UcmModel.NULL_URI;
 					}
+					// This is a "regular" exception that we simply re-raise
+					throw e;
+				}
 
-					final UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
-					if (attributes == null) {
-						throw new UcmServiceException(String.format(
-							"Path [%s] was found via FLD_INFO, but was neither a file nor a folder?!?", sanitizedPath));
-					}
-					URI newUri = UcmModel.getURI(attributes);
-					data.set(newFSObject(newUri, attributes));
-					if (newUri == null) {
-						throw new UcmServiceException(String.format(
-							"Path [%s] was found, but was neither a file nor a folder (no identifier attributes)?!?",
-							sanitizedPath));
-					}
-					return newUri;
-				});
-			} catch (Exception e) {
-				UcmModel.throwIfMatches(UcmServiceException.class, e);
-				throw new UcmServiceException(String.format("Exception caught searching for path [%s]", sanitizedPath),
-					e);
-			}
+				final UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
+				if (attributes == null) {
+					throw new UcmServiceException(String
+						.format("Path [%s] was found via FLD_INFO, but was neither a file nor a folder?!?", path));
+				}
+				URI newUri = UcmModel.getURI(attributes);
+				data.set(newFSObject(newUri, attributes));
+				if (newUri == null) {
+					throw new UcmServiceException(String.format(
+						"Path [%s] was found, but was neither a file nor a folder (no identifier attributes)?!?",
+						path));
+				}
+				return newUri;
+			});
+		} catch (Exception e) {
+			UcmModel.throwIfMatches(UcmServiceException.class, e);
+			throw new UcmServiceException(String.format("Exception caught searching for path [%s]", sanitizedPath), e);
 		}
 
 		// There's an object...so stash it
@@ -574,73 +567,73 @@ public class UcmModel {
 
 	protected URI resolveGuid(final UcmSession s, final String guid, final UcmObjectType type)
 		throws UcmServiceException, UcmObjectNotFoundException {
-		URI uri = this.uriByGUID.get(guid);
 		final AtomicReference<UcmFSObject> data = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
 		final AtomicReference<Throwable> thrown = new AtomicReference<>(null);
-		if (uri == null) {
-			try {
-				uri = this.uriByPaths.createIfAbsent(guid, () -> {
-					ServiceResponse response = null;
-					DataBinder responseData = null;
-					final UcmAtt identifierAtt;
-					final UcmAtt uriAtt;
-					final String serviceName = "FLD_INFO";
-					switch (type) {
-						case FILE:
-							identifierAtt = UcmAtt.fFileGUID;
-							uriAtt = UcmAtt.dDocName;
-							break;
-						case FOLDER:
-							uriAtt = identifierAtt = UcmAtt.fFolderGUID;
-							break;
+		// Do we already have this GUID?
+		final URI uri;
+		try {
+			// Did not find by GUID, try by path...
+			uri = this.uriByPaths.createIfAbsent(guid, (targetGuid) -> {
+				ServiceResponse response = null;
+				DataBinder responseData = null;
+				final UcmAtt identifierAtt;
+				final UcmAtt uriAtt;
+				final String serviceName = "FLD_INFO";
+				switch (type) {
+					case FILE:
+						identifierAtt = UcmAtt.fFileGUID;
+						uriAtt = UcmAtt.dDocName;
+						break;
+					case FOLDER:
+						uriAtt = identifierAtt = UcmAtt.fFolderGUID;
+						break;
 
-						default:
-							throw new UcmServiceException(String.format("Unsupported object type %s", type.name()));
-					}
+					default:
+						throw new UcmServiceException(String.format("Unsupported object type %s", type.name()));
+				}
 
-					try {
-						response = s.callService(serviceName, (binder) -> {
-							binder.putLocal(identifierAtt.name(), guid);
-							if (type == UcmObjectType.FILE) {
-								binder.putLocal("includeFileRenditionsInfo", "1");
-								binder.putLocal("isAddFolderMetadata", "1");
-							}
-						});
-						responseData = response.getResponseAsBinder();
-					} catch (final IdcClientException e) {
-						if (isNotFoundException(e, "Exception caught retrieving the %s with GUID [%s]", type.name(),
-							guid)) {
-							thrown.set(e);
-							return UcmModel.NULL_URI;
+				try {
+					response = s.callService(serviceName, (binder) -> {
+						binder.putLocal(identifierAtt.name(), targetGuid);
+						if (type == UcmObjectType.FILE) {
+							binder.putLocal("includeFileRenditionsInfo", "1");
+							binder.putLocal("isAddFolderMetadata", "1");
 						}
-						// This is a "regular" exception that we simply re-raise
-						throw e;
+					});
+					responseData = response.getResponseAsBinder();
+				} catch (final IdcClientException e) {
+					if (isNotFoundException(e, "Exception caught retrieving the %s with GUID [%s]", type.name(),
+						targetGuid)) {
+						thrown.set(e);
+						return UcmModel.NULL_URI;
 					}
+					// This is a "regular" exception that we simply re-raise
+					throw e;
+				}
 
-					final UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
-					if (attributes == null) {
-						throw new UcmServiceException(
-							String.format("%s GUID [%s] was found via %s(%s=%s), didn't contain any data?!?",
-								type.name(), guid, serviceName, identifierAtt.name(), guid));
-					}
-					String uriIdentifier = attributes.getString(uriAtt);
-					if (uriIdentifier != null) {
-						URI newUri = UcmModel.getURI(attributes);
-						data.set(newFSObject(newUri, attributes));
-						return newUri;
-					}
-
+				final UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
+				if (attributes == null) {
 					throw new UcmServiceException(
-						String.format("%s GUID [%s] was found, returned no results (no value for %s)?!?", type.name(),
-							guid, identifierAtt.name()));
-				});
-			} catch (Exception e) {
-				UcmModel.throwIfMatches(UcmServiceException.class, e);
+						String.format("%s GUID [%s] was found via %s(%s=%s), didn't contain any data?!?", type.name(),
+							targetGuid, serviceName, identifierAtt.name(), targetGuid));
+				}
+				String uriIdentifier = attributes.getString(uriAtt);
+				if (uriIdentifier != null) {
+					URI newUri = UcmModel.getURI(attributes);
+					data.set(newFSObject(newUri, attributes));
+					return newUri;
+				}
+
 				throw new UcmServiceException(
-					String.format("Exception caught searching for %s GUID [%s]", type.name(), guid), e);
-			}
+					String.format("%s GUID [%s] was found, returned no results (no value for %s)?!?", type.name(),
+						targetGuid, identifierAtt.name()));
+			});
+		} catch (Exception e) {
+			UcmModel.throwIfMatches(UcmServiceException.class, e);
+			throw new UcmServiceException(
+				String.format("Exception caught searching for %s GUID [%s]", type.name(), guid), e);
 		}
 
 		// There's an object...so stash it
@@ -703,76 +696,74 @@ public class UcmModel {
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
 		final AtomicReference<Throwable> thrown = new AtomicReference<>(null);
-		UcmUniqueURI guid = this.uniqueUriByHistoryUri.get(uri);
-		if (guid == null) {
-			try {
-				guid = this.uniqueUriByHistoryUri.createIfAbsent(uri, () -> {
-					ServiceResponse response = null;
-					DataBinder responseData = null;
-					final UcmAtt identifierAtt;
-					final String serviceName;
-					final String searchKey;
-					if (file && !link) {
-						String id = uri.getFragment();
-						if (id != null) {
-							serviceName = "DOC_INFO";
-							identifierAtt = UcmAtt.dID;
-							searchKey = id;
-						} else {
-							serviceName = "DOC_INFO_BY_NAME";
-							identifierAtt = UcmAtt.dDocName;
-							searchKey = uri.getSchemeSpecificPart();
-						}
+		final UcmUniqueURI guid;
+		try {
+			guid = this.uniqueUriByHistoryUri.createIfAbsent(uri, (newUri) -> {
+				ServiceResponse response = null;
+				DataBinder responseData = null;
+				final UcmAtt identifierAtt;
+				final String serviceName;
+				final String searchKey;
+				if (file && !link) {
+					String id = newUri.getFragment();
+					if (id != null) {
+						serviceName = "DOC_INFO";
+						identifierAtt = UcmAtt.dID;
+						searchKey = id;
 					} else {
-						identifierAtt = (file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID);
-						serviceName = "FLD_INFO";
-						searchKey = uri.getSchemeSpecificPart();
+						serviceName = "DOC_INFO_BY_NAME";
+						identifierAtt = UcmAtt.dDocName;
+						searchKey = newUri.getSchemeSpecificPart();
 					}
+				} else {
+					identifierAtt = (file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID);
+					serviceName = "FLD_INFO";
+					searchKey = newUri.getSchemeSpecificPart();
+				}
 
-					try {
-						response = s.callService(serviceName, (binder) -> {
-							binder.putLocal(identifierAtt.name(), searchKey);
-							if (file) {
-								binder.putLocal("isAddFolderMetadata", "1");
-							}
-						});
-						responseData = response.getResponseAsBinder();
-					} catch (final IdcClientException e) {
-						if (isNotFoundException(e, "Exception caught locating the object using URI [%s]", uri)) {
-							thrown.set(e);
-							return UcmUniqueURI.NULL_GUID;
+				try {
+					response = s.callService(serviceName, (binder) -> {
+						binder.putLocal(identifierAtt.name(), searchKey);
+						if (file) {
+							binder.putLocal("isAddFolderMetadata", "1");
 						}
-						// This is a "regular" exception that we simply re-raise
-						throw e;
+					});
+					responseData = response.getResponseAsBinder();
+				} catch (final IdcClientException e) {
+					if (isNotFoundException(e, "Exception caught locating the object using URI [%s]", newUri)) {
+						thrown.set(e);
+						return UcmUniqueURI.NULL_GUID;
 					}
+					// This is a "regular" exception that we simply re-raise
+					throw e;
+				}
 
-					final UcmAttributes attributes;
-					if (file && !link) {
-						attributes = buildAttributesFromDocInfo(responseData, history, renditions);
-					} else {
-						attributes = buildAttributesFromFldInfo(responseData);
-					}
-					if (attributes == null) {
-						throw new UcmServiceException(
-							String.format("The URI [%s] was found via %s(%s=%s), didn't contain any data?!?", uri,
-								serviceName, identifierAtt.name(), searchKey));
-					}
-					final URI newUri = UcmModel.getURI(attributes);
-					final UcmUniqueURI newGuid = UcmModel.getUniqueURI(attributes);
-					final UcmFSObject object = newFSObject(newUri, attributes);
-					UcmModel.this.objectByUniqueURI.put(newGuid, object);
-					if (attributes.hasAttribute(UcmAtt.fParentGUID)) {
-						UcmModel.this.parentByURI.put(newUri,
-							UcmModel.newFolderURI(attributes.getString(UcmAtt.fParentGUID)));
-					}
-					UcmModel.this.historyUriByUniqueURI.put(newGuid, newUri);
-					serviceInvoked.set(true);
-					return newGuid;
-				});
-			} catch (Exception e) {
-				UcmModel.throwIfMatches(UcmServiceException.class, e);
-				throw new UcmServiceException(String.format("Exception caught resolving URI [%s]", uri), e);
-			}
+				final UcmAttributes attributes;
+				if (file && !link) {
+					attributes = buildAttributesFromDocInfo(responseData, history, renditions);
+				} else {
+					attributes = buildAttributesFromFldInfo(responseData);
+				}
+				if (attributes == null) {
+					throw new UcmServiceException(
+						String.format("The URI [%s] was found via %s(%s=%s), didn't contain any data?!?", newUri,
+							serviceName, identifierAtt.name(), searchKey));
+				}
+				final URI finalUri = UcmModel.getURI(attributes);
+				final UcmUniqueURI newGuid = UcmModel.getUniqueURI(attributes);
+				final UcmFSObject object = newFSObject(finalUri, attributes);
+				UcmModel.this.objectByUniqueURI.put(newGuid, object);
+				if (attributes.hasAttribute(UcmAtt.fParentGUID)) {
+					UcmModel.this.parentByURI.put(finalUri,
+						UcmModel.newFolderURI(attributes.getString(UcmAtt.fParentGUID)));
+				}
+				UcmModel.this.historyUriByUniqueURI.put(newGuid, finalUri);
+				serviceInvoked.set(true);
+				return newGuid;
+			});
+		} catch (Exception e) {
+			UcmModel.throwIfMatches(UcmServiceException.class, e);
+			throw new UcmServiceException(String.format("Exception caught resolving URI [%s]", uri), e);
 		}
 
 		if (UcmUniqueURI.NULL_GUID.equals(guid)) {
@@ -815,50 +806,48 @@ public class UcmModel {
 
 	protected UcmFile getFileRevision(final UcmSession s, final String id)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
-		UcmUniqueURI guid = this.revisionUriByRevisionID.get(id);
 		final AtomicBoolean serviceInvoked = new AtomicBoolean(false);
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
-		if (guid == null) {
-			try {
-				guid = this.revisionUriByRevisionID.createIfAbsent(id, () -> {
-					ServiceResponse response = null;
-					DataBinder responseData = null;
-					try {
-						response = s.callService("DOC_INFO", (binder) -> {
-							binder.putLocal("dID", id);
-							binder.putLocal("includeFileRenditionsInfo", "1");
-							binder.putLocal("isAddFolderMetadata", "1");
-						});
-						responseData = response.getResponseAsBinder();
-					} catch (final IdcClientException e) {
-						if (isNotFoundException(e, "Exception caught retrieving the revision with ID [%s]", id)) {
-							return UcmUniqueURI.NULL_GUID;
-						}
-						// This is a "regular" exception that we simply re-raise
-						throw e;
+		final UcmUniqueURI guid;
+		try {
+			guid = this.revisionUriByRevisionID.createIfAbsent(id, (wantedId) -> {
+				ServiceResponse response = null;
+				DataBinder responseData = null;
+				try {
+					response = s.callService("DOC_INFO", (binder) -> {
+						binder.putLocal("dID", wantedId);
+						binder.putLocal("includeFileRenditionsInfo", "1");
+						binder.putLocal("isAddFolderMetadata", "1");
+					});
+					responseData = response.getResponseAsBinder();
+				} catch (final IdcClientException e) {
+					if (isNotFoundException(e, "Exception caught retrieving the revision with ID [%s]", wantedId)) {
+						return UcmUniqueURI.NULL_GUID;
 					}
+					// This is a "regular" exception that we simply re-raise
+					throw e;
+				}
 
-					UcmAttributes attributes = buildAttributesFromDocInfo(responseData, history, renditions);
-					if (attributes == null) {
-						throw new UcmServiceException(String.format(
-							"Revision ID [%s] was found via DOC_INFO(dID=%s), but returned empty results", id, id));
-					}
-					final URI uri = UcmModel.getURI(attributes);
-					final UcmUniqueURI newGuid = UcmModel.getUniqueURI(attributes);
-					UcmModel.this.objectByUniqueURI.put(newGuid, newFSObject(uri, attributes));
-					if (attributes.hasAttribute(UcmAtt.fParentGUID)) {
-						UcmModel.this.parentByURI.put(uri,
-							UcmModel.newFolderURI(attributes.getString(UcmAtt.fParentGUID)));
-					}
-					UcmModel.this.historyUriByUniqueURI.put(newGuid, uri);
-					serviceInvoked.set(true);
-					return UcmModel.getUniqueURI(attributes);
-				});
-			} catch (Exception e) {
-				UcmModel.throwIfMatches(UcmServiceException.class, e);
-				throw new UcmServiceException(String.format("Exception caught locating revision ID [%s]", id), e);
-			}
+				UcmAttributes attributes = buildAttributesFromDocInfo(responseData, history, renditions);
+				if (attributes == null) {
+					throw new UcmServiceException(
+						String.format("Revision ID [%s] was found via DOC_INFO(dID=%s), but returned empty results",
+							wantedId, wantedId));
+				}
+				final URI uri = UcmModel.getURI(attributes);
+				final UcmUniqueURI newGuid = UcmModel.getUniqueURI(attributes);
+				UcmModel.this.objectByUniqueURI.put(newGuid, newFSObject(uri, attributes));
+				if (attributes.hasAttribute(UcmAtt.fParentGUID)) {
+					UcmModel.this.parentByURI.put(uri, UcmModel.newFolderURI(attributes.getString(UcmAtt.fParentGUID)));
+				}
+				UcmModel.this.historyUriByUniqueURI.put(newGuid, uri);
+				serviceInvoked.set(true);
+				return UcmModel.getUniqueURI(attributes);
+			});
+		} catch (Exception e) {
+			UcmModel.throwIfMatches(UcmServiceException.class, e);
+			throw new UcmServiceException(String.format("Exception caught locating revision ID [%s]", id), e);
 		}
 
 		if (UcmUniqueURI.NULL_GUID.equals(guid)) {
@@ -1120,15 +1109,15 @@ public class UcmModel {
 		return iterateFolderContents(s, folder.getURI(), handler);
 	}
 
-	int iterateFolderContents(final UcmSession s, final URI uri, final ObjectHandler handler)
+	int iterateFolderContents(final UcmSession s, final URI targetUri, final ObjectHandler handler)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(s, "Must provide a session to search with");
-		Objects.requireNonNull(uri, "Must provide a URI to search for");
+		Objects.requireNonNull(targetUri, "Must provide a URI to search for");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
 		// If this isn't a folder, we don't even try it...
-		if (!UcmModel.isFolderURI(uri)) { return -1; }
+		if (!UcmModel.isFolderURI(targetUri)) { return -1; }
 
-		Map<String, URI> children = this.childrenByURI.get(uri);
+		Map<String, URI> children = this.childrenByURI.get(targetUri);
 		boolean reconstruct = false;
 		if (children != null) {
 			// We'll gather the objects first, and then iterate over them, because
@@ -1152,50 +1141,52 @@ public class UcmModel {
 					handler.handleObject(s, ret++, childUri, objects.get(childUri));
 				}
 				return ret;
+			} else {
+				// This ensures that the next thread (hopefully the current one) will trigger
+				// the function in createIfAbsent(), just below here...
+				this.childrenByURI.remove(targetUri);
 			}
 		}
 
 		final AtomicReference<UcmFSObject> data = new AtomicReference<>(null);
 		final AtomicReference<Map<String, UcmFSObject>> rawChildren = new AtomicReference<>(null);
-		if (children == null) {
-			try {
-				children = this.childrenByURI.createIfAbsent(uri, () -> {
-					try {
-						Map<String, URI> newChildren = new TreeMap<>();
-						Map<String, UcmFSObject> dataObjects = new TreeMap<>();
-						FolderContentsIterator it = new FolderContentsIterator(s, uri);
-						while (it.hasNext()) {
-							UcmAttributes o = it.next();
-							URI childUri = UcmModel.getURI(o);
-							String name = o.getString(UcmAtt.fFileName);
-							if (name == null) {
-								name = o.getString(UcmAtt.fFolderName);
-							}
-							newChildren.put(name, childUri);
-							UcmFSObject childObject = newFSObject(childUri, o);
-							dataObjects.put(name, childObject);
-							handler.handleObject(s, it.getCurrentPos(), childUri, childObject);
+		try {
+			children = this.childrenByURI.createIfAbsent(targetUri, (uri) -> {
+				try {
+					Map<String, URI> newChildren = new TreeMap<>();
+					Map<String, UcmFSObject> dataObjects = new TreeMap<>();
+					FolderContentsIterator it = new FolderContentsIterator(s, uri);
+					while (it.hasNext()) {
+						UcmAttributes o = it.next();
+						URI childUri = UcmModel.getURI(o);
+						String name = o.getString(UcmAtt.fFileName);
+						if (name == null) {
+							name = o.getString(UcmAtt.fFolderName);
 						}
-						rawChildren.set(dataObjects);
-						UcmAttributes folderAtts = it.getFolder();
-						URI folderUri = UcmModel.getURI(folderAtts);
-						data.set(newFSObject(folderUri, folderAtts));
-						return newChildren;
-					} catch (final UcmServiceException e) {
-						Throwable cause = e.getCause();
-						if (isNotFoundException(cause, "Exception caught retrieving the URI [%s]", uri)) {
-							throw new UcmFolderNotFoundException(String.format("No folder found with URI [%s]", uri));
-						}
-						// This is a "regular" exception that we simply re-raise
-						throw e;
+						newChildren.put(name, childUri);
+						UcmFSObject childObject = newFSObject(childUri, o);
+						dataObjects.put(name, childObject);
+						handler.handleObject(s, it.getCurrentPos(), childUri, childObject);
 					}
-				});
-			} catch (Exception e) {
-				UcmModel.throwIfMatches(UcmServiceException.class, e);
-				UcmModel.throwIfMatches(UcmFolderNotFoundException.class, e);
-				throw new UcmServiceException(
-					String.format("Exception caught finding the folder contents for URI [%s]", uri), e);
-			}
+					rawChildren.set(dataObjects);
+					UcmAttributes folderAtts = it.getFolder();
+					URI folderUri = UcmModel.getURI(folderAtts);
+					data.set(newFSObject(folderUri, folderAtts));
+					return newChildren;
+				} catch (final UcmServiceException e) {
+					Throwable cause = e.getCause();
+					if (isNotFoundException(cause, "Exception caught retrieving the URI [%s]", uri)) {
+						throw new UcmFolderNotFoundException(String.format("No folder found with URI [%s]", uri));
+					}
+					// This is a "regular" exception that we simply re-raise
+					throw e;
+				}
+			});
+		} catch (Exception e) {
+			UcmModel.throwIfMatches(UcmServiceException.class, e);
+			UcmModel.throwIfMatches(UcmFolderNotFoundException.class, e);
+			throw new UcmServiceException(
+				String.format("Exception caught finding the folder contents for URI [%s]", targetUri), e);
 		}
 
 		if (data.get() != null) {
@@ -1327,7 +1318,8 @@ public class UcmModel {
 		try {
 			UcmFSObject data = getFSObject(s, uri);
 			if (UcmFolder.class.isInstance(data)) { return UcmFolder.class.cast(data); }
-			throw new UcmFolderNotFoundException(String.format("The object with URI [%s] is not a folder", uri));
+			throw new UcmFolderNotFoundException(
+				String.format("The object with URI [%s] is not a folder: %s", uri, data));
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFolderNotFoundException(e.getMessage(), e);
 		}
@@ -1357,36 +1349,34 @@ public class UcmModel {
 
 	UcmFileHistory getFileHistory(final UcmSession s, final URI uri, final String revisionId)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
-		List<UcmRevision> history = this.historyByURI.get(uri);
-		if (history == null) {
-			try {
-				history = this.historyByURI.createIfAbsent(uri, () -> {
-					ServiceResponse response = null;
-					DataBinder responseData = null;
-					try {
-						response = s.callService("REV_HISTORY", (binder) -> binder.putLocal("dID", revisionId));
-						responseData = response.getResponseAsBinder();
-					} catch (final IdcClientException e) {
-						if (isNotFoundException(e, "Exception caught retrieving the URI [%s]", uri)) {
-							throw new UcmFolderNotFoundException(String.format("No file found with URI [%s]", uri));
-						}
-						// This is a "regular" exception that we simply re-raise
-						throw e;
+		final List<UcmRevision> history;
+		try {
+			history = this.historyByURI.createIfAbsent(uri, (targetUri) -> {
+				ServiceResponse response = null;
+				DataBinder responseData = null;
+				try {
+					response = s.callService("REV_HISTORY", (binder) -> binder.putLocal("dID", revisionId));
+					responseData = response.getResponseAsBinder();
+				} catch (final IdcClientException e) {
+					if (isNotFoundException(e, "Exception caught retrieving the URI [%s]", targetUri)) {
+						throw new UcmFolderNotFoundException(String.format("No file found with URI [%s]", targetUri));
 					}
+					// This is a "regular" exception that we simply re-raise
+					throw e;
+				}
 
-					DataResultSet revisions = responseData.getResultSet("REVISIONS");
-					LinkedList<UcmRevision> newHistory = new LinkedList<>();
-					for (DataObject o : revisions.getRows()) {
-						newHistory.addFirst(new UcmRevision(uri, o, revisions.getFields()));
-					}
-					return newHistory;
-				});
-			} catch (Exception e) {
-				UcmModel.throwIfMatches(UcmServiceException.class, e);
-				UcmModel.throwIfMatches(UcmFileNotFoundException.class, e);
-				throw new UcmServiceException(
-					String.format("Exception caught finding the file history for URI [%s]", uri), e);
-			}
+				DataResultSet revisions = responseData.getResultSet("REVISIONS");
+				LinkedList<UcmRevision> newHistory = new LinkedList<>();
+				for (DataObject o : revisions.getRows()) {
+					newHistory.addFirst(new UcmRevision(targetUri, o, revisions.getFields()));
+				}
+				return newHistory;
+			});
+		} catch (Exception e) {
+			UcmModel.throwIfMatches(UcmServiceException.class, e);
+			UcmModel.throwIfMatches(UcmFileNotFoundException.class, e);
+			throw new UcmServiceException(String.format("Exception caught finding the file history for URI [%s]", uri),
+				e);
 		}
 
 		return new UcmFileHistory(this, uri, history);
@@ -1485,61 +1475,59 @@ public class UcmModel {
 		Objects.requireNonNull(file, "Must provide a file whose renditions to return");
 
 		final UcmUniqueURI guid = file.getUniqueURI();
-		Map<String, UcmRenditionInfo> renditions = this.renditionsByUniqueURI.get(guid);
 		final AtomicReference<UcmFSObject> data = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
-		if (renditions == null) {
-			final String id = file.getRevisionId();
-			try {
-				renditions = this.renditionsByUniqueURI.createIfAbsent(guid, () -> {
-					ServiceResponse response = null;
-					DataBinder responseData = null;
-					try {
-						response = s.callService("DOC_INFO", (binder) -> {
-							binder.putLocal("dID", id);
-							binder.putLocal("includeFileRenditionsInfo", "1");
-							binder.putLocal("isAddFolderMetadata", "1");
-						});
-						responseData = response.getResponseAsBinder();
-					} catch (final IdcClientException e) {
-						if (isNotFoundException(e, "Exception caught retrieving the revision with ID [%s]", id)) {
-							throw new UcmFileRevisionNotFoundException();
-						}
-						// This is a "regular" exception that we simply re-raise
-						throw e;
+		final String id = file.getRevisionId();
+		final Map<String, UcmRenditionInfo> renditions;
+		try {
+			renditions = this.renditionsByUniqueURI.createIfAbsent(guid, (fileGuid) -> {
+				ServiceResponse response = null;
+				DataBinder responseData = null;
+				try {
+					response = s.callService("DOC_INFO", (binder) -> {
+						binder.putLocal("dID", id);
+						binder.putLocal("includeFileRenditionsInfo", "1");
+						binder.putLocal("isAddFolderMetadata", "1");
+					});
+					responseData = response.getResponseAsBinder();
+				} catch (final IdcClientException e) {
+					if (isNotFoundException(e, "Exception caught retrieving the revision with ID [%s]", id)) {
+						throw new UcmFileRevisionNotFoundException();
 					}
+					// This is a "regular" exception that we simply re-raise
+					throw e;
+				}
 
-					UcmAttributes attributes = buildAttributesFromDocInfo(responseData, history, null);
-					Map<String, UcmRenditionInfo> newRenditions = new TreeMap<>();
-					DataResultSet rs = responseData.getResultSet("Renditions");
-					if (rs != null) {
-						for (DataObject o : rs.getRows()) {
-							UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
-							newRenditions.put(r.getType().toUpperCase(), r);
-						}
-					} else {
-						UcmModel.this.log.warn(
-							"Revision ID [{}] was found via DOC_INFO(dID={}), but no rendition information was returned??! Generated a default primary rendition",
-							id, id);
-						UcmRenditionInfo info = generateDefaultRendition(guid, attributes);
-						newRenditions.put(info.getType(), info);
+				UcmAttributes attributes = buildAttributesFromDocInfo(responseData, history, null);
+				Map<String, UcmRenditionInfo> newRenditions = new TreeMap<>();
+				DataResultSet rs = responseData.getResultSet("Renditions");
+				if (rs != null) {
+					for (DataObject o : rs.getRows()) {
+						UcmRenditionInfo r = new UcmRenditionInfo(fileGuid, o, rs.getFields());
+						newRenditions.put(r.getType().toUpperCase(), r);
 					}
-					data.set(newFSObject(attributes));
-					return newRenditions;
-				});
-			} catch (Exception e) {
-				UcmModel.throwIfMatches(UcmServiceException.class, e);
-				UcmModel.throwIfMatches(UcmFileRevisionNotFoundException.class, e);
-				throw new UcmServiceException(
-					String.format("Exception caught retrieving the renditions list for file [%s] (revision ID [%s]",
-						file.getURI(), file.getRevisionId()),
-					e);
-			}
+				} else {
+					UcmModel.this.log.warn(
+						"Revision ID [{}] was found via DOC_INFO(dID={}), but no rendition information was returned??! Generated a default primary rendition",
+						id, id);
+					UcmRenditionInfo info = generateDefaultRendition(fileGuid, attributes);
+					newRenditions.put(info.getType(), info);
+				}
+				data.set(newFSObject(attributes));
+				return newRenditions;
+			});
+		} catch (Exception e) {
+			UcmModel.throwIfMatches(UcmServiceException.class, e);
+			UcmModel.throwIfMatches(UcmFileRevisionNotFoundException.class, e);
+			throw new UcmServiceException(
+				String.format("Exception caught retrieving the renditions list for file [%s] (revision ID [%s]",
+					file.getURI(), file.getRevisionId()),
+				e);
 		}
 
 		// Update the base object, since we just got it anyhow...
 		if (data.get() != null) {
-			createIfAbsentInCache(this.objectByUniqueURI, guid, () -> {
+			createIfAbsentInCache(this.objectByUniqueURI, guid, (g) -> {
 				UcmFSObject ret = data.get();
 				cacheDataObject(ret);
 				return ret;

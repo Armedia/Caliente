@@ -280,7 +280,7 @@ public class AttributeMapper {
 		if (type == null) { return this.commonRenderers; }
 		final String signature = type.getSignature();
 		try {
-			return this.cache.createIfAbsent(signature, () -> buildMappingRendererSet(type));
+			return this.cache.createIfAbsent(signature, (s) -> buildMappingRendererSet(type));
 		} catch (Exception e) {
 			throw new RuntimeException(String.format("Failed to generate the mapping renderers for type [%s] (%s)",
 				type.toString(), signature), e);

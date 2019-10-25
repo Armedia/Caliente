@@ -39,18 +39,20 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.LockDispenser;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.ShareableLockable;
 import com.armedia.commons.utilities.concurrent.ShareableMap;
-import com.armedia.commons.utilities.function.CheckedSupplier;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.function.CheckedFunction;
 
-public class KeyLockableCache<K extends Serializable, V> {
+public class KeyLockableCache<K extends Serializable, V> extends BaseShareableLockable {
 
 	public static final int MIN_LIMIT = 1000;
 	public static final TimeUnit DEFAULT_MAX_AGE_UNIT = TimeUnit.MINUTES;
@@ -207,8 +209,7 @@ public class KeyLockableCache<K extends Serializable, V> {
 	private final TimeUnit maxAgeUnit;
 	private final long maxAge;
 	private final Map<K, CacheItem> cache;
-	private final LockDispenser<K, ReentrantReadWriteLock> locks = new LockDispenser<>(
-		(key) -> new TraceableReentrantReadWriteLock(key));
+	private final LockDispenser<K, ShareableLockable> locks = new LockDispenser<>((key) -> new BaseShareableLockable());
 
 	public KeyLockableCache() {
 		this(KeyLockableCache.MIN_LIMIT, KeyLockableCache.DEFAULT_MAX_AGE_UNIT, KeyLockableCache.DEFAULT_MAX_AGE);
@@ -235,132 +236,103 @@ public class KeyLockableCache<K extends Serializable, V> {
 		}
 	}
 
-	public final Lock getExclusiveLock(K key) {
-		return this.locks.getLock(key).writeLock();
-	}
-
-	public final Lock getSharedLock(K key) {
-		return this.locks.getLock(key).readLock();
+	public final ShareableLockable getLock(K key) {
+		return this.locks.getLock(key);
 	}
 
 	protected CacheItem newCacheItem(K key, V value) {
 		return new SoftReferenceCacheItem(key, value);
 	}
 
-	protected final boolean threadHoldsExclusiveLock(K key) {
-		return this.locks.getLock(key).isWriteLockedByCurrentThread();
-	}
-
 	public final V get(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		// This construct helps avoid deadlocks while preserving concurrency where possible
-		Lock l = getSharedLock(key);
-		l.lock();
-		try {
-			CacheItem item = this.cache.get(key);
-			if (item == null) { return null; }
-			return item.get();
-		} finally {
-			l.unlock();
+		try (SharedAutoLock keyLock = getLock(key).autoSharedLock()) {
+			try (SharedAutoLock global = autoSharedLock()) {
+				CacheItem item = this.cache.get(key);
+				return (item != null ? item.get() : null);
+			}
 		}
 	}
 
-	public final <EX extends Throwable> V createIfAbsent(K key, CheckedSupplier<V, EX> initializer) throws EX {
+	public final <EX extends Throwable> V createIfAbsent(K key, CheckedFunction<K, V, EX> f) throws EX {
 		Objects.requireNonNull(key, "Must provide a non-null key");
-		Objects.requireNonNull(initializer, "Must provide a non-null initializer");
-		final Lock l = getExclusiveLock(key);
-		l.lock();
-		try {
-			V value = null;
-			CacheItem item = this.cache.get(key);
-			if (item != null) {
-				value = item.get();
+		Objects.requireNonNull(f, "Must provide a non-null initializer");
+		try (SharedAutoLock keyShared = getLock(key).autoSharedLock()) {
+			V existing = get(key);
+			if (existing == null) {
+				try (MutexAutoLock keyMutex = keyShared.upgrade()) {
+					existing = get(key);
+					if (existing == null) {
+						try (SharedAutoLock globalShared = autoSharedLock()) {
+							CacheItem item = this.cache.get(key);
+							if ((item != null) && (item.get() != null)) {
+								existing = item.get();
+							} else {
+								try (MutexAutoLock globalMutex = globalShared.upgrade()) {
+									this.cache.put(key, newCacheItem(key, existing = f.applyChecked(key)));
+								}
+							}
+						}
+					}
+				}
 			}
-			// We still have a value, so return it...
-			if (value != null) { return value; }
-
-			// The value is absent or expired...
-			V newValue = initializer.getChecked();
-			if (newValue != null) {
-				this.cache.put(key, newCacheItem(key, newValue));
-			} else {
-				this.cache.remove(key);
-			}
-
-			return newValue;
-		} finally {
-			l.unlock();
+			return existing;
 		}
 	}
 
-	public final void putIfAbsent(K key, V value) {
-		Objects.requireNonNull(key, "Must provide a non-null key");
-		if (value == null) { return; }
-
-		V existing = get(key);
-		if (existing != null) { return; }
-
-		final Lock l = getExclusiveLock(key);
-		l.lock();
-		try {
-			CacheItem item = this.cache.get(key);
-			if ((item != null) && (item.get() != null)) { return; }
-			this.cache.put(key, newCacheItem(key, value));
-		} finally {
-			l.unlock();
-		}
+	public final V putIfAbsent(K key, V value) {
+		return createIfAbsent(key, (k) -> value);
 	}
 
 	public final V put(K key, V value) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
-
 		if (value == null) { return remove(key); }
-		final Lock l = getExclusiveLock(key);
-		l.lock();
-		try {
-			V ret = null;
-			CacheItem item = this.cache.get(key);
-			if (item != null) {
-				ret = item.get();
+		try (MutexAutoLock keyMutex = getLock(key).autoMutexLock()) {
+			try (MutexAutoLock globalMutex = autoMutexLock()) {
+				CacheItem item = this.cache.put(key, newCacheItem(key, value));
+				return (item != null ? item.get() : null);
 			}
-			this.cache.put(key, newCacheItem(key, value));
-			return ret;
-		} finally {
-			l.unlock();
 		}
 	}
 
 	public final V remove(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
-		final Lock l = getExclusiveLock(key);
-		l.lock();
-		try {
-			CacheItem item = this.cache.remove(key);
-			return (item != null ? item.get() : null);
-		} finally {
-			l.unlock();
+		try (MutexAutoLock keyMutex = getLock(key).autoMutexLock()) {
+			try (SharedAutoLock globalShared = autoSharedLock()) {
+				CacheItem item = null;
+				if (this.cache.containsKey(key)) {
+					try (MutexAutoLock globalMutex = globalShared.upgrade()) {
+						if (this.cache.containsKey(key)) {
+							item = this.cache.remove(key);
+						}
+					}
+				}
+				return (item != null ? item.get() : null);
+			}
 		}
 	}
 
 	public final int size() {
-		return this.cache.size();
+		try (SharedAutoLock global = autoSharedLock()) {
+			return this.cache.size();
+		}
 	}
 
 	public final boolean isEmpty() {
-		return this.cache.isEmpty();
+		try (SharedAutoLock global = autoSharedLock()) {
+			return this.cache.isEmpty();
+		}
 	}
 
 	public final boolean containsValueForKey(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
-		// This construct helps avoid deadlocks while preserving concurrency where possible
-		final Lock l = getSharedLock(key);
-		l.lock();
-		try {
-			CacheItem item = this.cache.get(key);
-			if (item == null) { return false; }
-			return (item.get() != null);
-		} finally {
-			l.unlock();
+		try (SharedAutoLock lock = getLock(key).autoSharedLock()) {
+			try (SharedAutoLock global = autoSharedLock()) {
+				CacheItem item = this.cache.get(key);
+				if (item == null) { return false; }
+				return (item.get() != null);
+			}
 		}
 	}
 
@@ -375,21 +347,27 @@ public class KeyLockableCache<K extends Serializable, V> {
 	}
 
 	public final void clear() {
-		this.cache.clear();
+		try (MutexAutoLock globalMutex = autoMutexLock()) {
+			this.cache.clear();
+		}
 	}
 
 	public final Set<K> getKeys() {
-		return new LinkedHashSet<>(this.cache.keySet());
+		try (SharedAutoLock globalShared = autoSharedLock()) {
+			return new LinkedHashSet<>(this.cache.keySet());
+		}
 	}
 
 	public final Collection<V> values() {
-		Collection<V> values = new ArrayList<>();
-		for (CacheItem r : new ArrayList<>(this.cache.values())) {
-			V v = r.get();
-			if (v != null) {
-				values.add(v);
+		try (SharedAutoLock globalShared = autoSharedLock()) {
+			Collection<V> values = new ArrayList<>();
+			for (CacheItem r : new ArrayList<>(this.cache.values())) {
+				V v = r.get();
+				if (v != null) {
+					values.add(v);
+				}
 			}
+			return values;
 		}
-		return values;
 	}
 }
