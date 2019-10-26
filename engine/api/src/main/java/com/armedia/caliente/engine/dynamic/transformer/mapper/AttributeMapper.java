@@ -26,6 +26,7 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.dynamic.transformer.mapper;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,7 +37,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -66,6 +66,7 @@ import com.armedia.caliente.engine.dynamic.xml.mapper.ResidualsMode;
 import com.armedia.caliente.engine.dynamic.xml.mapper.SetValue;
 import com.armedia.caliente.engine.dynamic.xml.mapper.TypeMappings;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
+import com.armedia.caliente.engine.tools.KeyLockableCache.ReferenceType;
 import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.commons.utilities.Tools;
 
@@ -106,13 +107,8 @@ public class AttributeMapper {
 	}
 
 	// Make a cache that doesn't expire items and they don't get GC'd either
-	private final KeyLockableCache<String, MappingRendererSet> cache = new KeyLockableCache<String, MappingRendererSet>(
-		TimeUnit.SECONDS, -1) {
-		@Override
-		protected CacheItem newCacheItem(String key, MappingRendererSet value) {
-			return new DirectCacheItem(key, value);
-		}
-	};
+	private final KeyLockableCache<String, MappingRendererSet> cache = new KeyLockableCache<>(ReferenceType.FINAL,
+		Duration.ofSeconds(-1));
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final Map<String, MappingRendererSet> typedMappings;
@@ -280,7 +276,7 @@ public class AttributeMapper {
 		if (type == null) { return this.commonRenderers; }
 		final String signature = type.getSignature();
 		try {
-			return this.cache.createIfAbsent(signature, (s) -> buildMappingRendererSet(type));
+			return this.cache.computeIfAbsent(signature, (s) -> buildMappingRendererSet(type));
 		} catch (Exception e) {
 			throw new RuntimeException(String.format("Failed to generate the mapping renderers for type [%s] (%s)",
 				type.toString(), signature), e);

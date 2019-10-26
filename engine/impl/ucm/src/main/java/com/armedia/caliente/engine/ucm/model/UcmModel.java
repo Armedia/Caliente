@@ -217,10 +217,10 @@ public class UcmModel {
 		this.historyUriByUniqueURI.put(guid, uri);
 	}
 
-	protected <K extends Serializable, V> V createIfAbsentInCache(KeyLockableCache<K, V> cache, K key,
+	protected <K extends Serializable, V> V computeIfAxbsent(KeyLockableCache<K, V> cache, K key,
 		CheckedFunction<K, V, Exception> initializer) {
 		try {
-			return cache.createIfAbsent(key, initializer);
+			return cache.computeIfAbsent(key, initializer);
 		} catch (Exception e) {
 			// Never gonna happen...
 			throw new UcmRuntimeException("Unexpected Exception", e);
@@ -521,7 +521,7 @@ public class UcmModel {
 		final AtomicReference<Throwable> thrown = new AtomicReference<>(null);
 		final URI uri;
 		try {
-			uri = this.uriByPaths.createIfAbsent(sanitizedPath, (path) -> {
+			uri = this.uriByPaths.computeIfAbsent(sanitizedPath, (path) -> {
 				ServiceResponse response = null;
 				DataBinder responseData = null;
 				try {
@@ -575,7 +575,7 @@ public class UcmModel {
 		final URI uri;
 		try {
 			// Did not find by GUID, try by path...
-			uri = this.uriByPaths.createIfAbsent(guid, (targetGuid) -> {
+			uri = this.uriByPaths.computeIfAbsent(guid, (targetGuid) -> {
 				ServiceResponse response = null;
 				DataBinder responseData = null;
 				final UcmAtt identifierAtt;
@@ -698,7 +698,7 @@ public class UcmModel {
 		final AtomicReference<Throwable> thrown = new AtomicReference<>(null);
 		final UcmUniqueURI guid;
 		try {
-			guid = this.uniqueUriByHistoryUri.createIfAbsent(uri, (newUri) -> {
+			guid = this.uniqueUriByHistoryUri.computeIfAbsent(uri, (newUri) -> {
 				ServiceResponse response = null;
 				DataBinder responseData = null;
 				final UcmAtt identifierAtt;
@@ -811,7 +811,7 @@ public class UcmModel {
 		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
 		final UcmUniqueURI guid;
 		try {
-			guid = this.revisionUriByRevisionID.createIfAbsent(id, (wantedId) -> {
+			guid = this.revisionUriByRevisionID.computeIfAbsent(id, (wantedId) -> {
 				ServiceResponse response = null;
 				DataBinder responseData = null;
 				try {
@@ -1151,7 +1151,7 @@ public class UcmModel {
 		final AtomicReference<UcmFSObject> data = new AtomicReference<>(null);
 		final AtomicReference<Map<String, UcmFSObject>> rawChildren = new AtomicReference<>(null);
 		try {
-			children = this.childrenByURI.createIfAbsent(targetUri, (uri) -> {
+			children = this.childrenByURI.computeIfAbsent(targetUri, (uri) -> {
 				try {
 					Map<String, URI> newChildren = new TreeMap<>();
 					Map<String, UcmFSObject> dataObjects = new TreeMap<>();
@@ -1351,7 +1351,7 @@ public class UcmModel {
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
 		final List<UcmRevision> history;
 		try {
-			history = this.historyByURI.createIfAbsent(uri, (targetUri) -> {
+			history = this.historyByURI.computeIfAbsent(uri, (targetUri) -> {
 				ServiceResponse response = null;
 				DataBinder responseData = null;
 				try {
@@ -1480,7 +1480,7 @@ public class UcmModel {
 		final String id = file.getRevisionId();
 		final Map<String, UcmRenditionInfo> renditions;
 		try {
-			renditions = this.renditionsByUniqueURI.createIfAbsent(guid, (fileGuid) -> {
+			renditions = this.renditionsByUniqueURI.computeIfAbsent(guid, (fileGuid) -> {
 				ServiceResponse response = null;
 				DataBinder responseData = null;
 				try {
@@ -1527,7 +1527,7 @@ public class UcmModel {
 
 		// Update the base object, since we just got it anyhow...
 		if (data.get() != null) {
-			createIfAbsentInCache(this.objectByUniqueURI, guid, (g) -> {
+			this.objectByUniqueURI.computeIfAbsent(guid, (g) -> {
 				UcmFSObject ret = data.get();
 				cacheDataObject(ret);
 				return ret;
