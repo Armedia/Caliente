@@ -57,6 +57,7 @@ public class TraceableCondition implements Condition, Serializable, Traceable {
 		} else {
 			this.log = LoggerFactory.getLogger(getClass());
 		}
+		this.log.trace("{}.constructed()", this.name);
 	}
 
 	@Override
