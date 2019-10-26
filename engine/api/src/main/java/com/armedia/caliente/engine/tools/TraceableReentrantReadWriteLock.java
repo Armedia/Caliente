@@ -149,7 +149,7 @@ public class TraceableReentrantReadWriteLock extends ReentrantReadWriteLock impl
 
 		@Override
 		public void unlock() {
-			invoke(this::unlock, "unlock");
+			invoke(super::unlock, "unlock");
 		}
 
 		@Override
