@@ -27,110 +27,92 @@
 package com.armedia.caliente.engine.tools;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TraceableLockWrapper<L extends Lock> implements Lock, Serializable {
+public class TraceableReentrantLock extends ReentrantLock implements Traceable {
 	private static final long serialVersionUID = 1L;
 
 	private static final AtomicLong LOCK_COUNTER = new AtomicLong(0);
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final AtomicLong conditionCounter = new AtomicLong(0);
-	private final Serializable lockId;
-	private final L lock;
+	private final Serializable id;
+	private final String name;
 
-	public TraceableLockWrapper(L lock) {
-		this(String.format("%016x", TraceableLockWrapper.LOCK_COUNTER.getAndIncrement()), lock);
+	public TraceableReentrantLock() {
+		this(false);
 	}
 
-	public TraceableLockWrapper(Serializable lockId, L lock) {
-		this.lockId = lockId;
-		this.lock = lock;
+	public TraceableReentrantLock(Serializable id) {
+		this(id, false);
 	}
 
-	public final L getLock() {
-		return this.lock;
+	public TraceableReentrantLock(boolean fair) {
+		this(String.format("%016x", TraceableReentrantLock.LOCK_COUNTER.getAndIncrement()), fair);
+	}
+
+	public TraceableReentrantLock(Serializable id, boolean fair) {
+		super(fair);
+		this.id = Objects.requireNonNull(id, "Must provide a non-null ID");
+		this.name = Traceable.format("ReentrantLock[{}]", this.id);
+		this.log.trace("{}.constructed()", this.name);
+	}
+
+	@Override
+	public Logger getLog() {
+		return this.log;
+	}
+
+	@Override
+	public Serializable getId() {
+		return this.id;
+	}
+
+	@Override
+	public String getName() {
+		return this.name;
 	}
 
 	public final Serializable getLockId() {
-		return this.lockId;
+		return this.id;
 	}
 
 	@Override
 	public void lock() {
-		this.log.trace("Lock[{}].lock()", this.lockId);
-		boolean ok = false;
-		try {
-			this.lock.lock();
-			ok = true;
-		} finally {
-			this.log.trace("Lock[{}].lock() {}", this.lockId, ok ? "completed" : "FAILED");
-		}
+		invoke(super::lock, "lock");
 	}
 
 	@Override
 	public void lockInterruptibly() throws InterruptedException {
-		this.log.trace("Lock[{}].lockInterruptibly()", this.lockId);
-		boolean ok = false;
-		try {
-			this.lock.lockInterruptibly();
-			ok = true;
-		} finally {
-			this.log.trace("Lock[{}].lockInterruptibly() {}", this.lockId, ok ? "completed" : "FAILED");
-		}
+		invoke(super::lockInterruptibly, "lockInterruptibly");
 	}
 
 	@Override
 	public boolean tryLock() {
-		this.log.trace("Lock[{}].tryLock()", this.lockId);
-		boolean ok = false;
-		Boolean ret = null;
-		try {
-			ret = this.lock.tryLock();
-			ok = true;
-			return ret;
-		} finally {
-			this.log.trace("Lock[{}].tryLock() {} (returning {})", this.lockId, ok ? "completed" : "FAILED", ret);
-		}
+		return invoke(() -> super.tryLock(), "tryLock");
 	}
 
 	@Override
 	public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
-		this.log.trace("Lock[{}].tryLock({}, {})", this.lockId, time, unit);
-		boolean ok = false;
-		Boolean ret = null;
-		try {
-			ret = this.lock.tryLock(time, unit);
-			ok = true;
-			return ret;
-		} finally {
-			this.log.trace("Lock[{}].tryLock({}, {}) {} (returning {})", this.lockId, time, unit,
-				ok ? "completed" : "FAILED", ret);
-		}
+		return invoke(() -> super.tryLock(time, unit), "tryLock", time, unit);
 	}
 
 	@Override
 	public void unlock() {
-		this.log.trace("Lock[{}].unlock()", this.lockId);
-		boolean ok = false;
-		try {
-			this.lock.unlock();
-			ok = true;
-		} finally {
-			this.log.trace("Lock[{}].unlock() {}", this.lockId, ok ? "completed" : "FAILED");
-		}
+		invoke(super::unlock, "unlock");
 	}
 
 	@Override
 	public Condition newCondition() {
-		return new TraceableCondition(this.log, this.lockId,
-			String.format("%016x", this.conditionCounter.getAndIncrement()), this.lock.newCondition());
+		final Condition condition = super.newCondition();
+		final String conditionId = String.format("%016x", this.conditionCounter.getAndIncrement());
+		return new TraceableCondition(this.log, this.name, conditionId, condition);
 	}
-
 }
