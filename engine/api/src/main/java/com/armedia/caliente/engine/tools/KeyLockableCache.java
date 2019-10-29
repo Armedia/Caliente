@@ -32,13 +32,11 @@ import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import org.apache.commons.collections4.map.LRUMap;
@@ -54,7 +52,7 @@ import com.armedia.commons.utilities.concurrent.ShareableMap;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 import com.armedia.commons.utilities.function.CheckedFunction;
 
-public final class KeyLockableCache<K extends Serializable, V> extends BaseShareableLockable {
+public final class KeyLockableCache<K extends Serializable, V> {
 
 	public static final int MIN_LIMIT = 1000;
 	public static final Duration DEFAULT_MAX_AGE = Duration.ofMinutes(5);
@@ -187,9 +185,9 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final String cacheId;
-	private final ReferenceType type;
+	private final BiFunction<K, V, ? extends CacheItem> itemConstructor;
 	private final Duration maxAge;
-	private final Map<K, CacheItem> cache;
+	private final ShareableMap<K, CacheItem> cache;
 	private final LockDispenser<K, ShareableLockable> locks = new LockDispenser<>((key) -> new BaseShareableLockable());
 
 	public KeyLockableCache() {
@@ -221,7 +219,20 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 	}
 
 	public KeyLockableCache(ReferenceType type, int maxCount, Duration maxAge) {
-		this.type = Tools.coalesce(type, KeyLockableCache.DEFAULT_TYPE);
+
+		switch (Tools.coalesce(type, KeyLockableCache.DEFAULT_TYPE)) {
+			case WEAK:
+				this.itemConstructor = WeakReferenceCacheItem::new;
+				break;
+			case SOFT:
+				this.itemConstructor = SoftReferenceCacheItem::new;
+				break;
+			default:
+			case FINAL:
+				this.itemConstructor = DirectCacheItem::new;
+				break;
+		}
+
 		this.cacheId = String.format("%016x", KeyLockableCache.CACHE_ID.getAndIncrement());
 		final Map<K, CacheItem> cache = new LRUMap<>(Math.max(KeyLockableCache.MIN_LIMIT, maxCount));
 		this.cache = new ShareableMap<>(cache);
@@ -233,25 +244,15 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 	}
 
 	protected CacheItem newCacheItem(K key, V value) {
-		switch (this.type) {
-			case WEAK:
-				return new WeakReferenceCacheItem(key, value);
-			case SOFT:
-				return new SoftReferenceCacheItem(key, value);
-			default:
-			case FINAL:
-				return new DirectCacheItem(key, value);
-		}
+		return this.itemConstructor.apply(key, value);
 	}
 
 	public final V get(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		// This construct helps avoid deadlocks while preserving concurrency where possible
 		try (SharedAutoLock keyLock = getLock(key).autoSharedLock()) {
-			try (SharedAutoLock global = autoSharedLock()) {
-				CacheItem item = this.cache.get(key);
-				return (item != null ? item.get() : null);
-			}
+			CacheItem item = this.cache.get(key);
+			return (item != null ? item.get() : null);
 		}
 	}
 
@@ -264,14 +265,12 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 				try (MutexAutoLock keyMutex = keyShared.upgrade()) {
 					existing = get(key);
 					if (existing == null) {
-						try (SharedAutoLock globalShared = autoSharedLock()) {
+						try (SharedAutoLock globalShared = this.cache.autoSharedLock()) {
 							CacheItem item = this.cache.get(key);
-							if ((item != null) && (item.get() != null)) {
-								existing = item.get();
-							} else {
-								try (MutexAutoLock globalMutex = globalShared.upgrade()) {
-									this.cache.put(key, newCacheItem(key, existing = f.applyChecked(key)));
-								}
+							existing = (item != null ? item.get() : null);
+							if (existing != null) { return existing; }
+							try (MutexAutoLock globalMutex = globalShared.upgrade()) {
+								this.cache.put(key, newCacheItem(key, existing = f.applyChecked(key)));
 							}
 						}
 					}
@@ -289,17 +288,15 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		if (value == null) { return remove(key); }
 		try (MutexAutoLock keyMutex = getLock(key).autoMutexLock()) {
-			try (MutexAutoLock globalMutex = autoMutexLock()) {
-				CacheItem item = this.cache.put(key, newCacheItem(key, value));
-				return (item != null ? item.get() : null);
-			}
+			CacheItem item = this.cache.put(key, newCacheItem(key, value));
+			return (item != null ? item.get() : null);
 		}
 	}
 
 	public final V remove(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		try (MutexAutoLock keyMutex = getLock(key).autoMutexLock()) {
-			try (SharedAutoLock globalShared = autoSharedLock()) {
+			try (SharedAutoLock globalShared = this.cache.autoSharedLock()) {
 				CacheItem item = null;
 				if (this.cache.containsKey(key)) {
 					try (MutexAutoLock globalMutex = globalShared.upgrade()) {
@@ -314,25 +311,19 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 	}
 
 	public final int size() {
-		try (SharedAutoLock global = autoSharedLock()) {
-			return this.cache.size();
-		}
+		return this.cache.size();
 	}
 
 	public final boolean isEmpty() {
-		try (SharedAutoLock global = autoSharedLock()) {
-			return this.cache.isEmpty();
-		}
+		return this.cache.isEmpty();
 	}
 
 	public final boolean containsValueForKey(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		try (SharedAutoLock lock = getLock(key).autoSharedLock()) {
-			try (SharedAutoLock global = autoSharedLock()) {
-				CacheItem item = this.cache.get(key);
-				if (item == null) { return false; }
-				return (item.get() != null);
-			}
+			CacheItem item = this.cache.get(key);
+			if (item == null) { return false; }
+			return (item.get() != null);
 		}
 	}
 
@@ -347,27 +338,10 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 	}
 
 	public final void clear() {
-		try (MutexAutoLock globalMutex = autoMutexLock()) {
-			this.cache.clear();
-		}
+		this.cache.clear();
 	}
 
-	public final Set<K> getKeys() {
-		try (SharedAutoLock globalShared = autoSharedLock()) {
-			return new LinkedHashSet<>(this.cache.keySet());
-		}
-	}
-
-	public final Collection<V> values() {
-		try (SharedAutoLock globalShared = autoSharedLock()) {
-			Collection<V> values = new ArrayList<>();
-			for (CacheItem r : new ArrayList<>(this.cache.values())) {
-				V v = r.get();
-				if (v != null) {
-					values.add(v);
-				}
-			}
-			return values;
-		}
+	public final Set<K> keySet() {
+		return this.cache.keySet();
 	}
 }
