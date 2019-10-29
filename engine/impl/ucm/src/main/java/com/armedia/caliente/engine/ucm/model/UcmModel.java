@@ -746,20 +746,13 @@ public class UcmModel {
 				}
 				if (attributes == null) {
 					throw new UcmServiceException(
-						String.format("The URI [%s] was found via %s(%s=%s), didn't contain any data?!?", newUri,
+						String.format("The URI [%s] found via %s(%s=%s) didn't contain any data?!?", newUri,
 							serviceName, identifierAtt.name(), searchKey));
 				}
-				final URI finalUri = UcmModel.getURI(attributes);
-				final UcmUniqueURI newGuid = UcmModel.getUniqueURI(attributes);
-				final UcmFSObject object = newFSObject(finalUri, attributes);
-				UcmModel.this.objectByUniqueURI.put(newGuid, object);
-				if (attributes.hasAttribute(UcmAtt.fParentGUID)) {
-					UcmModel.this.parentByURI.put(finalUri,
-						UcmModel.newFolderURI(attributes.getString(UcmAtt.fParentGUID)));
-				}
-				UcmModel.this.historyUriByUniqueURI.put(newGuid, finalUri);
+				UcmFSObject object = newFSObject(attributes);
+				cacheDataObject(object);
 				serviceInvoked.set(true);
-				return newGuid;
+				return object.getUniqueURI();
 			});
 		} catch (Exception e) {
 			UcmModel.throwIfMatches(UcmServiceException.class, e);
@@ -1318,6 +1311,7 @@ public class UcmModel {
 		try {
 			UcmFSObject data = getFSObject(s, uri);
 			if (UcmFolder.class.isInstance(data)) { return UcmFolder.class.cast(data); }
+			data = getFSObject(s, uri);
 			throw new UcmFolderNotFoundException(
 				String.format("The object with URI [%s] is not a folder: %s", uri, data));
 		} catch (UcmObjectNotFoundException e) {
