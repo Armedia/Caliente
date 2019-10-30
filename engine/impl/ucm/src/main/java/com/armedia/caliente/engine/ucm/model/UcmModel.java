@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -56,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.tools.KeyLockableCache;
+import com.armedia.caliente.engine.tools.KeyLockableCache.ReferenceType;
 import com.armedia.caliente.engine.ucm.UcmConstants;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.commons.utilities.FileNameTools;
@@ -228,24 +230,27 @@ public class UcmModel {
 
 		Map<Integer, String> cacheNames = new LinkedHashMap<>();
 
-		this.objectByUniqueURI = new KeyLockableCache<>(objectCount);
+		// We don't want things to expire - that's what LRU caching is for
+		final Duration d = Duration.ofSeconds(-1);
+		final ReferenceType t = ReferenceType.FINAL;
+		this.objectByUniqueURI = new KeyLockableCache<>(t, objectCount, d);
 		cacheNames.put(System.identityHashCode(this.objectByUniqueURI), "objectByUniqueURI");
-		this.renditionsByUniqueURI = new KeyLockableCache<>(objectCount);
+		this.renditionsByUniqueURI = new KeyLockableCache<>(t, objectCount, d);
 		cacheNames.put(System.identityHashCode(this.renditionsByUniqueURI), "renditionsByUniqueURI");
-		this.historyByURI = new KeyLockableCache<>(objectCount);
+		this.historyByURI = new KeyLockableCache<>(t, objectCount, d);
 		cacheNames.put(System.identityHashCode(this.historyByURI), "historyByURI");
 
-		this.uriByPaths = new KeyLockableCache<>(objectCount);
+		this.uriByPaths = new KeyLockableCache<>(t, objectCount, d);
 		cacheNames.put(System.identityHashCode(this.uriByPaths), "uriByPaths");
-		this.parentByURI = new KeyLockableCache<>(objectCount);
+		this.parentByURI = new KeyLockableCache<>(t, objectCount, d);
 		cacheNames.put(System.identityHashCode(this.parentByURI), "parentByURI");
-		this.childrenByURI = new KeyLockableCache<>(objectCount);
+		this.childrenByURI = new KeyLockableCache<>(t, objectCount, d);
 		cacheNames.put(System.identityHashCode(this.childrenByURI), "childrenByURI");
-		this.uniqueUriByCurrentUri = new KeyLockableCache<>(objectCount);
+		this.uniqueUriByCurrentUri = new KeyLockableCache<>(t, objectCount, d);
 		cacheNames.put(System.identityHashCode(this.uniqueUriByCurrentUri), "uniqueUriByCurrentUri");
-		this.historyUriByUniqueURI = new KeyLockableCache<>(objectCount);
+		this.historyUriByUniqueURI = new KeyLockableCache<>(t, objectCount, d);
 		cacheNames.put(System.identityHashCode(this.historyUriByUniqueURI), "historyUriByUniqueURI");
-		this.revisionUriByRevisionID = new KeyLockableCache<>(objectCount);
+		this.revisionUriByRevisionID = new KeyLockableCache<>(t, objectCount, d);
 		cacheNames.put(System.identityHashCode(this.revisionUriByRevisionID), "revisionUriByRevisionID");
 		this.cacheNames = Tools.freezeMap(cacheNames);
 	}
