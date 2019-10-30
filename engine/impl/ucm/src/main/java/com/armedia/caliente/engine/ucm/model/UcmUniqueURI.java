@@ -47,6 +47,7 @@ public final class UcmUniqueURI implements Comparable<UcmUniqueURI>, Serializabl
 	}
 
 	private final URI uri;
+	private final URI historyUri;
 
 	public UcmUniqueURI(URI uri) {
 		this.uri = Objects.requireNonNull(uri, "Must provide a non-null URI");
@@ -54,6 +55,15 @@ public final class UcmUniqueURI implements Comparable<UcmUniqueURI>, Serializabl
 			Objects.requireNonNull(uri.getFragment(),
 				"A file's unique URI must also contain a revision ID in the fragment");
 		}
+		try {
+			this.historyUri = new URI(uri.getScheme(), uri.getSchemeSpecificPart(), null);
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(String.format("Failed to build the history URI from [%s]", uri), e);
+		}
+	}
+
+	public URI getHistoryURI() {
+		return this.historyUri;
 	}
 
 	public URI getURI() {
