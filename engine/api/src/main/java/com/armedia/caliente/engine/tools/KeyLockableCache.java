@@ -38,6 +38,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.apache.commons.collections4.map.LRUMap;
@@ -258,18 +259,30 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 	}
 
 	public final <EX extends Throwable> V computeIfAbsent(K key, CheckedFunction<K, V, EX> f) throws EX {
+		return computeIfMatches(key, Objects::isNull, f);
+	}
+
+	/**
+	 * <p>
+	 * Similar to {@link #computeIfAbsent(Serializable, CheckedFunction)}, except it applies the
+	 * given {@link Predicate} to any found value, and if the predicate matches then the computation
+	 * is carried out and its result returned.
+	 * </p>
+	 */
+	public final <EX extends Throwable> V computeIfMatches(K key, Predicate<V> predicate, CheckedFunction<K, V, EX> f)
+		throws EX {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		Objects.requireNonNull(f, "Must provide a non-null initializer");
 		try (SharedAutoLock keyShared = getLock(key).autoSharedLock()) {
 			V existing = get(key);
-			if (existing == null) {
+			if (predicate.test(existing)) {
 				try (MutexAutoLock keyMutex = keyShared.upgrade()) {
 					existing = get(key);
-					if (existing == null) {
+					if (predicate.test(existing)) {
 						try (SharedAutoLock cacheShared = autoSharedLock()) {
 							CacheItem item = this.cache.get(key);
 							existing = (item != null ? item.get() : null);
-							if (existing != null) { return existing; }
+							if (!predicate.test(existing)) { return existing; }
 							existing = f.applyChecked(key);
 							try (MutexAutoLock cacheMutex = cacheShared.upgrade()) {
 								this.cache.put(key, newCacheItem(key, existing));
