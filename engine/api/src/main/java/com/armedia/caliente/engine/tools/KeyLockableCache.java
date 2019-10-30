@@ -270,8 +270,9 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 							CacheItem item = this.cache.get(key);
 							existing = (item != null ? item.get() : null);
 							if (existing != null) { return existing; }
+							existing = f.applyChecked(key);
 							try (MutexAutoLock cacheMutex = cacheShared.upgrade()) {
-								this.cache.put(key, newCacheItem(key, existing = f.applyChecked(key)));
+								this.cache.put(key, newCacheItem(key, existing));
 							}
 						}
 					}
