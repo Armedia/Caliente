@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,7 +60,7 @@ import com.armedia.caliente.engine.ucm.UcmConstants;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.function.CheckedFunction;
+import com.armedia.commons.utilities.function.CheckedSupplier;
 import com.armedia.commons.utilities.function.CheckedTriConsumer;
 
 import oracle.stellent.ridc.IdcClientException;
@@ -93,18 +94,56 @@ public class UcmModel {
 	private static final String FOLDER_SCHEME = "folder";
 	private static final String NULL_SCHEME = "null";
 
-	private static final URI NULL_URI = UcmModel.newURI(UcmModel.NULL_SCHEME, "null");
-	private static final String NULL_FOLDER_GUID = "idcnull";
+	static final URI NULL_URI = UcmModel.newURI(UcmModel.NULL_SCHEME, "null");
+	static final String NULL_FOLDER_GUID = "idcnull";
 	static final URI NULL_FOLDER_URI = UcmModel.newFolderURI(UcmModel.NULL_FOLDER_GUID);
 
 	static final URI ROOT_URI = UcmModel.newFolderURI("FLD_ROOT");
+
+	private static class UcmServiceResponse {
+		private final UcmAttributes attributes;
+		private final DataResultSet history;
+		private final DataResultSet renditions;
+
+		private UcmServiceResponse(UcmAttributes attributes) {
+			this(attributes, null, null);
+		}
+
+		private UcmServiceResponse(UcmAttributes attributes, DataResultSet history) {
+			this(attributes, history, null);
+		}
+
+		private UcmServiceResponse(UcmAttributes attributes, DataResultSet history, DataResultSet renditions) {
+			this.attributes = Objects.requireNonNull(attributes, "Must provide the attribute response");
+			this.history = history;
+			this.renditions = renditions;
+		}
+
+		public UcmAttributes getAttributes() {
+			return this.attributes;
+		}
+
+		public DataResultSet getHistory() {
+			return this.history;
+		}
+
+		public DataResultSet getRenditions() {
+			return this.renditions;
+		}
+	}
 
 	// UniqueURI:
 	// * FILE -> file:${dDocName}#${dID}
 	// * FOLDER -> folder:${fFolderGUID}
 
-	// Unique URI -> UcmAttributes
+	// UniqueURI -> UcmFSObject
 	private final KeyLockableCache<UcmUniqueURI, UcmFSObject> objectByUniqueURI;
+
+	// UcmUniqueURI -> Map<String, UcmRenditionInfo>
+	private final KeyLockableCache<UcmUniqueURI, Map<String, UcmRenditionInfo>> renditionsByUniqueURI;
+
+	// HistoryURI -> List<UcmRevision>
+	private final KeyLockableCache<URI, List<UcmRevision>> historyByURI;
 
 	// path -> HistoryURI
 	private final KeyLockableCache<String, URI> uriByPaths;
@@ -115,20 +154,16 @@ public class UcmModel {
 	// Parent HistoryURI -> Map<Child Name, Child HistoryURI>
 	private final KeyLockableCache<URI, Map<String, URI>> childrenByURI;
 
-	// HistoryURI -> List<UcmRevision>
-	private final KeyLockableCache<URI, List<UcmRevision>> historyByURI;
-
 	// dID -> UcmUniqueURI
 	private final KeyLockableCache<String, UcmUniqueURI> revisionUriByRevisionID;
 
-	// UcmUniqueURI -> Map<String, UcmRenditionInfo>
-	private final KeyLockableCache<UcmUniqueURI, Map<String, UcmRenditionInfo>> renditionsByUniqueURI;
-
 	// HistoryURI -> UcmUniqueURI
-	private final KeyLockableCache<URI, UcmUniqueURI> uniqueUriByHistoryUri;
+	private final KeyLockableCache<URI, UcmUniqueURI> uniqueUriByCurrentUri;
 
 	// UniqueURI -> HistoryURI
 	private final KeyLockableCache<UcmUniqueURI, URI> historyUriByUniqueURI;
+
+	private final Map<Integer, String> cacheNames;
 
 	public static DataBinder getConfigInfo(UcmSession s) throws UcmServiceException {
 		try {
@@ -190,41 +225,101 @@ public class UcmModel {
 
 	public UcmModel(int objectCount) throws UcmServiceException {
 		objectCount = Tools.ensureBetween(UcmModel.MIN_OBJECT_COUNT, objectCount, UcmModel.MAX_OBJECT_COUNT);
-		this.uriByPaths = new KeyLockableCache<>(objectCount);
-		this.parentByURI = new KeyLockableCache<>(objectCount);
-		this.childrenByURI = new KeyLockableCache<>(objectCount);
-		this.historyByURI = new KeyLockableCache<>(objectCount);
+
+		Map<Integer, String> cacheNames = new LinkedHashMap<>();
+
 		this.objectByUniqueURI = new KeyLockableCache<>(objectCount);
-		this.uniqueUriByHistoryUri = new KeyLockableCache<>(objectCount);
-		this.historyUriByUniqueURI = new KeyLockableCache<>(objectCount);
+		cacheNames.put(System.identityHashCode(this.objectByUniqueURI), "objectByUniqueURI");
 		this.renditionsByUniqueURI = new KeyLockableCache<>(objectCount);
+		cacheNames.put(System.identityHashCode(this.renditionsByUniqueURI), "renditionsByUniqueURI");
+		this.historyByURI = new KeyLockableCache<>(objectCount);
+		cacheNames.put(System.identityHashCode(this.historyByURI), "historyByURI");
+
+		this.uriByPaths = new KeyLockableCache<>(objectCount);
+		cacheNames.put(System.identityHashCode(this.uriByPaths), "uriByPaths");
+		this.parentByURI = new KeyLockableCache<>(objectCount);
+		cacheNames.put(System.identityHashCode(this.parentByURI), "parentByURI");
+		this.childrenByURI = new KeyLockableCache<>(objectCount);
+		cacheNames.put(System.identityHashCode(this.childrenByURI), "childrenByURI");
+		this.uniqueUriByCurrentUri = new KeyLockableCache<>(objectCount);
+		cacheNames.put(System.identityHashCode(this.uniqueUriByCurrentUri), "uniqueUriByCurrentUri");
+		this.historyUriByUniqueURI = new KeyLockableCache<>(objectCount);
+		cacheNames.put(System.identityHashCode(this.historyUriByUniqueURI), "historyUriByUniqueURI");
 		this.revisionUriByRevisionID = new KeyLockableCache<>(objectCount);
+		cacheNames.put(System.identityHashCode(this.revisionUriByRevisionID), "revisionUriByRevisionID");
+		this.cacheNames = Tools.freezeMap(cacheNames);
 	}
 
-	protected void cacheDataObject(final UcmFSObject object) {
-		if (object == null) { return; }
+	protected boolean cacheObject(final UcmFSObject object) {
+		return cacheObject(null, object, null, null);
+	}
+
+	protected boolean cacheObject(final UcmFSObject object, Supplier<DataResultSet> history) {
+		return cacheObject(null, object, history, null);
+	}
+
+	protected boolean cacheObject(final UcmFSObject object, Supplier<DataResultSet> history,
+		Supplier<DataResultSet> renditions) {
+		return cacheObject(null, object, history, renditions);
+	}
+
+	private <K extends Serializable, V> V putInCache(KeyLockableCache<?, ?> locked, KeyLockableCache<K, V> cache, K k,
+		V v) {
+		final String name = this.cacheNames.getOrDefault(System.identityHashCode(cache),
+			String.valueOf(System.identityHashCode(cache)));
+		if (locked == cache) {
+			this.log.trace("Avoiding recursive cache locking: {}", name);
+			return null;
+		}
+		this.log.trace("Caching into {}: {} = {}", name, k, v);
+		return cache.put(k, v);
+	}
+
+	protected boolean cacheObject(KeyLockableCache<?, ?> cache, final UcmFSObject object,
+		Supplier<DataResultSet> history, Supplier<DataResultSet> renditions) {
+		if (object == null) {
+			this.log.trace("cacheObject() -> nothing to cache");
+			return false;
+		}
 		// Is this a file or a folder?
 		final URI uri = object.getURI();
 		final UcmUniqueURI guid = object.getUniqueURI();
 
-		this.objectByUniqueURI.put(guid, object);
+		// First, the primary objects
+		putInCache(cache, this.objectByUniqueURI, guid, object);
 
+		if ((history != null) && (cache != this.historyByURI)) {
+			DataResultSet rs = history.get();
+			if (rs != null) {
+				LinkedList<UcmRevision> list = new LinkedList<>();
+				for (DataObject o : rs.getRows()) {
+					list.addFirst(new UcmRevision(uri, o, rs.getFields()));
+				}
+				putInCache(cache, this.historyByURI, uri, Tools.freezeList(new ArrayList<>(list)));
+			}
+		}
+
+		if ((renditions != null) && (cache != this.renditionsByUniqueURI)) {
+			DataResultSet rs = renditions.get();
+			if (rs != null) {
+				Map<String, UcmRenditionInfo> m = new TreeMap<>();
+				for (DataObject o : rs.getRows()) {
+					UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
+					m.put(r.getType().toUpperCase(), r);
+				}
+				putInCache(cache, this.renditionsByUniqueURI, guid, Tools.freezeMap(new LinkedHashMap<>(m)));
+			}
+		}
+
+		// Now, the pointers...
 		if (object.hasAttribute(UcmAtt.fParentGUID)) {
-			this.parentByURI.put(uri, UcmModel.newFolderURI(object.getString(UcmAtt.fParentGUID)));
+			putInCache(cache, this.parentByURI, uri, UcmModel.newFolderURI(object.getString(UcmAtt.fParentGUID)));
 		}
 
-		this.uniqueUriByHistoryUri.put(uri, guid);
-		this.historyUriByUniqueURI.put(guid, uri);
-	}
+		putInCache(cache, this.uniqueUriByCurrentUri, uri, guid);
+		putInCache(cache, this.historyUriByUniqueURI, guid, uri);
 
-	protected <K extends Serializable, V> V computeIfAxbsent(KeyLockableCache<K, V> cache, K key,
-		CheckedFunction<K, V, Exception> initializer) {
-		try {
-			return cache.computeIfAbsent(key, initializer);
-		} catch (Exception e) {
-			// Never gonna happen...
-			throw new UcmRuntimeException("Unexpected Exception", e);
-		}
+		return true;
 	}
 
 	protected static final URI getURI(UcmAttributes data) {
@@ -396,8 +491,7 @@ public class UcmModel {
 		return !StringUtils.isEmpty(att.getString(UcmAtt.fTargetGUID));
 	}
 
-	private UcmAttributes buildAttributesFromDocInfo(DataBinder responseData, AtomicReference<DataResultSet> history,
-		AtomicReference<DataResultSet> renditions) throws UcmServiceException {
+	private UcmServiceResponse buildAttributesFromDocInfo(DataBinder responseData) throws UcmServiceException {
 		Map<String, String> baseObj = new HashMap<>();
 		// First things first!! Stash the retrieved object...
 		DataResultSet docInfo = responseData.getResultSet("DOC_INFO");
@@ -416,19 +510,15 @@ public class UcmModel {
 
 		baseObj.putAll(docInfo.getRows().get(0));
 
-		if (history != null) {
-			history.set(responseData.getResultSet("REVISION_HISTORY"));
-		}
-		if (renditions != null) {
-			renditions.set(responseData.getResultSet("Renditions"));
-		}
+		DataResultSet history = responseData.getResultSet("REVISION_HISTORY");
+		DataResultSet renditions = responseData.getResultSet("Renditions");
 
 		UcmAttributes baseData = new UcmAttributes(baseObj, docInfo.getFields(),
 			(fileInfo != null ? fileInfo.getFields() : null));
-		return baseData;
+		return new UcmServiceResponse(baseData, history, renditions);
 	}
 
-	private UcmAttributes buildAttributesFromFldInfo(DataBinder responseData) {
+	private UcmServiceResponse buildAttributesFromFldInfo(DataBinder responseData) {
 		boolean file = true;
 		DataResultSet rs = responseData.getResultSet("FileInfo");
 		if (rs == null) {
@@ -445,7 +535,7 @@ public class UcmModel {
 		if (!StringUtils.isEmpty(parentPath)) {
 			baseObj.put(UcmAtt.cmfParentPath.name(), FileNameTools.dirname(parentPath, '/'));
 		}
-		return new UcmAttributes(baseObj, rs.getFields());
+		return new UcmServiceResponse(new UcmAttributes(baseObj, rs.getFields()));
 	}
 
 	public UcmFSObject getObject(UcmSession s, String path) throws UcmServiceException, UcmObjectNotFoundException {
@@ -483,8 +573,8 @@ public class UcmModel {
 
 	public UcmFile getFileByGUID(UcmSession s, String guid) throws UcmServiceException, UcmFileNotFoundException {
 		try {
-			URI uri = resolveGuid(s, guid, UcmObjectType.FILE);
-			UcmFSObject obj = getFSObject(s, uri);
+			final URI uri = UcmModel.newFileURI(guid);
+			final UcmFSObject obj = getFSObject(s, uri);
 			if (!UcmFile.class.isInstance(obj)) {
 				throw new UcmFileNotFoundException(String.format("The file with URI [%s] does not exist", uri));
 			}
@@ -496,8 +586,8 @@ public class UcmModel {
 
 	public UcmFolder getFolderByGUID(UcmSession s, String guid) throws UcmServiceException, UcmFolderNotFoundException {
 		try {
-			URI uri = resolveGuid(s, guid, UcmObjectType.FOLDER);
-			UcmFSObject obj = getFSObject(s, uri);
+			final URI uri = UcmModel.newFolderURI(guid);
+			final UcmFSObject obj = getFSObject(s, uri);
 			if (!UcmFolder.class.isInstance(obj)) {
 				throw new UcmFileNotFoundException(String.format("The folder with URI [%s] does not exist", uri));
 			}
@@ -516,12 +606,9 @@ public class UcmModel {
 	}
 
 	protected URI resolvePath(final UcmSession s, String p) throws UcmServiceException, UcmObjectNotFoundException {
-		String sanitizedPath = UcmModel.sanitizePath(p);
-		final AtomicReference<UcmFSObject> data = new AtomicReference<>(null);
-		final AtomicReference<Throwable> thrown = new AtomicReference<>(null);
-		final URI uri;
+		final String sanitizedPath = UcmModel.sanitizePath(p);
 		try {
-			uri = this.uriByPaths.computeIfAbsent(sanitizedPath, (path) -> {
+			return this.uriByPaths.computeIfAbsent(sanitizedPath, (path) -> {
 				ServiceResponse response = null;
 				DataBinder responseData = null;
 				try {
@@ -529,53 +616,36 @@ public class UcmModel {
 					responseData = response.getResponseAsBinder();
 				} catch (final IdcClientException e) {
 					if (isNotFoundException(e, "Exception caught retrieving the file at [%s]", path)) {
-						thrown.set(e);
-						return UcmModel.NULL_URI;
+						throw new UcmObjectNotFoundException(String.format("No object found at path [%s]", path), e);
 					}
 					// This is a "regular" exception that we simply re-raise
 					throw e;
 				}
 
-				final UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
+				final UcmServiceResponse rsp = buildAttributesFromFldInfo(responseData);
+				final UcmAttributes attributes = rsp.getAttributes();
 				if (attributes == null) {
 					throw new UcmServiceException(String
 						.format("Path [%s] was found via FLD_INFO, but was neither a file nor a folder?!?", path));
 				}
-				URI newUri = UcmModel.getURI(attributes);
-				data.set(newFSObject(newUri, attributes));
-				if (newUri == null) {
-					throw new UcmServiceException(String.format(
-						"Path [%s] was found, but was neither a file nor a folder (no identifier attributes)?!?",
-						path));
-				}
-				return newUri;
+				// There's an object...so stash it
+				UcmFSObject object = newFSObject(attributes);
+				cacheObject(object);
+				return object.getURI();
 			});
 		} catch (Exception e) {
 			UcmModel.throwIfMatches(UcmServiceException.class, e);
+			UcmModel.throwIfMatches(UcmObjectNotFoundException.class, e);
 			throw new UcmServiceException(String.format("Exception caught searching for path [%s]", sanitizedPath), e);
 		}
-
-		// There's an object...so stash it
-		cacheDataObject(data.get());
-
-		if (Objects.equals(UcmModel.NULL_URI, uri)) {
-			throw new UcmObjectNotFoundException(String.format("No object found at path [%s]", sanitizedPath),
-				thrown.get());
-		}
-		return uri;
 	}
 
+	/*
 	protected URI resolveGuid(final UcmSession s, final String guid, final UcmObjectType type)
 		throws UcmServiceException, UcmObjectNotFoundException {
-		final AtomicReference<UcmFSObject> data = new AtomicReference<>(null);
-		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
-		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
-		final AtomicReference<Throwable> thrown = new AtomicReference<>(null);
-		// Do we already have this GUID?
-		final URI uri;
+	
 		try {
-			// Did not find by GUID, try by path...
-			uri = this.uriByPaths.computeIfAbsent(guid, (targetGuid) -> {
+			return this.uriByPaths.computeIfAbsent(guid, (targetGuid) -> {
 				ServiceResponse response = null;
 				DataBinder responseData = null;
 				final UcmAtt identifierAtt;
@@ -589,11 +659,11 @@ public class UcmModel {
 					case FOLDER:
 						uriAtt = identifierAtt = UcmAtt.fFolderGUID;
 						break;
-
+	
 					default:
 						throw new UcmServiceException(String.format("Unsupported object type %s", type.name()));
 				}
-
+	
 				try {
 					response = s.callService(serviceName, (binder) -> {
 						binder.putLocal(identifierAtt.name(), targetGuid);
@@ -606,74 +676,51 @@ public class UcmModel {
 				} catch (final IdcClientException e) {
 					if (isNotFoundException(e, "Exception caught retrieving the %s with GUID [%s]", type.name(),
 						targetGuid)) {
-						thrown.set(e);
-						return UcmModel.NULL_URI;
+						throw new UcmObjectNotFoundException(
+							String.format("No %s found with GUID [%s]", type.name(), guid), e);
 					}
 					// This is a "regular" exception that we simply re-raise
 					throw e;
 				}
-
-				final UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
+	
+				final UcmServiceResponse rsp = buildAttributesFromFldInfo(responseData);
+				final UcmAttributes attributes = rsp.getAttributes();
 				if (attributes == null) {
 					throw new UcmServiceException(
 						String.format("%s GUID [%s] was found via %s(%s=%s), didn't contain any data?!?", type.name(),
 							targetGuid, serviceName, identifierAtt.name(), targetGuid));
 				}
+	
 				String uriIdentifier = attributes.getString(uriAtt);
-				if (uriIdentifier != null) {
-					URI newUri = UcmModel.getURI(attributes);
-					data.set(newFSObject(newUri, attributes));
-					return newUri;
+				if (uriIdentifier == null) {
+					throw new UcmServiceException(
+						String.format("%s GUID [%s] was found, returned no results (no value for %s)?!?", type.name(),
+							targetGuid, identifierAtt.name()));
 				}
-
-				throw new UcmServiceException(
-					String.format("%s GUID [%s] was found, returned no results (no value for %s)?!?", type.name(),
-						targetGuid, identifierAtt.name()));
+				UcmFSObject object = newFSObject(attributes);
+				cacheObject(object);
+				return object.getURI();
 			});
 		} catch (Exception e) {
 			UcmModel.throwIfMatches(UcmServiceException.class, e);
+			UcmModel.throwIfMatches(UcmObjectNotFoundException.class, e);
 			throw new UcmServiceException(
 				String.format("Exception caught searching for %s GUID [%s]", type.name(), guid), e);
 		}
-
-		// There's an object...so stash it
-		if (data.get() != null) {
-			final UcmFSObject object = data.get();
-			cacheDataObject(object);
-
-			if (history.get() != null) {
-				DataResultSet rs = history.get();
-				LinkedList<UcmRevision> list = new LinkedList<>();
-				for (DataObject o : rs.getRows()) {
-					list.addFirst(new UcmRevision(uri, o, rs.getFields()));
-				}
-				this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
-			}
-
-			if (renditions.get() != null) {
-				UcmUniqueURI uniqueId = object.getUniqueURI();
-				DataResultSet rs = renditions.get();
-				Map<String, UcmRenditionInfo> m = new TreeMap<>();
-				for (DataObject o : rs.getRows()) {
-					UcmRenditionInfo r = new UcmRenditionInfo(uniqueId, o, rs.getFields());
-					m.put(r.getType().toUpperCase(), r);
-				}
-				this.renditionsByUniqueURI.put(uniqueId, Tools.freezeMap(new LinkedHashMap<>(m)));
-			}
-		}
-
-		if (Objects.equals(UcmModel.NULL_URI, uri)) {
-			throw new UcmObjectNotFoundException(String.format("No %s found with GUID [%s]", type.name(), guid),
-				thrown.get());
-		}
-		return uri;
 	}
+	*/
 
 	protected UcmFSObject getFSObject(final UcmSession s, final URI uri)
 		throws UcmServiceException, UcmObjectNotFoundException {
+		return getFSObject(s, uri, null);
+	}
+
+	protected UcmFSObject getFSObject(final UcmSession s, final URI uri,
+		CheckedSupplier<UcmFSObject, Exception> supplier) throws UcmServiceException, UcmObjectNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to retrieve");
 		if (UcmModel.NULL_FOLDER_GUID.equals(uri.getSchemeSpecificPart())) {
 			// Take a quick shortcut to avoid unnecessary calls
+			this.log.trace("getFSObject({}): returning null", uri);
 			return null;
 		}
 
@@ -689,23 +736,27 @@ public class UcmModel {
 			link = false;
 		} else {
 			// WTF?? Invalid URI
+			this.log.trace("getFSObject({}): invalid URI!", uri);
 			throw new IllegalArgumentException(String.format("The URI [%s] doesn't point to a valid object", uri));
 		}
 
-		final AtomicBoolean serviceInvoked = new AtomicBoolean(false);
-		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
-		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
-		final AtomicReference<Throwable> thrown = new AtomicReference<>(null);
+		final AtomicBoolean serviceCalled = new AtomicBoolean(false);
+		final AtomicReference<UcmFSObject> found = new AtomicReference<>(null);
+		final AtomicReference<UcmFSObject> cached = new AtomicReference<>(null);
+
 		final UcmUniqueURI guid;
 		try {
-			guid = this.uniqueUriByHistoryUri.computeIfAbsent(uri, (newUri) -> {
+			this.log.trace("getFSObject({})", uri);
+			guid = this.uniqueUriByCurrentUri.computeIfAbsent(uri, (historyUri) -> {
+				this.log.trace("getFSObject({})/computeIfAbsent({})", uri, historyUri);
+				serviceCalled.set(true);
 				ServiceResponse response = null;
 				DataBinder responseData = null;
 				final UcmAtt identifierAtt;
 				final String serviceName;
 				final String searchKey;
 				if (file && !link) {
-					String id = newUri.getFragment();
+					String id = historyUri.getFragment();
 					if (id != null) {
 						serviceName = "DOC_INFO";
 						identifierAtt = UcmAtt.dID;
@@ -713,12 +764,12 @@ public class UcmModel {
 					} else {
 						serviceName = "DOC_INFO_BY_NAME";
 						identifierAtt = UcmAtt.dDocName;
-						searchKey = newUri.getSchemeSpecificPart();
+						searchKey = historyUri.getSchemeSpecificPart();
 					}
 				} else {
 					identifierAtt = (file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID);
 					serviceName = "FLD_INFO";
-					searchKey = newUri.getSchemeSpecificPart();
+					searchKey = historyUri.getSchemeSpecificPart();
 				}
 
 				try {
@@ -730,61 +781,52 @@ public class UcmModel {
 					});
 					responseData = response.getResponseAsBinder();
 				} catch (final IdcClientException e) {
-					if (isNotFoundException(e, "Exception caught locating the object using URI [%s]", newUri)) {
-						thrown.set(e);
-						return UcmUniqueURI.NULL_GUID;
+					this.log.trace("getFSObject({})/computeIfAbsent({}): Exception caught!", uri, historyUri, e);
+					if (isNotFoundException(e, "Exception caught locating the object using URI [%s]", historyUri)) {
+						throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri), e);
 					}
 					// This is a "regular" exception that we simply re-raise
 					throw e;
 				}
 
+				final UcmServiceResponse rsp;
 				final UcmAttributes attributes;
 				if (file && !link) {
-					attributes = buildAttributesFromDocInfo(responseData, history, renditions);
+					rsp = buildAttributesFromDocInfo(responseData);
 				} else {
-					attributes = buildAttributesFromFldInfo(responseData);
+					rsp = buildAttributesFromFldInfo(responseData);
 				}
+				attributes = rsp.getAttributes();
 				if (attributes == null) {
+					this.log.trace("getFSObject({})/computeIfAbsent({}) - no attributes!", uri, historyUri);
 					throw new UcmServiceException(
-						String.format("The URI [%s] found via %s(%s=%s) didn't contain any data?!?", newUri,
+						String.format("The URI [%s] found via %s(%s=%s) didn't contain any data?!?", historyUri,
 							serviceName, identifierAtt.name(), searchKey));
 				}
 				UcmFSObject object = newFSObject(attributes);
-				cacheDataObject(object);
-				serviceInvoked.set(true);
+				found.set(object);
+				if (cacheObject(this.uniqueUriByCurrentUri, object, rsp::getHistory, rsp::getRenditions)) {
+					cached.set(this.objectByUniqueURI.get(object.getUniqueURI()));
+				}
 				return object.getUniqueURI();
 			});
 		} catch (Exception e) {
 			UcmModel.throwIfMatches(UcmServiceException.class, e);
+			UcmModel.throwIfMatches(UcmObjectNotFoundException.class, e);
 			throw new UcmServiceException(String.format("Exception caught resolving URI [%s]", uri), e);
 		}
 
-		if (UcmUniqueURI.NULL_GUID.equals(guid)) {
-			throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri), thrown.get());
-		}
+		this.log.trace("getFSObject({}) - serviceCalled = {}", uri, serviceCalled.get());
+		this.log.trace("getFSObject({}) - guid = {}", uri, guid);
 
-		if (serviceInvoked.get()) {
-			if (history.get() != null) {
-				DataResultSet rs = history.get();
-				LinkedList<UcmRevision> list = new LinkedList<>();
-				for (DataObject o : rs.getRows()) {
-					list.addFirst(new UcmRevision(uri, o, rs.getFields()));
-				}
-				this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
-			}
-
-			if (renditions.get() != null) {
-				DataResultSet rs = renditions.get();
-				Map<String, UcmRenditionInfo> m = new TreeMap<>();
-				for (DataObject o : rs.getRows()) {
-					UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
-					m.put(r.getType().toUpperCase(), r);
-				}
-				this.renditionsByUniqueURI.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
+		UcmFSObject ret = this.objectByUniqueURI.get(guid);
+		this.log.trace("getFSObject({}) - ret = {}", uri, ret);
+		if (ret == null) {
+			if (serviceCalled.get()) {
+				"HOW DA FUK?!?!".hashCode();
 			}
 		}
-
-		return this.objectByUniqueURI.get(guid);
+		return ret;
 	}
 
 	public UcmFile getFileRevision(UcmSession s, UcmRevision revision)
@@ -798,13 +840,13 @@ public class UcmModel {
 	}
 
 	protected UcmFile getFileRevision(final UcmSession s, final String id)
-		throws UcmServiceException, UcmFileRevisionNotFoundException {
-		final AtomicBoolean serviceInvoked = new AtomicBoolean(false);
-		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
-		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
+		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
 		final UcmUniqueURI guid;
+
 		try {
+			this.log.trace("getFileRevision({})", id);
 			guid = this.revisionUriByRevisionID.computeIfAbsent(id, (wantedId) -> {
+				this.log.trace("getFileRevision({})/computeIfAbsent({})", id, wantedId);
 				ServiceResponse response = null;
 				DataBinder responseData = null;
 				try {
@@ -816,61 +858,39 @@ public class UcmModel {
 					responseData = response.getResponseAsBinder();
 				} catch (final IdcClientException e) {
 					if (isNotFoundException(e, "Exception caught retrieving the revision with ID [%s]", wantedId)) {
-						return UcmUniqueURI.NULL_GUID;
+						throw new UcmFileRevisionNotFoundException(
+							String.format("No revision found with ID [%s]", wantedId), e);
 					}
 					// This is a "regular" exception that we simply re-raise
 					throw e;
 				}
 
-				UcmAttributes attributes = buildAttributesFromDocInfo(responseData, history, renditions);
+				final UcmServiceResponse rsp = buildAttributesFromDocInfo(responseData);
+				UcmAttributes attributes = rsp.getAttributes();
 				if (attributes == null) {
+					this.log.trace("getFileRevision({})/computeIfAbsent({}) - no attributes found", id, wantedId);
 					throw new UcmServiceException(
 						String.format("Revision ID [%s] was found via DOC_INFO(dID=%s), but returned empty results",
 							wantedId, wantedId));
 				}
-				final URI uri = UcmModel.getURI(attributes);
-				final UcmUniqueURI newGuid = UcmModel.getUniqueURI(attributes);
-				UcmModel.this.objectByUniqueURI.put(newGuid, newFSObject(uri, attributes));
-				if (attributes.hasAttribute(UcmAtt.fParentGUID)) {
-					UcmModel.this.parentByURI.put(uri, UcmModel.newFolderURI(attributes.getString(UcmAtt.fParentGUID)));
-				}
-				UcmModel.this.historyUriByUniqueURI.put(newGuid, uri);
-				serviceInvoked.set(true);
-				return UcmModel.getUniqueURI(attributes);
+				UcmFSObject object = newFSObject(attributes);
+				this.log.trace("getFileRevision({})/computeIfAbsent({}) - caching: {}", id, wantedId, object);
+				cacheObject(this.revisionUriByRevisionID, object, null, rsp::getRenditions);
+				this.log.trace("getFileRevision({})/computeIfAbsent({}) - returning: [{}]", id, wantedId,
+					object.getUniqueURI());
+				return object.getUniqueURI();
 			});
 		} catch (Exception e) {
+			this.log.trace("getFileRevision({})", id, e);
 			UcmModel.throwIfMatches(UcmServiceException.class, e);
+			UcmModel.throwIfMatches(UcmFileRevisionNotFoundException.class, e);
 			throw new UcmServiceException(String.format("Exception caught locating revision ID [%s]", id), e);
 		}
 
-		if (UcmUniqueURI.NULL_GUID.equals(guid)) {
-			throw new UcmFileRevisionNotFoundException(String.format("No revision found with ID [%s]", id));
-		}
-
-		UcmFSObject ret = this.objectByUniqueURI.get(guid);
+		final UcmFSObject ret = this.objectByUniqueURI.get(guid);
+		this.log.trace("getFileRevision({}) -> objectByUniqueURI.get({}) = {}", id, guid, ret);
 		if (!UcmFile.class.isInstance(ret)) {
 			throw new UcmFileRevisionNotFoundException(String.format("No revision found with ID [%s]", id));
-		}
-		if (serviceInvoked.get()) {
-			if (history.get() != null) {
-				URI uri = ret.getURI();
-				DataResultSet rs = history.get();
-				LinkedList<UcmRevision> list = new LinkedList<>();
-				for (DataObject o : rs.getRows()) {
-					list.addFirst(new UcmRevision(uri, o, rs.getFields()));
-				}
-				this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
-			}
-
-			if (renditions.get() != null) {
-				DataResultSet rs = renditions.get();
-				Map<String, UcmRenditionInfo> m = new TreeMap<>();
-				for (DataObject o : rs.getRows()) {
-					UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
-					m.put(r.getType().toUpperCase(), r);
-				}
-				this.renditionsByUniqueURI.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
-			}
 		}
 		return UcmFile.class.cast(ret);
 	}
@@ -1111,12 +1131,12 @@ public class UcmModel {
 		if (!UcmModel.isFolderURI(targetUri)) { return -1; }
 
 		Map<String, URI> children = this.childrenByURI.get(targetUri);
-		boolean reconstruct = false;
 		if (children != null) {
 			// We'll gather the objects first, and then iterate over them, because
 			// if there's an inconsistency (i.e. a missing stale object), then we
 			// want to do the full service invocation to the server
 			Map<URI, UcmFSObject> objects = new LinkedHashMap<>(children.size());
+			boolean reconstruct = false;
 			for (URI childUri : children.values()) {
 				try {
 					objects.put(childUri, getFSObject(s, childUri));
@@ -1141,8 +1161,6 @@ public class UcmModel {
 			}
 		}
 
-		final AtomicReference<UcmFSObject> data = new AtomicReference<>(null);
-		final AtomicReference<Map<String, UcmFSObject>> rawChildren = new AtomicReference<>(null);
 		try {
 			children = this.childrenByURI.computeIfAbsent(targetUri, (uri) -> {
 				try {
@@ -1159,12 +1177,12 @@ public class UcmModel {
 						newChildren.put(name, childUri);
 						UcmFSObject childObject = newFSObject(childUri, o);
 						dataObjects.put(name, childObject);
-						handler.handleObject(s, it.getCurrentPos(), childUri, childObject);
+						long pos = it.getCurrentPos();
+						handler.handleObject(s, pos, childUri, childObject);
 					}
-					rawChildren.set(dataObjects);
 					UcmAttributes folderAtts = it.getFolder();
-					URI folderUri = UcmModel.getURI(folderAtts);
-					data.set(newFSObject(folderUri, folderAtts));
+					cacheObject(this.childrenByURI, newFSObject(folderAtts), null, null);
+					dataObjects.values().forEach(this::cacheObject);
 					return newChildren;
 				} catch (final UcmServiceException e) {
 					Throwable cause = e.getCause();
@@ -1180,17 +1198,6 @@ public class UcmModel {
 			UcmModel.throwIfMatches(UcmFolderNotFoundException.class, e);
 			throw new UcmServiceException(
 				String.format("Exception caught finding the folder contents for URI [%s]", targetUri), e);
-		}
-
-		if (data.get() != null) {
-			cacheDataObject(data.get());
-		}
-
-		if (rawChildren.get() != null) {
-			Map<String, UcmFSObject> c = rawChildren.get();
-			for (String name : c.keySet()) {
-				cacheDataObject(c.get(name));
-			}
 		}
 
 		return (children != null ? children.size() : 0);
@@ -1229,20 +1236,23 @@ public class UcmModel {
 		}
 
 		try {
+			Set<URI> recursables = new LinkedHashSet<>();
 			iterateFolderContents(session, uri, (s, p, u, o) -> {
 				handler.handleObject(s, outerPos.getAndIncrement(), u, o);
 				if (UcmModel.isFolderURI(u) && (followShortcuts || !o.isShortcut())) {
-					try {
-						iterateFolderContentsRecursive(recursions, outerPos, s, u, followShortcuts, handler);
-					} catch (UcmFolderNotFoundException e) {
-						throw new UcmRuntimeException(String.format(
-							"Unexpected condition: can't find a folder that has just been found?? URI=[%s]", u), e);
-					} catch (UcmServiceException e) {
-						throw new UcmRuntimeServiceException(
-							String.format("Service exception caught while attempting to recurse through [%s] : %s", u,
-								recursions),
-							e);
-					}
+					recursables.add(u);
+				}
+			});
+			// now, do the recursions
+			recursables.forEach((u) -> {
+				try {
+					iterateFolderContentsRecursive(recursions, outerPos, session, u, followShortcuts, handler);
+				} catch (UcmFolderNotFoundException e) {
+					throw new UcmRuntimeException(String
+						.format("Unexpected condition: can't find a folder that has just been found?? URI=[%s]", u), e);
+				} catch (UcmServiceException e) {
+					throw new UcmRuntimeServiceException(String.format(
+						"Service exception caught while attempting to recurse through [%s] : %s", u, recursions), e);
 				}
 			});
 			return outerPos.get();
@@ -1308,15 +1318,15 @@ public class UcmModel {
 			throw new UcmFolderNotFoundException(String.format("The object URI [%s] is not a folder URI", uri));
 		}
 		if (UcmModel.NULL_FOLDER_URI.equals(uri)) { return null; }
+		UcmFSObject data = null;
 		try {
-			UcmFSObject data = getFSObject(s, uri);
+			data = getFSObject(s, uri);
 			if (UcmFolder.class.isInstance(data)) { return UcmFolder.class.cast(data); }
 			data = getFSObject(s, uri);
-			throw new UcmFolderNotFoundException(
-				String.format("The object with URI [%s] is not a folder: %s", uri, data));
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFolderNotFoundException(e.getMessage(), e);
 		}
+		throw new UcmFolderNotFoundException(String.format("The object with URI [%s] is not a folder: %s", uri, data));
 	}
 
 	public UcmFileHistory getFileHistory(UcmSession s, String path)
@@ -1341,25 +1351,25 @@ public class UcmModel {
 		return getFileHistory(s, uri, file.getString(UcmAtt.dID));
 	}
 
-	UcmFileHistory getFileHistory(final UcmSession s, final URI uri, final String revisionId)
+	private UcmFileHistory getFileHistory(final UcmSession s, final URI uri, final String revisionId)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
 		final List<UcmRevision> history;
 		try {
 			history = this.historyByURI.computeIfAbsent(uri, (targetUri) -> {
-				ServiceResponse response = null;
-				DataBinder responseData = null;
+				final ServiceResponse response;
+				final DataBinder responseData;
 				try {
 					response = s.callService("REV_HISTORY", (binder) -> binder.putLocal("dID", revisionId));
 					responseData = response.getResponseAsBinder();
 				} catch (final IdcClientException e) {
 					if (isNotFoundException(e, "Exception caught retrieving the URI [%s]", targetUri)) {
-						throw new UcmFolderNotFoundException(String.format("No file found with URI [%s]", targetUri));
+						throw new UcmFileNotFoundException(String.format("No file found with URI [%s]", targetUri), e);
 					}
 					// This is a "regular" exception that we simply re-raise
 					throw e;
 				}
 
-				DataResultSet revisions = responseData.getResultSet("REVISIONS");
+				final DataResultSet revisions = responseData.getResultSet("REVISIONS");
 				LinkedList<UcmRevision> newHistory = new LinkedList<>();
 				for (DataObject o : revisions.getRows()) {
 					newHistory.addFirst(new UcmRevision(targetUri, o, revisions.getFields()));
@@ -1469,8 +1479,6 @@ public class UcmModel {
 		Objects.requireNonNull(file, "Must provide a file whose renditions to return");
 
 		final UcmUniqueURI guid = file.getUniqueURI();
-		final AtomicReference<UcmFSObject> data = new AtomicReference<>(null);
-		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		final String id = file.getRevisionId();
 		final Map<String, UcmRenditionInfo> renditions;
 		try {
@@ -1492,9 +1500,10 @@ public class UcmModel {
 					throw e;
 				}
 
-				UcmAttributes attributes = buildAttributesFromDocInfo(responseData, history, null);
+				final UcmServiceResponse rsp = buildAttributesFromDocInfo(responseData);
+				UcmAttributes attributes = rsp.getAttributes();
 				Map<String, UcmRenditionInfo> newRenditions = new TreeMap<>();
-				DataResultSet rs = responseData.getResultSet("Renditions");
+				DataResultSet rs = rsp.getRenditions();
 				if (rs != null) {
 					for (DataObject o : rs.getRows()) {
 						UcmRenditionInfo r = new UcmRenditionInfo(fileGuid, o, rs.getFields());
@@ -1507,7 +1516,7 @@ public class UcmModel {
 					UcmRenditionInfo info = generateDefaultRendition(fileGuid, attributes);
 					newRenditions.put(info.getType(), info);
 				}
-				data.set(newFSObject(attributes));
+				cacheObject(newFSObject(attributes), rsp::getHistory);
 				return newRenditions;
 			});
 		} catch (Exception e) {
@@ -1517,24 +1526,6 @@ public class UcmModel {
 				String.format("Exception caught retrieving the renditions list for file [%s] (revision ID [%s]",
 					file.getURI(), file.getRevisionId()),
 				e);
-		}
-
-		// Update the base object, since we just got it anyhow...
-		if (data.get() != null) {
-			this.objectByUniqueURI.computeIfAbsent(guid, (g) -> {
-				UcmFSObject ret = data.get();
-				cacheDataObject(ret);
-				return ret;
-			});
-		}
-
-		if (history.get() != null) {
-			DataResultSet rs = history.get();
-			LinkedList<UcmRevision> list = new LinkedList<>();
-			for (DataObject o : rs.getRows()) {
-				list.addFirst(new UcmRevision(file.getURI(), o, rs.getFields()));
-			}
-			this.historyByURI.put(file.getURI(), Tools.freezeList(new ArrayList<>(list)));
 		}
 		return new TreeMap<>(renditions);
 	}

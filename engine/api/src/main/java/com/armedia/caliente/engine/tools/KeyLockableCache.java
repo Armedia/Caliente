@@ -45,9 +45,9 @@ import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.commons.utilities.LockDispenser;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.LockDispenser;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.concurrent.ShareableLockable;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
@@ -57,7 +57,7 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 
 	public static final int MIN_LIMIT = 1000;
 	public static final Duration DEFAULT_MAX_AGE = Duration.ofMinutes(5);
-	public static final ReferenceType DEFAULT_TYPE = ReferenceType.WEAK;
+	public static final ReferenceType DEFAULT_TYPE = ReferenceType.SOFT;
 
 	private static final AtomicLong CACHE_ID = new AtomicLong(0);
 
