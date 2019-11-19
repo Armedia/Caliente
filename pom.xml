@@ -586,6 +586,7 @@
 		<module>engine/impl/dfc</module>
 		<module>engine/impl/local</module>
 		<module>engine/impl/sharepoint</module>
+		<module>engine/impl/sql</module>
 		<module>engine/impl/ucm</module>
 		<module>engine/impl/xml</module>
 
