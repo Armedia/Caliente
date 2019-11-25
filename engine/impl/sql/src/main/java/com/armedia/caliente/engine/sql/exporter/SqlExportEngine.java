@@ -57,8 +57,8 @@ import com.armedia.commons.utilities.StreamTools;
 public class SqlExportEngine extends
 	ExportEngine<SqlRoot, SqlSessionWrapper, CmfValue, SqlExportContext, SqlExportContextFactory, SqlExportDelegateFactory, SqlExportEngineFactory> {
 
-	public SqlExportEngine(SqlExportEngineFactory factory, Logger output, WarningTracker warningTracker,
-		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
+	public SqlExportEngine(SqlExportEngineFactory factory, Logger output, WarningTracker warningTracker, File baseData,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, false, SearchType.PATH);
 	}
 
@@ -105,7 +105,7 @@ public class SqlExportEngine extends
 
 		while (path.length() > 1) {
 			String id = SqlCommon.calculateId(path);
-			if (StringUtils.equals(id, folderId)) { return FileNameTools.basename(path); }
+			if (StringUtils.equals(id, folderId)) { return FileNameTools.basename(path, '/'); }
 			// Move up one level...
 			path = FileNameTools.dirname(path, '/');
 		}
@@ -128,9 +128,9 @@ public class SqlExportEngine extends
 	}
 
 	@Override
-	protected SqlExportContextFactory newContextFactory(SqlRoot session, CfgTools cfg,
-		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> streamStore, Transformer transformer, Logger output,
-		WarningTracker warningTracker) throws Exception {
+	protected SqlExportContextFactory newContextFactory(SqlRoot session, CfgTools cfg, CmfObjectStore<?> objectStore,
+		CmfContentStore<?, ?> streamStore, Transformer transformer, Logger output, WarningTracker warningTracker)
+		throws Exception {
 		return new SqlExportContextFactory(this, cfg, session, objectStore, streamStore, output, warningTracker);
 	}
 
