@@ -78,10 +78,12 @@ public abstract class ExportDelegate< //
 		this.subType = calculateSubType(session, this.exportTarget.getType(), object);
 		this.secondaries = calculateSecondarySubtypes(session, this.exportTarget.getType(), this.subType, object);
 		Collection<CmfObjectRef> parentIds = calculateParentIds(session, object);
-		if (parentIds == null) {
+		if ((parentIds == null) || parentIds.isEmpty()) {
 			parentIds = Collections.emptySet();
+		} else {
+			parentIds = new LinkedHashSet<>(parentIds);
 		}
-		this.parentIds = Tools.freezeList(new ArrayList<>(parentIds));
+		this.parentIds = Tools.freezeCollection(parentIds);
 		this.name = calculateName(session, object);
 		if (this.subType == null) { throw new IllegalStateException("calculateSubType() may not return null"); }
 	}
