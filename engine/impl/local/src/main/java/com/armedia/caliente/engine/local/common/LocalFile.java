@@ -37,7 +37,9 @@ import java.util.List;
 import java.util.Objects;
 
 import com.armedia.commons.utilities.FileNameTools;
+import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.LazySupplier;
 
 public class LocalFile {
 
@@ -75,6 +77,20 @@ public class LocalFile {
 	private final boolean regularFile;
 	private final boolean symbolicLink;
 
+	private final LazySupplier<String> id = new LazySupplier<>(() -> LocalCommon.calculateId(getPortableFullPath()));
+	private final LazySupplier<String> parentId = new LazySupplier<>(
+		() -> LocalCommon.calculateId(getPortableParentPath()));
+	private final LazySupplier<String> portableFullPath = new LazySupplier<>(
+		() -> LocalCommon.getPortablePath(getFullPath()));
+	private final LazySupplier<String> portableParentPath = new LazySupplier<>(() -> {
+		String ppp = getParentPath();
+		if (ppp == null) { return "/"; }
+		return LocalCommon.getPortablePath(ppp);
+	});
+
+	private final LazySupplier<Integer> hash;
+	private final LazyFormatter string;
+
 	public LocalFile(LocalRoot root, String path) throws IOException {
 		this.root = root;
 		File f = root.relativize(new File(path));
@@ -96,14 +112,26 @@ public class LocalFile {
 		this.symbolicLink = Files.isSymbolicLink(p);
 		this.regularFile = Files.isRegularFile(p);
 		this.folder = Files.isDirectory(p);
+
+		this.hash = new LazySupplier<>(() -> Tools.hashTool(this, null, this.root, this.absoluteFile));
+
+		final String type = (this.folder ? "dir" : this.regularFile ? "file" : "<unknown>");
+		this.string = LazyFormatter.of(
+			"LocalFile [root=%s, absoluteFile=%s, relativeFile=%s, type=%s, link=%s, safePath=%s, fullPath=%s, parentPath=%s, name=%s, pathCount=%s]",
+			this.root, this.absoluteFile, this.relativeFile, type, this.symbolicLink, this.safePath, this.fullPath,
+			this.parentPath, this.name, this.pathCount);
+
+		if (this.name.equals("Erudicity")) {
+			"".hashCode();
+		}
 	}
 
 	public String getId() {
-		return LocalCommon.calculateId(getPortableFullPath());
+		return this.id.get();
 	}
 
 	public String getParentId() {
-		return LocalCommon.calculateId(getPortableParentPath());
+		return this.parentId.get();
 	}
 
 	public boolean isFolder() {
@@ -135,13 +163,11 @@ public class LocalFile {
 	}
 
 	public String getPortableParentPath() {
-		String path = getParentPath();
-		if (path == null) { return "/"; }
-		return LocalCommon.getPortablePath(path);
+		return this.portableParentPath.get();
 	}
 
 	public String getPortableFullPath() {
-		return LocalCommon.getPortablePath(getFullPath());
+		return this.portableFullPath.get();
 	}
 
 	/**
@@ -173,7 +199,7 @@ public class LocalFile {
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.root, this.absoluteFile);
+		return this.hash.get();
 	}
 
 	@Override
@@ -187,10 +213,6 @@ public class LocalFile {
 
 	@Override
 	public String toString() {
-		String type = (this.folder ? "dir" : this.regularFile ? "file" : "<unknown>");
-		return String.format(
-			"LocalFile [root=%s, absoluteFile=%s, relativeFile=%s, type=%s, link=%s, safePath=%s, fullPath=%s, parentPath=%s, name=%s, pathCount=%s]",
-			this.root, this.absoluteFile, this.relativeFile, type, this.symbolicLink, this.safePath, this.fullPath,
-			this.parentPath, this.name, this.pathCount);
+		return this.string.get();
 	}
 }
