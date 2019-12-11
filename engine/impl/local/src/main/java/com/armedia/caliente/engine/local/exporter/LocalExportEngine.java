@@ -47,6 +47,7 @@ import com.armedia.caliente.engine.local.common.LocalTranslator;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -89,9 +90,13 @@ public class LocalExportEngine extends
 		}
 		return StreamTools
 			.of(new LocalRecursiveIterator(session, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)))
-			.map((localFile) -> new ExportTarget(
-				localFile.getAbsolute().isFile() ? CmfObject.Archetype.DOCUMENT : CmfObject.Archetype.FOLDER,
-				localFile.getId(), localFile.getSafePath()));
+			.map(LocalExportEngine::toExportTarget);
+	}
+
+	protected static ExportTarget toExportTarget(LocalFile localFile) {
+		final Archetype archetype = localFile.getAbsolute().isFile() ? CmfObject.Archetype.DOCUMENT
+			: CmfObject.Archetype.FOLDER;
+		return new ExportTarget(archetype, localFile.getId(), localFile.getSafePath());
 	}
 
 	@Override
