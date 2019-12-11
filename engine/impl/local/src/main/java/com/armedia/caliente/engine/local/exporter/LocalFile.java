@@ -43,7 +43,7 @@ import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.function.LazySupplier;
 
-public class LocalFile {
+class LocalFile {
 
 	private static final String ENCODING = "UTF-8";
 
