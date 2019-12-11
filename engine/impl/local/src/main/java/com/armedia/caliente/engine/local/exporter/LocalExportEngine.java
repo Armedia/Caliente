@@ -100,17 +100,17 @@ public class LocalExportEngine extends
 		final Path root = f.toPath();
 		@SuppressWarnings("resource")
 		Stream<Path> pathStream = Files.walk(root, FileVisitOption.FOLLOW_LINKS);
-		Predicate<? super Path> p = null;
 
 		// First make sure we ignore empty folders if we were told to
-		p = LocalExportEngine::isEmptyDirectory;
 		if (configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)) {
+			Predicate<? super Path> p = LocalExportEngine::isEmptyDirectory;
 			pathStream = pathStream.filter(p.negate());
 		}
 
 		// Make sure we exclude the root path, as it's included in the walk
 		pathStream = pathStream.filter((path) -> !Objects.equals(path, root));
 
+		// The function that will do the intermediate mapping for us
 		Function<Path, LocalFile> mapper = (path) -> {
 			try {
 				return new LocalFile(session, path.toString());
