@@ -28,6 +28,15 @@ package com.armedia.caliente.engine.local.exporter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.apache.commons.codec.binary.StringUtils;
@@ -53,7 +62,6 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
-import com.armedia.commons.utilities.StreamTools;
 
 public class LocalExportEngine extends
 	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory, LocalExportEngineFactory> {
@@ -82,15 +90,58 @@ public class LocalExportEngine extends
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByPath(LocalRoot session, CfgTools configuration,
-		LocalExportDelegateFactory factory, String path) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByPath(final LocalRoot session, CfgTools configuration,
+		LocalExportDelegateFactory factory, String unused) throws Exception {
 		File f = session.getFile();
 		if (!f.exists()) {
 			throw new FileNotFoundException(String.format("Failed to find a file or folder at [%s]", f));
 		}
-		return StreamTools
-			.of(new LocalRecursiveIterator(session, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)))
-			.map(LocalExportEngine::toExportTarget);
+
+		final Path root = f.toPath();
+		@SuppressWarnings("resource")
+		Stream<Path> pathStream = Files.walk(root, FileVisitOption.FOLLOW_LINKS);
+		Predicate<? super Path> p = null;
+
+		// First make sure we ignore empty folders if we were told to
+		p = LocalExportEngine::isEmptyDirectory;
+		if (configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)) {
+			pathStream = pathStream.filter(p.negate());
+		}
+
+		// Make sure we exclude the root path, as it's included in the walk
+		pathStream = pathStream.filter((path) -> !Objects.equals(path, root));
+
+		Function<Path, LocalFile> mapper = (path) -> {
+			try {
+				return new LocalFile(session, path.toString());
+			} catch (IOException e) {
+				throw new UncheckedIOException(e.getMessage(), e);
+			}
+		};
+
+		// Next, conver to LocalFile instances
+		return pathStream //
+			.map(mapper) //
+			.filter(LocalFile::isHeadRevision) //
+			.map(LocalExportEngine::toExportTarget) //
+			.onClose(pathStream::close) //
+		;
+	}
+
+	protected static boolean isEmptyDirectory(Path p) {
+		if (!Files.isDirectory(p)) { return false; }
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(p)) {
+			for (Path e : stream) {
+				if (e == null) {
+					// Just to get rid of a warning without annotations ;)
+					continue;
+				}
+				return false;
+			}
+		} catch (IOException e) {
+			throw new UncheckedIOException(e.getMessage(), e);
+		}
+		return true;
 	}
 
 	protected static ExportTarget toExportTarget(LocalFile localFile) {
