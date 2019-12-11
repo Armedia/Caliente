@@ -62,11 +62,12 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.exporter.ExportDelegate;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalCommon;
-import com.armedia.caliente.engine.local.common.LocalFile;
 import com.armedia.caliente.engine.local.common.LocalRoot;
+import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -399,6 +400,20 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	protected Collection<LocalFileExportDelegate> identifyDependents(CmfObject<CmfValue> marshalled,
 		LocalExportContext ctx) throws Exception {
 		return null;
+	}
+
+	@Override
+	protected Collection<? extends ExportDelegate<?, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, ?>> identifyAntecedents(
+		CmfObject<CmfValue> marshalled, LocalExportContext ctx) throws Exception {
+		if (this.object.isFolder()) { return super.identifyAntecedents(marshalled, ctx); }
+		return super.identifyAntecedents(marshalled, ctx);
+	}
+
+	@Override
+	protected Collection<? extends ExportDelegate<?, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, ?>> identifySuccessors(
+		CmfObject<CmfValue> marshalled, LocalExportContext ctx) throws Exception {
+		if (this.object.isFolder()) { return super.identifySuccessors(marshalled, ctx); }
+		return super.identifySuccessors(marshalled, ctx);
 	}
 
 	@Override

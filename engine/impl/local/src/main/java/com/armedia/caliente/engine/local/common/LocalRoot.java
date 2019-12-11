@@ -40,7 +40,7 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 	private final String path;
 	private final File file;
 
-	static String normalize(String path) throws IOException {
+	public static String normalize(String path) throws IOException {
 		String p2 = FilenameUtils.normalize(path);
 		if (p2 == null) { throw new IOException(String.format("The path [%s] contains too many '..' elements", path)); }
 		return p2;

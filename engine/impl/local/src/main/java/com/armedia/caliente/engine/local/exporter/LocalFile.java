@@ -24,7 +24,7 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine.local.common;
+package com.armedia.caliente.engine.local.exporter;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.armedia.caliente.engine.local.common.LocalCommon;
+import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
@@ -68,6 +70,8 @@ public class LocalFile {
 	private final LocalRoot root;
 	private final File absoluteFile;
 	private final File relativeFile;
+	private final String historyRadix;
+	private final String versionTag;
 	private final String safePath;
 	private final String fullPath;
 	private final String parentPath;
@@ -78,6 +82,7 @@ public class LocalFile {
 	private final boolean symbolicLink;
 
 	private final LazySupplier<String> id = new LazySupplier<>(() -> LocalCommon.calculateId(getPortableFullPath()));
+	private final LazySupplier<String> historyId = new LazySupplier<>(() -> LocalCommon.calculateId(getHistoryRadix()));
 	private final LazySupplier<String> parentId = new LazySupplier<>(
 		() -> LocalCommon.calculateId(getPortableParentPath()));
 	private final LazySupplier<String> portableFullPath = new LazySupplier<>(
@@ -96,6 +101,10 @@ public class LocalFile {
 		File f = root.relativize(new File(path));
 		this.relativeFile = f;
 		this.absoluteFile = root.makeAbsolute(f);
+
+		// The history radix is calculated from the relative filename, minus the version data
+		this.historyRadix = null;
+		this.versionTag = null;
 
 		List<String> r = new ArrayList<>();
 		this.fullPath = this.relativeFile.getPath();
@@ -120,14 +129,14 @@ public class LocalFile {
 			"LocalFile [root=%s, absoluteFile=%s, relativeFile=%s, type=%s, link=%s, safePath=%s, fullPath=%s, parentPath=%s, name=%s, pathCount=%s]",
 			this.root, this.absoluteFile, this.relativeFile, type, this.symbolicLink, this.safePath, this.fullPath,
 			this.parentPath, this.name, this.pathCount);
-
-		if (this.name.equals("Erudicity")) {
-			"".hashCode();
-		}
 	}
 
 	public String getId() {
 		return this.id.get();
+	}
+
+	public String getHistoryRadix() {
+		return this.historyRadix;
 	}
 
 	public String getParentId() {
@@ -136,6 +145,11 @@ public class LocalFile {
 
 	public boolean isFolder() {
 		return this.folder;
+	}
+
+	public boolean isHeadRevision() {
+		// TODO:
+		return true;
 	}
 
 	public boolean isRegularFile() {

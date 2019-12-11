@@ -34,7 +34,6 @@ import java.util.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.local.common.LocalFile;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.commons.utilities.ArrayIterator;
 import com.armedia.commons.utilities.CloseableIterator;
