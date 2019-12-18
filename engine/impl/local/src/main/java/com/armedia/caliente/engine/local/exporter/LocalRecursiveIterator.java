@@ -29,7 +29,9 @@ package com.armedia.caliente.engine.local.exporter;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Stack;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.commons.utilities.ArrayIterator;
 import com.armedia.commons.utilities.CloseableIterator;
+import com.armedia.commons.utilities.Tools;
 
 public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 
@@ -59,15 +62,17 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 
 	private final Stack<RecursiveState> stateStack = new Stack<>();
 
-	public LocalRecursiveIterator(LocalRoot root, boolean excludeEmptyFolders) throws IOException {
+	private final Predicate<File> ignorePredicate;
+
+	public LocalRecursiveIterator(LocalRoot root, boolean excludeEmptyFolders) {
+		this(root, excludeEmptyFolders, null);
+	}
+
+	public LocalRecursiveIterator(LocalRoot root, boolean excludeEmptyFolders, Predicate<File> ignorePredicate) {
 		this.root = root;
 		this.stateStack.push(new RecursiveState(this.root.getFile()));
 		this.excludeEmptyFolders = excludeEmptyFolders;
-	}
-
-	private boolean ignoreObject(File object) {
-		// TODO: A configuration setting "somewhere" should control which paths we ignore
-		return false;
+		this.ignorePredicate = Tools.coalesce(ignorePredicate, Objects::isNull);
 	}
 
 	@Override
@@ -88,7 +93,7 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 			if (state.childIterator != null) {
 				while (state.childIterator.hasNext()) {
 					File f = state.childIterator.next();
-					if (ignoreObject(f)) {
+					if (this.ignorePredicate.test(f)) {
 						continue;
 					}
 
