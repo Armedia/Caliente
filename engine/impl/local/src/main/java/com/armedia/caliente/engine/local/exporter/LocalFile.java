@@ -47,11 +47,11 @@ class LocalFile {
 
 	private static final String ENCODING = "UTF-8";
 
-	private static String makeSafe(String s) throws IOException {
+	public static String makeSafe(String s) throws IOException {
 		return URLEncoder.encode(s, LocalFile.ENCODING);
 	}
 
-	private static String makeUnsafe(String s) throws IOException {
+	public static String makeUnsafe(String s) throws IOException {
 		return URLDecoder.decode(s, LocalFile.ENCODING);
 	}
 
