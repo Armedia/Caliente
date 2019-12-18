@@ -34,12 +34,14 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.apache.commons.codec.binary.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
@@ -59,6 +61,8 @@ import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.caliente.tools.alfresco.bi.BulkImportManager;
+import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 
@@ -73,13 +77,47 @@ public class LocalExportEngine extends
 	@Override
 	protected SearchType detectSearchType(String source) {
 		if (source == null) { return null; }
+		if (source.startsWith("@")) {
+			// If the file exists and is a regular file, this is to be treated as a scan index
+			Path p = new File(source.substring(1)).toPath();
+			if (Files.exists(p) && Files.isRegularFile(p)) { return SearchType.QUERY; }
+		}
 		return SearchType.PATH;
 	}
 
 	@Override
 	protected Stream<ExportTarget> findExportTargetsByQuery(LocalRoot session, CfgTools configuration,
-		LocalExportDelegateFactory factory, String query) throws Exception {
-		throw new Exception("Local Export doesn't support queries");
+		LocalExportDelegateFactory factory, String indexFile) throws Exception {
+		// Skip the @ at the beginning...
+		indexFile = indexFile.substring(1);
+		Path path = new File(indexFile).toPath();
+		Predicate<ScanIndexItem> p = ScanIndexItem::isDirectory;
+		Stream<ScanIndexItem> directories = BulkImportManager.scanItems(path, p);
+		Stream<ScanIndexItem> files = BulkImportManager.scanItems(path, p.negate());
+		return Stream.concat(directories, files).map(this::getExportTarget).filter(Objects::nonNull);
+	}
+
+	protected ExportTarget getExportTarget(ScanIndexItem item) {
+		String path = item.getSourcePath();
+		String name = item.getSourceName();
+		if (!StringUtils.isEmpty(path)) {
+			name = path + "/" + name;
+		}
+		// Convert to a local path?
+		final String portablePath = LocalCommon.getPortablePath(name);
+		final Archetype type = (item.isDirectory() ? Archetype.FOLDER : Archetype.DOCUMENT);
+
+		// The path from the XML is ALWAYS separated with forward slashes
+		List<String> r = new ArrayList<>();
+		for (String s : FileNameTools.tokenize(name, '/')) {
+			try {
+				r.add(LocalFile.makeSafe(s));
+			} catch (IOException e) {
+				throw new UncheckedIOException(String.format("Failed to make safe the string [%s]", s), e);
+			}
+		}
+		return new ExportTarget(type, LocalCommon.calculateId(portablePath),
+			FileNameTools.reconstitute(r, false, false, '/'));
 	}
 
 	@Override
@@ -125,6 +163,7 @@ public class LocalExportEngine extends
 			.map(LocalExportEngine::toExportTarget) //
 			.onClose(pathStream::close) //
 		;
+
 	}
 
 	protected static boolean isEmptyDirectory(Path p) {
