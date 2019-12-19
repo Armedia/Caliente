@@ -351,7 +351,7 @@ public class AlfImportDelegateFactory
 		thisMarker.setSourceName(contentPath.getFileName().toString());
 		thisMarker.setTargetPath("");
 		thisMarker.setTargetName(contentPath.getFileName().toString());
-		thisMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
+		thisMarker.setNumber(BigDecimal.ONE);
 
 		List<ScanIndexItemMarker> markerList = new ArrayList<>(1);
 		markerList.add(thisMarker);
@@ -475,6 +475,10 @@ public class AlfImportDelegateFactory
 		thisMarker.setSourceName(contentFile.getName());
 
 		BigDecimal number = AlfImportDelegateFactory.LAST_INDEX;
+		CmfProperty<CmfValue> versionCount = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
+		if ((versionCount != null) && versionCount.hasValues()) {
+			number = new BigDecimal(versionCount.getValue().asLong());
+		}
 		if (!headVersion || !lastVersion) {
 			number = new BigDecimal(current);
 		}
@@ -774,11 +778,18 @@ public class AlfImportDelegateFactory
 
 		ScanIndexItemMarker headMarker = thisMarker;
 		if (!thisMarker.isHeadVersion()) {
-			// This is not the head version. We need to make a copy
-			// of it and change the version number...
+			// This is used when the head version and the last version are not the same,
+			// thus a copy must be made and the version number adjusted so it's the last
+			// version number (i.e. version count + 1) since we're appending a version
+			// at the end of the version history
 			headMarker = markerList.get(thisMarker.getHeadIndex() - 1);
 			headMarker = headMarker.clone();
-			headMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
+			CmfProperty<CmfValue> versionCount = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
+			BigDecimal number = headMarker.getNumber();
+			if ((versionCount != null) && versionCount.hasValues()) {
+				number = new BigDecimal(versionCount.getValue().asLong() + 1);
+			}
+			headMarker.setNumber(number);
 			headMarker.setContent(AlfImportDelegateFactory.removeVersionTag(headMarker.getContent()));
 			headMarker.setMetadata(AlfImportDelegateFactory.removeVersionTag(headMarker.getMetadata()));
 			markerList.add(headMarker);
