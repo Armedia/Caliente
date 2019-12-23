@@ -94,10 +94,10 @@ public class LocalExportEngine extends
 		Predicate<ScanIndexItem> p = ScanIndexItem::isDirectory;
 		Stream<ScanIndexItem> directories = BulkImportManager.scanItems(path, p);
 		Stream<ScanIndexItem> files = BulkImportManager.scanItems(path, p.negate());
-		return Stream.concat(directories, files).map(this::getExportTarget).filter(Objects::nonNull);
+		return Stream.concat(directories, files).flatMap(this::getExportTargets).filter(Objects::nonNull);
 	}
 
-	protected ExportTarget getExportTarget(ScanIndexItem item) {
+	protected Stream<ExportTarget> getExportTargets(ScanIndexItem item) {
 		String path = item.getSourcePath();
 		String name = item.getSourceName();
 		if (!StringUtils.isEmpty(path)) {
@@ -116,8 +116,8 @@ public class LocalExportEngine extends
 				throw new UncheckedIOException(String.format("Failed to make safe the string [%s]", s), e);
 			}
 		}
-		return new ExportTarget(type, LocalCommon.calculateId(portablePath),
-			FileNameTools.reconstitute(r, false, false, '/'));
+		return Stream.of(new ExportTarget(type, LocalCommon.calculateId(portablePath),
+			FileNameTools.reconstitute(r, false, false, '/')));
 	}
 
 	@Override
