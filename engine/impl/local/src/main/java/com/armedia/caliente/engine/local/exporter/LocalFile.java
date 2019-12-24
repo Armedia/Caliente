@@ -139,6 +139,14 @@ class LocalFile {
 		return this.historyRadix;
 	}
 
+	public String getHistoryId() {
+		return this.historyId.get();
+	}
+
+	public String getVersionTag() {
+		return this.versionTag;
+	}
+
 	public String getParentId() {
 		return this.parentId.get();
 	}
