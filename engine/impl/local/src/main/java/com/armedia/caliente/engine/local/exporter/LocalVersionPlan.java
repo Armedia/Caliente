@@ -6,6 +6,8 @@ import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
+import org.apache.commons.lang3.StringUtils;
+
 public final class LocalVersionPlan implements Comparator<String> {
 
 	private final LocalFile pattern;
@@ -37,7 +39,8 @@ public final class LocalVersionPlan implements Comparator<String> {
 		if (a == null) { return -1; }
 		if (b == null) { return 1; }
 		if (Objects.equals(a, b)) { return 0; }
-		// TODO: Handle the empty string here?
+		if (StringUtils.isEmpty(a)) { return (this.emptyTagRoot ? -1 : 1); }
+		if (StringUtils.isEmpty(b)) { return (this.emptyTagRoot ? 1 : -1); }
 		return this.tagCompare.compare(a, b);
 	}
 
