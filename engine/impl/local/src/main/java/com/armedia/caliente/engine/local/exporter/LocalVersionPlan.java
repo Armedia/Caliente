@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
-public final class LocalVersionPlan implements Comparator<String> {
+public class LocalVersionPlan implements Comparator<String> {
 
 	private final LocalFile pattern;
 	private final Comparator<String> tagCompare;
