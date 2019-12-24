@@ -12,17 +12,23 @@ public final class LocalVersionPlan implements Comparator<String> {
 	private final Comparator<String> tagCompare;
 	private final BiPredicate<LocalFile, Path> siblingCheck;
 	private final Function<Path, Path> converter;
+	private final boolean emptyTagRoot;
 
 	public LocalVersionPlan(LocalFile pattern, Comparator<String> tagCompare, Function<Path, Path> converter,
-		BiPredicate<LocalFile, Path> siblingCheck) {
+		BiPredicate<LocalFile, Path> siblingCheck, boolean emptyTagRoot) {
 		this.pattern = Objects.requireNonNull(pattern, "Must provide a file to pattern the plan on");
 		this.tagCompare = Objects.requireNonNull(tagCompare, "Must provide a Comparator to order tags with");
 		this.siblingCheck = Objects.requireNonNull(siblingCheck, "Must provide a BiPredicate to check for siblings");
 		this.converter = (converter != null ? converter : Function.identity());
+		this.emptyTagRoot = emptyTagRoot;
 	}
 
 	public final LocalFile getPatternFile() {
 		return this.pattern;
+	}
+
+	public final boolean isEmptyTagRoot() {
+		return this.emptyTagRoot;
 	}
 
 	@Override
