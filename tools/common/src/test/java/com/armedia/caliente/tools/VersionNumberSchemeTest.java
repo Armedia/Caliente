@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.local.exporter;
+package com.armedia.caliente.tools;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -10,8 +10,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.tools.AlphaCounter;
+import com.armedia.caliente.tools.VersionNumberScheme;
 
-public class LocalVersionSchemeTest {
+public class VersionNumberSchemeTest {
 
 	@FunctionalInterface
 	private static interface Renderer {
@@ -23,7 +24,7 @@ public class LocalVersionSchemeTest {
 	private static final Renderer RENDER_NUM = (i, f) -> f || (i > 0) ? String.valueOf(i) : "";
 	private static final Renderer RENDER_ALPHA = (i, f) -> f || (i > 0) ? AlphaCounter.renderAlpha(i) : "";
 	private static final Renderer RENDER_ALNUM = (i,
-		f) -> f || (i > 0) ? AlphaCounter.render(i, LocalVersionSchemeTest.ALNUM_ALPHABET) : "";
+		f) -> f || (i > 0) ? AlphaCounter.render(i, VersionNumberSchemeTest.ALNUM_ALPHABET) : "";
 
 	private void renderSuffix(Renderer renderer, int dots, int values, List<String> target, String base,
 		Character sep) {
@@ -42,31 +43,31 @@ public class LocalVersionSchemeTest {
 
 	@Test
 	public void testBasicCompare() {
-		Assertions.assertEquals(0, LocalVersionScheme.basicCompare(null, null, true));
-		Assertions.assertEquals(0, LocalVersionScheme.basicCompare(null, "", true));
-		Assertions.assertEquals(0, LocalVersionScheme.basicCompare("", null, true));
-		Assertions.assertEquals(0, LocalVersionScheme.basicCompare("", "", true));
-		Assertions.assertEquals(-1, LocalVersionScheme.basicCompare(null, "0", true));
-		Assertions.assertEquals(-1, LocalVersionScheme.basicCompare("", "0", true));
-		Assertions.assertEquals(1, LocalVersionScheme.basicCompare("0", null, true));
-		Assertions.assertEquals(1, LocalVersionScheme.basicCompare("0", "", true));
+		Assertions.assertEquals(0, VersionNumberScheme.basicCompare(null, null, true));
+		Assertions.assertEquals(0, VersionNumberScheme.basicCompare(null, "", true));
+		Assertions.assertEquals(0, VersionNumberScheme.basicCompare("", null, true));
+		Assertions.assertEquals(0, VersionNumberScheme.basicCompare("", "", true));
+		Assertions.assertEquals(-1, VersionNumberScheme.basicCompare(null, "0", true));
+		Assertions.assertEquals(-1, VersionNumberScheme.basicCompare("", "0", true));
+		Assertions.assertEquals(1, VersionNumberScheme.basicCompare("0", null, true));
+		Assertions.assertEquals(1, VersionNumberScheme.basicCompare("0", "", true));
 
-		Assertions.assertEquals(0, LocalVersionScheme.basicCompare(null, null, false));
-		Assertions.assertEquals(0, LocalVersionScheme.basicCompare(null, "", false));
-		Assertions.assertEquals(0, LocalVersionScheme.basicCompare("", null, false));
-		Assertions.assertEquals(0, LocalVersionScheme.basicCompare("", "", false));
-		Assertions.assertEquals(1, LocalVersionScheme.basicCompare(null, "0", false));
-		Assertions.assertEquals(1, LocalVersionScheme.basicCompare("", "0", false));
-		Assertions.assertEquals(-1, LocalVersionScheme.basicCompare("0", null, false));
-		Assertions.assertEquals(-1, LocalVersionScheme.basicCompare("0", "", false));
+		Assertions.assertEquals(0, VersionNumberScheme.basicCompare(null, null, false));
+		Assertions.assertEquals(0, VersionNumberScheme.basicCompare(null, "", false));
+		Assertions.assertEquals(0, VersionNumberScheme.basicCompare("", null, false));
+		Assertions.assertEquals(0, VersionNumberScheme.basicCompare("", "", false));
+		Assertions.assertEquals(1, VersionNumberScheme.basicCompare(null, "0", false));
+		Assertions.assertEquals(1, VersionNumberScheme.basicCompare("", "0", false));
+		Assertions.assertEquals(-1, VersionNumberScheme.basicCompare("0", null, false));
+		Assertions.assertEquals(-1, VersionNumberScheme.basicCompare("0", "", false));
 
-		Assertions.assertEquals(0, LocalVersionScheme.basicCompare(String.valueOf(0), "0", true));
-		Assertions.assertEquals(0, LocalVersionScheme.basicCompare("0", String.valueOf(0), false));
+		Assertions.assertEquals(0, VersionNumberScheme.basicCompare(String.valueOf(0), "0", true));
+		Assertions.assertEquals(0, VersionNumberScheme.basicCompare("0", String.valueOf(0), false));
 
-		Assertions.assertNull(LocalVersionScheme.basicCompare("0", "1", true));
-		Assertions.assertNull(LocalVersionScheme.basicCompare("1", "0", true));
-		Assertions.assertNull(LocalVersionScheme.basicCompare("0", "1", false));
-		Assertions.assertNull(LocalVersionScheme.basicCompare("1", "0", false));
+		Assertions.assertNull(VersionNumberScheme.basicCompare("0", "1", true));
+		Assertions.assertNull(VersionNumberScheme.basicCompare("1", "0", true));
+		Assertions.assertNull(VersionNumberScheme.basicCompare("0", "1", false));
+		Assertions.assertNull(VersionNumberScheme.basicCompare("1", "0", false));
 	}
 
 	private void test(BiFunction<Character, Boolean, Comparator<String>> comparator, Renderer renderer, Character sep,
@@ -183,30 +184,30 @@ public class LocalVersionSchemeTest {
 	@Test
 	public void testGetNumeric() {
 		BiFunction<Character, Boolean, Comparator<String>> c = (s, b) -> {
-			if (b == null) { return LocalVersionScheme.getNumeric(s); }
-			return LocalVersionScheme.getNumeric(s, b);
+			if (b == null) { return VersionNumberScheme.getNumeric(s); }
+			return VersionNumberScheme.getNumeric(s, b);
 		};
-		test(c, LocalVersionSchemeTest.RENDER_NUM, null, 0, 10);
-		test(c, LocalVersionSchemeTest.RENDER_NUM, '.', 3, 5);
+		test(c, VersionNumberSchemeTest.RENDER_NUM, null, 0, 10);
+		test(c, VersionNumberSchemeTest.RENDER_NUM, '.', 3, 5);
 	}
 
 	@Test
 	public void testGetAlphabetic() {
 		BiFunction<Character, Boolean, Comparator<String>> c = (s, b) -> {
-			if (b == null) { return LocalVersionScheme.getAlphabetic(AlphaCounter.ALPHABET, s); }
-			return LocalVersionScheme.getAlphabetic(AlphaCounter.ALPHABET, s, b);
+			if (b == null) { return VersionNumberScheme.getAlphabetic(AlphaCounter.ALPHABET, s); }
+			return VersionNumberScheme.getAlphabetic(AlphaCounter.ALPHABET, s, b);
 		};
-		test(c, LocalVersionSchemeTest.RENDER_ALPHA, null, 0, 10);
-		test(c, LocalVersionSchemeTest.RENDER_ALPHA, '.', 3, 5);
+		test(c, VersionNumberSchemeTest.RENDER_ALPHA, null, 0, 10);
+		test(c, VersionNumberSchemeTest.RENDER_ALPHA, '.', 3, 5);
 	}
 
 	@Test
 	public void testGetAlphanumeric() {
 		BiFunction<Character, Boolean, Comparator<String>> c = (s, b) -> {
-			if (b == null) { return LocalVersionScheme.getAlphanumeric(s); }
-			return LocalVersionScheme.getAlphanumeric(s, b);
+			if (b == null) { return VersionNumberScheme.getAlphanumeric(s); }
+			return VersionNumberScheme.getAlphanumeric(s, b);
 		};
-		test(c, LocalVersionSchemeTest.RENDER_ALNUM, null, 0, 10);
-		test(c, LocalVersionSchemeTest.RENDER_ALNUM, '.', 3, 5);
+		test(c, VersionNumberSchemeTest.RENDER_ALNUM, null, 0, 10);
+		test(c, VersionNumberSchemeTest.RENDER_ALNUM, '.', 3, 5);
 	}
 }
