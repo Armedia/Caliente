@@ -14,7 +14,7 @@ public class AlphaCounter {
 		private final Map<Character, Integer> digitToValue;
 		private final Map<Integer, Character> valueToDigit;
 
-		private NumberBase(String digits) {
+		private NumberBase(CharSequence digits) {
 			Map<Character, Integer> digitToValue = new LinkedHashMap<>();
 			Map<Integer, Character> valueToDigit = new LinkedHashMap<>();
 
@@ -40,14 +40,14 @@ public class AlphaCounter {
 
 	private static final NumberBase ALPHABET_BASE = new NumberBase(AlphaCounter.ALPHABET);
 
-	private static final NumberBase getNumberBase(String digits) {
+	private static final NumberBase getNumberBase(CharSequence digits) {
 		if ((AlphaCounter.ALPHABET_BASE != null) && AlphaCounter.ALPHABET.equals(digits)) {
 			return AlphaCounter.ALPHABET_BASE;
 		}
 		return new NumberBase(digits);
 	}
 
-	private static String render(long num, String digits) {
+	public static String render(long num, CharSequence digits) {
 		// The number is 0-based, so bump it by one
 		num++;
 		if (num <= 0) { return ""; }
@@ -70,7 +70,7 @@ public class AlphaCounter {
 		return AlphaCounter.render(num, AlphaCounter.ALPHABET);
 	}
 
-	private static long count(String str, String digits) {
+	public static long count(String str, CharSequence digits) {
 		if (StringUtils.isEmpty(str)) { return -1; }
 
 		Map<Character, Integer> digitToValue = AlphaCounter.getNumberBase(digits).digitToValue;
