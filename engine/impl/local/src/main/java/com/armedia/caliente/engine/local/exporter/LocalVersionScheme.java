@@ -67,10 +67,6 @@ public class LocalVersionScheme {
 		return ret;
 	}
 
-	protected static int compareNumeric(String a, String b) {
-		return 0;
-	}
-
 	protected static Integer basicCompare(String a, String b, boolean emptyIsRoot) {
 		if (a == b) { return 0; }
 		boolean eA = StringUtils.isEmpty(a);
@@ -117,7 +113,12 @@ public class LocalVersionScheme {
 	}
 
 	public static final int compareAlphanumeric(Character sep, boolean emptyIsRoot, String a, String b) {
-		return LocalVersionScheme.compare(sep, emptyIsRoot, a, b, String::compareTo);
+		Comparator<String> c = (A, B) -> {
+			final int v = A.compareTo(B);
+			if (v == 0) { return v; }
+			return v / Math.abs(v);
+		};
+		return LocalVersionScheme.compare(sep, emptyIsRoot, a, b, c);
 	}
 
 	public static final int compareAlphabetic(CharSequence alphabet, Character sep, boolean emptyIsRoot, String a,
