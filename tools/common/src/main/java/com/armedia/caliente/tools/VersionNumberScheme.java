@@ -9,57 +9,55 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public class VersionNumberScheme {
+public class VersionNumberScheme implements Comparator<String> {
 
-	public static Comparator<String> getNumeric() {
-		return VersionNumberScheme.getNumeric(null, false);
+	public static final String NUM_ALPHABET = "0123456789";
+	public static final Comparator<String> NUM = (a, b) -> {
+		int A = Integer.valueOf(a);
+		int B = Integer.valueOf(b);
+		if (A == B) { return 0; }
+		return (A < B ? -1 : 1);
+	};
+
+	public static final String ALPHA_ALPHABET = AlphaCounter.ALPHABET;
+
+	public static final String ALNUM_ALPHABET = VersionNumberScheme.NUM_ALPHABET + VersionNumberScheme.ALPHA_ALPHABET;
+	public static final Comparator<String> ALNUM = (a, b) -> {
+		final int v = a.compareTo(b);
+		if (v == 0) { return v; }
+		return v / Math.abs(v);
+	};
+
+	private final boolean emptyIsRoot;
+	private final Character sep;
+	private final CharSequence alphabet;
+	private final Comparator<String> elementComparator;
+
+	public VersionNumberScheme(Character sep, boolean emptyIsRoot, CharSequence alphabet,
+		Comparator<String> elementComparator) {
+		this.emptyIsRoot = emptyIsRoot;
+		this.sep = sep;
+		this.alphabet = alphabet;
+		this.elementComparator = elementComparator;
 	}
 
-	public static Comparator<String> getNumeric(Character sep) {
-		return VersionNumberScheme.getNumeric(sep, false);
+	public boolean isEmptyIsRoot() {
+		return this.emptyIsRoot;
 	}
 
-	public static Comparator<String> getNumeric(boolean emptyIsRoot) {
-		return VersionNumberScheme.getNumeric(null, emptyIsRoot);
+	public Character getSep() {
+		return this.sep;
 	}
 
-	public static Comparator<String> getNumeric(Character sep, boolean emptyIsRoot) {
-		return (a, b) -> VersionNumberScheme.compareNumeric(sep, emptyIsRoot, a, b);
+	public CharSequence getAlphabet() {
+		return this.alphabet;
 	}
 
-	public static Comparator<String> getAlphanumeric() {
-		return VersionNumberScheme.getAlphanumeric(null, false);
+	public Comparator<String> getElementComparator() {
+		return this.elementComparator;
 	}
 
-	public static Comparator<String> getAlphanumeric(Character sep) {
-		return VersionNumberScheme.getAlphanumeric(sep, false);
-	}
-
-	public static Comparator<String> getAlphanumeric(boolean emptyIsRoot) {
-		return VersionNumberScheme.getAlphanumeric(null, emptyIsRoot);
-	}
-
-	public static Comparator<String> getAlphanumeric(Character sep, boolean emptyIsRoot) {
-		return (a, b) -> VersionNumberScheme.compareAlphanumeric(sep, emptyIsRoot, a, b);
-	}
-
-	public static Comparator<String> getAlphabetic(CharSequence alphabet) {
-		return VersionNumberScheme.getAlphabetic(alphabet, null, false);
-	}
-
-	public static Comparator<String> getAlphabetic(CharSequence alphabet, Character sep) {
-		return VersionNumberScheme.getAlphabetic(alphabet, sep, false);
-	}
-
-	public static Comparator<String> getAlphabetic(CharSequence alphabet, boolean emptyIsRoot) {
-		return VersionNumberScheme.getAlphabetic(alphabet, null, emptyIsRoot);
-	}
-
-	public static Comparator<String> getAlphabetic(CharSequence alphabet, Character sep, boolean emptyIsRoot) {
-		return (a, b) -> VersionNumberScheme.compareAlphabetic(alphabet, sep, emptyIsRoot, a, b);
-	}
-
-	protected static List<String> split(Character sep, String s) {
+	private List<String> split(Character sep, String s) {
 		if (sep != null) { return Tools.splitEscaped(sep, s); }
 		List<String> ret = new ArrayList<>(1);
 		ret.add(s);
@@ -77,25 +75,18 @@ public class VersionNumberScheme {
 		return null;
 	}
 
-	private static final Comparator<String> NUMERIC = (a, b) -> {
-		int A = Integer.valueOf(a);
-		int B = Integer.valueOf(b);
-		if (A == B) { return 0; }
-		return (A < B ? -1 : 1);
-	};
-
-	public static final int compare(Character sep, boolean emptyIsRoot, String a, String b,
-		Comparator<String> comparator) {
+	@Override
+	public final int compare(String a, String b) {
 		// Basic comparisons
-		Integer basic = VersionNumberScheme.basicCompare(a, b, emptyIsRoot);
+		Integer basic = VersionNumberScheme.basicCompare(a, b, this.emptyIsRoot);
 		if (basic != null) { return basic; }
 
-		List<String> A = VersionNumberScheme.split(sep, a);
-		List<String> B = VersionNumberScheme.split(sep, b);
+		List<String> A = split(this.sep, a);
+		List<String> B = split(this.sep, b);
 
 		int max = Math.min(A.size(), B.size());
 		for (int i = 0; i < max; i++) {
-			int r = comparator.compare(A.get(i), B.get(i));
+			int r = this.elementComparator.compare(A.get(i), B.get(i));
 			if (r != 0) { return r; }
 		}
 
@@ -107,27 +98,58 @@ public class VersionNumberScheme {
 		return (A.size() == max ? -1 : 1);
 	}
 
-	public static final int compareNumeric(Character sep, boolean emptyIsRoot, String a, String b) {
-		return VersionNumberScheme.compare(sep, emptyIsRoot, a, b, VersionNumberScheme.NUMERIC);
+	public static VersionNumberScheme getNumeric() {
+		return VersionNumberScheme.getNumeric(null, false);
 	}
 
-	public static final int compareAlphanumeric(Character sep, boolean emptyIsRoot, String a, String b) {
-		Comparator<String> c = (A, B) -> {
-			final int v = A.compareTo(B);
-			if (v == 0) { return v; }
-			return v / Math.abs(v);
-		};
-		return VersionNumberScheme.compare(sep, emptyIsRoot, a, b, c);
+	public static VersionNumberScheme getNumeric(Character sep) {
+		return VersionNumberScheme.getNumeric(sep, false);
 	}
 
-	public static final int compareAlphabetic(CharSequence alphabet, Character sep, boolean emptyIsRoot, String a,
-		String b) {
+	public static VersionNumberScheme getNumeric(boolean emptyIsRoot) {
+		return VersionNumberScheme.getNumeric(null, emptyIsRoot);
+	}
+
+	public static VersionNumberScheme getNumeric(Character sep, boolean emptyIsRoot) {
+		return new VersionNumberScheme(sep, emptyIsRoot, VersionNumberScheme.NUM_ALPHABET, VersionNumberScheme.NUM);
+	}
+
+	public static VersionNumberScheme getAlphanumeric() {
+		return VersionNumberScheme.getAlphanumeric(null, false);
+	}
+
+	public static VersionNumberScheme getAlphanumeric(Character sep) {
+		return VersionNumberScheme.getAlphanumeric(sep, false);
+	}
+
+	public static VersionNumberScheme getAlphanumeric(boolean emptyIsRoot) {
+		return VersionNumberScheme.getAlphanumeric(null, emptyIsRoot);
+	}
+
+	public static VersionNumberScheme getAlphanumeric(Character sep, boolean emptyIsRoot) {
+		return new VersionNumberScheme(sep, emptyIsRoot, VersionNumberScheme.ALNUM_ALPHABET, VersionNumberScheme.ALNUM);
+	}
+
+	public static VersionNumberScheme getAlphabetic(CharSequence alphabet) {
+		return VersionNumberScheme.getAlphabetic(alphabet, null, false);
+	}
+
+	public static VersionNumberScheme getAlphabetic(CharSequence alphabet, Character sep) {
+		return VersionNumberScheme.getAlphabetic(alphabet, sep, false);
+	}
+
+	public static VersionNumberScheme getAlphabetic(CharSequence alphabet, boolean emptyIsRoot) {
+		return VersionNumberScheme.getAlphabetic(alphabet, null, emptyIsRoot);
+	}
+
+	public static VersionNumberScheme getAlphabetic(CharSequence alphabet, Character sep, boolean emptyIsRoot) {
+		Objects.requireNonNull(alphabet, "Must provide a CharSequence to use as the alphabet");
 		Comparator<String> comparator = (A, B) -> {
 			long lA = AlphaCounter.count(A, alphabet);
 			long lB = AlphaCounter.count(B, alphabet);
 			if (lA == lB) { return 0; }
 			return (lA < lB ? -1 : 1);
 		};
-		return VersionNumberScheme.compare(sep, emptyIsRoot, a, b, comparator);
+		return new VersionNumberScheme(sep, emptyIsRoot, alphabet, comparator);
 	}
 }

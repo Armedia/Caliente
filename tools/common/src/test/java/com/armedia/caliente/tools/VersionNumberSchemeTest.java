@@ -1,16 +1,12 @@
 package com.armedia.caliente.tools;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiFunction;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import com.armedia.caliente.tools.AlphaCounter;
-import com.armedia.caliente.tools.VersionNumberScheme;
 
 public class VersionNumberSchemeTest {
 
@@ -70,9 +66,9 @@ public class VersionNumberSchemeTest {
 		Assertions.assertNull(VersionNumberScheme.basicCompare("1", "0", false));
 	}
 
-	private void test(BiFunction<Character, Boolean, Comparator<String>> comparator, Renderer renderer, Character sep,
+	private void test(BiFunction<Character, Boolean, VersionNumberScheme> comparator, Renderer renderer, Character sep,
 		int dots, int values) {
-		Comparator<String> c = null;
+		VersionNumberScheme c = null;
 		List<String> l = null;
 
 		// The happy path
@@ -183,7 +179,7 @@ public class VersionNumberSchemeTest {
 
 	@Test
 	public void testGetNumeric() {
-		BiFunction<Character, Boolean, Comparator<String>> c = (s, b) -> {
+		BiFunction<Character, Boolean, VersionNumberScheme> c = (s, b) -> {
 			if (b == null) { return VersionNumberScheme.getNumeric(s); }
 			return VersionNumberScheme.getNumeric(s, b);
 		};
@@ -193,7 +189,7 @@ public class VersionNumberSchemeTest {
 
 	@Test
 	public void testGetAlphabetic() {
-		BiFunction<Character, Boolean, Comparator<String>> c = (s, b) -> {
+		BiFunction<Character, Boolean, VersionNumberScheme> c = (s, b) -> {
 			if (b == null) { return VersionNumberScheme.getAlphabetic(AlphaCounter.ALPHABET, s); }
 			return VersionNumberScheme.getAlphabetic(AlphaCounter.ALPHABET, s, b);
 		};
@@ -203,7 +199,7 @@ public class VersionNumberSchemeTest {
 
 	@Test
 	public void testGetAlphanumeric() {
-		BiFunction<Character, Boolean, Comparator<String>> c = (s, b) -> {
+		BiFunction<Character, Boolean, VersionNumberScheme> c = (s, b) -> {
 			if (b == null) { return VersionNumberScheme.getAlphanumeric(s); }
 			return VersionNumberScheme.getAlphanumeric(s, b);
 		};
