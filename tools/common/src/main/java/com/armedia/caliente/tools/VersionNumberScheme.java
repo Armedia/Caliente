@@ -63,9 +63,9 @@ public class VersionNumberScheme implements Comparator<String> {
 		}
 		final String al = sb.toString();
 		if (sep == null) {
-			this.pattern = Pattern.compile("([" + al + "]*)?");
+			this.pattern = Pattern.compile("([" + al + "]*)");
 		} else {
-			this.pattern = Pattern.compile("((?:[" + al + "]+)(?:[" + sep + "][" + al + "]+)*)?");
+			this.pattern = Pattern.compile("((?:[" + al + "]+)(?:[" + sep + "][" + al + "]+)*)");
 		}
 	}
 
