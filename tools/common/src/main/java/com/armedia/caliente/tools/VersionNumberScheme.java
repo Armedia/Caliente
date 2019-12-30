@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -32,6 +33,7 @@ public class VersionNumberScheme implements Comparator<String> {
 	private final Character sep;
 	private final CharSequence alphabet;
 	private final Comparator<String> elementComparator;
+	private final Pattern pattern;
 
 	public VersionNumberScheme(Character sep, boolean emptyIsRoot, CharSequence alphabet,
 		Comparator<String> elementComparator) {
@@ -39,6 +41,36 @@ public class VersionNumberScheme implements Comparator<String> {
 		this.sep = sep;
 		this.alphabet = alphabet;
 		this.elementComparator = elementComparator;
+
+		// Make sure to escape special characters
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < alphabet.length(); i++) {
+			final char c = alphabet.charAt(i);
+			switch (c) {
+				case '\\':
+				case '-':
+				case '^':
+				case '[':
+				case ']':
+				case '&':
+					// Must be escaped
+					sb.append('\\');
+					break;
+				default:
+					break;
+			}
+			sb.append(c);
+		}
+		final String al = sb.toString();
+		if (sep == null) {
+			this.pattern = Pattern.compile("([" + al + "]*)?");
+		} else {
+			this.pattern = Pattern.compile("((?:[" + al + "]+)(?:[" + sep + "][" + al + "]+)*)?");
+		}
+	}
+
+	public Pattern toPattern() {
+		return this.pattern;
 	}
 
 	public boolean isEmptyIsRoot() {

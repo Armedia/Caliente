@@ -68,11 +68,12 @@ public class VersionNumberSchemeTest {
 
 	private void test(BiFunction<Character, Boolean, VersionNumberScheme> comparator, Renderer renderer, Character sep,
 		int dots, int values) {
-		VersionNumberScheme c = null;
+		VersionNumberScheme scheme = null;
 		List<String> l = null;
 
 		// The happy path
-		c = comparator.apply(sep, null);
+		scheme = comparator.apply(sep, null);
+		System.out.printf("%s%n", scheme.toPattern());
 		l = new ArrayList<>(100);
 		renderSuffix(renderer, dots, values, l, null, sep);
 		l.add(null);
@@ -80,13 +81,13 @@ public class VersionNumberSchemeTest {
 		for (int a = 0; a < l.size(); a++) {
 			final String A = l.get(a);
 
-			Assertions.assertEquals(0, c.compare(A, A));
+			Assertions.assertEquals(0, scheme.compare(A, A));
 			if (A == null) {
-				Assertions.assertEquals(0, c.compare(null, A));
-				Assertions.assertEquals(0, c.compare(A, null));
+				Assertions.assertEquals(0, scheme.compare(null, A));
+				Assertions.assertEquals(0, scheme.compare(A, null));
 			} else {
-				Assertions.assertEquals(1, c.compare(null, A));
-				Assertions.assertEquals(-1, c.compare(A, null));
+				Assertions.assertEquals(1, scheme.compare(null, A));
+				Assertions.assertEquals(-1, scheme.compare(A, null));
 			}
 
 			for (int b = 0; b < l.size(); b++) {
@@ -101,13 +102,14 @@ public class VersionNumberSchemeTest {
 				}
 				final int x = a;
 				final int y = b;
-				Assertions.assertEquals(expected, c.compare(A, B),
+				Assertions.assertEquals(expected, scheme.compare(A, B),
 					() -> String.format("%d.[%s] vs %d.[%s]", x, A, y, B));
 			}
 		}
 
 		// The happy path, with emptyIsRoot flag set
-		c = comparator.apply(sep, true);
+		scheme = comparator.apply(sep, true);
+		System.out.printf("%s%n", scheme.toPattern());
 		l = new ArrayList<>(100);
 		l.add(null);
 		renderSuffix(renderer, dots, values, l, null, sep);
@@ -115,13 +117,13 @@ public class VersionNumberSchemeTest {
 		for (int a = 0; a < l.size(); a++) {
 			final String A = l.get(a);
 
-			Assertions.assertEquals(0, c.compare(A, A));
+			Assertions.assertEquals(0, scheme.compare(A, A));
 			if (A == null) {
-				Assertions.assertEquals(0, c.compare(null, A));
-				Assertions.assertEquals(0, c.compare(A, null));
+				Assertions.assertEquals(0, scheme.compare(null, A));
+				Assertions.assertEquals(0, scheme.compare(A, null));
 			} else {
-				Assertions.assertEquals(-1, c.compare(null, A));
-				Assertions.assertEquals(1, c.compare(A, null));
+				Assertions.assertEquals(-1, scheme.compare(null, A));
+				Assertions.assertEquals(1, scheme.compare(A, null));
 			}
 
 			for (int b = 0; b < l.size(); b++) {
@@ -136,13 +138,14 @@ public class VersionNumberSchemeTest {
 				}
 				final int x = a;
 				final int y = b;
-				Assertions.assertEquals(expected, c.compare(A, B),
+				Assertions.assertEquals(expected, scheme.compare(A, B),
 					() -> String.format("%d.[%s] vs %d.[%s]", x, A, y, B));
 			}
 		}
 
 		// The happy path with emptyIsRoot unset
-		c = comparator.apply(sep, false);
+		scheme = comparator.apply(sep, false);
+		System.out.printf("%s%n", scheme.toPattern());
 		l = new ArrayList<>(100);
 		renderSuffix(renderer, dots, values, l, null, sep);
 		l.add(null);
@@ -150,13 +153,13 @@ public class VersionNumberSchemeTest {
 		for (int a = 0; a < l.size(); a++) {
 			final String A = l.get(a);
 
-			Assertions.assertEquals(0, c.compare(A, A));
+			Assertions.assertEquals(0, scheme.compare(A, A));
 			if (A == null) {
-				Assertions.assertEquals(0, c.compare(null, A));
-				Assertions.assertEquals(0, c.compare(A, null));
+				Assertions.assertEquals(0, scheme.compare(null, A));
+				Assertions.assertEquals(0, scheme.compare(A, null));
 			} else {
-				Assertions.assertEquals(1, c.compare(null, A));
-				Assertions.assertEquals(-1, c.compare(A, null));
+				Assertions.assertEquals(1, scheme.compare(null, A));
+				Assertions.assertEquals(-1, scheme.compare(A, null));
 			}
 
 			for (int b = 0; b < l.size(); b++) {
@@ -171,7 +174,7 @@ public class VersionNumberSchemeTest {
 				}
 				final int x = a;
 				final int y = b;
-				Assertions.assertEquals(expected, c.compare(A, B),
+				Assertions.assertEquals(expected, scheme.compare(A, B),
 					() -> String.format("%d.[%s] vs %d.[%s]", x, A, y, B));
 			}
 		}
