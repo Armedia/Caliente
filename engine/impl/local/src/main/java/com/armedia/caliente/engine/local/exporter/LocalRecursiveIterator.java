@@ -99,27 +99,27 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 
 			if (state.childIterator != null) {
 				while (state.childIterator.hasNext()) {
-					Path f = state.childIterator.next();
+					Path path = state.childIterator.next();
 					if (this.log.isTraceEnabled()) {
-						this.log.trace("Found {} [{}]", Files.isRegularFile(f) ? "FILE" : "FOLDER", f.toAbsolutePath());
+						this.log.trace("Found {} [{}]", Files.isRegularFile(path) ? "FILE" : "FOLDER", path.toAbsolutePath());
 					}
 
-					if (Files.isDirectory(f)) {
+					if (Files.isDirectory(path)) {
 						if (this.log.isTraceEnabled()) {
-							this.log.trace("Recursing into [{}]", f.toAbsolutePath());
+							this.log.trace("Recursing into [{}]", path.toAbsolutePath());
 						}
 						state.folderCount++;
-						this.stateStack.push(new RecursiveState(f));
+						this.stateStack.push(new RecursiveState(path));
 						continue recursion;
 					}
 
 					try {
-						LocalFile next = LocalFile.getInstance(this.root, f.toString());
+						LocalFile next = LocalFile.getInstance(this.root, path.toString());
 						state.fileCount++;
 						return found(next);
 					} catch (IOException e) {
 						throw new RuntimeException(
-							String.format("Failed to relativize the path [%s] from [%s]", f, this.root), e);
+							String.format("Failed to relativize the path [%s] from [%s]", path, this.root), e);
 					}
 				}
 			}
@@ -135,12 +135,12 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 			if (!state.completed) {
 				state.completed = true;
 				if (!this.excludeEmptyFolders || ((state.fileCount | state.folderCount) != 0)) {
-					Path f = state.base;
+					Path path = state.base;
 					try {
-						return found(LocalFile.getInstance(this.root, f.toString()));
+						return found(LocalFile.getInstance(this.root, path.toString()));
 					} catch (IOException e) {
 						throw new RuntimeException(
-							String.format("Failed to relativize the path [%s] from [%s]", f, this.root), e);
+							String.format("Failed to relativize the path [%s] from [%s]", path, this.root), e);
 					}
 				}
 			}
