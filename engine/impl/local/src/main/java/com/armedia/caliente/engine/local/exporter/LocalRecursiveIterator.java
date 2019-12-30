@@ -27,7 +27,6 @@
 package com.armedia.caliente.engine.local.exporter;
 
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -85,9 +84,7 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 			// No next yet, go looking for it...
 			final Path current = state.base;
 			if (state.childIterator == null) {
-				Predicate<Path> pred = current::equals;
-				pred = pred.or(this.ignorePredicate);
-				Stream<Path> s = Files.walk(current, 1, FileVisitOption.FOLLOW_LINKS).filter(pred.negate());
+				Stream<Path> s = Files.list(current).filter(this.ignorePredicate.negate());
 				@SuppressWarnings("resource")
 				Iterator<Path> it = new CloseableIteratorWrapper<>(s.iterator(), s::close);
 				if (it.hasNext()) {
@@ -101,7 +98,8 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 				while (state.childIterator.hasNext()) {
 					Path path = state.childIterator.next();
 					if (this.log.isTraceEnabled()) {
-						this.log.trace("Found {} [{}]", Files.isRegularFile(path) ? "FILE" : "FOLDER", path.toAbsolutePath());
+						this.log.trace("Found {} [{}]", Files.isRegularFile(path) ? "FILE" : "FOLDER",
+							path.toAbsolutePath());
 					}
 
 					if (Files.isDirectory(path)) {
