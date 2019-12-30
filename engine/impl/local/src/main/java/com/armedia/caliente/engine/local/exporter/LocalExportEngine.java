@@ -31,13 +31,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -65,6 +64,7 @@ import com.armedia.caliente.tools.alfresco.bi.BulkImportManager;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
+import com.armedia.commons.utilities.StreamTools;
 
 public class LocalExportEngine extends
 	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory, LocalExportEngineFactory> {
@@ -133,37 +133,14 @@ public class LocalExportEngine extends
 		if (!f.exists()) {
 			throw new FileNotFoundException(String.format("Failed to find a file or folder at [%s]", f));
 		}
-
-		final Path root = f.toPath();
-		@SuppressWarnings("resource")
-		Stream<Path> pathStream = Files.walk(root, FileVisitOption.FOLLOW_LINKS);
-
-		// First make sure we ignore empty folders if we were told to
-		if (configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)) {
-			Predicate<? super Path> p = LocalExportEngine::isEmptyDirectory;
-			pathStream = pathStream.filter(p.negate());
+		if (f.isDirectory()) {
+			return StreamTools
+				.of(new LocalRecursiveIterator(session, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)))
+				.map(LocalExportEngine::toExportTarget);
 		}
 
-		// Make sure we exclude the root path, as it's included in the walk
-		pathStream = pathStream.filter((path) -> !Objects.equals(path, root));
-
-		// The function that will do the intermediate mapping for us
-		Function<Path, LocalFile> mapper = (path) -> {
-			try {
-				return new LocalFile(session, path.toString());
-			} catch (IOException e) {
-				throw new UncheckedIOException(e.getMessage(), e);
-			}
-		};
-
-		// Next, conver to LocalFile instances
-		return pathStream //
-			.map(mapper) //
-			.filter(LocalFile::isHeadRevision) //
-			.map(LocalExportEngine::toExportTarget) //
-			.onClose(pathStream::close) //
-		;
-
+		return Collections.singleton(LocalExportEngine.toExportTarget(LocalFile.getInstance(session, f.getPath())))
+			.stream();
 	}
 
 	protected static boolean isEmptyDirectory(Path p) {
