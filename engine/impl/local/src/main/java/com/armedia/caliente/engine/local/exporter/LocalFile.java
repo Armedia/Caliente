@@ -82,9 +82,11 @@ class LocalFile {
 	private final boolean symbolicLink;
 
 	private final LazySupplier<String> id = new LazySupplier<>(() -> LocalCommon.calculateId(getPortableFullPath()));
-	private final LazySupplier<String> historyId = new LazySupplier<>(() -> LocalCommon.calculateId(getHistoryRadix()));
 	private final LazySupplier<String> parentId = new LazySupplier<>(
 		() -> LocalCommon.calculateId(getPortableParentPath()));
+	private final LazySupplier<String> historyId = new LazySupplier<>(
+		() -> LocalCommon.calculateId(getPortableHistoryRadix()));
+
 	private final LazySupplier<String> portableFullPath = new LazySupplier<>(
 		() -> LocalCommon.getPortablePath(getFullPath()));
 	private final LazySupplier<String> portableParentPath = new LazySupplier<>(() -> {
@@ -92,25 +94,29 @@ class LocalFile {
 		if (ppp == null) { return "/"; }
 		return LocalCommon.getPortablePath(ppp);
 	});
+	private final LazySupplier<String> portableHistoryRadix = new LazySupplier<>(
+		() -> LocalCommon.getPortablePath(getHistoryRadix()));
 
 	private final LazySupplier<Integer> hash;
 	private final LazyFormatter string;
 
-	public LocalFile(LocalRoot root, String path) throws IOException {
+	private LocalFile(LocalRoot root, String path) throws IOException {
 		this.root = root;
 		File f = root.relativize(new File(path));
 		this.relativeFile = f;
 		this.absoluteFile = root.makeAbsolute(f);
 
-		// The history radix is calculated from the relative filename, minus the version data
+		List<String> r = new ArrayList<>();
+		this.fullPath = this.relativeFile.getPath();
+		for (String s : FileNameTools.tokenize(this.fullPath, File.separatorChar)) {
+			r.add(LocalFile.makeSafe(s));
+		}
+
+		// The history radix is calculated from the relative portable filename, minus the version
+		// data
 		this.historyRadix = null;
 		this.versionTag = null;
 
-		List<String> r = new ArrayList<>();
-		this.fullPath = this.relativeFile.getPath();
-		for (String s : FileNameTools.tokenize(this.fullPath)) {
-			r.add(LocalFile.makeSafe(s));
-		}
 		this.safePath = FileNameTools.reconstitute(r, false, false, '/');
 		this.pathCount = r.size();
 		File parentFile = f.getParentFile();
@@ -133,6 +139,23 @@ class LocalFile {
 
 	public String getId() {
 		return this.id.get();
+	}
+
+	public boolean isSameHistory(Path p) {
+		// <> radix
+		// [] constant, unimportant
+		// {} version tag
+		// () extra, constant, unimportant
+		// <parent/basename>.[prefix.]{versionTag}[.suffix]
+		// <parent/basename>/[prefix.]{versionTag}[.suffix]
+		// <parent/basename>/[prefix.]{versionTag}[.suffix]/(stream)
+		// The path may be absolute or relative. If it's relative, it's assumed to be relative
+		// to the root of this instance.
+		return false;
+	}
+
+	public String getPortableHistoryRadix() {
+		return this.portableHistoryRadix.get();
 	}
 
 	public String getHistoryRadix() {
@@ -236,5 +259,21 @@ class LocalFile {
 	@Override
 	public String toString() {
 		return this.string.get();
+	}
+
+	public static LocalFile getInstance(LocalRoot root, String path) throws IOException {
+
+		// Here we have to do the following analysis:
+		//
+		// 1) Is this a folder? If so, just return the new instance
+		// 2) Find the file's entire history
+		// 3) Stow the file's entire history "somewhere" (an LRU cache?)
+		// 4) Find the specific file within its history
+		// 5) Return the instance
+		//
+		// The returned instance should be able to link back to its cached history
+		// or be used to retrieve it or rediscover it
+
+		return new LocalFile(root, path);
 	}
 }

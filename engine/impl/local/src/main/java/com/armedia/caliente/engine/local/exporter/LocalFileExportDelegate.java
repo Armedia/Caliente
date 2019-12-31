@@ -150,8 +150,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		if (p != null) {
 			File parent = new File(p);
 			if (!parent.equals(this.factory.getRoot().getFile())) {
-				ret.add(new LocalFileExportDelegate(this.factory, ctx.getSession(),
-					new LocalFile(this.factory.getRoot(), p)));
+				ret.add(new LocalFileExportDelegate(this.factory, ctx.getSession(), this.factory.getLocalFile(p)));
 			}
 		}
 
@@ -406,6 +405,9 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	protected Collection<? extends ExportDelegate<?, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, ?>> identifyAntecedents(
 		CmfObject<CmfValue> marshalled, LocalExportContext ctx) throws Exception {
 		if (this.object.isFolder()) { return super.identifyAntecedents(marshalled, ctx); }
+		// Find the object's base folder
+		// Find the strategy to locate sibling versions
+		// Find the sibling versions
 		return super.identifyAntecedents(marshalled, ctx);
 	}
 

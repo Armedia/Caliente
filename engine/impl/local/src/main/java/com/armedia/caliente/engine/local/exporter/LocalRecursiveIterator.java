@@ -26,7 +26,6 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.exporter;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -43,7 +42,7 @@ import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.CloseableIteratorWrapper;
 import com.armedia.commons.utilities.Tools;
 
-public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
+public class LocalRecursiveIterator extends CloseableIterator<Path> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -96,7 +95,7 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 
 			if (state.childIterator != null) {
 				while (state.childIterator.hasNext()) {
-					Path path = state.childIterator.next();
+					final Path path = state.childIterator.next();
 					if (this.log.isTraceEnabled()) {
 						this.log.trace("Found {} [{}]", Files.isRegularFile(path) ? "FILE" : "FOLDER",
 							path.toAbsolutePath());
@@ -111,14 +110,8 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 						continue recursion;
 					}
 
-					try {
-						LocalFile next = LocalFile.getInstance(this.root, path.toString());
-						state.fileCount++;
-						return found(next);
-					} catch (IOException e) {
-						throw new RuntimeException(
-							String.format("Failed to relativize the path [%s] from [%s]", path, this.root), e);
-					}
+					state.fileCount++;
+					return found(path);
 				}
 			}
 
@@ -133,13 +126,7 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 			if (!state.completed) {
 				state.completed = true;
 				if (!this.excludeEmptyFolders || ((state.fileCount | state.folderCount) != 0)) {
-					Path path = state.base;
-					try {
-						return found(LocalFile.getInstance(this.root, path.toString()));
-					} catch (IOException e) {
-						throw new RuntimeException(
-							String.format("Failed to relativize the path [%s] from [%s]", path, this.root), e);
-					}
+					return found(state.base);
 				}
 			}
 		}

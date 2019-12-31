@@ -64,7 +64,7 @@ public class LocalVersionPlan {
 
 	protected Stream<Path> findSiblings(LocalFile baseFile) throws IOException {
 		final Path baseFolder = baseFile.getAbsolute().getParentFile().toPath();
-		return Files.walk(baseFolder, 1);
+		return Files.list(baseFolder);
 	}
 
 	public final LocalVersionHistory getHistory(final LocalFile baseFile) throws IOException {

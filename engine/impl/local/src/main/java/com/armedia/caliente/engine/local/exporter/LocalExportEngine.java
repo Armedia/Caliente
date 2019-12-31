@@ -34,7 +34,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -136,11 +135,10 @@ public class LocalExportEngine extends
 		if (f.isDirectory()) {
 			return StreamTools
 				.of(new LocalRecursiveIterator(session, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)))
-				.map(LocalExportEngine::toExportTarget);
+				.map((p) -> toExportTarget(session, p));
 		}
 
-		return Collections.singleton(LocalExportEngine.toExportTarget(LocalFile.getInstance(session, f.getPath())))
-			.stream();
+		return Stream.of(toExportTarget(session, f.toPath()));
 	}
 
 	protected static boolean isEmptyDirectory(Path p) {
@@ -159,7 +157,14 @@ public class LocalExportEngine extends
 		return true;
 	}
 
-	protected static ExportTarget toExportTarget(LocalFile localFile) {
+	protected ExportTarget toExportTarget(LocalRoot root, Path path) {
+		final LocalFile localFile;
+		try {
+			localFile = getLocalFile(root, path.toString());
+		} catch (IOException e) {
+			throw new UncheckedIOException(
+				String.format("Failed to calculate the path for [%s] relative to [%s]", path, root.getPath()), e);
+		}
 		final Archetype archetype = localFile.getAbsolute().isFile() ? CmfObject.Archetype.DOCUMENT
 			: CmfObject.Archetype.FOLDER;
 		return new ExportTarget(archetype, localFile.getId(), localFile.getSafePath());
@@ -181,6 +186,10 @@ public class LocalExportEngine extends
 			path = FileNameTools.dirname(path, '/');
 		}
 		return null;
+	}
+
+	protected LocalFile getLocalFile(LocalRoot session, String path) throws IOException {
+		return LocalFile.getInstance(session, path.toString());
 	}
 
 	@Override

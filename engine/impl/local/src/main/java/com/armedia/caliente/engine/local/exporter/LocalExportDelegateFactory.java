@@ -27,6 +27,7 @@
 package com.armedia.caliente.engine.local.exporter;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.attribute.UserPrincipalLookupService;
 
@@ -57,6 +58,10 @@ public class LocalExportDelegateFactory
 
 	public final LocalRoot getRoot() {
 		return this.root;
+	}
+
+	public final LocalFile getLocalFile(String p) throws IOException {
+		return this.engine.getLocalFile(this.root, p);
 	}
 
 	public final boolean isCopyContent() {
