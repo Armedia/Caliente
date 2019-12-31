@@ -26,24 +26,10 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.exporter;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-
-import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.commons.utilities.Tools;
 
 public final class LocalVersionHistory implements Iterable<LocalFile> {
 
@@ -54,61 +40,13 @@ public final class LocalVersionHistory implements Iterable<LocalFile> {
 	private final Map<String, Integer> indexes;
 	private final List<LocalFile> history;
 
-	public LocalVersionHistory(LocalVersionPlan plan) throws IOException {
-		LocalFile baseFile = Objects.requireNonNull(plan, "Must provide a LocalVersionPlan instance to follow")
-			.getPatternFile();
-		final Path baseFolder = baseFile.getAbsolute().getParentFile().toPath();
-		final LocalRoot root = baseFile.getRootPath();
-		this.historyId = baseFile.getHistoryId();
-
-		final Path basePath = baseFile.getAbsolute().toPath();
-		final Map<String, LocalFile> versions = new TreeMap<>(plan);
-		final Predicate<Path> isBaseFile = (p) -> {
-			try {
-				return Files.isSameFile(basePath, p);
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-		};
-		final Function<Path, LocalFile> constructor = (p) -> {
-			try {
-				return new LocalFile(root, p.toString());
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-		};
-		Collector<? super LocalFile, ?, Map<String, LocalFile>> collector = Collectors.toMap(LocalFile::getVersionTag,
-			Function.identity(), (a, b) -> a, () -> versions);
-		try {
-			Files.walk(baseFolder, 1) //
-				.filter(Files::exists) // Does the found path exist?
-				.filter(isBaseFile.or(plan::isSibling)) // Same file or a sibling?
-				.filter(plan::isSibling) // Is this a version sibling?
-				.map(plan::convert) // Do I need to swap to another file?
-				.filter(Objects::nonNull) // Is the converted path non-null?
-				.filter(Files::exists) // Does the converted path exist?
-				.filter(Files::isRegularFile) // Is the converted path a regular file?
-				.map(constructor) // Turn it into a LocalFile instance
-				.collect(collector)
-			//
-			;
-		} catch (UncheckedIOException e) {
-			throw e.getCause();
-		}
-
-		// Ok...we have the TreeMap containing the versions, properly organized from earliest
-		// to latest, so now we convert that to indexes so we can have a properly ordered history
-		int i = 0;
-		Map<String, Integer> indexes = new HashMap<>();
-		List<LocalFile> history = new ArrayList<>(versions.size());
-		for (String tag : versions.keySet()) {
-			indexes.put(tag, i++);
-			history.add(versions.get(tag));
-		}
-		this.history = Tools.freezeList(history);
-		this.indexes = Tools.freezeMap(indexes);
-		this.root = this.history.get(0);
-		this.current = this.history.get(this.history.size() - 1);
+	public LocalVersionHistory(String historyId, LocalFile root, LocalFile current, Map<String, Integer> indexes,
+		List<LocalFile> history) {
+		this.historyId = historyId;
+		this.root = root;
+		this.current = current;
+		this.indexes = indexes;
+		this.history = history;
 	}
 
 	public LocalFile getRootVersion() {
