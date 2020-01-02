@@ -118,8 +118,8 @@ class LocalFile {
 
 		this.safePath = FileNameTools.reconstitute(r, false, false, '/');
 		this.pathCount = r.size();
-		File parentFile = p.getParent().toFile();
-		this.parentPath = (parentFile != null ? parentFile.getPath() : null);
+		Path parent = p.getParent();
+		this.parentPath = (parent != null ? parent.toString() : null);
 		this.name = p.getFileName().toString();
 
 		p = this.absoluteFile.toPath();

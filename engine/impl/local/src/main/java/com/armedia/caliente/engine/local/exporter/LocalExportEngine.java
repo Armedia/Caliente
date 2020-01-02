@@ -33,6 +33,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -60,6 +61,7 @@ import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.caliente.tools.VersionNumberScheme;
 import com.armedia.caliente.tools.alfresco.bi.BulkImportManager;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
 import com.armedia.commons.utilities.CfgTools;
@@ -83,16 +85,15 @@ public class LocalExportEngine extends
 			throw new ExportException("Failed to construct the root session", e);
 		}
 
-		// TODO: Configure the version tracking stuff as this will be needed for LocalFile creation
-		// * Calculate history ID
-		// * find history siblings
-		// * find history version tag
-
-		this.versionPlan = null;
+		this.versionPlan = new SimpleVersionPlan(this.root, VersionNumberScheme.getNumeric('.'));
 	}
 
 	protected LocalRoot getRoot() {
 		return this.root;
+	}
+
+	public LocalVersionPlan getVersionPlan() {
+		return this.versionPlan;
 	}
 
 	@Override
@@ -209,6 +210,10 @@ public class LocalExportEngine extends
 	}
 
 	protected LocalFile getLocalFile(String path) throws IOException {
+		//
+
+		this.versionPlan.parseVersionInfo(Paths.get(path));
+
 		return LocalFile.getInstance(this.root, path.toString());
 	}
 

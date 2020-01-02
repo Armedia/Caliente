@@ -27,6 +27,7 @@
 package com.armedia.caliente.engine.local.common;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -39,12 +40,21 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.CheckedSupplier;
 
 public final class LocalCommon {
 	public static final String TARGET_NAME = "local";
 	public static final Set<String> TARGETS = Collections.singleton(LocalCommon.TARGET_NAME);
 
 	private LocalCommon() {
+	}
+
+	public static <T> T uncheck(CheckedSupplier<T, IOException> s) {
+		try {
+			return s.getChecked();
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 	static Path getRootDirectory(CfgTools cfg) {

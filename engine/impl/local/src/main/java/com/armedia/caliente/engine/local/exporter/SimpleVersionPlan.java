@@ -29,6 +29,7 @@ package com.armedia.caliente.engine.local.exporter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,17 +56,17 @@ public class SimpleVersionPlan extends LocalVersionPlan {
 
 	private final Pattern pattern;
 
-	public SimpleVersionPlan(VersionNumberScheme numberScheme) {
-		super(numberScheme, null);
-		this.pattern = Pattern.compile("^(.*).v" + numberScheme.toPattern().pattern() + "$");
+	public SimpleVersionPlan(LocalRoot root, VersionNumberScheme numberScheme) {
+		super(root, numberScheme, null);
+		this.pattern = Pattern.compile("^(.*?)(?:.v" + numberScheme.toPattern().pattern() + ")?$");
 	}
 
 	@Override
-	protected VersionInfo parseVersionInfo(final LocalRoot root, Path p) {
-		Matcher m = this.pattern.matcher(p.getFileName().toString());
-		if (!m.matches()) { return new VersionInfo(p, LocalCommon.calculateId(p.toString()), null); }
-
-		return super.parseVersionInfo(root, p);
+	protected VersionInfo parseVersionInfo(Path path) {
+		Matcher m = this.pattern.matcher(path.toString());
+		final Path rawRadix = (m.matches() ? Paths.get(m.group(1)) : path);
+		final Path radix = LocalCommon.uncheck(() -> this.root.relativize(rawRadix));
+		return new VersionInfo(path, radix, m.group(2));
 	}
 
 	protected boolean siblingCheck(LocalFile baseFile, Path candidate) throws IOException {

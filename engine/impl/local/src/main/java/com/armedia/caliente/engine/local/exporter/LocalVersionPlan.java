@@ -42,6 +42,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.tools.VersionNumberScheme;
 import com.armedia.commons.utilities.Tools;
@@ -50,17 +51,23 @@ public class LocalVersionPlan {
 
 	protected static final class VersionInfo {
 		private final Path path;
+		private final Path radix;
 		private final String historyId;
 		private final String tag;
 
-		public VersionInfo(Path path, String historyId, String tag) {
+		public VersionInfo(Path path, Path radix, String tag) {
 			this.path = path;
-			this.historyId = historyId;
+			this.radix = radix;
+			this.historyId = LocalCommon.calculateId(radix.toString());
 			this.tag = tag;
 		}
 
 		public Path getPath() {
 			return this.path;
+		}
+
+		public Path getRadix() {
+			return this.radix;
 		}
 
 		public String getHistoryId() {
@@ -75,17 +82,19 @@ public class LocalVersionPlan {
 	protected static final Predicate<Path> PATH_FALSE = (a) -> false;
 	protected static final Function<Path, Path> IDENTITY = Function.identity();
 
-	private final VersionNumberScheme versionNumberScheme;
 	private final Function<Path, Path> converter;
+	protected final VersionNumberScheme versionNumberScheme;
+	protected final LocalRoot root;
 
-	public LocalVersionPlan(VersionNumberScheme numberScheme) {
-		this(numberScheme, null);
+	public LocalVersionPlan(LocalRoot root, VersionNumberScheme numberScheme) {
+		this(root, numberScheme, null);
 	}
 
-	public LocalVersionPlan(VersionNumberScheme numberScheme, Function<Path, Path> converter) {
+	public LocalVersionPlan(LocalRoot root, VersionNumberScheme numberScheme, Function<Path, Path> converter) {
 		this.versionNumberScheme = Objects.requireNonNull(numberScheme,
 			"Must provide a VersionNumberScheme to order tags with");
 		this.converter = Tools.coalesce(converter, LocalVersionPlan.IDENTITY);
+		this.root = Objects.requireNonNull(root, "Must provide a LocalRoot instance");
 	}
 
 	protected final Predicate<VersionInfo> getSiblingCheck(final LocalFile baseFile) {
@@ -95,8 +104,8 @@ public class LocalVersionPlan {
 	private boolean isSibling(LocalFile baseFile, VersionInfo candidate) {
 		try {
 			return (baseFile != null) && (candidate != null)
-				&& Files.isSameFile(baseFile.getAbsolute().toPath(), candidate.getPath())
-				&& Objects.equals(baseFile.getHistoryId(), candidate.getHistoryId());
+				&& (Files.isSameFile(baseFile.getAbsolute().toPath(), candidate.getPath())
+					|| Objects.equals(baseFile.getHistoryId(), candidate.getHistoryId()));
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
@@ -107,7 +116,7 @@ public class LocalVersionPlan {
 		return Files.list(baseFolder);
 	}
 
-	protected VersionInfo parseVersionInfo(final LocalRoot root, Path p) {
+	protected VersionInfo parseVersionInfo(Path p) {
 		return null;
 	}
 
@@ -130,7 +139,7 @@ public class LocalVersionPlan {
 				.filter(Objects::nonNull) // Is the converted path non-null?
 				.filter(Files::exists) // Does the converted path exist?
 				.filter(Files::isRegularFile) // Is the converted path a regular file?
-				.map((p) -> parseVersionInfo(root, p)) //
+				.map(this::parseVersionInfo) //
 				.filter(Objects::nonNull) // Again, avoid null values
 				.filter(getSiblingCheck(baseFile)) // Same file or a sibling?
 				.map(constructor) // Turn it into a LocalFile instance

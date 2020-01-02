@@ -30,12 +30,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
+import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.tools.VersionNumberScheme;
 
 public class NullVersionPlan extends LocalVersionPlan {
 
-	public NullVersionPlan(VersionNumberScheme numberScheme) {
-		super(numberScheme, null);
+	public NullVersionPlan(LocalRoot root, VersionNumberScheme numberScheme) {
+		super(root, numberScheme, null);
 	}
 
 	@Override
