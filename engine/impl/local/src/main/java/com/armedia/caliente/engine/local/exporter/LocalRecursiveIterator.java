@@ -71,7 +71,7 @@ public class LocalRecursiveIterator extends CloseableIterator<Path> {
 
 	public LocalRecursiveIterator(LocalRoot root, boolean excludeEmptyFolders, Predicate<Path> ignorePredicate) {
 		this.root = root;
-		this.stateStack.push(new RecursiveState(this.root.getFile().toPath()));
+		this.stateStack.push(new RecursiveState(this.root.getPath()));
 		this.excludeEmptyFolders = excludeEmptyFolders;
 		this.ignorePredicate = Tools.coalesce(ignorePredicate, Objects::isNull);
 	}

@@ -26,51 +26,20 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.exporter;
 
+import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.stream.Stream;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import com.armedia.caliente.tools.VersionNumberScheme;
 
-import com.armedia.caliente.engine.local.common.LocalRoot;
+public class NullVersionPlan extends LocalVersionPlan {
 
-public class LocalRecursiveIteratorTest {
-
-	@BeforeAll
-	public static void setUpBeforeClass() throws Exception {
+	public NullVersionPlan(VersionNumberScheme numberScheme) {
+		super(numberScheme, null);
 	}
 
-	@AfterAll
-	public static void tearDownAfterClass() throws Exception {
+	@Override
+	protected Stream<Path> findSiblingCandidates(LocalFile baseFile) throws IOException {
+		return Stream.empty();
 	}
-
-	@BeforeEach
-	public void setUp() throws Exception {
-	}
-
-	@AfterEach
-	public void tearDown() throws Exception {
-	}
-
-	@Test
-	public void testLocalRecursiveIterator() throws Throwable {
-		Path[] paths = new Path[] {
-			Paths.get("/home/diego/graphics"), //
-			Paths.get("/home/diego/GDrive"), //
-			Paths.get("/home/diego/Dropbox"), //
-			Paths.get("/home/diego/dctm-scripts"), //
-		};
-		for (Path p : paths) {
-			System.out.printf("Running on [%s]%n", p);
-			try (LocalRecursiveIterator it = new LocalRecursiveIterator(new LocalRoot(p), false)) {
-				while (it.hasNext()) {
-					System.out.printf("\t%s%n", it.next());
-				}
-			}
-		}
-	}
-
 }

@@ -107,7 +107,7 @@ public abstract class LocalImportDelegate extends
 		// way to figure that out from Java...
 		final boolean windowsMode = SystemUtils.IS_OS_WINDOWS;
 
-		File tgt = ctx.getSession().getFile();
+		File tgt = ctx.getSession().getPath().toFile();
 
 		CmfProperty<CmfValue> pathProp = this.cmfObject.getProperty(IntermediateProperty.PATH);
 		String p = "/";

@@ -45,6 +45,7 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
+import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
@@ -68,9 +69,30 @@ import com.armedia.commons.utilities.StreamTools;
 public class LocalExportEngine extends
 	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory, LocalExportEngineFactory> {
 
+	private final LocalRoot root;
+	private final LocalVersionPlan versionPlan;
+
 	public LocalExportEngine(LocalExportEngineFactory factory, Logger output, WarningTracker warningTracker,
-		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
+		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
+		throws ExportException {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, false, SearchType.PATH);
+
+		try {
+			this.root = LocalCommon.getLocalRoot(settings);
+		} catch (IOException e) {
+			throw new ExportException("Failed to construct the root session", e);
+		}
+
+		// TODO: Configure the version tracking stuff as this will be needed for LocalFile creation
+		// * Calculate history ID
+		// * find history siblings
+		// * find history version tag
+
+		this.versionPlan = null;
+	}
+
+	protected LocalRoot getRoot() {
+		return this.root;
 	}
 
 	@Override
@@ -103,7 +125,6 @@ public class LocalExportEngine extends
 			name = path + "/" + name;
 		}
 		// Convert to a local path?
-		final String portablePath = LocalCommon.getPortablePath(name);
 		final Archetype type = (item.isDirectory() ? Archetype.FOLDER : Archetype.DOCUMENT);
 
 		// The path from the XML is ALWAYS separated with forward slashes
@@ -115,8 +136,8 @@ public class LocalExportEngine extends
 				throw new UncheckedIOException(String.format("Failed to make safe the string [%s]", s), e);
 			}
 		}
-		return Stream.of(new ExportTarget(type, LocalCommon.calculateId(portablePath),
-			FileNameTools.reconstitute(r, false, false, '/')));
+		return Stream.of(
+			new ExportTarget(type, LocalCommon.calculateId(name), FileNameTools.reconstitute(r, false, false, '/')));
 	}
 
 	@Override
@@ -128,17 +149,17 @@ public class LocalExportEngine extends
 	@Override
 	protected Stream<ExportTarget> findExportTargetsByPath(final LocalRoot session, CfgTools configuration,
 		LocalExportDelegateFactory factory, String unused) throws Exception {
-		File f = session.getFile();
-		if (!f.exists()) {
-			throw new FileNotFoundException(String.format("Failed to find a file or folder at [%s]", f));
+		Path p = session.getPath();
+		if (!Files.exists(p)) {
+			throw new FileNotFoundException(String.format("Failed to find a file or folder at [%s]", p));
 		}
-		if (f.isDirectory()) {
+		if (Files.isDirectory(p)) {
 			return StreamTools
 				.of(new LocalRecursiveIterator(session, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)))
-				.map((p) -> toExportTarget(session, p));
+				.map(this::toExportTarget);
 		}
 
-		return Stream.of(toExportTarget(session, f.toPath()));
+		return Stream.of(toExportTarget(p));
 	}
 
 	protected static boolean isEmptyDirectory(Path p) {
@@ -157,16 +178,15 @@ public class LocalExportEngine extends
 		return true;
 	}
 
-	protected ExportTarget toExportTarget(LocalRoot root, Path path) {
+	protected ExportTarget toExportTarget(Path path) {
 		final LocalFile localFile;
 		try {
-			localFile = getLocalFile(root, path.toString());
+			localFile = getLocalFile(path.toString());
 		} catch (IOException e) {
 			throw new UncheckedIOException(
-				String.format("Failed to calculate the path for [%s] relative to [%s]", path, root.getPath()), e);
+				String.format("Failed to calculate the path for [%s] relative to [%s]", path, this.root.getPath()), e);
 		}
-		final Archetype archetype = localFile.getAbsolute().isFile() ? CmfObject.Archetype.DOCUMENT
-			: CmfObject.Archetype.FOLDER;
+		final Archetype archetype = localFile.isFolder() ? CmfObject.Archetype.FOLDER : CmfObject.Archetype.DOCUMENT;
 		return new ExportTarget(archetype, localFile.getId(), localFile.getSafePath());
 	}
 
@@ -188,8 +208,8 @@ public class LocalExportEngine extends
 		return null;
 	}
 
-	protected LocalFile getLocalFile(LocalRoot session, String path) throws IOException {
-		return LocalFile.getInstance(session, path.toString());
+	protected LocalFile getLocalFile(String path) throws IOException {
+		return LocalFile.getInstance(this.root, path.toString());
 	}
 
 	@Override

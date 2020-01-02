@@ -42,45 +42,81 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.tools.VersionNumberScheme;
 import com.armedia.commons.utilities.Tools;
 
 public class LocalVersionPlan {
 
-	private static final Predicate<Path> NO_SIBLING = (a) -> false;
+	protected static final class VersionInfo {
+		private final Path path;
+		private final String historyId;
+		private final String tag;
+
+		public VersionInfo(Path path, String historyId, String tag) {
+			this.path = path;
+			this.historyId = historyId;
+			this.tag = tag;
+		}
+
+		public Path getPath() {
+			return this.path;
+		}
+
+		public String getHistoryId() {
+			return this.historyId;
+		}
+
+		public String getTag() {
+			return this.tag;
+		}
+	}
+
+	protected static final Predicate<Path> PATH_FALSE = (a) -> false;
+	protected static final Function<Path, Path> IDENTITY = Function.identity();
 
 	private final VersionNumberScheme versionNumberScheme;
 	private final Function<Path, Path> converter;
 
+	public LocalVersionPlan(VersionNumberScheme numberScheme) {
+		this(numberScheme, null);
+	}
+
 	public LocalVersionPlan(VersionNumberScheme numberScheme, Function<Path, Path> converter) {
 		this.versionNumberScheme = Objects.requireNonNull(numberScheme,
 			"Must provide a VersionNumberScheme to order tags with");
-		this.converter = (converter != null ? converter : Function.identity());
+		this.converter = Tools.coalesce(converter, LocalVersionPlan.IDENTITY);
 	}
 
-	protected Predicate<Path> getSiblingCheck(final LocalFile baseFile) {
-		return LocalVersionPlan.NO_SIBLING;
+	protected final Predicate<VersionInfo> getSiblingCheck(final LocalFile baseFile) {
+		return (p) -> isSibling(baseFile, p);
 	}
 
-	protected Stream<Path> findSiblings(LocalFile baseFile) throws IOException {
+	private boolean isSibling(LocalFile baseFile, VersionInfo candidate) {
+		try {
+			return (baseFile != null) && (candidate != null)
+				&& Files.isSameFile(baseFile.getAbsolute().toPath(), candidate.getPath())
+				&& Objects.equals(baseFile.getHistoryId(), candidate.getHistoryId());
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+	}
+
+	protected Stream<Path> findSiblingCandidates(LocalFile baseFile) throws IOException {
 		final Path baseFolder = baseFile.getAbsolute().getParentFile().toPath();
 		return Files.list(baseFolder);
 	}
 
-	public final LocalVersionHistory getHistory(final LocalFile baseFile) throws IOException {
+	protected VersionInfo parseVersionInfo(final LocalRoot root, Path p) {
+		return null;
+	}
+
+	public final LocalVersionHistory findHistory(final LocalRoot root, final LocalFile baseFile) throws IOException {
 		String historyId = baseFile.getHistoryId();
-		final Path basePath = baseFile.getAbsolute().toPath();
 		final Map<String, LocalFile> versions = new TreeMap<>(this.versionNumberScheme);
-		final Predicate<Path> isBaseFile = (p) -> {
+		final Function<VersionInfo, LocalFile> constructor = (vi) -> {
 			try {
-				return Files.isSameFile(basePath, p);
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-		};
-		final Function<Path, LocalFile> constructor = (p) -> {
-			try {
-				return LocalFile.getInstance(baseFile.getRootPath(), p.toString());
+				return LocalFile.getInstance(baseFile.getRootPath(), vi.getPath().toString());
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
 			}
@@ -88,13 +124,15 @@ public class LocalVersionPlan {
 		Collector<? super LocalFile, ?, Map<String, LocalFile>> collector = Collectors.toMap(LocalFile::getVersionTag,
 			Function.identity(), (a, b) -> a, () -> versions);
 		try {
-			findSiblings(baseFile) //
-				.filter(Files::exists) // Does the found path exist?
-				.filter(isBaseFile.or(getSiblingCheck(baseFile))) // Same file or a sibling?
+			findSiblingCandidates(baseFile) //
+				.filter(Objects::nonNull) // Is the converted path non-null?
 				.map(this.converter) // Do I need to swap to another file?
 				.filter(Objects::nonNull) // Is the converted path non-null?
 				.filter(Files::exists) // Does the converted path exist?
 				.filter(Files::isRegularFile) // Is the converted path a regular file?
+				.map((p) -> parseVersionInfo(root, p)) //
+				.filter(Objects::nonNull) // Again, avoid null values
+				.filter(getSiblingCheck(baseFile)) // Same file or a sibling?
 				.map(constructor) // Turn it into a LocalFile instance
 				.collect(collector)
 			//
@@ -109,21 +147,17 @@ public class LocalVersionPlan {
 
 		// Ok...we have the TreeMap containing the versions, properly organized from earliest
 		// to latest, so now we convert that to indexes so we can have a properly ordered history
+		Map<String, Integer> versionIndexes = new HashMap<>();
+		List<LocalFile> fullHistory = new ArrayList<>(versions.size());
 		int i = 0;
-		Map<String, Integer> indexes = new HashMap<>();
-		List<LocalFile> history = new ArrayList<>(versions.size());
 		for (String tag : versions.keySet()) {
-			indexes.put(tag, i++);
-			history.add(versions.get(tag));
+			versionIndexes.put(tag, i++);
+			fullHistory.add(versions.get(tag));
 		}
-		history = Tools.freezeList(history);
-		indexes = Tools.freezeMap(indexes);
-		LocalFile root = history.get(0);
-		LocalFile current = history.get(history.size() - 1);
-		return new LocalVersionHistory(historyId, root, current, indexes, history);
-	}
-
-	public VersionNumberScheme getVersionNumberScheme() {
-		return this.versionNumberScheme;
+		fullHistory = Tools.freezeList(fullHistory);
+		versionIndexes = Tools.freezeMap(versionIndexes);
+		LocalFile rootVersion = fullHistory.get(0);
+		LocalFile currentVersion = fullHistory.get(fullHistory.size() - 1);
+		return new LocalVersionHistory(historyId, rootVersion, currentVersion, versionIndexes, fullHistory);
 	}
 }

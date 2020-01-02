@@ -145,16 +145,15 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		Collection<LocalExportDelegate<?>> ret = new ArrayList<>();
 
 		LocalFile abs = this.object;
-		File f = abs.getAbsolute();
-		String p = f.getParent();
-		if (p != null) {
-			File parent = new File(p);
-			if (!parent.equals(this.factory.getRoot().getFile())) {
-				ret.add(new LocalFileExportDelegate(this.factory, ctx.getSession(), this.factory.getLocalFile(p)));
+		Path path = abs.getAbsolute().toPath();
+		if (path != null) {
+			Path parent = path.getParent();
+			if (!Files.isSameFile(parent, this.factory.getRoot().getPath())) {
+				ret.add(new LocalFileExportDelegate(this.factory, ctx.getSession(),
+					this.factory.getLocalFile(parent.toString())));
 			}
 		}
 
-		Path path = this.object.getAbsolute().toPath();
 		PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
 
 		UserPrincipal owner = getOwner(path);
@@ -191,17 +190,15 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 	@Override
 	protected boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
-		final File file = this.object.getAbsolute();
+		final Path path = this.object.getAbsolute().toPath();
 		CmfAttribute<CmfValue> att = null;
 		att = new CmfAttribute<>(IntermediateAttribute.NAME, CmfValue.Type.STRING, false);
-		att.setValue(new CmfValue(file.getName()));
+		att.setValue(new CmfValue(path.getFileName().toString()));
 		object.setAttribute(att);
 
 		att = new CmfAttribute<>(IntermediateAttribute.OBJECT_ID, CmfValue.Type.ID, false);
 		att.setValue(new CmfValue(getObjectId()));
 		object.setAttribute(att);
-
-		Path path = file.toPath();
 
 		// Ok... we have the attribute views, export the information
 		try {
@@ -232,7 +229,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 				object.setProperty(versionTreeRoot);
 			}
 		} catch (IOException e) {
-			throw new ExportException(String.format("Failed to collect the basic attribute information for [%s]", file),
+			throw new ExportException(String.format("Failed to collect the basic attribute information for [%s]", path),
 				e);
 		}
 
@@ -358,10 +355,9 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 		try {
 			object.setProperty(new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfValue.Type.STRING,
-				calculateParentTreeIds(file)));
+				calculateParentTreeIds(path)));
 		} catch (IOException e) {
-			throw new ExportException(
-				String.format("Failed to calculate the parent path IDs for [%s]", file.getAbsolutePath()), e);
+			throw new ExportException(String.format("Failed to calculate the parent path IDs for [%s]", path), e);
 		}
 
 		object.setProperty(new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING,
@@ -380,17 +376,15 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		return true;
 	}
 
-	protected CmfValue calculateParentTreeIds(File f) throws IOException {
-		f = this.root.relativize(f);
+	protected CmfValue calculateParentTreeIds(Path p) throws IOException {
+		p = this.root.relativize(p);
 		List<String> parents = new LinkedList<>();
 		while (true) {
-			f = f.getParentFile();
-			if ((f == null) || StringUtils.isEmpty(f.getName())) {
+			p = p.getParent();
+			if ((p == null) || StringUtils.isEmpty(p.getFileName().toString())) {
 				break;
 			}
-			String path = LocalCommon.getPortablePath(f.getPath());
-			String id = LocalCommon.calculateId(path);
-			parents.add(0, id);
+			parents.add(0, LocalCommon.calculateId(p));
 		}
 		return new CmfValue(FileNameTools.reconstitute(parents, false, false, '/'));
 	}

@@ -27,14 +27,14 @@
 package com.armedia.caliente.engine.local.exporter;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.armedia.caliente.engine.local.common.LocalCommon;
+import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.tools.VersionNumberScheme;
 
 /**
@@ -51,24 +51,21 @@ import com.armedia.caliente.tools.VersionNumberScheme;
  * @author diego
  *
  */
-public class DefaultLocalVersionPlan extends LocalVersionPlan {
+public class SimpleVersionPlan extends LocalVersionPlan {
 
 	private final Pattern pattern;
 
-	public DefaultLocalVersionPlan(VersionNumberScheme numberScheme) {
+	public SimpleVersionPlan(VersionNumberScheme numberScheme) {
 		super(numberScheme, null);
 		this.pattern = Pattern.compile("^(.*).v" + numberScheme.toPattern().pattern() + "$");
 	}
 
 	@Override
-	protected final Predicate<Path> getSiblingCheck(final LocalFile baseFile) {
-		return (path) -> {
-			try {
-				return siblingCheck(baseFile, path);
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-		};
+	protected VersionInfo parseVersionInfo(final LocalRoot root, Path p) {
+		Matcher m = this.pattern.matcher(p.getFileName().toString());
+		if (!m.matches()) { return new VersionInfo(p, LocalCommon.calculateId(p.toString()), null); }
+
+		return super.parseVersionInfo(root, p);
 	}
 
 	protected boolean siblingCheck(LocalFile baseFile, Path candidate) throws IOException {

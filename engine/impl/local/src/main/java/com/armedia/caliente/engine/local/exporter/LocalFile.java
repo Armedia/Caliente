@@ -32,6 +32,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -82,29 +83,27 @@ class LocalFile {
 	private final boolean symbolicLink;
 
 	private final LazySupplier<String> id = new LazySupplier<>(() -> LocalCommon.calculateId(getPortableFullPath()));
-	private final LazySupplier<String> parentId = new LazySupplier<>(
-		() -> LocalCommon.calculateId(getPortableParentPath()));
-	private final LazySupplier<String> historyId = new LazySupplier<>(
-		() -> LocalCommon.calculateId(getPortableHistoryRadix()));
+	private final LazySupplier<String> parentId = new LazySupplier<>(() -> LocalCommon.calculateId(getParentPath()));
+	private final LazySupplier<String> historyId = new LazySupplier<>(() -> LocalCommon.calculateId(getHistoryRadix()));
 
 	private final LazySupplier<String> portableFullPath = new LazySupplier<>(
-		() -> LocalCommon.getPortablePath(getFullPath()));
+		() -> LocalCommon.toPortablePath(getFullPath()));
 	private final LazySupplier<String> portableParentPath = new LazySupplier<>(() -> {
 		String ppp = getParentPath();
 		if (ppp == null) { return "/"; }
-		return LocalCommon.getPortablePath(ppp);
+		return LocalCommon.toPortablePath(ppp);
 	});
 	private final LazySupplier<String> portableHistoryRadix = new LazySupplier<>(
-		() -> LocalCommon.getPortablePath(getHistoryRadix()));
+		() -> LocalCommon.toPortablePath(getHistoryRadix()));
 
 	private final LazySupplier<Integer> hash;
 	private final LazyFormatter string;
 
 	private LocalFile(LocalRoot root, String path) throws IOException {
 		this.root = root;
-		File f = root.relativize(new File(path));
-		this.relativeFile = f;
-		this.absoluteFile = root.makeAbsolute(f);
+		Path p = root.relativize(Paths.get(path));
+		this.relativeFile = p.toFile();
+		this.absoluteFile = root.makeAbsolute(p).toFile();
 
 		List<String> r = new ArrayList<>();
 		this.fullPath = this.relativeFile.getPath();
@@ -119,11 +118,11 @@ class LocalFile {
 
 		this.safePath = FileNameTools.reconstitute(r, false, false, '/');
 		this.pathCount = r.size();
-		File parentFile = f.getParentFile();
+		File parentFile = p.getParent().toFile();
 		this.parentPath = (parentFile != null ? parentFile.getPath() : null);
-		this.name = f.getName();
+		this.name = p.getFileName().toString();
 
-		Path p = this.absoluteFile.toPath();
+		p = this.absoluteFile.toPath();
 		this.symbolicLink = Files.isSymbolicLink(p);
 		this.regularFile = Files.isRegularFile(p);
 		this.folder = Files.isDirectory(p);
