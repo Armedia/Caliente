@@ -39,6 +39,7 @@ import java.util.Objects;
 
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
+import com.armedia.caliente.engine.local.exporter.LocalVersionPlan.VersionInfo;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
@@ -64,8 +65,8 @@ class LocalFile {
 		return LocalRoot.normalize(FileNameTools.reconstitute(r, false, false));
 	}
 
-	public static LocalFile newFromSafePath(LocalRoot root, String safePath) throws IOException {
-		return new LocalFile(root, LocalFile.decodeSafePath(safePath));
+	public static LocalFile newFromSafePath(LocalRoot root, String safePath, LocalVersionPlan plan) throws IOException {
+		return new LocalFile(root, LocalFile.decodeSafePath(safePath), plan);
 	}
 
 	private final LocalRoot root;
@@ -99,7 +100,7 @@ class LocalFile {
 	private final LazySupplier<Integer> hash;
 	private final LazyFormatter string;
 
-	private LocalFile(LocalRoot root, String path) throws IOException {
+	private LocalFile(LocalRoot root, String path, LocalVersionPlan versionPlan) throws IOException {
 		this.root = root;
 		Path p = root.relativize(Paths.get(path));
 		this.relativeFile = p.toFile();
@@ -113,8 +114,9 @@ class LocalFile {
 
 		// The history radix is calculated from the relative portable filename, minus the version
 		// data
-		this.historyRadix = null;
-		this.versionTag = null;
+		VersionInfo versionInfo = versionPlan.parseVersionInfo(root, p);
+		this.historyRadix = versionInfo.getRadix().toString();
+		this.versionTag = versionInfo.getHistoryId();
 
 		this.safePath = FileNameTools.reconstitute(r, false, false, '/');
 		this.pathCount = r.size();
@@ -260,8 +262,7 @@ class LocalFile {
 		return this.string.get();
 	}
 
-	public static LocalFile getInstance(LocalRoot root, String path) throws IOException {
-
+	public static LocalFile getInstance(LocalRoot root, String path, LocalVersionPlan versionPlan) throws IOException {
 		// Here we have to do the following analysis:
 		//
 		// 1) Is this a folder? If so, just return the new instance
@@ -273,6 +274,6 @@ class LocalFile {
 		// The returned instance should be able to link back to its cached history
 		// or be used to retrieve it or rediscover it
 
-		return new LocalFile(root, path);
+		return new LocalFile(root, path, versionPlan);
 	}
 }

@@ -84,17 +84,19 @@ public class LocalVersionPlan {
 
 	private final Function<Path, Path> converter;
 	protected final VersionNumberScheme versionNumberScheme;
-	protected final LocalRoot root;
 
-	public LocalVersionPlan(LocalRoot root, VersionNumberScheme numberScheme) {
-		this(root, numberScheme, null);
+	public LocalVersionPlan(VersionNumberScheme numberScheme) {
+		this(numberScheme, null);
 	}
 
-	public LocalVersionPlan(LocalRoot root, VersionNumberScheme numberScheme, Function<Path, Path> converter) {
+	public LocalVersionPlan(VersionNumberScheme numberScheme, Function<Path, Path> converter) {
 		this.versionNumberScheme = Objects.requireNonNull(numberScheme,
 			"Must provide a VersionNumberScheme to order tags with");
 		this.converter = Tools.coalesce(converter, LocalVersionPlan.IDENTITY);
-		this.root = Objects.requireNonNull(root, "Must provide a LocalRoot instance");
+	}
+
+	public VersionNumberScheme getVersionNumberScheme() {
+		return this.versionNumberScheme;
 	}
 
 	protected final Predicate<VersionInfo> getSiblingCheck(final LocalFile baseFile) {
@@ -116,7 +118,7 @@ public class LocalVersionPlan {
 		return Files.list(baseFolder);
 	}
 
-	protected VersionInfo parseVersionInfo(Path p) {
+	protected VersionInfo parseVersionInfo(LocalRoot root, Path p) {
 		return null;
 	}
 
@@ -125,7 +127,7 @@ public class LocalVersionPlan {
 		final Map<String, LocalFile> versions = new TreeMap<>(this.versionNumberScheme);
 		final Function<VersionInfo, LocalFile> constructor = (vi) -> {
 			try {
-				return LocalFile.getInstance(baseFile.getRootPath(), vi.getPath().toString());
+				return LocalFile.getInstance(baseFile.getRootPath(), vi.getPath().toString(), this);
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
 			}
@@ -139,7 +141,8 @@ public class LocalVersionPlan {
 				.filter(Objects::nonNull) // Is the converted path non-null?
 				.filter(Files::exists) // Does the converted path exist?
 				.filter(Files::isRegularFile) // Is the converted path a regular file?
-				.map(this::parseVersionInfo) //
+				// TODO: we should avoid parsing the version info twice
+				.map((p) -> parseVersionInfo(root, p)) // parse the version info
 				.filter(Objects::nonNull) // Again, avoid null values
 				.filter(getSiblingCheck(baseFile)) // Same file or a sibling?
 				.map(constructor) // Turn it into a LocalFile instance

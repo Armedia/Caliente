@@ -56,16 +56,16 @@ public class SimpleVersionPlan extends LocalVersionPlan {
 
 	private final Pattern pattern;
 
-	public SimpleVersionPlan(LocalRoot root, VersionNumberScheme numberScheme) {
-		super(root, numberScheme, null);
+	public SimpleVersionPlan(VersionNumberScheme numberScheme) {
+		super(numberScheme, null);
 		this.pattern = Pattern.compile("^(.*?)(?:.v" + numberScheme.toPattern().pattern() + ")?$");
 	}
 
 	@Override
-	protected VersionInfo parseVersionInfo(Path path) {
+	protected VersionInfo parseVersionInfo(LocalRoot root, Path path) {
 		Matcher m = this.pattern.matcher(path.toString());
 		final Path rawRadix = (m.matches() ? Paths.get(m.group(1)) : path);
-		final Path radix = LocalCommon.uncheck(() -> this.root.relativize(rawRadix));
+		final Path radix = LocalCommon.uncheck(() -> root.relativize(rawRadix));
 		return new VersionInfo(path, radix, m.group(2));
 	}
 

@@ -33,7 +33,6 @@ import java.io.UncheckedIOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -85,7 +84,8 @@ public class LocalExportEngine extends
 			throw new ExportException("Failed to construct the root session", e);
 		}
 
-		this.versionPlan = new SimpleVersionPlan(this.root, VersionNumberScheme.getNumeric('.'));
+		// TODO: Allow selection of the version number scheme
+		this.versionPlan = new SimpleVersionPlan(VersionNumberScheme.getNumeric('.'));
 	}
 
 	protected LocalRoot getRoot() {
@@ -210,11 +210,7 @@ public class LocalExportEngine extends
 	}
 
 	protected LocalFile getLocalFile(String path) throws IOException {
-		//
-
-		this.versionPlan.parseVersionInfo(Paths.get(path));
-
-		return LocalFile.getInstance(this.root, path.toString());
+		return LocalFile.getInstance(this.root, path.toString(), this.versionPlan);
 	}
 
 	@Override
