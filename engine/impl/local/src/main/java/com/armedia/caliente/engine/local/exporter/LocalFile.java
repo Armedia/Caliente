@@ -142,19 +142,6 @@ class LocalFile {
 		return this.id.get();
 	}
 
-	public boolean isSameHistory(Path p) {
-		// <> radix
-		// [] constant, unimportant
-		// {} version tag
-		// () extra, constant, unimportant
-		// <parent/basename>.[prefix.]{versionTag}[.suffix]
-		// <parent/basename>/[prefix.]{versionTag}[.suffix]
-		// <parent/basename>/[prefix.]{versionTag}[.suffix]/(stream)
-		// The path may be absolute or relative. If it's relative, it's assumed to be relative
-		// to the root of this instance.
-		return false;
-	}
-
 	public String getPortableHistoryRadix() {
 		return this.portableHistoryRadix.get();
 	}
@@ -263,17 +250,6 @@ class LocalFile {
 	}
 
 	public static LocalFile getInstance(LocalRoot root, String path, LocalVersionPlan versionPlan) throws IOException {
-		// Here we have to do the following analysis:
-		//
-		// 1) Is this a folder? If so, just return the new instance
-		// 2) Find the file's entire history
-		// 3) Stow the file's entire history "somewhere" (an LRU cache?)
-		// 4) Find the specific file within its history
-		// 5) Return the instance
-		//
-		// The returned instance should be able to link back to its cached history
-		// or be used to retrieve it or rediscover it
-
 		return new LocalFile(root, path, versionPlan);
 	}
 }
