@@ -72,7 +72,7 @@ public class LocalExportEngine extends
 
 	private final LocalRoot root;
 	private final LocalVersionPlan versionPlan;
-	private final LocalVersionHistoryManager histories;
+	private final LocalVersionHistoryCache histories;
 
 	public LocalExportEngine(LocalExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
@@ -90,7 +90,7 @@ public class LocalExportEngine extends
 		// TODO: Allow selection of the version plan
 		this.versionPlan = new SimpleVersionPlan(scheme);
 
-		this.histories = new LocalVersionHistoryManager(this.root, this.versionPlan);
+		this.histories = new LocalVersionHistoryCache(this.root, this.versionPlan);
 	}
 
 	protected LocalRoot getRoot() {
