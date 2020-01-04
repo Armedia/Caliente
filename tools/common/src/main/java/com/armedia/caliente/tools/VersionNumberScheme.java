@@ -12,6 +12,8 @@ import com.armedia.commons.utilities.Tools;
 
 public class VersionNumberScheme implements Comparator<String> {
 
+	private static final Character NULL_CHAR = null;
+
 	public static final String NUM_ALPHABET = "0123456789";
 	public static final Comparator<String> NUM = (a, b) -> {
 		int A = Integer.valueOf(a);
@@ -160,6 +162,22 @@ public class VersionNumberScheme implements Comparator<String> {
 
 	public static VersionNumberScheme getAlphanumeric(Character sep, boolean emptyIsRoot) {
 		return new VersionNumberScheme(sep, emptyIsRoot, VersionNumberScheme.ALNUM_ALPHABET, VersionNumberScheme.ALNUM);
+	}
+
+	public static VersionNumberScheme getAlphabetic() {
+		return VersionNumberScheme.getAlphabetic(VersionNumberScheme.NULL_CHAR, false);
+	}
+
+	public static VersionNumberScheme getAlphabetic(Character sep) {
+		return VersionNumberScheme.getAlphabetic(sep, false);
+	}
+
+	public static VersionNumberScheme getAlphabetic(boolean emptyIsRoot) {
+		return VersionNumberScheme.getAlphabetic(VersionNumberScheme.NULL_CHAR, emptyIsRoot);
+	}
+
+	public static VersionNumberScheme getAlphabetic(Character sep, boolean emptyIsRoot) {
+		return VersionNumberScheme.getAlphabetic(VersionNumberScheme.ALPHA_ALPHABET, sep, emptyIsRoot);
 	}
 
 	public static VersionNumberScheme getAlphabetic(CharSequence alphabet) {
