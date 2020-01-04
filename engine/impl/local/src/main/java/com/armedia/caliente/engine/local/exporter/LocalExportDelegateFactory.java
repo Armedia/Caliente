@@ -69,7 +69,7 @@ public class LocalExportDelegateFactory
 			case FOLDER:
 			case DOCUMENT:
 				return new LocalFileExportDelegate(this, session,
-					LocalFile.newFromSafePath(session, searchKey, this.engine.getVersionPlan()));
+					this.engine.getLocalFile(LocalFile.decodeSafePath(searchKey)));
 			case USER:
 				return new LocalPrincipalExportDelegate(this, session, this.userDb.lookupPrincipalByName(searchKey));
 			case GROUP:

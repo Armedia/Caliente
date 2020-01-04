@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.exporter;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -34,18 +36,22 @@ import java.util.Objects;
 public final class LocalVersionHistory implements Iterable<LocalFile> {
 
 	private final String historyId;
+	private final String radix;
 	private final LocalFile root;
 	private final LocalFile current;
 
-	private final Map<String, Integer> indexes;
+	private final Map<String, Integer> byIndex;
 	private final List<LocalFile> history;
+	private final Map<String, Integer> byPath;
 
-	public LocalVersionHistory(String historyId, LocalFile root, LocalFile current, Map<String, Integer> indexes,
-		List<LocalFile> history) {
+	public LocalVersionHistory(String historyId, LocalFile root, LocalFile current, Map<String, Integer> byIndex,
+		Map<String, Integer> byPath, List<LocalFile> history) {
 		this.historyId = historyId;
+		this.radix = root.getHistoryRadix();
 		this.root = root;
 		this.current = current;
-		this.indexes = indexes;
+		this.byIndex = byIndex;
+		this.byPath = byPath;
 		this.history = history;
 	}
 
@@ -95,15 +101,27 @@ public final class LocalVersionHistory implements Iterable<LocalFile> {
 		return this.history.get(index - 1);
 	}
 
+	public LocalFile getByPath(Path path) throws IOException {
+		// Convert to a relative, safe path
+		path = this.root.getRootPath().relativize(path);
+		String pathStr = path.toString();
+		Integer idx = this.byPath.get(pathStr);
+		if (idx == null) {
+			throw new IllegalArgumentException(String.format("Path [%s] is not part of this history %s (radix = [%s])",
+				path, this.historyId, this.radix));
+		}
+		return this.history.get(idx);
+	}
+
 	public Integer getIndexFor(String id) {
-		return this.indexes.get(Objects.requireNonNull(id, "Must provide an ID to check for"));
+		return this.byIndex.get(Objects.requireNonNull(id, "Must provide an ID to check for"));
 	}
 
 	public Map<String, Integer> getIndexes() {
-		return this.indexes;
+		return this.byIndex;
 	}
 
 	public int getCurrentIndex() {
-		return (this.indexes.size() - 1);
+		return (this.byIndex.size() - 1);
 	}
 }

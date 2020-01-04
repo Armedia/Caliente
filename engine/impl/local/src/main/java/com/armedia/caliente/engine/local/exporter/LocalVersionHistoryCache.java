@@ -78,7 +78,7 @@ public class LocalVersionHistoryCache {
 		try {
 			return this.histories.computeIfAbsent(key.get(), (k) -> {
 				try {
-					return this.plan.calculateHistory(this.root, LocalFile.getInstance(this.root, path, this.plan));
+					return this.plan.calculateHistory(this.root, Paths.get(path));
 				} catch (IOException e) {
 					throw new UncheckedIOException(
 						String.format("Failed to calculate the history for path [%s]", k, path), e);
@@ -87,6 +87,10 @@ public class LocalVersionHistoryCache {
 		} catch (UncheckedIOException e) {
 			throw e.getCause();
 		}
+	}
+
+	public LocalFile getLocalFile(Path path) throws IOException {
+		return getVersionHistory(path).getByPath(path);
 	}
 
 	public LocalVersionHistory getVersionHistory(final Path path) throws IOException {

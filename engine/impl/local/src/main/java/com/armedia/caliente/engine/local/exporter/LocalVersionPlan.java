@@ -79,6 +79,12 @@ public class LocalVersionPlan {
 		public String getTag() {
 			return this.tag;
 		}
+
+		@Override
+		public String toString() {
+			return String.format("VersionInfo [path=%s, radix=%s, historyId=%s, tag=%s]", this.path, this.radix,
+				this.historyId, this.tag);
+		}
 	}
 
 	protected static final Predicate<Path> PATH_FALSE = (a) -> false;
@@ -115,8 +121,12 @@ public class LocalVersionPlan {
 		}
 	}
 
-	protected Stream<Path> findSiblingCandidates(LocalFile baseFile) throws IOException {
-		final Path baseFolder = baseFile.getAbsolute().getParentFile().toPath();
+	protected Stream<Path> findSiblingCandidates(LocalRoot root, Path path) throws IOException {
+		if (!path.isAbsolute()) {
+			path = root.makeAbsolute(path);
+		}
+		final Path baseFolder = path.getParent();
+		if (baseFolder == null) { return Stream.empty(); }
 		return Files.list(baseFolder);
 	}
 
@@ -124,32 +134,23 @@ public class LocalVersionPlan {
 		return null;
 	}
 
-	final LocalVersionHistory calculateHistory(final LocalRoot root, final LocalFile baseFile) throws IOException {
-		String historyId = baseFile.getHistoryId();
-		final Map<String, LocalFile> versions = new TreeMap<>(this.versionNumberScheme);
-		final Function<VersionInfo, LocalFile> constructor = (vi) -> {
-			try {
-				return LocalFile.getInstance(baseFile.getRootPath(), vi.getPath().toString(), this);
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
-			}
-		};
-		Collector<? super LocalFile, ?, Map<String, LocalFile>> collector = Collectors.toMap(LocalFile::getVersionTag,
-			Function.identity(), (a, b) -> a, () -> versions);
+	final LocalVersionHistory calculateHistory(final LocalRoot root, final Path path) throws IOException {
+		final VersionInfo info = parseVersionInfo(root, path);
+		final String historyId = info.getHistoryId();
+		final Map<String, VersionInfo> versions = new TreeMap<>(this.versionNumberScheme);
+		final Collector<? super VersionInfo, ?, Map<String, VersionInfo>> collector = Collectors
+			.toMap(VersionInfo::getTag, Function.identity(), (a, b) -> a, () -> versions);
 
 		try {
-			findSiblingCandidates(baseFile) //
+			findSiblingCandidates(root, path) //
 				.filter(Objects::nonNull) // Is the converted path non-null?
 				.map(this.converter) // Do I need to swap to another file?
 				.filter(Objects::nonNull) // Is the converted path non-null?
 				.filter(Files::exists) // Does the converted path exist?
-				.filter(Files::isRegularFile) // Is the converted path a regular file?
-				// TODO: we should avoid parsing the version info twice
 				.map((p) -> parseVersionInfo(root, p)) // parse the version info
 				.filter(Objects::nonNull) // Again, avoid null values
-				.filter(getSiblingCheck(baseFile)) // Same file or a sibling?
-				.map(constructor) // Turn it into a LocalFile instance
-				.collect(collector)
+				.filter((vi) -> historyId.equals(vi.getHistoryId())) // Same file or a sibling?
+				.collect(collector) //
 			//
 			;
 		} catch (UncheckedIOException e) {
@@ -157,22 +158,27 @@ public class LocalVersionPlan {
 		} catch (final IOException e) {
 			throw e;
 		} catch (Throwable t) {
-			throw new IOException(String.format("Failed to find the siblings for %s", baseFile), t);
+			throw new IOException(String.format("Failed to find the siblings for [%s]", path), t);
 		}
 
 		// Ok...we have the TreeMap containing the versions, properly organized from earliest
 		// to latest, so now we convert that to indexes so we can have a properly ordered history
-		Map<String, Integer> versionIndexes = new HashMap<>();
+		Map<String, Integer> byPath = new HashMap<>();
+		Map<String, Integer> byHistoryId = new HashMap<>();
 		List<LocalFile> fullHistory = new ArrayList<>(versions.size());
 		int i = 0;
 		for (String tag : versions.keySet()) {
-			versionIndexes.put(tag, i++);
-			fullHistory.add(versions.get(tag));
+			byHistoryId.put(tag, i);
+			LocalFile lf = new LocalFile(root, info.getPath().toString(), versions.get(tag), i == versions.size());
+			byPath.put(lf.getFullPath(), i);
+			fullHistory.add(lf);
+			i++;
 		}
+		byPath = Tools.freezeMap(byPath);
 		fullHistory = Tools.freezeList(fullHistory);
-		versionIndexes = Tools.freezeMap(versionIndexes);
+		byHistoryId = Tools.freezeMap(byHistoryId);
 		LocalFile rootVersion = fullHistory.get(0);
 		LocalFile currentVersion = fullHistory.get(fullHistory.size() - 1);
-		return new LocalVersionHistory(historyId, rootVersion, currentVersion, versionIndexes, fullHistory);
+		return new LocalVersionHistory(historyId, rootVersion, currentVersion, byHistoryId, byPath, fullHistory);
 	}
 }

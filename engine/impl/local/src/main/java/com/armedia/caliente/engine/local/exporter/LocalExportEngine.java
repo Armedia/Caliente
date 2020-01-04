@@ -33,6 +33,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -232,7 +233,7 @@ public class LocalExportEngine extends
 	}
 
 	protected LocalFile getLocalFile(String path) throws IOException {
-		return LocalFile.getInstance(this.root, path.toString(), this.versionPlan);
+		return this.histories.getLocalFile(Paths.get(path));
 	}
 
 	@Override

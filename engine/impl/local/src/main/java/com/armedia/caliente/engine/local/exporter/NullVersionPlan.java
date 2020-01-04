@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
+import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.tools.VersionNumberScheme;
 
 public class NullVersionPlan extends LocalVersionPlan {
@@ -39,7 +40,7 @@ public class NullVersionPlan extends LocalVersionPlan {
 	}
 
 	@Override
-	protected Stream<Path> findSiblingCandidates(LocalFile baseFile) throws IOException {
+	protected Stream<Path> findSiblingCandidates(LocalRoot root, Path path) throws IOException {
 		return Stream.empty();
 	}
 }

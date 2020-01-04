@@ -67,10 +67,6 @@ class LocalFile {
 		return LocalRoot.normalize(FileNameTools.reconstitute(r, false, false, File.separatorChar));
 	}
 
-	public static LocalFile newFromSafePath(LocalRoot root, String safePath, LocalVersionPlan plan) throws IOException {
-		return new LocalFile(root, LocalFile.decodeSafePath(safePath), plan);
-	}
-
 	private final LocalRoot root;
 	private final File absoluteFile;
 	private final File relativeFile;
@@ -84,6 +80,7 @@ class LocalFile {
 	private final boolean folder;
 	private final boolean regularFile;
 	private final boolean symbolicLink;
+	private final boolean current;
 
 	private final LazySupplier<String> id = new LazySupplier<>(() -> LocalCommon.calculateId(getPortableFullPath()));
 	private final LazySupplier<String> parentId = new LazySupplier<>(() -> LocalCommon.calculateId(getParentPath()));
@@ -102,15 +99,12 @@ class LocalFile {
 	private final LazySupplier<Integer> hash;
 	private final LazyFormatter string;
 
-	private LocalFile(LocalRoot root, String path, LocalVersionPlan plan) throws IOException {
-		this(root, path, plan.parseVersionInfo(root, Paths.get(path)));
-	}
-
-	private LocalFile(LocalRoot root, String path, VersionInfo versionInfo) throws IOException {
+	LocalFile(LocalRoot root, String path, VersionInfo versionInfo, boolean current) throws IOException {
 		this.root = root;
 		Path p = root.relativize(Paths.get(path));
 		this.relativeFile = p.toFile();
 		this.absoluteFile = root.makeAbsolute(p).toFile();
+		this.current = current;
 
 		List<String> r = new ArrayList<>();
 		this.fullPath = this.relativeFile.getPath();
@@ -175,8 +169,7 @@ class LocalFile {
 	}
 
 	public boolean isHeadRevision() {
-		// TODO:
-		return true;
+		return this.current;
 	}
 
 	public boolean isRegularFile() {
@@ -255,9 +248,5 @@ class LocalFile {
 	@Override
 	public String toString() {
 		return this.string.get();
-	}
-
-	public static LocalFile getInstance(LocalRoot root, String path, LocalVersionPlan versionPlan) throws IOException {
-		return new LocalFile(root, path, versionPlan);
 	}
 }
