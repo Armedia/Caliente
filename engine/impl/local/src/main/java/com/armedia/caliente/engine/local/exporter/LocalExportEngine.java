@@ -72,6 +72,7 @@ public class LocalExportEngine extends
 
 	private final LocalRoot root;
 	private final LocalVersionPlan versionPlan;
+	private final LocalVersionHistoryManager histories;
 
 	public LocalExportEngine(LocalExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
@@ -85,7 +86,11 @@ public class LocalExportEngine extends
 		}
 
 		// TODO: Allow selection of the version number scheme
-		this.versionPlan = new SimpleVersionPlan(VersionNumberScheme.getNumeric('.'));
+		VersionNumberScheme scheme = VersionNumberScheme.getNumeric('.');
+		// TODO: Allow selection of the version plan
+		this.versionPlan = new SimpleVersionPlan(scheme);
+
+		this.histories = new LocalVersionHistoryManager(this.root, this.versionPlan);
 	}
 
 	protected LocalRoot getRoot() {
@@ -94,6 +99,23 @@ public class LocalExportEngine extends
 
 	public LocalVersionPlan getVersionPlan() {
 		return this.versionPlan;
+	}
+
+	public LocalVersionHistory getHistory(Path p) throws ExportException {
+		try {
+			return this.histories.getVersionHistory(p);
+		} catch (Exception e) {
+			throw new ExportException(String.format("Failed to obtain the version history for Path [%s]", p), e);
+		}
+	}
+
+	public LocalVersionHistory getHistory(LocalFile f) throws ExportException {
+		try {
+			return this.histories.getVersionHistory(f);
+		} catch (Exception e) {
+			throw new ExportException(String.format("Failed to obtain the version history for ID [%s] (radix = [%s])",
+				f.getHistoryId(), f.getHistoryRadix()), e);
+		}
 	}
 
 	@Override

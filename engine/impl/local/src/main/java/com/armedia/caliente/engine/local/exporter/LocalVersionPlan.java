@@ -42,6 +42,8 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.tools.VersionNumberScheme;
@@ -55,11 +57,11 @@ public class LocalVersionPlan {
 		private final String historyId;
 		private final String tag;
 
-		public VersionInfo(Path path, Path radix, String tag) {
+		VersionInfo(Path path, Path radix, String tag) {
 			this.path = path;
 			this.radix = radix;
 			this.historyId = LocalCommon.calculateId(radix.toString());
-			this.tag = tag;
+			this.tag = (StringUtils.isBlank(tag) ? StringUtils.EMPTY : tag);
 		}
 
 		public Path getPath() {
@@ -122,7 +124,7 @@ public class LocalVersionPlan {
 		return null;
 	}
 
-	public final LocalVersionHistory findHistory(final LocalRoot root, final LocalFile baseFile) throws IOException {
+	final LocalVersionHistory calculateHistory(final LocalRoot root, final LocalFile baseFile) throws IOException {
 		String historyId = baseFile.getHistoryId();
 		final Map<String, LocalFile> versions = new TreeMap<>(this.versionNumberScheme);
 		final Function<VersionInfo, LocalFile> constructor = (vi) -> {
@@ -134,6 +136,7 @@ public class LocalVersionPlan {
 		};
 		Collector<? super LocalFile, ?, Map<String, LocalFile>> collector = Collectors.toMap(LocalFile::getVersionTag,
 			Function.identity(), (a, b) -> a, () -> versions);
+
 		try {
 			findSiblingCandidates(baseFile) //
 				.filter(Objects::nonNull) // Is the converted path non-null?

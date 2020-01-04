@@ -98,8 +98,8 @@ public class VersionNumberScheme implements Comparator<String> {
 
 	protected static Integer basicCompare(String a, String b, boolean emptyIsRoot) {
 		if (a == b) { return 0; }
-		boolean eA = StringUtils.isEmpty(a);
-		boolean eB = StringUtils.isEmpty(b);
+		boolean eA = StringUtils.isBlank(a);
+		boolean eB = StringUtils.isBlank(b);
 		if (eA && eB) { return 0; }
 		if (eA) { return (emptyIsRoot ? -1 : 1); }
 		if (eB) { return (emptyIsRoot ? 1 : -1); }

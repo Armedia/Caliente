@@ -37,6 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.exporter.LocalVersionPlan.VersionInfo;
@@ -62,7 +64,7 @@ class LocalFile {
 		for (String s : FileNameTools.tokenize(safePath, '/')) {
 			r.add(LocalFile.makeUnsafe(s));
 		}
-		return LocalRoot.normalize(FileNameTools.reconstitute(r, false, false));
+		return LocalRoot.normalize(FileNameTools.reconstitute(r, false, false, File.separatorChar));
 	}
 
 	public static LocalFile newFromSafePath(LocalRoot root, String safePath, LocalVersionPlan plan) throws IOException {
@@ -100,7 +102,11 @@ class LocalFile {
 	private final LazySupplier<Integer> hash;
 	private final LazyFormatter string;
 
-	private LocalFile(LocalRoot root, String path, LocalVersionPlan versionPlan) throws IOException {
+	private LocalFile(LocalRoot root, String path, LocalVersionPlan plan) throws IOException {
+		this(root, path, plan.parseVersionInfo(root, Paths.get(path)));
+	}
+
+	private LocalFile(LocalRoot root, String path, VersionInfo versionInfo) throws IOException {
 		this.root = root;
 		Path p = root.relativize(Paths.get(path));
 		this.relativeFile = p.toFile();
@@ -112,11 +118,13 @@ class LocalFile {
 			r.add(LocalFile.makeSafe(s));
 		}
 
-		// The history radix is calculated from the relative portable filename, minus the version
-		// data
-		VersionInfo versionInfo = versionPlan.parseVersionInfo(root, p);
-		this.historyRadix = versionInfo.getRadix().toString();
-		this.versionTag = versionInfo.getHistoryId();
+		if (versionInfo != null) {
+			this.historyRadix = versionInfo.getRadix().toString();
+			this.versionTag = versionInfo.getTag();
+		} else {
+			this.historyRadix = p.toString();
+			this.versionTag = StringUtils.EMPTY;
+		}
 
 		this.safePath = FileNameTools.reconstitute(r, false, false, '/');
 		this.pathCount = r.size();

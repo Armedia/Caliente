@@ -54,6 +54,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 import javax.activation.MimeType;
 
@@ -80,7 +82,6 @@ import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.commons.utilities.FileNameTools;
 
 public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
-
 	private static final String EXT_ATT_PREFIX = "cmfext";
 	private static final String EXT_ATT_FORMAT = String.format("%s:%%s", LocalFileExportDelegate.EXT_ATT_PREFIX);
 	private static final String DOS_ATT_PREFIX = "cmfdos";
@@ -399,17 +400,46 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	protected Collection<? extends ExportDelegate<?, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, ?>> identifyAntecedents(
 		CmfObject<CmfValue> marshalled, LocalExportContext ctx) throws Exception {
 		if (this.object.isFolder()) { return super.identifyAntecedents(marshalled, ctx); }
-		// Find the object's base folder
-		// Find the strategy to locate sibling versions
-		// Find the sibling versions
-		return super.identifyAntecedents(marshalled, ctx);
+
+		if (this.object == null) {
+			throw new IllegalArgumentException("Must provide an object whose versions to analyze");
+		}
+
+		// Ok...so...we have to find all the history
+		Collection<LocalFileExportDelegate> antecedents = new LinkedList<>();
+		for (LocalFile file : this.factory.getEngine().getHistory(this.object)) {
+			if (Objects.equals(file.getId(), this.object.getId())) {
+				break;
+			}
+			antecedents.add(new LocalFileExportDelegate(this.factory, this.root, file));
+		}
+
+		return antecedents;
 	}
 
 	@Override
 	protected Collection<? extends ExportDelegate<?, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, ?>> identifySuccessors(
 		CmfObject<CmfValue> marshalled, LocalExportContext ctx) throws Exception {
 		if (this.object.isFolder()) { return super.identifySuccessors(marshalled, ctx); }
-		return super.identifySuccessors(marshalled, ctx);
+
+		if (this.object == null) {
+			throw new IllegalArgumentException("Must provide an object whose versions to analyze");
+		}
+
+		// Ok...so...we have to find all the history
+		Collection<LocalFileExportDelegate> successors = new LinkedList<>();
+		Consumer<LocalFileExportDelegate> consumer = null;
+		for (LocalFile file : this.factory.getEngine().getHistory(this.object)) {
+			if (Objects.equals(file.getId(), this.object.getId())) {
+				consumer = successors::add;
+				continue;
+			}
+			if (consumer != null) {
+				consumer.accept(new LocalFileExportDelegate(this.factory, this.root, file));
+			}
+		}
+
+		return successors;
 	}
 
 	@Override
@@ -496,8 +526,13 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	@Override
+	protected String calculateHistoryId(LocalRoot session, LocalFile object) throws Exception {
+		return object.getHistoryId();
+	}
+
+	@Override
 	protected boolean calculateHistoryCurrent(LocalRoot root, LocalFile object) throws Exception {
-		// Always true
+		// TODO: How do we determine this from this object?
 		return true;
 	}
 }
