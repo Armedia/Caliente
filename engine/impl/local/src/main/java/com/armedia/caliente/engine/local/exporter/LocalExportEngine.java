@@ -67,9 +67,18 @@ import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndexItem;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.StreamTools;
+import com.armedia.commons.utilities.Tools;
 
 public class LocalExportEngine extends
 	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory, LocalExportEngineFactory> {
+
+	public static final String VERSION_SCHEME_NUMERIC = "num";
+	public static final String VERSION_SCHEME_ALPHABETIC = "alpha";
+
+	// FLAT (a/b.v1, a/b.v2, a/b)
+	public static final String VERSION_LAYOUT_FLAT = "flat";
+	// HIERARCHICAL (a/b/v1[/stream] a/b/v2[/stream] a/b/v3[/stream])
+	public static final String VERSION_LAYOUT_HIERARCHICAL = "hierarchical";
 
 	private final LocalRoot root;
 	private final LocalVersionLayout versionLayout;
@@ -87,15 +96,37 @@ public class LocalExportEngine extends
 		}
 
 		// TODO: Allow selection of the version number scheme
-		// NUM
-		// ALPHA
-		VersionNumberScheme scheme = VersionNumberScheme.getNumeric('.');
+		final String schemeName = Tools.coalesce(settings.getString(LocalSetting.VERSION_SCHEME),
+			LocalExportEngine.VERSION_SCHEME_NUMERIC);
+		final boolean emptyIsRoot = Tools.coalesce(settings.getBoolean(LocalSetting.VERSION_SCHEME_EMPTY_IS_ROOT),
+			Boolean.FALSE);
+		final VersionNumberScheme scheme;
+		// TODO: Make this configurable?
+		final char sep = '.';
+		switch (schemeName.toLowerCase()) {
+			case VERSION_SCHEME_ALPHABETIC:
+				scheme = VersionNumberScheme.getAlphabetic(sep, emptyIsRoot);
+				break;
+			case VERSION_SCHEME_NUMERIC:
+				// fall-through
+			default:
+				scheme = VersionNumberScheme.getNumeric(sep, emptyIsRoot);
+				break;
+		}
+
 		// TODO: Allow selection of the version layout
-		// SIMPLE (a/b.v1, a/b.v2, a/b)
-		// HIERARCHICAL_1 (a/b/v1 a/b/v2 a/b/v3)
-		// HIERARCHICAL_2 (a/b/v1/stream, a/b/v2/stream, a/b/v3/stream)
-		// * requires extra parameter to describe the main stream's filename
-		this.versionLayout = new SimpleVersionLayout(scheme);
+		final String versionLayout = Tools.coalesce(settings.getString(LocalSetting.VERSION_LAYOUT), "");
+		// final String versionLayoutStreamName =
+		// settings.getString(LocalSetting.VERSION_LAYOUT_STREAM_NAME);
+		switch (versionLayout.toLowerCase()) {
+			case VERSION_LAYOUT_HIERARCHICAL:
+				// TODO: Implement this
+			case VERSION_LAYOUT_FLAT:
+				// fall-through
+			default:
+				this.versionLayout = new SimpleVersionLayout(scheme);
+				break;
+		}
 
 		this.histories = new LocalVersionHistoryCache(this.root, this.versionLayout);
 	}
