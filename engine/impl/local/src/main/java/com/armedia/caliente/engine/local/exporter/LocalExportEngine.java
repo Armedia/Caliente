@@ -72,7 +72,7 @@ public class LocalExportEngine extends
 	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory, LocalExportEngineFactory> {
 
 	private final LocalRoot root;
-	private final LocalVersionPlan versionPlan;
+	private final LocalVersionLayout versionLayout;
 	private final LocalVersionHistoryCache histories;
 
 	public LocalExportEngine(LocalExportEngineFactory factory, Logger output, WarningTracker warningTracker,
@@ -87,19 +87,24 @@ public class LocalExportEngine extends
 		}
 
 		// TODO: Allow selection of the version number scheme
+		// NUM
+		// ALPHA
 		VersionNumberScheme scheme = VersionNumberScheme.getNumeric('.');
-		// TODO: Allow selection of the version plan
-		this.versionPlan = new SimpleVersionPlan(scheme);
+		// TODO: Allow selection of the version layout
+		// SIMPLE (a/b.v1, a/b.v2, a/b)
+		// HIERARCHICAL_1 (a/b/v1 a/b/v2 a/b/v3)
+		// HIERARCHICAL_2 (a/b/v1/stream, a/b/v2/stream, a/b/v3/stream)
+		this.versionLayout = new SimpleVersionLayout(scheme);
 
-		this.histories = new LocalVersionHistoryCache(this.root, this.versionPlan);
+		this.histories = new LocalVersionHistoryCache(this.root, this.versionLayout);
 	}
 
 	protected LocalRoot getRoot() {
 		return this.root;
 	}
 
-	public LocalVersionPlan getVersionPlan() {
-		return this.versionPlan;
+	public LocalVersionLayout getVersionLayout() {
+		return this.versionLayout;
 	}
 
 	public LocalVersionHistory getHistory(Path p) throws ExportException {

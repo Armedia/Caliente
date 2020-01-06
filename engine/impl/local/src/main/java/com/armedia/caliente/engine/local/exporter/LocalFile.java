@@ -41,7 +41,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.caliente.engine.local.exporter.LocalVersionPlan.VersionInfo;
+import com.armedia.caliente.engine.local.exporter.LocalVersionLayout.VersionInfo;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;

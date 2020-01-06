@@ -12,7 +12,7 @@ import org.apache.commons.collections4.map.LRUMap;
 import org.apache.groovy.internal.util.Supplier;
 
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.caliente.engine.local.exporter.LocalVersionPlan.VersionInfo;
+import com.armedia.caliente.engine.local.exporter.LocalVersionLayout.VersionInfo;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.ShareableMap;
 
@@ -54,16 +54,16 @@ public class LocalVersionHistoryCache {
 		}
 	}
 
-	private final LocalVersionPlan plan;
+	private final LocalVersionLayout plan;
 	private final LocalRoot root;
 
 	private final Map<HistoryKey, LocalVersionHistory> histories;
 
-	public LocalVersionHistoryCache(LocalRoot root, LocalVersionPlan plan) {
+	public LocalVersionHistoryCache(LocalRoot root, LocalVersionLayout plan) {
 		this(root, plan, 0);
 	}
 
-	public LocalVersionHistoryCache(LocalRoot root, LocalVersionPlan plan, int historySize) {
+	public LocalVersionHistoryCache(LocalRoot root, LocalVersionLayout plan, int historySize) {
 		this.plan = plan;
 		this.root = root;
 		if (historySize < 0) {

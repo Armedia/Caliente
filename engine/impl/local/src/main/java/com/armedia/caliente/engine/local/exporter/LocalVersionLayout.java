@@ -49,7 +49,7 @@ import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.tools.VersionNumberScheme;
 import com.armedia.commons.utilities.Tools;
 
-public class LocalVersionPlan {
+public class LocalVersionLayout {
 
 	protected static final class VersionInfo {
 		private final Path path;
@@ -93,14 +93,14 @@ public class LocalVersionPlan {
 	private final Function<Path, Path> converter;
 	protected final VersionNumberScheme versionNumberScheme;
 
-	public LocalVersionPlan(VersionNumberScheme numberScheme) {
+	public LocalVersionLayout(VersionNumberScheme numberScheme) {
 		this(numberScheme, null);
 	}
 
-	public LocalVersionPlan(VersionNumberScheme numberScheme, Function<Path, Path> converter) {
+	public LocalVersionLayout(VersionNumberScheme numberScheme, Function<Path, Path> converter) {
 		this.versionNumberScheme = Objects.requireNonNull(numberScheme,
 			"Must provide a VersionNumberScheme to order tags with");
-		this.converter = Tools.coalesce(converter, LocalVersionPlan.IDENTITY);
+		this.converter = Tools.coalesce(converter, LocalVersionLayout.IDENTITY);
 	}
 
 	public VersionNumberScheme getVersionNumberScheme() {

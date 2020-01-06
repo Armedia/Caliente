@@ -52,11 +52,11 @@ import com.armedia.caliente.tools.VersionNumberScheme;
  * @author diego
  *
  */
-public class SimpleVersionPlan extends LocalVersionPlan {
+public class SimpleVersionLayout extends LocalVersionLayout {
 
 	private final Pattern pattern;
 
-	public SimpleVersionPlan(VersionNumberScheme numberScheme) {
+	public SimpleVersionLayout(VersionNumberScheme numberScheme) {
 		super(numberScheme, null);
 		this.pattern = Pattern.compile("^(.*?)(?:.v" + numberScheme.toPattern().pattern() + ")?$");
 	}
