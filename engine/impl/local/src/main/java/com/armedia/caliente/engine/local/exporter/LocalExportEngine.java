@@ -94,6 +94,7 @@ public class LocalExportEngine extends
 		// SIMPLE (a/b.v1, a/b.v2, a/b)
 		// HIERARCHICAL_1 (a/b/v1 a/b/v2 a/b/v3)
 		// HIERARCHICAL_2 (a/b/v1/stream, a/b/v2/stream, a/b/v3/stream)
+		// * requires extra parameter to describe the main stream's filename
 		this.versionLayout = new SimpleVersionLayout(scheme);
 
 		this.histories = new LocalVersionHistoryCache(this.root, this.versionLayout);
