@@ -141,8 +141,8 @@ public class LocalVersionLayout {
 		final Collector<? super VersionInfo, ?, Map<String, VersionInfo>> collector = Collectors
 			.toMap(VersionInfo::getTag, Function.identity(), (a, b) -> a, () -> versions);
 
-		try {
-			findSiblingCandidates(root, path) //
+		try (Stream<Path> candidates = findSiblingCandidates(root, path)) {
+			candidates //
 				.filter(Objects::nonNull) // Is the converted path non-null?
 				.map(this.converter) // Do I need to swap to another file?
 				.filter(Objects::nonNull) // Is the converted path non-null?

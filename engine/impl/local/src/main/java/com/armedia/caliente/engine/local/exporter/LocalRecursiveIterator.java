@@ -85,7 +85,7 @@ public class LocalRecursiveIterator extends CloseableIterator<Path> {
 			if (state.childIterator == null) {
 				Stream<Path> s = Files.list(current).filter(this.ignorePredicate.negate());
 				@SuppressWarnings("resource")
-				Iterator<Path> it = new CloseableIteratorWrapper<>(s.iterator(), s::close);
+				Iterator<Path> it = new CloseableIteratorWrapper<>(s);
 				if (it.hasNext()) {
 					state.childIterator = it;
 				} else {
