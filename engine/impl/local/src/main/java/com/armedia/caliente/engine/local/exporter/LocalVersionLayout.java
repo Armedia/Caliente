@@ -168,8 +168,9 @@ public class LocalVersionLayout {
 		List<LocalFile> fullHistory = new ArrayList<>(versions.size());
 		int i = 0;
 		for (String tag : versions.keySet()) {
+			VersionInfo thisInfo = versions.get(tag);
 			byHistoryId.put(tag, i);
-			LocalFile lf = new LocalFile(root, info.getPath().toString(), versions.get(tag), i == versions.size());
+			LocalFile lf = new LocalFile(root, thisInfo.getPath().toString(), thisInfo, i == versions.size());
 			byPath.put(lf.getFullPath(), i);
 			fullHistory.add(lf);
 			i++;
