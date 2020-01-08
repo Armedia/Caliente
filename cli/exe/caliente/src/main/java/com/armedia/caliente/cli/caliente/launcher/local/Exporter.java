@@ -42,8 +42,10 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
+import com.armedia.caliente.cli.filter.StringValueFilter;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.local.common.LocalSetting;
+import com.armedia.caliente.engine.local.exporter.LocalExportEngine;
 import com.armedia.caliente.engine.tools.LocalOrganizer;
 import com.armedia.caliente.store.local.LocalContentStoreSetting;
 import com.armedia.caliente.store.xml.StoreConfiguration;
@@ -61,8 +63,27 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		.setDescription("Ignore empty folders during extraction") //
 	;
 
+	private static final Option VERSION_SCHEME = new OptionImpl() //
+		.setLongOpt("version-scheme") //
+		.setDescription("The version scheme to use (how version tags are presented in a filename)") //
+		.setArgumentLimits(1) //
+		.setArgumentName("schemeName") //
+		.setValueFilter(new StringValueFilter(LocalExportEngine.VERSION_SCHEMES)) //
+	;
+
+	private static final Option VERSION_LAYOUT = new OptionImpl() //
+		.setLongOpt("version-layout") //
+		.setDescription("The version layout to use (how files are organized on disk)") //
+		.setArgumentLimits(1) //
+		.setArgumentName("layoutName") //
+		.setValueFilter(new StringValueFilter(LocalExportEngine.VERSION_LAYOUTS)) //
+	;
+
 	private static final OptionGroup OPTIONS = new OptionGroupImpl("Local Export") //
 		.add(Exporter.COPY_CONTENT) //
+		.add(Exporter.IGNORE_EMPTY_FOLDERS) //
+		.add(Exporter.VERSION_SCHEME) //
+		.add(Exporter.VERSION_LAYOUT) //
 	;
 
 	Exporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
@@ -165,6 +186,8 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		settings.put(LocalSetting.COPY_CONTENT.getLabel(), isCopyContent(commandValues));
 		settings.put(LocalSetting.IGNORE_EMPTY_FOLDERS.getLabel(),
 			commandValues.isPresent(Exporter.IGNORE_EMPTY_FOLDERS));
+		settings.put(LocalSetting.VERSION_SCHEME.getLabel(), commandValues.getString(Exporter.VERSION_SCHEME));
+		settings.put(LocalSetting.VERSION_LAYOUT.getLabel(), commandValues.getString(Exporter.VERSION_LAYOUT));
 		return EngineInterface.commonConfigure(commandValues, settings);
 	}
 
