@@ -35,8 +35,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -74,11 +78,23 @@ public class LocalExportEngine extends
 
 	public static final String VERSION_SCHEME_NUMERIC = "num";
 	public static final String VERSION_SCHEME_ALPHABETIC = "alpha";
+	public static final String VERSION_SCHEME_ALPHANUMERIC = "alnum";
+	private static final String VERSION_SCHEME_DEFAULT = LocalExportEngine.VERSION_SCHEME_NUMERIC;
+	public static final Set<String> VERSION_SCHEMES = Tools.freezeSet(new LinkedHashSet<>(new TreeSet<>(Arrays.asList( //
+		LocalExportEngine.VERSION_SCHEME_NUMERIC, //
+		LocalExportEngine.VERSION_SCHEME_ALPHABETIC, //
+		LocalExportEngine.VERSION_SCHEME_ALPHANUMERIC //
+	))));
 
 	// FLAT (a/b.v1, a/b.v2, a/b)
 	public static final String VERSION_LAYOUT_FLAT = "flat";
 	// HIERARCHICAL (a/b/v1[/stream] a/b/v2[/stream] a/b/v3[/stream])
 	public static final String VERSION_LAYOUT_HIERARCHICAL = "hierarchical";
+	private static final String VERSION_LAYOUT_DEFAULT = LocalExportEngine.VERSION_LAYOUT_FLAT;
+	public static final Set<String> VERSION_LAYOUTS = Tools.freezeSet(new LinkedHashSet<>(new TreeSet<>(Arrays.asList( //
+		LocalExportEngine.VERSION_LAYOUT_FLAT, //
+		LocalExportEngine.VERSION_LAYOUT_HIERARCHICAL //
+	))));
 
 	private final LocalRoot root;
 	private final LocalVersionLayout versionLayout;
@@ -95,37 +111,42 @@ public class LocalExportEngine extends
 			throw new ExportException("Failed to construct the root session", e);
 		}
 
-		// TODO: Allow selection of the version number scheme
 		final String schemeName = Tools.coalesce(settings.getString(LocalSetting.VERSION_SCHEME),
-			LocalExportEngine.VERSION_SCHEME_NUMERIC);
+			LocalExportEngine.VERSION_SCHEME_DEFAULT);
 		final boolean emptyIsRoot = Tools.coalesce(settings.getBoolean(LocalSetting.VERSION_SCHEME_EMPTY_IS_ROOT),
 			Boolean.FALSE);
 		final VersionNumberScheme scheme;
-		// TODO: Make this configurable?
+		// TODO: Make the separator configurable?
 		final char sep = '.';
 		switch (schemeName.toLowerCase()) {
 			case VERSION_SCHEME_ALPHABETIC:
 				scheme = VersionNumberScheme.getAlphabetic(sep, emptyIsRoot);
 				break;
+			case VERSION_SCHEME_ALPHANUMERIC:
+				scheme = VersionNumberScheme.getAlphanumeric(null, emptyIsRoot);
+				break;
 			case VERSION_SCHEME_NUMERIC:
-				// fall-through
-			default:
 				scheme = VersionNumberScheme.getNumeric(sep, emptyIsRoot);
 				break;
+			default:
+				throw new ExportException(
+					String.format("Support for version scheme [%s] is not yet implemented", schemeName));
 		}
 
-		// TODO: Allow selection of the version layout
-		final String versionLayout = Tools.coalesce(settings.getString(LocalSetting.VERSION_LAYOUT), "");
-		// final String versionLayoutStreamName =
+		final String layoutName = Tools.coalesce(settings.getString(LocalSetting.VERSION_LAYOUT),
+			LocalExportEngine.VERSION_LAYOUT_DEFAULT);
+		// final String layoutStreamName =
 		// settings.getString(LocalSetting.VERSION_LAYOUT_STREAM_NAME);
-		switch (versionLayout.toLowerCase()) {
+		switch (layoutName.toLowerCase()) {
 			case VERSION_LAYOUT_HIERARCHICAL:
 				// TODO: Implement this
 			case VERSION_LAYOUT_FLAT:
-				// fall-through
-			default:
 				this.versionLayout = new SimpleVersionLayout(scheme);
 				break;
+
+			default:
+				throw new ExportException(
+					String.format("Support for version scheme [%s] is not yet implemented", layoutName));
 		}
 
 		this.histories = new LocalVersionHistoryCache(this.root, this.versionLayout);
