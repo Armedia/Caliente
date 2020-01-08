@@ -744,7 +744,6 @@ public abstract class ImportEngine<//
 								}
 
 								try {
-									"".length();
 									dataObject = transformer.transform(objectStore.getValueMapper(),
 										translator.getAttributeNameMapper(), schemaService, dataObject);
 								} catch (TransformerException e) {
