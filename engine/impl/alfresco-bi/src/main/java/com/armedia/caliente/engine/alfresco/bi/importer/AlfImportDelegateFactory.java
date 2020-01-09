@@ -171,7 +171,7 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	private static final Pattern VERSION_SUFFIX = Pattern.compile("^.*(\\.v(\\d+(?:\\.\\d+)?))$");
+	private static final Pattern VERSION_SUFFIX = Pattern.compile("^.*?(\\.v([a-z0-9_]+(?:\\.[a-z0-9_]+)?))$");
 
 	private static final BigDecimal LAST_INDEX = new BigDecimal(Long.MAX_VALUE);
 
@@ -318,7 +318,7 @@ public class AlfImportDelegateFactory
 		return m.group(1);
 	}
 
-	static final String parseVersionNumber(String s) {
+	static final String parseVersionTag(String s) {
 		final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(s);
 		if (!m.matches()) { return null; }
 		return m.group(2);
