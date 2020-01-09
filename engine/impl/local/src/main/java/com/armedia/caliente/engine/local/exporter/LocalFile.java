@@ -28,6 +28,7 @@ package com.armedia.caliente.engine.local.exporter;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.file.Files;
@@ -39,9 +40,12 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.exporter.LocalVersionLayout.VersionInfo;
+import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
@@ -65,6 +69,27 @@ class LocalFile {
 			r.add(LocalFile.makeUnsafe(s));
 		}
 		return LocalRoot.normalize(FileNameTools.reconstitute(r, false, false, File.separatorChar));
+	}
+
+	public static String makeSafePath(String path) throws IOException {
+		List<String> r = new ArrayList<>();
+		for (String s : FileNameTools.tokenize(path.toString(), File.separatorChar)) {
+			r.add(LocalFile.makeSafe(s));
+		}
+		return FileNameTools.reconstitute(r, false, false, '/');
+	}
+
+	static ExportTarget toExportTarget(LocalRoot root, Path path) {
+		try {
+			path = root.relativize(Tools.canonicalize(path));
+			final Archetype archetype = Files.isDirectory(path) ? CmfObject.Archetype.FOLDER
+				: CmfObject.Archetype.DOCUMENT;
+			final String objectId = LocalCommon.calculateId(path);
+			final String safePath = LocalFile.makeSafePath(path.toString());
+			return new ExportTarget(archetype, objectId, safePath);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 	private final LocalRoot root;

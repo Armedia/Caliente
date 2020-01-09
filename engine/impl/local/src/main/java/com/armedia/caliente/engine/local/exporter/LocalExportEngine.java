@@ -60,7 +60,6 @@ import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.caliente.engine.local.common.LocalTranslator;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
@@ -261,15 +260,7 @@ public class LocalExportEngine extends
 	}
 
 	protected ExportTarget toExportTarget(Path path) {
-		final LocalFile localFile;
-		try {
-			localFile = getLocalFile(path.toString());
-		} catch (IOException e) {
-			throw new UncheckedIOException(
-				String.format("Failed to calculate the path for [%s] relative to [%s]", path, this.root.getPath()), e);
-		}
-		final Archetype archetype = localFile.isFolder() ? CmfObject.Archetype.FOLDER : CmfObject.Archetype.DOCUMENT;
-		return new ExportTarget(archetype, localFile.getId(), localFile.getSafePath());
+		return LocalFile.toExportTarget(this.root, path);
 	}
 
 	@Override
