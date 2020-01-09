@@ -390,7 +390,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 		LocalVersionHistory history = this.factory.getEngine().getHistory(this.object);
 		prop = new CmfProperty<>(IntermediateProperty.HEAD_NAME, IntermediateProperty.HEAD_NAME.type,
-			new CmfValue(history.getCurrentVersion().getName()));
+			new CmfValue(FileNameTools.basename(history.getCurrentVersion().getHistoryRadix(), '/')));
 		object.setProperty(prop);
 		prop = new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
 			new CmfValue(history.size()));
