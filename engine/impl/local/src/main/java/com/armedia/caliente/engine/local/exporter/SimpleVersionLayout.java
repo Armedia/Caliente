@@ -54,11 +54,16 @@ import com.armedia.caliente.tools.VersionNumberScheme;
  */
 public class SimpleVersionLayout extends LocalVersionLayout {
 
+	private static final String NULL_SCHEME_PATTERN = "(.*)";
 	private final Pattern pattern;
 
 	public SimpleVersionLayout(VersionNumberScheme numberScheme) {
 		super(numberScheme, null);
-		this.pattern = Pattern.compile("^(.*?)(?:.v" + numberScheme.toPattern().pattern() + ")?$");
+		String schemePattern = SimpleVersionLayout.NULL_SCHEME_PATTERN;
+		if (numberScheme != null) {
+			schemePattern = numberScheme.toPattern().pattern();
+		}
+		this.pattern = Pattern.compile("^(.*?)(?:.v" + schemePattern + ")?$");
 	}
 
 	@Override

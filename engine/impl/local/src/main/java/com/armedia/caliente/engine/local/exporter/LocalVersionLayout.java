@@ -98,8 +98,7 @@ public class LocalVersionLayout {
 	}
 
 	public LocalVersionLayout(VersionNumberScheme numberScheme, Function<Path, Path> converter) {
-		this.versionNumberScheme = Objects.requireNonNull(numberScheme,
-			"Must provide a VersionNumberScheme to order tags with");
+		this.versionNumberScheme = numberScheme;
 		this.converter = Tools.coalesce(converter, LocalVersionLayout.IDENTITY);
 	}
 
@@ -134,7 +133,7 @@ public class LocalVersionLayout {
 		return null;
 	}
 
-	final LocalVersionHistory calculateFolderHistory(LocalRoot root, Path path) throws IOException {
+	final LocalVersionHistory calculateSingleHistory(LocalRoot root, Path path) throws IOException {
 		final Path truePath = root.makeAbsolute(path);
 		Map<String, Integer> byPath = new HashMap<>();
 		Map<String, Integer> byHistoryId = new HashMap<>();
@@ -155,7 +154,9 @@ public class LocalVersionLayout {
 
 	final LocalVersionHistory calculateHistory(final LocalRoot root, final Path path) throws IOException {
 		final Path truePath = root.makeAbsolute(path);
-		if (Files.isDirectory(truePath)) { return calculateFolderHistory(root, path); }
+		if (Files.isDirectory(truePath) || (this.versionNumberScheme == null)) {
+			return calculateSingleHistory(root, path);
+		}
 
 		final VersionInfo info = parseVersionInfo(root, path);
 		final String historyId = info.getHistoryId();

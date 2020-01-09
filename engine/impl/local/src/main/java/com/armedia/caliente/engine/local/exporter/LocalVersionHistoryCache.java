@@ -23,8 +23,8 @@ public class LocalVersionHistoryCache {
 		private final Path radix;
 
 		private HistoryKey(Path path) {
-			VersionInfo info = LocalVersionHistoryCache.this.plan.parseVersionInfo(LocalVersionHistoryCache.this.root,
-				path);
+			VersionInfo info = LocalVersionHistoryCache.this.versionLayout
+				.parseVersionInfo(LocalVersionHistoryCache.this.root, path);
 			this.historyId = info.getHistoryId();
 			this.radix = info.getRadix();
 		}
@@ -54,7 +54,7 @@ public class LocalVersionHistoryCache {
 		}
 	}
 
-	private final LocalVersionLayout plan;
+	private final LocalVersionLayout versionLayout;
 	private final LocalRoot root;
 
 	private final Map<HistoryKey, LocalVersionHistory> histories;
@@ -64,7 +64,7 @@ public class LocalVersionHistoryCache {
 	}
 
 	public LocalVersionHistoryCache(LocalRoot root, LocalVersionLayout plan, int historySize) {
-		this.plan = plan;
+		this.versionLayout = plan;
 		this.root = root;
 		if (historySize < 0) {
 			this.histories = new ConcurrentHashMap<>();
@@ -76,15 +76,15 @@ public class LocalVersionHistoryCache {
 
 	private LocalVersionHistory getVersionHistory(HistoryKey key, String path) throws IOException {
 		final Path truePath = this.root.makeAbsolute(Paths.get(path));
-		if (Files.isDirectory(truePath)) {
+		if (Files.isDirectory(truePath) || (this.versionLayout.getVersionNumberScheme() == null)) {
 			// History doesn't need to be cached. so we avoid some synchronization overhead here
-			return this.plan.calculateFolderHistory(this.root, truePath);
+			return this.versionLayout.calculateSingleHistory(this.root, truePath);
 		}
 
 		try {
 			return this.histories.computeIfAbsent(key, (k) -> {
 				try {
-					return this.plan.calculateHistory(this.root, truePath);
+					return this.versionLayout.calculateHistory(this.root, truePath);
 				} catch (IOException e) {
 					throw new UncheckedIOException(
 						String.format("Failed to calculate the history for path [%s]", k, path), e);

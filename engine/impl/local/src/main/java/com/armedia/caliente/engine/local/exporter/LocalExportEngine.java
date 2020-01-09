@@ -78,7 +78,6 @@ public class LocalExportEngine extends
 	public static final String VERSION_SCHEME_NUMERIC = "num";
 	public static final String VERSION_SCHEME_ALPHABETIC = "alpha";
 	public static final String VERSION_SCHEME_ALPHANUMERIC = "alnum";
-	private static final String VERSION_SCHEME_DEFAULT = LocalExportEngine.VERSION_SCHEME_NUMERIC;
 	public static final Set<String> VERSION_SCHEMES = Tools.freezeSet(new LinkedHashSet<>(new TreeSet<>(Arrays.asList( //
 		LocalExportEngine.VERSION_SCHEME_NUMERIC, //
 		LocalExportEngine.VERSION_SCHEME_ALPHABETIC, //
@@ -110,26 +109,29 @@ public class LocalExportEngine extends
 			throw new ExportException("Failed to construct the root session", e);
 		}
 
-		final String schemeName = Tools.coalesce(settings.getString(LocalSetting.VERSION_SCHEME),
-			LocalExportEngine.VERSION_SCHEME_DEFAULT);
-		final boolean emptyIsRoot = Tools.coalesce(settings.getBoolean(LocalSetting.VERSION_SCHEME_EMPTY_IS_ROOT),
-			Boolean.FALSE);
 		final VersionNumberScheme scheme;
-		// TODO: Make the separator configurable?
-		final char sep = '.';
-		switch (schemeName.toLowerCase()) {
-			case VERSION_SCHEME_ALPHABETIC:
-				scheme = VersionNumberScheme.getAlphabetic(sep, emptyIsRoot);
-				break;
-			case VERSION_SCHEME_ALPHANUMERIC:
-				scheme = VersionNumberScheme.getAlphanumeric(null, emptyIsRoot);
-				break;
-			case VERSION_SCHEME_NUMERIC:
-				scheme = VersionNumberScheme.getNumeric(sep, emptyIsRoot);
-				break;
-			default:
-				throw new ExportException(
-					String.format("Support for version scheme [%s] is not yet implemented", schemeName));
+		final String schemeName = settings.getString(LocalSetting.VERSION_SCHEME);
+		if (!StringUtils.isBlank(schemeName)) {
+			final boolean emptyIsRoot = Tools.coalesce(settings.getBoolean(LocalSetting.VERSION_SCHEME_EMPTY_IS_ROOT),
+				Boolean.FALSE);
+			// TODO: Make the separator configurable?
+			final char sep = '.';
+			switch (schemeName.toLowerCase()) {
+				case VERSION_SCHEME_ALPHABETIC:
+					scheme = VersionNumberScheme.getAlphabetic(sep, emptyIsRoot);
+					break;
+				case VERSION_SCHEME_ALPHANUMERIC:
+					scheme = VersionNumberScheme.getAlphanumeric(null, emptyIsRoot);
+					break;
+				case VERSION_SCHEME_NUMERIC:
+					scheme = VersionNumberScheme.getNumeric(sep, emptyIsRoot);
+					break;
+				default:
+					throw new ExportException(
+						String.format("Support for version scheme [%s] is not yet implemented", schemeName));
+			}
+		} else {
+			scheme = null;
 		}
 
 		final String layoutName = Tools.coalesce(settings.getString(LocalSetting.VERSION_LAYOUT),
