@@ -49,8 +49,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.stream.XMLStreamException;
@@ -170,8 +168,6 @@ public class AlfImportDelegateFactory
 				this.root, this.versions, this.members);
 		}
 	}
-
-	private static final Pattern VERSION_SUFFIX = Pattern.compile("^.*(\\.v(\\d+(?:\\.\\d+)?))$");
 
 	private static final BigDecimal LAST_INDEX = new BigDecimal(Long.MAX_VALUE);
 
@@ -310,30 +306,6 @@ public class AlfImportDelegateFactory
 		f = f.getAbsoluteFile();
 		f = new File(FilenameUtils.normalize(f.getAbsolutePath()));
 		return f.getAbsoluteFile();
-	}
-
-	static final String parseVersionSuffix(String s) {
-		final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(s);
-		if (!m.matches()) { return ""; }
-		return m.group(1);
-	}
-
-	static final String parseVersionTag(String s) {
-		final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(s);
-		if (!m.matches()) { return null; }
-		return m.group(2);
-	}
-
-	static final File removeVersionTag(File f) {
-		return AlfImportDelegateFactory.removeVersionTag(f.toPath()).toFile();
-	}
-
-	static final Path removeVersionTag(Path p) {
-		final String suffix = AlfImportDelegateFactory.parseVersionSuffix(p.toString());
-		if (suffix == null) { return p; }
-		Path parent = p.getParent();
-		String name = p.getFileName().toString().replaceAll(String.format("\\Q%s\\E$", suffix), "");
-		return (parent != null ? parent.resolve(name) : Paths.get(name));
 	}
 
 	private final void storeManifestToScanIndex() throws ImportException {
@@ -790,8 +762,8 @@ public class AlfImportDelegateFactory
 				number = new BigDecimal(versionCount.getValue().asLong() + 1);
 			}
 			headMarker.setNumber(number);
-			headMarker.setContent(AlfImportDelegateFactory.removeVersionTag(headMarker.getContent()));
-			headMarker.setMetadata(AlfImportDelegateFactory.removeVersionTag(headMarker.getMetadata()));
+			headMarker.setContent(headMarker.getContent());
+			headMarker.setMetadata(headMarker.getMetadata());
 			markerList.add(headMarker);
 		}
 
