@@ -2,6 +2,7 @@ package com.armedia.caliente.engine.local.exporter;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -75,10 +76,16 @@ public class LocalVersionHistoryCache {
 	}
 
 	private LocalVersionHistory getVersionHistory(Supplier<HistoryKey> key, String path) throws IOException {
+		final Path truePath = this.root.makeAbsolute(Paths.get(path));
+		if (Files.isDirectory(truePath)) {
+			// History doesn't need to be cached. so we avoid some synchronization overhead here
+			return this.plan.calculateFolderHistory(this.root, truePath);
+		}
+
 		try {
 			return this.histories.computeIfAbsent(key.get(), (k) -> {
 				try {
-					return this.plan.calculateHistory(this.root, Paths.get(path));
+					return this.plan.calculateHistory(this.root, truePath);
 				} catch (IOException e) {
 					throw new UncheckedIOException(
 						String.format("Failed to calculate the history for path [%s]", k, path), e);
