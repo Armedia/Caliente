@@ -10,7 +10,6 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.collections4.map.LRUMap;
-import org.apache.groovy.internal.util.Supplier;
 
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.exporter.LocalVersionLayout.VersionInfo;
@@ -75,7 +74,7 @@ public class LocalVersionHistoryCache {
 		}
 	}
 
-	private LocalVersionHistory getVersionHistory(Supplier<HistoryKey> key, String path) throws IOException {
+	private LocalVersionHistory getVersionHistory(HistoryKey key, String path) throws IOException {
 		final Path truePath = this.root.makeAbsolute(Paths.get(path));
 		if (Files.isDirectory(truePath)) {
 			// History doesn't need to be cached. so we avoid some synchronization overhead here
@@ -83,7 +82,7 @@ public class LocalVersionHistoryCache {
 		}
 
 		try {
-			return this.histories.computeIfAbsent(key.get(), (k) -> {
+			return this.histories.computeIfAbsent(key, (k) -> {
 				try {
 					return this.plan.calculateHistory(this.root, truePath);
 				} catch (IOException e) {
@@ -101,10 +100,10 @@ public class LocalVersionHistoryCache {
 	}
 
 	public LocalVersionHistory getVersionHistory(final Path path) throws IOException {
-		return getVersionHistory(() -> new HistoryKey(path), path.toString());
+		return getVersionHistory(new HistoryKey(path), path.toString());
 	}
 
 	public LocalVersionHistory getVersionHistory(final LocalFile file) throws IOException {
-		return getVersionHistory(() -> new HistoryKey(file), file.getFullPath());
+		return getVersionHistory(new HistoryKey(file), file.getFullPath());
 	}
 }
