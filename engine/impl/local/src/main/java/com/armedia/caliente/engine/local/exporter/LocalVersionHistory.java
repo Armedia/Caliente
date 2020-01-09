@@ -113,8 +113,8 @@ public final class LocalVersionHistory implements Iterable<LocalFile> {
 		return this.history.get(idx);
 	}
 
-	public Integer getIndexFor(String id) {
-		return this.byIndex.get(Objects.requireNonNull(id, "Must provide an ID to check for"));
+	public Integer getIndexFor(String tag) {
+		return this.byIndex.get(Objects.requireNonNull(tag, "Must provide a tag to check for"));
 	}
 
 	public Map<String, Integer> getIndexes() {

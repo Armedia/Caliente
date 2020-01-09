@@ -395,17 +395,14 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		prop = new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
 			new CmfValue(history.size()));
 		object.setProperty(prop);
-		Integer historyIndex = history.getIndexFor(this.object.getId());
-		if (historyIndex != null) {
-			prop = new CmfProperty<>(IntermediateProperty.VERSION_INDEX, IntermediateProperty.VERSION_INDEX.type,
-				new CmfValue(historyIndex.intValue()));
-			object.setProperty(prop);
-			historyIndex = history.getCurrentIndex();
-			if (historyIndex != null) {
-				prop = new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
-					IntermediateProperty.VERSION_HEAD_INDEX.type, new CmfValue(historyIndex.intValue()));
-			}
-		}
+		Integer historyIndex = history.getIndexFor(this.object.getVersionTag());
+		prop = new CmfProperty<>(IntermediateProperty.VERSION_INDEX, IntermediateProperty.VERSION_INDEX.type,
+			new CmfValue(historyIndex.intValue()));
+		object.setProperty(prop);
+		historyIndex = history.getCurrentIndex();
+		prop = new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, IntermediateProperty.VERSION_HEAD_INDEX.type,
+			new CmfValue(historyIndex.intValue()));
+		object.setProperty(prop);
 
 		return true;
 	}
