@@ -532,7 +532,6 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 	@Override
 	protected boolean calculateHistoryCurrent(LocalRoot root, LocalFile object) throws Exception {
-		// TODO: How do we determine this from this object?
-		return true;
+		return object.isHeadRevision();
 	}
 }
