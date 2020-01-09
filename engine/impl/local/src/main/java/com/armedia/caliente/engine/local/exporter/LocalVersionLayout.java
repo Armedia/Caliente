@@ -193,7 +193,8 @@ public class LocalVersionLayout {
 		for (String tag : versions.keySet()) {
 			VersionInfo thisInfo = versions.get(tag);
 			byHistoryId.put(tag, i);
-			LocalFile lf = new LocalFile(root, thisInfo.getPath().toString(), thisInfo, i == versions.size());
+			final boolean latest = (i == (versions.size() - 1));
+			LocalFile lf = new LocalFile(root, thisInfo.getPath().toString(), thisInfo, latest);
 			byPath.put(lf.getFullPath(), i);
 			fullHistory.add(lf);
 			i++;
