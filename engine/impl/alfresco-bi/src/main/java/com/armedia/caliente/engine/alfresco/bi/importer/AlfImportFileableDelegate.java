@@ -44,7 +44,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.ScanIndexItemMarker.MarkerType;
@@ -736,33 +735,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			} else {
 				final boolean folder = (main.exists() && main.isFile() ? false : true);
 				this.factory.storeToIndex(ctx, folder, this.cmfObject, content, main, meta, markerType);
-
-				// IF (and only if) the document is also the head document, but not the latest
-				// version (i.e. mid-tree "CURRENT", we need to copy everything over to a "new"
-				// location with no version number - including the properties.
-				String mainName = main.getName();
-				final String suffix = AlfImportDelegateFactory.parseVersionSuffix(mainName);
-				if (this.cmfObject.isHistoryCurrent() && !StringUtils.isEmpty(suffix)) {
-					final String versionTag = String.format("\\Q%s\\E$", suffix);
-					File newMain = new File(main.getAbsolutePath().replaceAll(versionTag, ""));
-					File newMeta = new File(meta.getAbsolutePath().replaceAll(versionTag, ""));
-					boolean ok = false;
-					try {
-						FileUtils.copyFile(main, newMain);
-						FileUtils.copyFile(meta, newMeta);
-						ok = true;
-					} catch (IOException e) {
-						throw new ImportException(
-							String.format("Failed to create a copy of the HEAD version for %s from [%s] to [%s]",
-								this.cmfObject.getDescription(), main.getAbsolutePath(), newMain.getAbsolutePath()),
-							e);
-					} finally {
-						if (!ok) {
-							newMain.delete();
-							newMeta.delete();
-						}
-					}
-				}
 			}
 		}
 
