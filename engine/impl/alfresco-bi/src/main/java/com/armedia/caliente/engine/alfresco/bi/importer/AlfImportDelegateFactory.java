@@ -441,7 +441,7 @@ public class AlfImportDelegateFactory
 					if (!folder) {
 						// ERROR: insufficient data
 						throw new ImportException(
-							String.format("Incomplete version indexes found for %s (", cmfObject.getDescription()));
+							String.format("Incomplete version indexes found for %s", cmfObject.getDescription()));
 					}
 					// It's OK for directories...everything is 1
 					head = count = current = 1;
