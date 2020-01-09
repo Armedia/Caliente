@@ -189,20 +189,9 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		return ret;
 	}
 
-	@Override
-	protected boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
-		final Path path = this.object.getAbsolute().toPath();
-		CmfAttribute<CmfValue> att = null;
-		att = new CmfAttribute<>(IntermediateAttribute.NAME, CmfValue.Type.STRING, false);
-		att.setValue(new CmfValue(path.getFileName().toString()));
-		object.setAttribute(att);
-
-		att = new CmfAttribute<>(IntermediateAttribute.OBJECT_ID, CmfValue.Type.ID, false);
-		att.setValue(new CmfValue(getObjectId()));
-		object.setAttribute(att);
-
-		// Ok... we have the attribute views, export the information
+	protected void applyBasicFileAttributes(Path path, CmfObject<CmfValue> object) throws ExportException {
 		try {
+			CmfAttribute<CmfValue> att = null;
 			final BasicFileAttributeView basic = getFileAttributeView(path, BasicFileAttributeView.class);
 			BasicFileAttributes basicAtts = basic.readAttributes();
 
@@ -233,64 +222,102 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			throw new ExportException(String.format("Failed to collect the basic attribute information for [%s]", path),
 				e);
 		}
+	}
 
+	protected void applyUserDefinedAttributes(Path path, CmfObject<CmfValue> object) {
 		final UserDefinedFileAttributeView extendedAtts = getFileAttributeView(path,
 			UserDefinedFileAttributeView.class);
-		if (extendedAtts != null) {
-			try {
-				for (String name : extendedAtts.list()) {
-					int bytes = extendedAtts.size(name);
-					if (bytes == 0) {
-						continue;
-					}
-
-					ByteBuffer buf = ByteBuffer.allocate(bytes);
-					extendedAtts.read(name, buf);
-					buf.flip();
-					att = new CmfAttribute<>(String.format(LocalFileExportDelegate.EXT_ATT_FORMAT, name),
-						CmfValue.Type.BASE64_BINARY, false);
-					byte[] data = null;
-					if (buf.hasArray()) {
-						data = buf.array();
-					} else {
-						data = new byte[bytes];
-						buf.get(data);
-					}
-					att.setValue(new CmfValue(data));
-					object.setAttribute(att);
+		if (extendedAtts == null) { return; }
+		CmfAttribute<CmfValue> att = null;
+		try {
+			for (String name : extendedAtts.list()) {
+				int bytes = extendedAtts.size(name);
+				if (bytes == 0) {
+					continue;
 				}
-			} catch (Exception e) {
-				// Do nothing
-			}
-		}
 
+				ByteBuffer buf = ByteBuffer.allocate(bytes);
+				extendedAtts.read(name, buf);
+				buf.flip();
+				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.EXT_ATT_FORMAT, name),
+					CmfValue.Type.BASE64_BINARY, false);
+				byte[] data = null;
+				if (buf.hasArray()) {
+					data = buf.array();
+				} else {
+					data = new byte[bytes];
+					buf.get(data);
+				}
+				att.setValue(new CmfValue(data));
+				object.setAttribute(att);
+			}
+		} catch (Exception e) {
+			// Do nothing
+		}
+	}
+
+	protected void applyDosFileAttributes(Path path, CmfObject<CmfValue> object) {
 		final DosFileAttributeView dos = getFileAttributeView(path, DosFileAttributeView.class);
-		if (dos != null) {
-			try {
-				DosFileAttributes atts = dos.readAttributes();
-				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "hidden"),
-					CmfValue.Type.BOOLEAN, false);
-				att.setValue(new CmfValue(atts.isHidden()));
-				object.setAttribute(att);
+		if (dos == null) { return; }
+		CmfAttribute<CmfValue> att = null;
+		try {
+			DosFileAttributes atts = dos.readAttributes();
+			att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "hidden"),
+				CmfValue.Type.BOOLEAN, false);
+			att.setValue(new CmfValue(atts.isHidden()));
+			object.setAttribute(att);
 
-				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "system"),
-					CmfValue.Type.BOOLEAN, false);
-				att.setValue(new CmfValue(atts.isSystem()));
-				object.setAttribute(att);
+			att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "system"),
+				CmfValue.Type.BOOLEAN, false);
+			att.setValue(new CmfValue(atts.isSystem()));
+			object.setAttribute(att);
 
-				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "archive"),
-					CmfValue.Type.BOOLEAN, false);
-				att.setValue(new CmfValue(atts.isArchive()));
-				object.setAttribute(att);
+			att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "archive"),
+				CmfValue.Type.BOOLEAN, false);
+			att.setValue(new CmfValue(atts.isArchive()));
+			object.setAttribute(att);
 
-				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "readonly"),
-					CmfValue.Type.BOOLEAN, false);
-				att.setValue(new CmfValue(atts.isReadOnly()));
-				object.setAttribute(att);
-			} catch (Exception e) {
-				// do nothing...
-			}
+			att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "readonly"),
+				CmfValue.Type.BOOLEAN, false);
+			att.setValue(new CmfValue(atts.isReadOnly()));
+			object.setAttribute(att);
+		} catch (Exception e) {
+			// do nothing...
 		}
+	}
+
+	protected void applyPosixFileAttributes(Path path, CmfObject<CmfValue> object) {
+		final PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
+		if (posix == null) { return; }
+		CmfAttribute<CmfValue> att = null;
+		try {
+			PosixFileAttributes posixAtts = posix.readAttributes();
+			GroupPrincipal ownerGroup = posixAtts.group();
+			att = new CmfAttribute<>(IntermediateAttribute.GROUP, CmfValue.Type.STRING, false);
+			att.setValue(new CmfValue(ownerGroup.getName()));
+			object.setAttribute(att);
+		} catch (Exception e) {
+			// Do nothing...
+		}
+	}
+
+	@Override
+	protected boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
+		final Path path = this.object.getAbsolute().toPath();
+		CmfAttribute<CmfValue> att = null;
+		att = new CmfAttribute<>(IntermediateAttribute.NAME, CmfValue.Type.STRING, false);
+		att.setValue(new CmfValue(path.getFileName().toString()));
+		object.setAttribute(att);
+
+		att = new CmfAttribute<>(IntermediateAttribute.OBJECT_ID, CmfValue.Type.ID, false);
+		att.setValue(new CmfValue(getObjectId()));
+		object.setAttribute(att);
+
+		// Ok... we have the attribute views, export the information
+		applyBasicFileAttributes(path, object);
+		applyUserDefinedAttributes(path, object);
+		applyDosFileAttributes(path, object);
+		applyPosixFileAttributes(path, object);
 
 		UserPrincipal owner = getOwner(path);
 		if (owner != null) {
@@ -305,19 +332,6 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			att = new CmfAttribute<>(IntermediateAttribute.OWNER, CmfValue.Type.STRING, false);
 			att.setValue(new CmfValue(owner.getName()));
 			object.setAttribute(att);
-		}
-
-		final PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
-		if (posix != null) {
-			try {
-				PosixFileAttributes posixAtts = posix.readAttributes();
-				GroupPrincipal ownerGroup = posixAtts.group();
-				att = new CmfAttribute<>(IntermediateAttribute.GROUP, CmfValue.Type.STRING, false);
-				att.setValue(new CmfValue(ownerGroup.getName()));
-				object.setAttribute(att);
-			} catch (Exception e) {
-				// Do nothing...
-			}
 		}
 
 		/*
@@ -372,6 +386,25 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			att = new CmfAttribute<>(IntermediateAttribute.PATH, CmfValue.Type.STRING, true);
 			att.setValue(new CmfValue(this.object.getPortableFullPath()));
 			object.setAttribute(att);
+		}
+
+		LocalVersionHistory history = this.factory.getEngine().getHistory(this.object);
+		prop = new CmfProperty<>(IntermediateProperty.HEAD_NAME, IntermediateProperty.HEAD_NAME.type,
+			new CmfValue(history.getCurrentVersion().getName()));
+		object.setProperty(prop);
+		prop = new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
+			new CmfValue(history.size()));
+		object.setProperty(prop);
+		Integer historyIndex = history.getIndexFor(this.object.getId());
+		if (historyIndex != null) {
+			prop = new CmfProperty<>(IntermediateProperty.VERSION_INDEX, IntermediateProperty.VERSION_INDEX.type,
+				new CmfValue(historyIndex.intValue()));
+			object.setProperty(prop);
+			historyIndex = history.getCurrentIndex();
+			if (historyIndex != null) {
+				prop = new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
+					IntermediateProperty.VERSION_HEAD_INDEX.type, new CmfValue(historyIndex.intValue()));
+			}
 		}
 
 		return true;
