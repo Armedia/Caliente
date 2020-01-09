@@ -39,6 +39,7 @@ import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -344,6 +345,12 @@ public abstract class ExportEngine<//
 		return values;
 	}
 
+	protected boolean shouldFetchHistory(
+		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> referrent, CmfObject<VALUE> marshaled) {
+		if (referrent == null) { return true; }
+		return !Objects.equals(referrent.getHistoryId(), marshaled.getHistoryId());
+	}
+
 	private Result doExportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> referrent, final ExportTarget target,
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject, final CONTEXT ctx,
@@ -516,7 +523,7 @@ public abstract class ExportEngine<//
 			}
 
 			final boolean latestOnly = ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY);
-			if (!latestOnly) {
+			if (!latestOnly && shouldFetchHistory(referrent, marshaled)) {
 				try {
 					referenced = sourceObject.identifyAntecedents(marshaled, ctx);
 					if (referenced == null) {
@@ -655,7 +662,7 @@ public abstract class ExportEngine<//
 				this.log.debug("Successfully stored {} as object # {}", logLabel, ret);
 			}
 
-			if (!latestOnly) {
+			if (!latestOnly && shouldFetchHistory(referrent, marshaled)) {
 				try {
 					referenced = sourceObject.identifySuccessors(marshaled, ctx);
 					if (referenced == null) {
