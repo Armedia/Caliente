@@ -171,7 +171,7 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	private static final Pattern VERSION_SUFFIX = Pattern.compile("^.*?(\\.v([a-z0-9_]+(?:\\.[a-z0-9_]+)?))$");
+	private static final Pattern VERSION_SUFFIX = Pattern.compile("^.*(\\.v(\\d+(?:\\.\\d+)?))$");
 
 	private static final BigDecimal LAST_INDEX = new BigDecimal(Long.MAX_VALUE);
 
