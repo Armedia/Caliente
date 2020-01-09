@@ -60,7 +60,7 @@ public class LocalVersionLayout {
 		VersionInfo(Path path, Path radix, String tag) {
 			this.path = path;
 			this.radix = radix;
-			this.historyId = LocalCommon.calculateId(radix.toString());
+			this.historyId = LocalCommon.calculateId(LocalCommon.toPortablePath(radix.toString()));
 			this.tag = (StringUtils.isBlank(tag) ? StringUtils.EMPTY : tag);
 		}
 

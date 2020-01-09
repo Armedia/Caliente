@@ -138,10 +138,10 @@ class LocalFile {
 		}
 
 		if (versionInfo != null) {
-			this.historyRadix = versionInfo.getRadix().toString();
+			this.historyRadix = LocalCommon.toPortablePath(versionInfo.getRadix().toString());
 			this.versionTag = versionInfo.getTag();
 		} else {
-			this.historyRadix = p.toString();
+			this.historyRadix = LocalCommon.toPortablePath(p.toString());
 			this.versionTag = StringUtils.EMPTY;
 		}
 
