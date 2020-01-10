@@ -117,6 +117,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		this.reference = ((reference != null) && !reference.isNull() && reference.asBoolean());
 		CmfValue virtual = getPropertyValue(IntermediateProperty.VDOC_HISTORY);
 		this.virtual = ((virtual != null) && !virtual.isNull() && virtual.asBoolean());
+		if (this.virtual) { throw new ImportException("Virtual documents aren't currently supported"); }
 		this.defaultType = this.factory.getType(defaultType);
 		this.referenceType = this.factory.getType(AlfImportFileableDelegate.REFERENCE_TYPE);
 	}
