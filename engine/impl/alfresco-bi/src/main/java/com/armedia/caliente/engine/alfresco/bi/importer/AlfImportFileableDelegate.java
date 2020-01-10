@@ -59,6 +59,7 @@ import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
@@ -733,8 +734,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					}
 				}
 			} else {
-				final boolean folder = (main.exists() && main.isFile() ? false : true);
-				this.factory.storeToIndex(ctx, folder, this.cmfObject, content, main, meta, markerType);
+				this.factory.storeToIndex(ctx, (this.cmfObject.getType() == Archetype.FOLDER), this.cmfObject, content,
+					main, meta, markerType);
 			}
 		}
 
