@@ -34,36 +34,46 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.tools.VersionNumberScheme;
 
 /**
- * <p>
- * {@code create cached global temporary table if not exists table_name ( columns... ) transactional;}
- * </p>
- * <p>
- * No tag: {@code <parent/prefix[.ext]>}
- * </p>
- * <p>
- * With tag: {@code <parent/prefix[.ext]>.v(versionTag)}
- * </p>
  *
  * @author diego
  *
  */
 public class SimpleVersionLayout extends LocalVersionLayout {
 
+	private static final String DEFAULT_TAG_SEPARATOR = ".v";
+
 	private static final String NULL_SCHEME_PATTERN = "(.*)";
 	private final Pattern pattern;
 
 	public SimpleVersionLayout(VersionNumberScheme numberScheme) {
+		this(numberScheme, SimpleVersionLayout.DEFAULT_TAG_SEPARATOR);
+	}
+
+	public SimpleVersionLayout(VersionNumberScheme numberScheme, String tagSeparator) {
 		super(numberScheme, null);
 		String schemePattern = SimpleVersionLayout.NULL_SCHEME_PATTERN;
 		if (numberScheme != null) {
 			schemePattern = numberScheme.toPattern().pattern();
 		}
-		this.pattern = Pattern.compile("^(.*?)(?:.v" + schemePattern + ")?$");
+
+		if (tagSeparator == null) {
+			tagSeparator = SimpleVersionLayout.DEFAULT_TAG_SEPARATOR;
+		}
+		if (StringUtils.isEmpty(tagSeparator)) {
+			tagSeparator = StringUtils.EMPTY;
+		} else {
+			tagSeparator = Pattern.quote(tagSeparator);
+
+		}
+
+		this.pattern = Pattern.compile("^(.*?)(?:" + tagSeparator + schemePattern + ")?$");
 	}
 
 	@Override

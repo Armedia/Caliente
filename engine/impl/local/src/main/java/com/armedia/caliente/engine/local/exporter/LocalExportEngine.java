@@ -111,6 +111,7 @@ public class LocalExportEngine extends
 
 		final VersionNumberScheme scheme;
 		final String schemeName = settings.getString(LocalSetting.VERSION_SCHEME);
+		final String tagSeparator = settings.getString(LocalSetting.VERSION_TAG_SEPARATOR);
 		if (!StringUtils.isBlank(schemeName)) {
 			final boolean emptyIsRoot = Tools.coalesce(settings.getBoolean(LocalSetting.VERSION_SCHEME_EMPTY_IS_ROOT),
 				Boolean.FALSE);
@@ -142,7 +143,7 @@ public class LocalExportEngine extends
 			case VERSION_LAYOUT_HIERARCHICAL:
 				// TODO: Implement this
 			case VERSION_LAYOUT_FLAT:
-				this.versionLayout = new SimpleVersionLayout(scheme);
+				this.versionLayout = new SimpleVersionLayout(scheme, tagSeparator);
 				break;
 
 			default:

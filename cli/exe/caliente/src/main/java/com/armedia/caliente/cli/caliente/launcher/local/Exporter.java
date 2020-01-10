@@ -71,6 +71,13 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		.setValueFilter(new StringValueFilter(LocalExportEngine.VERSION_SCHEMES)) //
 	;
 
+	private static final Option VERSION_TAG_SEPARATOR = new OptionImpl() //
+		.setLongOpt("version-tag-separator") //
+		.setDescription("The string that separates the base filename from the version tag") //
+		.setArgumentLimits(1) //
+		.setArgumentName("string") //
+	;
+
 	private static final Option VERSION_LAYOUT = new OptionImpl() //
 		.setLongOpt("version-layout") //
 		.setDescription("The version layout to use (how files are organized on disk)") //
@@ -83,6 +90,7 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		.add(Exporter.COPY_CONTENT) //
 		.add(Exporter.IGNORE_EMPTY_FOLDERS) //
 		.add(Exporter.VERSION_SCHEME) //
+		.add(Exporter.VERSION_TAG_SEPARATOR) //
 		.add(Exporter.VERSION_LAYOUT) //
 	;
 
@@ -187,6 +195,8 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		settings.put(LocalSetting.IGNORE_EMPTY_FOLDERS.getLabel(),
 			commandValues.isPresent(Exporter.IGNORE_EMPTY_FOLDERS));
 		settings.put(LocalSetting.VERSION_SCHEME.getLabel(), commandValues.getString(Exporter.VERSION_SCHEME));
+		settings.put(LocalSetting.VERSION_TAG_SEPARATOR.getLabel(),
+			commandValues.getString(Exporter.VERSION_TAG_SEPARATOR));
 		settings.put(LocalSetting.VERSION_LAYOUT.getLabel(), commandValues.getString(Exporter.VERSION_LAYOUT));
 		return EngineInterface.commonConfigure(commandValues, settings);
 	}
