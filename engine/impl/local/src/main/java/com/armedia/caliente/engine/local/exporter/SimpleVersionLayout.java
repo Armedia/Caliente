@@ -70,7 +70,6 @@ public class SimpleVersionLayout extends LocalVersionLayout {
 			tagSeparator = StringUtils.EMPTY;
 		} else {
 			tagSeparator = Pattern.quote(tagSeparator);
-
 		}
 
 		this.pattern = Pattern.compile("^(.*?)(?:" + tagSeparator + schemePattern + ")?$");
