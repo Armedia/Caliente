@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -70,7 +71,7 @@ import com.armedia.commons.utilities.Tools;
 
 abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
-	protected static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+	protected static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
 	public static final String REFERENCE_TYPE = "arm:reference";
 	public static final String STATUS_ASPECT = "arm:calienteStatus";
@@ -735,9 +736,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					}
 				}
 			} else {
-				this.factory.storeToIndex(ctx, (this.cmfObject.getType() == Archetype.FOLDER), this.cmfObject, content,
-					main, meta, markerType);
-			}
+			this.factory.storeToIndex(ctx, (this.cmfObject.getType() == Archetype.FOLDER), this.cmfObject, content,
+				main, meta, markerType);
+		}
 		}
 
 		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), path));
