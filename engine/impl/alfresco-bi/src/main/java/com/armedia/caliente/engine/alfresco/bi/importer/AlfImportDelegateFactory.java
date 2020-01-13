@@ -57,7 +57,6 @@ import javax.xml.validation.Schema;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
@@ -102,28 +101,6 @@ public class AlfImportDelegateFactory
 
 		private VirtualDocument(String historyId) {
 			this.historyId = historyId;
-		}
-
-		public void setRoot(ScanIndexItemMarker marker) throws ImportException {
-			if (this.root != null) { throw new ImportException("This virtual document already has a root element"); }
-			this.root = marker;
-		}
-
-		public void addVersion(ScanIndexItemMarker version) throws ImportException {
-			if (this.versions.containsKey(version.getTargetName())) {
-				throw new ImportException(
-					String.format("This virtual document already has a version called [%s]", version.getTargetName()));
-			}
-			this.versions.put(version.getTargetName(), version);
-			this.members.put(version.getTargetName(), new ArrayList<ScanIndexItemMarker>());
-		}
-
-		public void addMember(String version, ScanIndexItemMarker member) throws ImportException {
-			List<ScanIndexItemMarker> markers = this.members.get(version);
-			if ((markers == null) || !this.versions.containsKey(version)) {
-				throw new ImportException(String.format("This virtual document has no version called [%s]", version));
-			}
-			markers.add(member);
 		}
 
 		public void serialize() throws Exception {
@@ -381,15 +358,6 @@ public class AlfImportDelegateFactory
 			case RENDITION_ENTRY:
 				renditionRootPath = String.format("%s-renditions", cmfObject.getId());
 				// Fall-through
-			case VDOC_ROOT:
-			case VDOC_VERSION:
-			case VDOC_STREAM:
-			case VDOC_RENDITION:
-			case VDOC_REFERENCE:
-				head = 1;
-				count = 1;
-				current = 1;
-				break;
 
 			case NORMAL:
 			default:
@@ -493,31 +461,11 @@ public class AlfImportDelegateFactory
 			renditionTypeStr = typeStr;
 		}
 
-		String append = null;
 		// This is the base name, others may change it...
 		thisMarker.setTargetName(contentFile.getName());
 		switch (type) {
-			case VDOC_ROOT:
-				thisMarker.setDirectory(true);
 			case NORMAL:
 				thisMarker.setTargetName(ctx.getObjectName(cmfObject));
-				break;
-
-			case VDOC_RENDITION:
-				// fall-through
-			case VDOC_STREAM:
-				// For the primary streams, we set the same name of the object
-				thisMarker.setTargetName(ctx.getObjectName(cmfObject));
-				// fall-through
-			case VDOC_REFERENCE:
-				// For the member, we have to append one more item to the cmsPath
-				append = contentFile.getParentFile().getName();
-				// fall-through
-			case VDOC_VERSION:
-				targetPath = String.format("%s/%s", targetPath, ctx.getObjectName(cmfObject));
-				if (append != null) {
-					targetPath = String.format("%s/%s", targetPath, append);
-				}
 				break;
 
 			case RENDITION_ROOT:
@@ -553,31 +501,6 @@ public class AlfImportDelegateFactory
 		thisMarker.setHeadIndex(head);
 		thisMarker.setVersionCount(count);
 		return thisMarker;
-	}
-
-	private final void handleVirtual(final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile,
-		MarkerType type, ScanIndexItemMarker thisMarker) throws ImportException {
-		VirtualDocument vdoc = ConcurrentUtils.createIfAbsentUnchecked(this.vdocs, cmfObject.getHistoryId(),
-			() -> new VirtualDocument(cmfObject.getHistoryId()));
-
-		switch (type) {
-			case VDOC_ROOT:
-				vdoc.setRoot(thisMarker);
-				break;
-
-			case VDOC_VERSION:
-				vdoc.addVersion(thisMarker);
-				break;
-
-			case VDOC_RENDITION:
-			case VDOC_STREAM:
-			case VDOC_REFERENCE:
-				vdoc.addMember(contentFile.getParentFile().getName(), thisMarker);
-				break;
-
-			default:
-				break;
-		}
 	}
 
 	final File generateMetadataFile(final Properties p, final CmfObject<CmfValue> cmfObject, final File main)
@@ -714,14 +637,6 @@ public class AlfImportDelegateFactory
 			metadataFile, type);
 		List<ScanIndexItemMarker> markerList = null;
 		switch (type) {
-			case VDOC_ROOT:
-			case VDOC_VERSION:
-			case VDOC_STREAM:
-			case VDOC_RENDITION:
-			case VDOC_REFERENCE:
-				handleVirtual(cmfObject, contentFile, metadataFile, type, thisMarker);
-				return;
-
 			case RENDITION_ROOT:
 			case RENDITION_TYPE:
 			case RENDITION_ENTRY:
