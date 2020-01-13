@@ -306,7 +306,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		}
 
 		ShptFile headVersion = null;
-		if (this.isHistoryCurrent()) {
+		if (isHistoryCurrent()) {
 			headVersion = this;
 		} else {
 			headVersion = this.successors.stream().filter(ShptFile::isHistoryCurrent).findFirst().orElse(null);
@@ -318,14 +318,17 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 		object.setProperty(new CmfProperty<>(IntermediateProperty.HEAD_NAME, CmfValue.Type.STRING,
 			new CmfValue(headVersion.getName())));
-		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT, CmfValue.Type.BOOLEAN,
-			new CmfValue(isRoot || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY))));
-		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, CmfValue.Type.INTEGER,
-			new CmfValue(this.predecessors.size() + this.successors.size() + 1)));
-		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX, CmfValue.Type.INTEGER,
-			new CmfValue(this.predecessors.size())));
-		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, CmfValue.Type.INTEGER,
-			new CmfValue(this.predecessors.size() + this.successors.size())));
+		object.setProperty(
+			new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT, IntermediateProperty.VERSION_TREE_ROOT.type,
+				new CmfValue(isRoot || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY))));
+		object
+			.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
+				new CmfValue(this.predecessors.size() + this.successors.size() + 1)));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX,
+			IntermediateProperty.VERSION_INDEX.type, new CmfValue(this.predecessors.size())));
+		object.setProperty(
+			new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, IntermediateProperty.VERSION_HEAD_INDEX.type,
+				new CmfValue(this.predecessors.size() + this.successors.size())));
 
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.VERSION.name, CmfValue.Type.STRING, true, versionNames));
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.VERSION_TREE.name, CmfValue.Type.ID, false,

@@ -157,8 +157,8 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			}
 		}
 
-		properties.add(new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION, CmfValue.Type.BOOLEAN,
-			new CmfValue(newestVersion)));
+		properties.add(new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION,
+			IntermediateProperty.IS_NEWEST_VERSION.type, new CmfValue(newestVersion)));
 
 		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
 			new CmfValue(versionCount)));

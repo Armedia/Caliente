@@ -104,16 +104,16 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		DfcVersionHistory<IDfSysObject> history = getVersionHistory(ctx, document);
 		properties.add(new CmfProperty<>(IntermediateProperty.HEAD_NAME, IntermediateProperty.HEAD_NAME.type,
 			DfValueFactory.of(history.getCurrentVersion().getObject().getObjectName())));
-		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, DctmDataType.DF_INTEGER.getStoredType(),
+		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
 			false, DfValueFactory.of(history.size())));
 		Integer historyIndex = history.getIndexFor(document.getObjectId());
 		if (historyIndex != null) {
 			properties.add(new CmfProperty<>(IntermediateProperty.VERSION_INDEX,
-				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.of(historyIndex)));
+				IntermediateProperty.VERSION_INDEX.type, false, DfValueFactory.of(historyIndex)));
 			historyIndex = history.getCurrentIndex();
 			if (historyIndex != null) {
 				properties.add(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
-					DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.of(historyIndex)));
+					IntermediateProperty.VERSION_HEAD_INDEX.type, false, DfValueFactory.of(historyIndex)));
 			}
 		}
 
