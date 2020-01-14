@@ -102,8 +102,8 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 
 	private class LocalHandle extends Handle {
 
-		protected LocalHandle(CmfObject<?> object, CmfContentStream info, URI locator) {
-			super(object, info, locator);
+		protected LocalHandle(CmfContentStream info, URI locator) {
+			super(info, locator, locator.toString());
 		}
 
 	}
@@ -606,8 +606,8 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	@Override
-	protected LocalHandle constructHandle(CmfObject<?> object, CmfContentStream info, URI locator) {
-		return new LocalHandle(object, info, locator);
+	protected LocalHandle constructHandle(CmfContentStream info, URI locator) {
+		return new LocalHandle(info, locator);
 	}
 
 	@Override
