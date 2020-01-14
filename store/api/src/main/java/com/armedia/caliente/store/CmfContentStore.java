@@ -251,7 +251,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		return locator;
 	}
 
-	public final <VALUE> Handle newHandle(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
+	public final <VALUE> Handle addContentStream(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }

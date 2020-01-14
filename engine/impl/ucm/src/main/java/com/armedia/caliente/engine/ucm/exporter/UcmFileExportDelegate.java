@@ -258,7 +258,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			info.setProperty("description", rendition.getDescription());
 
 			contents.add(info);
-			CmfContentStore<?, ?>.Handle contentHandle = streamStore.newHandle(translator, marshalled, info);
+			CmfContentStore<?, ?>.Handle contentHandle = streamStore.addContentStream(translator, marshalled, info);
 			if (!skipContent) {
 				// Doesn't support file-level, so we (sadly) use stream-level transfers
 				try (InputStream in = this.object.getInputStream(ctx.getSession(), rendition.getType())) {

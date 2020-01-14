@@ -505,10 +505,10 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		info.setLength(src.length());
 		info.setFileName(src.getName());
 		ret.add(info);
+		final CmfContentStore<?, ?>.Handle h = streamStore.addContentStream(translator, marshalled, info);
 		boolean skipContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		if (this.factory.isCopyContent() && !skipContent) {
 			try {
-				CmfContentStore<?, ?>.Handle h = streamStore.findHandle(info);
 				File tgt = h.getFile(true);
 				if (tgt != null) {
 					if (this.log.isDebugEnabled()) {
