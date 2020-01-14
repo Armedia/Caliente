@@ -36,7 +36,9 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
@@ -136,25 +138,23 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 
 		public File getFile() throws CmfStorageException {
-			return CmfContentStore.this.getFile(this);
+			return getFile(false);
 		}
 
 		public final File getFile(boolean ensureParents) throws CmfStorageException {
-			File f = CmfContentStore.this.getFile(this);
-			if (ensureParents) {
-				ensureParentExists(f);
-			}
-			return f;
+			Path p = getPath(ensureParents);
+			if (p == null) { return null; }
+			return p.toFile();
 		}
 
 		public Path getPath() throws CmfStorageException {
-			return CmfContentStore.this.getPath(this);
+			return getPath(false);
 		}
 
 		public final Path getPath(boolean ensureParents) throws CmfStorageException {
 			Path p = CmfContentStore.this.getPath(this);
 			if (ensureParents) {
-				ensureParentExists(p.toFile());
+				ensureParentExists(p);
 			}
 			return p;
 		}
@@ -196,12 +196,12 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	protected abstract File doGetRootLocation();
 
-	private void ensureParentExists(File f) throws CmfStorageException {
-		if (f == null) { throw new IllegalArgumentException("Must provide a valid file to check against"); }
-		File parent = f.getParentFile();
+	private void ensureParentExists(Path p) throws CmfStorageException {
+		if (p == null) { throw new IllegalArgumentException("Must provide a valid path to check against"); }
+		Path parent = p.getParent();
 		if (parent == null) { return; }
 
-		if (!parent.exists()) {
+		if (!Files.exists(parent)) {
 			IOException caught = null;
 			for (int i = 0; (i < 3); i++) {
 				if (i > 0) {
@@ -215,7 +215,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 				try {
 					caught = null;
-					FileUtils.forceMkdir(parent);
+					FileUtils.forceMkdir(parent.toFile());
 					break;
 				} catch (IOException e) {
 					// Something went wrong...
@@ -224,14 +224,12 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			}
 			if (caught != null) {
 				throw new CmfStorageException(
-					String.format("Failed to create the parent content directory [%s]", parent.getAbsolutePath()),
-					caught);
+					String.format("Failed to create the parent content directory [%s]", parent), caught);
 			}
 		}
 
-		if (!parent.isDirectory()) {
-			throw new CmfStorageException(
-				String.format("The parent location [%s] is not a directory", parent.getAbsoluteFile()));
+		if (!Files.isDirectory(parent)) {
+			throw new CmfStorageException(String.format("The parent location [%s] is not a directory", parent));
 		}
 	}
 
@@ -281,28 +279,6 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		return new Handle(info, encodeLocator(locator));
 	}
 
-	protected final File getFile(Handle handle) throws CmfStorageException {
-		try (SharedAutoLock lock = autoSharedLock()) {
-			assertOpen();
-
-			// Short-cut, no need to look if we won't do anything
-			if (!isSupportsFileAccess()) { return null; }
-
-			LOCATOR locator = getLocator(handle);
-			File f = getFile(locator);
-			if (f == null) {
-				throw new IllegalStateException("getFile() returned null - did you forget to override the method?");
-			}
-			return Tools.canonicalize(f);
-		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to locate the file for %s", handle), e);
-		}
-	}
-
-	protected File getFile(LOCATOR locator) throws IOException {
-		return null;
-	}
-
 	protected final Path getPath(Handle handle) throws CmfStorageException {
 		try (SharedAutoLock lock = autoSharedLock()) {
 			assertOpen();
@@ -317,7 +293,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			}
 			return Tools.canonicalize(p);
 		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to locate the path for %s", handle), e);
+			throw new CmfStorageException(String.format("Failed to locate the file for %s", handle), e);
 		}
 	}
 
@@ -353,18 +329,18 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 			// First, let's try a shortcut
 			if (isSupportsFileAccess()) {
-				final File f;
+				final Path p;
 				try {
-					f = getFile(locator);
+					p = getPath(locator);
 				} catch (IOException e) {
 					throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator),
 						e);
 				}
 				try {
-					return FileChannel.open(f.toPath(), StandardOpenOption.READ);
+					return FileChannel.open(p, StandardOpenOption.READ);
 				} catch (IOException e) {
 					throw new CmfStorageException(
-						String.format("Failed to open a readable channel from the file [%s]", f.getAbsolutePath()), e);
+						String.format("Failed to open a readable channel from the file [%s]", p), e);
 				}
 			}
 
@@ -398,24 +374,23 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 			// First, let's try a shortcut
 			if (isSupportsFileAccess()) {
-				final File f;
+				final Path p;
 				try {
-					f = getFile(locator);
+					p = getPath(locator);
 				} catch (IOException e) {
 					throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator),
 						e);
 				}
-				ensureParentExists(f);
+				ensureParentExists(p);
 
-				try (FileChannel out = FileChannel.open(f.toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+				try (FileChannel out = FileChannel.open(p, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
 					StandardOpenOption.TRUNCATE_EXISTING)) {
 					return out.transferFrom(in, 0, Long.MAX_VALUE);
 				} catch (FileNotFoundException e) {
-					throw new CmfStorageException(
-						String.format("Failed to open an output stream to the file [%s]", f.getAbsolutePath()), e);
+					throw new CmfStorageException(String.format("Failed to open an output stream to the file [%s]", p),
+						e);
 				} catch (IOException e) {
-					throw new CmfStorageException(
-						String.format("Failed to copy the content from the file [%s]", f.getAbsolutePath()), e);
+					throw new CmfStorageException(String.format("Failed to copy the content from the file [%s]", p), e);
 				}
 			}
 
@@ -445,15 +420,27 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	protected abstract long store(OPERATION operation, LOCATOR locator, ReadableByteChannel in)
 		throws CmfStorageException;
 
-	protected final long store(Handle handle, File file) throws CmfStorageException {
-		return store(handle, Objects.requireNonNull(file, "Must provide a File instance").toPath());
+	protected final long store(Handle handle, File source) throws CmfStorageException {
+		return store(handle, Objects.requireNonNull(source, "Must provide a File instance").toPath());
 	}
 
-	protected final long store(Handle handle, Path path) throws CmfStorageException {
-		try (FileChannel in = FileChannel.open(path, StandardOpenOption.READ)) {
+	protected final long store(Handle handle, Path source) throws CmfStorageException {
+		// Shortcut!
+		if (isSupportsFileAccess()) {
+			Path target = getPath(handle);
+			try {
+				ensureParentExists(target);
+				Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+				return Files.size(target);
+			} catch (IOException e) {
+				throw new CmfStorageException(String.format("Failed to copy the file [%s] as [%s]", source, target), e);
+			}
+		}
+
+		try (FileChannel in = FileChannel.open(source, StandardOpenOption.READ)) {
 			return store(handle, in);
 		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to store the content into the Path [%s]", path), e);
+			throw new CmfStorageException(String.format("Failed to store the content into the Path [%s]", source), e);
 		}
 	}
 
@@ -493,16 +480,28 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		});
 	}
 
-	protected final long read(Handle handle, File file) throws CmfStorageException {
-		return read(handle, Objects.requireNonNull(file, "Must provide a File instance").toPath());
+	protected final long read(Handle handle, File target) throws CmfStorageException {
+		return read(handle, Objects.requireNonNull(target, "Must provide a File instance").toPath());
 	}
 
-	protected final long read(Handle handle, Path path) throws CmfStorageException {
-		try (FileChannel out = FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
+	protected final long read(Handle handle, Path target) throws CmfStorageException {
+		// Shortcut!
+		if (isSupportsFileAccess()) {
+			Path source = getPath(handle);
+			try {
+				ensureParentExists(target);
+				Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+				return Files.size(target);
+			} catch (IOException e) {
+				throw new CmfStorageException(String.format("Failed to copy the file [%s] as [%s]", source, target), e);
+			}
+		}
+
+		try (FileChannel out = FileChannel.open(target, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
 			StandardOpenOption.APPEND, StandardOpenOption.WRITE)) {
 			return read(handle, out);
 		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to store the content into the Path [%s]", path), e);
+			throw new CmfStorageException(String.format("Failed to store the content into the Path [%s]", target), e);
 		}
 	}
 
@@ -548,21 +547,20 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		try {
 			if (isSupportsFileAccess()) {
 				op = null;
-				final File f;
+				final Path p;
 				try {
-					f = getFile(locator);
+					p = getPath(locator);
 				} catch (IOException e) {
 					throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator),
 						e);
 				}
-				ensureParentExists(f);
+				ensureParentExists(p);
 				try {
-					out = FileChannel.open(f.toPath(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
+					out = FileChannel.open(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
 						StandardOpenOption.APPEND);
 				} catch (IOException e) {
 					throw new CmfStorageException(
-						String.format("Failed to open a writable byte channel to the file [%s]", f.getAbsolutePath()),
-						e);
+						String.format("Failed to open a writable byte channel to the file [%s]", p), e);
 				}
 			} else {
 				op = newOperation(false);
@@ -648,7 +646,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			// First, let's try a shortcut
 			if (isSupportsFileAccess()) {
 				try {
-					getFile(locator).exists();
+					return Files.exists(getPath(locator));
 				} catch (IOException e) {
 					throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator),
 						e);
@@ -681,12 +679,12 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			// First, let's try a shortcut
 			if (isSupportsFileAccess()) {
 				try {
-					File f = getFile(locator);
-					if (!f.exists() || !f.isFile()) {
+					Path p = getPath(locator);
+					if (!Files.exists(p) || !Files.isRegularFile(p)) {
 						throw new CmfStorageException(
 							String.format("Locator [%s] doesn't refer to an existing and valid file", locator));
 					}
-					return f.length();
+					return Files.size(p);
 				} catch (IOException e) {
 					throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator),
 						e);
