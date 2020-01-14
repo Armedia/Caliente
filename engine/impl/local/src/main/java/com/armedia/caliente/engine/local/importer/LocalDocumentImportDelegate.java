@@ -75,7 +75,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 
 		boolean created = true;
 		for (CmfContentStream info : contents) {
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
+			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().createHandle(translator, this.cmfObject, info);
 			final File src;
 			try {
 				src = h.getFile();

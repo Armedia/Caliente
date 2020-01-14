@@ -437,7 +437,7 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 		boolean skipContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		if (this.factory.isCopyContent() && !skipContent) {
 			try {
-				CmfContentStore<?, ?>.Handle h = streamStore.getHandle(translator, marshalled, info);
+				CmfContentStore<?, ?>.Handle h = streamStore.createHandle(translator, marshalled, info);
 				File tgt = h.getFile(true);
 				if (tgt != null) {
 					if (this.log.isDebugEnabled()) {

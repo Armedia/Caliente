@@ -629,7 +629,7 @@ public abstract class ExportEngine<//
 				CmfContentStream md = new CmfContentStream(0, "metadata", 1);
 				md.setProperty(CmfContentStream.BASENAME, "metadata." + type.name());
 				md.setExtension("xml");
-				CmfContentStore<?, ?>.Handle h = streamStore.getHandle(CmfAttributeTranslator.CMFVALUE_TRANSLATOR,
+				CmfContentStore<?, ?>.Handle h = streamStore.createHandle(CmfAttributeTranslator.CMFVALUE_TRANSLATOR,
 					encoded, md);
 				try (OutputStream out = h.getOutputStream()) {
 					XmlBase.storeToXML(new MetadataT(encoded), out);

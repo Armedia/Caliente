@@ -406,7 +406,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		if (skipContent) { return info; }
 
 		// CmfStore the content in the filesystem
-		CmfContentStore<?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, info);
+		CmfContentStore<?, ?>.Handle contentHandle = streamStore.createHandle(translator, marshaled, info);
 		try {
 			if (contentHandle.getSourceStore().isSupportsFileAccess()) {
 				document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, info.getRenditionPage(),

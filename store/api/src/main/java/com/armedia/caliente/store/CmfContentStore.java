@@ -412,21 +412,25 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 	}
 
-	protected abstract Handle constructHandle(CmfObject<?> object, CmfContentStream info, LOCATOR locator);
+	protected abstract <VALUE> Handle constructHandle(CmfObject<VALUE> object, CmfContentStream info, LOCATOR locator);
 
 	protected final LOCATOR extractLocator(Handle handle) {
 		if (handle == null) { throw new IllegalArgumentException("Must provide a handle whose locator to extract"); }
 		return handle.locator;
 	}
 
-	public final <T> Handle getHandle(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+	public final <VALUE> Handle createHandle(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }
 		return constructHandle(object, info, calculateLocator(translator, object, info));
 	}
 
-	protected final <T> LOCATOR calculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+	public final Handle getHandle(CmfContentStream info) {
+		return null;
+	}
+
+	protected final <VALUE> LOCATOR calculateLocator(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }

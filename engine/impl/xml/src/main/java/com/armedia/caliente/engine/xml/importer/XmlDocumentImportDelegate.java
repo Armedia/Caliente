@@ -116,7 +116,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 				// Skip the non-default rendition
 				continue;
 			}
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
+			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().createHandle(translator, this.cmfObject, info);
 			final File f;
 			try {
 				f = h.getFile();
@@ -146,7 +146,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		if (contents == 0) {
 			// Generate a placeholder, empty file
 			CmfContentStream info = new CmfContentStream(0);
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
+			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().createHandle(translator, this.cmfObject, info);
 			File f = null;
 			try {
 				f = h.getFile(true);
