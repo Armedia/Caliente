@@ -301,7 +301,7 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		return str;
 	}
 
-	private <T> String constructFileName(Location loc) {
+	private String constructFileName(Location loc) {
 		String baseName = loc.baseName;
 		String descriptor = (this.ignoreDescriptor ? "" : loc.descriptor);
 		String ext = loc.extension;
@@ -341,7 +341,7 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	@Override
-	protected <T> URI doCalculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+	protected <VALUE> URI doCalculateLocator(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
 		final Location location = this.organizer.getLocation(translator, object, info);
 		final List<String> rawPath = new ArrayList<>(location.containerSpec);
