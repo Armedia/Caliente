@@ -772,6 +772,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	public final void clearAllStreams() throws CmfStorageException {
 		runExclusively((operation) -> {
+			assertOpen();
 			final boolean tx = operation.begin();
 			try {
 				clearAllStreams(operation);
