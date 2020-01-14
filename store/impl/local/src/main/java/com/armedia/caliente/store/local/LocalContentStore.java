@@ -42,6 +42,9 @@ import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -381,91 +384,83 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	@Override
-	protected final File getFile(URI locator) {
-		return new File(this.baseDir, locator.getSchemeSpecificPart());
+	protected final Path getPath(URI locator) {
+		return new File(this.baseDir, locator.getSchemeSpecificPart()).toPath();
 	}
 
 	@Override
 	protected FileChannel openChannel(LocalStoreOperation op, URI locator) throws CmfStorageException {
-		final File f = getFile(locator);
+		final Path p = getPath(locator);
 		try {
-			return FileChannel.open(f.toPath(), StandardOpenOption.READ);
+			return FileChannel.open(p, StandardOpenOption.READ);
 		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to open the file at [%s] for input", f), e);
+			throw new CmfStorageException(String.format("Failed to open the file at [%s] for input", p), e);
 		}
 	}
 
 	@Override
 	protected long store(LocalStoreOperation op, URI locator, ReadableByteChannel in) throws CmfStorageException {
-		final File f = getFile(locator);
-		f.getParentFile().mkdirs(); // Create the parents, if needed
-
-		boolean created;
-		try {
-			created = f.createNewFile();
+		try (FileChannel channel = createChannel(op, locator)) {
+			return channel.transferFrom(channel, 0, Long.MAX_VALUE);
 		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to create the file at [%s]", f), e);
-		}
-		if (!created) {
-			if (this.failOnCollisions) {
-				throw new CmfStorageException(String.format(
-					"Filename collision detected for target file [%s] - a file already exists at that location",
-					f.getAbsolutePath()));
-			}
-			if (!f.exists()) {
-				throw new CmfStorageException(
-					String.format("Failed to create the non-existent target file [%s]", f.getAbsolutePath()));
-			}
-		}
-
-		final long size = getSize(op, locator);
-		try (FileChannel out = createChannel(op, locator)) {
-			return out.transferFrom(in, 0, size);
-		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to transfer data into the file at [%s]", locator), e);
+			throw new CmfStorageException(
+				String.format("Failed to transfer the contents to the stream at locator [%s]", locator), e);
 		}
 	}
 
 	@Override
 	protected FileChannel createChannel(LocalStoreOperation op, URI locator) throws CmfStorageException {
-		final File f = getFile(locator);
-		f.getParentFile().mkdirs(); // Create the parents, if needed
+		final Path p = getPath(locator);
 
-		boolean created;
+		Path parent = p.getParent();
+		if ((parent != null) && !Files.exists(parent)) {
+			try {
+				Files.createDirectories(parent);
+			} catch (IOException e) {
+				throw new CmfStorageException(
+					String.format("Failed to create the parent path [%s] for [%s]", parent, p), e);
+			}
+		}
+
+		boolean created = false;
 		try {
-			created = f.createNewFile();
+			Files.createFile(p);
+			created = true;
+		} catch (FileAlreadyExistsException e) {
+			created = false;
 		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to create the file at [%s]", f), e);
+			throw new CmfStorageException(String.format("Failed to create the file at [%s]", p), e);
 		}
 		if (!created) {
 			if (this.failOnCollisions) {
 				throw new CmfStorageException(String.format(
-					"Filename collision detected for target file [%s] - a file already exists at that location",
-					f.getAbsolutePath()));
+					"Filename collision detected for target file [%s] - a file already exists at that location", p));
 			}
-			if (!f.exists()) {
-				throw new CmfStorageException(
-					String.format("Failed to create the non-existent target file [%s]", f.getAbsolutePath()));
+			if (!Files.exists(p)) {
+				throw new CmfStorageException(String.format("Failed to create the non-existent target file [%s]", p));
 			}
 		}
 		try {
-			return FileChannel.open(f.toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE,
-				StandardOpenOption.APPEND);
+			return FileChannel.open(p, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND);
 		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to open the FileChannel to the file at [%s]", f), e);
+			throw new CmfStorageException(String.format("Failed to open the FileChannel to the file at [%s]", p), e);
 		}
 	}
 
 	@Override
 	protected boolean exists(LocalStoreOperation op, URI locator) throws CmfStorageException {
-		final File f = getFile(locator);
-		return f.exists();
+		final Path p = getPath(locator);
+		return Files.exists(p);
 	}
 
 	@Override
 	protected long getSize(LocalStoreOperation op, URI locator) throws CmfStorageException {
-		final File f = getFile(locator);
-		return (f.exists() ? f.length() : -1);
+		final Path p = getPath(locator);
+		try {
+			return (Files.exists(p) ? Files.size(p) : -1);
+		} catch (IOException e) {
+			throw new CmfStorageException(String.format("Failed to read the size of the file at [%s]", p), e);
+		}
 	}
 
 	@Override
