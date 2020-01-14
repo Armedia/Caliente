@@ -44,6 +44,7 @@ import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.WritableByteChannelWrapper;
@@ -60,22 +61,22 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	public static final String DEFAULT_QUALIFIER = "content";
 
 	public final class Handle {
-		private final String id;
+		private final String locator;
 		private final CmfContentStream info;
 
-		protected Handle(CmfContentStream info, String id) {
+		protected Handle(CmfContentStream info, String locator) {
 			if (info == null) { throw new IllegalArgumentException("Must provide a content info"); }
-			if (id == null) {
+			if (StringUtils.isBlank(locator)) {
 				throw new IllegalArgumentException(
-					"Must provide an ID string to identify the content within the store");
+					"Must provide a valid, non-blank locator string to identify the content within the store");
 			}
 			this.info = info;
-			this.id = id;
-			info.setHandleId(id);
+			this.locator = locator;
+			info.setLocator(this.locator);
 		}
 
-		public String getId() {
-			return this.id;
+		public String getLocator() {
+			return this.locator;
 		}
 
 		/**
@@ -176,7 +177,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 		@Override
 		public String toString() {
-			return String.format("Handle [id=%s, info=%s]", this.id, this.info);
+			return String.format("Handle [id=%s, info=%s]", this.locator, this.info.getObject());
 		}
 	}
 
@@ -238,7 +239,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		if (this != handle.getSourceStore()) {
 			throw new IllegalArgumentException("The given Handle instance does not refer to content in this store");
 		}
-		LOCATOR locator = decodeLocator(handle.id);
+		LOCATOR locator = decodeLocator(handle.locator);
 		if (locator == null) {
 			throw new IllegalArgumentException("The given handle did not match an existing locator");
 		}
@@ -274,8 +275,15 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	 *         if none exists in this content store
 	 */
 	public final Handle findHandle(CmfContentStream info) {
-		LOCATOR locator = calculateLocator(info);
-		if (locator == null) { return null; }
+		String encodedLocator = info.getLocator();
+		if (StringUtils.isBlank(encodedLocator)) {
+			throw new IllegalArgumentException("The given content stream instance lacks valid locator information");
+		}
+		LOCATOR locator = decodeLocator(encodedLocator);
+		if (locator == null) {
+			throw new IllegalArgumentException(
+				String.format("Failed to decode the given locator string [%s]", encodedLocator));
+		}
 		return new Handle(info, encodeLocator(locator));
 	}
 
@@ -310,13 +318,6 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	protected abstract <VALUE> LOCATOR doCalculateLocator(CmfAttributeTranslator<VALUE> translator,
 		CmfObject<VALUE> object, CmfContentStream info);
-
-	protected final <VALUE> LOCATOR calculateLocator(CmfContentStream info) {
-		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }
-		return doCalculateLocator(info);
-	}
-
-	protected abstract LOCATOR doCalculateLocator(CmfContentStream info);
 
 	protected final InputStream openStream(Handle handle) throws CmfStorageException {
 		return Channels.newInputStream(openChannel(handle));
