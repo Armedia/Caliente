@@ -1632,8 +1632,8 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 				final List<CmfContentStream> ret = new ArrayList<>();
 				while (rs.next()) {
 					final int contentNumber = rs.getInt("content_number");
-					final CmfContentStream info = new CmfContentStream(contentNumber, rs.getString("rendition_id"),
-						rs.getInt("rendition_page"), rs.getString("modifier"));
+					final CmfContentStream info = new CmfContentStream(object, contentNumber,
+						rs.getString("rendition_id"), rs.getInt("rendition_page"), rs.getString("modifier"));
 					info.setLength(rs.getLong("stream_length"));
 					String ext = rs.getString("extension");
 					if (rs.wasNull() || StringUtils.isEmpty(ext)) {

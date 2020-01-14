@@ -626,7 +626,7 @@ public abstract class ExportEngine<//
 			}
 
 			if (ctx.isSupportsCompanionMetadata(type)) {
-				CmfContentStream md = new CmfContentStream(0, "metadata", 1);
+				CmfContentStream md = new CmfContentStream(marshaled, 0, "metadata", 1);
 				md.setProperty(CmfContentStream.BASENAME, "metadata." + type.name());
 				md.setExtension("xml");
 				CmfContentStore<?, ?>.Handle h = streamStore.createHandle(CmfAttributeTranslator.CMFVALUE_TRANSLATOR,

@@ -63,7 +63,7 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 
 		FolderT f = this.delegate.createItem(translator, ctx);
 		CmfContentStore<?, ?>.Handle h = ctx.getContentStore().createHandle(translator, this.cmfObject,
-			new CmfContentStream(0));
+			new CmfContentStream(this.cmfObject, 0));
 		if (!h.getSourceStore().isSupportsFileAccess()) { return null; }
 		File tgt = null;
 		try {

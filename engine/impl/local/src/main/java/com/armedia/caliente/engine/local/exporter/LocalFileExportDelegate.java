@@ -479,7 +479,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		if (getType() != CmfObject.Archetype.DOCUMENT) { return null; }
 
 		List<CmfContentStream> ret = new ArrayList<>(1);
-		CmfContentStream info = new CmfContentStream(0);
+		CmfContentStream info = new CmfContentStream(marshalled, 0);
 		File src = this.object.getAbsolute();
 		MimeType type = null;
 		try {

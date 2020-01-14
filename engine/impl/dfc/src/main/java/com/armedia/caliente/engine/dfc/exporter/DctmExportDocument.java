@@ -352,7 +352,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			final String renditionId = ((renditionNumber != 0)
 				? String.format("%08x.%s", content.getRendition(), format)
 				: null);
-			info = new CmfContentStream(index, renditionId, renditionPage, modifier);
+			info = new CmfContentStream(marshaled, index, renditionId, renditionPage, modifier);
 		} catch (Exception e) {
 			this.log.error(
 				"Failed to retrieve the base content metadata for the content stream # {} for {} (contentId = {})",

@@ -145,7 +145,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
 		if (contents == 0) {
 			// Generate a placeholder, empty file
-			CmfContentStream info = new CmfContentStream(0);
+			CmfContentStream info = new CmfContentStream(this.cmfObject, 0);
 			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().createHandle(translator, this.cmfObject, info);
 			File f = null;
 			try {

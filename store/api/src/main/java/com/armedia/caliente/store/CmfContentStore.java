@@ -412,7 +412,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 	}
 
-	protected abstract <VALUE> Handle constructHandle(CmfObject<VALUE> object, CmfContentStream info, LOCATOR locator);
+	protected abstract Handle constructHandle(CmfObject<?> object, CmfContentStream info, LOCATOR locator);
 
 	protected final LOCATOR extractLocator(Handle handle) {
 		if (handle == null) { throw new IllegalArgumentException("Must provide a handle whose locator to extract"); }

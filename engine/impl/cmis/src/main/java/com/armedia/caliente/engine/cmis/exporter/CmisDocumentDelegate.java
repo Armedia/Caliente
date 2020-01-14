@@ -180,7 +180,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		List<CmfContentStream> ret = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
 			includeRenditions);
 		ContentStream main = this.object.getContentStream();
-		CmfContentStream mainInfo = new CmfContentStream(0);
+		CmfContentStream mainInfo = new CmfContentStream(marshalled, 0);
 		mainInfo.setMimeType(MimeTools.resolveMimeType(main.getMimeType()));
 		String name = main.getFileName();
 		mainInfo.setFileName(name);
@@ -195,7 +195,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		if (includeRenditions) {
 			int i = 0;
 			for (Rendition r : this.object.getRenditions()) {
-				CmfContentStream info = new CmfContentStream(++i, r.getKind());
+				CmfContentStream info = new CmfContentStream(marshalled, ++i, r.getKind());
 				ContentStream cs = r.getContentStream();
 				info.setMimeType(MimeTools.resolveMimeType(r.getMimeType()));
 				name = cs.getFileName();

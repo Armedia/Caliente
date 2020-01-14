@@ -547,7 +547,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		Collection<CmfContentStream> contents = ctx.getContentStreams(this.cmfObject);
 		if (contents.isEmpty()) {
 			// No content streams, so make one up so we can build the properties file
-			contents = Collections.singleton(new CmfContentStream(0));
+			contents = Collections.singleton(new CmfContentStream(this.cmfObject, 0));
 		}
 
 		boolean renditionsRootIndexed = false;

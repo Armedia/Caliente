@@ -429,7 +429,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
 		boolean includeRenditions) {
 		final ShptSession session = ctx.getSession();
-		CmfContentStream info = new CmfContentStream(0);
+		CmfContentStream info = new CmfContentStream(marshaled, 0);
 		final String name = this.object.getName();
 		info.setFileName(name);
 		info.setExtension(FilenameUtils.getExtension(name));
