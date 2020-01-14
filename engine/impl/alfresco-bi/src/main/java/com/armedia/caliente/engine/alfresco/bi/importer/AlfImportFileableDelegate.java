@@ -559,8 +559,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				continue;
 			}
 
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().createHandle(this.factory.getTranslator(),
-				this.cmfObject, content);
+			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().getHandle(content);
 
 			// First things first: identify the type we're going to store into
 			AlfrescoType targetType = getTargetType(content);

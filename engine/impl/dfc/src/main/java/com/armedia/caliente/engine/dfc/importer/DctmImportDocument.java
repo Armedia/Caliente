@@ -52,7 +52,6 @@ import com.armedia.caliente.engine.dfc.common.DctmDocument;
 import com.armedia.caliente.engine.dfc.common.DctmSysObject;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
@@ -718,7 +717,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		}
 		CmfContentStore<?, ?> contentStore = context.getContentStore();
 		int i = 0;
-		final CmfAttributeTranslator<IDfValue> translator = this.factory.getEngine().getTranslator();
 		String contentType = null;
 		Boolean fromDctm = null;
 		final boolean skipRenditions = this.factory.isSkipRenditions();
@@ -727,7 +725,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				// Skip the non-default rendition
 				continue;
 			}
-			CmfContentStore<?, ?>.Handle h = contentStore.createHandle(translator, this.cmfObject, info);
+			CmfContentStore<?, ?>.Handle h = contentStore.getHandle(info);
 			CfgTools cfg = info.getCfgTools();
 
 			if (fromDctm == null) {

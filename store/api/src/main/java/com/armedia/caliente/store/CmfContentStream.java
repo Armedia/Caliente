@@ -54,6 +54,7 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 	private MimeType mimeType = null;
 	private String extension = null;
 	private String fileName = null;
+	private String handleId = null;
 
 	private final Map<String, String> properties = new HashMap<>();
 	private final CfgTools cfg = new CfgTools(this.properties);
@@ -194,12 +195,20 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 		return new HashSet<>(this.properties.keySet());
 	}
 
+	void setHandleId(String handleId) {
+		this.handleId = handleId;
+	}
+
+	String getHandleId() {
+		return this.handleId;
+	}
+
 	@Override
 	public String toString() {
 		return String.format(
-			"CmfContentStream [object=%s-%s, renditionIdentifier=%s, renditionPage=%s, modifier=%s, length=%s, mimeType=%s, fileName=%s]",
+			"CmfContentStream [object=%s-%s, renditionIdentifier=%s, renditionPage=%s, modifier=%s, length=%s, mimeType=%s, fileName=%s, handleId=%s]",
 			this.object.getType().name(), this.object.getId(), this.renditionIdentifier, this.renditionPage,
-			this.modifier, this.length, this.mimeType, this.fileName);
+			this.modifier, this.length, this.mimeType, this.fileName, this.handleId);
 	}
 
 	@Override

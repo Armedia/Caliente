@@ -508,7 +508,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		boolean skipContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		if (this.factory.isCopyContent() && !skipContent) {
 			try {
-				CmfContentStore<?, ?>.Handle h = streamStore.createHandle(translator, marshalled, info);
+				CmfContentStore<?, ?>.Handle h = streamStore.getHandle(info);
 				File tgt = h.getFile(true);
 				if (tgt != null) {
 					if (this.log.isDebugEnabled()) {

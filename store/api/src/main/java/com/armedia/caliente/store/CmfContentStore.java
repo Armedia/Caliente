@@ -52,44 +52,24 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	public static final String DEFAULT_QUALIFIER = "content";
 
 	public abstract class Handle {
-		private final CmfObject.Archetype objectType;
-		private final String objectId;
+		private final String id;
 		private final CmfContentStream info;
 		private final LOCATOR locator;
 
-		protected Handle(CmfObject<?> object, CmfContentStream info, LOCATOR locator) {
-			if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
+		protected Handle(CmfContentStream info, LOCATOR locator, String id) {
 			if (info == null) { throw new IllegalArgumentException("Must provide a content info"); }
 			if (locator == null) {
 				throw new IllegalArgumentException(
 					"Must provide a locator string to identify the content within the store");
 			}
-			this.objectType = object.getType();
-			this.objectId = object.getId();
 			this.info = info;
+			info.setHandleId(id);
 			this.locator = locator;
+			this.id = id;
 		}
 
-		/**
-		 * <p>
-		 * Returns the type of object whose content this handle points to.
-		 * </p>
-		 *
-		 * @return the type of object whose content this handle points to.
-		 */
-		public final CmfObject.Archetype getObjectType() {
-			return this.objectType;
-		}
-
-		/**
-		 * <p>
-		 * Returns the ID for the object whose content this handle points to.
-		 * </p>
-		 *
-		 * @return the ID for the object whose content this handle points to.
-		 */
-		public final String getObjectId() {
-			return this.objectId;
+		public final String getId() {
+			return this.id;
 		}
 
 		/**

@@ -87,8 +87,7 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 
 	private final Map<Class<? extends FileAttributeView>, FileAttributeView> attributeViews = new HashMap<>();
 
-	protected SqlFileExportDelegate(SqlExportDelegateFactory factory, SqlRoot root, SqlFile object)
-		throws Exception {
+	protected SqlFileExportDelegate(SqlExportDelegateFactory factory, SqlRoot root, SqlFile object) throws Exception {
 		super(factory, root, SqlFile.class, object);
 	}
 
@@ -149,8 +148,8 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 		if (p != null) {
 			File parent = new File(p);
 			if (!parent.equals(this.factory.getRoot().getFile())) {
-				ret.add(new SqlFileExportDelegate(this.factory, ctx.getSession(),
-					new SqlFile(this.factory.getRoot(), p)));
+				ret.add(
+					new SqlFileExportDelegate(this.factory, ctx.getSession(), new SqlFile(this.factory.getRoot(), p)));
 			}
 		}
 
@@ -396,8 +395,8 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 	}
 
 	@Override
-	protected Collection<SqlFileExportDelegate> identifyDependents(CmfObject<CmfValue> marshalled,
-		SqlExportContext ctx) throws Exception {
+	protected Collection<SqlFileExportDelegate> identifyDependents(CmfObject<CmfValue> marshalled, SqlExportContext ctx)
+		throws Exception {
 		return null;
 	}
 
@@ -408,7 +407,7 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 		if (getType() != CmfObject.Archetype.DOCUMENT) { return null; }
 
 		List<CmfContentStream> ret = new ArrayList<>(1);
-		CmfContentStream info = new CmfContentStream(0);
+		CmfContentStream info = new CmfContentStream(marshalled, 0);
 		File src = this.object.getAbsolute();
 		MimeType type = null;
 		try {
