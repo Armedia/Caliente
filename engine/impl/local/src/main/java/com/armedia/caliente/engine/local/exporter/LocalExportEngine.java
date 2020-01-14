@@ -58,6 +58,7 @@ import com.armedia.caliente.engine.local.common.LocalSessionFactory;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.caliente.engine.local.common.LocalTranslator;
+import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject.Archetype;
@@ -214,11 +215,7 @@ public class LocalExportEngine extends
 		// The path from the XML is ALWAYS separated with forward slashes
 		List<String> r = new ArrayList<>();
 		for (String s : FileNameTools.tokenize(name, '/')) {
-			try {
-				r.add(LocalFile.makeSafe(s));
-			} catch (IOException e) {
-				throw new UncheckedIOException(String.format("Failed to make safe the string [%s]", s), e);
-			}
+			r.add(PathTools.makeSafe(s));
 		}
 		return Stream.of(
 			new ExportTarget(type, LocalCommon.calculateId(name), FileNameTools.reconstitute(r, false, false, '/')));

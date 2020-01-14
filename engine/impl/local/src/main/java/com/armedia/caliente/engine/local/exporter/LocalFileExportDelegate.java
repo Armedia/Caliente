@@ -488,13 +488,6 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			type = MimeTools.DEFAULT_MIME_TYPE;
 		}
 
-		marshalled
-			.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, CmfValue.Type.INTEGER, new CmfValue(1)));
-		marshalled.setProperty(
-			new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, CmfValue.Type.INTEGER, new CmfValue(0)));
-		marshalled
-			.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX, CmfValue.Type.INTEGER, new CmfValue(0)));
-
 		CmfAttribute<CmfValue> typeAtt = new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_MIME_TYPE,
 			CmfValue.Type.STRING, false);
 		typeAtt.setValue(new CmfValue(type.getBaseType()));
@@ -504,8 +497,9 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		info.setMimeType(MimeTools.resolveMimeType(type.getBaseType()));
 		info.setLength(src.length());
 		info.setFileName(src.getName());
-		ret.add(info);
+		info.setProperty(IntermediateProperty.FULL_PATH, this.object.getPortableFullPath());
 		final CmfContentStore<?, ?>.Handle h = streamStore.addContentStream(translator, marshalled, info);
+		ret.add(info);
 		boolean skipContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		if (this.factory.isCopyContent() && !skipContent) {
 			try {

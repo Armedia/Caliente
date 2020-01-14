@@ -57,7 +57,7 @@ public class LocalOrganizer extends CmfContentOrganizer {
 	}
 
 	@Override
-	protected <T> Location calculateLocation(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+	protected <VALUE> Location calculateLocation(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
 		final List<String> containerSpec = calculateContainerSpec(translator, object, info);
 		final String baseName = calculateBaseName(translator, object, info);
@@ -67,11 +67,11 @@ public class LocalOrganizer extends CmfContentOrganizer {
 		return newLocation(containerSpec, baseName, extension, descriptor, appendix);
 	}
 
-	protected <T> List<String> calculateContainerSpec(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentStream info) {
+	protected <VALUE> List<String> calculateContainerSpec(CmfAttributeTranslator<VALUE> translator,
+		CmfObject<VALUE> object, CmfContentStream info) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
-		CmfProperty<T> paths = object.getProperty(IntermediateProperty.FIXED_PATH);
+		CmfProperty<VALUE> paths = object.getProperty(IntermediateProperty.FIXED_PATH);
 
 		List<String> ret = new ArrayList<>();
 		if ((paths != null) && paths.hasValues()) {
@@ -82,9 +82,22 @@ public class LocalOrganizer extends CmfContentOrganizer {
 		return ret;
 	}
 
-	protected <T> String getLeafName(CmfAttributeTranslator<T> translator, CmfObject<T> object) {
+	protected <VALUE> String getLeafName(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
+		CmfContentStream info) {
 		String objectName = null;
 		CmfProperty<?> name = null;
+
+		/*
+		if (StringUtils.isEmpty(objectName) && info.hasProperty(IntermediateProperty.FULL_PATH)) {
+			objectName = info.getProperty(IntermediateProperty.FULL_PATH);
+			if (!StringUtils.isEmpty(objectName)) {
+				// Split on the last slash
+				objectName = FileNameTools.basename(objectName, '/');
+				// Un-fix the name
+				objectName = PathTools.makeUnsafe(objectName);
+			}
+		}
+		*/
 
 		if (StringUtils.isEmpty(objectName)) {
 			name = object.getProperty(IntermediateProperty.FIXED_NAME);
@@ -121,17 +134,17 @@ public class LocalOrganizer extends CmfContentOrganizer {
 		return objectName;
 	}
 
-	protected <T> String calculateBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+	protected <VALUE> String calculateBaseName(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
-		return getLeafName(translator, object);
+		return getLeafName(translator, object, info);
 	}
 
-	protected <T> String calculateExtension(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+	protected <VALUE> String calculateExtension(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
 		return info.getExtension();
 	}
 
-	protected <T> String calculateDescriptor(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+	protected <VALUE> String calculateDescriptor(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
 		final String attName = translator.getAttributeNameMapper().decodeAttributeName(object.getType(),
 			IntermediateAttribute.VERSION_LABEL);
@@ -146,7 +159,7 @@ public class LocalOrganizer extends CmfContentOrganizer {
 		return oldFrag;
 	}
 
-	protected <T> String calculateAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+	protected <VALUE> String calculateAppendix(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
 		return "";
 	}

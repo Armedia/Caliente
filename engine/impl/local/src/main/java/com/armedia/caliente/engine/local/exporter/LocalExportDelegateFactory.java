@@ -34,6 +34,7 @@ import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.engine.local.common.LocalSetting;
+import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
@@ -69,7 +70,7 @@ public class LocalExportDelegateFactory
 			case FOLDER:
 			case DOCUMENT:
 				return new LocalFileExportDelegate(this, session,
-					this.engine.getLocalFile(LocalFile.decodeSafePath(searchKey)));
+					this.engine.getLocalFile(LocalRoot.normalize(PathTools.decodeSafePath(searchKey))));
 			case USER:
 				return new LocalPrincipalExportDelegate(this, session, this.userDb.lookupPrincipalByName(searchKey));
 			case GROUP:

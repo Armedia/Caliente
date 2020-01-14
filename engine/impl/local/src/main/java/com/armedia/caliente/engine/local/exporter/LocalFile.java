@@ -29,8 +29,6 @@ package com.armedia.caliente.engine.local.exporter;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,6 +42,7 @@ import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.exporter.LocalVersionLayout.VersionInfo;
+import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.commons.utilities.FileNameTools;
@@ -53,39 +52,13 @@ import com.armedia.commons.utilities.function.LazySupplier;
 
 class LocalFile {
 
-	private static final String ENCODING = "UTF-8";
-
-	public static String makeSafe(String s) throws IOException {
-		return URLEncoder.encode(s, LocalFile.ENCODING);
-	}
-
-	public static String makeUnsafe(String s) throws IOException {
-		return URLDecoder.decode(s, LocalFile.ENCODING);
-	}
-
-	public static String decodeSafePath(String safePath) throws IOException {
-		List<String> r = new ArrayList<>();
-		for (String s : FileNameTools.tokenize(safePath, '/')) {
-			r.add(LocalFile.makeUnsafe(s));
-		}
-		return LocalRoot.normalize(FileNameTools.reconstitute(r, false, false, File.separatorChar));
-	}
-
-	public static String makeSafePath(String path) throws IOException {
-		List<String> r = new ArrayList<>();
-		for (String s : FileNameTools.tokenize(path.toString(), File.separatorChar)) {
-			r.add(LocalFile.makeSafe(s));
-		}
-		return FileNameTools.reconstitute(r, false, false, '/');
-	}
-
 	static ExportTarget toExportTarget(LocalRoot root, Path path) {
 		try {
 			path = root.relativize(Tools.canonicalize(path));
 			final Archetype archetype = Files.isDirectory(path) ? CmfObject.Archetype.FOLDER
 				: CmfObject.Archetype.DOCUMENT;
 			final String objectId = LocalCommon.calculateId(path);
-			final String safePath = LocalFile.makeSafePath(path.toString());
+			final String safePath = PathTools.encodeSafePath(path.toString());
 			return new ExportTarget(archetype, objectId, safePath);
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
@@ -134,7 +107,7 @@ class LocalFile {
 		List<String> r = new ArrayList<>();
 		this.fullPath = this.relativeFile.getPath();
 		for (String s : FileNameTools.tokenize(this.fullPath, File.separatorChar)) {
-			r.add(LocalFile.makeSafe(s));
+			r.add(PathTools.makeSafe(s));
 		}
 
 		if (versionInfo != null) {
