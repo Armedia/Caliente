@@ -364,6 +364,9 @@
 			<column name="file_name" type="text" remarks="The content's file name">
 				<constraints nullable="true" />
 			</column>
+			<column name="locator" type="text" remarks="The content's encoded locator">
+				<constraints nullable="false" />
+			</column>
 		</createTable>
 		<addPrimaryKey tableName="cmf_content" columnNames="object_id, content_number" />
 		<addForeignKeyConstraint constraintName="fk_cmf_content_object"

@@ -598,18 +598,12 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	@Override
-	protected URI decodeLocator(String handleId) {
-		if (handleId == null) { return null; }
+	protected URI decodeLocator(String locator) {
+		if (locator == null) { return null; }
 		try {
-			return new URI(handleId);
+			return new URI(locator);
 		} catch (URISyntaxException e) {
-			throw new IllegalArgumentException(String.format("Failed to construct a URI from [%s]", handleId), e);
+			throw new IllegalArgumentException(String.format("Failed to construct a URI from [%s]", locator), e);
 		}
-	}
-
-	@Override
-	protected URI doCalculateLocator(CmfContentStream info) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

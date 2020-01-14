@@ -195,11 +195,14 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 		return new HashSet<>(this.properties.keySet());
 	}
 
-	void setLocator(String locator) {
+	public void setLocator(String locator) {
+		if (this.locator != null) {
+			throw new IllegalStateException("A locator has already been assigned to this stream, can't reassign it");
+		}
 		this.locator = Objects.requireNonNull(locator, "Must provide a non-null locator");
 	}
 
-	String getLocator() {
+	public String getLocator() {
 		return this.locator;
 	}
 

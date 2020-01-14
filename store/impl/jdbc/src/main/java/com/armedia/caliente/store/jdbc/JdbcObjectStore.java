@@ -1561,7 +1561,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 		// Step 2: prepare the new content records and properties
 		List<Object[]> contents = new ArrayList<>();
 		List<Object[]> properties = new ArrayList<>();
-		Object[] cArr = new Object[9];
+		Object[] cArr = new Object[10];
 		Object[] pArr = new Object[4];
 		for (CmfContentStream i : content) {
 			// First, the content record...
@@ -1574,6 +1574,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 			cArr[6] = i.getLength();
 			cArr[7] = Tools.toString(Tools.coalesce(i.getMimeType(), MimeTools.DEFAULT_MIME_TYPE));
 			cArr[8] = i.getFileName();
+			cArr[9] = i.getLocator();
 			contents.add(cArr.clone());
 
 			// Then, the properties...
@@ -1647,6 +1648,10 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 					str = rs.getString("file_name");
 					if ((str != null) && !rs.wasNull()) {
 						info.setFileName(str);
+					}
+					str = rs.getString("locator");
+					if ((str != null) && !rs.wasNull()) {
+						info.setLocator(str);
 					}
 
 					Map<String, String> props = qr.query(c, translateQuery(JdbcDialect.Query.LOAD_CONTENT_PROPERTIES),
