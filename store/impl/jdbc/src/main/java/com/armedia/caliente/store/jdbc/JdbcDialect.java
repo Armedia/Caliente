@@ -174,7 +174,7 @@ public abstract class JdbcDialect {
 				"              object_id, content_number, rendition_id, rendition_page, modifier, extension, " + //
 				"              stream_length, mime_type, file_name, locator" + //
 				"           ) " + //
-				"    values (?, ?, ?, ?, ?, ?, ?, ?, ?)" //
+				"    values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" //
 		),
 
 		DELETE_CONTENT( //
