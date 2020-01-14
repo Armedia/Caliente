@@ -172,7 +172,7 @@ public abstract class JdbcDialect {
 			"       insert into " + //
 				"          cmf_content (" + //
 				"              object_id, content_number, rendition_id, rendition_page, modifier, extension, " + //
-				"              stream_length, mime_type, file_name" + //
+				"              stream_length, mime_type, file_name, locator" + //
 				"           ) " + //
 				"    values (?, ?, ?, ?, ?, ?, ?, ?, ?)" //
 		),
