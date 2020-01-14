@@ -27,7 +27,6 @@
 package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -559,7 +558,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				continue;
 			}
 
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().getHandle(content);
+			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().findHandle(content);
 
 			// First things first: identify the type we're going to store into
 			AlfrescoType targetType = getTargetType(content);
@@ -574,7 +573,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			final File main;
 			try {
 				main = h.getFile();
-			} catch (IOException e) {
+			} catch (CmfStorageException e) {
 				throw new ImportException("Failure!", e);
 			}
 

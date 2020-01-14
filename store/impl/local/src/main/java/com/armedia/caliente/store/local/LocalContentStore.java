@@ -31,17 +31,18 @@
 package com.armedia.caliente.store.local;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -56,7 +57,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.xml.bind.JAXBException;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
@@ -98,14 +98,6 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		s.add(LocalContentStore.SCHEME_FIXED);
 		s.add(LocalContentStore.SCHEME_SAFE);
 		SUPPORTED_SCHEMES = Tools.freezeSet(s);
-	}
-
-	private class LocalHandle extends Handle {
-
-		protected LocalHandle(CmfContentStream info, URI locator) {
-			super(info, locator, locator.toString());
-		}
-
 	}
 
 	private final File baseDir;
@@ -389,33 +381,23 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	@Override
-	protected final File doGetFile(URI locator) {
+	protected final File getFile(URI locator) {
 		return new File(this.baseDir, locator.getSchemeSpecificPart());
 	}
 
 	@Override
-	protected InputStream openInput(LocalStoreOperation op, URI locator) throws CmfStorageException {
-		final File f;
+	protected FileChannel openChannel(LocalStoreOperation op, URI locator) throws CmfStorageException {
+		final File f = getFile(locator);
 		try {
-			f = getFile(locator);
-		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to identify the file for [%s]", locator), e);
-		}
-		try {
-			return new FileInputStream(f);
+			return FileChannel.open(f.toPath(), StandardOpenOption.READ);
 		} catch (IOException e) {
 			throw new CmfStorageException(String.format("Failed to open the file at [%s] for input", f), e);
 		}
 	}
 
 	@Override
-	protected long setContents(LocalStoreOperation op, URI locator, InputStream in) throws CmfStorageException {
-		final File f;
-		try {
-			f = getFile(locator);
-		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to identify the file for [%s]", locator), e);
-		}
+	protected long store(LocalStoreOperation op, URI locator, ReadableByteChannel in) throws CmfStorageException {
+		final File f = getFile(locator);
 		f.getParentFile().mkdirs(); // Create the parents, if needed
 
 		boolean created;
@@ -435,24 +417,18 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 					String.format("Failed to create the non-existent target file [%s]", f.getAbsolutePath()));
 			}
 		}
-		try (FileOutputStream out = new FileOutputStream(f)) {
-			IOUtils.copyLarge(in, out);
-		} catch (FileNotFoundException e) {
-			throw new CmfStorageException(String.format("Failed to open the output stream to the file at [%s]", f), e);
+
+		final long size = getSize(op, locator);
+		try (FileChannel out = createChannel(op, locator)) {
+			return out.transferFrom(in, 0, size);
 		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to write the content out to the file at [%s]", f), e);
+			throw new CmfStorageException(String.format("Failed to transfer data into the file at [%s]", locator), e);
 		}
-		return f.length();
 	}
 
 	@Override
-	protected OutputStream getOutputStream(LocalStoreOperation op, URI locator) throws CmfStorageException {
-		final File f;
-		try {
-			f = getFile(locator);
-		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to identify the file for [%s]", locator), e);
-		}
+	protected FileChannel createChannel(LocalStoreOperation op, URI locator) throws CmfStorageException {
+		final File f = getFile(locator);
 		f.getParentFile().mkdirs(); // Create the parents, if needed
 
 		boolean created;
@@ -473,31 +449,22 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 			}
 		}
 		try {
-			return new FileOutputStream(f);
-		} catch (FileNotFoundException e) {
-			throw new CmfStorageException(String.format("Failed to open the output stream to the file at [%s]", f), e);
+			return FileChannel.open(f.toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+				StandardOpenOption.APPEND);
+		} catch (IOException e) {
+			throw new CmfStorageException(String.format("Failed to open the FileChannel to the file at [%s]", f), e);
 		}
 	}
 
 	@Override
-	protected boolean isExists(LocalStoreOperation op, URI locator) throws CmfStorageException {
-		final File f;
-		try {
-			f = getFile(locator);
-		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to identify the file for [%s]", locator), e);
-		}
+	protected boolean exists(LocalStoreOperation op, URI locator) throws CmfStorageException {
+		final File f = getFile(locator);
 		return f.exists();
 	}
 
 	@Override
-	protected long getStreamSize(LocalStoreOperation op, URI locator) throws CmfStorageException {
-		final File f;
-		try {
-			f = getFile(locator);
-		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to identify the file for [%s]", locator), e);
-		}
+	protected long getSize(LocalStoreOperation op, URI locator) throws CmfStorageException {
+		final File f = getFile(locator);
 		return (f.exists() ? f.length() : -1);
 	}
 
@@ -606,11 +573,6 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	@Override
-	protected LocalHandle constructHandle(CmfContentStream info, URI locator) {
-		return new LocalHandle(info, locator);
-	}
-
-	@Override
 	protected void clearAllProperties(LocalStoreOperation operation, String prefix) throws CmfStorageException {
 		prefix = String.format("%s.", prefix);
 		Set<String> deletions = new LinkedHashSet<>();
@@ -632,5 +594,27 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 			}
 		}
 		return matches;
+	}
+
+	@Override
+	protected String encodeLocator(URI locator) {
+		if (locator == null) { return null; }
+		return locator.toString();
+	}
+
+	@Override
+	protected URI decodeLocator(String handleId) {
+		if (handleId == null) { return null; }
+		try {
+			return new URI(handleId);
+		} catch (URISyntaxException e) {
+			throw new IllegalArgumentException(String.format("Failed to construct a URI from [%s]", handleId), e);
+		}
+	}
+
+	@Override
+	protected URI doCalculateLocator(CmfContentStream info) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

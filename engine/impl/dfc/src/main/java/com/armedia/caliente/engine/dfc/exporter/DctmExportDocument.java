@@ -406,7 +406,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		if (skipContent) { return info; }
 
 		// CmfStore the content in the filesystem
-		CmfContentStore<?, ?>.Handle contentHandle = streamStore.createHandle(translator, marshaled, info);
+		CmfContentStore<?, ?>.Handle contentHandle = streamStore.newHandle(translator, marshaled, info);
 		try {
 			if (contentHandle.getSourceStore().isSupportsFileAccess()) {
 				document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, info.getRenditionPage(),
@@ -416,7 +416,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 				try (InputStream in = document.getContentEx3(format, info.getRenditionPage(), info.getModifier(),
 					false)) {
 					// Don't pull the content until we're sure we can put it somewhere...
-					contentHandle.setContents(in);
+					contentHandle.store(in);
 				}
 			}
 		} catch (Exception e) {

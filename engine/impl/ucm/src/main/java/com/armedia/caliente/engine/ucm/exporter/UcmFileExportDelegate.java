@@ -258,12 +258,12 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			info.setProperty("description", rendition.getDescription());
 
 			contents.add(info);
-			CmfContentStore<?, ?>.Handle contentHandle = streamStore.createHandle(translator, marshalled, info);
+			CmfContentStore<?, ?>.Handle contentHandle = streamStore.newHandle(translator, marshalled, info);
 			if (!skipContent) {
 				// Doesn't support file-level, so we (sadly) use stream-level transfers
 				try (InputStream in = this.object.getInputStream(ctx.getSession(), rendition.getType())) {
 					// Don't pull the content until we're sure we can put it somewhere...
-					contentHandle.setContents(in);
+					contentHandle.store(in);
 				} catch (UcmServiceException e) {
 					this.log.error("A Service Exception was raised while seeking the [{}] rendition for {}",
 						renditionLabel, marshalled.getDescription(), e);

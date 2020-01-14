@@ -27,14 +27,14 @@
 package com.armedia.caliente.engine.local.exporter;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.DosFileAttributeView;
@@ -508,7 +508,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		boolean skipContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		if (this.factory.isCopyContent() && !skipContent) {
 			try {
-				CmfContentStore<?, ?>.Handle h = streamStore.getHandle(info);
+				CmfContentStore<?, ?>.Handle h = streamStore.findHandle(info);
 				File tgt = h.getFile(true);
 				if (tgt != null) {
 					if (this.log.isDebugEnabled()) {
@@ -516,8 +516,8 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 					}
 					Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				} else {
-					try (InputStream in = new FileInputStream(src)) {
-						h.setContents(in);
+					try (FileChannel in = FileChannel.open(src.toPath(), StandardOpenOption.READ)) {
+						h.store(in);
 					}
 				}
 			} catch (Exception e) {

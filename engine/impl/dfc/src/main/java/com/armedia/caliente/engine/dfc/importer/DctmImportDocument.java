@@ -490,7 +490,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		File path;
 		try {
 			path = contentHandle.getFile();
-		} catch (IOException e) {
+		} catch (CmfStorageException e) {
 			throw new ImportException(String.format("Failed to get the content file for %s, qualifier [%s]",
 				this.cmfObject.getDescription(), contentHandle.getInfo()), e);
 		}
@@ -499,24 +499,24 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			// If the content store doesn't support this, then we dump to a temp file and go from
 			// there
 			// TODO: Look into IDfSysObjectInternal for use of streams vs. using filesystem staging
+			boolean ok = false;
 			try {
 				path = File.createTempFile("content", null);
-				contentHandle.writeFile(path);
 				path.deleteOnExit();
+				contentHandle.store(path);
+				ok = true;
 			} catch (IOException e) {
-				if (path != null) {
-					path.delete();
-				}
 				throw new ImportException(
 					String.format("Failed to create and write the temporary content file for %s, qualifier [%s]",
 						this.cmfObject.getDescription(), contentHandle.getInfo()),
 					e);
 			} catch (CmfStorageException e) {
-				if (path != null) {
-					path.delete();
-				}
 				throw new ImportException(String.format("Failed to get the content stream for %s, qualifier [%s]",
 					this.cmfObject.getDescription(), contentHandle.getInfo()), e);
+			} finally {
+				if (!ok && (path != null)) {
+					path.delete();
+				}
 			}
 		}
 
@@ -725,7 +725,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				// Skip the non-default rendition
 				continue;
 			}
-			CmfContentStore<?, ?>.Handle h = contentStore.getHandle(info);
+			CmfContentStore<?, ?>.Handle h = contentStore.findHandle(info);
 			CfgTools cfg = info.getCfgTools();
 
 			if (fromDctm == null) {

@@ -89,14 +89,14 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		}
 		if ((info == null) || info.isEmpty()) { return null; }
 		CmfContentStream content = info.get(0);
-		CmfContentStore<?, ?>.Handle h = store.getHandle(content);
+		CmfContentStore<?, ?>.Handle h = store.findHandle(content);
 
 		String fileName = content.getFileName();
 		// String size = content.getProperty(ContentProperty.SIZE);
 		String mimeType = content.getMimeType().toString();
 
 		try {
-			return new ContentStreamImpl(fileName, BigInteger.valueOf(h.getStreamSize()), mimeType, h.openInput());
+			return new ContentStreamImpl(fileName, BigInteger.valueOf(h.getSize()), mimeType, h.openStream());
 		} catch (CmfStorageException e) {
 			throw new ImportException(
 				String.format("Failed to access the [%s] content for %s", h.getInfo(), this.cmfObject.getDescription()),

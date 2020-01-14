@@ -629,9 +629,9 @@ public abstract class ExportEngine<//
 				CmfContentStream md = new CmfContentStream(marshaled, 0, "metadata", 1);
 				md.setProperty(CmfContentStream.BASENAME, "metadata." + type.name());
 				md.setExtension("xml");
-				CmfContentStore<?, ?>.Handle h = streamStore.createHandle(CmfAttributeTranslator.CMFVALUE_TRANSLATOR,
+				CmfContentStore<?, ?>.Handle h = streamStore.newHandle(CmfAttributeTranslator.CMFVALUE_TRANSLATOR,
 					encoded, md);
-				try (OutputStream out = h.getOutputStream()) {
+				try (OutputStream out = h.createStream()) {
 					XmlBase.storeToXML(new MetadataT(encoded), out);
 				} catch (JAXBException e) {
 					this.log.warn("Failed to construct the XML companion metadata for {}", marshaled.getDescription(),
