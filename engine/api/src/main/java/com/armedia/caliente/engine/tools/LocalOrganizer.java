@@ -107,6 +107,13 @@ public class LocalOrganizer extends CmfContentOrganizer {
 		}
 
 		if (StringUtils.isEmpty(objectName)) {
+			name = object.getProperty(IntermediateProperty.PRESERVED_NAME);
+			if ((name != null) && name.hasValues()) {
+				objectName = name.getValue().toString();
+			}
+		}
+
+		if (StringUtils.isEmpty(objectName)) {
 			name = object.getProperty(IntermediateProperty.HEAD_NAME);
 			if ((name != null) && name.hasValues()) {
 				objectName = name.getValue().toString();

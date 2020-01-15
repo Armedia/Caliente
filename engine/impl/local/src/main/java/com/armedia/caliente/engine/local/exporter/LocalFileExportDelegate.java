@@ -384,8 +384,8 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 		encoded.setProperty(new CmfProperty<>(IntermediateProperty.FULL_PATH, IntermediateProperty.FULL_PATH.type,
 			new CmfValue(this.object.getPortableFullPath())));
-		encoded.setProperty(new CmfProperty<>(IntermediateProperty.CONTENT_SOURCE,
-			IntermediateProperty.CONTENT_SOURCE.type, new CmfValue(this.object.getPortableFullPath())));
+		encoded.setProperty(new CmfProperty<>(IntermediateProperty.PRESERVED_NAME,
+			IntermediateProperty.PRESERVED_NAME.type, new CmfValue(this.object.getName())));
 
 		if (this.object.isFolder()) {
 			// If this is a folder, the path is set to its full, relative path
