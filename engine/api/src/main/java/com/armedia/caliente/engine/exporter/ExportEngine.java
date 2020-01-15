@@ -76,7 +76,6 @@ import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
@@ -630,8 +629,8 @@ public abstract class ExportEngine<//
 				CmfContentStream md = new CmfContentStream(marshaled, 0, "metadata", 1);
 				md.setProperty(CmfContentStream.BASENAME, "metadata." + type.name());
 				md.setExtension("xml");
-				CmfContentStore<?, ?>.Handle h = streamStore.addContentStream(CmfAttributeTranslator.CMFVALUE_TRANSLATOR,
-					encoded, md);
+				CmfContentStore<?, ?>.Handle h = streamStore
+					.addContentStream(CmfAttributeTranslator.CMFVALUE_TRANSLATOR, encoded, md);
 				try (OutputStream out = h.createStream()) {
 					XmlBase.storeToXML(new MetadataT(encoded), out);
 				} catch (JAXBException e) {
@@ -644,9 +643,6 @@ public abstract class ExportEngine<//
 			}
 
 			try {
-				if (Archetype.DOCUMENT == marshaled.getType()) {
-					"".hashCode();
-				}
 				final boolean includeRenditions = !ctx.getSettings().getBoolean(TransferSetting.NO_RENDITIONS);
 				List<CmfContentStream> contentStreams = sourceObject.storeContent(ctx, getTranslator(), marshaled,
 					referrentTarget, streamStore, includeRenditions);
