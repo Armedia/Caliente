@@ -212,7 +212,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			if (getType() == CmfObject.Archetype.DOCUMENT) {
 				att = new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_LENGTH,
 					IntermediateAttribute.CONTENT_STREAM_LENGTH.type, false);
-				att.setValue(new CmfValue((double) basicAtts.size()));
+				att.setValue(new CmfValue(basicAtts.size()));
 				object.setAttribute(att);
 
 				// All documents are roots...
