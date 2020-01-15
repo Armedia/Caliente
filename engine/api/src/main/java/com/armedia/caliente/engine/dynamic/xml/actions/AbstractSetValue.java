@@ -106,13 +106,13 @@ public abstract class AbstractSetValue extends ConditionalAction {
 
 	@Override
 	protected final void executeAction(DynamicElementContext<?> ctx) throws ActionException {
-		Object name = Tools.toString(ActionTools.eval(getName(), ctx));
+		String name = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (name == null) { throw new ActionException("No name expression given for variable definition"); }
 
 		final CmfValue.Type type = getType();
 		final Object value = ActionTools.eval(getValue(), ctx);
 		final boolean repeating = (Iterable.class.isInstance(value) || ((value != null) && value.getClass().isArray()));
-		final DynamicValue variable = createValue(ctx, String.valueOf(name), type, repeating);
+		final DynamicValue variable = createValue(ctx, name, type, repeating);
 		if (value != null) {
 			if (repeating) {
 				// Make sure we take all available values
@@ -122,7 +122,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 				variable.setValue(fromIterable(value));
 			}
 		}
-		ctx.getDynamicObject().getAtt().put(variable.getName(), variable);
+		ctx.getDynamicObject().getAtt().put(name, variable);
 	}
 
 }
