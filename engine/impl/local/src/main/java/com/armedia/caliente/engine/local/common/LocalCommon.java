@@ -26,6 +26,7 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.common;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
@@ -82,6 +83,6 @@ public final class LocalCommon {
 
 	public static String toPortablePath(String path) {
 		if (StringUtils.isEmpty(path)) { return null; }
-		return FileNameTools.reconstitute(FileNameTools.tokenize(path), true, false, '/');
+		return FileNameTools.reconstitute(FileNameTools.tokenize(path, File.separatorChar), true, false, '/');
 	}
 }
