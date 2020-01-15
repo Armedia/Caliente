@@ -54,7 +54,7 @@
 		<dfc.version>6.7-SP1</dfc.version>
 		<easymock.version>4.0.2</easymock.version>
 		<groovy-jsr223.version>2.5.8</groovy-jsr223.version>
-		<h2.version>1.4.200</h2.version>
+		<h2.version>1.4.199</h2.version>
 		<jshare.version>1.0.409</jshare.version>
 		<junit.version>5.5.2</junit.version>
 		<liquibase-core.version>3.8.4</liquibase-core.version>
