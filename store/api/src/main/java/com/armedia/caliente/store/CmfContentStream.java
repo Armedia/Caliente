@@ -116,35 +116,39 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 		return this.modifier;
 	}
 
-	public void setExtension(String extension) {
+	public CmfContentStream setExtension(String extension) {
 		if (StringUtils.isEmpty(extension)) {
 			extension = null;
 		}
 		this.extension = extension;
+		return this;
 	}
 
 	public long getLength() {
 		return this.length;
 	}
 
-	public void setLength(long length) {
+	public CmfContentStream setLength(long length) {
 		this.length = length;
+		return this;
 	}
 
 	public MimeType getMimeType() {
 		return this.mimeType;
 	}
 
-	public void setMimeType(MimeType mimeType) {
+	public CmfContentStream setMimeType(MimeType mimeType) {
 		this.mimeType = mimeType;
+		return this;
 	}
 
 	public String getFileName() {
 		return this.fileName;
 	}
 
-	public void setFileName(String fileName) {
+	public CmfContentStream setFileName(String fileName) {
 		this.fileName = fileName;
+		return this;
 	}
 
 	public CfgTools getCfgTools() {
@@ -183,8 +187,9 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 		return this.properties.remove(name);
 	}
 
-	public void clearAllProperties() {
+	public CmfContentStream clearAllProperties() {
 		this.properties.clear();
+		return this;
 	}
 
 	public int getPropertyCount() {
@@ -195,11 +200,14 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 		return new HashSet<>(this.properties.keySet());
 	}
 
-	public void setLocator(String locator) {
-		if (this.locator != null) {
-			throw new IllegalStateException("A locator has already been assigned to this stream, can't reassign it");
+	public CmfContentStream setLocator(String locator) {
+		if ((this.locator != null) && !Objects.equals(this.locator, locator)) {
+			throw new IllegalStateException(
+				String.format("A locator has already been assigned to this stream, can't reassign it ([%s] vs. [%s])",
+					this.locator, locator));
 		}
 		this.locator = Objects.requireNonNull(locator, "Must provide a non-null locator");
+		return this;
 	}
 
 	public String getLocator() {
