@@ -40,10 +40,12 @@ import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.xml.actions.AbortTransformation;
 import com.armedia.caliente.engine.dynamic.xml.actions.AttributeCopy;
+import com.armedia.caliente.engine.dynamic.xml.actions.AttributeJoin;
 import com.armedia.caliente.engine.dynamic.xml.actions.AttributeRemove;
 import com.armedia.caliente.engine.dynamic.xml.actions.AttributeRename;
 import com.armedia.caliente.engine.dynamic.xml.actions.AttributeReplace;
 import com.armedia.caliente.engine.dynamic.xml.actions.AttributeSet;
+import com.armedia.caliente.engine.dynamic.xml.actions.AttributeSplit;
 import com.armedia.caliente.engine.dynamic.xml.actions.CustomAction;
 import com.armedia.caliente.engine.dynamic.xml.actions.Debug;
 import com.armedia.caliente.engine.dynamic.xml.actions.EndTransformation;
@@ -64,10 +66,12 @@ import com.armedia.caliente.engine.dynamic.xml.actions.ValueMappingApply;
 import com.armedia.caliente.engine.dynamic.xml.actions.ValueMappingClear;
 import com.armedia.caliente.engine.dynamic.xml.actions.ValueMappingSet;
 import com.armedia.caliente.engine.dynamic.xml.actions.VariableCopy;
+import com.armedia.caliente.engine.dynamic.xml.actions.VariableJoin;
 import com.armedia.caliente.engine.dynamic.xml.actions.VariableRemove;
 import com.armedia.caliente.engine.dynamic.xml.actions.VariableRename;
 import com.armedia.caliente.engine.dynamic.xml.actions.VariableReplace;
 import com.armedia.caliente.engine.dynamic.xml.actions.VariableSet;
+import com.armedia.caliente.engine.dynamic.xml.actions.VariableSplit;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionGroup.t", propOrder = {
@@ -89,6 +93,8 @@ public class ActionGroup extends ConditionalAction {
 		@XmlElement(name = "copy-variable", type = VariableCopy.class), //
 		@XmlElement(name = "custom-action", type = CustomAction.class), //
 		@XmlElement(name = "end-transformation", type = EndTransformation.class), //
+		@XmlElement(name = "join-attribute", type = AttributeJoin.class), //
+		@XmlElement(name = "join-variable", type = VariableJoin.class), //
 		@XmlElement(name = "load-external-metadata", type = LoadExternalMetadata.class), //
 		@XmlElement(name = "map-attribute-value", type = MapAttributeValue.class), //
 		@XmlElement(name = "map-original-subtype", type = MapOriginalSubtype.class), //
@@ -110,6 +116,8 @@ public class ActionGroup extends ConditionalAction {
 		@XmlElement(name = "set-subtype", type = SubtypeSet.class), //
 		@XmlElement(name = "set-value-mapping", type = ValueMappingSet.class), //
 		@XmlElement(name = "set-variable", type = VariableSet.class), //
+		@XmlElement(name = "split-attribute", type = AttributeSplit.class), //
+		@XmlElement(name = "split-variable", type = VariableSplit.class), //
 	})
 	protected List<Action> actions;
 

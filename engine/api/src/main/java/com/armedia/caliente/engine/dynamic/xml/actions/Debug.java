@@ -60,6 +60,8 @@ public class Debug extends ConditionalAction {
 		@XmlElement(name = "copy-variable", type = VariableCopy.class), //
 		@XmlElement(name = "custom-action", type = CustomAction.class), //
 		@XmlElement(name = "end-transformation", type = EndTransformation.class), //
+		@XmlElement(name = "join-attribute", type = AttributeJoin.class), //
+		@XmlElement(name = "join-variable", type = VariableJoin.class), //
 		@XmlElement(name = "load-external-metadata", type = LoadExternalMetadata.class), //
 		@XmlElement(name = "map-attribute-value", type = MapAttributeValue.class), //
 		@XmlElement(name = "map-original-subtype", type = MapOriginalSubtype.class), //
@@ -81,6 +83,8 @@ public class Debug extends ConditionalAction {
 		@XmlElement(name = "set-subtype", type = SubtypeSet.class), //
 		@XmlElement(name = "set-value-mapping", type = ValueMappingSet.class), //
 		@XmlElement(name = "set-variable", type = VariableSet.class), //
+		@XmlElement(name = "split-attribute", type = AttributeSplit.class), //
+		@XmlElement(name = "split-variable", type = VariableSplit.class), //
 	})
 	protected List<Action> actions;
 

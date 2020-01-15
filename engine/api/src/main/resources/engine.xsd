@@ -590,6 +590,43 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="actionSplitJoin.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="separator" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+				<xsd:attribute name="keepEmpty" type="xsd:boolean" default="false" use="optional" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionSplitAttribute.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionSplitJoin.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionSplitVariable.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionSplitJoin.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionJoinAttribute.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionSplitJoin.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionJoinVariable.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionSplitJoin.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="mapValueCase.t">
 		<xsd:sequence>
 			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
@@ -784,6 +821,8 @@
 			<xsd:element name="custom-action" type="tns:actionCustomAction.t" />
 			<xsd:element name="end-transformation" type="tns:actionEndTransformation.t" />
 			<xsd:element name="group" type="tns:actionGroup.t" />
+			<xsd:element name="join-attribute" type="tns:actionJoinAttribute.t" />
+			<xsd:element name="join-variable" type="tns:actionJoinVariable.t" />
 			<xsd:element name="load-external-metadata" type="tns:actionLoadExternalMetadata.t" />
 			<xsd:element name="map-attribute-value" type="tns:actionMapAttributeValue.t" />
 			<xsd:element name="map-original-subtype" type="tns:actionMapOriginalSubtype.t" />
@@ -805,6 +844,8 @@
 			<xsd:element name="set-subtype" type="tns:actionSetSubtype.t" />
 			<xsd:element name="set-value-mapping" type="tns:actionSetValueMapping.t" />
 			<xsd:element name="set-variable" type="tns:actionSetVariable.t" />
+			<xsd:element name="split-attribute" type="tns:actionSplitAttribute.t" />
+			<xsd:element name="split-variable" type="tns:actionSplitVariable.t" />
 		</xsd:choice>
 	</xsd:group>
 
