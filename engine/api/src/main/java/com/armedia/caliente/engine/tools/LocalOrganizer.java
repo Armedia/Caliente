@@ -101,14 +101,14 @@ public class LocalOrganizer extends CmfContentOrganizer {
 
 		if (StringUtils.isEmpty(objectName)) {
 			name = object.getProperty(IntermediateProperty.FIXED_NAME);
-			if (name != null) {
+			if ((name != null) && name.hasValues()) {
 				objectName = name.getValue().toString();
 			}
 		}
 
 		if (StringUtils.isEmpty(objectName)) {
 			name = object.getProperty(IntermediateProperty.HEAD_NAME);
-			if (name != null) {
+			if ((name != null) && name.hasValues()) {
 				objectName = name.getValue().toString();
 			}
 		}
@@ -116,7 +116,7 @@ public class LocalOrganizer extends CmfContentOrganizer {
 		if (StringUtils.isEmpty(objectName)) {
 			name = object.getAttribute(
 				translator.getAttributeNameMapper().decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
-			if (name != null) {
+			if ((name != null) && name.hasValues()) {
 				objectName = name.getValue().toString();
 			}
 		}
