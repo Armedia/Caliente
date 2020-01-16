@@ -597,8 +597,8 @@
 					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="separator" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="keepEmpty" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
 				</xsd:sequence>
-				<xsd:attribute name="keepEmpty" type="xsd:boolean" default="false" use="optional" />
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>

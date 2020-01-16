@@ -28,70 +28,23 @@
 package com.armedia.caliente.engine.dynamic.xml.actions;
 
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
-import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.store.CmfValue.Type;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
-public abstract class AbstractJoinValueAttribute extends AbstractTransformValue {
-
-	@XmlElement(name = "separator", required = true)
-	protected Expression separator;
-
-	@XmlAttribute(name = "keepEmpty", required = false)
-	protected boolean keepEmpty = false;
-
-	public final Expression getSeparator() {
-		return this.separator;
-	}
-
-	public final void setSeparator(Expression separator) {
-		this.separator = separator;
-	}
-
-	public final boolean isKeepEmpty() {
-		return this.keepEmpty;
-	}
-
-	public final void setKeepEmpty(boolean keepEmpty) {
-		this.keepEmpty = keepEmpty;
-	}
-
+public abstract class AbstractJoinValueAttribute extends AbstractSplitJoinValueAttribute {
 	@Override
-	protected final DynamicValue executeAction(DynamicElementContext<?> ctx, DynamicValue candidate)
-		throws ActionException {
-		final String separator = Tools.toString(ActionTools.eval(getSeparator(), ctx));
-		if (StringUtils.isEmpty(separator)) {
-			final String lang = this.separator.getLang();
-			throw new ActionException(String.format("This separator %s expression yielded an empty string: <%s>%s</%s>",
-				lang, lang, this.separator.getScript(), lang));
-		}
-		final char sep = separator.charAt(0);
-		Stream<String> s = candidate.getValues().stream().map(Tools::toString);
-		// Filter empty values
-		if (!this.keepEmpty) {
-			Predicate<String> p = StringUtils::isEmpty;
-			s = s.filter(p.negate());
-		}
-		Collection<String> strings = s.collect(Collectors.toCollection(LinkedList::new));
+	protected DynamicValue processValues(DynamicElementContext<?> ctx, DynamicValue candidate,
+		Collection<String> strings, char sep) throws ActionException {
 		String finalValue = Tools.joinEscaped(sep, strings);
 		DynamicValue result = new DynamicValue(candidate.getName(), Type.STRING, false);
 		result.setValue(finalValue);
 		return result;
 	}
-
 }

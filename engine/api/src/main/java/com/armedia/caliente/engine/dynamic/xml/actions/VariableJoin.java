@@ -38,7 +38,7 @@ import com.armedia.caliente.engine.dynamic.DynamicValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionJoinVariable.t", propOrder = {
-	"comparison", "name", "separator"
+	"comparison", "name", "separator", "keepEmpty"
 })
 public class VariableJoin extends AbstractJoinValueAttribute {
 

@@ -32,9 +32,9 @@ public class AttributeJoinTest {
 
 		final String separators = "`~!@#$%^&*()_+[]\\{}|;':\",./<>?";
 
-		action.setName(new Expression(attributeName));
+		action.setName(Expression.constant(attributeName));
 
-		action.setKeepEmpty(true);
+		action.setKeepEmpty(Expression.constant("true"));
 		for (int i = 0; i < separators.length(); i++) {
 			final char sep = separators.charAt(i);
 			action.setSeparator(new Expression(String.valueOf(sep)));
@@ -60,7 +60,7 @@ public class AttributeJoinTest {
 				() -> String.format("Separator: %s", sep));
 		}
 
-		action.setKeepEmpty(false);
+		action.setKeepEmpty(Expression.constant("false"));
 		for (int i = 0; i < separators.length(); i++) {
 			final char sep = separators.charAt(i);
 			action.setSeparator(new Expression(String.valueOf(sep)));

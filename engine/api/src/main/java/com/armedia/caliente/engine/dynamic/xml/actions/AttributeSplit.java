@@ -38,7 +38,7 @@ import com.armedia.caliente.engine.dynamic.DynamicValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionSplitAttribute.t", propOrder = {
-	"comparison", "name", "separator"
+	"comparison", "name", "separator", "keepEmpty"
 })
 public class AttributeSplit extends AbstractSplitValueAttribute {
 
