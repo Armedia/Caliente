@@ -3,14 +3,10 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-	<changeSet id="metadata-3001" author="caliente">
-		<!-- add some important DB tuning parameters -->
-		<!-- DB lock timeout = 5 min -->
-		<!-- TX log size = 1GB -->
-		<sql dbms="h2">
-			set default_lock_timeout 300000;
-			set max_log_size 1024;
-		</sql>
-	</changeSet>
+	<include file="com/armedia/caliente/store/jdbc/changelog/common.changelog-3.0.xml" />
 
+	<!-- **************************************** -->
+	<!-- Deltas and changes...                    -->
+	<!-- **************************************** -->
+	<include file="common.changelog.deltas.xml"/>
 </databaseChangeLog>
