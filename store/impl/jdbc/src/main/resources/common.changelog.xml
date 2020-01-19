@@ -8,5 +8,7 @@
 	<!-- **************************************** -->
 	<!-- Deltas and changes...                    -->
 	<!-- **************************************** -->
+	<!--
 	<include file="common.changelog.deltas.xml"/>
+	-->
 </databaseChangeLog>
