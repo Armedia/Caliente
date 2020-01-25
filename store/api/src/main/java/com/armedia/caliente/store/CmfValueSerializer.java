@@ -133,17 +133,17 @@ public enum CmfValueSerializer implements CheckedCodec<CmfValue, String, ParseEx
 	},
 	DATETIME(CmfValue.Type.DATETIME) {
 
-		private final String PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
+		private final String pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
 
 		@Override
 		public String doSerialize(CmfValue value) throws ParseException {
 			if (value.isNull()) { return null; }
-			return DateFormatUtils.format(value.asTime(), this.PATTERN);
+			return DateFormatUtils.format(value.asTime(), this.pattern);
 		}
 
 		@Override
 		public CmfValue doDeserialize(String str) throws ParseException {
-			return CmfValue.of(DateUtils.parseDate(str, this.PATTERN));
+			return CmfValue.of(DateUtils.parseDate(str, this.pattern));
 		}
 
 	},
