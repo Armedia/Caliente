@@ -102,7 +102,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 				if (Date.class.isInstance(object)) { return object; }
 				if (Calendar.class.isInstance(object)) { return Calendar.class.cast(object).getTime(); }
 				try {
-					return new CmfValue(type, object).asTime();
+					return CmfValue.of(type, object).asTime();
 				} catch (ParseException e) {
 					throw new ConditionException(String.format("Failed to convert the value [%s] as a Date", object),
 						e);

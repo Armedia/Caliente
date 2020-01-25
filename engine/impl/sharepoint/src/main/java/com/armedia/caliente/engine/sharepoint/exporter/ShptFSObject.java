@@ -97,18 +97,18 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			name = name.replaceFirst("/", "_");
 		}
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.OBJECT_NAME.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(name))));
+			Collections.singleton(CmfValue.of(name))));
 
 		Date d = getCreatedTime();
 		if (d != null) {
 			object.setAttribute(new CmfAttribute<>(ShptAttributes.CREATE_DATE.name, CmfValue.Type.DATETIME, false,
-				Collections.singleton(new CmfValue(d))));
+				Collections.singleton(CmfValue.of(d))));
 		}
 
 		d = getLastModifiedTime();
 		if (d != null) {
 			object.setAttribute(new CmfAttribute<>(ShptAttributes.MODIFICATION_DATE.name, CmfValue.Type.DATETIME, false,
-				Collections.singleton(new CmfValue(d))));
+				Collections.singleton(CmfValue.of(d))));
 		}
 
 		// Target Paths
@@ -123,9 +123,9 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 					getServerRelativeUrl(), getType(), getObjectId(), getLabel());
 			}
 			object.setProperty(new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING, true,
-				Collections.singleton(new CmfValue(path))));
+				Collections.singleton(CmfValue.of(path))));
 			object.setProperty(new CmfProperty<>(IntermediateProperty.FULL_PATH, CmfValue.Type.STRING, true,
-				Collections.singleton(new CmfValue(String.format("%s/%s", path, object.getName())))));
+				Collections.singleton(CmfValue.of(String.format("%s/%s", path, object.getName())))));
 		}
 		return true;
 	}
@@ -139,7 +139,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			parentPath = FileNameTools.dirname(parentPath, '/');
 			ShptFolder parent = new ShptFolder(this.factory, session, session.getFolder(parentPath));
 			marshaled.setProperty(new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfValue.Type.ID, true,
-				Collections.singleton(new CmfValue(CmfValue.Type.ID, parent.getObjectId()))));
+				Collections.singleton(CmfValue.of(CmfValue.Type.ID, parent.getObjectId()))));
 			ret.add(parent);
 			if (this.log.isDebugEnabled()) {
 				this.log.debug("Adding parent dependency to [{}] from source path [{}] for {} [ID={}/L={}]", parentPath,

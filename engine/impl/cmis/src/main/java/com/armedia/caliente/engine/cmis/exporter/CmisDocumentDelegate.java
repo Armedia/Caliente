@@ -135,7 +135,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			CmfAttribute<CmfValue> antecedentId = new CmfAttribute<>(CmisCustomAttributes.VERSION_ANTECEDENT_ID.name,
 				CmfValue.Type.ID, false);
 			try {
-				antecedentId.setValue(new CmfValue(CmfValue.Type.ID, Object.class.cast(this.antecedentId)));
+				antecedentId.setValue(CmfValue.of(CmfValue.Type.ID, Object.class.cast(this.antecedentId)));
 			} catch (ParseException e) {
 				throw new ExportException(String.format("Failed to create an object ID value from [%s] for %s",
 					this.antecedentId, object.getDescription()));
@@ -143,7 +143,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			object.setAttribute(antecedentId);
 		}
 		object.setAttribute(new CmfAttribute<>(IntermediateAttribute.IS_LATEST_VERSION,
-			IntermediateAttribute.IS_LATEST_VERSION.type, new CmfValue(this.object.isLatestVersion())));
+			IntermediateAttribute.IS_LATEST_VERSION.type, CmfValue.of(this.object.isLatestVersion())));
 
 		Document headVersion = null;
 		if (this.object.isLatestVersion()) {
@@ -156,16 +156,16 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			}
 		}
 		object.setProperty(new CmfProperty<>(IntermediateProperty.HEAD_NAME, IntermediateProperty.HEAD_NAME.type,
-			new CmfValue(headVersion.getName())));
+			CmfValue.of(headVersion.getName())));
 		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
 			IntermediateProperty.VERSION_TREE_ROOT.type,
-			new CmfValue((this.antecedentId == null) || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY))));
+			CmfValue.of((this.antecedentId == null) || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY))));
 		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX,
-			IntermediateProperty.VERSION_INDEX.type, new CmfValue(this.previous.size())));
+			IntermediateProperty.VERSION_INDEX.type, CmfValue.of(this.previous.size())));
 		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT,
-			IntermediateProperty.VERSION_COUNT.type, new CmfValue(this.previous.size() + this.successors.size() + 1)));
+			IntermediateProperty.VERSION_COUNT.type, CmfValue.of(this.previous.size() + this.successors.size() + 1)));
 		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
-			IntermediateProperty.VERSION_HEAD_INDEX.type, new CmfValue(this.previous.size() + this.successors.size())));
+			IntermediateProperty.VERSION_HEAD_INDEX.type, CmfValue.of(this.previous.size() + this.successors.size())));
 
 		if (!this.object.isLatestVersion()) {
 			marshalParentsAndPaths(ctx, object, this.object.getObjectOfLatestVersion(false));

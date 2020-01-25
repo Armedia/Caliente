@@ -194,11 +194,11 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 		final File file = this.object.getAbsolute();
 		CmfAttribute<CmfValue> att = null;
 		att = new CmfAttribute<>(IntermediateAttribute.NAME, CmfValue.Type.STRING, false);
-		att.setValue(new CmfValue(file.getName()));
+		att.setValue(CmfValue.of(file.getName()));
 		object.setAttribute(att);
 
 		att = new CmfAttribute<>(IntermediateAttribute.OBJECT_ID, CmfValue.Type.ID, false);
-		att.setValue(new CmfValue(getObjectId()));
+		att.setValue(CmfValue.of(getObjectId()));
 		object.setAttribute(att);
 
 		Path path = file.toPath();
@@ -209,26 +209,26 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 			BasicFileAttributes basicAtts = basic.readAttributes();
 
 			att = new CmfAttribute<>(IntermediateAttribute.CREATION_DATE, CmfValue.Type.DATETIME, false);
-			att.setValue(new CmfValue(new Date(basicAtts.creationTime().toMillis())));
+			att.setValue(CmfValue.of(new Date(basicAtts.creationTime().toMillis())));
 			object.setAttribute(att);
 
 			att = new CmfAttribute<>(IntermediateAttribute.LAST_MODIFICATION_DATE, CmfValue.Type.DATETIME, false);
-			att.setValue(new CmfValue(new Date(basicAtts.lastModifiedTime().toMillis())));
+			att.setValue(CmfValue.of(new Date(basicAtts.lastModifiedTime().toMillis())));
 			object.setAttribute(att);
 
 			att = new CmfAttribute<>(IntermediateAttribute.LAST_ACCESS_DATE, CmfValue.Type.DATETIME, false);
-			att.setValue(new CmfValue(new Date(basicAtts.lastAccessTime().toMillis())));
+			att.setValue(CmfValue.of(new Date(basicAtts.lastAccessTime().toMillis())));
 			object.setAttribute(att);
 
 			if (getType() == CmfObject.Archetype.DOCUMENT) {
 				att = new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_LENGTH, CmfValue.Type.DOUBLE, false);
-				att.setValue(new CmfValue((double) basicAtts.size()));
+				att.setValue(CmfValue.of((double) basicAtts.size()));
 				object.setAttribute(att);
 
 				// All documents are roots...
 				CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
 					CmfValue.Type.BOOLEAN, false);
-				versionTreeRoot.setValue(new CmfValue(true));
+				versionTreeRoot.setValue(CmfValue.of(true));
 				object.setProperty(versionTreeRoot);
 			}
 		} catch (IOException e) {
@@ -258,7 +258,7 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 						data = new byte[bytes];
 						buf.get(data);
 					}
-					att.setValue(new CmfValue(data));
+					att.setValue(CmfValue.of(data));
 					object.setAttribute(att);
 				}
 			} catch (Exception e) {
@@ -272,22 +272,22 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 				DosFileAttributes atts = dos.readAttributes();
 				att = new CmfAttribute<>(String.format(SqlFileExportDelegate.DOS_ATT_FORMAT, "hidden"),
 					CmfValue.Type.BOOLEAN, false);
-				att.setValue(new CmfValue(atts.isHidden()));
+				att.setValue(CmfValue.of(atts.isHidden()));
 				object.setAttribute(att);
 
 				att = new CmfAttribute<>(String.format(SqlFileExportDelegate.DOS_ATT_FORMAT, "system"),
 					CmfValue.Type.BOOLEAN, false);
-				att.setValue(new CmfValue(atts.isSystem()));
+				att.setValue(CmfValue.of(atts.isSystem()));
 				object.setAttribute(att);
 
 				att = new CmfAttribute<>(String.format(SqlFileExportDelegate.DOS_ATT_FORMAT, "archive"),
 					CmfValue.Type.BOOLEAN, false);
-				att.setValue(new CmfValue(atts.isArchive()));
+				att.setValue(CmfValue.of(atts.isArchive()));
 				object.setAttribute(att);
 
 				att = new CmfAttribute<>(String.format(SqlFileExportDelegate.DOS_ATT_FORMAT, "readonly"),
 					CmfValue.Type.BOOLEAN, false);
-				att.setValue(new CmfValue(atts.isReadOnly()));
+				att.setValue(CmfValue.of(atts.isReadOnly()));
 				object.setAttribute(att);
 			} catch (Exception e) {
 				// do nothing...
@@ -297,15 +297,15 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 		UserPrincipal owner = getOwner(path);
 		if (owner != null) {
 			att = new CmfAttribute<>(IntermediateAttribute.CREATED_BY, CmfValue.Type.STRING, false);
-			att.setValue(new CmfValue(owner.getName()));
+			att.setValue(CmfValue.of(owner.getName()));
 			object.setAttribute(att);
 
 			att = new CmfAttribute<>(IntermediateAttribute.LAST_MODIFIED_BY, CmfValue.Type.STRING, false);
-			att.setValue(new CmfValue(owner.getName()));
+			att.setValue(CmfValue.of(owner.getName()));
 			object.setAttribute(att);
 
 			att = new CmfAttribute<>(IntermediateAttribute.OWNER, CmfValue.Type.STRING, false);
-			att.setValue(new CmfValue(owner.getName()));
+			att.setValue(CmfValue.of(owner.getName()));
 			object.setAttribute(att);
 		}
 
@@ -315,7 +315,7 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 				PosixFileAttributes posixAtts = posix.readAttributes();
 				GroupPrincipal ownerGroup = posixAtts.group();
 				att = new CmfAttribute<>(IntermediateAttribute.GROUP, CmfValue.Type.STRING, false);
-				att.setValue(new CmfValue(ownerGroup.getName()));
+				att.setValue(CmfValue.of(ownerGroup.getName()));
 				object.setAttribute(att);
 			} catch (Exception e) {
 				// Do nothing...
@@ -350,7 +350,7 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 		prop = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfValue.Type.ID, true);
 		att = new CmfAttribute<>(IntermediateAttribute.PARENT_ID, CmfValue.Type.ID, true);
 		if (parentId != null) {
-			att.setValue(new CmfValue(parentId));
+			att.setValue(CmfValue.of(parentId));
 			prop.setValue(att.getValue());
 		}
 		object.setAttribute(att);
@@ -365,15 +365,15 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 		}
 
 		object.setProperty(new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING,
-			new CmfValue(this.object.getPortableParentPath())));
+			CmfValue.of(this.object.getPortableParentPath())));
 
 		object.setProperty(new CmfProperty<>(IntermediateProperty.FULL_PATH, CmfValue.Type.STRING,
-			new CmfValue(this.object.getPortableFullPath())));
+			CmfValue.of(this.object.getPortableFullPath())));
 
 		if (this.object.isFolder()) {
 			// If this is a folder, the path is set to its full, relative path
 			att = new CmfAttribute<>(IntermediateAttribute.PATH, CmfValue.Type.STRING, true);
-			att.setValue(new CmfValue(this.object.getPortableFullPath()));
+			att.setValue(CmfValue.of(this.object.getPortableFullPath()));
 			object.setAttribute(att);
 		}
 
@@ -392,7 +392,7 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 			String id = SqlCommon.calculateId(path);
 			parents.add(0, id);
 		}
-		return new CmfValue(FileNameTools.reconstitute(parents, false, false, '/'));
+		return CmfValue.of(FileNameTools.reconstitute(parents, false, false, '/'));
 	}
 
 	@Override
@@ -418,15 +418,15 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 		}
 
 		marshalled
-			.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, CmfValue.Type.INTEGER, new CmfValue(1)));
+			.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, CmfValue.Type.INTEGER, CmfValue.of(1)));
 		marshalled.setProperty(
-			new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, CmfValue.Type.INTEGER, new CmfValue(0)));
+			new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, CmfValue.Type.INTEGER, CmfValue.of(0)));
 		marshalled
-			.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX, CmfValue.Type.INTEGER, new CmfValue(0)));
+			.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX, CmfValue.Type.INTEGER, CmfValue.of(0)));
 
 		CmfAttribute<CmfValue> typeAtt = new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_MIME_TYPE,
 			CmfValue.Type.STRING, false);
-		typeAtt.setValue(new CmfValue(type.getBaseType()));
+		typeAtt.setValue(CmfValue.of(type.getBaseType()));
 		marshalled.setAttribute(typeAtt);
 
 		// TODO: add the attributes...

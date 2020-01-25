@@ -1387,7 +1387,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 			final CmfValue v;
 			try {
 				if (rs.wasNull() || (nullValue && JdbcObjectStore.NULL.equals(data))) {
-					v = new CmfValue(property.getType(), null);
+					v = CmfValue.of(property.getType(), null);
 				} else {
 					v = deserializer.deserialize(data);
 				}

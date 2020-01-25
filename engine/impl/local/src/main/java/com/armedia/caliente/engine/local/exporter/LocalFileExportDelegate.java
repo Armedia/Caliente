@@ -196,29 +196,29 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			BasicFileAttributes basicAtts = basic.readAttributes();
 
 			att = new CmfAttribute<>(IntermediateAttribute.CREATION_DATE, IntermediateAttribute.CREATION_DATE.type,
-				new CmfValue(new Date(basicAtts.creationTime().toMillis())));
+				CmfValue.of(new Date(basicAtts.creationTime().toMillis())));
 			object.setAttribute(att);
 
 			att = new CmfAttribute<>(IntermediateAttribute.LAST_MODIFICATION_DATE,
 				IntermediateAttribute.LAST_MODIFICATION_DATE.type,
-				new CmfValue(new Date(basicAtts.lastModifiedTime().toMillis())));
+				CmfValue.of(new Date(basicAtts.lastModifiedTime().toMillis())));
 			object.setAttribute(att);
 
 			att = new CmfAttribute<>(IntermediateAttribute.LAST_ACCESS_DATE,
 				IntermediateAttribute.LAST_ACCESS_DATE.type,
-				new CmfValue(new Date(basicAtts.lastAccessTime().toMillis())));
+				CmfValue.of(new Date(basicAtts.lastAccessTime().toMillis())));
 			object.setAttribute(att);
 
 			if (getType() == CmfObject.Archetype.DOCUMENT) {
 				att = new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_LENGTH,
 					IntermediateAttribute.CONTENT_STREAM_LENGTH.type, false);
-				att.setValue(new CmfValue(basicAtts.size()));
+				att.setValue(CmfValue.of(basicAtts.size()));
 				object.setAttribute(att);
 
 				// All documents are roots...
 				CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
 					IntermediateProperty.VERSION_TREE_ROOT.type, false);
-				versionTreeRoot.setValue(new CmfValue(true));
+				versionTreeRoot.setValue(CmfValue.of(true));
 				object.setProperty(versionTreeRoot);
 			}
 		} catch (IOException e) {
@@ -251,7 +251,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 					data = new byte[bytes];
 					buf.get(data);
 				}
-				att.setValue(new CmfValue(data));
+				att.setValue(CmfValue.of(data));
 				object.setAttribute(att);
 			}
 		} catch (Exception e) {
@@ -267,22 +267,22 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			DosFileAttributes atts = dos.readAttributes();
 			att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "hidden"),
 				CmfValue.Type.BOOLEAN, false);
-			att.setValue(new CmfValue(atts.isHidden()));
+			att.setValue(CmfValue.of(atts.isHidden()));
 			object.setAttribute(att);
 
 			att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "system"),
 				CmfValue.Type.BOOLEAN, false);
-			att.setValue(new CmfValue(atts.isSystem()));
+			att.setValue(CmfValue.of(atts.isSystem()));
 			object.setAttribute(att);
 
 			att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "archive"),
 				CmfValue.Type.BOOLEAN, false);
-			att.setValue(new CmfValue(atts.isArchive()));
+			att.setValue(CmfValue.of(atts.isArchive()));
 			object.setAttribute(att);
 
 			att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "readonly"),
 				CmfValue.Type.BOOLEAN, false);
-			att.setValue(new CmfValue(atts.isReadOnly()));
+			att.setValue(CmfValue.of(atts.isReadOnly()));
 			object.setAttribute(att);
 		} catch (Exception e) {
 			// do nothing...
@@ -297,7 +297,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			PosixFileAttributes posixAtts = posix.readAttributes();
 			GroupPrincipal ownerGroup = posixAtts.group();
 			att = new CmfAttribute<>(IntermediateAttribute.GROUP, IntermediateAttribute.GROUP.type, false);
-			att.setValue(new CmfValue(ownerGroup.getName()));
+			att.setValue(CmfValue.of(ownerGroup.getName()));
 			object.setAttribute(att);
 		} catch (Exception e) {
 			// Do nothing...
@@ -309,11 +309,11 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		final Path path = this.object.getAbsolute().toPath();
 		CmfAttribute<CmfValue> att = null;
 		att = new CmfAttribute<>(IntermediateAttribute.NAME, IntermediateAttribute.NAME.type, false);
-		att.setValue(new CmfValue(path.getFileName().toString()));
+		att.setValue(CmfValue.of(path.getFileName().toString()));
 		encoded.setAttribute(att);
 
 		att = new CmfAttribute<>(IntermediateAttribute.OBJECT_ID, IntermediateAttribute.OBJECT_ID.type, false);
-		att.setValue(new CmfValue(getObjectId()));
+		att.setValue(CmfValue.of(getObjectId()));
 		encoded.setAttribute(att);
 
 		// Ok... we have the attribute views, export the information
@@ -325,16 +325,16 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		UserPrincipal owner = getOwner(path);
 		if (owner != null) {
 			att = new CmfAttribute<>(IntermediateAttribute.CREATED_BY, IntermediateAttribute.CREATED_BY.type, false);
-			att.setValue(new CmfValue(owner.getName()));
+			att.setValue(CmfValue.of(owner.getName()));
 			encoded.setAttribute(att);
 
 			att = new CmfAttribute<>(IntermediateAttribute.LAST_MODIFIED_BY,
 				IntermediateAttribute.LAST_MODIFIED_BY.type, false);
-			att.setValue(new CmfValue(owner.getName()));
+			att.setValue(CmfValue.of(owner.getName()));
 			encoded.setAttribute(att);
 
 			att = new CmfAttribute<>(IntermediateAttribute.OWNER, IntermediateAttribute.OWNER.type, false);
-			att.setValue(new CmfValue(owner.getName()));
+			att.setValue(CmfValue.of(owner.getName()));
 			encoded.setAttribute(att);
 		}
 
@@ -366,7 +366,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		prop = new CmfProperty<>(IntermediateProperty.PARENT_ID, IntermediateProperty.PARENT_ID.type, true);
 		att = new CmfAttribute<>(IntermediateAttribute.PARENT_ID, IntermediateAttribute.PARENT_ID.type, true);
 		if (parentId != null) {
-			att.setValue(new CmfValue(parentId));
+			att.setValue(CmfValue.of(parentId));
 			prop.setValue(att.getValue());
 		}
 		encoded.setAttribute(att);
@@ -380,31 +380,31 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		}
 
 		encoded.setProperty(new CmfProperty<>(IntermediateProperty.PATH, IntermediateProperty.PATH.type,
-			new CmfValue(this.object.getPortableParentPath())));
+			CmfValue.of(this.object.getPortableParentPath())));
 
 		encoded.setProperty(new CmfProperty<>(IntermediateProperty.FULL_PATH, IntermediateProperty.FULL_PATH.type,
-			new CmfValue(this.object.getPortableFullPath())));
+			CmfValue.of(this.object.getPortableFullPath())));
 		encoded.setProperty(new CmfProperty<>(IntermediateProperty.PRESERVED_NAME,
-			IntermediateProperty.PRESERVED_NAME.type, new CmfValue(this.object.getName())));
+			IntermediateProperty.PRESERVED_NAME.type, CmfValue.of(this.object.getName())));
 
 		if (this.object.isFolder()) {
 			// If this is a folder, the path is set to its full, relative path
 			att = new CmfAttribute<>(IntermediateAttribute.PATH, CmfValue.Type.STRING, true);
-			att.setValue(new CmfValue(this.object.getPortableFullPath()));
+			att.setValue(CmfValue.of(this.object.getPortableFullPath()));
 			encoded.setAttribute(att);
 		}
 
 		LocalVersionHistory history = this.factory.getEngine().getHistory(this.object);
 		encoded.setProperty(new CmfProperty<>(IntermediateProperty.HEAD_NAME, IntermediateProperty.HEAD_NAME.type,
-			new CmfValue(FileNameTools.basename(history.getCurrentVersion().getHistoryRadix(), '/'))));
+			CmfValue.of(FileNameTools.basename(history.getCurrentVersion().getHistoryRadix(), '/'))));
 		encoded.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT,
-			IntermediateProperty.VERSION_COUNT.type, new CmfValue(history.size())));
+			IntermediateProperty.VERSION_COUNT.type, CmfValue.of(history.size())));
 		Integer historyIndex = history.getIndexFor(this.object.getVersionTag());
 		encoded.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX,
-			IntermediateProperty.VERSION_INDEX.type, new CmfValue(historyIndex.intValue() + 1)));
+			IntermediateProperty.VERSION_INDEX.type, CmfValue.of(historyIndex.intValue() + 1)));
 		historyIndex = history.getCurrentIndex();
 		encoded.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
-			IntermediateProperty.VERSION_HEAD_INDEX.type, new CmfValue(historyIndex.intValue() + 1)));
+			IntermediateProperty.VERSION_HEAD_INDEX.type, CmfValue.of(historyIndex.intValue() + 1)));
 
 		return true;
 	}
@@ -419,7 +419,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			}
 			parents.add(0, LocalCommon.calculateId(p));
 		}
-		return new CmfValue(FileNameTools.reconstitute(parents, false, false, '/'));
+		return CmfValue.of(FileNameTools.reconstitute(parents, false, false, '/'));
 	}
 
 	@Override
@@ -492,7 +492,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 		CmfAttribute<CmfValue> typeAtt = new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_MIME_TYPE,
 			CmfValue.Type.STRING, false);
-		typeAtt.setValue(new CmfValue(type.getBaseType()));
+		typeAtt.setValue(CmfValue.of(type.getBaseType()));
 		marshalled.setAttribute(typeAtt);
 
 		// TODO: add the attributes...

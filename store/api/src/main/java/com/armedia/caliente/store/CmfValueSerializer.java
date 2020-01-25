@@ -54,7 +54,7 @@ public enum CmfValueSerializer implements CheckedCodec<CmfValue, String, ParseEx
 
 		@Override
 		public CmfValue doDeserialize(String str) {
-			return new CmfValue(Boolean.valueOf(str));
+			return CmfValue.of(Boolean.valueOf(str));
 		}
 	},
 	INTEGER(CmfValue.Type.INTEGER) {
@@ -66,7 +66,7 @@ public enum CmfValueSerializer implements CheckedCodec<CmfValue, String, ParseEx
 
 		@Override
 		public CmfValue doDeserialize(String str) {
-			return new CmfValue(Integer.valueOf(str));
+			return CmfValue.of(Integer.valueOf(str));
 		}
 	},
 	DOUBLE(CmfValue.Type.DOUBLE) {
@@ -78,7 +78,7 @@ public enum CmfValueSerializer implements CheckedCodec<CmfValue, String, ParseEx
 
 		@Override
 		public CmfValue doDeserialize(String str) {
-			return new CmfValue(Double.longBitsToDouble(Long.decode(str)));
+			return CmfValue.of(Double.longBitsToDouble(Long.decode(str)));
 		}
 
 		@Override
@@ -115,7 +115,7 @@ public enum CmfValueSerializer implements CheckedCodec<CmfValue, String, ParseEx
 			if (!m.matches()) {
 				throw new ParseException(String.format("The string [%s] is not a valid ID string", str), 0);
 			}
-			return new CmfValue(CmfValue.Type.ID, m.group(1));
+			return CmfValue.of(CmfValue.Type.ID, m.group(1));
 		}
 
 		@Override
@@ -143,7 +143,7 @@ public enum CmfValueSerializer implements CheckedCodec<CmfValue, String, ParseEx
 
 		@Override
 		public CmfValue doDeserialize(String str) throws ParseException {
-			return new CmfValue(DateUtils.parseDate(str, this.PATTERN));
+			return CmfValue.of(DateUtils.parseDate(str, this.PATTERN));
 		}
 
 	},
@@ -158,7 +158,7 @@ public enum CmfValueSerializer implements CheckedCodec<CmfValue, String, ParseEx
 		@Override
 		public CmfValue doDeserialize(String str) throws ParseException {
 			try {
-				return new CmfValue(new URI(str));
+				return CmfValue.of(new URI(str));
 			} catch (URISyntaxException e) {
 				throw new ParseException(
 					String.format("The string [%s] could not be parsed as a URI: %s", str, e.getMessage()), 0);
@@ -176,7 +176,7 @@ public enum CmfValueSerializer implements CheckedCodec<CmfValue, String, ParseEx
 
 		@Override
 		public CmfValue doDeserialize(String str) throws ParseException {
-			return new CmfValue(Type.HTML, str);
+			return CmfValue.of(Type.HTML, str);
 		}
 
 	},
@@ -190,7 +190,7 @@ public enum CmfValueSerializer implements CheckedCodec<CmfValue, String, ParseEx
 
 		@Override
 		public CmfValue doDeserialize(String str) throws ParseException {
-			return new CmfValue(Type.BASE64_BINARY, Base64.decodeBase64(str));
+			return CmfValue.of(Type.BASE64_BINARY, Base64.decodeBase64(str));
 		}
 
 	},
@@ -244,7 +244,7 @@ public enum CmfValueSerializer implements CheckedCodec<CmfValue, String, ParseEx
 	}
 
 	protected CmfValue doDeserialize(String str) throws ParseException {
-		return new CmfValue(str);
+		return CmfValue.of(str);
 	}
 
 	@Override

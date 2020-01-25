@@ -208,7 +208,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		if (this.version != null) {
 			Date d = this.version.getCreatedTime();
 			if (d != null) {
-				Collection<CmfValue> c = Collections.singleton(new CmfValue(d));
+				Collection<CmfValue> c = Collections.singleton(CmfValue.of(d));
 				object.setAttribute(
 					new CmfAttribute<>(ShptAttributes.CREATE_DATE.name, CmfValue.Type.DATETIME, false, c));
 				object.setAttribute(
@@ -216,11 +216,11 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			}
 		}
 
-		versionNames.add(new CmfValue(this.versionNumber.toString()));
+		versionNames.add(CmfValue.of(this.versionNumber.toString()));
 
 		CmfAttribute<CmfValue> current = new CmfAttribute<>(IntermediateAttribute.IS_LATEST_VERSION,
 			CmfValue.Type.BOOLEAN, false);
-		current.setValue(new CmfValue((this.version == null) || this.version.isCurrentVersion()));
+		current.setValue(CmfValue.of((this.version == null) || this.version.isCurrentVersion()));
 		object.setAttribute(current);
 
 		final boolean isRoot;
@@ -230,7 +230,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			isRoot = (this.antecedentId == null);
 			if (this.antecedentId != null) {
 				object.setAttribute(new CmfAttribute<>(ShptAttributes.VERSION_PRIOR.name, CmfValue.Type.ID, false,
-					Collections.singleton(new CmfValue(this.antecedentId))));
+					Collections.singleton(CmfValue.of(this.antecedentId))));
 			}
 		} else {
 			String antecedentId = this.antecedentId;
@@ -296,7 +296,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 				}
 				if (antecedentId != null) {
 					object.setAttribute(new CmfAttribute<>(ShptAttributes.VERSION_PRIOR.name, CmfValue.Type.ID, false,
-						Collections.singleton(new CmfValue(antecedentId))));
+						Collections.singleton(CmfValue.of(antecedentId))));
 				}
 				isRoot = (antecedentId == null);
 			} catch (ShptSessionException e) {
@@ -317,22 +317,22 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		}
 
 		object.setProperty(new CmfProperty<>(IntermediateProperty.HEAD_NAME, CmfValue.Type.STRING,
-			new CmfValue(headVersion.getName())));
+			CmfValue.of(headVersion.getName())));
 		object.setProperty(
 			new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT, IntermediateProperty.VERSION_TREE_ROOT.type,
-				new CmfValue(isRoot || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY))));
+				CmfValue.of(isRoot || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY))));
 		object
 			.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
-				new CmfValue(this.predecessors.size() + this.successors.size() + 1)));
+				CmfValue.of(this.predecessors.size() + this.successors.size() + 1)));
 		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX,
-			IntermediateProperty.VERSION_INDEX.type, new CmfValue(this.predecessors.size())));
+			IntermediateProperty.VERSION_INDEX.type, CmfValue.of(this.predecessors.size())));
 		object.setProperty(
 			new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, IntermediateProperty.VERSION_HEAD_INDEX.type,
-				new CmfValue(this.predecessors.size() + this.successors.size())));
+				CmfValue.of(this.predecessors.size() + this.successors.size())));
 
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.VERSION.name, CmfValue.Type.STRING, true, versionNames));
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.VERSION_TREE.name, CmfValue.Type.ID, false,
-			Collections.singleton(new CmfValue(getHistoryId()))));
+			Collections.singleton(CmfValue.of(getHistoryId()))));
 		return true;
 	}
 
@@ -345,7 +345,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			author = new ShptUser(this.factory, service, service.getFileAuthor(this.object.getServerRelativeUrl()));
 			ret.add(author);
 			marshaled.setAttribute(new CmfAttribute<>(ShptAttributes.OWNER.name, CmfValue.Type.STRING, false,
-				Collections.singleton(new CmfValue(author.getName()))));
+				Collections.singleton(CmfValue.of(author.getName()))));
 		} catch (IncompleteDataException e) {
 			this.log.warn(e.getMessage());
 		}
@@ -369,14 +369,14 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		if (creator != null) {
 			ret.add(creator);
 			marshaled.setAttribute(new CmfAttribute<>(ShptAttributes.CREATOR.name, CmfValue.Type.STRING, false,
-				Collections.singleton(new CmfValue(creator.getName()))));
+				Collections.singleton(CmfValue.of(creator.getName()))));
 
 		}
 
 		if (modifier != null) {
 			ret.add(modifier);
 			marshaled.setAttribute(new CmfAttribute<>(ShptAttributes.MODIFIER.name, CmfValue.Type.STRING, false,
-				Collections.singleton(new CmfValue(modifier.getName()))));
+				Collections.singleton(CmfValue.of(modifier.getName()))));
 		}
 
 		return ret;
@@ -460,7 +460,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		}
 
 		marshaled.setAttribute(new CmfAttribute<>(ShptAttributes.CONTENT_TYPE.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(type.getBaseType()))));
+			Collections.singleton(CmfValue.of(type.getBaseType()))));
 		info.setMimeType(MimeTools.resolveMimeType(type.getBaseType()));
 		info.setLength(buf.getCurrentSize());
 		List<CmfContentStream> ret = new ArrayList<>();

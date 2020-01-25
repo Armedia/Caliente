@@ -202,7 +202,7 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		if (this.organizer == null) { throw new IllegalArgumentException("Must provide a content organizer"); }
 		this.organizer.configure(settings);
 		if (storeOrganizerName) {
-			setProperty("organizer", new CmfValue(organizer.getName()));
+			setProperty("organizer", CmfValue.of(organizer.getName()));
 		}
 
 		// This seems clunky but it's actually very useful - it allows us to load properties
@@ -239,7 +239,7 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		v = getProperty(LocalContentStoreSetting.USE_WINDOWS_FIX.getLabel());
 		this.useWindowsFix = ((v != null) && v.asBoolean());
 		// This helps make sure the actual used value is stored
-		setProperty(LocalContentStoreSetting.USE_WINDOWS_FIX.getLabel(), new CmfValue(this.useWindowsFix));
+		setProperty(LocalContentStoreSetting.USE_WINDOWS_FIX.getLabel(), CmfValue.of(this.useWindowsFix));
 	}
 
 	protected void initProperties() throws CmfStorageException {
@@ -262,16 +262,16 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		final boolean ignoreFragment = this.settings.getBoolean(LocalContentStoreSetting.IGNORE_DESCRIPTOR);
 		final boolean useWindowsFix = this.settings.getBoolean(LocalContentStoreSetting.USE_WINDOWS_FIX);
 
-		setProperty(LocalContentStoreSetting.FORCE_SAFE_FILENAMES.getLabel(), new CmfValue(forceSafeFilenames));
+		setProperty(LocalContentStoreSetting.FORCE_SAFE_FILENAMES.getLabel(), CmfValue.of(forceSafeFilenames));
 		if (safeFilenameEncoding != null) {
 			setProperty(LocalContentStoreSetting.SAFE_FILENAME_ENCODING.getLabel(),
-				new CmfValue(safeFilenameEncoding.name()));
+				CmfValue.of(safeFilenameEncoding.name()));
 		}
-		setProperty(LocalContentStoreSetting.FIX_FILENAMES.getLabel(), new CmfValue(fixFilenames));
-		setProperty(LocalContentStoreSetting.FAIL_ON_COLLISIONS.getLabel(), new CmfValue(failOnCollisions));
-		setProperty(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel(), new CmfValue(ignoreFragment));
+		setProperty(LocalContentStoreSetting.FIX_FILENAMES.getLabel(), CmfValue.of(fixFilenames));
+		setProperty(LocalContentStoreSetting.FAIL_ON_COLLISIONS.getLabel(), CmfValue.of(failOnCollisions));
+		setProperty(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel(), CmfValue.of(ignoreFragment));
 		setProperty(LocalContentStoreSetting.USE_WINDOWS_FIX.getLabel(),
-			new CmfValue(useWindowsFix || SystemUtils.IS_OS_WINDOWS));
+			CmfValue.of(useWindowsFix || SystemUtils.IS_OS_WINDOWS));
 	}
 
 	@Override

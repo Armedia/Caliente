@@ -191,7 +191,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 	@Override
 	public CmfValue getValue(CmfValue.Type type, Object value) throws ParseException {
 		try {
-			return new CmfValue(type, value);
+			return CmfValue.of(type, value);
 		} catch (ParseException e) {
 			throw new RuntimeException("Exception raised while creating a new value", e);
 		}

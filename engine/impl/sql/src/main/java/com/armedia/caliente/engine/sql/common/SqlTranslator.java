@@ -140,6 +140,6 @@ public class SqlTranslator extends CmfAttributeTranslator<CmfValue> {
 
 	@Override
 	public CmfValue getValue(CmfValue.Type type, Object value) throws ParseException {
-		return new CmfValue(type, value);
+		return CmfValue.of(type, value);
 	}
 }

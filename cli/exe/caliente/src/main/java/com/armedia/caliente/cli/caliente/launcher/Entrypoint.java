@@ -347,7 +347,7 @@ public class Entrypoint extends AbstractEntrypoint {
 				|| this.command.isContentStreamsExternal(commandValues);
 			try {
 				objectStore.setProperty(Entrypoint.STORE_PROP_CONTENT_LOCATION_REQUIRED,
-					new CmfValue(contentLocationRequired));
+					CmfValue.of(contentLocationRequired));
 			} catch (CmfStorageException e) {
 				throw new CommandLineProcessingException(1,
 					String.format("Failed to store the property %s into the Object Store",
@@ -653,16 +653,16 @@ public class Entrypoint extends AbstractEntrypoint {
 			try {
 				if (writeProperties) {
 					Map<String, CmfValue> properties = new TreeMap<>();
-					properties.put(String.format(format, "engine"), new CmfValue(engineName));
-					properties.put(String.format(format, "version"), new CmfValue(Entrypoint.VERSION));
-					properties.put(String.format(format, "start"), new CmfValue(new Date()));
+					properties.put(String.format(format, "engine"), CmfValue.of(engineName));
+					properties.put(String.format(format, "version"), CmfValue.of(Entrypoint.VERSION));
+					properties.put(String.format(format, "start"), CmfValue.of(new Date()));
 					objectStore.setProperties(properties);
 				}
 				this.command.run(state, commandValues, positionals);
 			} catch (Throwable t) {
 				if (writeProperties) {
 					try {
-						objectStore.setProperty(String.format(format, "error"), new CmfValue(Tools.dumpStackTrace(t)));
+						objectStore.setProperty(String.format(format, "error"), CmfValue.of(Tools.dumpStackTrace(t)));
 					} catch (Exception e) {
 						log.error("Failed to store the captured error into the properties database", e);
 					}
@@ -672,7 +672,7 @@ public class Entrypoint extends AbstractEntrypoint {
 				// TODO: Unlock from single execution
 				try {
 					if (writeProperties) {
-						objectStore.setProperty(String.format(format, "end"), new CmfValue(new Date()));
+						objectStore.setProperty(String.format(format, "end"), CmfValue.of(new Date()));
 					}
 				} finally {
 					shutdownStores();

@@ -236,59 +236,117 @@ public final class CmfValue {
 		return DateFormat.getDateInstance().parse(str);
 	}
 
+	public static CmfValue of(CmfValue.Type type, Object value) throws ParseException {
+		Objects.requireNonNull(type, "Must provide a value type");
+		if (value == null) { return type.getNull(); }
+		return new CmfValue(type, value);
+	}
+
+	public static CmfValue of(boolean value) {
+		return new CmfValue(value);
+	}
+
+	public static CmfValue of(Boolean value) {
+		if (value == null) { return CmfValue.Type.BOOLEAN.getNull(); }
+		return new CmfValue(value);
+	}
+
+	public static CmfValue of(long value) {
+		return new CmfValue(value);
+	}
+
+	public static CmfValue of(Long value) {
+		if (value == null) { return CmfValue.Type.INTEGER.getNull(); }
+		return new CmfValue(value);
+	}
+
+	public static CmfValue of(double value) {
+		return new CmfValue(value);
+	}
+
+	public static CmfValue of(Double value) {
+		if (value == null) { return CmfValue.Type.DOUBLE.getNull(); }
+		return new CmfValue(value);
+	}
+
+	public static CmfValue of(String value) {
+		if (value == null) { return CmfValue.Type.STRING.getNull(); }
+		return new CmfValue(value);
+	}
+
+	public static CmfValue of(URI value) {
+		if (value == null) { return CmfValue.Type.URI.getNull(); }
+		return new CmfValue(value);
+	}
+
+	public static CmfValue of(byte[] value) {
+		if (value == null) { return CmfValue.Type.BASE64_BINARY.getNull(); }
+		return new CmfValue(value);
+	}
+
+	public static CmfValue of(Date value) {
+		if (value == null) { return CmfValue.Type.DATETIME.getNull(); }
+		return new CmfValue(value);
+	}
+
+	public static CmfValue of(Calendar value) {
+		if (value == null) { return CmfValue.Type.DATETIME.getNull(); }
+		return new CmfValue(value);
+	}
+
 	private final CmfValue.Type type;
 	private final Object value;
 	private final boolean nullValue;
 
-	public CmfValue(long value) {
-		this.type = CmfValue.Type.INTEGER;
-		this.value = value;
-		this.nullValue = false;
-	}
-
-	public CmfValue(boolean value) {
+	private CmfValue(boolean value) {
 		this.type = CmfValue.Type.BOOLEAN;
 		this.value = value;
 		this.nullValue = false;
 	}
 
-	public CmfValue(double value) {
+	private CmfValue(long value) {
+		this.type = CmfValue.Type.INTEGER;
+		this.value = value;
+		this.nullValue = false;
+	}
+
+	private CmfValue(double value) {
 		this.type = CmfValue.Type.DOUBLE;
 		this.value = value;
 		this.nullValue = false;
 	}
 
-	public CmfValue(String value) {
+	private CmfValue(String value) {
 		this.type = CmfValue.Type.STRING;
 		this.value = value;
 		this.nullValue = (value == null);
 	}
 
-	public CmfValue(URI value) {
+	private CmfValue(URI value) {
 		this.type = CmfValue.Type.URI;
 		this.value = value;
 		this.nullValue = (value == null);
 	}
 
-	public CmfValue(byte[] data) {
+	private CmfValue(byte[] data) {
 		this.type = CmfValue.Type.BASE64_BINARY;
 		this.value = Base64.encodeBase64(data);
 		this.nullValue = (this.value == null);
 	}
 
-	public CmfValue(Date value) {
+	private CmfValue(Date value) {
 		this.type = CmfValue.Type.DATETIME;
 		this.value = value;
 		this.nullValue = (value == null);
 	}
 
-	public CmfValue(Calendar value) {
+	private CmfValue(Calendar value) {
 		this.type = CmfValue.Type.DATETIME;
 		this.value = (value != null ? value.getTime() : null);
 		this.nullValue = (value == null);
 	}
 
-	public CmfValue(CmfValue.Type type, Object value) throws ParseException {
+	private CmfValue(CmfValue.Type type, Object value) throws ParseException {
 		this.type = type;
 		this.nullValue = (value == null);
 		if (value != null) {

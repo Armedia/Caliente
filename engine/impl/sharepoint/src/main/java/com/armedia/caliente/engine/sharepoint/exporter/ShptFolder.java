@@ -99,7 +99,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	protected boolean marshal(ShptExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.WELCOME_PAGE.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.object.getWelcomePage()))));
+			Collections.singleton(CmfValue.of(this.object.getWelcomePage()))));
 		return true;
 	}
 

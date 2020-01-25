@@ -94,9 +94,9 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 		final Acl acl = this.object.getAcl();
 
 		CmfProperty<CmfValue> owner = new CmfProperty<>(IntermediateProperty.ACL_OWNER, CmfValue.Type.STRING, false);
-		owner.setValue(new CmfValue(this.object.getCreatedBy()));
+		owner.setValue(CmfValue.of(this.object.getCreatedBy()));
 		CmfProperty<CmfValue> name = new CmfProperty<>(IntermediateProperty.ACL_OBJECT_ID, CmfValue.Type.STRING, false);
-		name.setValue(new CmfValue(this.object.getId()));
+		name.setValue(CmfValue.of(this.object.getId()));
 
 		if (acl != null) {
 			String permissionsName = String.format(CmisProperty.PERMISSION_PROPERTY_FMT,
@@ -121,9 +121,9 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 
 				// Ok...so now we have the principal, and the list of allowable actions that should
 				// be permitted. Therefore, we can export this information
-				accessors.addValue(new CmfValue(p.getId()));
-				permissions.addValue(new CmfValue(AclTools.encode(ace.getPermissions())));
-				accessorActions.addValue(new CmfValue(AclTools.encode(actions)));
+				accessors.addValue(CmfValue.of(p.getId()));
+				permissions.addValue(CmfValue.of(AclTools.encode(ace.getPermissions())));
+				accessorActions.addValue(CmfValue.of(AclTools.encode(actions)));
 			}
 
 			object.setProperty(accessors);
