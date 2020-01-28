@@ -171,7 +171,7 @@ public class AlfImportDelegateFactory
 	private final Map<String, AlfrescoType> defaultTypes;
 
 	private final ConcurrentMap<String, VirtualDocument> vdocs = new ConcurrentHashMap<>();
-	private final ThreadLocal<List<ScanIndexItemMarker>> currentVersions = new ThreadLocal<>();
+	private final ThreadLocal<List<ScanIndexItemMarker>> currentVersions = ThreadLocal.withInitial(ArrayList::new);
 
 	private final AlfXmlIndex fileIndex;
 	private final AlfXmlIndex folderIndex;
@@ -624,7 +624,7 @@ public class AlfImportDelegateFactory
 		if (markerList != null) {
 			markerList.clear();
 		}
-		this.currentVersions.set(null);
+		this.currentVersions.remove();
 	}
 
 	protected final void storeToIndex(final AlfImportContext ctx, final boolean folder,
@@ -645,10 +645,6 @@ public class AlfImportDelegateFactory
 
 			case NORMAL:
 				markerList = this.currentVersions.get();
-				if (markerList == null) {
-					markerList = new ArrayList<>();
-					this.currentVersions.set(markerList);
-				}
 				break;
 
 			default:
