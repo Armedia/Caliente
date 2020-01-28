@@ -112,7 +112,7 @@ public class XmlImportDelegateFactory
 	private final File db;
 	private final File content;
 
-	private final ThreadLocal<List<DocumentVersionT>> threadedVersionList = new ThreadLocal<>();
+	private final ThreadLocal<List<DocumentVersionT>> threadedVersionList = ThreadLocal.withInitial(ArrayList::new);
 
 	private final ImportEngineListener documentListener = new DefaultImportEngineListener() {
 
@@ -121,12 +121,7 @@ public class XmlImportDelegateFactory
 		@Override
 		public void objectHistoryImportStarted(UUID jobId, CmfObject.Archetype objectType, String batchId, int count) {
 			if (objectType != CmfObject.Archetype.DOCUMENT) { return; }
-			List<DocumentVersionT> l = XmlImportDelegateFactory.this.threadedVersionList.get();
-			if (l == null) {
-				l = new ArrayList<>();
-				XmlImportDelegateFactory.this.threadedVersionList.set(l);
-			}
-			l.clear();
+			XmlImportDelegateFactory.this.threadedVersionList.remove();
 		}
 
 		@Override
@@ -135,7 +130,7 @@ public class XmlImportDelegateFactory
 			if (objectType != CmfObject.Archetype.DOCUMENT) { return; }
 			if (failed) { return; }
 			List<DocumentVersionT> l = XmlImportDelegateFactory.this.threadedVersionList.get();
-			if ((l == null) || l.isEmpty()) { return; }
+			if (l.isEmpty()) { return; }
 
 			try {
 				DocumentT doc = new DocumentT();
@@ -338,11 +333,6 @@ public class XmlImportDelegateFactory
 
 	protected void storeDocumentVersion(DocumentVersionT v) throws ImportException {
 		List<DocumentVersionT> l = this.threadedVersionList.get();
-		if (l == null) {
-			throw new ImportException(String.format(
-				"Attempting to store version [%s] of history [%s], but no such history has been started: %s",
-				v.getVersion(), v.getHistoryId(), v));
-		}
 		DocumentT doc = new DocumentT();
 		doc.getVersion().add(v);
 		try {
