@@ -31,7 +31,7 @@ The build process supports three build profiles:
 
 * "No" profile (i.e. SNAPSHOT)
   * Default when no profile is specified
-  * Will generate 
+  * Will generate
 * Beta profile (-Pbeta)
   * Requires defining a **betaNumber** variable which will supplement built artifacts' tags (i.e. -DbetaNumber=03)
 * Release profile (-Prelease)
@@ -41,7 +41,7 @@ The build process supports three build profiles:
 
 The primary executable will be located in: `$/cli/exe/caliente/target/caliente-${version}-exe.jar`
 
-The ${version} element can take one of these forms:
+The _**${version}**_ element can take one of these forms:
 
 * _**DEFAULT:**_ ${project.version}-SNAPSHOT-${git.branch}-${git.hash}
   * Example: caliente-**3.9.4-SNAPSHOT-devel-1b45cd80**-exe.jar
@@ -63,4 +63,27 @@ $ java -jar caliente-3.9.4-exe.jar -h
 
 The -h parameter offers help on the different modes of invocation, including commands, available parameters, etc.  Please note that the help will change depending on the command and parameters given dynamically at runtime.
 
-That's it!!
+The most important parameters are:
+
+* **--engine** / **-e** (_required_): the ECM Engine to use (case-insensitive, one of alfrescobi, cmis, dctm, local, shpt, ucm, xml)
+* **--lib** / **-l** (_optional_): a supplementary library _directory_ from which all contained JARs will be added to the dynamic classpath on startup
+
+Caliente supports 5 basic operations (commands):
+
+* **encrypt**: Encrypt a password for use by Caliente (i.e. so you can write scripts with passwords in them without compromising them)
+* **decrypt**: Decrypt a password used by Caliente (i.e. in case you need to recover or validate a password used by Caliente)
+* **export**: Perform a content extraction from a source ECM
+* **import**: Perform a content ingestion to a target ECM (in some cases, notably AlfrescoBI, this only includes executing the transformation steps to prepare the content for ingestion).
+
+For example, a typical Documentum extraction could look like this:
+
+```
+$ java -jar caliente-3.9.4-exe.jar --engine dctm export --server documentum --user dmadmin --password XZ6ZkrcrHz!d4sz3$Eg= --dfc /apps/documentum-6.7-SP2 --from "/Reports/2019" --data "export/Reports-2019"
+```
+
+If you add the **-h** parameter anywhere in the command line, Caliente will output the documentation (help) message instead of executing any work. The tool will take into account any parameters you've specified that may affect the message output, so the help offered is as relevant as possible to whatever it is you're trying to do.
+
+
+### That's it!!
+
+Happy extractions!
