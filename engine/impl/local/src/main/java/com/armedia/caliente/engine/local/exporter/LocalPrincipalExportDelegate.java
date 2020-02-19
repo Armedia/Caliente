@@ -63,11 +63,11 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 	protected boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		CmfAttribute<CmfValue> att = null;
 		att = new CmfAttribute<>(IntermediateAttribute.NAME, CmfValue.Type.STRING, false);
-		att.setValue(new CmfValue(this.object.getName()));
+		att.setValue(CmfValue.of(this.object.getName()));
 		object.setAttribute(att);
 		if (object.getType() == CmfObject.Archetype.USER) {
 			att = new CmfAttribute<>(IntermediateAttribute.LOGIN_NAME, CmfValue.Type.STRING, false);
-			att.setValue(new CmfValue(this.object.getName()));
+			att.setValue(CmfValue.of(this.object.getName()));
 			object.setAttribute(att);
 		}
 		return true;

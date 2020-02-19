@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -74,9 +75,9 @@ public class PermissionMapper {
 		public boolean equals(Object obj) {
 			if (!Tools.baseEquals(this, obj)) { return false; }
 			PriorityKey other = PriorityKey.class.cast(obj);
-			if (!Tools.equals(this.extra, other.extra)) { return false; }
-			if (!Tools.equals(this.total, other.total)) { return false; }
-			if (!Tools.equals(this.permission, other.permission)) { return false; }
+			if (!Objects.equals(this.extra, other.extra)) { return false; }
+			if (!Objects.equals(this.total, other.total)) { return false; }
+			if (!Objects.equals(this.permission, other.permission)) { return false; }
 			return true;
 		}
 

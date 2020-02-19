@@ -148,44 +148,44 @@ public class ShptUser extends ShptSecurityObject<User> {
 		if (!super.marshal(ctx, object)) { return false; }
 		// UserID
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.OBJECT_ID.name, CmfValue.Type.ID, false,
-			Collections.singleton(new CmfValue(String.format("USER(%s)", getObjectId())))));
+			Collections.singleton(CmfValue.of(String.format("USER(%s)", getObjectId())))));
 
 		// LoginName
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.OBJECT_NAME.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.userName))));
+			Collections.singleton(CmfValue.of(this.userName))));
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.LOGIN_NAME.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.userName))));
+			Collections.singleton(CmfValue.of(this.userName))));
 		if (this.userDomain != null) {
 			object.setAttribute(new CmfAttribute<>(ShptAttributes.LOGIN_DOMAIN.name, CmfValue.Type.STRING, false,
-				Collections.singleton(new CmfValue(this.userDomain))));
+				Collections.singleton(CmfValue.of(this.userDomain))));
 		}
 
 		// SiteAdmin
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.SITE_ADMIN.name, CmfValue.Type.BOOLEAN, false,
-			Collections.singleton(new CmfValue(this.object.isSiteAdmin()))));
+			Collections.singleton(CmfValue.of(this.object.isSiteAdmin()))));
 
 		// PrincipalType
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.PRINCIPAL_TYPE.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.object.getType().name()))));
+			Collections.singleton(CmfValue.of(this.object.getType().name()))));
 
 		// UserIdName
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.PRINCIPAL_ID.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.object.getUserId().getNameId()))));
+			Collections.singleton(CmfValue.of(this.object.getUserId().getNameId()))));
 
 		// UserIdIssuer
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.PRINCIPAL_ID_ISSUER.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.object.getUserId().getNameIdIssuer()))));
+			Collections.singleton(CmfValue.of(this.object.getUserId().getNameIdIssuer()))));
 
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.MODIFICATION_DATE.name, CmfValue.Type.DATETIME, false,
-			Collections.singleton(new CmfValue(new Date()))));
+			Collections.singleton(CmfValue.of(new Date()))));
 
 		// Email
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.EMAIL.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.object.getEmail()))));
+			Collections.singleton(CmfValue.of(this.object.getEmail()))));
 
 		// Title
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.TITLE.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.object.getTitle()))));
+			Collections.singleton(CmfValue.of(this.object.getTitle()))));
 
 		// User Groups
 		final List<Group> l;
@@ -200,14 +200,14 @@ public class ShptUser extends ShptSecurityObject<User> {
 		object.setAttribute(groups);
 		if ((l != null) && !l.isEmpty()) {
 			for (Group g : l) {
-				groups.addValue(new CmfValue(g.getLoginName()));
+				groups.addValue(CmfValue.of(g.getLoginName()));
 			}
 		}
 
 		CmfAttribute<CmfValue> roles = new CmfAttribute<>(ShptAttributes.USER_ROLES.name, CmfValue.Type.STRING, true);
 		object.setAttribute(groups);
 		for (Role r : this.roles) {
-			roles.addValue(new CmfValue(r.getName()));
+			roles.addValue(CmfValue.of(r.getName()));
 		}
 		return true;
 	}

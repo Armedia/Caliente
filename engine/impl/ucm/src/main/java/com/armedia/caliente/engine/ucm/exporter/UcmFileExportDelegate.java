@@ -119,7 +119,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			latest = (history.getLastRevision().getRevisionId() == this.object.getRevisionNumber());
 		}
 		CmfAttribute<CmfValue> latestVersion = new CmfAttribute<>(UcmAtt.cmfLatestVersion.name(), CmfValue.Type.BOOLEAN,
-			false, Collections.singleton(new CmfValue(latest)));
+			false, Collections.singleton(CmfValue.of(latest)));
 		object.setAttribute(latestVersion);
 
 		return true;
@@ -131,7 +131,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 		if (!super.getDataProperties(ctx, properties, object)) { return false; }
 
 		properties.add(new CmfProperty<>(IntermediateProperty.IS_UNFILED, CmfValue.Type.BOOLEAN,
-			new CmfValue(object.isUnfiled())));
+			CmfValue.of(object.isUnfiled())));
 
 		final boolean newestVersion;
 		final int versionCount;
@@ -151,23 +151,23 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 
 			try {
 				properties.add(new CmfProperty<>(IntermediateProperty.HEAD_NAME, IntermediateProperty.HEAD_NAME.type,
-					new CmfValue(ctx.getSession().getFileRevision(history.getLastRevision()).getName())));
+					CmfValue.of(ctx.getSession().getFileRevision(history.getLastRevision()).getName())));
 			} catch (Exception e) {
 				throw new ExportException("Failed to find the last revision information", e);
 			}
 		}
 
-		properties.add(new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION, CmfValue.Type.BOOLEAN,
-			new CmfValue(newestVersion)));
+		properties.add(new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION,
+			IntermediateProperty.IS_NEWEST_VERSION.type, CmfValue.of(newestVersion)));
 
 		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
-			new CmfValue(versionCount)));
+			CmfValue.of(versionCount)));
 
 		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_INDEX, IntermediateProperty.VERSION_INDEX.type,
-			new CmfValue(versionIndex)));
+			CmfValue.of(versionIndex)));
 
 		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
-			IntermediateProperty.VERSION_HEAD_INDEX.type, new CmfValue(versionHeadIndex)));
+			IntermediateProperty.VERSION_HEAD_INDEX.type, CmfValue.of(versionHeadIndex)));
 
 		return true;
 	}
@@ -248,7 +248,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 				renditionLabel = CmfContentStream.DEFAULT_RENDITION;
 			}
 
-			CmfContentStream info = new CmfContentStream(index++, renditionLabel, 0);
+			CmfContentStream info = new CmfContentStream(marshalled, index++, renditionLabel, 0);
 			try {
 				info.setMimeType(new MimeType(rendition.getFormat()));
 			} catch (MimeTypeParseException e) {
@@ -258,12 +258,12 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			info.setProperty("description", rendition.getDescription());
 
 			contents.add(info);
-			CmfContentStore<?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshalled, info);
+			CmfContentStore<?, ?>.Handle contentHandle = streamStore.addContentStream(translator, marshalled, info);
 			if (!skipContent) {
 				// Doesn't support file-level, so we (sadly) use stream-level transfers
 				try (InputStream in = this.object.getInputStream(ctx.getSession(), rendition.getType())) {
 					// Don't pull the content until we're sure we can put it somewhere...
-					contentHandle.setContents(in);
+					contentHandle.store(in);
 				} catch (UcmServiceException e) {
 					this.log.error("A Service Exception was raised while seeking the [{}] rendition for {}",
 						renditionLabel, marshalled.getDescription(), e);

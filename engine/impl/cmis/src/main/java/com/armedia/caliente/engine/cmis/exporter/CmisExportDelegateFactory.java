@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.cmis.exporter;
 
+import java.util.Objects;
+
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Folder;
@@ -38,7 +40,6 @@ import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.Tools;
 
 public class CmisExportDelegateFactory
 	extends ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
@@ -65,7 +66,7 @@ public class CmisExportDelegateFactory
 			case DOCUMENT:
 				// Is this the PWC? If so, then don't include it...
 				Document doc = checkedCast(obj, Document.class, type, searchKey);
-				if ((doc.isPrivateWorkingCopy() == Boolean.TRUE) || Tools.equals("pwc", doc.getVersionLabel())) {
+				if ((doc.isPrivateWorkingCopy() == Boolean.TRUE) || Objects.equals("pwc", doc.getVersionLabel())) {
 					// We will not include the PWC in an export
 					doc = doc.getObjectOfLatestVersion(false);
 					if (doc == null) { return null; }

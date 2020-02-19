@@ -32,6 +32,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import org.apache.http.HttpHost;
 import org.apache.http.auth.Credentials;
@@ -711,10 +712,10 @@ public class ShptSession {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		ShptSession other = ShptSession.class.cast(obj);
-		if (!Tools.equals(this.url, other.url)) { return false; }
-		if (!Tools.equals(this.domain, other.domain)) { return false; }
-		if (!Tools.equals(this.user, other.user)) { return false; }
-		if (!Tools.equals(this.password, other.password)) { return false; }
+		if (!Objects.equals(this.url, other.url)) { return false; }
+		if (!Objects.equals(this.domain, other.domain)) { return false; }
+		if (!Objects.equals(this.user, other.user)) { return false; }
+		if (!Objects.equals(this.password, other.password)) { return false; }
 		return true;
 	}
 

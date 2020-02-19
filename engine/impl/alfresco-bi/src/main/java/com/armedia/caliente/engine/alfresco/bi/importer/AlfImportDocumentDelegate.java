@@ -26,11 +26,6 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.alfresco.bi.importer;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.apache.commons.io.FileUtils;
-
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfContentStream;
@@ -61,16 +56,5 @@ public class AlfImportDocumentDelegate extends AlfImportFileableDelegate {
 			return this.renditionType;
 		}
 		return super.calculateTargetType(content);
-	}
-
-	@Override
-	protected boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException {
-		try {
-			FileUtils.write(target, content, AlfImportFileableDelegate.DEFAULT_CHARSET);
-			return true;
-		} catch (IOException e) {
-			throw new ImportException(String.format("Failed to create the stub file for %s at [%s] with contents [%s]",
-				this.cmfObject.getDescription(), target.getAbsolutePath(), content), e);
-		}
 	}
 }

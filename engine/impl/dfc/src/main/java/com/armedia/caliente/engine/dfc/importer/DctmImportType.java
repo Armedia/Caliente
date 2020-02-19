@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
@@ -400,7 +401,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 
 	@Override
 	protected boolean isSameObject(IDfType existingType, DctmImportContext ctx) throws DfException, ImportException {
-		if (!Tools.equals(existingType.getName(),
+		if (!Objects.equals(existingType.getName(),
 			this.cmfObject.getAttribute(DctmAttributes.NAME).getValue().asString())) {
 			return false;
 		}
@@ -491,7 +492,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			return true;
 		}
 		// If the type name is the same as dmi_${objectId}, we skip it
-		if (Tools.equals(typeName, String.format("dmi_%s", this.cmfObject.getId()))) { return false; }
+		if (Objects.equals(typeName, String.format("dmi_%s", this.cmfObject.getId()))) { return false; }
 		return super.skipImport(ctx);
 	}
 
@@ -562,8 +563,8 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			if (obj == this) { return true; }
 			if (!IDfAttr.class.isInstance(obj)) { return false; }
 			final IDfAttr other = IDfAttr.class.cast(obj);
-			// if (!Tools.equals(this.id, other.getId())) { return false; }
-			if (!Tools.equals(this.name, other.getName())) { return false; }
+			// if (!Objects.equals(this.id, other.getId())) { return false; }
+			if (!Objects.equals(this.name, other.getName())) { return false; }
 			if (this.type != other.getDataType()) { return false; }
 			if (this.length != other.getLength()) { return false; }
 			if (this.repeating != other.isRepeating()) { return false; }
@@ -572,8 +573,8 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 		}
 
 		public boolean isAssignableTo(IDfAttr other) {
-			// if (!Tools.equals(this.id, other.getId())) { return false; }
-			if (!Tools.equals(this.name, other.getName())) { return false; }
+			// if (!Objects.equals(this.id, other.getId())) { return false; }
+			if (!Objects.equals(this.name, other.getName())) { return false; }
 			if (this.type != other.getDataType()) { return false; }
 			if ((this.type == IDfType.DF_STRING) && (this.length > other.getLength())) { return false; }
 			if (this.repeating != other.isRepeating()) { return false; }

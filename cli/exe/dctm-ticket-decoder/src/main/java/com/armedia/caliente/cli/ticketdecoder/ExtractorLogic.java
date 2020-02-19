@@ -281,7 +281,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		if (format != null) {
 			// If we're not using a format wildcard...
 			if (!StringUtils.equals(ExtractorLogic.FORMAT_WILDCARD, format)) {
-				p = p.and((rendition, peers) -> Tools.equals(rendition.getFormat(), format));
+				p = p.and((rendition, peers) -> Objects.equals(rendition.getFormat(), format));
 			}
 			// If a modifier is specified, add it
 			if (modifier != null) {
@@ -291,10 +291,10 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 					p = p.and((rendition, idx) -> {
 						SortedSet<Rendition> peers = idx.get(RenditionIndexType.MODIFIER, format);
 						if ((peers == null) || peers.isEmpty()) { return true; }
-						return Tools.equals(rendition, extractor.apply(peers));
+						return Objects.equals(rendition, extractor.apply(peers));
 					});
 				} else {
-					p = p.and((rendition, peers) -> Tools.equals(rendition.getModifier(), modifier));
+					p = p.and((rendition, peers) -> Objects.equals(rendition.getModifier(), modifier));
 				}
 			}
 		}
@@ -307,7 +307,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 			p = p.and((rendition, index) -> {
 				SortedSet<Rendition> peers = index.get(RenditionIndexType.DATE, format);
 				if ((peers == null) || peers.isEmpty()) { return true; }
-				return Tools.equals(rendition, extractor.apply(peers));
+				return Objects.equals(rendition, extractor.apply(peers));
 			});
 		}
 

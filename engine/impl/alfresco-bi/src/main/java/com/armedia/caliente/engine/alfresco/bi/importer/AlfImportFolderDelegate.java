@@ -26,7 +26,6 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.alfresco.bi.importer;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -92,35 +91,5 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 			if (ctx.isSupported(child.getType())) { return true; }
 		}
 		return false;
-	}
-
-	private boolean hasPropertyValues(IntermediateProperty property) {
-		CmfProperty<CmfValue> p = this.cmfObject.getProperty(property);
-		if (p == null) { return false; }
-		if (p.isMultivalued()) { return p.hasValues(); }
-		CmfValue v = p.getValue();
-		return ((v != null) && !v.isNull());
-	}
-
-	@Override
-	protected boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException {
-		if ((getFolderDepth() == 0) && (hasPropertyValues(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER)
-			|| hasPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER)) && !hasSupportedChildren(ctx)) {
-			// If the object is a top-level folder that is also a user's or group's
-			// home and is also empty (i.e. no children), then we don't create a stub
-			return false;
-		}
-
-		// The folder is either not empty, or not a user's or group's home, so we
-		// include it to avoid problems with its children
-		/*
-		try {
-			FileUtils.forceMkdir(target);
-		} catch (IOException e) {
-			throw new ImportException(String.format("Failed to create the folder for %s at [%s]",
-				this.cmfObject.getDescription(), target.getAbsolutePath()), e);
-		}
-		*/
-		return true;
 	}
 }

@@ -33,6 +33,7 @@ package com.armedia.caliente.engine.dfc.importer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -218,7 +219,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 			// Next, set the password
 			CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.USER_SOURCE);
 			final IDfValue userSource = (att != null ? att.getValue() : null);
-			if ((att == null) || Tools.equals(DfcConstant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
+			if ((att == null) || Objects.equals(DfcConstant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
 				// Default the password to the user's login name, if a specific value hasn't been
 				// selected for global use
 				final String inlinePasswordValue = ctx.getSettings().getString(Setting.DEFAULT_USER_PASSWORD.getLabel(),
@@ -236,7 +237,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 			user.setHomeDocbase(docbase);
 		} else {
 			final String existingDocbase = user.getHomeDocbase();
-			if (!docbase.equals("") && !Tools.equals(docbase, existingDocbase)) {
+			if (!docbase.equals("") && !Objects.equals(docbase, existingDocbase)) {
 				user.changeHomeDocbase(docbase, true);
 			}
 		}

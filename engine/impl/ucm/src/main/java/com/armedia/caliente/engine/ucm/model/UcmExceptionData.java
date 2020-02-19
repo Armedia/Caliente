@@ -29,6 +29,7 @@ package com.armedia.caliente.engine.ucm.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -55,7 +56,7 @@ public class UcmExceptionData {
 		}
 
 		public boolean tagIs(String candidate) {
-			return Tools.equals(candidate, this.tag);
+			return Objects.equals(candidate, this.tag);
 		}
 
 		public List<String> getParameters() {

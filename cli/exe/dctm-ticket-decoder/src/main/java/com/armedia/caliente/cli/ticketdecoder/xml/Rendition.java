@@ -29,6 +29,7 @@ package com.armedia.caliente.cli.ticketdecoder.xml;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -124,9 +125,9 @@ public class Rendition {
 	public boolean matches(IDfContent c) throws DfException {
 		if (c == null) { return false; }
 		if (this.type != c.getRendition()) { return false; }
-		if (!Tools.equals(this.format, c.getFullFormat())) { return false; }
+		if (!Objects.equals(this.format, c.getFullFormat())) { return false; }
 		String mod = Tools.coalesce(c.getString("page_modifier"), "");
-		if (!Tools.equals(this.modifier, mod)) { return false; }
+		if (!Objects.equals(this.modifier, mod)) { return false; }
 		return true;
 	}
 
@@ -141,9 +142,9 @@ public class Rendition {
 		Rendition other = Rendition.class.cast(obj);
 		if (this.type != other.type) { return false; }
 		if (this.pageCount != other.pageCount) { return false; }
-		if (!Tools.equals(this.format, other.format)) { return false; }
-		if (!Tools.equals(this.modifier, other.modifier)) { return false; }
-		if (!Tools.equals(this.pages, other.pages)) { return false; }
+		if (!Objects.equals(this.format, other.format)) { return false; }
+		if (!Objects.equals(this.modifier, other.modifier)) { return false; }
+		if (!Objects.equals(this.pages, other.pages)) { return false; }
 		return true;
 	}
 

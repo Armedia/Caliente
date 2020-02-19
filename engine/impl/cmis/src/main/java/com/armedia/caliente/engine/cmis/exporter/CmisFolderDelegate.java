@@ -29,6 +29,7 @@ package com.armedia.caliente.engine.cmis.exporter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
@@ -41,7 +42,6 @@ import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.FileNameTools;
-import com.armedia.commons.utilities.Tools;
 
 public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 
@@ -82,7 +82,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 		while (it.hasNext()) {
 			CmisObject o = it.next();
 			// Don't continue if the referrent object is one of this object's children
-			if ((referrent != null) && Tools.equals(referrent.getId(), o.getId())) { return ret; }
+			if ((referrent != null) && Objects.equals(referrent.getId(), o.getId())) { return ret; }
 			if (o instanceof Folder) {
 				childFolders.add(new CmisFolderDelegate(this.factory, ctx.getSession(), Folder.class.cast(o)));
 			} else if (o instanceof Document) {

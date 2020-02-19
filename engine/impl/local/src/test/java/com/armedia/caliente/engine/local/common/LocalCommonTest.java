@@ -26,10 +26,11 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.common;
 
-import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -48,38 +49,39 @@ class LocalCommonTest {
 		CfgTools cfg = new CfgTools(settings);
 		Assertions.assertNull(LocalCommon.getRootDirectory(cfg));
 
-		String path = null;
-		File file = null;
+		String s = null;
+		Path path = null;
 
-		path = "";
-		settings.put(LocalSetting.ROOT.getLabel(), path);
-		file = LocalCommon.getRootDirectory(cfg);
-		Assertions.assertNull(file);
+		s = "";
+		settings.put(LocalSetting.ROOT.getLabel(), s);
+		path = LocalCommon.getRootDirectory(cfg);
+		Assertions.assertNull(path);
 
-		path = "/some/folder/path";
-		settings.put(LocalSetting.ROOT.getLabel(), path);
-		file = LocalCommon.getRootDirectory(cfg);
-		Assertions.assertEquals(path, file.getPath());
+		s = "/some/folder/path";
+		settings.put(LocalSetting.ROOT.getLabel(), s);
+		path = LocalCommon.getRootDirectory(cfg);
+		Assertions.assertEquals(s, path.toString());
 
-		path = "a/relative/variation/some/folder/path/../another/././../target";
-		settings.put(LocalSetting.ROOT.getLabel(), path);
-		file = Tools.canonicalize(new File(path));
-		path = file.getPath();
-		file = LocalCommon.getRootDirectory(cfg);
-		Assertions.assertEquals(path, file.getPath());
+		s = "a/relative/variation/some/folder/path/../another/././../target";
+		settings.put(LocalSetting.ROOT.getLabel(), s);
+		path = Tools.canonicalize(Paths.get(s));
+		s = path.toString();
+		path = LocalCommon.getRootDirectory(cfg);
+		Assertions.assertEquals(s, path.toString());
 
-		path = "/some/folder/path/../another/././../target";
-		settings.put(LocalSetting.ROOT.getLabel(), path);
-		file = Tools.canonicalize(new File(path));
-		path = file.getPath();
-		file = LocalCommon.getRootDirectory(cfg);
-		Assertions.assertEquals(path, file.getPath());
+		s = "/some/folder/path/../another/././../target";
+		settings.put(LocalSetting.ROOT.getLabel(), s);
+		path = Tools.canonicalize(Paths.get(s));
+		s = path.toString();
+		path = LocalCommon.getRootDirectory(cfg);
+		Assertions.assertEquals(s, path.toString());
 	}
 
 	@Test
 	void testCalculateId() {
 		String[] paths = {
-			"a", "b", "c/d/../e", "f/g/h/i/j/k/../l", "a/././././b"
+			"a", "b", //
+			"c/d/../e", "f/g/h/i/j/k/../l", "a/././././b", //
 		};
 		final Path root = Tools.canonicalize(FileUtils.getUserDirectory()).toPath();
 		for (String path1 : paths) {
@@ -88,7 +90,6 @@ class LocalCommonTest {
 				String.format("The path [%s] is a bad test example - fix the unit test", path1));
 			Path child1 = root.resolve(path1).normalize();
 			child1 = root.relativize(child1);
-			String portable1 = LocalCommon.getPortablePath(child1.toString());
 
 			for (String path2 : paths) {
 				path2 = FilenameUtils.normalize(path2);
@@ -96,12 +97,13 @@ class LocalCommonTest {
 					String.format("The path [%s] is a bad test example - fix the unit test", path2));
 				Path child2 = root.resolve(path2).normalize();
 				child2 = root.relativize(child2);
-				String portable2 = LocalCommon.getPortablePath(child2.toString());
 
-				if (Tools.equals(portable1, portable2)) {
-					Assertions.assertEquals(LocalCommon.calculateId(portable1), LocalCommon.calculateId(portable2));
+				if (Objects.equals(child1.toString(), child2.toString())) {
+					Assertions.assertEquals(LocalCommon.calculateId(child1.toString()),
+						LocalCommon.calculateId(child2.toString()));
 				} else {
-					Assertions.assertNotEquals(LocalCommon.calculateId(portable1), LocalCommon.calculateId(portable2));
+					Assertions.assertNotEquals(LocalCommon.calculateId(child1.toString()),
+						LocalCommon.calculateId(child2.toString()));
 				}
 			}
 		}

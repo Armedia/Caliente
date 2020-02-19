@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.token;
 
+import java.util.Objects;
+
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -137,7 +139,7 @@ public final class Token {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		Token other = Token.class.cast(obj);
 		if (this.type != other.type) { return false; }
-		if (!Tools.equals(this.value, other.value)) { return false; }
+		if (!Objects.equals(this.value, other.value)) { return false; }
 		return true;
 	}
 

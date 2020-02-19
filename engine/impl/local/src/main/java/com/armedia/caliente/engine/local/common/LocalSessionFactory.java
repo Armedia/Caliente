@@ -26,8 +26,9 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.common;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.pool2.PooledObject;
@@ -42,18 +43,13 @@ public class LocalSessionFactory extends SessionFactory<LocalRoot> {
 
 	public LocalSessionFactory(CfgTools settings, CmfCrypt crypto) throws IOException {
 		super(settings, crypto);
-		File root = LocalCommon.getRootDirectory(settings);
-		if (root == null) {
-			throw new IllegalArgumentException("Must provide a root directory to base the local engine off of");
-		}
-		root = root.getCanonicalFile();
-
-		FileUtils.forceMkdir(root);
-		if (!root.isDirectory()) {
+		this.root = LocalCommon.getLocalRoot(settings);
+		final Path root = this.root.getPath();
+		FileUtils.forceMkdir(root.toFile());
+		if (!Files.isDirectory(root)) {
 			throw new IllegalArgumentException(
 				String.format("Root directory [%s] could not be found, nor could it be created", root));
 		}
-		this.root = new LocalRoot(root);
 	}
 
 	protected LocalRoot getRoot() {

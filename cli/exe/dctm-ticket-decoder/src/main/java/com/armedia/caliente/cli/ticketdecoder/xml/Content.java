@@ -28,6 +28,7 @@ package com.armedia.caliente.cli.ticketdecoder.xml;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -132,11 +133,11 @@ public class Content {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		Content other = Content.class.cast(obj);
-		if (!Tools.equals(this.objectId, other.objectId)) { return false; }
-		if (!Tools.equals(this.historyId, other.historyId)) { return false; }
-		if (!Tools.equals(this.version, other.version)) { return false; }
-		if (!Tools.equals(this.paths, other.paths)) { return false; }
-		if (!Tools.equals(this.renditions, other.renditions)) { return false; }
+		if (!Objects.equals(this.objectId, other.objectId)) { return false; }
+		if (!Objects.equals(this.historyId, other.historyId)) { return false; }
+		if (!Objects.equals(this.version, other.version)) { return false; }
+		if (!Objects.equals(this.paths, other.paths)) { return false; }
+		if (!Objects.equals(this.renditions, other.renditions)) { return false; }
 		return true;
 	}
 

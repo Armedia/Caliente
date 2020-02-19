@@ -29,6 +29,7 @@ package com.armedia.caliente.engine.cmis.importer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -47,7 +48,6 @@ import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServi
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.TypeDeclaration;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.commons.utilities.Tools;
 
 public class CmisSchemaService implements SchemaService {
 
@@ -72,7 +72,7 @@ public class CmisSchemaService implements SchemaService {
 			// ignore them
 			ObjectType node = tree.getItem();
 			// Ignore secondary types
-			if (secondary != Tools.equals(BaseTypeId.CMIS_SECONDARY, node.getId())) {
+			if (secondary != Objects.equals(BaseTypeId.CMIS_SECONDARY, node.getId())) {
 				continue;
 			}
 			harvestChildTypes(tree, objectTypes);
@@ -91,7 +91,7 @@ public class CmisSchemaService implements SchemaService {
 
 		ObjectType baseType = type.getBaseType();
 		// Check to see if the root base type is the secondary type
-		if (secondary != Tools.equals(BaseTypeId.CMIS_SECONDARY, baseType.getId())) { return null; }
+		if (secondary != Objects.equals(BaseTypeId.CMIS_SECONDARY, baseType.getId())) { return null; }
 		Map<String, PropertyDefinition<?>> properties = type.getPropertyDefinitions();
 		Map<String, AttributeDeclaration> attributes = new TreeMap<>();
 		for (String name : properties.keySet()) {

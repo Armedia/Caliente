@@ -34,6 +34,7 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -101,7 +102,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 				if (Date.class.isInstance(object)) { return object; }
 				if (Calendar.class.isInstance(object)) { return Calendar.class.cast(object).getTime(); }
 				try {
-					return new CmfValue(type, object).asTime();
+					return CmfValue.of(type, object).asTime();
 				} catch (ParseException e) {
 					throw new ConditionException(String.format("Failed to convert the value [%s] as a Date", object),
 						e);
@@ -173,7 +174,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 			// If their cardinality is different, we can't compare them...
 			if ((leftCol == null) != (rightCol == null)) { return false; }
 			// They can be compared directly using equals(), so let's do it!
-			if ((leftCol != null) && (rightCol != null)) { return Tools.equals(leftCol, rightCol); }
+			if ((leftCol != null) && (rightCol != null)) { return Objects.equals(leftCol, rightCol); }
 			// We can't compare directly, so let's fall back to the original comparison...
 		}
 

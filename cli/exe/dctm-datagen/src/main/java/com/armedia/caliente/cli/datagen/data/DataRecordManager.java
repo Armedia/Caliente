@@ -38,8 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.LazyFormatter;
-import com.armedia.commons.utilities.LockDispenser;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.LockDispenser;
 
 public abstract class DataRecordManager<L extends Object> {
 

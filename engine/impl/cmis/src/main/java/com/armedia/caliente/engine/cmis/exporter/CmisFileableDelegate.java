@@ -100,7 +100,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		final String rootPath = ctx.getSession().getRootFolder().getName();
 		for (Folder f : object.getParents()) {
 			try {
-				parents.addValue(new CmfValue(CmfValue.Type.ID, f.getId()));
+				parents.addValue(CmfValue.of(CmfValue.Type.ID, f.getId()));
 			} catch (ParseException e) {
 				// Will not happen...but still
 				throw new ExportException(String.format("Failed to store the parent ID [%s] for %s [%s]", f.getId(),
@@ -108,8 +108,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			}
 			for (String p : f.getPaths()) {
 				String path = String.format("/%s%s", rootPath, p);
-				paths.addValue(new CmfValue(path));
-				fullPaths.addValue(new CmfValue(String.format("%s/%s", path, object.getName())));
+				paths.addValue(CmfValue.of(path));
+				fullPaths.addValue(CmfValue.of(String.format("%s/%s", path, object.getName())));
 			}
 			// TODO: Calculate the parentTreeID values
 		}

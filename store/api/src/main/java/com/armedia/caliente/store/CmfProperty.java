@@ -32,8 +32,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-
-import com.armedia.commons.utilities.Tools;
+import java.util.Objects;
 
 public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE> {
 
@@ -333,11 +332,11 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 
 	public boolean isSameValues(CmfProperty<?> other) {
 		if (!isSame(other)) { return false; }
-		if (!isMultivalued()) { return Tools.equals(this.singleValue, other.singleValue); }
+		if (!isMultivalued()) { return Objects.equals(this.singleValue, other.singleValue); }
 		final int valueCount = this.values.size();
 		if (valueCount != other.getValueCount()) { return false; }
 		for (int i = 0; i < valueCount; i++) {
-			if (!Tools.equals(this.values.get(i), other.values.get(i))) { return false; }
+			if (!Objects.equals(this.values.get(i), other.values.get(i))) { return false; }
 		}
 		return true;
 	}

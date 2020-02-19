@@ -116,11 +116,11 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 				// Skip the non-default rendition
 				continue;
 			}
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
+			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().findHandle(info);
 			final File f;
 			try {
 				f = h.getFile();
-			} catch (IOException e) {
+			} catch (CmfStorageException e) {
 				// Failed to get the file, so we can't handle this
 				throw new CmfStorageException(
 					String.format("Failed to locate the content file for %s, content qualifier [%s]",
@@ -145,8 +145,8 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
 		if (contents == 0) {
 			// Generate a placeholder, empty file
-			CmfContentStream info = new CmfContentStream(0);
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
+			CmfContentStream info = new CmfContentStream(this.cmfObject, 0);
+			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().findHandle(info);
 			File f = null;
 			try {
 				f = h.getFile(true);
