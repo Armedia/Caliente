@@ -27,6 +27,8 @@
 package com.armedia.caliente.engine.local.importer;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.slf4j.Logger;
 
@@ -52,8 +54,8 @@ public class LocalImportContextFactory extends
 
 	@Override
 	protected File locateFolder(LocalRoot session, String path) throws Exception {
-		File f = new File(session.getFile(), path).getCanonicalFile();
-		if (f.exists() && f.isDirectory()) { return f; }
+		Path p = session.makeAbsolute(path);
+		if (Files.exists(p) && Files.isDirectory(p)) { return p.toFile(); }
 		return null;
 	}
 

@@ -27,306 +27,144 @@
 package com.armedia.caliente.store;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.commons.utilities.ReadableByteChannelWrapper;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.WritableByteChannelWrapper;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 import com.armedia.commons.utilities.function.CheckedRunnable;
+import com.armedia.commons.utilities.function.CheckedSupplier;
 
 public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperation<?>> extends CmfStore<OPERATION> {
 
 	protected static final int MIN_BUFFER_SIZE = 4096;
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
-	protected static final int MAX_BUFFER_SIZE = (Integer.MAX_VALUE & 0xFFFFF000);
+	protected static final int MAX_BUFFER_SIZE = (Integer.MAX_VALUE & 0x7FFFF000);
 
 	public static final String DEFAULT_QUALIFIER = "content";
 
-	public abstract class Handle {
-		private final CmfObject.Archetype objectType;
-		private final String objectId;
+	public final class Handle {
+		private final String locator;
 		private final CmfContentStream info;
-		private final LOCATOR locator;
 
-		protected Handle(CmfObject<?> object, CmfContentStream info, LOCATOR locator) {
-			if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
+		protected Handle(CmfContentStream info, String locator) {
 			if (info == null) { throw new IllegalArgumentException("Must provide a content info"); }
-			if (locator == null) {
+			if (StringUtils.isBlank(locator)) {
 				throw new IllegalArgumentException(
-					"Must provide a locator string to identify the content within the store");
+					"Must provide a valid, non-blank locator string to identify the content within the store");
 			}
-			this.objectType = object.getType();
-			this.objectId = object.getId();
 			this.info = info;
 			this.locator = locator;
+			info.setLocator(this.locator);
 		}
 
-		/**
-		 * <p>
-		 * Returns the type of object whose content this handle points to.
-		 * </p>
-		 *
-		 * @return the type of object whose content this handle points to.
-		 */
-		public final CmfObject.Archetype getObjectType() {
-			return this.objectType;
+		public String getLocator() {
+			return this.locator;
 		}
 
-		/**
-		 * <p>
-		 * Returns the ID for the object whose content this handle points to.
-		 * </p>
-		 *
-		 * @return the ID for the object whose content this handle points to.
-		 */
-		public final String getObjectId() {
-			return this.objectId;
-		}
-
-		/**
-		 * <p>
-		 * Returns the qualifier for this content stream. Can be {@code null}.
-		 * </p>
-		 *
-		 * @return the qualifier for this content stream
-		 */
-		public final CmfContentStream getInfo() {
+		public CmfContentStream getInfo() {
 			return this.info;
 		}
 
-		/**
-		 * <p>
-		 * Returns the {@link CmfContentStore} from which this handle was obtained.
-		 * </p>
-		 *
-		 * @return the {@link CmfContentStore} from which this handle was obtained.
-		 */
-		public final CmfContentStore<LOCATOR, OPERATION> getSourceStore() {
-			return CmfContentStore.this;
+		public WritableByteChannel createChannel() throws CmfStorageException {
+			return CmfContentStore.this.createChannel(this);
 		}
 
-		/**
-		 * <p>
-		 * Returns a {@link File} object that leads to the actual content file (existent or not),
-		 * and can be used to read from and write to it. If the underlying {@link CmfContentStore}
-		 * doesn't support this functionality, {@code null} is returned.
-		 * </p>
-		 * <p>
-		 * Whatever file is returned will already be canonical (via {@link File#getCanonicalFile()}
-		 * ), except if the invocation raises an exception. In that event, the non-canonical
-		 * {@link File} will be returned.
-		 * </p>
-		 * <p>
-		 * This invocation is identical to calling {@link #getFile(boolean)} with a {@code false}
-		 * parameter.
-		 * </p>
-		 *
-		 * @return a {@link File} object that leads to the actual content file (existent or not), or
-		 *         {@code null} if this functionality is not supported.
-		 * @throws IOException
-		 */
-		public final File getFile() throws IOException {
+		public OutputStream createStream() throws CmfStorageException {
+			return CmfContentStore.this.createStream(this);
+		}
+
+		public ReadableByteChannel openChannel() throws CmfStorageException {
+			return CmfContentStore.this.openChannel(this);
+		}
+
+		public InputStream openStream() throws CmfStorageException {
+			return CmfContentStore.this.openStream(this);
+		}
+
+		public long store(ReadableByteChannel in) throws CmfStorageException {
+			return CmfContentStore.this.store(this, in);
+		}
+
+		public long store(InputStream in) throws CmfStorageException {
+			return CmfContentStore.this.store(this, in);
+		}
+
+		public long store(File f) throws CmfStorageException {
+			return CmfContentStore.this.store(this, f);
+		}
+
+		public long store(Path p) throws CmfStorageException {
+			return CmfContentStore.this.store(this, p);
+		}
+
+		public long read(WritableByteChannel out) throws CmfStorageException {
+			return CmfContentStore.this.read(this, out);
+		}
+
+		public long read(OutputStream out) throws CmfStorageException {
+			return CmfContentStore.this.read(this, out);
+		}
+
+		public long read(File f) throws CmfStorageException {
+			return CmfContentStore.this.read(this, f);
+		}
+
+		public long read(Path p) throws CmfStorageException {
+			return CmfContentStore.this.read(this, p);
+		}
+
+		public File getFile() throws CmfStorageException {
 			return getFile(false);
 		}
 
-		/**
-		 * <p>
-		 * Returns a {@link File} object that leads to the actual content file (existent or not),
-		 * and can be used to read from and write to it. If the underlying {@link CmfContentStore}
-		 * doesn't support this functionality, {@code null} is returned.
-		 * </p>
-		 * <p>
-		 * The {@code ensureParents} parameter controls whether or not the file's parent path will
-		 * be created if they don't exist (recursively). A value of {@code true} causes any missing
-		 * components of the file's parent path to be created, while {@code false} does nothing.
-		 * </p>
-		 * <p>
-		 * Whatever file is returned will already be canonical (via {@link File#getCanonicalFile()}
-		 * ), except if the invocation raises an exception. In that event, the non-canonical
-		 * {@link File} will be returned.
-		 * </p>
-		 *
-		 * @return a {@link File} object that leads to the actual content file (existent or not), or
-		 *         {@code null} if this functionality is not supported.
-		 * @param ensureParents
-		 *            whether or not to ensure the parent folders are created if they don't exist
-		 * @throws IOException
-		 */
-		public final File getFile(boolean ensureParents) throws IOException {
-			File f = CmfContentStore.this.getFile(this.locator);
+		public final File getFile(boolean ensureParents) throws CmfStorageException {
+			Path p = getPath(ensureParents);
+			if (p == null) { return null; }
+			return p.toFile();
+		}
+
+		public Path getPath() throws CmfStorageException {
+			return getPath(false);
+		}
+
+		public final Path getPath(boolean ensureParents) throws CmfStorageException {
+			Path p = CmfContentStore.this.getPath(this);
 			if (ensureParents) {
-				ensureParentExists(f);
+				CmfContentStore.ensureParentExists(p);
 			}
-			return f;
+			return p;
 		}
 
-		/**
-		 * <p>
-		 * Returns an {@link InputStream} that can be used to read from the actual content file, or
-		 * {@code null} if this handle refers to an as-yet non-existent content stream.
-		 * </p>
-		 * <p>
-		 * All {@link CmfContentStore} implementations <b>must</b> support this functionality.
-		 * </p>
-		 *
-		 * @return an {@link InputStream} that can be used to read from the actual content file, or
-		 *         {@code null} if this handle refers to an as-yet non-existent content stream
-		 * @throws CmfStorageException
-		 */
-		public final InputStream openInput() throws CmfStorageException {
-			return CmfContentStore.this.openInput(this.locator);
+		public long getSize() throws CmfStorageException {
+			return CmfContentStore.this.getSize(this);
 		}
 
-		/**
-		 * <p>
-		 * Read the contents of the given file into the underlying {@link CmfContentStore}, to be
-		 * stored as the content for this handle, using a default read buffer size (from
-		 * {@link CmfContentStore#DEFAULT_BUFFER_SIZE}). Supports files larger than 2GB.
-		 * </p>
-		 *
-		 * @param source
-		 *            the file to read from
-		 * @return the number of bytes copied
-		 * @throws IOException
-		 * @throws CmfStorageException
-		 */
-		public final long readFile(File source) throws IOException, CmfStorageException {
-			return readFile(source, 0);
+		public CmfContentStore<LOCATOR, OPERATION> getSourceStore() {
+			return CmfContentStore.this;
 		}
 
-		/**
-		 * <p>
-		 * Read the contents of the given file into the underlying {@link CmfContentStore}, to be
-		 * stored as the content for this handle, using a read buffer of {@code bufferSize} bytes.
-		 * Supports files larger than 2GB. If {@code bufferSize} is less than or equal to 0, a
-		 * default buffer of DEFAULT_BUFFER_SIZE is used.
-		 * </p>
-		 *
-		 * @param source
-		 *            the file to read from
-		 * @return the number of bytes copied
-		 * @throws IOException
-		 */
-		public final long readFile(File source, int bufferSize) throws IOException, CmfStorageException {
-			if (source == null) { throw new IllegalArgumentException("Must provide a file to read from"); }
-			return setContents(new FileInputStream(source));
-		}
-
-		/**
-		 * <p>
-		 * Write the content from the underlying {@link CmfContentStore} into the given file, using
-		 * a default read buffer size (from {@link CmfContentStore#DEFAULT_BUFFER_SIZE}). Supports
-		 * files larger than 2GB. used.
-		 * </p>
-		 *
-		 * @param target
-		 *            the file to write to
-		 * @return the number of bytes copied
-		 * @throws IOException
-		 */
-		public final long writeFile(File target) throws IOException, CmfStorageException {
-			return writeFile(target, 0);
-		}
-
-		/**
-		 * <p>
-		 * Write the content from the underlying {@link CmfContentStore} into the given file, using
-		 * a read buffer of {@code bufferSize} bytes. Supports files larger than 2GB. If
-		 * {@code bufferSize} is less than or equal to 0, a default buffer of DEFAULT_BUFFER_SIZE is
-		 * used.
-		 * </p>
-		 *
-		 * @param target
-		 *            the file to write to
-		 * @return the number of bytes copied
-		 * @throws IOException
-		 */
-		public final long writeFile(File target, int bufferSize) throws IOException, CmfStorageException {
-			if (target == null) { throw new IllegalArgumentException("Must provide a file to write to"); }
-			try (InputStream in = openInput()) {
-				try (OutputStream out = new FileOutputStream(target)) {
-					if (bufferSize <= 0) {
-						bufferSize = CmfContentStore.DEFAULT_BUFFER_SIZE;
-					} else {
-						bufferSize = Tools.ensureBetween(CmfContentStore.MIN_BUFFER_SIZE, bufferSize,
-							CmfContentStore.MAX_BUFFER_SIZE);
-					}
-					// We use copyLarge() to support files greater than 2GB
-					return IOUtils.copyLarge(in, out, new byte[bufferSize]);
-				}
-			}
-		}
-
-		/**
-		 * <p>
-		 * Sets the stream's contents to the data contained in the given {@link InputStream},
-		 * returning the number of bytes actually written out.
-		 * </p>
-		 * <p>
-		 * All {@link CmfContentStore} implementations <b>must</b> support this functionality.
-		 * </p>
-		 *
-		 * @return the number of bytes written out
-		 * @throws CmfStorageException
-		 */
-		public final long setContents(InputStream in) throws CmfStorageException {
-			return CmfContentStore.this.setContents(this.locator, in);
-		}
-
-		/**
-		 * <p>
-		 * Returns an {@link OutputStream} that can be used to write to the actual content file,
-		 * creating a new stream if it doesn't exist. If the underlying content store doesn't
-		 * support the modification or creation of new content streams, a
-		 * {@link CmfStorageException} will be raised . Please note that the stream <b>must</b> be
-		 * {@link OutputStream#close() closed} properly, or this will leave dangling locks which can
-		 * cause other issues. Use of the {@code try-with-resources} construct is highly recommended
-		 * for safety.
-		 * </p>
-		 * <p>
-		 * All {@link CmfContentStore} implementations <b>must</b> support this functionality.
-		 * </p>
-		 *
-		 * @return an {@link OutputStream} that can be used to write to the actual content file
-		 * @throws CmfStorageException
-		 */
-		public final OutputStream getOutputStream() throws CmfStorageException {
-			return CmfContentStore.this.getOutputStream(this.locator);
-		}
-
-		/**
-		 * <p>
-		 * Returns {@code true} if this content stream already exists, or {@code false} if this
-		 * handle is simply a placeholder.
-		 * </p>
-		 *
-		 * @return {@code true} if this content stream already exists, or {@code false} if this
-		 *         handle is simply a placeholder
-		 */
-		public final boolean isExists() throws CmfStorageException {
-			return CmfContentStore.this.isExists(this.locator);
-		}
-
-		/**
-		 * <p>
-		 * Returns the length in bytes for the underlying content stream, or -1 if it doesn't exist
-		 * (i.e. if invoking {@link #isExists()} would return {@code false}).
-		 * </p>
-		 *
-		 * @return the length in bytes for the underlying content stream, or -1 if it doesn't exist
-		 * @throws CmfStorageException
-		 */
-		public final long getStreamSize() throws CmfStorageException {
-			return CmfContentStore.this.getStreamSize(this.locator);
+		@Override
+		public String toString() {
+			return String.format("Handle [id=%s, info=%s]", this.locator, this.info.getObject());
 		}
 	}
 
@@ -346,26 +184,12 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	protected abstract File doGetRootLocation();
 
-	protected final File getFile(LOCATOR locator) throws IOException {
-		if (locator == null) { throw new IllegalArgumentException("Must provide a locator string"); }
-		// Short-cut, no need to luck if we won't do anything
-		if (!isSupportsFileAccess()) { return null; }
-		try (SharedAutoLock lock = autoSharedLock()) {
-			assertOpen();
-			File f = doGetFile(locator);
-			if (f == null) {
-				throw new IllegalStateException("doGetFile() returned null - did you forget to override the method?");
-			}
-			return f.getCanonicalFile();
-		}
-	}
-
-	private void ensureParentExists(File f) throws IOException {
-		if (f == null) { throw new IllegalArgumentException("Must provide a valid file to check against"); }
-		File parent = f.getParentFile();
+	private static void ensureParentExists(Path p) throws CmfStorageException {
+		if (p == null) { throw new IllegalArgumentException("Must provide a valid path to check against"); }
+		Path parent = p.getParent();
 		if (parent == null) { return; }
 
-		if (!parent.exists()) {
+		if (!Files.exists(parent)) {
 			IOException caught = null;
 			for (int i = 0; (i < 3); i++) {
 				if (i > 0) {
@@ -379,7 +203,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 				try {
 					caught = null;
-					FileUtils.forceMkdir(parent);
+					FileUtils.forceMkdir(parent.toFile());
 					break;
 				} catch (IOException e) {
 					// Something went wrong...
@@ -387,134 +211,245 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 				}
 			}
 			if (caught != null) {
-				throw new IOException(
-					String.format("Failed to create the parent content directory [%s]", parent.getAbsolutePath()),
-					caught);
+				throw new CmfStorageException(
+					String.format("Failed to create the parent content directory [%s]", parent), caught);
 			}
 		}
 
-		if (!parent.isDirectory()) {
-			throw new IOException(
-				String.format("The parent location [%s] is not a directory", parent.getAbsoluteFile()));
+		if (!Files.isDirectory(parent)) {
+			throw new CmfStorageException(String.format("The parent location [%s] is not a directory", parent));
 		}
 	}
 
-	protected File doGetFile(LOCATOR locator) throws IOException {
-		return null;
-	}
-
-	protected final void validateLocator(LOCATOR locator) {
-		if (locator == null) { throw new IllegalArgumentException("Must provide a non-null locator"); }
-		if (!isSupported(locator)) {
-			throw new IllegalArgumentException(
-				String.format("The locator [%s] is not supported by CmfContentStore class [%s]", locator,
-					getClass().getCanonicalName()));
+	protected final LOCATOR getLocator(Handle handle) {
+		Objects.requireNonNull(handle, "Must provide a non-null Handle instance");
+		try (SharedAutoLock lock = autoSharedLock()) {
+			assertOpen();
+			if (this != handle.getSourceStore()) {
+				throw new IllegalArgumentException("The given Handle instance does not refer to content in this store");
+			}
+			LOCATOR locator = decodeLocator(handle.locator);
+			if (locator == null) {
+				throw new IllegalArgumentException("The given handle did not match an existing locator");
+			}
+			if (!isSupported(locator)) {
+				throw new IllegalArgumentException(
+					String.format("The locator [%s] (from %s)is not supported by CmfContentStore class [%s]", locator,
+						handle, getClass().getCanonicalName()));
+			}
+			return locator;
 		}
 	}
 
-	protected abstract Handle constructHandle(CmfObject<?> object, CmfContentStream info, LOCATOR locator);
-
-	protected final LOCATOR extractLocator(Handle handle) {
-		if (handle == null) { throw new IllegalArgumentException("Must provide a handle whose locator to extract"); }
-		return handle.locator;
-	}
-
-	public final <T> Handle getHandle(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+	public final <VALUE> Handle addContentStream(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }
-		return constructHandle(object, info, calculateLocator(translator, object, info));
+		try (SharedAutoLock lock = autoSharedLock()) {
+			assertOpen();
+			LOCATOR locator = calculateLocator(translator, object, info);
+			return new Handle(info, encodeLocator(locator));
+		}
 	}
 
-	protected final <T> LOCATOR calculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+	protected abstract String encodeLocator(LOCATOR locator);
+
+	protected abstract LOCATOR decodeLocator(String handleId);
+
+	/**
+	 * <p>
+	 * Returns the {@link Handle} for the given {@link CmfContentStream} instance if one exists in
+	 * this content store, otherwise returns {@code null}.
+	 * </p>
+	 *
+	 * @param info
+	 *            the stream to retrieve the content for
+	 * @return the {@link Handle} for the given {@link CmfContentStream} instance, or {@code null}
+	 *         if none exists in this content store
+	 */
+	public final Handle findHandle(CmfContentStream info) {
+		try (SharedAutoLock lock = autoSharedLock()) {
+			assertOpen();
+			String encodedLocator = info.getLocator();
+			if (StringUtils.isBlank(encodedLocator)) {
+				throw new IllegalArgumentException("The given content stream instance lacks valid locator information");
+			}
+			LOCATOR locator = decodeLocator(encodedLocator);
+			if (locator == null) {
+				throw new IllegalArgumentException(
+					String.format("Failed to decode the given locator string [%s]", encodedLocator));
+			}
+			return new Handle(info, encodeLocator(locator));
+		}
+	}
+
+	protected final Path getPath(Handle handle) throws CmfStorageException {
+		try (SharedAutoLock lock = autoSharedLock()) {
+			assertOpen();
+
+			// Short-cut, no need to look if we won't do anything
+			if (!isSupportsFileAccess()) { return null; }
+
+			LOCATOR locator = getLocator(handle);
+			Path p = getPath(locator);
+			if (p == null) {
+				throw new IllegalStateException("getPath() returned null - did you forget to override the method?");
+			}
+			return Tools.canonicalize(p);
+		} catch (IOException e) {
+			throw new CmfStorageException(String.format("Failed to locate the file for %s", handle), e);
+		}
+	}
+
+	protected Path getPath(LOCATOR locator) throws IOException {
+		return null;
+	}
+
+	protected final <VALUE> LOCATOR calculateLocator(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }
 		return doCalculateLocator(translator, object, info);
 	}
 
-	protected abstract <T> LOCATOR doCalculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentStream info);
+	protected abstract <VALUE> LOCATOR doCalculateLocator(CmfAttributeTranslator<VALUE> translator,
+		CmfObject<VALUE> object, CmfContentStream info);
 
-	protected final InputStream openInput(LOCATOR locator) throws CmfStorageException {
-		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		validateLocator(locator);
-
-		// First, let's try a shortcut
-		if (isSupportsFileAccess()) {
-			final File f;
-			try {
-				f = getFile(locator);
-			} catch (IOException e) {
-				throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator), e);
-			}
-			try {
-				return new FileInputStream(f);
-			} catch (FileNotFoundException e) {
-				throw new CmfStorageException(
-					String.format("Failed to open an input stream from the file [%s]", f.getAbsolutePath()), e);
-			}
-		}
-
-		// If it doesn't support file access...
-		return runConcurrently((operation) -> {
-			final boolean tx = operation.begin();
-			try {
-				return openInput(operation, locator);
-			} finally {
-				if (tx) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn("Failed to rollback the transaction for retrieving the file locator [{}]",
-							locator, e);
-					}
-				}
-			}
-		});
+	protected final InputStream openStream(Handle handle) throws CmfStorageException {
+		return Channels.newInputStream(openChannel(handle));
 	}
 
-	protected abstract InputStream openInput(OPERATION operation, LOCATOR locator) throws CmfStorageException;
+	protected final ReadableByteChannel openChannel(Handle handle) throws CmfStorageException {
+		final Lock lock = acquireSharedLock();
 
-	protected final long setContents(LOCATOR locator, InputStream in) throws CmfStorageException {
-		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		validateLocator(locator);
+		assertOpen();
+		final LOCATOR locator = getLocator(handle);
 
-		// First, let's try a shortcut
-		if (isSupportsFileAccess()) {
-			try (SharedAutoLock lock = autoSharedLock()) {
-				final File f;
+		final OPERATION op;
+
+		ReadableByteChannel in = null;
+		boolean ok = false;
+		try {
+			// First, let's try a shortcut
+			if (isSupportsFileAccess()) {
+				op = null;
+				final Path p;
 				try {
-					f = getFile(locator);
+					p = getPath(locator);
 				} catch (IOException e) {
 					throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator),
 						e);
 				}
+				CmfContentStore.ensureParentExists(p);
 				try {
-					ensureParentExists(f);
+					in = FileChannel.open(p, StandardOpenOption.READ);
 				} catch (IOException e) {
 					throw new CmfStorageException(
-						String.format("Failed to create the requisite directory structure for locator [%s]", locator),
-						e);
+						String.format("Failed to open a readable byte channel to the file [%s]", p), e);
 				}
-				try (OutputStream out = new FileOutputStream(f)) {
-					return IOUtils.copyLarge(in, out);
-				} catch (FileNotFoundException e) {
-					throw new CmfStorageException(
-						String.format("Failed to open an output stream to the file [%s]", f.getAbsolutePath()), e);
-				} catch (IOException e) {
-					throw new CmfStorageException(
-						String.format("Failed to copy the content from the file [%s]", f.getAbsolutePath()), e);
-				}
+			} else {
+				op = newOperation(false);
+				in = openChannel(op, locator);
+			}
+			ok = true;
+		} finally {
+			if (!ok) {
+				lock.unlock();
 			}
 		}
 
-		// If it doesn't support file access...
+		return new ReadableByteChannelWrapper(in) {
+			final boolean tx = ((op != null) && op.begin());
+			boolean ok = true;
+
+			private <V, T extends Throwable> V doWork(CheckedSupplier<V, T> r) throws T {
+				boolean o = false;
+				try {
+					V v = r.getChecked();
+					o = true;
+					return v;
+				} finally {
+					this.ok &= o;
+				}
+			}
+
+			private <T extends Throwable> void doWork(CheckedRunnable<T> r) throws T {
+				boolean o = false;
+				try {
+					r.runChecked();
+					o = true;
+				} finally {
+					this.ok &= o;
+				}
+			}
+
+			@Override
+			public int read(ByteBuffer dst) throws IOException {
+				return doWork(() -> super.read(dst));
+			}
+
+			@Override
+			public boolean isOpen() {
+				return doWork(super::isOpen);
+			}
+
+			@Override
+			public void close() throws IOException {
+				try {
+					doWork(super::close);
+					if (this.tx) {
+						doWork(op::rollback);
+					}
+				} catch (CmfOperationException e) {
+					CmfContentStore.this.log.warn(
+						"Failed to roll back the transaction for setting the reading the content from locator [{}]",
+						locator, e);
+				} finally {
+					lock.unlock();
+				}
+			}
+		};
+
+	}
+
+	protected abstract ReadableByteChannel openChannel(OPERATION operation, LOCATOR locator) throws CmfStorageException;
+
+	protected final long store(Handle handle, InputStream in) throws CmfStorageException {
+		return store(handle, Channels.newChannel(in));
+	}
+
+	protected final long store(Handle handle, ReadableByteChannel in) throws CmfStorageException {
 		return runConcurrently((operation) -> {
+			assertOpen();
+			LOCATOR locator = getLocator(handle);
+
+			// First, let's try a shortcut
+			if (isSupportsFileAccess()) {
+				final Path p;
+				try {
+					p = getPath(locator);
+				} catch (IOException e) {
+					throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator),
+						e);
+				}
+				CmfContentStore.ensureParentExists(p);
+
+				try (FileChannel out = FileChannel.open(p, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+					StandardOpenOption.TRUNCATE_EXISTING)) {
+					return out.transferFrom(in, 0, Long.MAX_VALUE);
+				} catch (FileNotFoundException e) {
+					throw new CmfStorageException(String.format("Failed to open an output stream to the file [%s]", p),
+						e);
+				} catch (IOException e) {
+					throw new CmfStorageException(String.format("Failed to copy the content from the file [%s]", p), e);
+				}
+			}
+
+			// If it doesn't support file access...
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				long ret = setContents(operation, locator, in);
+				long ret = store(operation, locator, in);
 				if (tx) {
 					operation.commit();
 				}
@@ -533,46 +468,163 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		});
 	}
 
-	protected abstract long setContents(OPERATION operation, LOCATOR locator, InputStream in)
+	protected abstract long store(OPERATION operation, LOCATOR locator, ReadableByteChannel in)
 		throws CmfStorageException;
 
-	protected final OutputStream getOutputStream(LOCATOR locator) throws CmfStorageException {
-		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		assertOpen();
-		validateLocator(locator);
+	protected final long store(Handle handle, File source) throws CmfStorageException {
+		return store(handle, Objects.requireNonNull(source, "Must provide a File instance").toPath());
+	}
 
-		// First, let's try a shortcut
-		OutputStream out = null;
+	protected final long store(Handle handle, Path source) throws CmfStorageException {
+		return runConcurrently((operation) -> {
+			// Shortcut!
+			if (isSupportsFileAccess()) {
+				Path target = getPath(handle);
+				try {
+					CmfContentStore.ensureParentExists(target);
+					Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+					return Files.size(target);
+				} catch (IOException e) {
+					throw new CmfStorageException(String.format("Failed to copy the file [%s] as [%s]", source, target),
+						e);
+				}
+			}
+
+			try (FileChannel in = FileChannel.open(source, StandardOpenOption.READ)) {
+				return store(handle, in);
+			} catch (IOException e) {
+				throw new CmfStorageException(String.format("Failed to store the content into the Path [%s]", source),
+					e);
+			}
+		});
+	}
+
+	protected final long read(Handle handle, OutputStream out) throws CmfStorageException {
+		return read(handle, Channels.newChannel(out));
+	}
+
+	protected final long read(Handle handle, WritableByteChannel out) throws CmfStorageException {
+		return runConcurrently((operation) -> {
+			final boolean tx = operation.begin();
+			boolean ok = false;
+			// First things first: get the readable channel
+			try (ReadableByteChannel in = openChannel(handle)) {
+
+				// Can we optimize this through file I/O?
+				long total = 0;
+				if (FileChannel.class.isInstance(out)) {
+					total = FileChannel.class.cast(out).transferFrom(in, 0, handle.getInfo().getLength());
+				} else {
+					total = transfer(in, out);
+				}
+				ok = true;
+				return total;
+			} catch (IOException e) {
+				throw new CmfStorageException(
+					String.format("Failed to perform a file-level channel transfer for %s", handle), e);
+			} finally {
+				if (tx && !ok) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for reading the content for handle [{}]",
+							handle, e);
+					}
+				}
+			}
+		});
+	}
+
+	protected final long read(Handle handle, File target) throws CmfStorageException {
+		return read(handle, Objects.requireNonNull(target, "Must provide a File instance").toPath());
+	}
+
+	protected final long read(Handle handle, Path target) throws CmfStorageException {
+		return runConcurrently((operation) -> {
+			// Shortcut!
+			if (isSupportsFileAccess()) {
+				Path source = getPath(handle);
+				try {
+					CmfContentStore.ensureParentExists(target);
+					Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+					return Files.size(target);
+				} catch (IOException e) {
+					throw new CmfStorageException(String.format("Failed to copy the file [%s] as [%s]", source, target),
+						e);
+				}
+			}
+
+			try (FileChannel out = FileChannel.open(target, StandardOpenOption.CREATE,
+				StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.APPEND, StandardOpenOption.WRITE)) {
+				return read(handle, out);
+			} catch (IOException e) {
+				throw new CmfStorageException(String.format("Failed to store the content into the Path [%s]", target),
+					e);
+			}
+		});
+	}
+
+	protected int getBufferSize() {
+		return CmfContentStore.MIN_BUFFER_SIZE;
+	}
+
+	protected final long transfer(ReadableByteChannel in, WritableByteChannel out) throws IOException {
+		int bufferSize = (getBufferSize() & CmfContentStore.MAX_BUFFER_SIZE);
+		// No dice... let's do the manual copy
+		ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+		long total = 0;
+		while (true) {
+			buffer.clear();
+			int r = in.read(buffer);
+			if (r < 0) {
+				break;
+			}
+			total += r;
+			if (r > 0) {
+				buffer.flip();
+				out.write(buffer);
+				total += r;
+			}
+		}
+		return total;
+	}
+
+	protected final OutputStream createStream(Handle handle) throws CmfStorageException {
+		return Channels.newOutputStream(createChannel(handle));
+	}
+
+	protected final WritableByteChannel createChannel(Handle handle) throws CmfStorageException {
 		final Lock lock = acquireSharedLock();
+
+		assertOpen();
+		final LOCATOR locator = getLocator(handle);
+
 		final OPERATION op;
 
+		WritableByteChannel out = null;
 		boolean ok = false;
 		try {
+			// First, let's try a shortcut
 			if (isSupportsFileAccess()) {
 				op = null;
-				final File f;
+				final Path p;
 				try {
-					f = getFile(locator);
+					p = getPath(locator);
 				} catch (IOException e) {
 					throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator),
 						e);
 				}
+				CmfContentStore.ensureParentExists(p);
 				try {
-					ensureParentExists(f);
+					out = FileChannel.open(p, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
+						StandardOpenOption.APPEND);
 				} catch (IOException e) {
 					throw new CmfStorageException(
-						String.format("Failed to create the requisite directory structure for locator [%s]", locator),
-						e);
-				}
-				try {
-					out = new FileOutputStream(f);
-				} catch (FileNotFoundException e) {
-					throw new CmfStorageException(
-						String.format("Failed to open an output stream to the file [%s]", f.getAbsolutePath()), e);
+						String.format("Failed to open a writable byte channel to the file [%s]", p), e);
 				}
 			} else {
 				op = newOperation(false);
-				out = getOutputStream(op, locator);
+				out = createChannel(op, locator);
 			}
 			ok = true;
 		} finally {
@@ -581,9 +633,20 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			}
 		}
 
-		return new FilterOutputStream(out) {
+		return new WritableByteChannelWrapper(out) {
 			final boolean tx = ((op != null) && op.begin());
 			boolean ok = true;
+
+			private <V, T extends Throwable> V doWork(CheckedSupplier<V, T> r) throws T {
+				boolean o = false;
+				try {
+					V v = r.getChecked();
+					o = true;
+					return v;
+				} finally {
+					this.ok &= o;
+				}
+			}
 
 			private <T extends Throwable> void doWork(CheckedRunnable<T> r) throws T {
 				boolean o = false;
@@ -596,23 +659,13 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			}
 
 			@Override
-			public void write(int b) throws IOException {
-				doWork(() -> super.write(b));
+			public int write(ByteBuffer src) throws IOException {
+				return doWork(() -> super.write(src));
 			}
 
 			@Override
-			public void write(byte[] b) throws IOException {
-				doWork(() -> super.write(b));
-			}
-
-			@Override
-			public void write(byte[] b, int off, int len) throws IOException {
-				doWork(() -> super.write(b, off, len));
-			}
-
-			@Override
-			public void flush() throws IOException {
-				doWork(super::flush);
+			public boolean isOpen() {
+				return doWork(super::isOpen);
 			}
 
 			@Override
@@ -642,25 +695,28 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		};
 	}
 
-	protected abstract OutputStream getOutputStream(OPERATION operation, LOCATOR locator) throws CmfStorageException;
+	protected abstract WritableByteChannel createChannel(OPERATION operation, LOCATOR locator)
+		throws CmfStorageException;
 
-	protected final boolean isExists(LOCATOR locator) throws CmfStorageException {
-		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		validateLocator(locator);
-		// First, let's try a shortcut
-		if (isSupportsFileAccess()) {
-			try {
-				getFile(locator).exists();
-			} catch (IOException e) {
-				throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator), e);
-			}
-		}
-
-		// If it doesn't support file access...
+	public final boolean exists(Handle handle) throws CmfStorageException {
 		return runConcurrently((operation) -> {
+			assertOpen();
+			LOCATOR locator = getLocator(handle);
+
+			// First, let's try a shortcut
+			if (isSupportsFileAccess()) {
+				try {
+					return Files.exists(getPath(locator));
+				} catch (IOException e) {
+					throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator),
+						e);
+				}
+			}
+
+			// If it doesn't support file access...
 			final boolean tx = operation.begin();
 			try {
-				return isExists(operation, locator);
+				return exists(operation, locator);
 			} finally {
 				if (tx) {
 					try {
@@ -674,29 +730,31 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		});
 	}
 
-	protected abstract boolean isExists(OPERATION operation, LOCATOR locator) throws CmfStorageException;
+	protected abstract boolean exists(OPERATION operation, LOCATOR locator) throws CmfStorageException;
 
-	protected final long getStreamSize(LOCATOR locator) throws CmfStorageException {
-		validateLocator(locator);
-		// First, let's try a shortcut
-		if (isSupportsFileAccess()) {
-			try {
-				File f = getFile(locator);
-				if (!f.exists() || !f.isFile()) {
-					throw new CmfStorageException(
-						String.format("Locator [%s] doesn't refer to an existing and valid file", locator));
-				}
-				return f.length();
-			} catch (IOException e) {
-				throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator), e);
-			}
-		}
-
-		// If it doesn't support file access...
+	protected final long getSize(Handle handle) throws CmfStorageException {
 		return runConcurrently((operation) -> {
+			assertOpen();
+			LOCATOR locator = getLocator(handle);
+			// First, let's try a shortcut
+			if (isSupportsFileAccess()) {
+				try {
+					Path p = getPath(locator);
+					if (!Files.exists(p) || !Files.isRegularFile(p)) {
+						throw new CmfStorageException(
+							String.format("Locator [%s] doesn't refer to an existing and valid file", locator));
+					}
+					return Files.size(p);
+				} catch (IOException e) {
+					throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator),
+						e);
+				}
+			}
+
+			// If it doesn't support file access...
 			final boolean tx = operation.begin();
 			try {
-				return getStreamSize(operation, locator);
+				return getSize(operation, locator);
 			} finally {
 				if (tx) {
 					try {
@@ -710,10 +768,11 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		});
 	}
 
-	protected abstract long getStreamSize(OPERATION operation, LOCATOR locator) throws CmfStorageException;
+	protected abstract long getSize(OPERATION operation, LOCATOR locator) throws CmfStorageException;
 
 	public final void clearAllStreams() throws CmfStorageException {
 		runExclusively((operation) -> {
+			assertOpen();
 			final boolean tx = operation.begin();
 			try {
 				clearAllStreams(operation);

@@ -244,7 +244,7 @@ public enum Comparison {
 		if (str == null) { return null; }
 
 		try {
-			return new CmfValue(CmfValue.Type.DATETIME, str).asTime();
+			return CmfValue.of(CmfValue.Type.DATETIME, str).asTime();
 		} catch (ParseException e) {
 			throw new RuntimeDynamicElementException(String.format("Could not parse the date string [%s]", str));
 		}

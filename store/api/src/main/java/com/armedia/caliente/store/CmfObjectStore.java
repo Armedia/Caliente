@@ -40,6 +40,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -793,7 +794,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		if (newName == null) { throw new IllegalArgumentException("Must provide new name for the object"); }
 
 		// Shortcut - do nothing if there's no name change
-		if (Tools.equals(newName, object.getName())) { return false; }
+		if (Objects.equals(newName, object.getName())) { return false; }
 
 		return runExclusively((operation) -> {
 			final boolean tx = operation.begin();

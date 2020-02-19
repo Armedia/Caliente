@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
 	<changeSet id="metadata-3000" author="caliente">
 		<!-- The CMF info table -->
@@ -363,6 +363,9 @@
 			</column>
 			<column name="file_name" type="text" remarks="The content's file name">
 				<constraints nullable="true" />
+			</column>
+			<column name="locator" type="text" remarks="The content's encoded locator">
+				<constraints nullable="false" />
 			</column>
 		</createTable>
 		<addPrimaryKey tableName="cmf_content" columnNames="object_id, content_number" />

@@ -30,68 +30,82 @@ import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.commons.utilities.LockDispenser;
-import com.armedia.commons.utilities.concurrent.ShareableMap;
-import com.armedia.commons.utilities.function.CheckedSupplier;
+import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.LockDispenser;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.ShareableLockable;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.function.CheckedFunction;
 
-public class KeyLockableCache<K extends Serializable, V> {
+public final class KeyLockableCache<K extends Serializable, V> extends BaseShareableLockable {
 
 	public static final int MIN_LIMIT = 1000;
-	public static final TimeUnit DEFAULT_MAX_AGE_UNIT = TimeUnit.MINUTES;
-	public static final long DEFAULT_MAX_AGE = 5;
+	public static final Duration DEFAULT_MAX_AGE = Duration.ofMinutes(5);
+	public static final ReferenceType DEFAULT_TYPE = ReferenceType.SOFT;
 
 	private static final AtomicLong CACHE_ID = new AtomicLong(0);
+
+	public enum ReferenceType {
+		//
+		FINAL, //
+		SOFT, //
+		WEAK, //
+		//
+		;
+
+	}
 
 	@FunctionalInterface
 	public static interface Expirable {
 		public void expire();
 	}
 
-	protected abstract class CacheItem {
+	private class CacheItem {
 		protected final K key;
-		protected final long creationDate;
+		protected final Instant creationDate;
+		protected final Supplier<V> supplier;
 
-		protected CacheItem(K key) {
+		private CacheItem(K key, Supplier<V> supplier) {
 			this.key = key;
-			this.creationDate = System.currentTimeMillis();
+			this.creationDate = Instant.now();
+			this.supplier = supplier;
 			if (KeyLockableCache.this.log.isTraceEnabled()) {
-				KeyLockableCache.this.log.trace("Cache[{}] new {} for {} (@ {}/{})", KeyLockableCache.this.cacheId,
-					getClass().getSimpleName(), key, this.creationDate, new Date(this.creationDate));
+				KeyLockableCache.this.log.trace("Cache[{}] new {} for {} (@ {})", KeyLockableCache.this.cacheId,
+					getClass().getSimpleName(), key, this.creationDate);
 			}
 		}
 
 		public final V get() {
 			// If the age is negative, it NEVER expires unless the GC reclaims it...
-			if (KeyLockableCache.this.maxAge < 0) {
-				V ret = doGet();
+			if (KeyLockableCache.this.maxAge.isNegative()) {
+				V ret = this.supplier.get();
 				if (ret == null) {
 					if (KeyLockableCache.this.log.isTraceEnabled()) {
 						KeyLockableCache.this.log.trace("Cache[{}] item for {} has expired",
 							KeyLockableCache.this.cacheId, this.key);
 					}
-					expire();
 				}
 				return ret;
 			}
 
 			// If the age is 0, then it expires immediately
-			if (KeyLockableCache.this.maxAge == 0) {
+			if (KeyLockableCache.this.maxAge.isZero()) {
 				if (KeyLockableCache.this.log.isTraceEnabled()) {
 					KeyLockableCache.this.log.trace("Cache[{}] item for {} expired immediately",
 						KeyLockableCache.this.cacheId, this.key);
@@ -101,34 +115,33 @@ public class KeyLockableCache<K extends Serializable, V> {
 			}
 
 			// Let's check if it's expired...
-			final long age = System.currentTimeMillis() - this.creationDate;
-			final long maxMillis = KeyLockableCache.this.maxAgeUnit.toMillis(KeyLockableCache.this.maxAge);
-			if (age >= maxMillis) {
+			final Instant now = Instant.now();
+			final Duration currentAge = Duration.between(this.creationDate, now);
+			if (KeyLockableCache.this.maxAge.compareTo(currentAge) <= 0) {
 				if (KeyLockableCache.this.log.isTraceEnabled()) {
-					KeyLockableCache.this.log.trace("Cache[{}] item for {} has died of old age ({}ms >= {}ms)",
-						KeyLockableCache.this.cacheId, this.key, age, maxMillis);
+					KeyLockableCache.this.log.trace("Cache[{}] item for {} has died of old age ({})",
+						KeyLockableCache.this.cacheId, this.key, currentAge);
 				}
 				expire();
 				return null;
 			}
 
 			// It's not expired, so it's up to the GC
-			V ret = doGet();
+			V ret = this.supplier.get();
 			if (ret == null) {
 				if (KeyLockableCache.this.log.isTraceEnabled()) {
 					KeyLockableCache.this.log.trace("Cache[{}] item for {} has been garbage-collected",
 						KeyLockableCache.this.cacheId, this.key);
 				}
-				expire();
 			}
 			return ret;
 		}
 
-		protected abstract V doGet();
+		private void expire() {
+			expire(this.supplier.get());
+		}
 
-		protected abstract void expire();
-
-		protected final void callExpire(V value) {
+		private void expire(V value) {
 			if (!Expirable.class.isInstance(value)) { return; }
 			if (KeyLockableCache.this.log.isTraceEnabled()) {
 				KeyLockableCache.this.log.trace("Cache[{}] value for {} is Expirable, calling expire()",
@@ -147,46 +160,15 @@ public class KeyLockableCache<K extends Serializable, V> {
 		}
 	}
 
-	protected final class DirectCacheItem extends CacheItem {
-		private final V value;
-
+	public final class DirectCacheItem extends CacheItem {
 		public DirectCacheItem(K key, V value) {
-			super(key);
-			this.value = Objects.requireNonNull(value, "Must provide a non-null value");
-		}
-
-		@Override
-		protected V doGet() {
-			return this.value;
-		}
-
-		@Override
-		protected void expire() {
-			callExpire(this.value);
+			super(key, () -> value);
 		}
 	}
 
-	protected class ReferenceCacheItem extends CacheItem {
-		private final Reference<V> value;
-
+	private class ReferenceCacheItem extends CacheItem {
 		public ReferenceCacheItem(K key, Reference<V> value) {
-			super(key);
-			this.value = Objects.requireNonNull(value, "Must provide a non-null Reference object");
-		}
-
-		@Override
-		protected V doGet() {
-			return this.value.get();
-		}
-
-		@Override
-		protected void expire() {
-			V v = this.value.get();
-			try {
-				callExpire(v);
-			} finally {
-				this.value.enqueue();
-			}
+			super(key, value::get);
 		}
 	}
 
@@ -204,163 +186,164 @@ public class KeyLockableCache<K extends Serializable, V> {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final String cacheId;
-	private final TimeUnit maxAgeUnit;
-	private final long maxAge;
+	private final BiFunction<K, V, ? extends CacheItem> itemConstructor;
+	private final Duration maxAge;
 	private final Map<K, CacheItem> cache;
-	private final LockDispenser<K, ReentrantReadWriteLock> locks = new LockDispenser<>(
-		(key) -> new TraceableReentrantReadWriteLock(key));
+	private final LockDispenser<K, ShareableLockable> locks = new LockDispenser<>((key) -> new BaseShareableLockable());
 
 	public KeyLockableCache() {
-		this(KeyLockableCache.MIN_LIMIT, KeyLockableCache.DEFAULT_MAX_AGE_UNIT, KeyLockableCache.DEFAULT_MAX_AGE);
+		this(null, KeyLockableCache.MIN_LIMIT, KeyLockableCache.DEFAULT_MAX_AGE);
+	}
+
+	public KeyLockableCache(Duration maxAge) {
+		this(null, KeyLockableCache.MIN_LIMIT, maxAge);
 	}
 
 	public KeyLockableCache(int maxCount) {
-		this(maxCount, KeyLockableCache.DEFAULT_MAX_AGE_UNIT, KeyLockableCache.DEFAULT_MAX_AGE);
+		this(null, maxCount, KeyLockableCache.DEFAULT_MAX_AGE);
 	}
 
-	public KeyLockableCache(TimeUnit maxAgeUnit, long maxAge) {
-		this(KeyLockableCache.MIN_LIMIT, maxAgeUnit, maxAge);
+	public KeyLockableCache(int maxCount, Duration maxAge) {
+		this(null, maxCount, maxAge);
 	}
 
-	public KeyLockableCache(int maxCount, TimeUnit maxAgeUnit, long maxAge) {
-		this.cacheId = String.format("%016x", KeyLockableCache.CACHE_ID.getAndIncrement());
-		final Map<K, CacheItem> cache = new LRUMap<>(Math.max(KeyLockableCache.MIN_LIMIT, maxCount));
-		this.cache = new ShareableMap<>(cache);
-		if (maxAgeUnit == null) {
-			this.maxAgeUnit = KeyLockableCache.DEFAULT_MAX_AGE_UNIT;
-			this.maxAge = KeyLockableCache.DEFAULT_MAX_AGE;
-		} else {
-			this.maxAgeUnit = maxAgeUnit;
-			this.maxAge = Math.max(-1, maxAge);
+	public KeyLockableCache(ReferenceType type) {
+		this(type, KeyLockableCache.MIN_LIMIT, KeyLockableCache.DEFAULT_MAX_AGE);
+	}
+
+	public KeyLockableCache(ReferenceType type, Duration maxAge) {
+		this(type, KeyLockableCache.MIN_LIMIT, maxAge);
+	}
+
+	public KeyLockableCache(ReferenceType type, int maxCount) {
+		this(type, maxCount, KeyLockableCache.DEFAULT_MAX_AGE);
+	}
+
+	public KeyLockableCache(ReferenceType type, int maxCount, Duration maxAge) {
+
+		switch (Tools.coalesce(type, KeyLockableCache.DEFAULT_TYPE)) {
+			case WEAK:
+				this.itemConstructor = WeakReferenceCacheItem::new;
+				break;
+			case SOFT:
+				this.itemConstructor = SoftReferenceCacheItem::new;
+				break;
+			default:
+			case FINAL:
+				this.itemConstructor = DirectCacheItem::new;
+				break;
 		}
+
+		this.cacheId = String.format("%016x", KeyLockableCache.CACHE_ID.getAndIncrement());
+		this.cache = new LRUMap<>(Math.max(KeyLockableCache.MIN_LIMIT, maxCount));
+		this.maxAge = maxAge;
 	}
 
-	public final Lock getExclusiveLock(K key) {
-		return this.locks.getLock(key).writeLock();
-	}
-
-	public final Lock getSharedLock(K key) {
-		return this.locks.getLock(key).readLock();
+	public final ShareableLockable getLock(K key) {
+		return this.locks.getLock(key);
 	}
 
 	protected CacheItem newCacheItem(K key, V value) {
-		return new SoftReferenceCacheItem(key, value);
-	}
-
-	protected final boolean threadHoldsExclusiveLock(K key) {
-		return this.locks.getLock(key).isWriteLockedByCurrentThread();
+		return this.itemConstructor.apply(key, value);
 	}
 
 	public final V get(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		// This construct helps avoid deadlocks while preserving concurrency where possible
-		Lock l = getSharedLock(key);
-		l.lock();
-		try {
-			CacheItem item = this.cache.get(key);
-			if (item == null) { return null; }
-			return item.get();
-		} finally {
-			l.unlock();
+		try (SharedAutoLock keyShared = getLock(key).autoSharedLock()) {
+			try (SharedAutoLock cacheShared = autoSharedLock()) {
+				CacheItem item = this.cache.get(key);
+				return (item != null ? item.get() : null);
+			}
 		}
 	}
 
-	public final <EX extends Throwable> V createIfAbsent(K key, CheckedSupplier<V, EX> initializer) throws EX {
+	public final <EX extends Throwable> V computeIfAbsent(K key, CheckedFunction<K, V, EX> f) throws EX {
+		return computeIfMatches(key, Objects::isNull, f);
+	}
+
+	/**
+	 * <p>
+	 * Similar to {@link #computeIfAbsent(Serializable, CheckedFunction)}, except it applies the
+	 * given {@link Predicate} to any found value, and if the predicate matches then the computation
+	 * is carried out and its result returned.
+	 * </p>
+	 */
+	public final <EX extends Throwable> V computeIfMatches(K key, Predicate<V> predicate, CheckedFunction<K, V, EX> f)
+		throws EX {
 		Objects.requireNonNull(key, "Must provide a non-null key");
-		Objects.requireNonNull(initializer, "Must provide a non-null initializer");
-		final Lock l = getExclusiveLock(key);
-		l.lock();
-		try {
-			V value = null;
-			CacheItem item = this.cache.get(key);
-			if (item != null) {
-				value = item.get();
+		Objects.requireNonNull(f, "Must provide a non-null initializer");
+		try (SharedAutoLock keyShared = getLock(key).autoSharedLock()) {
+			V existing = get(key);
+			if (predicate.test(existing)) {
+				try (MutexAutoLock keyMutex = keyShared.upgrade()) {
+					existing = get(key);
+					if (predicate.test(existing)) {
+						try (SharedAutoLock cacheShared = autoSharedLock()) {
+							CacheItem item = this.cache.get(key);
+							existing = (item != null ? item.get() : null);
+							if (!predicate.test(existing)) { return existing; }
+							existing = f.applyChecked(key);
+							try (MutexAutoLock cacheMutex = cacheShared.upgrade()) {
+								this.cache.put(key, newCacheItem(key, existing));
+							}
+						}
+					}
+				}
 			}
-			// We still have a value, so return it...
-			if (value != null) { return value; }
-
-			// The value is absent or expired...
-			V newValue = initializer.getChecked();
-			if (newValue != null) {
-				this.cache.put(key, newCacheItem(key, newValue));
-			} else {
-				this.cache.remove(key);
-			}
-
-			return newValue;
-		} finally {
-			l.unlock();
+			return existing;
 		}
 	}
 
-	public final void putIfAbsent(K key, V value) {
-		Objects.requireNonNull(key, "Must provide a non-null key");
-		if (value == null) { return; }
-
-		V existing = get(key);
-		if (existing != null) { return; }
-
-		final Lock l = getExclusiveLock(key);
-		l.lock();
-		try {
-			CacheItem item = this.cache.get(key);
-			if ((item != null) && (item.get() != null)) { return; }
-			this.cache.put(key, newCacheItem(key, value));
-		} finally {
-			l.unlock();
-		}
+	public final V putIfAbsent(K key, V value) {
+		return computeIfAbsent(key, (k) -> value);
 	}
 
 	public final V put(K key, V value) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
-
 		if (value == null) { return remove(key); }
-		final Lock l = getExclusiveLock(key);
-		l.lock();
-		try {
-			V ret = null;
-			CacheItem item = this.cache.get(key);
-			if (item != null) {
-				ret = item.get();
+		try (MutexAutoLock keyMutex = getLock(key).autoMutexLock()) {
+			try (MutexAutoLock cacheMutex = autoMutexLock()) {
+				CacheItem item = this.cache.put(key, newCacheItem(key, value));
+				return (item != null ? item.get() : null);
 			}
-			this.cache.put(key, newCacheItem(key, value));
-			return ret;
-		} finally {
-			l.unlock();
 		}
 	}
 
 	public final V remove(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
-		final Lock l = getExclusiveLock(key);
-		l.lock();
-		try {
-			CacheItem item = this.cache.remove(key);
-			return (item != null ? item.get() : null);
-		} finally {
-			l.unlock();
+		try (MutexAutoLock keyMutex = getLock(key).autoMutexLock()) {
+			try (SharedAutoLock cacheShared = autoSharedLock()) {
+				CacheItem item = null;
+				if (this.cache.containsKey(key)) {
+					try (MutexAutoLock cacheMutex = cacheShared.upgrade()) {
+						if (this.cache.containsKey(key)) {
+							item = this.cache.remove(key);
+						}
+					}
+				}
+				return (item != null ? item.get() : null);
+			}
 		}
 	}
 
 	public final int size() {
-		return this.cache.size();
+		return shareLocked(this.cache::size);
 	}
 
 	public final boolean isEmpty() {
-		return this.cache.isEmpty();
+		return shareLocked(this.cache::isEmpty);
 	}
 
 	public final boolean containsValueForKey(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
-		// This construct helps avoid deadlocks while preserving concurrency where possible
-		final Lock l = getSharedLock(key);
-		l.lock();
-		try {
-			CacheItem item = this.cache.get(key);
+		try (SharedAutoLock keyShared = getLock(key).autoSharedLock()) {
+			CacheItem item = null;
+			try (SharedAutoLock cacheShared = autoSharedLock()) {
+				item = this.cache.get(key);
+			}
 			if (item == null) { return false; }
 			return (item.get() != null);
-		} finally {
-			l.unlock();
 		}
 	}
 
@@ -375,21 +358,10 @@ public class KeyLockableCache<K extends Serializable, V> {
 	}
 
 	public final void clear() {
-		this.cache.clear();
+		mutexLocked(this.cache::clear);
 	}
 
 	public final Set<K> getKeys() {
-		return new LinkedHashSet<>(this.cache.keySet());
-	}
-
-	public final Collection<V> values() {
-		Collection<V> values = new ArrayList<>();
-		for (CacheItem r : new ArrayList<>(this.cache.values())) {
-			V v = r.get();
-			if (v != null) {
-				values.add(v);
-			}
-		}
-		return values;
+		return shareLocked(() -> new LinkedHashSet<>(this.cache.keySet()));
 	}
 }

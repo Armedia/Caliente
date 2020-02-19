@@ -29,6 +29,7 @@ package com.armedia.caliente.store;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.activation.MimeType;
@@ -43,44 +44,52 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 	public static final String DEFAULT_RENDITION = "$main$";
 	public static final String BASENAME = "$basename$";
 
+	private final CmfObjectRef object;
+	private final int index;
 	private final String renditionIdentifier;
 	private final int renditionPage;
 	private final String modifier;
 
-	private final int index;
 	private long length = 0;
 	private MimeType mimeType = null;
 	private String extension = null;
 	private String fileName = null;
+	private String locator = null;
 
 	private final Map<String, String> properties = new HashMap<>();
 	private final CfgTools cfg = new CfgTools(this.properties);
 
-	public CmfContentStream(int index) {
-		this(index, null, 0, null);
+	public CmfContentStream(CmfObjectRef object, int index) {
+		this(object, index, null, 0, null);
 	}
 
-	public CmfContentStream(int index, int renditionPage) {
-		this(index, null, renditionPage, null);
+	public CmfContentStream(CmfObjectRef object, int index, int renditionPage) {
+		this(object, index, null, renditionPage, null);
 	}
 
-	public CmfContentStream(int index, int renditionPage, String modifier) {
-		this(index, null, renditionPage, modifier);
+	public CmfContentStream(CmfObjectRef object, int index, int renditionPage, String modifier) {
+		this(object, index, null, renditionPage, modifier);
 	}
 
-	public CmfContentStream(int index, String renditionIdentifier) {
-		this(index, renditionIdentifier, 0, null);
+	public CmfContentStream(CmfObjectRef object, int index, String renditionIdentifier) {
+		this(object, index, renditionIdentifier, 0, null);
 	}
 
-	public CmfContentStream(int index, String renditionIdentifier, int renditionPage) {
-		this(index, renditionIdentifier, renditionPage, null);
+	public CmfContentStream(CmfObjectRef object, int index, String renditionIdentifier, int renditionPage) {
+		this(object, index, renditionIdentifier, renditionPage, null);
 	}
 
-	public CmfContentStream(int index, String renditionIdentifier, int renditionPage, String modifier) {
+	public CmfContentStream(CmfObjectRef object, int index, String renditionIdentifier, int renditionPage,
+		String modifier) {
+		this.object = new CmfObjectRef(object);
 		this.index = (index < 0 ? 0 : index);
 		this.renditionIdentifier = Tools.coalesce(renditionIdentifier, CmfContentStream.DEFAULT_RENDITION);
 		this.renditionPage = renditionPage;
 		this.modifier = Tools.coalesce(modifier, "");
+	}
+
+	public CmfObjectRef getObject() {
+		return this.object;
 	}
 
 	public int getIndex() {
@@ -88,7 +97,7 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 	}
 
 	public boolean isDefaultRendition() {
-		return Tools.equals(CmfContentStream.DEFAULT_RENDITION, this.renditionIdentifier);
+		return Objects.equals(CmfContentStream.DEFAULT_RENDITION, this.renditionIdentifier);
 	}
 
 	public String getRenditionIdentifier() {
@@ -107,35 +116,39 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 		return this.modifier;
 	}
 
-	public void setExtension(String extension) {
+	public CmfContentStream setExtension(String extension) {
 		if (StringUtils.isEmpty(extension)) {
 			extension = null;
 		}
 		this.extension = extension;
+		return this;
 	}
 
 	public long getLength() {
 		return this.length;
 	}
 
-	public void setLength(long length) {
+	public CmfContentStream setLength(long length) {
 		this.length = length;
+		return this;
 	}
 
 	public MimeType getMimeType() {
 		return this.mimeType;
 	}
 
-	public void setMimeType(MimeType mimeType) {
+	public CmfContentStream setMimeType(MimeType mimeType) {
 		this.mimeType = mimeType;
+		return this;
 	}
 
 	public String getFileName() {
 		return this.fileName;
 	}
 
-	public void setFileName(String fileName) {
+	public CmfContentStream setFileName(String fileName) {
 		this.fileName = fileName;
+		return this;
 	}
 
 	public CfgTools getCfgTools() {
@@ -174,8 +187,9 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 		return this.properties.remove(name);
 	}
 
-	public void clearAllProperties() {
+	public CmfContentStream clearAllProperties() {
 		this.properties.clear();
+		return this;
 	}
 
 	public int getPropertyCount() {
@@ -186,35 +200,56 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 		return new HashSet<>(this.properties.keySet());
 	}
 
+	public CmfContentStream setLocator(String locator) {
+		if ((this.locator != null) && !Objects.equals(this.locator, locator)) {
+			throw new IllegalStateException(
+				String.format("A locator has already been assigned to this stream, can't reassign it ([%s] vs. [%s])",
+					this.locator, locator));
+		}
+		this.locator = Objects.requireNonNull(locator, "Must provide a non-null locator");
+		return this;
+	}
+
+	public String getLocator() {
+		return this.locator;
+	}
+
 	@Override
 	public String toString() {
 		return String.format(
-			"CmfContentStream [renditionIdentifier=%s, renditionPage=%s, length=%s, mimeType=%s, fileName=%s]",
-			this.renditionIdentifier, this.renditionPage, this.length, this.mimeType, this.fileName);
+			"CmfContentStream [object=%s-%s, renditionIdentifier=%s, renditionPage=%s, modifier=%s, length=%s, mimeType=%s, fileName=%s, locator=%s]",
+			this.object.getType().name(), this.object.getId(), this.renditionIdentifier, this.renditionPage,
+			this.modifier, this.length, this.mimeType, this.fileName, this.locator);
 	}
 
 	@Override
 	public int compareTo(CmfContentStream o) {
 		if (o == null) { return 1; }
 		int r = 0;
+		r = Tools.compare(this.object, o.object);
+		if (r != 0) { return r; }
 		r = Tools.compare(this.renditionIdentifier, o.renditionIdentifier);
 		if (r != 0) { return r; }
 		r = Tools.compare(this.renditionPage, o.renditionPage);
+		if (r != 0) { return r; }
+		r = Tools.compare(this.modifier, o.modifier);
 		if (r != 0) { return r; }
 		return 0;
 	}
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.renditionIdentifier, this.renditionPage);
+		return Tools.hashTool(this, null, this.object, this.renditionIdentifier, this.renditionPage, this.modifier);
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		CmfContentStream other = CmfContentStream.class.cast(obj);
-		if (!Tools.equals(this.renditionIdentifier, other.renditionIdentifier)) { return false; }
+		if (!Objects.equals(this.object, other.object)) { return false; }
+		if (!Objects.equals(this.renditionIdentifier, other.renditionIdentifier)) { return false; }
 		if (this.renditionPage != other.renditionPage) { return false; }
+		if (!Objects.equals(this.modifier, other.modifier)) { return false; }
 		return true;
 	}
 }

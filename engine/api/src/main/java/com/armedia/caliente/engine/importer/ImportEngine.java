@@ -116,7 +116,7 @@ public abstract class ImportEngine<//
 			this.contextFactory = contextFactory;
 			this.delegateFactory = delegateFactory;
 			this.workerCounter = synchronizedCounter;
-			this.workerCounter.increment();
+			this.workerCounter.incrementAndGet();
 		}
 
 		@Override
@@ -295,7 +295,7 @@ public abstract class ImportEngine<//
 				}
 			} finally {
 				this.log.debug("Worker exiting...");
-				this.workerCounter.decrement();
+				this.workerCounter.decrementAndGet();
 			}
 		}
 	}
@@ -487,9 +487,9 @@ public abstract class ImportEngine<//
 						this.contentStore, transformer, this.output, this.warningTracker);
 					final String fmt = "caliente.import.product.%s";
 					this.objectStore.setProperty(String.format(fmt, "name"),
-						new CmfValue(contextFactory.getProductName()));
+						CmfValue.of(contextFactory.getProductName()));
 					this.objectStore.setProperty(String.format(fmt, "version"),
-						new CmfValue(contextFactory.getProductVersion()));
+						CmfValue.of(contextFactory.getProductVersion()));
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the context factory to carry out the import", e);
 				}
@@ -744,7 +744,6 @@ public abstract class ImportEngine<//
 								}
 
 								try {
-									"".length();
 									dataObject = transformer.transform(objectStore.getValueMapper(),
 										translator.getAttributeNameMapper(), schemaService, dataObject);
 								} catch (TransformerException e) {
@@ -793,7 +792,7 @@ public abstract class ImportEngine<//
 						@Override
 						public boolean endTier(int tierId, boolean ok) throws CmfStorageException {
 							try {
-								workerCounter.waitUntil(0);
+								workerCounter.waitUntilValue(0);
 							} catch (InterruptedException e) {
 								throw new CmfStorageException(
 									String.format("Thread interrupted while waiting for tier [%d] to complete", tierId),
@@ -817,7 +816,7 @@ public abstract class ImportEngine<//
 						// Here, we wait for all the workers to conclude
 						this.log.info("Waiting for the {} workers to exit...", type.name());
 						try {
-							workerCounter.waitUntil(0);
+							workerCounter.waitUntilValue(0);
 						} catch (InterruptedException e) {
 							this.log.warn("Interrupted while waiting for an executor thread to exit", e);
 							Thread.currentThread().interrupt();
@@ -851,7 +850,7 @@ public abstract class ImportEngine<//
 				this.log.info("Waiting for pending workers to terminate (maximum 5 minutes, {} pending workers)",
 					pending);
 				try {
-					workerCounter.waitUntil(0, 5, TimeUnit.MINUTES);
+					workerCounter.waitUntilValue(0, 5, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for normal executor termination", e);
 					Thread.currentThread().interrupt();
@@ -870,7 +869,7 @@ public abstract class ImportEngine<//
 					this.log.info(
 						"Waiting an additional 60 seconds for worker termination as a contingency ({} pending workers)",
 						pending);
-					workerCounter.waitUntil(0, 1, TimeUnit.MINUTES);
+					workerCounter.waitUntilValue(0, 1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
 					Thread.currentThread().interrupt();

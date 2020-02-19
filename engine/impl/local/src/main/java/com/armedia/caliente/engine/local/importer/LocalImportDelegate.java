@@ -45,6 +45,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.lang3.SystemUtils;
 
@@ -64,7 +65,6 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.tools.FilenameEncoder;
 import com.armedia.commons.utilities.FileNameTools;
-import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalImportDelegate extends
 	ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
@@ -107,7 +107,7 @@ public abstract class LocalImportDelegate extends
 		// way to figure that out from Java...
 		final boolean windowsMode = SystemUtils.IS_OS_WINDOWS;
 
-		File tgt = ctx.getSession().getFile();
+		File tgt = ctx.getSession().getPath().toFile();
 
 		CmfProperty<CmfValue> pathProp = this.cmfObject.getProperty(IntermediateProperty.PATH);
 		String p = "/";
@@ -167,7 +167,7 @@ public abstract class LocalImportDelegate extends
 				continue;
 			}
 			FileTime remote = FileTime.fromMillis(sv.asTime().getTime());
-			if (!Tools.equals(local, remote)) { return false; }
+			if (!Objects.equals(local, remote)) { return false; }
 		}
 
 		if (ownerView != null) {
@@ -180,7 +180,7 @@ public abstract class LocalImportDelegate extends
 					if (!sv.isNull()) {
 						try {
 							UserPrincipal remote = userSvc.lookupPrincipalByName(v.getValue().asString());
-							if (!Tools.equals(local, remote)) { return false; }
+							if (!Objects.equals(local, remote)) { return false; }
 						} catch (UserPrincipalNotFoundException e) {
 							// Ignore...
 						}
@@ -199,7 +199,7 @@ public abstract class LocalImportDelegate extends
 					if (!sv.isNull()) {
 						try {
 							GroupPrincipal remote = userSvc.lookupPrincipalByGroupName(v.getValue().asString());
-							if (!Tools.equals(local, remote)) { return false; }
+							if (!Objects.equals(local, remote)) { return false; }
 						} catch (UserPrincipalNotFoundException e) {
 							// Ignore...
 						}

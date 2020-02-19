@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -199,7 +200,7 @@ public class DfcVersionTree {
 
 				// If there is no antecedent, and the antecedent ID is the null ID
 				// (0000000000000000), then this MUST be the chronicle root...verify it!
-				if (!Tools.equals(chronicleId, sysObject.getObjectId().getId())) {
+				if (!Objects.equals(chronicleId, sysObject.getObjectId().getId())) {
 					// If this is not the chronicle root, this is an error condition from invalid
 					// data, and we can't continue
 					throw new DctmException(String.format(

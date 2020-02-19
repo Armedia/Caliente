@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+	<changeSet author="caliente-jdbc" id="caliente-common-1.0">
+		<preConditions>
+			<changeSetExecuted id="common-1000" author="caliente" changeLogFile="com/armedia/caliente/store/jdbc/changelog/common.changelog-1.0.xml"/>
+		</preConditions>
+	</changeSet>
+
+	<!-- **************************************** -->
+	<!-- For future deltas, as needed...          -->
+	<!-- **************************************** -->
+	<!--
+	<include file="com/armedia/caliente/store/jdbc/changelog/common.changelog-3.1.xml" />
+	-->
+</databaseChangeLog>

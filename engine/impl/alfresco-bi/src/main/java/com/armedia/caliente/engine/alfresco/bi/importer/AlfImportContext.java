@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
+import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportContext;
 import com.armedia.caliente.engine.importer.ImportException;
@@ -41,6 +42,7 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
@@ -65,6 +67,10 @@ public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImport
 	}
 
 	protected String getObjectName(CmfObject<CmfValue> object, boolean current) {
+		CmfProperty<CmfValue> prop = object.getProperty(IntermediateProperty.HEAD_NAME);
+		if ((prop != null) && prop.hasValues()) { return prop.getValue().toString(); }
+
+		// No explicitly-set HEAD name, find the name for the HEAD revision
 		CmfObject<CmfValue> head = object;
 		if (current) {
 			try {

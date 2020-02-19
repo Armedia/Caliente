@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -161,7 +162,7 @@ public class OptionParser {
 				expected = shortOpt;
 				break;
 		}
-		return Tools.equals(expected, actual);
+		return Objects.equals(expected, actual);
 	}
 
 	protected boolean isHelpRequested(Option helpOption, Collection<Token> tokens) {
@@ -185,7 +186,7 @@ public class OptionParser {
 					expected = shortOpt;
 					break;
 			}
-			if (Tools.equals(expected, actual)) { return true; }
+			if (Objects.equals(expected, actual)) { return true; }
 		}
 		return false;
 	}

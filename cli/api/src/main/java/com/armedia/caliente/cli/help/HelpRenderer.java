@@ -322,7 +322,7 @@ public final class HelpRenderer {
 			aliases = " (";
 			boolean first = true;
 			for (String a : command.getAliases()) {
-				if (Tools.equals(a, command.getName())) {
+				if (Objects.equals(a, command.getName())) {
 					continue;
 				}
 				aliases = String.format("%s%s%s", aliases, first ? "" : ", ", a);
@@ -349,7 +349,7 @@ public final class HelpRenderer {
 				sb.append(" (");
 				boolean first = true;
 				for (String s : aliases) {
-					if (Tools.equals(s, c.getName())) {
+					if (Objects.equals(s, c.getName())) {
 						continue;
 					}
 					if (!first) {

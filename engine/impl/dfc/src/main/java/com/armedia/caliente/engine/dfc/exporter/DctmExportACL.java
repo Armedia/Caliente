@@ -32,6 +32,7 @@ package com.armedia.caliente.engine.dfc.exporter;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
@@ -45,7 +46,6 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.tools.dfc.DfValueFactory;
 import com.armedia.caliente.tools.dfc.DfcQuery;
 import com.armedia.caliente.tools.dfc.DfcUtils;
-import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPermit;
@@ -135,10 +135,10 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 
 			final String accessorType;
 			final IDfGroup g = session.getGroup(accessor);
-			if ((g != null) || Tools.equals(DctmACL.DM_GROUP, accessor) || Tools.equals(DctmACL.DM_WORLD, accessor)) {
+			if ((g != null) || Objects.equals(DctmACL.DM_GROUP, accessor) || Objects.equals(DctmACL.DM_WORLD, accessor)) {
 				accessorType = (g != null ? g.getGroupClass() : "group");
 			} else {
-				if (Tools.equals(DctmACL.DM_OWNER, accessor) || IDfUser.class.isInstance(o)) {
+				if (Objects.equals(DctmACL.DM_OWNER, accessor) || IDfUser.class.isInstance(o)) {
 					accessorType = "user";
 				} else {
 					// WTF is it?

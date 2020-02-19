@@ -28,6 +28,7 @@ package com.armedia.caliente.cli.ticketdecoder.xml;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -63,7 +64,7 @@ public class Contents {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		Contents other = Contents.class.cast(obj);
-		if (!Tools.equals(this.contents, other.contents)) { return false; }
+		if (!Objects.equals(this.contents, other.contents)) { return false; }
 		return true;
 	}
 

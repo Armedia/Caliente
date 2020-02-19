@@ -31,6 +31,7 @@
 package com.armedia.caliente.engine.dfc.importer;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -46,7 +47,6 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.tools.dfc.DfcUtils;
-import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
@@ -272,7 +272,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				this.log.warn(msg);
 				continue;
 			}
-			if (Tools.equals(groupName, user.getUserGroupName())) {
+			if (Objects.equals(groupName, user.getUserGroupName())) {
 				continue;
 			}
 			this.log.info("Setting group [{}] as the default group for user [{}]", groupName, user.getUserName());

@@ -27,6 +27,7 @@
 package com.armedia.caliente.tools.alfresco.bi.xml;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -96,9 +97,9 @@ public class ScanIndexItemVersion implements Cloneable {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		ScanIndexItemVersion other = ScanIndexItemVersion.class.cast(obj);
-		if (!Tools.equals(this.number, other.number)) { return false; }
-		if (!Tools.equals(this.content, other.content)) { return false; }
-		if (!Tools.equals(this.metadata, other.metadata)) { return false; }
+		if (!Objects.equals(this.number, other.number)) { return false; }
+		if (!Objects.equals(this.content, other.content)) { return false; }
+		if (!Objects.equals(this.metadata, other.metadata)) { return false; }
 		return true;
 	}
 

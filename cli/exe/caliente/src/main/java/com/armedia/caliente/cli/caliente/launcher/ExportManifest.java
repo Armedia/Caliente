@@ -106,7 +106,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 			this.date = DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(new Date());
 			this.type = object.getType();
 			this.tier = object.getDependencyTier();
-			this.searchKey = String.format("%%%s", object.getSearchKey(), object.getId());
+			this.searchKey = String.format("%%%s", object.getSearchKey());
 			this.retryId = ImportRestriction.render(object);
 			this.historyId = object.getHistoryId();
 			this.sourceId = object.getId();

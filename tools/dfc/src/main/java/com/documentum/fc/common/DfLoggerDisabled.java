@@ -58,7 +58,7 @@ public final class DfLoggerDisabled {
 	private static final String FQCN = DfLoggerDisabled.class.getName() + ".";
 	private static final String TRACING = "tracing.";
 	private static final int TRACING_LENGTH = DfLoggerDisabled.TRACING.length();
-	private static ThreadLocal<Stack<String>> s_prefixes = new ThreadLocal<>();
+	private static ThreadLocal<Stack<String>> s_prefixes = ThreadLocal.withInitial(Stack::new);
 	private static ThreadLocal<Integer> s_muteCounter = new ThreadLocal<>();
 	private static final Loggers s_loggers = new Loggers();
 
@@ -235,18 +235,12 @@ public final class DfLoggerDisabled {
 
 	public static void setClientContext(String prefix) {
 		DfLoggerDisabled.s_loggers.reset();
-
-		Stack<String> prefixesStack = DfLoggerDisabled.s_prefixes.get();
-		if (prefixesStack == null) {
-			prefixesStack = new Stack<>();
-			DfLoggerDisabled.s_prefixes.set(prefixesStack);
-		}
-		prefixesStack.push(prefix);
+		DfLoggerDisabled.s_prefixes.get().push(prefix);
 	}
 
 	public static void restoreClientContext() {
 		Stack<String> prefixesStack = DfLoggerDisabled.s_prefixes.get();
-		if ((prefixesStack != null) && (!prefixesStack.empty())) {
+		if (!prefixesStack.empty()) {
 			prefixesStack.pop();
 			DfLoggerDisabled.s_loggers.reset();
 		}
@@ -323,7 +317,7 @@ public final class DfLoggerDisabled {
 	private static String getCurrentPrefix() {
 		if (DfLoggerDisabled.s_muteCounter.get() != null) { return DfLoggerDisabled.MUTE; }
 		Stack<String> prefixesStack = DfLoggerDisabled.s_prefixes.get();
-		if ((prefixesStack == null) || (prefixesStack.empty())) { return null; }
+		if (prefixesStack.empty()) { return null; }
 		return prefixesStack.peek();
 	}
 
@@ -331,19 +325,15 @@ public final class DfLoggerDisabled {
 		static final int CACHE_SIZE = 4999;
 
 		public Map<Object, Logger> getLoggersMap() {
-			Map<Object, Logger> map = this.m_loggersMap.get();
-			if (map == null) {
-				map = new HashMap<>(Loggers.CACHE_SIZE);
-				this.m_loggersMap.set(map);
-			}
-			return map;
+			return this.m_loggersMap.get();
 		}
 
 		public void reset() {
-			this.m_loggersMap.set(new HashMap<Object, Logger>(Loggers.CACHE_SIZE));
+			this.m_loggersMap.remove();
 		}
 
-		private final ThreadLocal<Map<Object, Logger>> m_loggersMap = new ThreadLocal<>();
+		private final ThreadLocal<Map<Object, Logger>> m_loggersMap = ThreadLocal
+			.withInitial(() -> new HashMap<>(Loggers.CACHE_SIZE));
 	}
 
 	private static class LoggingResourceBundle extends ResourceBundle {

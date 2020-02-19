@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -42,8 +43,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import com.armedia.commons.utilities.Tools;
 
 public class DctmVersionNumberTest {
 
@@ -393,7 +392,7 @@ public class DctmVersionNumberTest {
 				String[] cb = b.split("\\.");
 
 				int c = 0;
-				while ((c < ca.length) && (c < cb.length) && Tools.equals(ca[c], cb[c])) {
+				while ((c < ca.length) && (c < cb.length) && Objects.equals(ca[c], cb[c])) {
 					c++;
 				}
 				// We've found a mismatch, so check to see if the code does the same thing

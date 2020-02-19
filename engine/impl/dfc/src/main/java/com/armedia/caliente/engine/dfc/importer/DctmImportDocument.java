@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import javax.activation.MimeType;
 
@@ -51,7 +52,6 @@ import com.armedia.caliente.engine.dfc.common.DctmDocument;
 import com.armedia.caliente.engine.dfc.common.DctmSysObject;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
@@ -107,10 +107,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		for (Iterator<IDfValue> it = path.iterator(); it.hasNext();) {
 			IDfValue v = it.next();
 			final String tgt = ctx.getTargetPath(v.asString());
-			if (Tools.equals("", tgt)) {
+			if (Objects.equals("", tgt)) {
 				it.remove();
 			}
-			if (Tools.equals("/", tgt)) {
+			if (Objects.equals("/", tgt)) {
 				it.remove();
 			}
 		}
@@ -468,7 +468,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
 		String sourceChronicleId = (att != null ? att.getValue().asId().getId() : null);
 		final boolean root = (((p != null) && p.hasValues() && p.getValue().asBoolean()) || (sourceChronicleId == null)
-			|| Tools.equals(this.cmfObject.getId(), sourceChronicleId));
+			|| Objects.equals(this.cmfObject.getId(), sourceChronicleId));
 		if (!root && !newObject) {
 			this.antecedentTemporaryPermission = new TemporaryPermission(context.getSession(), document,
 				IDfACL.DF_PERMIT_VERSION);
@@ -490,7 +490,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		File path;
 		try {
 			path = contentHandle.getFile();
-		} catch (IOException e) {
+		} catch (CmfStorageException e) {
 			throw new ImportException(String.format("Failed to get the content file for %s, qualifier [%s]",
 				this.cmfObject.getDescription(), contentHandle.getInfo()), e);
 		}
@@ -499,24 +499,24 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			// If the content store doesn't support this, then we dump to a temp file and go from
 			// there
 			// TODO: Look into IDfSysObjectInternal for use of streams vs. using filesystem staging
+			boolean ok = false;
 			try {
 				path = File.createTempFile("content", null);
-				contentHandle.writeFile(path);
 				path.deleteOnExit();
+				contentHandle.store(path);
+				ok = true;
 			} catch (IOException e) {
-				if (path != null) {
-					path.delete();
-				}
 				throw new ImportException(
 					String.format("Failed to create and write the temporary content file for %s, qualifier [%s]",
 						this.cmfObject.getDescription(), contentHandle.getInfo()),
 					e);
 			} catch (CmfStorageException e) {
-				if (path != null) {
-					path.delete();
-				}
 				throw new ImportException(String.format("Failed to get the content stream for %s, qualifier [%s]",
 					this.cmfObject.getDescription(), contentHandle.getInfo()), e);
+			} finally {
+				if (!ok && (path != null)) {
+					path.delete();
+				}
 			}
 		}
 
@@ -525,7 +525,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		fullFormat = Tools.coalesce(fullFormat, contentType);
 
 		if (renditionNumber == 0) {
-			if (!Tools.equals(fullFormat, contentType)) {
+			if (!Objects.equals(fullFormat, contentType)) {
 				fullFormat = contentType;
 			}
 			try {
@@ -541,7 +541,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 					e.getClass().getCanonicalName(), e.getMessage());
 				throw new ImportException(msg, e);
 			}
-		} else if (Tools.equals(contentType, fullFormat) && StringUtils.isEmpty(pageModifier)) {
+		} else if (Objects.equals(contentType, fullFormat) && StringUtils.isEmpty(pageModifier)) {
 			// If the rendition is of the same format as the main content, then we MUST skip it
 			final String msg = String.format("Skipped a rendition for document [%s](%s) -> {%s/%s/%s/%s}",
 				this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber, pageModifier);
@@ -638,7 +638,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 	protected String identifyFormat(IDfSession session, String aContentType, String extension) throws DfException {
 		// We have a mime type or format name ... try a format name first
 		// Shortcut - avoid checking if it's the default binary type (application/octet-stream)
-		if (Tools.equals(aContentType, DctmImportDocument.DEFAULT_BINARY_MIME)) { return null; }
+		if (Objects.equals(aContentType, DctmImportDocument.DEFAULT_BINARY_MIME)) { return null; }
 
 		// Not a format...must be a mime type
 
@@ -717,7 +717,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		}
 		CmfContentStore<?, ?> contentStore = context.getContentStore();
 		int i = 0;
-		final CmfAttributeTranslator<IDfValue> translator = this.factory.getEngine().getTranslator();
 		String contentType = null;
 		Boolean fromDctm = null;
 		final boolean skipRenditions = this.factory.isSkipRenditions();
@@ -726,7 +725,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				// Skip the non-default rendition
 				continue;
 			}
-			CmfContentStore<?, ?>.Handle h = contentStore.getHandle(translator, this.cmfObject, info);
+			CmfContentStore<?, ?>.Handle h = contentStore.findHandle(info);
 			CfgTools cfg = info.getCfgTools();
 
 			if (fromDctm == null) {

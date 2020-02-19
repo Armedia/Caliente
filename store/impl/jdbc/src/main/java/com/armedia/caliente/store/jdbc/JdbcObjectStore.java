@@ -49,6 +49,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -585,7 +586,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 							}
 
 							// Do the history checking
-							if (!Tools.equals(currentHistory, historyId)) {
+							if (!Objects.equals(currentHistory, historyId)) {
 								if (currentHistory != null) {
 									this.log.debug("CLOSE HISTORY: {}", currentHistory);
 									if (!handler.endHistory(currentHistory, true)) {
@@ -597,7 +598,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 								}
 
 								// Do the tier checking
-								if (!Tools.equals(currentTier, tierId)) {
+								if (!Objects.equals(currentTier, tierId)) {
 									if (currentTier != null) {
 										this.log.debug("CLOSE TIER: {}", currentTier);
 										if (!handler.endTier(currentTier, true)) {
@@ -783,7 +784,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 				public boolean handleObject(CmfObject<CmfValue> obj) throws CmfStorageException {
 					final String oldName = obj.getName();
 					final String newName = nameFixer.fixName(obj);
-					if (!StringUtils.isEmpty(newName) && !Tools.equals(oldName, newName)) {
+					if (!StringUtils.isEmpty(newName) && !Objects.equals(oldName, newName)) {
 						renameObject(operation, obj, newName);
 						result.incrementAndGet();
 						try {
@@ -1386,7 +1387,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 			final CmfValue v;
 			try {
 				if (rs.wasNull() || (nullValue && JdbcObjectStore.NULL.equals(data))) {
-					v = new CmfValue(property.getType(), null);
+					v = CmfValue.of(property.getType(), null);
 				} else {
 					v = deserializer.deserialize(data);
 				}
@@ -1560,7 +1561,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 		// Step 2: prepare the new content records and properties
 		List<Object[]> contents = new ArrayList<>();
 		List<Object[]> properties = new ArrayList<>();
-		Object[] cArr = new Object[9];
+		Object[] cArr = new Object[10];
 		Object[] pArr = new Object[4];
 		for (CmfContentStream i : content) {
 			// First, the content record...
@@ -1573,6 +1574,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 			cArr[6] = i.getLength();
 			cArr[7] = Tools.toString(Tools.coalesce(i.getMimeType(), MimeTools.DEFAULT_MIME_TYPE));
 			cArr[8] = i.getFileName();
+			cArr[9] = i.getLocator();
 			contents.add(cArr.clone());
 
 			// Then, the properties...
@@ -1631,8 +1633,8 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 				final List<CmfContentStream> ret = new ArrayList<>();
 				while (rs.next()) {
 					final int contentNumber = rs.getInt("content_number");
-					final CmfContentStream info = new CmfContentStream(contentNumber, rs.getString("rendition_id"),
-						rs.getInt("rendition_page"), rs.getString("modifier"));
+					final CmfContentStream info = new CmfContentStream(object, contentNumber,
+						rs.getString("rendition_id"), rs.getInt("rendition_page"), rs.getString("modifier"));
 					info.setLength(rs.getLong("stream_length"));
 					String ext = rs.getString("extension");
 					if (rs.wasNull() || StringUtils.isEmpty(ext)) {
@@ -1646,6 +1648,10 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 					str = rs.getString("file_name");
 					if ((str != null) && !rs.wasNull()) {
 						info.setFileName(str);
+					}
+					str = rs.getString("locator");
+					if ((str != null) && !rs.wasNull()) {
+						info.setLocator(str);
 					}
 
 					Map<String, String> props = qr.query(c, translateQuery(JdbcDialect.Query.LOAD_CONTENT_PROPERTIES),

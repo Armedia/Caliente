@@ -42,9 +42,6 @@ import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.filter.IntegerValueFilter;
 import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
-import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
-import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.common.DfException;
 
 class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 	private static final Option BATCH_SIZE = new OptionImpl() //
@@ -163,9 +160,6 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		.add(Exporter.SPECIAL_USERS) //
 	;
 
-	private DfcSessionPool pool = null;
-	private IDfSession session = null;
-
 	Exporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
@@ -202,13 +196,6 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 		if (!EngineInterface.commonConfigure(commandValues, settings)) { return false; }
 
-		try {
-			this.pool = new DfcSessionPool(settings);
-			this.session = this.pool.acquireSession();
-		} catch (DfException e) {
-			throw new CalienteException("Failed to initialize the connection pool or get the primary session", e);
-		}
-
 		if (commandValues.isPresent(Exporter.OWNER_ATTRIBUTES)) {
 			settings.put(Setting.OWNER_ATTRIBUTES.getLabel(), commandValues.getStrings(Exporter.OWNER_ATTRIBUTES));
 		}
@@ -240,12 +227,6 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 
 	@Override
 	public void close() throws Exception {
-		if (this.session != null) {
-			this.pool.releaseSession(this.session);
-		}
-		if (this.pool != null) {
-			this.pool.close();
-		}
 	}
 
 	@Override

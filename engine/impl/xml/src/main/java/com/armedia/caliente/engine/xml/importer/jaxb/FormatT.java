@@ -29,6 +29,7 @@ package com.armedia.caliente.engine.xml.importer.jaxb;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
@@ -116,7 +117,7 @@ public class FormatT implements Comparable<FormatT> {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		FormatT other = FormatT.class.cast(obj);
-		if (!Tools.equals(this.name, other.name)) { return false; }
+		if (!Objects.equals(this.name, other.name)) { return false; }
 		return true;
 	}
 

@@ -104,16 +104,16 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		DfcVersionHistory<IDfSysObject> history = getVersionHistory(ctx, document);
 		properties.add(new CmfProperty<>(IntermediateProperty.HEAD_NAME, IntermediateProperty.HEAD_NAME.type,
 			DfValueFactory.of(history.getCurrentVersion().getObject().getObjectName())));
-		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, DctmDataType.DF_INTEGER.getStoredType(),
+		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
 			false, DfValueFactory.of(history.size())));
 		Integer historyIndex = history.getIndexFor(document.getObjectId());
 		if (historyIndex != null) {
 			properties.add(new CmfProperty<>(IntermediateProperty.VERSION_INDEX,
-				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.of(historyIndex)));
+				IntermediateProperty.VERSION_INDEX.type, false, DfValueFactory.of(historyIndex)));
 			historyIndex = history.getCurrentIndex();
 			if (historyIndex != null) {
 				properties.add(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
-					DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.of(historyIndex)));
+					IntermediateProperty.VERSION_HEAD_INDEX.type, false, DfValueFactory.of(historyIndex)));
 			}
 		}
 
@@ -166,7 +166,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		for (DfcVersion<IDfSysObject> version : getVersionHistory(ctx, document)) {
 			IDfSysObject doc = version.getObject();
 			final IDfId id = doc.getObjectId();
-			if (Tools.equals(id.getId(), document.getObjectId().getId())) {
+			if (Objects.equals(id.getId(), document.getObjectId().getId())) {
 				// Once we've found the "reference" object in the history, we skip adding it
 				// since it will be added explicitly
 				if (!prior) {
@@ -220,7 +220,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		// not duplicate, but doing it like this helps us avoid o(n^2) performance
 		// which is BAAAD
 		boolean rootObject = false;
-		if (Tools.equals(marshaled.getId(), ctx.getRootObjectId())) {
+		if (Objects.equals(marshaled.getId(), ctx.getRootObjectId())) {
 			// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
 			int previousCount = 0;
 			for (IDfSysObject versionDoc : getVersions(ctx, true, document)) {
@@ -233,7 +233,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			rootObject = (previousCount == 0);
 		} else {
 			// If we're the first object in the version history, we mark ourselves as such.
-			rootObject = Tools.equals(document.getObjectId(),
+			rootObject = Objects.equals(document.getObjectId(),
 				getVersionHistory(ctx, document).getRootVersion().getId());
 		}
 		marshaled.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
@@ -253,7 +253,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		// There is no actual harm done, since the export engine is smart enough to
 		// not duplicate, but doing it like this helps us avoid o(n^2) performance
 		// which is BAAAD
-		if (Tools.equals(marshaled.getId(), ctx.getRootObjectId())) {
+		if (Objects.equals(marshaled.getId(), ctx.getRootObjectId())) {
 			// Now, also do the *SUBSEQUENT* versions...
 			for (IDfSysObject versionDoc : getVersions(ctx, false, document)) {
 				if (this.log.isDebugEnabled()) {
@@ -352,7 +352,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			final String renditionId = ((renditionNumber != 0)
 				? String.format("%08x.%s", content.getRendition(), format)
 				: null);
-			info = new CmfContentStream(index, renditionId, renditionPage, modifier);
+			info = new CmfContentStream(marshaled, index, renditionId, renditionPage, modifier);
 		} catch (Exception e) {
 			this.log.error(
 				"Failed to retrieve the base content metadata for the content stream # {} for {} (contentId = {})",
@@ -406,7 +406,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		if (skipContent) { return info; }
 
 		// CmfStore the content in the filesystem
-		CmfContentStore<?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, info);
+		CmfContentStore<?, ?>.Handle contentHandle = streamStore.addContentStream(translator, marshaled, info);
 		try {
 			if (contentHandle.getSourceStore().isSupportsFileAccess()) {
 				document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, info.getRenditionPage(),
@@ -416,7 +416,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 				try (InputStream in = document.getContentEx3(format, info.getRenditionPage(), info.getModifier(),
 					false)) {
 					// Don't pull the content until we're sure we can put it somewhere...
-					contentHandle.setContents(in);
+					contentHandle.store(in);
 				}
 			}
 		} catch (Exception e) {

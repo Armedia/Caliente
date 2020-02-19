@@ -30,12 +30,13 @@
 
 package com.armedia.caliente.engine.dfc.importer;
 
+import java.util.Objects;
+
 import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.tools.dfc.DfcUtils;
-import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
@@ -74,7 +75,7 @@ public class DctmImportStore extends DctmImportDelegate<IDfStore> {
 	@Override
 	protected boolean isSameObject(IDfStore store, DctmImportContext ctx) throws DfException {
 		IDfValue name = this.cmfObject.getAttribute(DctmAttributes.NAME).getValue();
-		return Tools.equals(name, store.getName());
+		return Objects.equals(name, store.getName());
 	}
 
 	@Override
