@@ -27,6 +27,7 @@
 package com.armedia.caliente.store;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -71,7 +72,7 @@ public class CmfObjectRef implements Comparable<CmfObjectRef>, Serializable {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		CmfObjectRef other = CmfObjectRef.class.cast(obj);
 		if (this.type != other.type) { return false; }
-		if (!Tools.equals(this.id, other.id)) { return false; }
+		if (!Objects.equals(this.id, other.id)) { return false; }
 		return true;
 	}
 

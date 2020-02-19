@@ -62,13 +62,12 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 		throws ImportException, CmfStorageException {
 
 		FolderT f = this.delegate.createItem(translator, ctx);
-		CmfContentStore<?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
-			new CmfContentStream(0));
+		CmfContentStore<?, ?>.Handle h = ctx.getContentStore().findHandle(new CmfContentStream(this.cmfObject, 0));
 		if (!h.getSourceStore().isSupportsFileAccess()) { return null; }
 		File tgt = null;
 		try {
 			tgt = h.getFile();
-		} catch (IOException e) {
+		} catch (CmfStorageException e) {
 			// Failed to get the file, so we can't handle this
 			throw new CmfStorageException(
 				String.format("Failed to locate the location for the %s", this.cmfObject.getDescription()), e);

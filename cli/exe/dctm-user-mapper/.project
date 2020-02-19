@@ -59,23 +59,5 @@
 				<arguments>1.0-name-matches-false-false-documentum</arguments>
 			</matcher>
 		</filter>
-		<filter>
-			<id>0</id>
-			<name>target</name>
-			<type>9</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-classes</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>0</id>
-			<name>target</name>
-			<type>9</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-test-classes</arguments>
-			</matcher>
-		</filter>
 	</filteredResources>
 </projectDescription>

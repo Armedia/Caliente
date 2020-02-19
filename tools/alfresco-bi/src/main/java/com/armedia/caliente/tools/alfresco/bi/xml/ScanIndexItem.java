@@ -28,6 +28,7 @@ package com.armedia.caliente.tools.alfresco.bi.xml;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -121,12 +122,12 @@ public class ScanIndexItem {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		ScanIndexItem other = ScanIndexItem.class.cast(obj);
 		if (this.directory != other.directory) { return false; }
-		if (!Tools.equals(this.sourceName, other.sourceName)) { return false; }
-		if (!Tools.equals(this.sourcePath, other.sourcePath)) { return false; }
-		if (!Tools.equals(this.targetName, other.targetName)) { return false; }
-		if (!Tools.equals(this.targetPath, other.targetPath)) { return false; }
-		if (!Tools.equals(this.versions.size(), other.versions.size())) { return false; }
-		if (!Tools.equals(this.versions, other.versions)) { return false; }
+		if (!Objects.equals(this.sourceName, other.sourceName)) { return false; }
+		if (!Objects.equals(this.sourcePath, other.sourcePath)) { return false; }
+		if (!Objects.equals(this.targetName, other.targetName)) { return false; }
+		if (!Objects.equals(this.targetPath, other.targetPath)) { return false; }
+		if (!Objects.equals(this.versions.size(), other.versions.size())) { return false; }
+		if (!Objects.equals(this.versions, other.versions)) { return false; }
 		return true;
 	}
 

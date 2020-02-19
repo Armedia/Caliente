@@ -28,6 +28,7 @@ package com.armedia.calienteng;
 
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -128,11 +129,11 @@ public class EventRegistration implements Comparable<EventRegistration> {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		EventRegistration other = EventRegistration.class.cast(obj);
-		if (!Tools.equals(this.id, other.id)) { return false; }
-		if (!Tools.equals(this.registeredId, other.registeredId)) { return false; }
-		if (!Tools.equals(this.userName, other.userName)) { return false; }
-		if (!Tools.equals(this.event, other.event)) { return false; }
-		if (!Tools.equals(this.message, other.message)) { return false; }
+		if (!Objects.equals(this.id, other.id)) { return false; }
+		if (!Objects.equals(this.registeredId, other.registeredId)) { return false; }
+		if (!Objects.equals(this.userName, other.userName)) { return false; }
+		if (!Objects.equals(this.event, other.event)) { return false; }
+		if (!Objects.equals(this.message, other.message)) { return false; }
 		if (this.priority != other.priority) { return false; }
 		if (this.sendMail != other.sendMail) { return false; }
 		return true;
@@ -173,7 +174,7 @@ public class EventRegistration implements Comparable<EventRegistration> {
 					}
 				}
 			}
-			if (Tools.equals("DM_EVENT_E_EVENT_ALREADY_REGISTERED", e.getMessageId())) { return false; }
+			if (Objects.equals("DM_EVENT_E_EVENT_ALREADY_REGISTERED", e.getMessageId())) { return false; }
 			throw e;
 		}
 	}
@@ -215,7 +216,7 @@ public class EventRegistration implements Comparable<EventRegistration> {
 					}
 				}
 			}
-			if (Tools.equals("DM_EVENT_E_NOT_REGISTERED", e.getMessageId())) { return false; }
+			if (Objects.equals("DM_EVENT_E_NOT_REGISTERED", e.getMessageId())) { return false; }
 			throw e;
 		}
 	}
@@ -396,7 +397,7 @@ public class EventRegistration implements Comparable<EventRegistration> {
 			while (query.hasNext()) {
 				IDfTypedObject o = query.next();
 				String userName = o.getString("user_name");
-				if (!Tools.equals(user, userName)) {
+				if (!Objects.equals(user, userName)) {
 					if (s != null) {
 						ret.put(user, s);
 					}

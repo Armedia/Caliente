@@ -82,7 +82,8 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 	}
 
 	@Override
-	protected final void executeAction(DynamicElementContext<?> ctx, DynamicValue candidate) throws ActionException {
+	protected final DynamicValue executeAction(DynamicElementContext<?> ctx, DynamicValue candidate)
+		throws ActionException {
 		RegularExpression regexBase = getRegex();
 		final String regex = Tools.toString(ActionTools.eval(regexBase, ctx));
 		if (regex == null) { throw new ActionException("No regular expression given to check against"); }
@@ -102,7 +103,7 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 				newValue = Pattern.compile(regex, flags).matcher(oldString).replaceAll(replacement);
 			}
 			candidate.setValue(newValue);
-			return;
+			return null;
 		}
 
 		final int valueCount = candidate.getSize();
@@ -137,5 +138,6 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 			}
 			candidate.setValues(newValues);
 		}
+		return null;
 	}
 }

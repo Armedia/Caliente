@@ -27,10 +27,10 @@
 package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,12 +38,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.ScanIndexItemMarker.MarkerType;
@@ -59,6 +57,7 @@ import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
@@ -67,9 +66,15 @@ import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.tools.DefaultCmfObjectHandler;
 import com.armedia.commons.utilities.Tools;
 
+/*
+ * NEEDED CHANGES:
+ * 1) don't create stubs
+ * 2) versions are created but not populated correctly
+ */
+
 abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
-	protected static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+	protected static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
 	public static final String REFERENCE_TYPE = "arm:reference";
 	public static final String STATUS_ASPECT = "arm:calienteStatus";
@@ -77,8 +82,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 	private static final String TYPE_PROPERTY = "type";
 	private static final String ASPECT_PROPERTY = "aspects";
-
-	private static final Pattern VDOC_MEMBER_PARSER = Pattern.compile("^\\[(.+)\\]\\{(.+)\\}$");
 
 	private static enum PermitValue {
 		//
@@ -101,27 +104,16 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	private final boolean reference;
-	private final boolean virtual;
 	private final AlfrescoType defaultType;
 	private final AlfrescoType referenceType;
-
-	private AlfrescoType vdocRoot = null;
-	private AlfrescoType vdocVersion = null;
-	private AlfrescoType vdocReference = null;
 
 	public AlfImportFileableDelegate(String defaultType, AlfImportDelegateFactory factory,
 		CmfObject<CmfValue> storedObject) throws Exception {
 		super(factory, storedObject);
 		CmfValue reference = getPropertyValue(IntermediateProperty.IS_REFERENCE);
 		this.reference = ((reference != null) && !reference.isNull() && reference.asBoolean());
-		CmfValue virtual = getPropertyValue(IntermediateProperty.VDOC_HISTORY);
-		this.virtual = ((virtual != null) && !virtual.isNull() && virtual.asBoolean());
 		this.defaultType = this.factory.getType(defaultType);
 		this.referenceType = this.factory.getType(AlfImportFileableDelegate.REFERENCE_TYPE);
-	}
-
-	protected final boolean isVirtual() {
-		return this.virtual;
 	}
 
 	protected final boolean isReference() {
@@ -212,8 +204,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		Properties p, boolean concatenateFallback) throws ImportException {
 		storeValue(ctx, srcAtt, tgtAtt.name, tgtAtt.multiple, p, concatenateFallback);
 	}
-
-	protected abstract boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException;
 
 	private boolean includeProperty(String propertyName, AlfrescoType targetType) {
 		return targetType.hasAttribute(propertyName);
@@ -445,9 +435,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 						continue;
 					}
 
-					if (Tools.equals(accessor, "dm_owner")) {
+					if (Objects.equals(accessor, "dm_owner")) {
 						accessor = owner;
-					} else if (Tools.equals(accessor, "dm_group")) {
+					} else if (Objects.equals(accessor, "dm_group")) {
 						accessor = group;
 					}
 
@@ -517,38 +507,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		p.setProperty("arm:renditionFormat", content.getMimeType().toString());
 	}
 
-	private boolean resolveVdocTypes() {
-		if (!this.factory.initializeVdocSupport()) { return false; }
-		this.vdocRoot = this.factory.getType("cm:folder", "dctm:vdocRoot");
-		this.vdocVersion = this.factory.getType("cm:folder", "dctm:vdocVersion");
-		this.vdocReference = this.factory.getType("dctm:vdocReference");
-		return (this.vdocRoot != null) && (this.vdocVersion != null) && (this.vdocReference != null);
-	}
-
-	protected final void populateVdocReference(Properties p, String referenceId, String targetName, String targetId,
-		String label) throws ImportException {
-		// Set the type property
-		AlfrescoType type = this.vdocReference;
-		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, type.getName());
-		Collection<String> aspects = new LinkedHashSet<>();
-		for (String aspect : type.getAspects()) {
-			aspects.add(aspect);
-		}
-		aspects.add(AlfImportFileableDelegate.CALIENTE_ASPECT);
-		aspects.add(AlfImportFileableDelegate.STATUS_ASPECT);
-		p.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, StringUtils.join(aspects, ','));
-		p.setProperty("arm:aspects", StringUtils.join(aspects, ','));
-		p.setProperty("arm:aclInheritance", "NONE[]");
-		p.setProperty("cm:name", targetName);
-		p.setProperty("arm:refTarget", targetId);
-		if (!StringUtils.isEmpty(label)) {
-			p.setProperty("arm:refVersion", label);
-		}
-		if (!StringUtils.isEmpty(referenceId)) {
-			p.setProperty("dctm:vdocReferenceId", referenceId);
-		}
-	}
-
 	@Override
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
 		AlfImportContext ctx) throws ImportException, CmfStorageException {
@@ -588,11 +546,12 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		Collection<CmfContentStream> contents = ctx.getContentStreams(this.cmfObject);
 		if (contents.isEmpty()) {
 			// No content streams, so make one up so we can build the properties file
-			contents = Collections.singleton(new CmfContentStream(0));
+			CmfContentStream dummy = new CmfContentStream(this.cmfObject, 0);
+			contents = Collections.singleton(dummy);
+			// This is necessary to properly populate the dummy content stream
+			ctx.getContentStore().addContentStream(translator, this.cmfObject, dummy);
 		}
 
-		boolean vdocRootIndexed = false;
-		Set<String> vdocVersionsIndexed = new HashSet<>();
 		boolean renditionsRootIndexed = false;
 		Set<String> renditionTypesIndexed = new HashSet<>();
 		final boolean skipRenditions = this.factory.isSkipRenditions();
@@ -602,8 +561,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				continue;
 			}
 
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().getHandle(this.factory.getTranslator(),
-				this.cmfObject, content);
+			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().findHandle(content);
 
 			// First things first: identify the type we're going to store into
 			AlfrescoType targetType = getTargetType(content);
@@ -618,15 +576,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			final File main;
 			try {
 				main = h.getFile();
-			} catch (IOException e) {
+			} catch (CmfStorageException e) {
 				throw new ImportException("Failure!", e);
-			}
-
-			if (!main.exists()) {
-				ctx.printf("Creating a stub for %s", this.cmfObject.getDescription());
-				if (!createStub(ctx, main, this.cmfObject.getLabel())) {
-					return Collections.singleton(ImportOutcome.SKIPPED);
-				}
 			}
 
 			// Ok...so...now that we know where the metadata properties must go, we write them
@@ -634,12 +585,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			Properties p = new Properties();
 			final boolean primaryRendition = content.isDefaultRendition() && (content.getRenditionPage() == 0);
 			final MarkerType markerType = (primaryRendition ? MarkerType.NORMAL : MarkerType.RENDITION_ENTRY);
-
-			if (this.virtual && !primaryRendition) {
-				// This is a VDoc rendition...and is currently not supported
-				this.log.warn("VDoc renditions aren't yet supported for {}", this.cmfObject.getDescription());
-				continue;
-			}
 
 			if (primaryRendition) {
 				// First page of the default rendition gets ALL the metadata. Everything
@@ -667,102 +612,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 
 			final File meta = this.factory.generateMetadataFile(p, this.cmfObject, main);
-			if (this.virtual && resolveVdocTypes()) {
-				File vdocVersion = meta.getParentFile();
-				if (vdocVersionsIndexed.add(vdocVersion.getName())) {
-					// Does the reference home already have properties? If not, then add them...
-					Properties versionProps = new Properties();
-					try {
-						populatePrimaryAttributes(ctx, versionProps, this.vdocRoot, content);
-					} catch (AlfRenderingException e) {
-						throw new ImportException(e.getMessage(), e);
-					}
-
-					if (this.cmfObject.isHistoryCurrent() && !vdocRootIndexed) {
-						final File vdocRootMeta = this.factory.generateMetadataFile(versionProps, this.cmfObject,
-							vdocVersion.getParentFile());
-						this.factory.storeToIndex(ctx, true, this.cmfObject, content, vdocVersion.getParentFile(),
-							vdocRootMeta, MarkerType.VDOC_ROOT);
-						vdocRootIndexed = true;
-					}
-
-					versionProps.setProperty("cm:name", vdocVersion.getName());
-					versionProps.setProperty("dctm:object_name", vdocVersion.getName());
-					versionProps.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, this.vdocVersion.getName());
-					Set<String> aspects = new LinkedHashSet<>(this.vdocVersion.getAspects());
-					aspects.add(AlfImportFileableDelegate.STATUS_ASPECT);
-					versionProps.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, StringUtils.join(aspects, ','));
-					final File vdocVersionMeta = this.factory.generateMetadataFile(versionProps, this.cmfObject,
-						vdocVersion);
-					this.factory.storeToIndex(ctx, true, this.cmfObject, content, vdocVersion, vdocVersionMeta,
-						MarkerType.VDOC_VERSION);
-				}
-				this.factory.storeToIndex(ctx, false, this.cmfObject, content, main, meta,
-					(primaryRendition ? MarkerType.VDOC_STREAM : MarkerType.VDOC_RENDITION));
-
-				CmfProperty<CmfValue> members = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
-				if (members != null) {
-					for (CmfValue member : members) {
-						if (member.isNull()) {
-							continue;
-						}
-						Matcher matcher = AlfImportFileableDelegate.VDOC_MEMBER_PARSER.matcher(member.asString());
-						if (!matcher.matches()) {
-							this.log.warn("Incomplete VDoc member data for %s - [%s]", this.cmfObject.getDescription(),
-								member.asString());
-							continue;
-						}
-
-						String[] memberData = matcher.group(1).split("\\|");
-						if (memberData.length < 5) {
-							this.log.warn("Incomplete VDoc member reference data for %s - [%s]",
-								this.cmfObject.getDescription(), member.asString());
-							continue;
-						}
-
-						Properties vdocMemberProperties = new Properties();
-						populateVdocReference(vdocMemberProperties, memberData[0], memberData[0], memberData[1],
-							memberData[2]);
-
-						File vdocMember = new File(vdocVersion, memberData[0]);
-						createStub(ctx, vdocMember, member.asString());
-						File vdocMemberMeta = this.factory.generateMetadataFile(vdocMemberProperties, this.cmfObject,
-							vdocMember);
-						this.factory.storeToIndex(ctx, false, this.cmfObject, content, vdocMember, vdocMemberMeta,
-							MarkerType.VDOC_REFERENCE);
-					}
-				}
-			} else {
-				final boolean folder = (main.exists() && main.isFile() ? false : true);
-				this.factory.storeToIndex(ctx, folder, this.cmfObject, content, main, meta, markerType);
-
-				// IF (and only if) the document is also the head document, but not the latest
-				// version (i.e. mid-tree "CURRENT", we need to copy everything over to a "new"
-				// location with no version number - including the properties.
-				String mainName = main.getName();
-				final String suffix = AlfImportDelegateFactory.parseVersionSuffix(mainName);
-				if (this.cmfObject.isHistoryCurrent() && !StringUtils.isEmpty(suffix)) {
-					final String versionTag = String.format("\\Q%s\\E$", suffix);
-					File newMain = new File(main.getAbsolutePath().replaceAll(versionTag, ""));
-					File newMeta = new File(meta.getAbsolutePath().replaceAll(versionTag, ""));
-					boolean ok = false;
-					try {
-						FileUtils.copyFile(main, newMain);
-						FileUtils.copyFile(meta, newMeta);
-						ok = true;
-					} catch (IOException e) {
-						throw new ImportException(
-							String.format("Failed to create a copy of the HEAD version for %s from [%s] to [%s]",
-								this.cmfObject.getDescription(), main.getAbsolutePath(), newMain.getAbsolutePath()),
-							e);
-					} finally {
-						if (!ok) {
-							newMain.delete();
-							newMeta.delete();
-						}
-					}
-				}
-			}
+			this.factory.storeToIndex(ctx, (this.cmfObject.getType() == Archetype.FOLDER), this.cmfObject, content,
+				main, meta, markerType);
 		}
 
 		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), path));

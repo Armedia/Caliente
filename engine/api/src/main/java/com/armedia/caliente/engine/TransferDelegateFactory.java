@@ -42,10 +42,10 @@ public abstract class TransferDelegateFactory< //
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final ENGINE engine;
-	private final CmfAttributeTranslator<VALUE> translator;
-	private final CfgTools configuration;
-	private final boolean skipRenditions;
+	protected final ENGINE engine;
+	protected final CmfAttributeTranslator<VALUE> translator;
+	protected final CfgTools configuration;
+	protected final boolean skipRenditions;
 
 	public TransferDelegateFactory(ENGINE engine, CfgTools configuration) {
 		this.engine = engine;

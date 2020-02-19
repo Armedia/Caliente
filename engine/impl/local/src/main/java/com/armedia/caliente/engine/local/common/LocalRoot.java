@@ -28,6 +28,9 @@ package com.armedia.caliente.engine.local.common;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Objects;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -36,76 +39,76 @@ import com.armedia.commons.utilities.Tools;
 
 public final class LocalRoot implements Comparable<LocalRoot> {
 
-	private final String path;
-	private final File file;
+	protected static final Path ROOT = Paths.get(File.separator);
+	private final Path path;
 
-	static String normalize(String path) throws IOException {
-		String p2 = FilenameUtils.normalize(path);
-		if (p2 == null) { throw new IOException(String.format("The path [%s] contains too many '..' elements", path)); }
-		return p2;
-	}
-
-	public LocalRoot(File path) throws IOException {
-		this(path.getCanonicalPath());
+	public static String normalize(String path) throws IOException {
+		String p = FilenameUtils.normalize(path);
+		if (p == null) { throw new IOException(String.format("The path [%s] contains too many '..' elements", path)); }
+		return p;
 	}
 
 	public LocalRoot(String path) throws IOException {
-		this.file = new File(LocalRoot.normalize(path)).getCanonicalFile();
-		this.path = this.file.getPath();
+		this(new File(LocalRoot.normalize(path)).toPath());
 	}
 
-	public String getPath() {
+	public LocalRoot(Path path) throws IOException {
+		this.path = Tools.canonicalize(Objects.requireNonNull(path, "Must provide a Path to use as the root"));
+	}
+
+	public Path getPath() {
 		return this.path;
 	}
 
-	public File getFile() {
-		return this.file;
-	}
-
 	public String relativize(String path) throws IOException {
-		File f = new File(LocalRoot.normalize(path));
-		if (!f.isAbsolute()) {
-			f = new File(this.file, path);
+		if (StringUtils.isEmpty(path)) { return File.separator; }
+		path = LocalRoot.normalize(path);
+		Path p = Paths.get(path);
+		p = relativize(p);
+		return Tools.toString(p);
+	}
+
+	public Path relativize(Path path) throws IOException {
+		if ((path == null) || (path.getNameCount() < 1)) { return LocalRoot.ROOT; }
+		if (!path.isAbsolute()) {
+			path = this.path.resolve(path);
 		}
-		String str = f.getPath().substring(this.path.length());
-		if (str.startsWith(File.separator)) { return str.substring(1); }
-		if (StringUtils.isEmpty(str)) { return File.separator; }
-		throw new IOException(String.format("The path [%s] is not a child of [%s]", path, this.path));
+		path = path.normalize();
+		if (!path.startsWith(this.path)) {
+			throw new IOException(String.format("The path [%s] is not a child of [%s]", path, this.path));
+		}
+		return this.path.relativize(path);
 	}
 
-	public File relativize(File file) throws IOException {
-		return new File(relativize(file.getPath()));
+	public Path makeAbsolute(String path) throws IOException {
+		return makeAbsolute(Paths.get(path));
 	}
 
-	public File makeAbsolute(File file) throws IOException {
-		return makeAbsolute(file.getPath());
-	}
-
-	public File makeAbsolute(String path) throws IOException {
-		return new File(this.file, LocalRoot.normalize(path)).getAbsoluteFile();
+	public Path makeAbsolute(Path path) throws IOException {
+		return Tools.canonicalize(this.path.resolve(path));
 	}
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.file);
+		return Tools.hashTool(this, null, this.path);
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		LocalRoot other = LocalRoot.class.cast(obj);
-		if (!Tools.equals(this.file, other.file)) { return false; }
+		if (!Objects.equals(this.path, other.path)) { return false; }
 		return true;
 	}
 
 	@Override
 	public int compareTo(LocalRoot o) {
 		if (o == null) { return 1; }
-		return this.file.compareTo(o.file);
+		return this.path.compareTo(o.path);
 	}
 
 	@Override
 	public String toString() {
-		return String.format("LocalRoot [%s]", this.file);
+		return String.format("LocalRoot [%s]", this.path);
 	}
 }

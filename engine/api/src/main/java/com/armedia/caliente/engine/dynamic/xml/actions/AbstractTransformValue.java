@@ -71,7 +71,8 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 
 	protected abstract Map<String, DynamicValue> getCandidateValues(DynamicElementContext<?> ctx);
 
-	protected abstract void executeAction(DynamicElementContext<?> ctx, DynamicValue candidate) throws ActionException;
+	protected abstract DynamicValue executeAction(DynamicElementContext<?> ctx, DynamicValue candidate)
+		throws ActionException;
 
 	protected boolean failShort() {
 		return false;
@@ -90,7 +91,11 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 			// Shortcut!! Look for only one candidate!
 			DynamicValue candidate = values.get(comparand);
 			if (candidate != null) {
-				executeAction(ctx, candidate);
+				DynamicValue result = executeAction(ctx, candidate);
+				if ((result != null) && (result != candidate)) {
+					values.remove(candidate.getName());
+					values.put(result.getName(), result);
+				}
 			}
 			return;
 		}
@@ -98,7 +103,12 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 		// Need to find a matching candidate...
 		for (String s : values.keySet()) {
 			if (comparison.check(CmfValue.Type.STRING, s, comparand)) {
-				executeAction(ctx, values.get(s));
+				DynamicValue candidate = values.get(s);
+				DynamicValue result = executeAction(ctx, candidate);
+				if ((result != null) && (result != candidate)) {
+					values.remove(candidate.getName());
+					values.put(result.getName(), result);
+				}
 			}
 		}
 	}

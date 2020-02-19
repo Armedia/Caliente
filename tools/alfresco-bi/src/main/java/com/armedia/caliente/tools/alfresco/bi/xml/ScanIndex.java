@@ -28,6 +28,7 @@ package com.armedia.caliente.tools.alfresco.bi.xml;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -62,8 +63,8 @@ public class ScanIndex {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		ScanIndex other = ScanIndex.class.cast(obj);
-		if (!Tools.equals(this.items.size(), other.items.size())) { return false; }
-		if (!Tools.equals(this.items, other.items)) { return false; }
+		if (!Objects.equals(this.items.size(), other.items.size())) { return false; }
+		if (!Objects.equals(this.items, other.items)) { return false; }
 		return true;
 	}
 

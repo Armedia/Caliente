@@ -35,6 +35,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -54,7 +55,6 @@ import com.armedia.caliente.tools.dfc.DfcQuery;
 import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.DfcVersionHistory;
 import com.armedia.commons.utilities.FileNameTools;
-import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.function.CheckedFunction;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.DfObjectNotFoundException;
@@ -231,8 +231,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	protected final boolean isSameACL(T object, String aclDomain, String aclName) throws DfException {
-		if (!Tools.equals(object.getACLDomain(), aclDomain)) { return false; }
-		if (!Tools.equals(object.getACLName(), aclName)) { return false; }
+		if (!Objects.equals(object.getACLDomain(), aclDomain)) { return false; }
+		if (!Objects.equals(object.getACLName(), aclName)) { return false; }
 		return true;
 	}
 
@@ -635,7 +635,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		IDfReference ref = getReferenceFor(sysObject);
 		if (ref != null) {
 			IDfId referrentId = ref.getReferenceById();
-			if (Tools.equals(referrentId.getDocbaseId(), sysObject.getObjectId().getDocbaseId())) {
+			if (Objects.equals(referrentId.getDocbaseId(), sysObject.getObjectId().getDocbaseId())) {
 				// The object is from the same docbase, so we make sure it's listed as a requirement
 				// to ensure it gets copied AFTER the referrent gets copied
 				DctmExportDelegate<?> delegate = this.factory.newExportDelegate(session,

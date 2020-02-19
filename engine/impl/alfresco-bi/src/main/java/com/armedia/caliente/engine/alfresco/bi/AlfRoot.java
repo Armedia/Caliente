@@ -28,6 +28,7 @@ package com.armedia.caliente.engine.alfresco.bi;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -92,7 +93,7 @@ public final class AlfRoot implements Comparable<AlfRoot> {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		AlfRoot other = AlfRoot.class.cast(obj);
-		if (!Tools.equals(this.file, other.file)) { return false; }
+		if (!Objects.equals(this.file, other.file)) { return false; }
 		return true;
 	}
 

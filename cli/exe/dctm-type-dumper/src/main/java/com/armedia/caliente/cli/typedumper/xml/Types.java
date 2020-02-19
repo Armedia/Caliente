@@ -28,6 +28,7 @@ package com.armedia.caliente.cli.typedumper.xml;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -63,7 +64,7 @@ public class Types {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		Types other = Types.class.cast(obj);
-		if (!Tools.equals(this.types, other.types)) { return false; }
+		if (!Objects.equals(this.types, other.types)) { return false; }
 		return true;
 	}
 

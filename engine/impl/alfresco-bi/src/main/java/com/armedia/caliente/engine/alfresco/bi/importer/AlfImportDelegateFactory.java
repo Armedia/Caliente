@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
@@ -48,8 +49,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.stream.XMLStreamException;
@@ -58,7 +57,6 @@ import javax.xml.validation.Schema;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
@@ -105,28 +103,6 @@ public class AlfImportDelegateFactory
 			this.historyId = historyId;
 		}
 
-		public void setRoot(ScanIndexItemMarker marker) throws ImportException {
-			if (this.root != null) { throw new ImportException("This virtual document already has a root element"); }
-			this.root = marker;
-		}
-
-		public void addVersion(ScanIndexItemMarker version) throws ImportException {
-			if (this.versions.containsKey(version.getTargetName())) {
-				throw new ImportException(
-					String.format("This virtual document already has a version called [%s]", version.getTargetName()));
-			}
-			this.versions.put(version.getTargetName(), version);
-			this.members.put(version.getTargetName(), new ArrayList<ScanIndexItemMarker>());
-		}
-
-		public void addMember(String version, ScanIndexItemMarker member) throws ImportException {
-			List<ScanIndexItemMarker> markers = this.members.get(version);
-			if ((markers == null) || !this.versions.containsKey(version)) {
-				throw new ImportException(String.format("This virtual document has no version called [%s]", version));
-			}
-			markers.add(member);
-		}
-
 		public void serialize() throws Exception {
 			if (!isComplete()) {
 				throw new Exception("This virtual document is not complete - can't serialize it yet");
@@ -170,8 +146,6 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	private static final Pattern VERSION_SUFFIX = Pattern.compile("^.*(\\.v(\\d+(?:\\.\\d+)?))$");
-
 	private static final BigDecimal LAST_INDEX = new BigDecimal(Long.MAX_VALUE);
 
 	private static final String SCHEMA_NAME = "alfresco-model.xsd";
@@ -197,7 +171,7 @@ public class AlfImportDelegateFactory
 	private final Map<String, AlfrescoType> defaultTypes;
 
 	private final ConcurrentMap<String, VirtualDocument> vdocs = new ConcurrentHashMap<>();
-	private final ThreadLocal<List<ScanIndexItemMarker>> currentVersions = new ThreadLocal<>();
+	private final ThreadLocal<List<ScanIndexItemMarker>> currentVersions = ThreadLocal.withInitial(ArrayList::new);
 
 	private final AlfXmlIndex fileIndex;
 	private final AlfXmlIndex folderIndex;
@@ -295,7 +269,7 @@ public class AlfImportDelegateFactory
 
 	boolean mapUserLogin(String userName, String login) {
 		// Only add the mapping if the username is different from the login
-		if ((userName == null) || Tools.equals(userName, login)) { return false; }
+		if ((userName == null) || Objects.equals(userName, login)) { return false; }
 		if (login == null) {
 			this.userLoginMap.remove(userName);
 		} else {
@@ -309,30 +283,6 @@ public class AlfImportDelegateFactory
 		f = f.getAbsoluteFile();
 		f = new File(FilenameUtils.normalize(f.getAbsolutePath()));
 		return f.getAbsoluteFile();
-	}
-
-	static final String parseVersionSuffix(String s) {
-		final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(s);
-		if (!m.matches()) { return ""; }
-		return m.group(1);
-	}
-
-	static final String parseVersionNumber(String s) {
-		final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(s);
-		if (!m.matches()) { return null; }
-		return m.group(2);
-	}
-
-	static final File removeVersionTag(File f) {
-		return AlfImportDelegateFactory.removeVersionTag(f.toPath()).toFile();
-	}
-
-	static final Path removeVersionTag(Path p) {
-		final String suffix = AlfImportDelegateFactory.parseVersionSuffix(p.toString());
-		if (suffix == null) { return p; }
-		Path parent = p.getParent();
-		String name = p.getFileName().toString().replaceAll(String.format("\\Q%s\\E$", suffix), "");
-		return (parent != null ? parent.resolve(name) : Paths.get(name));
 	}
 
 	private final void storeManifestToScanIndex() throws ImportException {
@@ -350,7 +300,7 @@ public class AlfImportDelegateFactory
 		thisMarker.setSourceName(contentPath.getFileName().toString());
 		thisMarker.setTargetPath("");
 		thisMarker.setTargetName(contentPath.getFileName().toString());
-		thisMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
+		thisMarker.setNumber(BigDecimal.ONE);
 
 		List<ScanIndexItemMarker> markerList = new ArrayList<>(1);
 		markerList.add(thisMarker);
@@ -408,15 +358,6 @@ public class AlfImportDelegateFactory
 			case RENDITION_ENTRY:
 				renditionRootPath = String.format("%s-renditions", cmfObject.getId());
 				// Fall-through
-			case VDOC_ROOT:
-			case VDOC_VERSION:
-			case VDOC_STREAM:
-			case VDOC_RENDITION:
-			case VDOC_REFERENCE:
-				head = 1;
-				count = 1;
-				current = 1;
-				break;
 
 			case NORMAL:
 			default:
@@ -440,7 +381,7 @@ public class AlfImportDelegateFactory
 					if (!folder) {
 						// ERROR: insufficient data
 						throw new ImportException(
-							String.format("Incomplete version indexes found for %s (", cmfObject.getDescription()));
+							String.format("Incomplete version indexes found for %s", cmfObject.getDescription()));
 					}
 					// It's OK for directories...everything is 1
 					head = count = current = 1;
@@ -474,6 +415,10 @@ public class AlfImportDelegateFactory
 		thisMarker.setSourceName(contentFile.getName());
 
 		BigDecimal number = AlfImportDelegateFactory.LAST_INDEX;
+		CmfProperty<CmfValue> versionCount = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
+		if ((versionCount != null) && versionCount.hasValues()) {
+			number = new BigDecimal(versionCount.getValue().asLong());
+		}
 		if (!headVersion || !lastVersion) {
 			number = new BigDecimal(current);
 		}
@@ -516,31 +461,11 @@ public class AlfImportDelegateFactory
 			renditionTypeStr = typeStr;
 		}
 
-		String append = null;
 		// This is the base name, others may change it...
 		thisMarker.setTargetName(contentFile.getName());
 		switch (type) {
-			case VDOC_ROOT:
-				thisMarker.setDirectory(true);
 			case NORMAL:
 				thisMarker.setTargetName(ctx.getObjectName(cmfObject));
-				break;
-
-			case VDOC_RENDITION:
-				// fall-through
-			case VDOC_STREAM:
-				// For the primary streams, we set the same name of the object
-				thisMarker.setTargetName(ctx.getObjectName(cmfObject));
-				// fall-through
-			case VDOC_REFERENCE:
-				// For the member, we have to append one more item to the cmsPath
-				append = contentFile.getParentFile().getName();
-				// fall-through
-			case VDOC_VERSION:
-				targetPath = String.format("%s/%s", targetPath, ctx.getObjectName(cmfObject));
-				if (append != null) {
-					targetPath = String.format("%s/%s", targetPath, append);
-				}
 				break;
 
 			case RENDITION_ROOT:
@@ -578,31 +503,6 @@ public class AlfImportDelegateFactory
 		return thisMarker;
 	}
 
-	private final void handleVirtual(final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile,
-		MarkerType type, ScanIndexItemMarker thisMarker) throws ImportException {
-		VirtualDocument vdoc = ConcurrentUtils.createIfAbsentUnchecked(this.vdocs, cmfObject.getHistoryId(),
-			() -> new VirtualDocument(cmfObject.getHistoryId()));
-
-		switch (type) {
-			case VDOC_ROOT:
-				vdoc.setRoot(thisMarker);
-				break;
-
-			case VDOC_VERSION:
-				vdoc.addVersion(thisMarker);
-				break;
-
-			case VDOC_RENDITION:
-			case VDOC_STREAM:
-			case VDOC_REFERENCE:
-				vdoc.addMember(contentFile.getParentFile().getName(), thisMarker);
-				break;
-
-			default:
-				break;
-		}
-	}
-
 	final File generateMetadataFile(final Properties p, final CmfObject<CmfValue> cmfObject, final File main)
 		throws ImportException {
 		Path target = this.biManager.calculateMetadataPath(main.toPath());
@@ -632,7 +532,7 @@ public class AlfImportDelegateFactory
 	protected final void storeArtificialFolderToIndex(String artificialFolder) throws ImportException {
 		artificialFolder = FilenameUtils.normalize(artificialFolder, true);
 		if (StringUtils.isEmpty(artificialFolder)) { return; }
-		while (!Tools.equals(".", artificialFolder)) {
+		while (!Objects.equals(".", artificialFolder)) {
 			this.artificialFolders.add(artificialFolder);
 			artificialFolder = FileNameTools.dirname(artificialFolder, '/');
 		}
@@ -724,7 +624,7 @@ public class AlfImportDelegateFactory
 		if (markerList != null) {
 			markerList.clear();
 		}
-		this.currentVersions.set(null);
+		this.currentVersions.remove();
 	}
 
 	protected final void storeToIndex(final AlfImportContext ctx, final boolean folder,
@@ -737,14 +637,6 @@ public class AlfImportDelegateFactory
 			metadataFile, type);
 		List<ScanIndexItemMarker> markerList = null;
 		switch (type) {
-			case VDOC_ROOT:
-			case VDOC_VERSION:
-			case VDOC_STREAM:
-			case VDOC_RENDITION:
-			case VDOC_REFERENCE:
-				handleVirtual(cmfObject, contentFile, metadataFile, type, thisMarker);
-				return;
-
 			case RENDITION_ROOT:
 			case RENDITION_TYPE:
 			case RENDITION_ENTRY:
@@ -753,10 +645,6 @@ public class AlfImportDelegateFactory
 
 			case NORMAL:
 				markerList = this.currentVersions.get();
-				if (markerList == null) {
-					markerList = new ArrayList<>();
-					this.currentVersions.set(markerList);
-				}
 				break;
 
 			default:
@@ -773,13 +661,20 @@ public class AlfImportDelegateFactory
 
 		ScanIndexItemMarker headMarker = thisMarker;
 		if (!thisMarker.isHeadVersion()) {
-			// This is not the head version. We need to make a copy
-			// of it and change the version number...
+			// This is used when the head version and the last version are not the same,
+			// thus a copy must be made and the version number adjusted so it's the last
+			// version number (i.e. version count + 1) since we're appending a version
+			// at the end of the version history
 			headMarker = markerList.get(thisMarker.getHeadIndex() - 1);
 			headMarker = headMarker.clone();
-			headMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
-			headMarker.setContent(AlfImportDelegateFactory.removeVersionTag(headMarker.getContent()));
-			headMarker.setMetadata(AlfImportDelegateFactory.removeVersionTag(headMarker.getMetadata()));
+			CmfProperty<CmfValue> versionCount = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
+			BigDecimal number = headMarker.getNumber();
+			if ((versionCount != null) && versionCount.hasValues()) {
+				number = new BigDecimal(versionCount.getValue().asLong() + 1);
+			}
+			headMarker.setNumber(number);
+			headMarker.setContent(headMarker.getContent());
+			headMarker.setMetadata(headMarker.getMetadata());
 			markerList.add(headMarker);
 		}
 

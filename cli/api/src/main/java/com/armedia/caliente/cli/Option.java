@@ -34,8 +34,6 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-import com.armedia.commons.utilities.Tools;
-
 public abstract class Option implements PositionalValueSupport, Cloneable {
 
 	public static final Pattern VALID_LONG = Pattern.compile("^[$\\w][-$\\w]*$");
@@ -102,8 +100,8 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	public static boolean isConflicting(Option a, Option b) {
 		if (a == b) { return true; }
 		if ((a == null) || (b == null)) { return false; }
-		if (!Tools.equals(a.getShortOpt(), b.getShortOpt())) { return false; }
-		if (!Tools.equals(a.getLongOpt(), b.getLongOpt())) { return false; }
+		if (!Objects.equals(a.getShortOpt(), b.getShortOpt())) { return false; }
+		if (!Objects.equals(a.getLongOpt(), b.getLongOpt())) { return false; }
 		return true;
 	}
 
@@ -126,10 +124,10 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	 */
 	public static boolean isEquivalent(Option a, Option b) {
 		if (!Option.isConflicting(a, b)) { return false; }
-		if (!Tools.equals(a.getMinArguments(), b.getMinArguments())) { return false; }
-		if (!Tools.equals(a.getMaxArguments(), b.getMaxArguments())) { return false; }
-		if (!Tools.equals(a.getValueSep(), b.getValueSep())) { return false; }
-		if (!Tools.equals(a.getValueFilter(), b.getValueFilter())) { return false; }
+		if (!Objects.equals(a.getMinArguments(), b.getMinArguments())) { return false; }
+		if (!Objects.equals(a.getMaxArguments(), b.getMaxArguments())) { return false; }
+		if (!Objects.equals(a.getValueSep(), b.getValueSep())) { return false; }
+		if (!Objects.equals(a.getValueFilter(), b.getValueFilter())) { return false; }
 		return true;
 	}
 
@@ -153,10 +151,10 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	 */
 	public static boolean isIdentical(Option a, Option b) {
 		if (!Option.isEquivalent(a, b)) { return false; }
-		if (!Tools.equals(a.isRequired(), b.isRequired())) { return false; }
-		if (!Tools.equals(a.getDescription(), b.getDescription())) { return false; }
-		if (!Tools.equals(a.getArgumentName(), b.getArgumentName())) { return false; }
-		if (!Tools.equals(a.getDefaults(), b.getDefaults())) { return false; }
+		if (!Objects.equals(a.isRequired(), b.isRequired())) { return false; }
+		if (!Objects.equals(a.getDescription(), b.getDescription())) { return false; }
+		if (!Objects.equals(a.getArgumentName(), b.getArgumentName())) { return false; }
+		if (!Objects.equals(a.getDefaults(), b.getDefaults())) { return false; }
 		return true;
 	}
 

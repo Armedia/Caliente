@@ -27,6 +27,7 @@
 package com.armedia.caliente.store.jdbc;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.commons.utilities.Tools;
@@ -61,8 +62,8 @@ public class JdbcContentLocator implements Serializable, Comparable<JdbcContentL
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		JdbcContentLocator other = JdbcContentLocator.class.cast(obj);
-		if (!Tools.equals(this.objectId, other.objectId)) { return false; }
-		if (!Tools.equals(this.info, other.info)) { return false; }
+		if (!Objects.equals(this.objectId, other.objectId)) { return false; }
+		if (!Objects.equals(this.info, other.info)) { return false; }
 		return true;
 	}
 

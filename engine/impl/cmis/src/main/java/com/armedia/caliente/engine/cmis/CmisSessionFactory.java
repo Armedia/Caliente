@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import org.apache.chemistry.opencmis.client.api.OperationContext;
@@ -100,7 +101,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 		}
 		Map<String, String> ids = new TreeMap<>();
 		for (Repository r : repositories) {
-			if ((repoId == null) || Tools.equals(repoId, r.getId())) {
+			if ((repoId == null) || Objects.equals(repoId, r.getId())) {
 				repo = r;
 				break;
 			}

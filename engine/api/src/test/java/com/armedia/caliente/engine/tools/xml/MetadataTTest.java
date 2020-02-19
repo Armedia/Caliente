@@ -90,7 +90,7 @@ public class MetadataTTest {
 			case OTHER:
 				return null;
 		}
-		return new CmfValue(type, value);
+		return CmfValue.of(type, value);
 	}
 
 	static {

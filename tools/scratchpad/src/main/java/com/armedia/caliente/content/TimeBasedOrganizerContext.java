@@ -28,8 +28,7 @@ package com.armedia.caliente.content;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-
-import com.armedia.commons.utilities.Tools;
+import java.util.Objects;
 
 public class TimeBasedOrganizerContext extends OrganizerContext {
 
@@ -47,7 +46,7 @@ public class TimeBasedOrganizerContext extends OrganizerContext {
 		if (timestamp == null) {
 			// No time... get the current instant
 			timestamp = ZonedDateTime.now(TimeBasedOrganizerContext.ZONE_ID);
-		} else if (!Tools.equals(TimeBasedOrganizerContext.ZONE_ID, timestamp.getZone())) {
+		} else if (!Objects.equals(TimeBasedOrganizerContext.ZONE_ID, timestamp.getZone())) {
 			// Not in Zulu time? Convert it!
 			timestamp = timestamp.withZoneSameInstant(TimeBasedOrganizerContext.ZONE_ID);
 		}

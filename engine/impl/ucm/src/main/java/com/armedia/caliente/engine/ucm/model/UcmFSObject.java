@@ -69,12 +69,12 @@ public abstract class UcmFSObject extends UcmModelObject {
 			parentUri = UcmModel.newFolderURI(data.getString(UcmAtt.fParentGUID));
 			if (UcmModel.isRoot(parentUri)) {
 				parentUri = UcmModel.NULL_FOLDER_URI;
-				mutableData.put(UcmAtt.fParentGUID.name(), new CmfValue(parentUri.getSchemeSpecificPart()));
+				mutableData.put(UcmAtt.fParentGUID.name(), CmfValue.of(parentUri.getSchemeSpecificPart()));
 			}
 		}
 		this.parentUri = new UcmUniqueURI(parentUri);
-		mutableData.put(UcmAtt.cmfUniqueURI.name(), new CmfValue(this.uniqueUri.toString()));
-		mutableData.put(UcmAtt.cmfParentURI.name(), new CmfValue(this.parentUri.toString()));
+		mutableData.put(UcmAtt.cmfUniqueURI.name(), CmfValue.of(this.uniqueUri.toString()));
+		mutableData.put(UcmAtt.cmfParentURI.name(), CmfValue.of(this.parentUri.toString()));
 
 		this.attributes = data;
 		UcmAtt nameAtt = null;
@@ -101,7 +101,7 @@ public abstract class UcmFSObject extends UcmModelObject {
 			} else {
 				this.path = String.format("%s/%s", this.parentPath, name);
 			}
-			mutableData.put(UcmAtt.cmfPath.name(), new CmfValue(this.path));
+			mutableData.put(UcmAtt.cmfPath.name(), CmfValue.of(this.path));
 			this.unfiled = false;
 		} else {
 			this.path = String.format("{unfiled[#%08x]:%s}", this.attributes.getInteger(UcmAtt.dID),

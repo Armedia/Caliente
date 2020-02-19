@@ -28,14 +28,23 @@ package com.armedia.caliente.engine.tools;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public final class PathTools {
+
+	private static final String ENCODING = StandardCharsets.UTF_8.name();
+
 	public static final String ROOT = "root";
 
 	public static final int MIN_FOLDER_LEVELS = 1;
@@ -44,6 +53,40 @@ public final class PathTools {
 
 	private PathTools() {
 
+	}
+
+	public static String makeSafe(String s) {
+		try {
+			return URLEncoder.encode(s, PathTools.ENCODING);
+		} catch (UnsupportedEncodingException e) {
+			throw new UncheckedIOException(
+				String.format("Default encoding of %s is not supported...how?!?!", PathTools.ENCODING), e);
+		}
+	}
+
+	public static String makeUnsafe(String s) {
+		try {
+			return URLDecoder.decode(s, PathTools.ENCODING);
+		} catch (UnsupportedEncodingException e) {
+			throw new UncheckedIOException(
+				String.format("Default encoding of %s is not supported...how?!?!", PathTools.ENCODING), e);
+		}
+	}
+
+	public static String decodeSafePath(String safePath) {
+		List<String> r = new ArrayList<>();
+		for (String s : FileNameTools.tokenize(safePath, '/')) {
+			r.add(PathTools.makeUnsafe(s));
+		}
+		return FileNameTools.reconstitute(r, false, false, File.separatorChar);
+	}
+
+	public static String encodeSafePath(String path) {
+		List<String> r = new ArrayList<>();
+		for (String s : FileNameTools.tokenize(path.toString(), File.separatorChar)) {
+			r.add(PathTools.makeSafe(s));
+		}
+		return FileNameTools.reconstitute(r, false, false, '/');
 	}
 
 	public static File getRootDirectory(CfgTools cfg) throws IOException {

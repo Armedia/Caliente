@@ -33,6 +33,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -284,7 +285,7 @@ class FilenameMapper {
 								if (name == null) {
 									name = oldName;
 								}
-								if (!Tools.equals(name, oldName)) {
+								if (!Objects.equals(name, oldName)) {
 									// If it was renamed, then the mapping is output, conflict
 									// or no conflict. If the same entry later has a conflict,
 									// it will be overwritten anyway...

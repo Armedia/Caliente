@@ -26,7 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.exporter;
 
-import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -56,15 +57,15 @@ public class LocalRecursiveIteratorTest {
 
 	@Test
 	public void testLocalRecursiveIterator() throws Throwable {
-		File[] files = new File[] {
-			new File("/home/diego/graphics"), //
-			new File("/home/diego/GDrive"), //
-			new File("/home/diego/Dropbox"), //
-			new File("/home/diego/dctm-scripts"), //
+		Path[] paths = new Path[] {
+			Paths.get("/home/diego/graphics"), //
+			Paths.get("/home/diego/GDrive"), //
+			Paths.get("/home/diego/Dropbox"), //
+			Paths.get("/home/diego/dctm-scripts"), //
 		};
-		for (File f : files) {
-			System.out.printf("Running on [%s]%n", f);
-			try (LocalRecursiveIterator it = new LocalRecursiveIterator(new LocalRoot(f), false)) {
+		for (Path p : paths) {
+			System.out.printf("Running on [%s]%n", p);
+			try (LocalRecursiveIterator it = new LocalRecursiveIterator(new LocalRoot(p), false)) {
 				while (it.hasNext()) {
 					System.out.printf("\t%s%n", it.next());
 				}

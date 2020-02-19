@@ -112,7 +112,7 @@ public class ShptExportEngine extends
 
 		while (path.length() > 1) {
 			String id = ShptCommon.calculateId(path);
-			if (StringUtils.equals(id, folderId)) { return FileNameTools.basename(path); }
+			if (StringUtils.equals(id, folderId)) { return FileNameTools.basename(path, '/'); }
 			// Move up one level...
 			path = FileNameTools.dirname(path, '/');
 		}

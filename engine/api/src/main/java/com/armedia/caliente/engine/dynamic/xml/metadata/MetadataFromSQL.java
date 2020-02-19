@@ -31,6 +31,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -47,7 +48,6 @@ import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
-import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -127,7 +127,7 @@ public class MetadataFromSQL extends MetadataReaderBase {
 										thisColumnName = thisColumnName.toUpperCase();
 										soughtColumnName = StringUtils.upperCase(soughtColumnName);
 									}
-									if ((soughtColumnName == null) || Tools.equals(soughtColumnName, thisColumnName)) {
+									if ((soughtColumnName == null) || Objects.equals(soughtColumnName, thisColumnName)) {
 										// Here we try to decode the data type, but we also find the
 										// column's index
 										columnType = md.getColumnType(i);
