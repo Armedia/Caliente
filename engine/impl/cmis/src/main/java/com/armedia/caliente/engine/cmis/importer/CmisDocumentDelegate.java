@@ -29,6 +29,7 @@ package com.armedia.caliente.engine.cmis.importer;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
@@ -88,15 +89,14 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		}
 		if ((info == null) || info.isEmpty()) { return null; }
 		CmfContentStream content = info.get(0);
-		CmfContentStore<?, ?>.Handle h = store.getHandle(this.factory.getEngine().getTranslator(), this.cmfObject,
-			content);
+		CmfContentStore<?, ?>.Handle h = store.findHandle(content);
 
 		String fileName = content.getFileName();
 		// String size = content.getProperty(ContentProperty.SIZE);
 		String mimeType = content.getMimeType().toString();
 
 		try {
-			return new ContentStreamImpl(fileName, BigInteger.valueOf(h.getStreamSize()), mimeType, h.openInput());
+			return new ContentStreamImpl(fileName, BigInteger.valueOf(h.getSize()), mimeType, h.openStream());
 		} catch (CmfStorageException e) {
 			throw new ImportException(
 				String.format("Failed to access the [%s] content for %s", h.getInfo(), this.cmfObject.getDescription()),
@@ -192,7 +192,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	@Override
 	protected boolean isSameObject(Document existing) {
 		if (!super.isSameObject(existing)) { return false; }
-		return Tools.equals(existing.getVersionLabel(), this.versionLabel);
+		return Objects.equals(existing.getVersionLabel(), this.versionLabel);
 	}
 
 	@Override

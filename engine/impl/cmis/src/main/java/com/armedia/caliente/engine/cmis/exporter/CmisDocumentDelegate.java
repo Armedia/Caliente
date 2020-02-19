@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Rendition;
@@ -79,13 +80,13 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		List<Document> succ = new ArrayList<>(all.size());
 
 		Document first = all.get(0);
-		if ((first.isPrivateWorkingCopy() == Boolean.TRUE) || Tools.equals("pwc", first.getVersionLabel())) {
+		if ((first.isPrivateWorkingCopy() == Boolean.TRUE) || Objects.equals("pwc", first.getVersionLabel())) {
 			all.remove(0);
 		}
 		Collections.reverse(all);
 		List<Document> tgt = prev;
 		for (Document d : all) {
-			if (Tools.equals(object.getId(), d.getId())) {
+			if (Objects.equals(object.getId(), d.getId())) {
 				tgt = succ;
 				continue;
 			}
@@ -134,15 +135,15 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			CmfAttribute<CmfValue> antecedentId = new CmfAttribute<>(CmisCustomAttributes.VERSION_ANTECEDENT_ID.name,
 				CmfValue.Type.ID, false);
 			try {
-				antecedentId.setValue(new CmfValue(CmfValue.Type.ID, Object.class.cast(this.antecedentId)));
+				antecedentId.setValue(CmfValue.of(CmfValue.Type.ID, Object.class.cast(this.antecedentId)));
 			} catch (ParseException e) {
 				throw new ExportException(String.format("Failed to create an object ID value from [%s] for %s",
 					this.antecedentId, object.getDescription()));
 			}
 			object.setAttribute(antecedentId);
 		}
-		object.setAttribute(new CmfAttribute<>(IntermediateAttribute.IS_LATEST_VERSION, CmfValue.Type.BOOLEAN,
-			new CmfValue(this.object.isLatestVersion())));
+		object.setAttribute(new CmfAttribute<>(IntermediateAttribute.IS_LATEST_VERSION,
+			IntermediateAttribute.IS_LATEST_VERSION.type, CmfValue.of(this.object.isLatestVersion())));
 
 		Document headVersion = null;
 		if (this.object.isLatestVersion()) {
@@ -154,16 +155,17 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 					String.format("Failed to find the latest version for [%s]", object.getDescription()));
 			}
 		}
-		object.setProperty(new CmfProperty<>(IntermediateProperty.HEAD_NAME, CmfValue.Type.STRING,
-			new CmfValue(headVersion.getName())));
-		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT, CmfValue.Type.BOOLEAN,
-			new CmfValue((this.antecedentId == null) || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY))));
-		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX, CmfValue.Type.INTEGER,
-			new CmfValue(this.previous.size())));
-		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, CmfValue.Type.INTEGER,
-			new CmfValue(this.previous.size() + this.successors.size() + 1)));
-		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, CmfValue.Type.INTEGER,
-			new CmfValue(this.previous.size() + this.successors.size())));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.HEAD_NAME, IntermediateProperty.HEAD_NAME.type,
+			CmfValue.of(headVersion.getName())));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
+			IntermediateProperty.VERSION_TREE_ROOT.type,
+			CmfValue.of((this.antecedentId == null) || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY))));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX,
+			IntermediateProperty.VERSION_INDEX.type, CmfValue.of(this.previous.size())));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT,
+			IntermediateProperty.VERSION_COUNT.type, CmfValue.of(this.previous.size() + this.successors.size() + 1)));
+		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
+			IntermediateProperty.VERSION_HEAD_INDEX.type, CmfValue.of(this.previous.size() + this.successors.size())));
 
 		if (!this.object.isLatestVersion()) {
 			marshalParentsAndPaths(ctx, object, this.object.getObjectOfLatestVersion(false));
@@ -178,7 +180,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		List<CmfContentStream> ret = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
 			includeRenditions);
 		ContentStream main = this.object.getContentStream();
-		CmfContentStream mainInfo = new CmfContentStream(0);
+		CmfContentStream mainInfo = new CmfContentStream(marshalled, 0);
 		mainInfo.setMimeType(MimeTools.resolveMimeType(main.getMimeType()));
 		String name = main.getFileName();
 		mainInfo.setFileName(name);
@@ -193,7 +195,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		if (includeRenditions) {
 			int i = 0;
 			for (Rendition r : this.object.getRenditions()) {
-				CmfContentStream info = new CmfContentStream(++i, r.getKind());
+				CmfContentStream info = new CmfContentStream(marshalled, ++i, r.getKind());
 				ContentStream cs = r.getContentStream();
 				info.setMimeType(MimeTools.resolveMimeType(r.getMimeType()));
 				name = cs.getFileName();
@@ -221,10 +223,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	protected long storeContentStream(CmfObject<CmfValue> marshalled, CmfAttributeTranslator<CmfValue> translator,
 		Rendition r, ContentStream cs, CmfContentStore<?, ?> streamStore, CmfContentStream info)
 		throws CmfStorageException {
-		CmfContentStore<?, ?>.Handle h = streamStore.getHandle(translator, marshalled, info);
+		CmfContentStore<?, ?>.Handle h = streamStore.addContentStream(translator, marshalled, info);
 		InputStream src = cs.getStream();
 		try {
-			return h.setContents(src);
+			return h.store(src);
 		} finally {
 			IOUtils.closeQuietly(src);
 		}

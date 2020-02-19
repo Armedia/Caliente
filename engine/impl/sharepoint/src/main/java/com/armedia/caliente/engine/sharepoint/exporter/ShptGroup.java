@@ -68,44 +68,44 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 		if (!super.marshal(ctx, object)) { return false; }
 		// UserID
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.OBJECT_ID.name, CmfValue.Type.ID, false,
-			Collections.singleton(new CmfValue(String.format("USER(%08x)", this.object.getId())))));
+			Collections.singleton(CmfValue.of(String.format("USER(%08x)", this.object.getId())))));
 
 		// LoginName
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.OBJECT_NAME.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.object.getLoginName()))));
+			Collections.singleton(CmfValue.of(this.object.getLoginName()))));
 
 		// AutoAcceptMembershipRequest
 		object
 			.setAttribute(new CmfAttribute<>(ShptAttributes.AUTO_ACCEPT_MEMBERSHIP_REQUEST.name, CmfValue.Type.BOOLEAN,
-				false, Collections.singleton(new CmfValue(this.object.isAutoAcceptRequestToJoinLeave()))));
+				false, Collections.singleton(CmfValue.of(this.object.isAutoAcceptRequestToJoinLeave()))));
 
 		// AllowMembershipRequest
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.ALLOW_MEMBERSHIP_REQUEST.name, CmfValue.Type.BOOLEAN,
-			false, Collections.singleton(new CmfValue(this.object.isRequestToJoinLeaveAllowed()))));
+			false, Collections.singleton(CmfValue.of(this.object.isRequestToJoinLeaveAllowed()))));
 
 		// AllowMembersEditMembership
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.ALLOW_MEMBERS_EDIT_MEMBERSHIP.name, CmfValue.Type.BOOLEAN,
-			false, Collections.singleton(new CmfValue(this.object.isMembersEditMembershipAllowed()))));
+			false, Collections.singleton(CmfValue.of(this.object.isMembersEditMembershipAllowed()))));
 
 		// PrincipalType
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.PRINCIPAL_TYPE.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.object.getType().name()))));
+			Collections.singleton(CmfValue.of(this.object.getType().name()))));
 
 		// Description
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.DESCRIPTION.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.object.getDescription()))));
+			Collections.singleton(CmfValue.of(this.object.getDescription()))));
 
 		// Email
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.EMAIL.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.object.getRequestToJoinLeaveEmailSetting()))));
+			Collections.singleton(CmfValue.of(this.object.getRequestToJoinLeaveEmailSetting()))));
 
 		// Title
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.TITLE.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.object.getTitle()))));
+			Collections.singleton(CmfValue.of(this.object.getTitle()))));
 
 		// Owner Title
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.OWNER_TITLE.name, CmfValue.Type.STRING, false,
-			Collections.singleton(new CmfValue(this.object.getOwnerTitle()))));
+			Collections.singleton(CmfValue.of(this.object.getOwnerTitle()))));
 
 		// User Groups
 		final List<User> l;
@@ -121,7 +121,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 		object.setAttribute(users);
 		if ((l != null) && !l.isEmpty()) {
 			for (User u : l) {
-				users.addValue(new CmfValue(u.getLoginName()));
+				users.addValue(CmfValue.of(u.getLoginName()));
 			}
 		}
 		return true;

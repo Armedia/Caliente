@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.ticketdecoder.xml;
 
+import java.util.Objects;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -116,8 +118,8 @@ public class Page {
 		Page other = Page.class.cast(obj);
 		if (this.number != other.number) { return false; }
 		if (this.length != other.length) { return false; }
-		if (!Tools.equals(this.hash, other.hash)) { return false; }
-		if (!Tools.equals(this.path, other.path)) { return false; }
+		if (!Objects.equals(this.hash, other.hash)) { return false; }
+		if (!Objects.equals(this.path, other.path)) { return false; }
 		return true;
 	}
 

@@ -31,7 +31,6 @@ import java.util.Objects;
 
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
-import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
@@ -121,7 +120,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		@Override
 		public CmfValue doEncode(IDfValue value) {
 			try {
-				return new CmfValue(CmfValue.Type.ID, value.asId().getId());
+				return CmfValue.of(CmfValue.Type.ID, value.asId().getId());
 			} catch (ParseException e) {
 				throw new RuntimeException("Unexpected parsing exception", e);
 			}
@@ -154,13 +153,13 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			IDfTime t = value.asTime();
 			if (t.isNullDate() || !t.isValid()) {
 				try {
-					return new CmfValue(CmfValue.Type.DATETIME, null);
+					return CmfValue.of(CmfValue.Type.DATETIME, null);
 				} catch (ParseException e) {
 					// Not going to happen...
 					throw new RuntimeException("Unexpected parse exception", e);
 				}
 			}
-			return new CmfValue(t.getDate());
+			return CmfValue.of(t.getDate());
 		}
 
 		@Override
@@ -197,7 +196,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 
 		@Override
 		public CmfValue doEncode(IDfValue value) {
-			return new CmfValue(value.asDouble());
+			return CmfValue.of(value.asDouble());
 		}
 
 		@Override
@@ -350,7 +349,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 	 */
 	@Override
 	public boolean isNullValue(IDfValue v) {
-		return (v == null) || ((v.getDataType() == this.nullValue.getDataType()) && Tools.equals(v, this.nullValue));
+		return (v == null) || ((v.getDataType() == this.nullValue.getDataType()) && Objects.equals(v, this.nullValue));
 	}
 
 	/**
@@ -380,18 +379,18 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 	protected CmfValue doEncode(IDfValue value) {
 		switch (this.type) {
 			case BOOLEAN:
-				return new CmfValue(value.asBoolean());
+				return CmfValue.of(value.asBoolean());
 			case DOUBLE:
-				return new CmfValue(value.asDouble());
+				return CmfValue.of(value.asDouble());
 			case ID:
 			case INTEGER:
-				return new CmfValue(value.asInteger());
+				return CmfValue.of(value.asInteger());
 			case STRING:
-				return new CmfValue(value.asString());
+				return CmfValue.of(value.asString());
 			case DATETIME:
 				IDfTime t = value.asTime();
 				if (t.isNullDate()) { return this.type.getNull(); }
-				return new CmfValue(t.getDate());
+				return CmfValue.of(t.getDate());
 			default:
 				break;
 		}

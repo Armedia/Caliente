@@ -32,6 +32,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
@@ -143,8 +144,8 @@ public class XmlFile {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		XmlFile other = XmlFile.class.cast(obj);
-		if (!Tools.equals(this.root, other.root)) { return false; }
-		if (!Tools.equals(this.absoluteFile, other.absoluteFile)) { return false; }
+		if (!Objects.equals(this.root, other.root)) { return false; }
+		if (!Objects.equals(this.absoluteFile, other.absoluteFile)) { return false; }
 		return true;
 	}
 

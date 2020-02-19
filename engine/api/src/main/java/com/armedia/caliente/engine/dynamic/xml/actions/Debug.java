@@ -52,35 +52,39 @@ public class Debug extends ConditionalAction {
 	@XmlElements({
 		// The polymorphic children...
 		@XmlElement(name = "group", type = ActionGroup.class), //
-		@XmlElement(name = "map-subtype", type = MapSubtype.class), //
-		@XmlElement(name = "map-original-subtype", type = MapOriginalSubtype.class), //
-		@XmlElement(name = "set-subtype", type = SubtypeSet.class), //
-		@XmlElement(name = "replace-subtype", type = SubtypeReplace.class), //
+		@XmlElement(name = "abort-transformation", type = AbortTransformation.class), //
 		@XmlElement(name = "add-secondary-subtype", type = SecondarySubtypeAdd.class), //
-		@XmlElement(name = "remove-secondary-subtype", type = SecondarySubtypeRemove.class), //
-		@XmlElement(name = "replace-secondary-subtype", type = SecondarySubtypeReplace.class), //
-		@XmlElement(name = "remove-original-secondary-subtypes", type = OriginalSecondarySubtypeRemove.class), //
-		@XmlElement(name = "reset-original-secondary-subtypes", type = OriginalSecondarySubtypeReset.class), //
-		@XmlElement(name = "set-attribute", type = AttributeSet.class), //
-		@XmlElement(name = "copy-attribute", type = AttributeCopy.class), //
-		@XmlElement(name = "rename-attribute", type = AttributeRename.class), //
-		@XmlElement(name = "remove-attribute", type = AttributeRemove.class), //
-		@XmlElement(name = "replace-attribute", type = AttributeReplace.class), //
-		@XmlElement(name = "map-attribute-value", type = MapAttributeValue.class), //
-		@XmlElement(name = "map-variable-value", type = MapVariableValue.class), //
-		@XmlElement(name = "set-variable", type = VariableSet.class), //
-		@XmlElement(name = "copy-variable", type = VariableCopy.class), //
-		@XmlElement(name = "rename-variable", type = VariableRename.class), //
-		@XmlElement(name = "remove-variable", type = VariableRemove.class), //
-		@XmlElement(name = "replace-variable", type = VariableReplace.class), //
-		@XmlElement(name = "set-value-mapping", type = ValueMappingSet.class), //
-		@XmlElement(name = "clear-value-mapping", type = ValueMappingClear.class), //
 		@XmlElement(name = "apply-value-mapping", type = ValueMappingApply.class), //
-		@XmlElement(name = "map-principal", type = PrincipalMappingApply.class), //
+		@XmlElement(name = "clear-value-mapping", type = ValueMappingClear.class), //
+		@XmlElement(name = "copy-attribute", type = AttributeCopy.class), //
+		@XmlElement(name = "copy-variable", type = VariableCopy.class), //
 		@XmlElement(name = "custom-action", type = CustomAction.class), //
 		@XmlElement(name = "end-transformation", type = EndTransformation.class), //
-		@XmlElement(name = "abort-transformation", type = AbortTransformation.class), //
+		@XmlElement(name = "join-attribute", type = AttributeJoin.class), //
+		@XmlElement(name = "join-variable", type = VariableJoin.class), //
 		@XmlElement(name = "load-external-metadata", type = LoadExternalMetadata.class), //
+		@XmlElement(name = "map-attribute-value", type = MapAttributeValue.class), //
+		@XmlElement(name = "map-original-subtype", type = MapOriginalSubtype.class), //
+		@XmlElement(name = "map-principal", type = PrincipalMappingApply.class), //
+		@XmlElement(name = "map-subtype", type = MapSubtype.class), //
+		@XmlElement(name = "map-variable-value", type = MapVariableValue.class), //
+		@XmlElement(name = "remove-attribute", type = AttributeRemove.class), //
+		@XmlElement(name = "remove-original-secondary-subtypes", type = OriginalSecondarySubtypeRemove.class), //
+		@XmlElement(name = "remove-secondary-subtype", type = SecondarySubtypeRemove.class), //
+		@XmlElement(name = "remove-variable", type = VariableRemove.class), //
+		@XmlElement(name = "rename-attribute", type = AttributeRename.class), //
+		@XmlElement(name = "rename-variable", type = VariableRename.class), //
+		@XmlElement(name = "replace-attribute", type = AttributeReplace.class), //
+		@XmlElement(name = "replace-secondary-subtype", type = SecondarySubtypeReplace.class), //
+		@XmlElement(name = "replace-subtype", type = SubtypeReplace.class), //
+		@XmlElement(name = "replace-variable", type = VariableReplace.class), //
+		@XmlElement(name = "reset-original-secondary-subtypes", type = OriginalSecondarySubtypeReset.class), //
+		@XmlElement(name = "set-attribute", type = AttributeSet.class), //
+		@XmlElement(name = "set-subtype", type = SubtypeSet.class), //
+		@XmlElement(name = "set-value-mapping", type = ValueMappingSet.class), //
+		@XmlElement(name = "set-variable", type = VariableSet.class), //
+		@XmlElement(name = "split-attribute", type = AttributeSplit.class), //
+		@XmlElement(name = "split-variable", type = VariableSplit.class), //
 	})
 	protected List<Action> actions;
 

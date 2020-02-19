@@ -33,6 +33,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
@@ -49,7 +50,6 @@ import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
-import com.armedia.commons.utilities.Tools;
 import com.ctc.wstx.api.WstxOutputProperties;
 import com.ctc.wstx.stax.WstxOutputFactory;
 
@@ -191,7 +191,7 @@ public class PropertiesTest {
 			}
 			String src = p.getProperty(s);
 			String tgt = q.getProperty(s);
-			if (!Tools.equals(src, tgt)) {
+			if (!Objects.equals(src, tgt)) {
 				different.put(s, Pair.of(src, tgt));
 				continue;
 			}

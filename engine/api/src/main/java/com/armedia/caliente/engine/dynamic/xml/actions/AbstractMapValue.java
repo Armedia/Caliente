@@ -117,9 +117,9 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 	}
 
 	@Override
-	protected void executeAction(DynamicElementContext<?> ctx, DynamicValue candidate) throws ActionException {
+	protected DynamicValue executeAction(DynamicElementContext<?> ctx, DynamicValue candidate) throws ActionException {
 		// Shortcut - avoid any work if no work can be done...
-		if (candidate.isEmpty()) { return; }
+		if (candidate.isEmpty()) { return null; }
 
 		final List<Object> newValues = new ArrayList<>(candidate.getSize());
 		final Cardinality cardinality = getCardinality();
@@ -145,6 +145,7 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 			newValues.add(targetIndex, newValue);
 		}
 		candidate.setValues(newValues);
+		return null;
 	}
 
 }

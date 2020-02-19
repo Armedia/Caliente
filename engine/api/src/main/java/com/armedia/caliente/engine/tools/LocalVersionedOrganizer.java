@@ -55,7 +55,7 @@ public class LocalVersionedOrganizer extends LocalOrganizer {
 		final List<String> container = super.calculateContainerSpec(translator, object, info);
 
 		// Next step: add the object name
-		container.add(getLeafName(translator, object));
+		container.add(getLeafName(translator, object, info));
 
 		// Finally, add the version number, appending "CURRENT" if it's the current version
 		if (object.getType() == Archetype.DOCUMENT) {

@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -83,7 +84,7 @@ public abstract class ImportContextFactory< //
 	}
 
 	private FOLDER ensurePath(SESSION session, String path) throws Exception {
-		if (Tools.equals("/", path)) { return null; }
+		if (Objects.equals("/", path)) { return null; }
 		FOLDER target = locateFolder(session, path);
 		if (target == null) {
 			FOLDER parent = ensurePath(session, FileNameTools.dirname(path, '/'));

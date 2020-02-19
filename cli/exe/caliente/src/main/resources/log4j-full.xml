@@ -3,6 +3,7 @@
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
 
 	<appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+		<param name="target" value="System.out"/>
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%d{ISO8601} [%-16t] %m%n" />
 		</layout>
@@ -24,6 +25,17 @@
 	<appender name="default.async" class="org.apache.log4j.AsyncAppender">
 		<param name="BufferSize" value="10240" />
 		<appender-ref ref="default" />
+	</appender>
+
+	<appender name="stderr" class="org.apache.log4j.ConsoleAppender">
+		<param name="target" value="System.err"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n" />
+		</layout>
+	</appender>
+	<appender name="stderr.async" class="org.apache.log4j.AsyncAppender">
+		<param name="BufferSize" value="10240" />
+		<appender-ref ref="stderr" />
 	</appender>
 
 	<appender name="manifest" class="org.apache.log4j.FileAppender">

@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.typedumper.xml;
 
+import java.util.Objects;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -101,11 +103,11 @@ public class Attribute {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		Attribute other = Attribute.class.cast(obj);
-		if (!Tools.equals(this.name, other.name)) { return false; }
+		if (!Objects.equals(this.name, other.name)) { return false; }
 		if (this.type != other.type) { return false; }
 		if (this.repeating != other.repeating) { return false; }
 		if (this.qualified != other.qualified) { return false; }
-		if (!Tools.equals(this.length, other.length)) { return false; }
+		if (!Objects.equals(this.length, other.length)) { return false; }
 		return true;
 	}
 

@@ -36,6 +36,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -363,7 +364,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			if (isShortConstructionCycle()) {
 				finalizeConstruction(object, isNew, context);
 				final IDfId newId = persistChanges(object, context);
-				if (!Tools.equals(object.getObjectId().getId(), newId.getId())) {
+				if (!Objects.equals(object.getObjectId().getId(), newId.getId())) {
 					// The object has changed... so we pull the newly-persisted object
 					object = castObject(session.getObject(newId));
 				}
@@ -430,7 +431,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			finalizeConstruction(object, isNew, context);
 			final IDfId newId = persistChanges(object, context);
 
-			if (!Tools.equals(object.getObjectId().getId(), newId.getId())) {
+			if (!Objects.equals(object.getObjectId().getId(), newId.getId())) {
 				// The object has changed... so we pull the newly-persisted object
 				object = castObject(session.getObject(newId));
 				newLabel = calculateLabel(object);
@@ -554,7 +555,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			IDfValue thisValue = thisAtt.getValue(i);
 			IDfValue existingValue = existingObject.getRepeatingValue(attributeName, i);
 
-			if (!Tools.equals(thisType.getValue(thisValue), thisType.getValue(existingValue))) { return false; }
+			if (!Objects.equals(thisType.getValue(thisValue), thisType.getValue(existingValue))) { return false; }
 		}
 		// At this point we know that all attribute values are equal and in the same order
 		return true;

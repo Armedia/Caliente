@@ -24,7 +24,7 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine.local.common;
+package com.armedia.caliente.engine.sql.common;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,35 +34,36 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
-public class LocalFile {
+public class SqlFile {
 
 	private static final String ENCODING = "UTF-8";
 
 	private static String makeSafe(String s) throws IOException {
-		return URLEncoder.encode(s, LocalFile.ENCODING);
+		return URLEncoder.encode(s, SqlFile.ENCODING);
 	}
 
 	private static String makeUnsafe(String s) throws IOException {
-		return URLDecoder.decode(s, LocalFile.ENCODING);
+		return URLDecoder.decode(s, SqlFile.ENCODING);
 	}
 
 	public static String decodeSafePath(String safePath) throws IOException {
 		List<String> r = new ArrayList<>();
 		for (String s : FileNameTools.tokenize(safePath, '/')) {
-			r.add(LocalFile.makeUnsafe(s));
+			r.add(SqlFile.makeUnsafe(s));
 		}
-		return LocalRoot.normalize(FileNameTools.reconstitute(r, false, false));
+		return SqlRoot.normalize(FileNameTools.reconstitute(r, false, false));
 	}
 
-	public static LocalFile newFromSafePath(LocalRoot root, String safePath) throws IOException {
-		return new LocalFile(root, LocalFile.decodeSafePath(safePath));
+	public static SqlFile newFromSafePath(SqlRoot root, String safePath) throws IOException {
+		return new SqlFile(root, SqlFile.decodeSafePath(safePath));
 	}
 
-	private final LocalRoot root;
+	private final SqlRoot root;
 	private final File absoluteFile;
 	private final File relativeFile;
 	private final String safePath;
@@ -74,7 +75,7 @@ public class LocalFile {
 	private final boolean regularFile;
 	private final boolean symbolicLink;
 
-	public LocalFile(LocalRoot root, String path) throws IOException {
+	public SqlFile(SqlRoot root, String path) throws IOException {
 		this.root = root;
 		File f = root.relativize(new File(path));
 		this.relativeFile = f;
@@ -83,7 +84,7 @@ public class LocalFile {
 		List<String> r = new ArrayList<>();
 		this.fullPath = this.relativeFile.getPath();
 		for (String s : FileNameTools.tokenize(this.fullPath)) {
-			r.add(LocalFile.makeSafe(s));
+			r.add(SqlFile.makeSafe(s));
 		}
 		this.safePath = FileNameTools.reconstitute(r, false, false, '/');
 		this.pathCount = r.size();
@@ -98,11 +99,11 @@ public class LocalFile {
 	}
 
 	public String getId() {
-		return LocalCommon.calculateId(getPortableFullPath());
+		return SqlCommon.calculateId(getPortableFullPath());
 	}
 
 	public String getParentId() {
-		return LocalCommon.calculateId(getPortableParentPath());
+		return SqlCommon.calculateId(getPortableParentPath());
 	}
 
 	public boolean isFolder() {
@@ -136,11 +137,11 @@ public class LocalFile {
 	public String getPortableParentPath() {
 		String path = getParentPath();
 		if (path == null) { return "/"; }
-		return LocalCommon.getPortablePath(path);
+		return SqlCommon.getPortablePath(path);
 	}
 
 	public String getPortableFullPath() {
-		return LocalCommon.getPortablePath(getFullPath());
+		return SqlCommon.getPortablePath(getFullPath());
 	}
 
 	/**
@@ -166,7 +167,7 @@ public class LocalFile {
 		return this.absoluteFile;
 	}
 
-	public LocalRoot getRootPath() {
+	public SqlRoot getRootPath() {
 		return this.root;
 	}
 
@@ -178,9 +179,9 @@ public class LocalFile {
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		LocalFile other = LocalFile.class.cast(obj);
-		if (!Tools.equals(this.root, other.root)) { return false; }
-		if (!Tools.equals(this.absoluteFile, other.absoluteFile)) { return false; }
+		SqlFile other = SqlFile.class.cast(obj);
+		if (!Objects.equals(this.root, other.root)) { return false; }
+		if (!Objects.equals(this.absoluteFile, other.absoluteFile)) { return false; }
 		return true;
 	}
 
@@ -188,7 +189,7 @@ public class LocalFile {
 	public String toString() {
 		String type = (this.folder ? "dir" : this.regularFile ? "file" : "<unknown>");
 		return String.format(
-			"LocalFile [root=%s, absoluteFile=%s, relativeFile=%s, type=%s, link=%s, safePath=%s, fullPath=%s, parentPath=%s, name=%s, pathCount=%s]",
+			"SqlFile [root=%s, absoluteFile=%s, relativeFile=%s, type=%s, link=%s, safePath=%s, fullPath=%s, parentPath=%s, name=%s, pathCount=%s]",
 			this.root, this.absoluteFile, this.relativeFile, type, this.symbolicLink, this.safePath, this.fullPath,
 			this.parentPath, this.name, this.pathCount);
 	}

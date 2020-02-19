@@ -28,7 +28,6 @@ package com.armedia.caliente.engine.local.importer;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Collection;
@@ -75,11 +74,11 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 
 		boolean created = true;
 		for (CmfContentStream info : contents) {
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
+			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().findHandle(info);
 			final File src;
 			try {
 				src = h.getFile();
-			} catch (IOException e) {
+			} catch (CmfStorageException e) {
 				throw new ImportException(String.format("Failed to obtain the content file for %s, content [%s]",
 					this.cmfObject.getDescription(), info), e);
 			}
@@ -136,14 +135,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 						e);
 				}
 			} else {
-				try (InputStream in = h.openInput()) {
-					Files.copy(in, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-				} catch (IOException e) {
-					throw new ImportException(
-						String.format("Failed to copy the default content object into [%s] for %s, stream %s",
-							targetFile, this.cmfObject.getDescription(), info),
-						e);
-				}
+				h.store(targetFile);
 			}
 
 			try {

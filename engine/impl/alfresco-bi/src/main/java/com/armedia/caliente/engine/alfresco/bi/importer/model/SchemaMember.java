@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -216,8 +217,8 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		@SuppressWarnings("unchecked")
 		SchemaMember<T> other = (SchemaMember<T>) obj;
-		if (!Tools.equals(this.name, other.name)) { return false; }
-		if (!Tools.equals(this.parent, other.parent)) { return false; }
+		if (!Objects.equals(this.name, other.name)) { return false; }
+		if (!Objects.equals(this.parent, other.parent)) { return false; }
 		return true;
 	}
 

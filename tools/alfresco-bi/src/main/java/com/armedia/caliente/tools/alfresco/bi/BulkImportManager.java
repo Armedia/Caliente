@@ -39,12 +39,14 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Spliterator;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -149,7 +151,7 @@ public final class BulkImportManager {
 		return this.basePath.relativize(path);
 	}
 
-	private File toFile(Path indexFile) throws IOException {
+	private static File toFile(Path indexFile) throws IOException {
 		File f = indexFile.toFile();
 		try {
 			f = f.getCanonicalFile();
@@ -288,16 +290,58 @@ public final class BulkImportManager {
 
 	public Stream<ScanIndexItem> scanItems(final boolean directoryMode)
 		throws IOException, JAXBException, XMLStreamException {
-		File xmlFile = null;
+		Predicate<ScanIndexItem> filter = (i) -> (i.isDirectory() == directoryMode);
 		for (Path p : (directoryMode ? this.folderIndexes : this.fileIndexes)) {
-			xmlFile = toFile(p);
-			if (xmlFile != null) {
-				break;
-			}
+			Stream<ScanIndexItem> s = BulkImportManager.scanItems(p, filter);
+			if (s != null) { return s; }
 		}
-		if (xmlFile == null) { return Stream.empty(); }
+		return Stream.empty();
+	}
 
-		final InputStream in = new FileInputStream(xmlFile);
+	/**
+	 * <p>
+	 * Returns a {@link Stream} that allows the caller to scan through all the {@link ScanIndexItem}
+	 * entries in the given path, or {@code null} if the path does not
+	 * {@link Files#exists(Path, java.nio.file.LinkOption...) exist} or is not a
+	 * {@link Files#isRegularFile(Path, java.nio.file.LinkOption...) regular file}. If a Stream
+	 * instance is returned, it will be immutable, and will not contain any {@code null} elements.
+	 * </p>
+	 *
+	 * @param xmlFile
+	 * @return a {@link Stream} of {@link ScanIndexItem} elements
+	 * @throws IOException
+	 * @throws JAXBException
+	 * @throws XMLStreamException
+	 */
+	public static Stream<ScanIndexItem> scanItems(Path xmlFile) throws IOException, JAXBException, XMLStreamException {
+		return BulkImportManager.scanItems(xmlFile, null);
+	}
+
+	/**
+	 * <p>
+	 * Returns a {@link Stream} that allows the caller to scan through all the {@link ScanIndexItem}
+	 * entries in the given path filtering on those that match the given {@link Predicate}, or
+	 * {@code null} if the path does not {@link Files#exists(Path, java.nio.file.LinkOption...)
+	 * exist} or is not a {@link Files#isRegularFile(Path, java.nio.file.LinkOption...) regular
+	 * file}. If a Stream instance is returned, it will be immutable, and will not contain any
+	 * {@code null} elements.
+	 * </p>
+	 *
+	 * @param xmlFile
+	 * @param filter
+	 * @return a {@link Stream} of {@link ScanIndexItem} elements that match the given
+	 *         {@link Predicate}, or {@code null} if the path doesn't exist or is not a regular file
+	 * @throws IOException
+	 * @throws JAXBException
+	 * @throws XMLStreamException
+	 */
+	public static Stream<ScanIndexItem> scanItems(Path xmlFile, Predicate<ScanIndexItem> filter)
+		throws IOException, JAXBException, XMLStreamException {
+		if (xmlFile == null) { return null; }
+		if (!Files.exists(xmlFile)) { return null; }
+		if (!Files.isRegularFile(xmlFile)) { return null; }
+
+		final InputStream in = Files.newInputStream(xmlFile);
 		final XMLStreamReader xml = XMLInputFactory.newInstance().createXMLStreamReader(in);
 		if ((xml.nextTag() != XMLStreamConstants.START_ELEMENT) || !StringUtils.equals("scan", xml.getLocalName())) {
 			// Empty document or no proper root tag?!?!?
@@ -309,6 +353,7 @@ public final class BulkImportManager {
 			}
 		}
 
+		final Predicate<ScanIndexItem> finalFilter = Tools.coalesce(filter, Objects::nonNull);
 		final Unmarshaller u = XmlTools.getUnmarshaller(ScanIndex.class, ScanIndexItem.class,
 			ScanIndexItemVersion.class);
 
@@ -325,7 +370,7 @@ public final class BulkImportManager {
 					JAXBElement<ScanIndexItem> xmlItem = u.unmarshal(xml, ScanIndexItem.class);
 					if (xmlItem != null) {
 						final ScanIndexItem item = xmlItem.getValue();
-						if (item.isDirectory() != directoryMode) {
+						if (!finalFilter.test(item)) {
 							// Only return items of the type we're interested in
 							continue;
 						}

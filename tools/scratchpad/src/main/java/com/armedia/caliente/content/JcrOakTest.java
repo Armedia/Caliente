@@ -54,7 +54,6 @@ import com.armedia.caliente.tools.ProgressTrigger.ProgressReport;
 import com.armedia.commons.utilities.FunctionalPooledWorkersLogic;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.PooledWorkersLogic;
-import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.function.CheckedSupplier;
 
@@ -163,7 +162,7 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 						// Validate that the data is the correct data...
 						String readHash = DigestUtils.sha256Hex(in);
 						String expectedHash = this.testData.getHash(counterPos);
-						if (!Tools.equals(readHash, expectedHash)) {
+						if (!Objects.equals(readHash, expectedHash)) {
 							this.console.debug("Read element # {} @ [{}]", counterPos, path);
 						} else {
 							this.console.error("*** WRONG DATA RETURNED FROM [{}] (#{}) - expected {} but got {} ***",

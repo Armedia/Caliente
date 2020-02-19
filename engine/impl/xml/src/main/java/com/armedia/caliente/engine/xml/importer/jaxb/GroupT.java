@@ -29,6 +29,7 @@ package com.armedia.caliente.engine.xml.importer.jaxb;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -246,7 +247,7 @@ public class GroupT implements Comparable<GroupT> {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		GroupT other = GroupT.class.cast(obj);
-		if (!Tools.equals(this.name, other.name)) { return false; }
+		if (!Objects.equals(this.name, other.name)) { return false; }
 		return true;
 	}
 

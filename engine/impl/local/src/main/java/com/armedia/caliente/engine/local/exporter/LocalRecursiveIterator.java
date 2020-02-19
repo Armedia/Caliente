@@ -26,31 +26,34 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.exporter;
 
-import java.io.File;
-import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Stack;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.local.common.LocalFile;
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.commons.utilities.ArrayIterator;
 import com.armedia.commons.utilities.CloseableIterator;
+import com.armedia.commons.utilities.CloseableIteratorWrapper;
+import com.armedia.commons.utilities.Tools;
 
-public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
+public class LocalRecursiveIterator extends CloseableIterator<Path> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private class RecursiveState {
-		private final File base;
-		private Iterator<File> childIterator = null;
+		private final Path base;
+		private Iterator<Path> childIterator = null;
 		private int fileCount = 0;
 		private int folderCount = 0;
 		private boolean completed = false;
 
-		private RecursiveState(File base) {
+		private RecursiveState(Path base) {
 			this.base = base;
 		}
 	}
@@ -60,15 +63,17 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 
 	private final Stack<RecursiveState> stateStack = new Stack<>();
 
-	public LocalRecursiveIterator(LocalRoot root, boolean excludeEmptyFolders) throws IOException {
-		this.root = root;
-		this.stateStack.push(new RecursiveState(this.root.getFile()));
-		this.excludeEmptyFolders = excludeEmptyFolders;
+	private final Predicate<Path> ignorePredicate;
+
+	public LocalRecursiveIterator(LocalRoot root, boolean excludeEmptyFolders) {
+		this(root, excludeEmptyFolders, null);
 	}
 
-	private boolean ignoreObject(File object) {
-		// TODO: A configuration setting "somewhere" should control which paths we ignore
-		return false;
+	public LocalRecursiveIterator(LocalRoot root, boolean excludeEmptyFolders, Predicate<Path> ignorePredicate) {
+		this.root = root;
+		this.stateStack.push(new RecursiveState(this.root.getPath()));
+		this.excludeEmptyFolders = excludeEmptyFolders;
+		this.ignorePredicate = Tools.coalesce(ignorePredicate, Objects::isNull);
 	}
 
 	@Override
@@ -76,11 +81,13 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 		recursion: while (!this.stateStack.isEmpty()) {
 			RecursiveState state = this.stateStack.peek();
 			// No next yet, go looking for it...
-			final File current = state.base;
+			final Path current = state.base;
 			if (state.childIterator == null) {
-				File[] children = current.listFiles();
-				if ((children != null) && (children.length > 0)) {
-					state.childIterator = new ArrayIterator<>(children);
+				Stream<Path> s = Files.list(current).filter(this.ignorePredicate.negate());
+				@SuppressWarnings("resource")
+				Iterator<Path> it = new CloseableIteratorWrapper<>(s);
+				if (it.hasNext()) {
+					state.childIterator = it;
 				} else {
 					state.childIterator = null;
 				}
@@ -88,32 +95,23 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 
 			if (state.childIterator != null) {
 				while (state.childIterator.hasNext()) {
-					File f = state.childIterator.next();
-					if (ignoreObject(f)) {
-						continue;
-					}
-
+					final Path path = state.childIterator.next();
 					if (this.log.isTraceEnabled()) {
-						this.log.trace("Found {} [{}]", f.isFile() ? "FILE" : "FOLDER", f.getAbsolutePath());
+						this.log.trace("Found {} [{}]", Files.isRegularFile(path) ? "FILE" : "FOLDER",
+							path.toAbsolutePath());
 					}
 
-					if (f.isDirectory()) {
+					if (Files.isDirectory(path)) {
 						if (this.log.isTraceEnabled()) {
-							this.log.trace("Recursing into [{}]", f.getAbsolutePath());
+							this.log.trace("Recursing into [{}]", path.toAbsolutePath());
 						}
 						state.folderCount++;
-						this.stateStack.push(new RecursiveState(f));
+						this.stateStack.push(new RecursiveState(path));
 						continue recursion;
 					}
 
-					try {
-						LocalFile next = new LocalFile(this.root, f.getPath());
-						state.fileCount++;
-						return found(next);
-					} catch (IOException e) {
-						throw new RuntimeException(
-							String.format("Failed to relativize the path [%s] from [%s]", f, this.root), e);
-					}
+					state.fileCount++;
+					return found(path);
 				}
 			}
 
@@ -128,13 +126,7 @@ public class LocalRecursiveIterator extends CloseableIterator<LocalFile> {
 			if (!state.completed) {
 				state.completed = true;
 				if (!this.excludeEmptyFolders || ((state.fileCount | state.folderCount) != 0)) {
-					File f = state.base;
-					try {
-						return found(new LocalFile(this.root, f.getPath()));
-					} catch (IOException e) {
-						throw new RuntimeException(
-							String.format("Failed to relativize the path [%s] from [%s]", f, this.root), e);
-					}
+					return found(state.base);
 				}
 			}
 		}

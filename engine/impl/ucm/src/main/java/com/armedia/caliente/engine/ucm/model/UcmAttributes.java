@@ -111,7 +111,7 @@ public final class UcmAttributes {
 				switch (t) {
 					case BOOLEAN:
 						if (!StringUtils.isEmpty(v)) {
-							value = new CmfValue(UcmAttributes.TRUE_VALUES.contains(v.toString().toUpperCase()));
+							value = CmfValue.of(UcmAttributes.TRUE_VALUES.contains(v.toString().toUpperCase()));
 						} else {
 							T = CmfValue.Type.BOOLEAN;
 						}
@@ -121,7 +121,7 @@ public final class UcmAttributes {
 					case MEMO:
 					case CLOB:
 						if (v != null) {
-							value = new CmfValue(v.toString());
+							value = CmfValue.of(v.toString());
 						} else {
 							T = CmfValue.Type.STRING;
 						}
@@ -130,7 +130,7 @@ public final class UcmAttributes {
 					case FLOAT:
 						// Parse as a double...
 						if (!StringUtils.isEmpty(v)) {
-							value = new CmfValue(Double.valueOf(v.toString()));
+							value = CmfValue.of(Double.valueOf(v.toString()));
 						} else {
 							T = CmfValue.Type.DOUBLE;
 						}
@@ -138,7 +138,7 @@ public final class UcmAttributes {
 					case DATE:
 						if (!StringUtils.isEmpty(v)) {
 							try {
-								value = new CmfValue(DataObjectEncodingUtils.decodeDate(v.toString()));
+								value = CmfValue.of(DataObjectEncodingUtils.decodeDate(v.toString()));
 							} catch (ParseException e) {
 								throw new UcmRuntimeException(
 									String.format("Failed to parse the value [%s] as a date", v), e);
@@ -149,7 +149,7 @@ public final class UcmAttributes {
 						break;
 					case INT:
 						if (!StringUtils.isEmpty(v)) {
-							value = new CmfValue(Long.valueOf(v.toString()));
+							value = CmfValue.of(Long.valueOf(v.toString()));
 						} else {
 							T = CmfValue.Type.INTEGER;
 						}
@@ -171,7 +171,7 @@ public final class UcmAttributes {
 		// Now, all the other custom fields are string-typed
 		for (String s : data.keySet()) {
 			if (!tgt.containsKey(s)) {
-				tgt.put(s, new CmfValue(data.get(s)));
+				tgt.put(s, CmfValue.of(data.get(s)));
 			}
 		}
 		this.data = tgt;

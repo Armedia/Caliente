@@ -89,7 +89,7 @@ class JdbcTools {
 
 	static final Object[][] NO_PARAMS = new Object[0][0];
 
-	private static final ThreadLocal<QueryRunner> QUERY_RUNNER = new ThreadLocal<>();
+	private static final ThreadLocal<QueryRunner> QUERY_RUNNER = ThreadLocal.withInitial(QueryRunner::new);
 
 	static boolean isValidId(String id) {
 		if (id == null) { return false; }
@@ -98,12 +98,7 @@ class JdbcTools {
 	}
 
 	static QueryRunner getQueryRunner() {
-		QueryRunner q = JdbcTools.QUERY_RUNNER.get();
-		if (q == null) {
-			q = new QueryRunner();
-			JdbcTools.QUERY_RUNNER.set(q);
-		}
-		return q;
+		return JdbcTools.QUERY_RUNNER.get();
 	}
 
 	static String composeDatabaseId(CmfObject.Archetype type, String id) {

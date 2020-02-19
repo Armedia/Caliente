@@ -158,15 +158,15 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 		throws ExportException {
 		String path = object.getParentPath();
 		CmfProperty<CmfValue> p = new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING,
-			new CmfValue(Tools.coalesce(path, StringUtils.EMPTY)));
+			CmfValue.of(Tools.coalesce(path, StringUtils.EMPTY)));
 		properties.add(p);
 
 		p = new CmfProperty<>(IntermediateProperty.FULL_PATH, CmfValue.Type.STRING,
-			new CmfValue(String.format("%s/%s", Tools.coalesce(path, StringUtils.EMPTY), object.getName())));
+			CmfValue.of(String.format("%s/%s", Tools.coalesce(path, StringUtils.EMPTY), object.getName())));
 		properties.add(p);
 
 		p = new CmfProperty<>(IntermediateProperty.IS_REFERENCE, CmfValue.Type.BOOLEAN,
-			new CmfValue(object.isShortcut()));
+			CmfValue.of(object.isShortcut()));
 		properties.add(p);
 		if (object.isShortcut()) {
 			String targetGuid = object.getTargetGUID();
@@ -182,9 +182,9 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 					String.format("Failed to locate the referenced %s with GUID %s", getType().name(), targetGuid), e);
 			}
 			p = new CmfProperty<>(IntermediateProperty.REF_TARGET, CmfValue.Type.STRING,
-				new CmfValue(target.getURI().toString()));
+				CmfValue.of(target.getURI().toString()));
 			properties.add(p);
-			p = new CmfProperty<>(IntermediateProperty.REF_VERSION, CmfValue.Type.STRING, new CmfValue("HEAD"));
+			p = new CmfProperty<>(IntermediateProperty.REF_VERSION, CmfValue.Type.STRING, CmfValue.of("HEAD"));
 			properties.add(p);
 		}
 
@@ -193,7 +193,7 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 		properties.add(p);
 
 		if (!UcmModel.isRoot(parentUri)) {
-			p.addValue(new CmfValue(parentUri.toString()));
+			p.addValue(CmfValue.of(parentUri.toString()));
 		}
 
 		p = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfValue.Type.STRING, true);
@@ -213,7 +213,7 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 				}
 				l.addFirst(parentFolder.getURI().toString());
 			}
-			p.addValue(new CmfValue(FileNameTools.reconstitute(l, false, false, '/')));
+			p.addValue(CmfValue.of(FileNameTools.reconstitute(l, false, false, '/')));
 		}
 		return true;
 	}

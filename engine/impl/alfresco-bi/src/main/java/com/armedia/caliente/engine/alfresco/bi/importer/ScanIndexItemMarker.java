@@ -42,11 +42,6 @@ public class ScanIndexItemMarker implements Cloneable {
 		RENDITION_ROOT(true), // The root directory that contains all renditions
 		RENDITION_TYPE(true), // The directory that contains each rendition type
 		RENDITION_ENTRY, // The renditions themselves
-		VDOC_ROOT(true), // A Virtual Document's root directory
-		VDOC_VERSION(true), // A Virtual Document version's directory
-		VDOC_STREAM, // A Virtual Document's primary stream
-		VDOC_RENDITION, // A Virtual Document's rendition
-		VDOC_REFERENCE, // A Virtual Document reference to another document
 		//
 		;
 
