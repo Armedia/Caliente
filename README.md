@@ -14,14 +14,25 @@ Just pull the repository, run the Maven build, and _voilá_!
 
 ### Build
 
-**NOTE**: You'll need to build the Caliente [Commons-Utilities](https://github.com/Armedia/Commons-Utilities) package as well. This package is not publicly available in binary form (yet!), but you should be able to pull it and build it locally without issue.
+1. Build the Caliente [License](https://github.com/Armedia/Caliente-License) package. This package is not publicly available in binary form (yet!), but you should be able to pull the sources and build it locally without issue.
 
-**NOTE**: Caliente's unit tests require some test servers that aren't available to the public. Work is ongoing to remove this requirement so they can be run reliably outside of the base development environment, but this progress is slow due to other priorities (not my only job :) ).
+```
+$ git clone https://github.com/Armedia/Caliente-License
+$ cd Caliente-License
+$ mvn install
+```
+
+2. Build the Caliente [Commons-Utilities](https://github.com/Armedia/Commons-Utilities) package. This package is not publicly available in binary form (yet!), but you should be able to pull the sources and build it locally without issue.
 
 ```
 $ git clone https://github.com/Armedia/Commons-Utilities
 $ cd Commons-Utilities
 $ mvn install
+```
+
+3. Build Caliente itself.  **NOTE**: Caliente's unit tests require some test servers that aren't available to the public. Work is ongoing to remove this requirement so they can be run reliably outside of the base development environment, but this progress is slow due to other priorities (not my only job :) ).
+
+```
 $ git clone https://github.com/Armedia/Caliente
 $ cd Caliente
 $ mvn -DskipTests=true package
