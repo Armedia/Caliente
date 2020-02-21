@@ -7,11 +7,19 @@
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
 	<artifactId>caliente</artifactId>
-	<version>3.9.5</version>
+	<version>3.9.6</version>
 	<packaging>pom</packaging>
+	<inceptionYear>2013</inceptionYear>
+
+	<licenses>
+		<license>
+			<name>GNU Lesser General Public License</name>
+			<url>https://www.gnu.org/licenses/lgpl-3.0.en.html</url>
+		</license>
+	</licenses>
 
 	<organization>
-		<name>Armedia</name>
+		<name>Armedia, LLC</name>
 		<url>http://www.armedia.com</url>
 	</organization>
 
@@ -71,7 +79,7 @@
 		<stax-utils.version>20070216</stax-utils.version>
 		<tomcat.version>9.0.27</tomcat.version>
 		<unboundid-ldapsdk.version>4.0.12</unboundid-ldapsdk.version>
-		<utilities.version>1.0.14</utilities.version>
+		<utilities.version>1.0.15</utilities.version>
 		<woodstox.version>5.2.0</woodstox.version>
 
 		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
@@ -367,6 +375,27 @@
 							</requireFilesExist>
 						</rules>
 					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>license-maven-plugin</artifactId>
+					<version>1.16</version>
+					<configuration>
+						<licenseName>caliente_license</licenseName>
+						<licenseResolver>classpath://caliente</licenseResolver>
+						<addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+						<canUpdateCopyright>true</canUpdateCopyright>
+						<includes>
+							<include>**/*.java</include>
+						</includes>
+					</configuration>
+					<dependencies>
+						<dependency>
+							<groupId>com.armedia.caliente</groupId>
+							<artifactId>license-headers</artifactId>
+							<version>1.0.1</version>
+						</dependency>
+					</dependencies>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
