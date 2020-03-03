@@ -308,7 +308,8 @@ public abstract class ExportEngine<//
 			});
 		} catch (Exception e) {
 			throw new ExportException(
-				String.format("Can't calculate the folder name for folder with ID [%s] - please fix this!", folderId));
+				String.format("Can't calculate the folder name for folder with ID [%s] - please fix this!", folderId),
+				e);
 		}
 	}
 
@@ -339,7 +340,7 @@ public abstract class ExportEngine<//
 			} catch (ParseException e) {
 				// Should never happen...but still
 				throw new ExportException(String.format("Failed to encode the String value [%s] as a STRING for %s",
-					fixed, object.getDescription()));
+					fixed, object.getDescription()), e);
 			}
 		}
 		return values;
