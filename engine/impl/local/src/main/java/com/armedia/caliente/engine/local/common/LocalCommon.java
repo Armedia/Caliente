@@ -83,6 +83,9 @@ public final class LocalCommon {
 
 	public static String toPortablePath(String path) {
 		if (StringUtils.isEmpty(path)) { return null; }
-		return FileNameTools.reconstitute(FileNameTools.tokenize(path, File.separatorChar), true, false, '/');
+		if (File.separatorChar != '/') {
+			path = path.replace(File.separatorChar, '/');
+		}
+		return FileNameTools.reconstitute(FileNameTools.tokenize(path, '/'), true, false, '/');
 	}
 }
