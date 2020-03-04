@@ -326,8 +326,12 @@ public class XmlImportDelegateFactory
 	}
 
 	String relativizeXmlLocation(String absolutePath) {
-		String base = String.format("%s/", this.content.getAbsolutePath().replace(File.separatorChar, '/'));
-		absolutePath = absolutePath.replace(File.separatorChar, '/');
+		String base = this.content.getAbsolutePath();
+		if (File.separatorChar != '/') {
+			base = base.replace(File.separatorChar, '/');
+			absolutePath = absolutePath.replace(File.separatorChar, '/');
+		}
+		base = String.format("%s/", base);
 		return absolutePath.substring(base.length());
 	}
 
