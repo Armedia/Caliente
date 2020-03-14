@@ -290,7 +290,7 @@ public class AlfImportEngine extends
 
 		List<URI> modelUrls = new ArrayList<>();
 		for (String s : contentModels) {
-			File f = new File(s).getCanonicalFile();
+			File f = Tools.canonicalize(new File(s));
 			if (!f.exists()) { throw new FileNotFoundException(f.getAbsolutePath()); }
 			if (!f.isFile()) {
 				throw new IOException(String.format("File [%s] is not a regular file", f.getAbsolutePath()));

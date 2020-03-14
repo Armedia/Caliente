@@ -28,7 +28,6 @@ package com.armedia.caliente.cli.filenamemapper;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -208,13 +207,7 @@ class FilenameMapper {
 				this.log.error("Invalid empty filename given");
 				return 1;
 			}
-			File f = new File(targetStr);
-			try {
-				f = f.getCanonicalFile();
-			} catch (IOException e) {
-				f = f.getAbsoluteFile();
-			}
-			targetFile = f;
+			targetFile = Tools.canonicalize(new File(targetStr));
 		}
 
 		final boolean dedupEnabled = !cli.isPresent(CLIParam.no_dedup);
