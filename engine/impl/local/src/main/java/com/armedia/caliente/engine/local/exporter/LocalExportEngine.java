@@ -238,7 +238,8 @@ public class LocalExportEngine extends
 		if (Files.isDirectory(p)) {
 			stream = StreamTools //
 				.of(new LocalRecursiveIterator(root, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS))) //
-				.map(this::toExportTarget) //
+				.filter(Files::exists) // Only include files/links that aren't broken
+				.map(this::toExportTarget) // Convert to export targets
 			;
 		} else {
 			stream = Stream.of(toExportTarget(p));
