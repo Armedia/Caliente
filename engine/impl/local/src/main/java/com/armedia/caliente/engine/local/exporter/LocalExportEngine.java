@@ -228,19 +228,23 @@ public class LocalExportEngine extends
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByPath(final LocalRoot session, CfgTools configuration,
+	protected Stream<ExportTarget> findExportTargetsByPath(final LocalRoot root, CfgTools configuration,
 		LocalExportDelegateFactory factory, String unused) throws Exception {
-		Path p = session.getPath();
+		Path p = root.getPath();
 		if (!Files.exists(p)) {
 			throw new FileNotFoundException(String.format("Failed to find a file or folder at [%s]", p));
 		}
+		final Stream<ExportTarget> stream;
 		if (Files.isDirectory(p)) {
-			return StreamTools
-				.of(new LocalRecursiveIterator(session, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)))
-				.map(this::toExportTarget);
+			stream = StreamTools //
+				.of(new LocalRecursiveIterator(root, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS))) //
+				.map(this::toExportTarget) //
+			;
+		} else {
+			stream = Stream.of(toExportTarget(p));
 		}
 
-		return Stream.of(toExportTarget(p));
+		return stream.filter(Objects::nonNull);
 	}
 
 	protected static boolean isEmptyDirectory(Path p) {
