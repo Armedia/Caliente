@@ -27,7 +27,8 @@
 package com.armedia.caliente.cli.utils;
 
 import java.io.File;
-import java.io.IOException;
+
+import com.armedia.commons.utilities.Tools;
 
 public class CliUtils {
 
@@ -36,16 +37,6 @@ public class CliUtils {
 	}
 
 	static File newFileObject(File parent, String path) {
-		File f = (parent != null ? new File(parent, path) : new File(path));
-		try {
-			f = f.getCanonicalFile();
-		} catch (IOException e) {
-			// this.log.warn("Failed to canonicalize the path for [{}]",
-			// f.getAbsolutePath(), e);
-			// Do nothing, for now
-		} finally {
-			f = f.getAbsoluteFile();
-		}
-		return f;
+		return Tools.canonicalize(parent != null ? new File(parent, path) : new File(path));
 	}
 }

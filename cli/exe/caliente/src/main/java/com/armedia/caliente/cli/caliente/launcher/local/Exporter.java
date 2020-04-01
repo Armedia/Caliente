@@ -27,7 +27,6 @@
 package com.armedia.caliente.cli.caliente.launcher.local;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 
 import com.armedia.caliente.cli.Option;
@@ -176,19 +175,7 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 			throw new CalienteException(
 				String.format("The specified source at [%s] is not readable", source.getPath()));
 		}
-		try {
-			File f = source.getCanonicalFile();
-			source = f;
-		} catch (IOException e) {
-			File f = source.getAbsoluteFile();
-			String fmt = "Failed to find the canonical path for [{}], will settle for the absolute path at [{}]";
-			if (this.log.isTraceEnabled()) {
-				this.log.warn(fmt, source.getPath(), f.getPath(), e);
-			} else {
-				this.log.warn(fmt, source.getPath(), f.getPath());
-			}
-			source = f;
-		}
+		source = Tools.canonicalize(source);
 
 		settings.put(LocalSetting.ROOT.getLabel(), source.getAbsolutePath());
 		settings.put(LocalSetting.COPY_CONTENT.getLabel(), isCopyContent(commandValues));

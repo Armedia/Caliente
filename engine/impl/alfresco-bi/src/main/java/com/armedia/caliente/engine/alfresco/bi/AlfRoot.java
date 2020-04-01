@@ -50,7 +50,7 @@ public final class AlfRoot implements Comparable<AlfRoot> {
 	}
 
 	public AlfRoot(String path) throws IOException {
-		this.file = new File(AlfRoot.normalize(path)).getCanonicalFile();
+		this.file = Tools.canonicalize(new File(AlfRoot.normalize(path)));
 		this.path = this.file.getPath();
 	}
 

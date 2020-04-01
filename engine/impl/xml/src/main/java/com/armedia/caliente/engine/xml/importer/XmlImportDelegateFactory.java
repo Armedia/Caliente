@@ -74,6 +74,7 @@ import com.armedia.caliente.engine.xml.importer.jaxb.UsersT;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.xml.XmlTools;
 
 public class XmlImportDelegateFactory
@@ -288,16 +289,16 @@ public class XmlImportDelegateFactory
 		engine.addListener(this.documentListener);
 		String db = configuration.getString(XmlSetting.DB);
 		if (db != null) {
-			this.db = new File(db).getCanonicalFile();
+			this.db = Tools.canonicalize(new File(db));
 		} else {
-			this.db = new File("caliente-data").getCanonicalFile();
+			this.db = Tools.canonicalize(new File("caliente-data"));
 		}
 		FileUtils.forceMkdir(this.db);
 		String content = configuration.getString(XmlSetting.CONTENT);
 		if (content != null) {
-			this.content = new File(content).getCanonicalFile();
+			this.content = Tools.canonicalize(new File(content));
 		} else {
-			this.content = new File(db, "content").getCanonicalFile();
+			this.content = Tools.canonicalize(new File(db, "content"));
 		}
 		FileUtils.forceMkdir(this.content);
 		this.aggregateFolders = configuration.getBoolean(XmlSetting.AGGREGATE_FOLDERS);
@@ -326,8 +327,12 @@ public class XmlImportDelegateFactory
 	}
 
 	String relativizeXmlLocation(String absolutePath) {
-		String base = String.format("%s/", this.content.getAbsolutePath().replace(File.separatorChar, '/'));
-		absolutePath = absolutePath.replace(File.separatorChar, '/');
+		String base = this.content.getAbsolutePath();
+		if (File.separatorChar != '/') {
+			base = base.replace(File.separatorChar, '/');
+			absolutePath = absolutePath.replace(File.separatorChar, '/');
+		}
+		base = String.format("%s/", base);
 		return absolutePath.substring(base.length());
 	}
 
