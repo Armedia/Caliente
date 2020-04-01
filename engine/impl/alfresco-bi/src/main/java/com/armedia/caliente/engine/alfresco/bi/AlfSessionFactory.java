@@ -37,6 +37,7 @@ import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
 public class AlfSessionFactory extends SessionFactory<AlfRoot> {
 
@@ -48,7 +49,7 @@ public class AlfSessionFactory extends SessionFactory<AlfRoot> {
 		if (root == null) {
 			throw new IllegalArgumentException("Must provide a root directory to base the local engine off of");
 		}
-		root = root.getCanonicalFile();
+		root = Tools.canonicalize(root);
 
 		FileUtils.forceMkdir(root);
 		if (!root.isDirectory()) {

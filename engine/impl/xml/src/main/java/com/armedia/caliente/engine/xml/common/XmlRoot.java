@@ -50,7 +50,7 @@ public final class XmlRoot implements Comparable<XmlRoot> {
 	}
 
 	public XmlRoot(String path) throws IOException {
-		this.file = new File(XmlRoot.normalize(path)).getCanonicalFile();
+		this.file = Tools.canonicalize(new File(XmlRoot.normalize(path)));
 		this.path = this.file.getPath();
 	}
 

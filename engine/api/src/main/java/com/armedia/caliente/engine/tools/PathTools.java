@@ -92,7 +92,7 @@ public final class PathTools {
 	public static File getRootDirectory(CfgTools cfg) throws IOException {
 		String root = cfg.getString(PathTools.ROOT);
 		if (root == null) { return null; }
-		return new File(root).getCanonicalFile();
+		return Tools.canonicalize(new File(root));
 	}
 
 	public static String addNumericPaths(List<String> paths, long objectNumber) {

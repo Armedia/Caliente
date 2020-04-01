@@ -54,7 +54,8 @@ class LocalFile {
 
 	static ExportTarget toExportTarget(LocalRoot root, Path path) {
 		try {
-			path = root.relativize(Tools.canonicalize(path));
+			if (!Files.exists(path)) { return null; }
+			path = root.relativize(path);
 			final Archetype archetype = Files.isDirectory(path) ? CmfObject.Archetype.FOLDER
 				: CmfObject.Archetype.DOCUMENT;
 			final String objectId = LocalCommon.calculateId(path);

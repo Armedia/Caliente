@@ -33,22 +33,20 @@ import java.io.Reader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class LocalPathTokenSource extends ReaderTokenSource {
+import com.armedia.commons.utilities.Tools;
 
-	private static Path resolveCanonicalPath(Path p) throws IOException {
-		return p.toFile().getCanonicalFile().toPath();
-	}
+public class LocalPathTokenSource extends ReaderTokenSource {
 
 	private final Path sourcePath;
 
 	public LocalPathTokenSource(String sourcePath) throws IOException {
 		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a non-null path"); }
-		this.sourcePath = LocalPathTokenSource.resolveCanonicalPath(Paths.get(sourcePath));
+		this.sourcePath = Tools.canonicalize(Paths.get(sourcePath));
 	}
 
 	public LocalPathTokenSource(Path sourcePath) throws IOException {
 		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a non-null path"); }
-		this.sourcePath = LocalPathTokenSource.resolveCanonicalPath(sourcePath);
+		this.sourcePath = Tools.canonicalize(sourcePath);
 	}
 
 	public Path getSourcePath() {
