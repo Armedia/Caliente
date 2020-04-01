@@ -151,21 +151,6 @@ public final class BulkImportManager {
 		return this.basePath.relativize(path);
 	}
 
-	private static File toFile(Path indexFile) throws IOException {
-		File f = indexFile.toFile();
-		try {
-			f = f.getCanonicalFile();
-		} catch (IOException e) {
-			// Do nothing...
-		} finally {
-			f = f.getAbsoluteFile();
-		}
-
-		if (!f.exists() || !f.isFile() || !f.canRead()) { return null; }
-
-		return f;
-	}
-
 	private Path resolve(Path base, String childPath) {
 		if (StringUtils.isEmpty(childPath)) { return base; }
 		if (childPath.startsWith(BulkImportManager.BASE_PATH_PREFIX)) {

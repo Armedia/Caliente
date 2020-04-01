@@ -337,12 +337,7 @@ public class UserMapper {
 		source = source.toUpperCase();
 		source = source.replaceAll("\\s", "_");
 		CSVFormat format = CSVFormat.DEFAULT.withRecordSeparator(UserMapper.NEWLINE);
-		File f = new File(String.format("new_%s%s.%s.csv", name, docbase, source)).getAbsoluteFile();
-		try {
-			f = f.getCanonicalFile();
-		} catch (IOException e) {
-			// Do nothing
-		}
+		File f = Tools.canonicalize(new File(String.format("new_%s%s.%s.csv", name, docbase, source)));
 		UserMapper.log.info("Creating a new CSV file at [{}]...", f.getAbsolutePath());
 		CSVPrinter ret = new CSVPrinter(new FileWriter(f), format);
 		for (String s : headings) {
@@ -356,7 +351,7 @@ public class UserMapper {
 	private int writeMappings(OptionValues cli, String startMarkerString, String docbase, Properties userMapping,
 		Properties groupMapping) {
 		File mapFile = null;
-		;
+
 		docbase = getDocbaseSuffix(cli, docbase);
 		mapFile = Tools.canonicalize(new File(String.format("usermap%s.xml", docbase)));
 		try (FileOutputStream out = new FileOutputStream(mapFile)) {
@@ -372,7 +367,7 @@ public class UserMapper {
 		mapFile = Tools.canonicalize(new File(String.format("groupmap%s.xml", docbase)));
 		try (FileOutputStream out = new FileOutputStream(mapFile)) {
 			UserMapper.log.info("Writing out group mappings to [{}]...", mapFile.getAbsolutePath());
-			;
+
 			groupMapping.storeToXML(out, String.format("Group mappings as of %s", startMarkerString));
 			UserMapper.log.info("Group mappings written out to [{}]...", mapFile.getAbsolutePath());
 		} catch (IOException e) {

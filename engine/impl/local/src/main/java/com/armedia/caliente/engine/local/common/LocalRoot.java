@@ -85,7 +85,7 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 	}
 
 	public Path makeAbsolute(Path path) throws IOException {
-		return Tools.canonicalize(this.path.resolve(path));
+		return Tools.canonicalize(this.path.resolve(path), false);
 	}
 
 	@Override
