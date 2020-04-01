@@ -65,6 +65,7 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.tools.FilenameEncoder;
 import com.armedia.commons.utilities.FileNameTools;
+import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalImportDelegate extends
 	ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
@@ -124,7 +125,7 @@ public abstract class LocalImportDelegate extends
 		// We always fix the file's name, since it's not part of the path and may also need fixing.
 		// Same dilemma as above, though - need to know "when" to use windows mode...
 		String name = FilenameEncoder.safeEncode(this.cmfObject.getName(), windowsMode);
-		return new File(tgt, name).getCanonicalFile();
+		return Tools.canonicalize(new File(tgt, name));
 	}
 
 	protected boolean isSameDatesAndOwners(File targetFile, CmfAttributeTranslator<CmfValue> translator)

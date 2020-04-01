@@ -40,6 +40,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
 public class XmlImportContextFactory
 	extends ImportContextFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine, File> {
@@ -52,7 +53,7 @@ public class XmlImportContextFactory
 
 	@Override
 	protected File locateFolder(XmlRoot session, String path) throws Exception {
-		File f = new File(session.getFile(), path).getCanonicalFile();
+		File f = Tools.canonicalize(new File(session.getFile(), path));
 		if (f.exists() && f.isDirectory()) { return f; }
 		return null;
 	}

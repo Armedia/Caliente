@@ -45,6 +45,7 @@ import com.armedia.caliente.cli.launcher.AbstractEntrypoint;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.PooledWorkers;
+import com.armedia.commons.utilities.Tools;
 
 public class Entrypoint extends AbstractEntrypoint {
 	private static final int MIN_THREADS = 1;
@@ -83,19 +84,13 @@ public class Entrypoint extends AbstractEntrypoint {
 		final String reportMarker = DateFormatUtils.format(new Date(), Entrypoint.REPORT_MARKER_FORMAT);
 		System.setProperty("logName", String.format("%s-%s", getName(), reportMarker));
 
-		final File biFile = new File(cli.getString(CLIParam.bulk_import)).getCanonicalFile();
+		final File biFile = Tools.canonicalize(new File(cli.getString(CLIParam.bulk_import)));
 		if (!Entrypoint.verifyPath(this.log, biFile, "bulk import")) { return 1; }
-		final File beFile = new File(cli.getString(CLIParam.bulk_export)).getCanonicalFile();
+		final File beFile = Tools.canonicalize(new File(cli.getString(CLIParam.bulk_export)));
 		if (!Entrypoint.verifyPath(this.log, beFile, "bulk export")) { return 1; }
 
 		final String reportDirStr = cli.getString(CLIParam.report_dir, System.getProperty("user.dir"));
-		File reportDir = new File(reportDirStr);
-		try {
-			reportDir = reportDir.getCanonicalFile();
-		} catch (IOException e) {
-			// do nothing...
-		}
-		reportDir = reportDir.getAbsoluteFile();
+		File reportDir = Tools.canonicalize(new File(reportDirStr));
 
 		try {
 			FileUtils.forceMkdir(reportDir);

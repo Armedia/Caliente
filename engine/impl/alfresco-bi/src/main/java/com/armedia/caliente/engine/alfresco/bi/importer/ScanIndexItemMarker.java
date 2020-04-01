@@ -261,7 +261,7 @@ public class ScanIndexItemMarker implements Cloneable {
 		// We only intend to store paths separated by '/' in the XML, regardless of source
 		// platform. This is CRITICAL. We make the effort to change all the separators
 		// into '/'
-		return path.replaceAll(String.format("\\Q%s\\E+", File.separator), "/");
+		return path.replace(File.separatorChar, '/');
 	}
 
 	@Override

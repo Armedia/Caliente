@@ -45,6 +45,7 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
 public class AlfImportContextFactory
 	extends ImportContextFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine, File> {
@@ -57,7 +58,7 @@ public class AlfImportContextFactory
 
 	@Override
 	protected File locateFolder(AlfRoot session, String path) throws Exception {
-		File f = new File(session.getFile(), path).getCanonicalFile();
+		File f = Tools.canonicalize(new File(session.getFile(), path));
 		if (f.exists() && f.isDirectory()) { return f; }
 		return null;
 	}

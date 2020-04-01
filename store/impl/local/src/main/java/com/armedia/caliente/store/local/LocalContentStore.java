@@ -136,12 +136,7 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 				String.format("Failed to create the full path at [%s] ", baseDir.getAbsolutePath()));
 		}
 		this.settings = settings;
-		File f = baseDir;
-		try {
-			f = baseDir.getCanonicalFile();
-		} catch (IOException e) {
-			f = baseDir;
-		}
+		File f = Tools.canonicalize(baseDir);
 		this.baseDir = f;
 		this.storeProperties = (parent == null) && settings.getBoolean(LocalContentStoreSetting.STORE_PROPERTIES);
 
