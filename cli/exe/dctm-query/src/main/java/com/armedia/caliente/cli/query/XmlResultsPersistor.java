@@ -34,21 +34,27 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.function.CheckedFunction;
 import com.armedia.commons.utilities.function.CheckedLazySupplier;
 import com.ctc.wstx.api.WstxOutputProperties;
 import com.ctc.wstx.stax.WstxOutputFactory;
@@ -66,16 +72,23 @@ import javanet.staxutils.IndentingXMLStreamWriter;
 public class XmlResultsPersistor extends BaseShareableLockable implements ResultsPersistor {
 
 	private static final String DM_UNKNOWN = "DM_UNKNOWN";
-	private static final Map<Integer, String> TYPES;
+	private static final Map<Integer, Pair<String, CheckedFunction<IDfValue, String, DfException>>> TYPES;
 	static {
-		Map<Integer, String> types = new TreeMap<>();
-		types.put(IDfAttr.DM_BOOLEAN, "DM_BOOLEAN");
-		types.put(IDfAttr.DM_INTEGER, "DM_INTEGER");
-		types.put(IDfAttr.DM_STRING, "DM_STRING");
-		types.put(IDfAttr.DM_ID, "DM_ID");
-		types.put(IDfAttr.DM_TIME, "DM_TIME");
-		types.put(IDfAttr.DM_DOUBLE, "DM_DOUBLE");
-		types.put(IDfAttr.DM_UNDEFINED, "DM_UNDEFINED");
+		Map<Integer, Pair<String, CheckedFunction<IDfValue, String, DfException>>> types = new TreeMap<>();
+		types.put(IDfAttr.DM_BOOLEAN, Pair.of("DM_BOOLEAN", null));
+		types.put(IDfAttr.DM_INTEGER, Pair.of("DM_INTEGER", null));
+		types.put(IDfAttr.DM_STRING, Pair.of("DM_STRING", null));
+		types.put(IDfAttr.DM_ID, Pair.of("DM_ID", (value) -> {
+			IDfId id = value.asId();
+			return (id.isNull() ? DfId.DF_NULLID_STR : id.toString());
+		}));
+		types.put(IDfAttr.DM_TIME, Pair.of("DM_TIME", (value) -> {
+			IDfTime time = value.asTime();
+			return (time.isNullDate() ? DfTime.DF_NULLDATE_STR
+				: DateFormatUtils.ISO_8601_EXTENDED_DATETIME_FORMAT.format(time.getDate()));
+		}));
+		types.put(IDfAttr.DM_DOUBLE, Pair.of("DM_DOUBLE", null));
+		types.put(IDfAttr.DM_UNDEFINED, Pair.of("DM_UNDEFINED", null));
 		TYPES = Tools.freezeMap(types);
 	}
 
@@ -101,10 +114,21 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 			return factory;
 		});
 
+	private static final Pattern ATTRIBUTE_NAME_CHECKER = Pattern.compile("^[\\w\\-\\.]+$");
+
 	private Writer out = null;
 	private XMLStreamWriter xml = null;
 	private boolean first = false;
+	private Map<String, String> sanitized = null;
 	private Map<String, IDfAttr> attributes = null;
+
+	private String sanitizeAttributeName(int pos, String attributeName) {
+		Matcher m = XmlResultsPersistor.ATTRIBUTE_NAME_CHECKER.matcher(attributeName);
+		if (!m.matches()) {
+			attributeName = String.format("dm_attr_%04d", pos);
+		}
+		return attributeName;
+	}
 
 	@Override
 	public void initialize(final File target, String dql, Collection<IDfAttr> attributes) throws Exception {
@@ -112,6 +136,7 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 		try (MutexAutoLock lock = autoMutexLock()) {
 			this.out = new BufferedWriter(new FileWriter(finalTarget));
 			this.attributes = new LinkedHashMap<>();
+			this.sanitized = new HashMap<>();
 
 			XMLOutputFactory factory = XmlResultsPersistor.OUTPUT_FACTORY.get();
 			XMLStreamWriter writer = factory.createXMLStreamWriter(this.out);
@@ -132,10 +157,18 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 			this.xml.writeEndElement();
 
 			this.xml.writeStartElement("attributes");
+			int pos = 0;
 			for (IDfAttr attr : attributes) {
 				this.attributes.put(attr.getName(), attr);
 
-				this.xml.writeStartElement(attr.getName());
+				final String rawName = attr.getName();
+				final String attrName = sanitizeAttributeName(++pos, rawName);
+
+				this.xml.writeStartElement(attrName);
+				if (!StringUtils.equals(rawName, attrName)) {
+					this.sanitized.put(rawName, attrName);
+					this.xml.writeComment(" " + rawName + " ");
+				}
 
 				this.xml.writeStartElement("id");
 				this.xml.writeCharacters(attr.getId());
@@ -143,8 +176,8 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 
 				this.xml.writeStartElement("type");
 				this.xml.writeAttribute("code", String.valueOf(attr.getDataType()));
-				this.xml.writeCharacters(
-					XmlResultsPersistor.TYPES.getOrDefault(attr.getDataType(), XmlResultsPersistor.DM_UNKNOWN));
+				Pair<String, ?> p = XmlResultsPersistor.TYPES.get(attr.getDataType());
+				this.xml.writeCharacters(p != null ? p.getLeft() : XmlResultsPersistor.DM_UNKNOWN);
 				this.xml.writeEndElement();
 
 				this.xml.writeStartElement("repeating");
@@ -169,32 +202,13 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 	}
 
 	private String render(IDfValue value) {
-		switch (value.getDataType()) {
-			case IDfAttr.DM_BOOLEAN:
-				break;
-
-			case IDfAttr.DM_INTEGER:
-				break;
-
-			case IDfAttr.DM_STRING:
-				break;
-
-			case IDfAttr.DM_ID:
-				IDfId id = value.asId();
-				return (id.isNull() ? DfId.DF_NULLID_STR : id.toString());
-
-			case IDfAttr.DM_TIME:
-				IDfTime time = value.asTime();
-				return (time.isNullDate() ? DfTime.DF_NULLDATE_STR
-					: DateFormatUtils.ISO_8601_EXTENDED_DATETIME_FORMAT.format(time.getDate()));
-
-			case IDfAttr.DM_DOUBLE:
-				break;
-
-			default:
-				break;
+		Pair<String, CheckedFunction<IDfValue, String, DfException>> p = XmlResultsPersistor.TYPES
+			.get(value.getDataType());
+		CheckedFunction<IDfValue, String, DfException> f = IDfValue::asString;
+		if ((p != null) && (p.getRight() != null)) {
+			f = p.getRight();
 		}
-		return value.asString();
+		return f.apply(value);
 	}
 
 	private void render(IDfTypedObject object) throws DfException, XMLStreamException {
@@ -204,15 +218,19 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 
 		for (int i = 0; i < atts; i++) {
 			IDfAttr attr = object.getAttr(i);
-			final String name = attr.getName();
-			this.xml.writeStartElement(name);
-			if (!this.attributes.containsKey(name)) {
-				this.xml.writeComment("This attribute wasn't included in the main query structure");
+			final String rawName = attr.getName();
+			final String attrName = this.sanitized.getOrDefault(rawName, rawName);
+			this.xml.writeStartElement(attrName);
+			if (!StringUtils.equals(rawName, attrName)) {
+				this.xml.writeComment(" " + rawName + " ");
 			}
-			final int values = object.getValueCount(name);
+			if (!this.attributes.containsKey(rawName)) {
+				this.xml.writeComment(" This attribute wasn't included in the main query structure ");
+			}
+			final int values = object.getValueCount(rawName);
 			for (int v = 0; v < values; v++) {
 				this.xml.writeStartElement("value");
-				this.xml.writeCharacters(render(object.getRepeatingValue(name, v)));
+				this.xml.writeCharacters(render(object.getRepeatingValue(rawName, v)));
 				this.xml.writeEndElement();
 			}
 		}
