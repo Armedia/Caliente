@@ -619,6 +619,7 @@
 		<module>cli/exe/dctm-datagen</module>
 		<module>cli/exe/dctm-filename-mapper</module>
 		<module>cli/exe/dctm-history</module>
+		<module>cli/exe/dctm-query</module>
 		<module>cli/exe/dctm-ticket-decoder</module>
 		<module>cli/exe/dctm-type-dumper</module>
 		<module>cli/exe/dctm-user-mapper</module>
