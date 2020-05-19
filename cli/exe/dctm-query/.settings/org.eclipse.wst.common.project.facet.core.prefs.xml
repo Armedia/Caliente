@@ -6,10 +6,6 @@
     <node name="platform">
       <attribute name="platform-id" value="generic_2_2"/>
     </node>
-    <node name="schemas">
-      <node name="schema-1">
-        <attribute name="location" value="platform:/resource/caliente-cli-dctm-query/src/main/resources/type-dumper.xsd"/>
-      </node>
-    </node>
+    <node name="schemas"/>
   </facet>
 </root>
