@@ -152,7 +152,7 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 			this.xml.writeStartElement(rootElement);
 			this.xml.flush();
 
-			this.xml.writeStartElement("query");
+			this.xml.writeStartElement("dql");
 			this.xml.writeCData(dql);
 			this.xml.writeEndElement();
 
