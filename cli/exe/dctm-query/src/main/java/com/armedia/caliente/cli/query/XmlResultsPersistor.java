@@ -233,6 +233,7 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 				this.xml.writeCharacters(render(object.getRepeatingValue(rawName, v)));
 				this.xml.writeEndElement();
 			}
+			this.xml.writeEndElement();
 		}
 
 		this.xml.writeEndElement();
