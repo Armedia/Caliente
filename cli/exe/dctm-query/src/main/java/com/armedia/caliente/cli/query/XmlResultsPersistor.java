@@ -56,6 +56,7 @@ import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.function.CheckedFunction;
 import com.armedia.commons.utilities.function.CheckedLazySupplier;
+import com.armedia.commons.utilities.xml.XmlStreamElement;
 import com.ctc.wstx.api.WstxOutputProperties;
 import com.ctc.wstx.stax.WstxOutputFactory;
 import com.documentum.fc.client.IDfTypedObject;
@@ -121,6 +122,7 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 	private boolean first = false;
 	private Map<String, String> sanitized = null;
 	private Map<String, IDfAttr> attributes = null;
+	private XmlStreamElement xmlRoot = null;
 
 	private String sanitizeAttributeName(int pos, String attributeName) {
 		Matcher m = XmlResultsPersistor.ATTRIBUTE_NAME_CHECKER.matcher(attributeName);
@@ -147,54 +149,50 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 				}
 			};
 			this.xml.writeStartDocument(Charset.defaultCharset().name(), "1.1");
-			String rootElement = "query";
-			this.xml.writeDTD(String.format("<!DOCTYPE %s>", rootElement));
-			this.xml.writeStartElement(rootElement);
-			this.xml.flush();
+			this.xmlRoot = new XmlStreamElement(this.xml, "query");
 
-			this.xml.writeStartElement("dql");
-			this.xml.writeCData(dql);
-			this.xml.writeEndElement();
-
-			this.xml.writeStartElement("attributes");
-			int pos = 0;
-			for (IDfAttr attr : attributes) {
-				this.attributes.put(attr.getName(), attr);
-
-				final String rawName = attr.getName();
-				final String attrName = sanitizeAttributeName(++pos, rawName);
-
-				this.xml.writeStartElement(attrName);
-				if (!StringUtils.equals(rawName, attrName)) {
-					this.sanitized.put(rawName, attrName);
-					this.xml.writeComment(" " + rawName + " ");
-				}
-
-				this.xml.writeStartElement("id");
-				this.xml.writeCharacters(attr.getId());
-				this.xml.writeEndElement();
-
-				this.xml.writeStartElement("type");
-				this.xml.writeAttribute("code", String.valueOf(attr.getDataType()));
-				Pair<String, ?> p = XmlResultsPersistor.TYPES.get(attr.getDataType());
-				this.xml.writeCharacters(p != null ? p.getLeft() : XmlResultsPersistor.DM_UNKNOWN);
-				this.xml.writeEndElement();
-
-				this.xml.writeStartElement("repeating");
-				this.xml.writeCharacters(String.valueOf(attr.isRepeating()));
-				this.xml.writeEndElement();
-
-				this.xml.writeStartElement("qualifiable");
-				this.xml.writeCharacters(String.valueOf(attr.isQualifiable()));
-				this.xml.writeEndElement();
-
-				this.xml.writeStartElement("length");
-				this.xml.writeCharacters(String.valueOf(attr.getLength()));
-				this.xml.writeEndElement();
-
-				this.xml.writeEndElement();
+			try (XmlStreamElement xmlDql = this.xmlRoot.newElement("dql")) {
+				this.xml.writeCData(dql);
 			}
-			this.xml.writeEndElement();
+
+			try (XmlStreamElement xmlAttributes = this.xmlRoot.newElement("attributes")) {
+				int pos = 0;
+				for (IDfAttr attr : attributes) {
+					this.attributes.put(attr.getName(), attr);
+
+					final String rawName = attr.getName();
+					final String attrName = sanitizeAttributeName(++pos, rawName);
+
+					try (XmlStreamElement xmlAtt = xmlAttributes.newElement(attrName)) {
+						if (!StringUtils.equals(rawName, attrName)) {
+							this.sanitized.put(rawName, attrName);
+							this.xml.writeComment(" " + rawName + " ");
+						}
+
+						try (XmlStreamElement xmlId = xmlAttributes.newElement("id")) {
+							this.xml.writeCharacters(attr.getId());
+						}
+
+						try (XmlStreamElement xmlType = xmlAttributes.newElement("type")) {
+							this.xml.writeAttribute("code", String.valueOf(attr.getDataType()));
+							Pair<String, ?> p = XmlResultsPersistor.TYPES.get(attr.getDataType());
+							this.xml.writeCharacters(p != null ? p.getLeft() : XmlResultsPersistor.DM_UNKNOWN);
+						}
+
+						try (XmlStreamElement xmlRepeating = xmlAttributes.newElement("repeating")) {
+							this.xml.writeCharacters(String.valueOf(attr.isRepeating()));
+						}
+
+						try (XmlStreamElement xmlQualifiable = xmlAttributes.newElement("qualifiable")) {
+							this.xml.writeCharacters(String.valueOf(attr.isQualifiable()));
+						}
+
+						try (XmlStreamElement xmlLength = xmlAttributes.newElement("length")) {
+							this.xml.writeCharacters(String.valueOf(attr.getLength()));
+						}
+					}
+				}
+			}
 
 			this.attributes = Tools.freezeMap(this.attributes);
 			this.first = true;
@@ -214,29 +212,27 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 	private void render(IDfTypedObject object) throws DfException, XMLStreamException {
 		final int atts = object.getAttrCount();
 
-		this.xml.writeStartElement("result");
-
-		for (int i = 0; i < atts; i++) {
-			IDfAttr attr = object.getAttr(i);
-			final String rawName = attr.getName();
-			final String attrName = this.sanitized.getOrDefault(rawName, rawName);
-			this.xml.writeStartElement(attrName);
-			if (!StringUtils.equals(rawName, attrName)) {
-				this.xml.writeComment(" " + rawName + " ");
+		try (XmlStreamElement xmlResult = this.xmlRoot.newElement("result")) {
+			for (int i = 0; i < atts; i++) {
+				IDfAttr attr = object.getAttr(i);
+				final String rawName = attr.getName();
+				final String attrName = this.sanitized.getOrDefault(rawName, rawName);
+				try (XmlStreamElement xmlAttr = xmlResult.newElement(attrName)) {
+					if (!StringUtils.equals(rawName, attrName)) {
+						this.xml.writeComment(" " + rawName + " ");
+					}
+					if (!this.attributes.containsKey(rawName)) {
+						this.xml.writeComment(" This attribute wasn't included in the main query structure ");
+					}
+					final int values = object.getValueCount(rawName);
+					for (int v = 0; v < values; v++) {
+						try (XmlStreamElement xmlValue = xmlAttr.newElement("value")) {
+							this.xml.writeCharacters(render(object.getRepeatingValue(rawName, v)));
+						}
+					}
+				}
 			}
-			if (!this.attributes.containsKey(rawName)) {
-				this.xml.writeComment(" This attribute wasn't included in the main query structure ");
-			}
-			final int values = object.getValueCount(rawName);
-			for (int v = 0; v < values; v++) {
-				this.xml.writeStartElement("value");
-				this.xml.writeCharacters(render(object.getRepeatingValue(rawName, v)));
-				this.xml.writeEndElement();
-			}
-			this.xml.writeEndElement();
 		}
-
-		this.xml.writeEndElement();
 	}
 
 	@Override
@@ -263,6 +259,7 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 				this.xml.writeEndElement();
 			}
 			this.xml.flush();
+			this.xmlRoot.close();
 			this.xml.writeEndDocument();
 			this.xml.close();
 			this.out.flush();
