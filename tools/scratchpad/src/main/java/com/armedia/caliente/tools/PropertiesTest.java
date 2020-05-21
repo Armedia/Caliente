@@ -50,6 +50,7 @@ import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
+import com.armedia.commons.utilities.xml.XmlStreamElement;
 import com.ctc.wstx.api.WstxOutputProperties;
 import com.ctc.wstx.stax.WstxOutputFactory;
 
@@ -108,29 +109,27 @@ public class PropertiesTest {
 
 			writer.writeStartDocument(PropertiesTest.CHARSET_NAME, "1.1");
 			// writer.writeDTD(PropertiesTest.DTD);
-			writer.writeStartElement("properties");
-			writer.flush();
-			out.flush();
-			if (comment != null) {
-				writer.writeStartElement("comment");
-				writer.writeCharacters(comment);
-				writer.writeEndElement();
+			try (XmlStreamElement xmlProperties = new XmlStreamElement(writer, "properties")) {
 				writer.flush();
 				out.flush();
-			}
-			for (final String key : new TreeSet<>(p.stringPropertyNames())) {
-				String value = p.getProperty(key);
-				if (value == null) {
-					continue;
+				if (comment != null) {
+					try (XmlStreamElement xmlComment = xmlProperties.newElement("comment")) {
+						writer.writeCharacters(comment);
+					}
+					out.flush();
 				}
-				writer.writeStartElement("entry");
-				writer.writeAttribute("key", key);
-				writer.writeCharacters(p.getProperty(key));
-				writer.writeEndElement();
-				writer.flush();
-				out.flush();
+				for (final String key : new TreeSet<>(p.stringPropertyNames())) {
+					String value = p.getProperty(key);
+					if (value == null) {
+						continue;
+					}
+					try (XmlStreamElement xmlEntry = xmlProperties.newElement("entry")) {
+						writer.writeAttribute("key", key);
+						writer.writeCharacters(p.getProperty(key));
+						out.flush();
+					}
+				}
 			}
-			writer.writeEndElement();
 			writer.writeEndDocument();
 			writer.flush();
 			out.flush();
