@@ -12,6 +12,12 @@
 		</xsd:restriction>
 	</xsd:simpleType>
 
+	<xsd:simpleType name="nonEmpty.t">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
 	<xsd:simpleType name="singleChar.t">
 		<xsd:restriction base="xsd:string">
 			<xsd:minLength value="1" />
@@ -100,6 +106,14 @@
 			<xsd:enumeration value="HTML" />
 			<xsd:enumeration value="BASE64_BINARY" />
 			<xsd:enumeration value="OTHER" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="extractSearchType.t" final="restriction">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="PATH" />
+			<xsd:enumeration value="QUERY" />
+			<xsd:enumeration value="KEY" />
 		</xsd:restriction>
 	</xsd:simpleType>
 
@@ -995,30 +1009,46 @@
 				<xsd:element name="search-names-list" type="tns:externalMetadataNamesList.t" />
 				<xsd:element name="search-names-query" type="tns:externalMetadataNamesQuery.t" />
 			</xsd:choice>
-			<xsd:element name="query" type="tns:parameterizedSQL.t"  minOccurs="1" maxOccurs="1" />
+			<xsd:element name="query" type="tns:parameterizedSQL.t"  minOccurs="1" maxOccurs="1">
+				<xsd:unique name="uniqueSQLParameterName">
+					<xsd:selector xpath="tns:parameter/tns:name"/>
+					<xsd:field xpath="."/>
+				</xsd:unique>
+			</xsd:element>
 			<xsd:element name="value-column" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="attribute-types" type="tns:externalMetadataAttributeTypes.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
-		<xsd:attribute name="dataSource" type="xsd:IDREF" use="required" />
+		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
 	</xsd:complexType>
 
 	<xsd:complexType name="externalMetadataFromDDL.t">
 		<xsd:sequence>
-			<xsd:element name="query" type="tns:parameterizedSQL.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="query" type="tns:parameterizedSQL.t" minOccurs="1" maxOccurs="1">
+				<xsd:unique name="uniqueDDLParameterName">
+					<xsd:selector xpath="tns:parameter/tns:name"/>
+					<xsd:field xpath="."/>
+				</xsd:unique>
+			</xsd:element>
 			<xsd:element name="ignore-columns" type="tns:externalMetadataNamesList.t" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t"  minOccurs="0" maxOccurs="1" />
 			<xsd:element name="attribute-types" type="tns:externalMetadataAttributeTypes.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
-		<xsd:attribute name="dataSource" type="xsd:IDREF" use="required" />
+		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
 	</xsd:complexType>
 
 	<xsd:complexType name="setting.t">
 		<xsd:simpleContent>
 			<xsd:extension base="xsd:string">
-				<xsd:attribute name="name" type="xsd:string" use="required"/>
+				<xsd:attribute name="name" type="tns:noSpaces.t" use="required"/>
 			</xsd:extension>
 		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="settings.t">
+		<xsd:sequence>
+			<xsd:element name="setting" type="tns:setting.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
 	</xsd:complexType>
 
 	<xsd:complexType name="externalMetadataSet.t">
@@ -1041,18 +1071,35 @@
 			<xsd:element name="password" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="setting" type="tns:setting.t" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
-		<xsd:attribute name="name" type="xsd:ID" use="required" />
+		<xsd:attribute name="name" type="tns:noSpaces.t" use="required" />
 	</xsd:complexType>
 
 	<xsd:element name="external-metadata">
 		<xsd:complexType>
 			<xsd:sequence>
-				<xsd:element name="data-source" type="tns:externalMetadataSource.t" minOccurs="1" maxOccurs="unbounded" />
+				<xsd:element name="data-source" type="tns:externalMetadataSource.t" minOccurs="1" maxOccurs="unbounded">
+					<xsd:unique name="uniqueDataSourceSettingName">
+						<xsd:selector xpath="tns:setting"/>
+						<xsd:field xpath="@name"/>
+					</xsd:unique>
+				</xsd:element>
 				<xsd:element name="metadata-set" type="tns:externalMetadataSet.t" minOccurs="0" maxOccurs="unbounded" />
 			</xsd:sequence>
 		</xsd:complexType>
-		<xsd:unique name="uniqueDataSourceReference">
-			<xsd:selector xpath="*"/>
+        <xsd:key name="PK.DataSource">
+            <xsd:selector xpath="tns:data-source"/>
+            <xsd:field xpath="@name"/>
+        </xsd:key>
+        <xsd:keyref name="FK.DataSource.FromSQL" refer="tns:PK.DataSource">
+            <xsd:selector xpath="tns:metadata-set/tns:from-sql"/>
+            <xsd:field xpath="@dataSource"/>
+        </xsd:keyref>
+        <xsd:keyref name="FK.DataSource.FromDDL" refer="tns:PK.DataSource">
+            <xsd:selector xpath="tns:metadata-set/tns:from-ddl"/>
+            <xsd:field xpath="@dataSource"/>
+        </xsd:keyref>
+		<xsd:unique name="uniqueMetadataSetId">
+			<xsd:selector xpath="tns:metadata-set"/>
 			<xsd:field xpath="@id"/>
 		</xsd:unique>
 	</xsd:element>
