@@ -1337,7 +1337,7 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:element name="extract">
+	<xsd:element name="extraction">
 		<xsd:complexType>
 			<xsd:sequence>
 				<xsd:element name="settings" type="tns:settings.t" minOccurs="0" maxOccurs="1">
