@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extract xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine engine.xsd">
+	<settings>
+		<setting name="1">setting</setting>
+		<setting name="2">setting</setting>
+		<setting name="3">setting</setting>
+		<setting name="4">setting</setting>
+		<setting name="5">setting</setting>
+		<setting name="6">setting</setting>
+		<setting name="7">setting</setting>
+		<setting name="8">setting</setting>
+		<setting name="9">setting</setting>
+		<setting name="0">setting</setting>
+	</settings>
+	<sources>
+		<source engine="x" name="A">
+			<settings>
+				<setting name="0">setting</setting>
+			</settings>
+			<search lang="x" name="0" type="PATH">search</search>
+			<search lang="x" name="1" type="PATH">search</search>
+			<search lang="x" name="2" type="PATH">search</search>
+			<search lang="x" name="3" type="PATH">search</search>
+			<search lang="x" name="4" type="PATH">search</search>
+			<search lang="x" name="5" type="PATH">search</search>
+			<search lang="x" name="6" type="PATH">search</search>
+			<search lang="x" name="7" type="PATH">search</search>
+			<search lang="x" name="8" type="PATH">search</search>
+		</source>
+		<source engine="x" name="B">
+			<settings>
+				<setting name="0">setting</setting>
+			</settings>
+			<search lang="x" name="0" type="PATH">search</search>
+			<search lang="x" name="1" type="PATH">search</search>
+			<search lang="x" name="2" type="PATH">search</search>
+			<search lang="x" name="3" type="PATH">search</search>
+			<search lang="x" name="4" type="PATH">search</search>
+			<search lang="x" name="5" type="PATH">search</search>
+			<search lang="x" name="6" type="PATH">search</search>
+			<search lang="x" name="7" type="PATH">search</search>
+			<search lang="x" name="8" type="PATH">search</search>
+		</source>
+		<source engine="x" name="C">
+			<settings>
+				<setting name="z">setting</setting>
+			</settings>
+			<search lang="x" name="0" type="PATH">search</search>
+			<search lang="x" name="1" type="PATH">search</search>
+			<search lang="x" name="2" type="PATH">search</search>
+			<search lang="x" name="3" type="PATH">search</search>
+			<search lang="x" name="4" type="PATH">search</search>
+			<search lang="x" name="5" type="PATH">search</search>
+			<search lang="x" name="6" type="PATH">search</search>
+			<search lang="x" name="7" type="PATH">search</search>
+			<search lang="x" name="8" type="PATH">search</search>
+		</source>
+	</sources>
+	<metadata engine="x" xsi:type="extractComponent.t">
+		<settings>
+			<setting name="z">setting</setting>
+		</settings>
+	</metadata>
+	<content engine="x">
+		<settings>
+			<setting name="z">setting</setting>
+		</settings>
+		<organization engine="x">
+			<settings>
+				<setting name="z">setting</setting>
+			</settings>
+		</organization>
+	</content>
+</extract>
