@@ -26,9 +26,13 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.exporter.xml;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -42,21 +46,21 @@ import com.armedia.caliente.engine.tools.xml.XmlSchema;
 @XmlSchema("engine.xsd")
 public class Extraction extends SettingsContainer {
 
-	@XmlElement(name = "sources", required = true)
-	protected ExtractSourcesT sources;
+	@XmlElementWrapper(name = "sources", required = true)
+	@XmlElement(name = "source", required = true)
+	protected List<ExtractSourceT> sources;
 
 	@XmlElement(name = "metadata", required = false)
 	protected ExtractComponentT metadata;
 
 	@XmlElement(name = "content", required = false)
-	protected ExtractContentT content;
+	protected ExtractComponentT content;
 
-	public ExtractSourcesT getSources() {
+	public List<ExtractSourceT> getSources() {
+		if (this.sources == null) {
+			this.sources = new ArrayList<>();
+		}
 		return this.sources;
-	}
-
-	public void setSources(ExtractSourcesT value) {
-		this.sources = value;
 	}
 
 	public ExtractComponentT getMetadata() {
@@ -67,11 +71,11 @@ public class Extraction extends SettingsContainer {
 		this.metadata = value;
 	}
 
-	public ExtractContentT getContent() {
+	public ExtractComponentT getContent() {
 		return this.content;
 	}
 
-	public void setContent(ExtractContentT value) {
+	public void setContent(ExtractComponentT value) {
 		this.content = value;
 	}
 

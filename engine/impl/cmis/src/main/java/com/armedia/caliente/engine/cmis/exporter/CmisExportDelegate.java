@@ -34,7 +34,6 @@ import org.apache.chemistry.opencmis.client.api.Session;
 
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.exporter.ExportDelegate;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
@@ -75,8 +74,7 @@ public abstract class CmisExportDelegate<T> extends
 
 	@Override
 	protected List<CmfContentStream> storeContent(CmisExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
-		boolean includeRenditions) {
+		CmfObject<CmfValue> marshalled, CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
 		return new ArrayList<>();
 	}
 }

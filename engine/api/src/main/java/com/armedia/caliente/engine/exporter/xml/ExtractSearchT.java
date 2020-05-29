@@ -33,7 +33,7 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.exporter.ExportTargetLocator;
+import com.armedia.caliente.engine.exporter.locator.ExportTargetLocator;
 import com.armedia.commons.utilities.xml.AbstractEnumAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)

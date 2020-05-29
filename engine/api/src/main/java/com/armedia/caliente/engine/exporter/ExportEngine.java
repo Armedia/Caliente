@@ -646,7 +646,7 @@ public abstract class ExportEngine<//
 			try {
 				final boolean includeRenditions = !ctx.getSettings().getBoolean(TransferSetting.NO_RENDITIONS);
 				List<CmfContentStream> contentStreams = sourceObject.storeContent(ctx, getTranslator(), marshaled,
-					referrentTarget, streamStore, includeRenditions);
+					streamStore, includeRenditions);
 				if ((contentStreams != null) && !contentStreams.isEmpty()) {
 					objectStore.setContentStreams(marshaled, contentStreams);
 				}
@@ -1074,6 +1074,7 @@ public abstract class ExportEngine<//
 		} catch (TransferException e) {
 			throw new ExportException(e.getMessage(), e.getCause());
 		}
+
 		final ExportState exportState = new ExportState(getOutput(), getBaseData(), getObjectStore(), getContentStore(),
 			configuration);
 

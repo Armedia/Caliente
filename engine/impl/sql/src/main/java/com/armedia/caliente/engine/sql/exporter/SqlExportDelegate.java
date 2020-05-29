@@ -29,7 +29,6 @@ package com.armedia.caliente.engine.sql.exporter;
 import java.util.List;
 
 import com.armedia.caliente.engine.exporter.ExportDelegate;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.sql.common.SqlRoot;
 import com.armedia.caliente.engine.sql.common.SqlSessionWrapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -57,8 +56,7 @@ abstract class SqlExportDelegate<T> extends
 
 	@Override
 	protected List<CmfContentStream> storeContent(SqlExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
-		boolean includeRenditions) {
+		CmfObject<CmfValue> marshalled, CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
 		return null;
 	}
 }
