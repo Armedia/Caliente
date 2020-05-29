@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.exporter;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -45,22 +46,26 @@ public abstract class ExportTargetLocator<SESSION> {
 		return SearchType.QUERY;
 	}
 
-	protected abstract Stream<ExportTarget> findExportTargetsByQuery(SESSION session, CfgTools configuration,
-		String query) throws Exception;
+	protected abstract Stream<ExportTarget> findExportTargetsByQuery(SESSION session, String query) throws Exception;
 
-	protected abstract Stream<ExportTarget> findExportTargetsByPath(SESSION session, CfgTools configuration,
-		String path) throws Exception;
+	protected abstract Stream<ExportTarget> findExportTargetsByPath(SESSION session, String path) throws Exception;
 
-	protected abstract Stream<ExportTarget> findExportTargetsBySearchKey(SESSION session, CfgTools configuration,
-		String searchKey) throws Exception;
+	protected abstract Stream<ExportTarget> findExportTargetsBySearchKey(SESSION session, String searchKey)
+		throws Exception;
 
 	public final Stream<ExportTarget> getExportTargets(String source) throws Exception {
+		Objects.requireNonNull(source, "Must provide the search terms");
 		final SearchType searchType = detectSearchType(source);
 		if (searchType == null) {
 			throw new ExportException(
 				String.format("This engine doesn't know how to search for exportable objects using [%s]", source));
 		}
+		return getExportTargets(searchType, source);
+	}
 
+	public final Stream<ExportTarget> getExportTargets(SearchType searchType, String source) throws Exception {
+		Objects.requireNonNull(searchType, "Must provide the type of search to execute");
+		Objects.requireNonNull(source, "Must provide the search terms");
 		if (!this.supportedSearches.contains(searchType)) {
 			throw new ExportException(String.format("This engine doesn't support searches by %s (from the source [%s])",
 				searchType.name().toLowerCase(), source));
@@ -77,30 +82,37 @@ public abstract class ExportTargetLocator<SESSION> {
 					throw new ExportException(
 						String.format("Invalid search key [%s] - no object can be found with an empty key"));
 				}
-				ret = findExportTargetsBySearchKey(session, this.settings, searchKey);
+				ret = findExportTargetsBySearchKey(session, searchKey);
 				break;
 			case PATH:
 				// CMS Path!
-				ret = findExportTargetsByPath(session, this.settings, source);
+				ret = findExportTargetsByPath(session, source);
 				break;
 			case QUERY:
 				// Query string!
-				ret = findExportTargetsByQuery(session, this.settings, source);
+				ret = findExportTargetsByQuery(session, source);
 			default:
 				break;
 		}
 
-		if (ret != null) {
-			if (ret.isParallel()) {
-				// Switch to sequential mode - we're doing our own parallelism here
-				ret = ret.sequential();
+		// If there's nothing to return, always return an empty Stream
+		if (ret == null) {
+			try {
+				return Stream.empty();
+			} finally {
+				sessionWrapper.close();
 			}
-		} else {
-			ret = Stream.empty();
 		}
 
-		// Make sure we only close the session after the search scan is complete
-		return ret.onClose(sessionWrapper::close);
+		if (ret.isParallel()) {
+			// Switch to sequential mode - we're doing our own parallelism here
+			ret = ret.sequential();
+		}
+
+		// Make sure we close the session after the scan is complete
+		ret.onClose(sessionWrapper::close);
+
+		return ret;
 	}
 
 }
