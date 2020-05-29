@@ -32,11 +32,14 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.tools.xml.XmlSchema;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
 	"sources", "metadata", "content"
 })
 @XmlRootElement(name = "extraction")
+@XmlSchema("engine.xsd")
 public class Extraction extends SettingsContainer {
 
 	@XmlElement(name = "sources", required = true)
