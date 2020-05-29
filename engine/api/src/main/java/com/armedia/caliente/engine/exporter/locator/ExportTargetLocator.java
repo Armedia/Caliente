@@ -3,6 +3,7 @@ package com.armedia.caliente.engine.exporter.locator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -13,12 +14,9 @@ import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.function.CheckedSupplier;
+import com.armedia.commons.utilities.function.CheckedConsumer;
 
 public abstract class ExportTargetLocator<SESSION> {
-
-	public static interface SearchRunner extends CheckedSupplier<Stream<ExportTarget>, Exception> {
-	}
 
 	public static enum SearchType {
 		//
@@ -41,9 +39,10 @@ public abstract class ExportTargetLocator<SESSION> {
 	}
 
 	/**
-	 * Detect the type of search to conduct, or {@code null} if this search pattern isn't supported.
+	 * Detect the searchType of search to conduct, or {@code null} if this search pattern isn't
+	 * supported.
 	 *
-	 * @return the type of search to conduct, or {@code null} if this search pattern isn't
+	 * @return the searchType of search to conduct, or {@code null} if this search pattern isn't
 	 *         supported.
 	 */
 	protected SearchType detectSearchType(String source) {
@@ -61,7 +60,7 @@ public abstract class ExportTargetLocator<SESSION> {
 		throws Exception;
 
 	private Stream<ExportTarget> findExportTargets(SearchType searchType, String term) throws Exception {
-		Objects.requireNonNull(searchType, "Must provide the type of search to execute");
+		Objects.requireNonNull(searchType, "Must provide the searchType of search to execute");
 		Objects.requireNonNull(term, "Must provide the search term");
 		if (!this.supportedSearches.contains(searchType)) {
 			throw new ExportException(String.format("This engine doesn't support searches by %s (from the source [%s])",
@@ -105,6 +104,7 @@ public abstract class ExportTargetLocator<SESSION> {
 			// Switch to sequential mode - we're doing our own parallelism here
 			ret = ret.sequential();
 		}
+		ret = ret.filter(Objects::nonNull);
 
 		// Make sure we close the session after the scan is complete
 		ret.onClose(sessionWrapper::close);
@@ -112,9 +112,49 @@ public abstract class ExportTargetLocator<SESSION> {
 		return ret;
 	}
 
-	public SearchRunner getSearchRunner(SearchType searchType, String term) {
-		Objects.requireNonNull(term, "Must provide the search term");
-		final SearchType type = Optional.ofNullable(searchType).orElseGet(() -> detectSearchType(term));
-		return () -> findExportTargets(type, term);
+	public static class Search {
+		private final ExportTargetLocator<?> locator;
+		private final SearchType searchType;
+		private final String term;
+
+		private Search(ExportTargetLocator<?> locator, String term) {
+			this(locator, null, term);
+		}
+
+		private Search(ExportTargetLocator<?> locator, SearchType searchType, String term) {
+			Objects.requireNonNull(term, "Must provide the search term");
+			this.locator = Objects.requireNonNull(locator, "Must provide the locator to search with");
+			this.searchType = Optional.ofNullable(searchType).orElseGet(() -> locator.detectSearchType(term));
+			this.term = term;
+		}
+
+		public long runSearch(CheckedConsumer<ExportTarget, ? extends Exception> consumer) throws Exception {
+			Stream<ExportTarget> stream = this.locator.findExportTargets(this.searchType, this.term);
+			if (consumer == null) { return stream.count(); }
+
+			final AtomicLong counter = new AtomicLong();
+			stream.forEach(consumer.andThen((t) -> counter.incrementAndGet()));
+			return counter.get();
+		}
+
+		public ExportTargetLocator<?> getLocator() {
+			return this.locator;
+		}
+
+		public SearchType getSearchType() {
+			return this.searchType;
+		}
+
+		public String getTerm() {
+			return this.term;
+		}
+	}
+
+	public Search getSearchRunner(String term) {
+		return getSearchRunner(null, term);
+	}
+
+	public Search getSearchRunner(SearchType searchType, String term) {
+		return new Search(this, searchType, term);
 	}
 }
