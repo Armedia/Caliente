@@ -1327,16 +1327,6 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="extractContent.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:extractComponent.t">
-				<xsd:sequence>
-					<xsd:element name="organization" type="tns:extractContentOrganization.t" minOccurs="0" maxOccurs="1" />
-				</xsd:sequence>
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-
 	<xsd:element name="extraction">
 		<xsd:complexType>
 			<xsd:sequence>
@@ -1353,7 +1343,7 @@
 					</xsd:unique>
 				</xsd:element>
 				<xsd:element name="metadata" type="tns:extractComponent.t" minOccurs="0" maxOccurs="1" />
-				<xsd:element name="content" type="tns:extractContent.t" minOccurs="0" maxOccurs="1" />
+				<xsd:element name="content" type="tns:extractComponent.t" minOccurs="0" maxOccurs="1" />
 			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>

@@ -1,6 +1,7 @@
-package com.armedia.caliente.engine.exporter;
+package com.armedia.caliente.engine.exporter.locator;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -8,10 +9,16 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
+import com.armedia.caliente.engine.exporter.ExportException;
+import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.CheckedSupplier;
 
 public abstract class ExportTargetLocator<SESSION> {
+
+	public static interface SearchRunner extends CheckedSupplier<Stream<ExportTarget>, Exception> {
+	}
 
 	public static enum SearchType {
 		//
@@ -53,22 +60,12 @@ public abstract class ExportTargetLocator<SESSION> {
 	protected abstract Stream<ExportTarget> findExportTargetsBySearchKey(SESSION session, String searchKey)
 		throws Exception;
 
-	public final Stream<ExportTarget> getExportTargets(String source) throws Exception {
-		Objects.requireNonNull(source, "Must provide the search terms");
-		final SearchType searchType = detectSearchType(source);
-		if (searchType == null) {
-			throw new ExportException(
-				String.format("This engine doesn't know how to search for exportable objects using [%s]", source));
-		}
-		return getExportTargets(searchType, source);
-	}
-
-	public final Stream<ExportTarget> getExportTargets(SearchType searchType, String source) throws Exception {
+	private Stream<ExportTarget> findExportTargets(SearchType searchType, String term) throws Exception {
 		Objects.requireNonNull(searchType, "Must provide the type of search to execute");
-		Objects.requireNonNull(source, "Must provide the search terms");
+		Objects.requireNonNull(term, "Must provide the search term");
 		if (!this.supportedSearches.contains(searchType)) {
 			throw new ExportException(String.format("This engine doesn't support searches by %s (from the source [%s])",
-				searchType.name().toLowerCase(), source));
+				searchType.name().toLowerCase(), term));
 		}
 
 		SessionWrapper<SESSION> sessionWrapper = this.sessionFactory.acquireSession();
@@ -77,7 +74,7 @@ public abstract class ExportTargetLocator<SESSION> {
 		switch (searchType) {
 			case KEY:
 				// SearchKey!
-				final String searchKey = StringUtils.strip(source.substring(1));
+				final String searchKey = StringUtils.strip(term.substring(1));
 				if (StringUtils.isEmpty(searchKey)) {
 					throw new ExportException(
 						String.format("Invalid search key [%s] - no object can be found with an empty key"));
@@ -86,11 +83,11 @@ public abstract class ExportTargetLocator<SESSION> {
 				break;
 			case PATH:
 				// CMS Path!
-				ret = findExportTargetsByPath(session, source);
+				ret = findExportTargetsByPath(session, term);
 				break;
 			case QUERY:
 				// Query string!
-				ret = findExportTargetsByQuery(session, source);
+				ret = findExportTargetsByQuery(session, term);
 			default:
 				break;
 		}
@@ -115,4 +112,9 @@ public abstract class ExportTargetLocator<SESSION> {
 		return ret;
 	}
 
+	public SearchRunner getSearchRunner(SearchType searchType, String term) {
+		Objects.requireNonNull(term, "Must provide the search term");
+		final SearchType type = Optional.ofNullable(searchType).orElseGet(() -> detectSearchType(term));
+		return () -> findExportTargets(type, term);
+	}
 }
