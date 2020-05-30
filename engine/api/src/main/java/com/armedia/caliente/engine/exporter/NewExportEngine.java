@@ -101,7 +101,7 @@ public abstract class NewExportEngine {
 		return runners;
 	}
 
-	protected MetadataExtractor buildMetadataExtractor(Extraction extraction, ContentExtractor contentExtractor)
+	protected MetadataExtractor<?, ?> buildMetadataExtractor(Extraction extraction, ContentExtractor contentExtractor)
 		throws ExportException {
 		return null;
 	}
@@ -135,7 +135,7 @@ public abstract class NewExportEngine {
 		}
 
 		try (ContentExtractor content = buildContentExtractor(extraction)) {
-			try (MetadataExtractor metadata = buildMetadataExtractor(extraction, content)) {
+			try (MetadataExtractor<?, ?> metadata = buildMetadataExtractor(extraction, content)) {
 				for (Pair<String, Search> p : searches) {
 					processor.accept(p.getKey(), p.getValue());
 				}
