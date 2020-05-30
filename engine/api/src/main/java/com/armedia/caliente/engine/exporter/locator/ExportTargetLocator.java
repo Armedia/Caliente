@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.exporter.locator;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
@@ -93,11 +92,8 @@ public abstract class ExportTargetLocator<SESSION> {
 
 		// If there's nothing to return, always return an empty Stream
 		if (ret == null) {
-			try {
-				return Stream.empty();
-			} finally {
-				sessionWrapper.close();
-			}
+			sessionWrapper.close();
+			return Stream.empty();
 		}
 
 		if (ret.isParallel()) {
@@ -118,13 +114,9 @@ public abstract class ExportTargetLocator<SESSION> {
 		private final String term;
 
 		private Search(ExportTargetLocator<?> locator, String term) {
-			this(locator, null, term);
-		}
-
-		private Search(ExportTargetLocator<?> locator, SearchType searchType, String term) {
 			Objects.requireNonNull(term, "Must provide the search term");
 			this.locator = Objects.requireNonNull(locator, "Must provide the locator to search with");
-			this.searchType = Optional.ofNullable(searchType).orElseGet(() -> locator.detectSearchType(term));
+			this.searchType = locator.detectSearchType(term);
 			this.term = term;
 		}
 
@@ -151,10 +143,6 @@ public abstract class ExportTargetLocator<SESSION> {
 	}
 
 	public Search getSearchRunner(String term) {
-		return getSearchRunner(null, term);
-	}
-
-	public Search getSearchRunner(SearchType searchType, String term) {
-		return new Search(this, searchType, term);
+		return new Search(this, term);
 	}
 }

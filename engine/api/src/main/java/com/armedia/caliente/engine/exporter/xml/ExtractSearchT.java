@@ -31,7 +31,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.exporter.locator.ExportTargetLocator;
 import com.armedia.commons.utilities.xml.AbstractEnumAdapter;
@@ -54,10 +53,6 @@ public class ExtractSearchT {
 	@XmlAttribute(name = "name", required = false)
 	protected String name;
 
-	@XmlAttribute(name = "type", required = true)
-	@XmlJavaTypeAdapter(value = SearchTypeAdapter.class)
-	protected ExportTargetLocator.SearchType type;
-
 	@XmlAttribute(name = "lang", required = false)
 	protected String lang;
 
@@ -75,14 +70,6 @@ public class ExtractSearchT {
 
 	public void setName(String value) {
 		this.name = value;
-	}
-
-	public ExportTargetLocator.SearchType getType() {
-		return this.type;
-	}
-
-	public void setType(ExportTargetLocator.SearchType value) {
-		this.type = value;
 	}
 
 	public String getLang() {

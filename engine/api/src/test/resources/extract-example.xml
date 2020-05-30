@@ -18,43 +18,43 @@
 			<settings>
 				<setting name="0">setting</setting>
 			</settings>
-			<search lang="x" name="0" type="PATH">search</search>
-			<search lang="x" name="1" type="PATH">search</search>
-			<search lang="x" name="2" type="PATH">search</search>
-			<search lang="x" name="3" type="PATH">search</search>
-			<search lang="x" name="4" type="PATH">search</search>
-			<search lang="x" name="5" type="PATH">search</search>
-			<search lang="x" name="6" type="PATH">search</search>
-			<search lang="x" name="7" type="PATH">search</search>
-			<search lang="x" name="8" type="PATH">search</search>
+			<search lang="x" name="0">search</search>
+			<search lang="x" name="1">search</search>
+			<search lang="x" name="2">search</search>
+			<search lang="x" name="3">search</search>
+			<search lang="x" name="4">search</search>
+			<search lang="x" name="5">search</search>
+			<search lang="x" name="6">search</search>
+			<search lang="x" name="7">search</search>
+			<search lang="x" name="8">search</search>
 		</source>
 		<source engine="x" name="B">
 			<settings>
 				<setting name="0">setting</setting>
 			</settings>
-			<search lang="x" name="0" type="PATH">search</search>
-			<search lang="x" name="1" type="PATH">search</search>
-			<search lang="x" name="2" type="PATH">search</search>
-			<search lang="x" name="3" type="PATH">search</search>
-			<search lang="x" name="4" type="PATH">search</search>
-			<search lang="x" name="5" type="PATH">search</search>
-			<search lang="x" name="6" type="PATH">search</search>
-			<search lang="x" name="7" type="PATH">search</search>
-			<search lang="x" name="8" type="PATH">search</search>
+			<search lang="x" name="0">search</search>
+			<search lang="x" name="1">search</search>
+			<search lang="x" name="2">search</search>
+			<search lang="x" name="3">search</search>
+			<search lang="x" name="4">search</search>
+			<search lang="x" name="5">search</search>
+			<search lang="x" name="6">search</search>
+			<search lang="x" name="7">search</search>
+			<search lang="x" name="8">search</search>
 		</source>
 		<source engine="x" name="C">
 			<settings>
 				<setting name="z">setting</setting>
 			</settings>
-			<search lang="x" name="0" type="PATH">search</search>
-			<search lang="x" name="1" type="PATH">search</search>
-			<search lang="x" name="2" type="PATH">search</search>
-			<search lang="x" name="3" type="PATH">search</search>
-			<search lang="x" name="4" type="PATH">search</search>
-			<search lang="x" name="5" type="PATH">search</search>
-			<search lang="x" name="6" type="PATH">search</search>
-			<search lang="x" name="7" type="PATH">search</search>
-			<search lang="x" name="8" type="PATH">search</search>
+			<search lang="x" name="0">search</search>
+			<search lang="x" name="1">search</search>
+			<search lang="x" name="2">search</search>
+			<search lang="x" name="3">search</search>
+			<search lang="x" name="4">search</search>
+			<search lang="x" name="5">search</search>
+			<search lang="x" name="6">search</search>
+			<search lang="x" name="7">search</search>
+			<search lang="x" name="8">search</search>
 		</source>
 	</sources>
 	<metadata engine="x">

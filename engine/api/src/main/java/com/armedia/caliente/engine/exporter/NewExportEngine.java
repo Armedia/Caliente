@@ -94,7 +94,8 @@ public abstract class NewExportEngine {
 				} else {
 					searchName = sourceName + "#" + searchName;
 				}
-				runners.add(Pair.of(searchName, locator.getSearchRunner(search.getType(), search.getValue())));
+				// TODO: Support script execution via "lang"?
+				runners.add(Pair.of(searchName, locator.getSearchRunner(search.getValue())));
 			}
 		}
 		return runners;

@@ -109,14 +109,6 @@
 		</xsd:restriction>
 	</xsd:simpleType>
 
-	<xsd:simpleType name="extractSearchType.t" final="restriction">
-		<xsd:restriction base="xsd:string">
-			<xsd:enumeration value="PATH" />
-			<xsd:enumeration value="QUERY" />
-			<xsd:enumeration value="KEY" />
-		</xsd:restriction>
-	</xsd:simpleType>
-
 	<xsd:complexType name="conditionGroupAnd.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionGroup.t" />
@@ -1292,7 +1284,6 @@
 		<xsd:simpleContent>
 			<xsd:extension base="xsd:string">
 				<xsd:attribute name="name" type="tns:nonEmpty.t" use="optional" />
-				<xsd:attribute name="type" type="tns:extractSearchType.t" use="required" />
 				<!-- TODO: Allow expressions? -->
 				<xsd:attribute name="lang" type="tns:noSpaces.t" use="optional" />
 			</xsd:extension>
