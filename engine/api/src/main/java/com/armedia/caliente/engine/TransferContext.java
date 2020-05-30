@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.CheckedSupplier;
 
 /**
  *
@@ -101,6 +103,14 @@ public abstract class TransferContext< //
 
 	public final SESSION getSession() {
 		return this.session;
+	}
+
+	public final <T> T getSession(Class<T> klass) {
+		return getSession(klass, null);
+	}
+
+	public final <T, EX extends Exception> T getSession(Class<T> klass, CheckedSupplier<T, EX> alt) throws EX {
+		return Tools.cast(klass, this.session, alt);
 	}
 
 	private void assertValidName(String name) {
