@@ -33,6 +33,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -59,10 +61,66 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.function.CheckedBiFunction;
 import com.armedia.commons.utilities.function.CheckedConsumer;
 
 @XmlTransient
 public abstract class MetadataReaderBase extends BaseShareableLockable implements AttributeValuesLoader {
+
+	private static final Map<CmfValue.Type, CheckedBiFunction<ResultSet, String, Object, Exception>> DDL_READERS;
+	private static final Map<CmfValue.Type, CheckedBiFunction<ResultSet, Integer, Object, Exception>> SQL_READERS;
+
+	static {
+		Map<CmfValue.Type, CheckedBiFunction<ResultSet, String, Object, Exception>> ddl = new EnumMap<>(
+			CmfValue.Type.class);
+		Map<CmfValue.Type, CheckedBiFunction<ResultSet, Integer, Object, Exception>> sql = new EnumMap<>(
+			CmfValue.Type.class);
+
+		ddl.put(CmfValue.Type.BOOLEAN, ResultSet::getBoolean);
+		sql.put(CmfValue.Type.BOOLEAN, ResultSet::getBoolean);
+
+		ddl.put(CmfValue.Type.DATETIME, ResultSet::getDate);
+		sql.put(CmfValue.Type.DATETIME, ResultSet::getDate);
+
+		ddl.put(CmfValue.Type.DOUBLE, ResultSet::getDouble);
+		sql.put(CmfValue.Type.DATETIME, ResultSet::getDouble);
+
+		ddl.put(CmfValue.Type.INTEGER, ResultSet::getLong);
+		sql.put(CmfValue.Type.INTEGER, ResultSet::getLong);
+
+		ddl.put(CmfValue.Type.BOOLEAN, ResultSet::getBoolean);
+		sql.put(CmfValue.Type.BOOLEAN, ResultSet::getBoolean);
+
+		EnumSet.of( //
+			CmfValue.Type.URI, //
+			CmfValue.Type.HTML, //
+			CmfValue.Type.ID, //
+			CmfValue.Type.STRING //
+		) //
+			.forEach((t) -> {
+				ddl.put(t, ResultSet::getString);
+				sql.put(t, ResultSet::getString);
+			});
+
+		ddl.put(CmfValue.Type.BASE64_BINARY, (rs, s) -> {
+			InputStream bs = rs.getBinaryStream(s);
+			if (bs == null) { return null; }
+			try (InputStream in = bs) {
+				return IOUtils.toByteArray(in);
+			}
+		});
+
+		sql.put(CmfValue.Type.BASE64_BINARY, (rs, s) -> {
+			InputStream bs = rs.getBinaryStream(s);
+			if (bs == null) { return null; }
+			try (InputStream in = bs) {
+				return IOUtils.toByteArray(in);
+			}
+		});
+
+		DDL_READERS = Tools.freezeMap(ddl);
+		SQL_READERS = Tools.freezeMap(sql);
+	}
 
 	@XmlElement(name = "query", required = true)
 	protected ParameterizedQuery query;
@@ -232,66 +290,19 @@ public abstract class MetadataReaderBase extends BaseShareableLockable implement
 	}
 
 	protected final Object getValue(ResultSet rs, String columnName, CmfValue.Type type) throws Exception {
-		switch (type) {
-			case BOOLEAN:
-				return rs.getBoolean(columnName);
-
-			case DATETIME:
-				return rs.getDate(columnName);
-
-			case DOUBLE:
-				return rs.getDouble(columnName);
-
-			case INTEGER:
-				return rs.getLong(columnName);
-
-			case URI:
-			case HTML:
-			case ID:
-			case STRING:
-				return rs.getString(columnName);
-
-			case BASE64_BINARY:
-				InputStream bs = rs.getBinaryStream(columnName);
-				if (bs == null) { return null; }
-				try (InputStream in = bs) {
-					return IOUtils.toByteArray(in);
-				}
-
-			default:
-				throw new Exception(String.format("Unsupported data type %s for column %s", type.name(), columnName));
+		CheckedBiFunction<ResultSet, String, Object, Exception> reader = MetadataReaderBase.DDL_READERS.get(type);
+		if (reader == null) {
+			throw new Exception(String.format("Unsupported data type %s for column %s", type.name(), columnName));
 		}
+		return reader.apply(rs, columnName);
 	}
 
 	protected final Object getValue(ResultSet rs, int columnIndex, CmfValue.Type type) throws Exception {
-		switch (type) {
-			case BOOLEAN:
-				return rs.getBoolean(columnIndex);
-
-			case DATETIME:
-				return rs.getDate(columnIndex);
-
-			case DOUBLE:
-				return rs.getDouble(columnIndex);
-
-			case INTEGER:
-				return rs.getLong(columnIndex);
-
-			case URI:
-			case HTML:
-			case ID:
-			case STRING:
-				return rs.getString(columnIndex);
-
-			case BASE64_BINARY:
-				try (InputStream in = rs.getBinaryStream(columnIndex)) {
-					if (in == null) { return null; }
-					return IOUtils.toByteArray(in);
-				}
-
-			default:
-				throw new Exception(String.format("Unsupported data type %s for column %s", type.name(), columnIndex));
+		CheckedBiFunction<ResultSet, Integer, Object, Exception> reader = MetadataReaderBase.SQL_READERS.get(type);
+		if (reader == null) {
+			throw new Exception(String.format("Unsupported data type %s for column # %d", type.name(), columnIndex));
 		}
+		return reader.apply(rs, columnIndex);
 	}
 
 	protected final CmfValue.Type decodeSQLType(int type) {
