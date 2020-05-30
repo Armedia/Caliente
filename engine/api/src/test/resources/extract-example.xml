@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extraction xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine engine.xsd">
 	<settings>
 		<setting name="1">setting</setting>
 		<setting name="2">setting</setting>
@@ -57,7 +57,7 @@
 			<search lang="x" name="8" type="PATH">search</search>
 		</source>
 	</sources>
-	<metadata engine="x" xsi:type="extractComponent.t">
+	<metadata engine="x">
 		<settings>
 			<setting name="z">setting</setting>
 		</settings>
@@ -66,10 +66,5 @@
 		<settings>
 			<setting name="z">setting</setting>
 		</settings>
-		<organization engine="x">
-			<settings>
-				<setting name="z">setting</setting>
-			</settings>
-		</organization>
 	</content>
 </extraction>
