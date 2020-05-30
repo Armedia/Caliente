@@ -36,6 +36,7 @@ import java.util.function.BiConsumer;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.armedia.caliente.engine.exporter.content.ContentExtractor;
 import com.armedia.caliente.engine.exporter.locator.ExportTargetLocator;
 import com.armedia.caliente.engine.exporter.locator.ExportTargetLocator.Search;
 import com.armedia.caliente.engine.exporter.xml.ExtractSearchT;

@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.exporter;
+package com.armedia.caliente.engine.exporter.content;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +14,8 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 
+import com.armedia.caliente.engine.exporter.ExportContext;
+import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.tools.ContentTools;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObjectRef;
