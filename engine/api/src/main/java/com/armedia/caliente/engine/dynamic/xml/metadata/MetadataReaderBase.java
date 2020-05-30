@@ -252,8 +252,9 @@ public abstract class MetadataReaderBase extends BaseShareableLockable implement
 				return rs.getString(columnName);
 
 			case BASE64_BINARY:
-				try (InputStream in = rs.getBinaryStream(columnName)) {
-					if (in == null) { return null; }
+				InputStream bs = rs.getBinaryStream(columnName);
+				if (bs == null) { return null; }
+				try (InputStream in = bs) {
 					return IOUtils.toByteArray(in);
 				}
 
