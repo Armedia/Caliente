@@ -46,12 +46,12 @@ import java.util.concurrent.locks.Lock;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.commons.utilities.ReadableByteChannelWrapper;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.WritableByteChannelWrapper;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 import com.armedia.commons.utilities.function.CheckedRunnable;
 import com.armedia.commons.utilities.function.CheckedSupplier;
+import com.armedia.commons.utilities.io.ReadableByteChannelWrapper;
+import com.armedia.commons.utilities.io.WritableByteChannelWrapper;
 
 public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperation<?>> extends CmfStore<OPERATION> {
 
