@@ -9,8 +9,8 @@ import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Collection;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 
@@ -27,25 +27,26 @@ public abstract class ContentExtractor implements AutoCloseable {
 	protected static interface FSWriter extends CheckedBiFunction<Path, Integer, Long, Exception> {
 	}
 
-	public abstract class ContentData {
+	public abstract class ContentStream {
 
 		public static final int MIN_BUFFER_SIZE = 4 * (int) FileUtils.ONE_KB;
-		public static final int DEF_BUFFER_SIZE = 8 * ContentData.MIN_BUFFER_SIZE;
+		public static final int DEF_BUFFER_SIZE = 8 * ContentStream.MIN_BUFFER_SIZE;
 
 		private final CmfContentStream info;
 		private final FSWriter fsWriter;
 
-		protected ContentData(CmfContentStream info) {
+		protected ContentStream(CmfContentStream info) {
 			this(info, null);
 		}
 
-		protected ContentData(CmfContentStream info, FSWriter fileWriter) {
+		protected ContentStream(CmfContentStream info, FSWriter fileWriter) {
 			this.info = info;
 			this.fsWriter = fileWriter;
 		}
 
 		private int sanitizeBufferSize(int bufferSize) {
-			return (bufferSize <= 0) ? ContentData.DEF_BUFFER_SIZE : Math.max(ContentData.MIN_BUFFER_SIZE, bufferSize);
+			return (bufferSize <= 0) ? ContentStream.DEF_BUFFER_SIZE
+				: Math.max(ContentStream.MIN_BUFFER_SIZE, bufferSize);
 		}
 
 		public final CmfContentStream getInfo() {
@@ -107,6 +108,6 @@ public abstract class ContentExtractor implements AutoCloseable {
 		}
 	}
 
-	public abstract <VALUE, CONTEXT extends ExportContext<?, VALUE, ?>> Stream<? extends ContentData> getContentData(
+	public abstract <VALUE, CONTEXT extends ExportContext<?, VALUE, ?>> Collection<? extends ContentStream> getContentData(
 		CONTEXT ctx, CmfObjectRef object, boolean includeRenditions) throws ExportException;
 }

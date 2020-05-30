@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationHandler;
+import java.nio.channels.WritableByteChannel;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,6 +38,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -70,6 +72,7 @@ import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
+import com.armedia.caliente.engine.exporter.content.ContentExtractor;
 import com.armedia.caliente.engine.tools.xml.MetadataT;
 import com.armedia.caliente.engine.tools.xml.XmlBase;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -92,6 +95,7 @@ import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.ConcurrentTools;
+import com.armedia.commons.utilities.function.CheckedBiFunction;
 import com.armedia.commons.utilities.line.LineScanner;
 
 public abstract class ExportEngine<//
@@ -645,18 +649,63 @@ public abstract class ExportEngine<//
 
 			try {
 				final boolean includeRenditions = !ctx.getSettings().getBoolean(TransferSetting.NO_RENDITIONS);
-				List<CmfContentStream> contentStreams = sourceObject.storeContent(ctx, getTranslator(), marshaled,
-					streamStore, includeRenditions);
+				final boolean ignoreContent = !ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
+				final ContentExtractor contentExtractor = ctx.getContentExtractor();
+				final CheckedBiFunction<CmfContentStore<?, ?>.Handle, ContentExtractor.ContentStream, Long, Exception> handler = //
+					(streamStore.isSupportsFileAccess() ? this::doStoreContentToFile : this::doStoreContentToStream) //
+				;
+
+				List<CmfContentStream> contentStreams = new LinkedList<>();
+				for (ContentExtractor.ContentStream stream : contentExtractor.getContentData(ctx, encoded,
+					includeRenditions)) {
+					if (stream == null) {
+						continue;
+					}
+
+					// Are we ignoring the content streams?
+					if (ignoreContent) {
+						contentStreams.add(stream.getInfo());
+						continue;
+					}
+
+					final CmfContentStore<?, ?>.Handle handle = streamStore.addContentStream(translator, marshaled,
+						stream.getInfo());
+					try {
+						long size = handler.apply(handle, stream);
+						if (size == stream.getInfo().getLength()) {
+							// TODO: Get the hash?
+							contentStreams.add(stream.getInfo());
+							continue;
+						} else {
+							// TODO: Raise an exception? Log a warning?
+						}
+					} catch (Exception e) {
+
+						// If this was an error interacting with the content store, it's not safe
+						// to continue
+						if (CmfStorageException.class.isInstance(e)) { throw CmfStorageException.class.cast(e); }
+
+						CmfContentStream info = stream.getInfo();
+						// If this was an exception related to I/O, it's not safe to continue
+						if (IOException.class.isInstance(e)) {
+							throw new ExportException(
+								String.format("Failed to retrieve content stream # %d for %s (%s)", info.getIndex(),
+									logLabel, info),
+								e);
+						}
+
+						// Otherwise, this may have been an exception related to fetching the
+						// content, which means we keep trying with other content streams...
+						this.log.warn("Failed to store content stream # {} for {} ({})", info.getIndex(), logLabel,
+							info, e);
+					}
+				}
+
 				if ((contentStreams != null) && !contentStreams.isEmpty()) {
 					objectStore.setContentStreams(marshaled, contentStreams);
 				}
-			} catch (Exception e) {
-				if (CmfStorageException.class.isInstance(e) || CmfStorageException.class.isInstance(e.getCause())) {
-					throw new ExportException(String.format("Failed to execute the content storage for %s", logLabel),
-						e);
-				}
-				// Otherwise, just log it and keep moving
-				this.log.warn("Failed to store the content streams for {}", logLabel, e);
+			} catch (CmfStorageException e) {
+				throw new ExportException(String.format("Failed to execute the content storage for %s", logLabel), e);
 			}
 
 			if (this.log.isDebugEnabled()) {
@@ -745,6 +794,20 @@ public abstract class ExportEngine<//
 				ctx.popReferrent();
 			}
 		}
+	}
+
+	private long doStoreContentToFile(CmfContentStore<?, ?>.Handle handle, ContentExtractor.ContentStream stream)
+		throws IOException, CmfStorageException, ExportException {
+		return stream.saveContentTo(handle.getPath(true));
+	}
+
+	private long doStoreContentToStream(CmfContentStore<?, ?>.Handle handle, ContentExtractor.ContentStream stream)
+		throws IOException, CmfStorageException, ExportException {
+		long written = -1;
+		try (WritableByteChannel out = handle.createChannel()) {
+			written = stream.saveContentTo(out);
+		}
+		return written;
 	}
 
 	/**

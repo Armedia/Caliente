@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.TransferContext;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.exporter.content.ContentExtractor;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -75,6 +76,10 @@ public class ExportContext< //
 			default:
 				return false;
 		}
+	}
+
+	public final ContentExtractor getContentExtractor() {
+		return null;
 	}
 
 	public final boolean isReferrentLoop(ExportTarget referrent) {
