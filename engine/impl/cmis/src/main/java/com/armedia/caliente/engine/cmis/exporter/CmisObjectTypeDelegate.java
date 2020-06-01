@@ -27,8 +27,11 @@
 package com.armedia.caliente.engine.cmis.exporter;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.Session;
@@ -37,8 +40,29 @@ import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.commons.utilities.Tools;
 
 public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
+
+	private static final Map<String, Function<PropertyDefinition<?>, Object>> READERS;
+	static {
+		Map<String, Function<PropertyDefinition<?>, Object>> readers = new HashMap<>();
+		readers.put("id", PropertyDefinition::getId);
+		readers.put("localNamespace", PropertyDefinition::getLocalNamespace);
+		readers.put("localName", PropertyDefinition::getLocalName);
+		readers.put("queryName", PropertyDefinition::getQueryName);
+		readers.put("displayName", PropertyDefinition::getDisplayName);
+		readers.put("description", PropertyDefinition::getDescription);
+		readers.put("propertyType", PropertyDefinition::getPropertyType);
+		readers.put("cardinality", PropertyDefinition::getCardinality);
+		readers.put("updatability", PropertyDefinition::getUpdatability);
+		readers.put("inherited", PropertyDefinition::isInherited);
+		readers.put("required", PropertyDefinition::isRequired);
+		readers.put("queryable", PropertyDefinition::isQueryable);
+		readers.put("orderable", PropertyDefinition::isOrderable);
+		readers.put("openChoice", PropertyDefinition::isOpenChoice);
+		READERS = Tools.freezeMap(readers);
+	}
 
 	protected CmisObjectTypeDelegate(CmisExportDelegateFactory factory, Session session, ObjectType folder)
 		throws Exception {
@@ -50,12 +74,52 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 		// TODO: For now, do nothing...
 		if (ctx != null) { return false; }
 
-		// Don't marshal base types
+		// Don't marshal base types?
 		if (this.object.isBaseType()) { return false; }
 
 		for (PropertyDefinition<?> p : this.object.getPropertyDefinitions().values()) {
 			// TODO: How to encode this information in an "engine-neutral" fashion?
-			p.hashCode();
+
+			/*-
+			"my:stringProperty":{
+			    "id":"my:stringProperty",
+			    "localNamespace":"local",
+			    "localName":"my:stringProperty",
+			    "queryName":"my:stringProperty",
+			    "displayName":"My String Property",
+			    "description":"This is a String.~,
+			    "propertyType":"string",
+			    "updatability":"readwrite",
+			    "inherited":false,
+			    "openChoice":false,
+			    "required":false,
+			    "cardinality":"single",
+			    "queryable":true,
+			    "orderable":true,
+			}
+			*/
+
+			for (String name : CmisObjectTypeDelegate.READERS.keySet()) {
+				Object o = CmisObjectTypeDelegate.READERS.get(name).apply(p);
+				if (o == null) {
+					continue;
+				}
+
+				if (o.getClass().isEnum()) {
+					o = Enum.class.cast(o).name();
+				} else {
+					o = Tools.toString(o);
+				}
+
+				// TODO: Now, what?
+			}
+
+			// TODO: Handle these
+			/*
+			List<?> defaultValue = p.getDefaultValue();
+			List<? extends Choice<?>> choices = p.getChoices();
+			*/
+
 		}
 		return true;
 	}
