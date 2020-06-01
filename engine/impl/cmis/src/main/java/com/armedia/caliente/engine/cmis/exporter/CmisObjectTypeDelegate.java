@@ -64,19 +64,17 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 		READERS = Tools.freezeMap(readers);
 	}
 
-	protected CmisObjectTypeDelegate(CmisExportDelegateFactory factory, Session session, ObjectType folder)
+	protected CmisObjectTypeDelegate(CmisExportDelegateFactory factory, Session session, ObjectType objectType)
 		throws Exception {
-		super(factory, session, ObjectType.class, folder);
+		super(factory, session, ObjectType.class, objectType);
 	}
 
 	@Override
 	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
-		// TODO: For now, do nothing...
-		if (ctx != null) { return false; }
+		// Don't marshal the details for base types?
+		if (this.object.isBaseType()) { return true; }
 
-		// Don't marshal base types?
-		if (this.object.isBaseType()) { return false; }
-
+		// Save the property definitions...
 		for (PropertyDefinition<?> p : this.object.getPropertyDefinitions().values()) {
 			// TODO: How to encode this information in an "engine-neutral" fashion?
 
@@ -150,7 +148,7 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 		CmisExportContext ctx) throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
 		ObjectType objectType = this.object.getParentType();
-		if (!objectType.isBaseType()) {
+		if (objectType != null) {
 			ret.add(new CmisObjectTypeDelegate(this.factory, ctx.getSession(), objectType));
 		}
 		return ret;
