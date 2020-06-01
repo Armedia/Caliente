@@ -31,7 +31,6 @@ import java.util.Objects;
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Folder;
-import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.Session;
 
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
@@ -74,9 +73,11 @@ public class CmisExportDelegateFactory
 				return new CmisDocumentDelegate(this, session, doc);
 
 			case TYPE:
+				/*
 				ObjectType objectType = checkedCast(obj, ObjectType.class, type, searchKey);
 				if (objectType.isBaseType()) { return null; }
 				return new CmisObjectTypeDelegate(this, session, objectType);
+				*/
 
 			case USER:
 			case GROUP:
