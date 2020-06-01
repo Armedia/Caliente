@@ -87,7 +87,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 			}
 		}
 
-		BindingType bindingType = BindingType.ATOMPUB;
+		BindingType bindingType = BindingType.BROWSER;
 
 		if (parameters.containsKey(SessionParameter.BINDING_TYPE)) {
 			String bt = parameters.get(SessionParameter.BINDING_TYPE);
