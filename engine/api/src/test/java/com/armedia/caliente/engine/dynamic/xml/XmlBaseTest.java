@@ -33,9 +33,6 @@ import javax.xml.bind.JAXBException;
 
 import org.junit.jupiter.api.Test;
 
-import com.armedia.caliente.engine.dynamic.xml.ExternalMetadata;
-import com.armedia.caliente.engine.dynamic.xml.Filters;
-import com.armedia.caliente.engine.dynamic.xml.Transformations;
 import com.armedia.caliente.engine.tools.xml.XmlBase;
 
 public class XmlBaseTest {

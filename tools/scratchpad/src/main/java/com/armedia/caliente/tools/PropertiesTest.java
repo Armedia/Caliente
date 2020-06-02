@@ -49,7 +49,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.armedia.commons.utilities.BinaryMemoryBuffer;
+import com.armedia.commons.utilities.io.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.xml.XmlStreamElement;
 import com.ctc.wstx.api.WstxOutputProperties;
 import com.ctc.wstx.stax.WstxOutputFactory;
