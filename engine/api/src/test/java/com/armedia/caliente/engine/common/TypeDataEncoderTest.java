@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.exporter;
+package com.armedia.caliente.engine.common;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

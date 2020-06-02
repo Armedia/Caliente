@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.exporter;
+package com.armedia.caliente.engine.common;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -44,6 +44,7 @@ import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyUriDefinit
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -56,7 +57,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-public class TypeDataEncoder<T> {
+public class TypeDataEncoder {
 
 	private static final Function<String, String> STRING = Function.identity();
 	private static final Codec<Object, String> STRING_CODEC = new StringCodec<>(Tools::toString);
@@ -214,7 +215,7 @@ public class TypeDataEncoder<T> {
 		VALUE_CODECS = Tools.freezeMap(valueCodecs);
 	}
 
-	protected static MutablePropertyDefinition<?> constructDefinition(PropertyType propertyType) {
+	static MutablePropertyDefinition<?> constructDefinition(PropertyType propertyType) {
 		MutablePropertyDefinition<?> ret = null;
 		switch (Objects.requireNonNull(propertyType, "Must provide the type of property to instantiate")) {
 			case BOOLEAN:
@@ -259,7 +260,7 @@ public class TypeDataEncoder<T> {
 		return ret;
 	}
 
-	protected static String encodeProperty(PropertyDefinition<?> property) throws JsonProcessingException {
+	static String encodeProperty(PropertyDefinition<?> property) throws JsonProcessingException {
 		// First: the common properties
 		Map<String, Object> values = TypeDataEncoder.encodeCommonValues(property);
 
@@ -285,7 +286,7 @@ public class TypeDataEncoder<T> {
 		return new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValueAsString(values);
 	}
 
-	protected static Map<String, Object> encodeCommonValues(PropertyDefinition<?> property) {
+	static Map<String, Object> encodeCommonValues(PropertyDefinition<?> property) {
 		Map<String, Object> values = new LinkedHashMap<>();
 		for (String name : TypeDataEncoder.COMMON_ACCESSORS.keySet()) {
 			String value = TypeDataEncoder.COMMON_ACCESSORS.get(name).get(property);
@@ -308,7 +309,7 @@ public class TypeDataEncoder<T> {
 		return values;
 	}
 
-	protected static Object encodeChoice(Codec<Object, String> codec, Choice<?> choice) {
+	static Object encodeChoice(Codec<Object, String> codec, Choice<?> choice) {
 		if (choice == null) { return null; }
 
 		Map<String, Object> encodedChoice = new LinkedHashMap<>();
@@ -335,7 +336,7 @@ public class TypeDataEncoder<T> {
 		return encodedChoice;
 	}
 
-	protected static <V> PropertyDefinition<V> decodeProperty(String json) throws JsonProcessingException {
+	static <V> PropertyDefinition<V> decodeProperty(String json) throws JsonProcessingException {
 		// First: the common properties
 		Map<?, ?> values = new ObjectMapper().readValue(json, Map.class);
 
@@ -376,7 +377,7 @@ public class TypeDataEncoder<T> {
 		return property;
 	}
 
-	protected static <V> Pair<Codec<V, String>, MutablePropertyDefinition<V>> decodeCommonValues(Map<?, ?> values) {
+	static <V> Pair<Codec<V, String>, MutablePropertyDefinition<V>> decodeCommonValues(Map<?, ?> values) {
 		// First things first: get the type
 		Object type = values.get(TypeDataEncoder.LBL_PROPERTY_TYPE);
 		if (type == null) {
@@ -418,7 +419,7 @@ public class TypeDataEncoder<T> {
 		return Pair.of(codec, property);
 	}
 
-	protected static <V> Choice<V> decodeChoice(Codec<V, String> codec, Object choiceObj) {
+	static <V> Choice<V> decodeChoice(Codec<V, String> codec, Object choiceObj) {
 		if (choiceObj == null) { return null; }
 
 		@SuppressWarnings("unchecked")
@@ -460,19 +461,14 @@ public class TypeDataEncoder<T> {
 		return choice;
 	}
 
-	private final Codec<String, T> codec;
-
-	public TypeDataEncoder(Codec<String, T> codec) {
-		this.codec = codec;
-	}
-
-	public void encode(List<PropertyDefinition<?>> v, CmfObject<T> object) throws ExportException {
+	public static <T> void encode(List<PropertyDefinition<?>> v, CmfObject<T> object, Function<String, T> encoder)
+		throws ExportException {
 		CmfProperty<T> property = new CmfProperty<>(IntermediateProperty.PROPERTY_DEFINITIONS, CmfValue.Type.STRING,
 			true);
 
 		for (PropertyDefinition<?> p : v) {
 			try {
-				property.addValue(this.codec.encode(TypeDataEncoder.encodeProperty(p)));
+				property.addValue(encoder.apply(TypeDataEncoder.encodeProperty(p)));
 			} catch (JsonProcessingException e) {
 				throw new ExportException("Failed to encode the property: " + p, e);
 			}
@@ -481,13 +477,14 @@ public class TypeDataEncoder<T> {
 		object.setProperty(property);
 	}
 
-	public List<PropertyDefinition<?>> decode(CmfObject<T> object) throws ImportException {
+	public static <T> List<PropertyDefinition<?>> decode(CmfObject<T> object, Function<T, String> decoder)
+		throws ImportException {
 		CmfProperty<T> property = object.getProperty(IntermediateProperty.PROPERTY_DEFINITIONS);
 		List<PropertyDefinition<?>> list = new ArrayList<>();
 		if ((property != null) && property.hasValues()) {
 			for (T t : property) {
 				try {
-					list.add(TypeDataEncoder.decodeProperty(this.codec.decode(t)));
+					list.add(TypeDataEncoder.decodeProperty(decoder.apply(t)));
 				} catch (JsonProcessingException e) {
 					throw new ImportException("Failed to decode the property: " + t, e);
 				}
