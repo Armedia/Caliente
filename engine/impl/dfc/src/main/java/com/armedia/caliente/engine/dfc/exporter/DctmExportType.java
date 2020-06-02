@@ -30,10 +30,19 @@
 
 package com.armedia.caliente.engine.dfc.exporter;
 
+import java.math.BigInteger;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
+import org.apache.chemistry.opencmis.commons.definitions.MutablePropertyDefinition;
+import org.apache.chemistry.opencmis.commons.definitions.MutablePropertyStringDefinition;
+import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
+import org.apache.chemistry.opencmis.commons.enums.Cardinality;
+import org.apache.chemistry.opencmis.commons.enums.PropertyType;
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.engine.common.PropertyDefinitionEncoder;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
@@ -208,7 +217,72 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			// if this isn't a type we support (because it's a supertype that doesn't map to
 			// a concrete type), then we simply skip adding the "target" marker property
 		}
+
+		properties.add(PropertyDefinitionEncoder.encode(createPropertyDefinitions(type), DfValueFactory::of));
+
 		return ret;
+	}
+
+	protected Map<String, PropertyDefinition<?>> createPropertyDefinitions(IDfType type) throws DfException {
+		Map<String, PropertyDefinition<?>> definitions = new LinkedHashMap<>();
+		final int attCount = type.getTypeAttrCount();
+		final int firstAtt = type.getInt(DctmAttributes.START_POS);
+		for (int i = firstAtt; i < attCount; i++) {
+			IDfAttr attr = type.getTypeAttr(i);
+			final String name = attr.getName();
+			final boolean repeating = attr.isRepeating();
+			final int dataType = attr.getDataType();
+			final int length = attr.getLength();
+			final String desc = type.getTypeAttrDescription(name);
+
+			PropertyType propertyType = null;
+			switch (dataType) {
+				case IDfValue.DF_BOOLEAN:
+					propertyType = PropertyType.BOOLEAN;
+					break;
+
+				case IDfValue.DF_DOUBLE:
+					propertyType = PropertyType.DECIMAL;
+					break;
+
+				case IDfValue.DF_ID:
+					propertyType = PropertyType.ID;
+					break;
+
+				case IDfValue.DF_INTEGER:
+					propertyType = PropertyType.INTEGER;
+					break;
+
+				case IDfValue.DF_TIME:
+					propertyType = PropertyType.DATETIME;
+					break;
+
+				case IDfValue.DF_STRING:
+				case IDfValue.DF_UNDEFINED:
+				default:
+					propertyType = PropertyType.STRING;
+					break;
+
+			}
+
+			MutablePropertyDefinition<?> def = PropertyDefinitionEncoder.constructDefinition(propertyType);
+			def.setLocalName(name);
+			def.setLocalNamespace("dctm:" + type.getName());
+			def.setId(type.getName() + ":" + name);
+			def.setCardinality(repeating ? Cardinality.MULTI : Cardinality.SINGLE);
+			def.setIsInherited(false);
+			def.setIsQueryable(true);
+			def.setQueryName(name);
+			def.setIsRequired(false); // TODO: What here?
+			def.setDescription(desc);
+
+			if (propertyType == PropertyType.STRING) {
+				MutablePropertyStringDefinition.class.cast(def).setMaxLength(BigInteger.valueOf(length));
+			}
+
+			definitions.put(def.getId(), def);
+		}
+		return definitions;
 	}
 
 	@Override
