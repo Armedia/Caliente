@@ -2,9 +2,15 @@ package com.armedia.caliente.engine.exporter;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import org.apache.chemistry.opencmis.commons.definitions.Choice;
 import org.apache.chemistry.opencmis.commons.definitions.MutablePropertyDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
 import org.apache.chemistry.opencmis.commons.enums.Cardinality;
@@ -13,6 +19,7 @@ import org.apache.chemistry.opencmis.commons.enums.DecimalPrecision;
 import org.apache.chemistry.opencmis.commons.enums.PropertyType;
 import org.apache.chemistry.opencmis.commons.enums.Updatability;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AbstractPropertyDefinition;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.ChoiceImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyDateTimeDefinitionImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyDecimalDefinitionImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyIntegerDefinitionImpl;
@@ -53,17 +60,94 @@ public class TypeDataCodecTest {
 		BigDecimal.ZERO, BigDecimal.ONE, BigDecimal.TEN
 	};
 
+	private <T> List<Choice<T>> renderChoices(PropertyType type, int maxWidth, int currentDepth) {
+		List<Choice<T>> l = new ArrayList<>();
+		for (int current = 0; current < maxWidth; current++) {
+			ChoiceImpl<T> impl = new ChoiceImpl<>();
+
+			impl.setDisplayName(String.format("%s-choice-%d-%d", type.value(), current, currentDepth));
+			impl.setValue(renderDefaultValues(type, maxWidth));
+
+			if (currentDepth < maxWidth) {
+				for (int child = 0; child < maxWidth; child++) {
+					impl.setChoice(renderChoices(type, maxWidth, currentDepth + 1));
+				}
+			}
+
+			l.add(impl);
+		}
+		return l;
+	}
+
+	private <T> List<Choice<T>> renderChoices(PropertyType type, int width) {
+		return renderChoices(type, width, 0);
+	}
+
+	private <T> List<T> renderDefaultValues(PropertyType type, final int i) {
+		List<Object> values = new ArrayList<>(i);
+		if (i > 0) {
+			switch (type) {
+				case BOOLEAN:
+					for (int j = 0; j < i; j++) {
+						values.add((j % 2) == 1);
+					}
+					break;
+
+				case INTEGER:
+					for (int j = 0; j < i; j++) {
+						values.add(BigInteger.valueOf((j * 10) + 1));
+					}
+					break;
+
+				case DECIMAL:
+					for (int j = 0; j < i; j++) {
+						values.add(BigDecimal.valueOf((j * 10) + 1));
+					}
+					break;
+
+				case DATETIME:
+					ZonedDateTime zdt = ZonedDateTime.now();
+					for (int j = 0; j < i; j++) {
+						values.add(GregorianCalendar.from(zdt.plus(Duration.ofDays(j))));
+					}
+					break;
+
+				case ID:
+				case URI:
+				case HTML:
+				case STRING:
+					for (int j = 0; j < i; j++) {
+						values.add(String.format("default-%s-value-%d", type.value(), j));
+					}
+					break;
+
+			}
+		}
+
+		@SuppressWarnings("unchecked")
+		List<T> defaultValues = (List<T>) values;
+		return defaultValues;
+	}
+
 	private void populateSpecificVariations(MPD<?> mpd, Consumer<MutablePropertyDefinition<?>> consumer) {
-		switch (mpd.getPropertyType()) {
+		final PropertyType type = mpd.getPropertyType();
+		switch (type) {
 			case INTEGER:
 				for (BigInteger min : TypeDataCodecTest.BIG_INTEGERS) {
 					for (BigInteger max : TypeDataCodecTest.BIG_INTEGERS) {
-						PropertyIntegerDefinitionImpl impl = PropertyIntegerDefinitionImpl.class
-							.cast(TypeDataCodec.constructDefinition(mpd.getPropertyType()));
-						mpd.copyTo(impl);
-						impl.setMinValue(min);
-						impl.setMaxValue(max);
-						consumer.accept(impl);
+						for (int i = 0; i < 3; i++) {
+							PropertyIntegerDefinitionImpl impl = PropertyIntegerDefinitionImpl.class
+								.cast(TypeDataCodec.constructDefinition(mpd.getPropertyType()));
+							mpd.copyTo(impl);
+							impl.setMinValue(min);
+							impl.setMaxValue(max);
+
+							impl.setDefaultValue(renderDefaultValues(type, i));
+							impl.setChoices(renderChoices(mpd.getPropertyType(), i));
+
+							// Return the value
+							consumer.accept(impl);
+						}
 					}
 				}
 				return;
@@ -72,13 +156,20 @@ public class TypeDataCodecTest {
 				for (BigDecimal min : TypeDataCodecTest.BIG_DECIMALS) {
 					for (BigDecimal max : TypeDataCodecTest.BIG_DECIMALS) {
 						for (DecimalPrecision precision : DecimalPrecision.values()) {
-							PropertyDecimalDefinitionImpl impl = PropertyDecimalDefinitionImpl.class
-								.cast(TypeDataCodec.constructDefinition(mpd.getPropertyType()));
-							mpd.copyTo(impl);
-							impl.setMinValue(min);
-							impl.setMaxValue(max);
-							impl.setPrecision(precision);
-							consumer.accept(impl);
+							for (int i = 0; i < 3; i++) {
+								PropertyDecimalDefinitionImpl impl = PropertyDecimalDefinitionImpl.class
+									.cast(TypeDataCodec.constructDefinition(mpd.getPropertyType()));
+								mpd.copyTo(impl);
+								impl.setMinValue(min);
+								impl.setMaxValue(max);
+								impl.setPrecision(precision);
+
+								impl.setDefaultValue(renderDefaultValues(type, i));
+								impl.setChoices(renderChoices(mpd.getPropertyType(), i));
+
+								// Return the value
+								consumer.accept(impl);
+							}
 						}
 					}
 				}
@@ -86,28 +177,49 @@ public class TypeDataCodecTest {
 
 			case DATETIME:
 				for (DateTimeResolution resolution : DateTimeResolution.values()) {
-					PropertyDateTimeDefinitionImpl impl = PropertyDateTimeDefinitionImpl.class
-						.cast(TypeDataCodec.constructDefinition(mpd.getPropertyType()));
-					mpd.copyTo(impl);
-					impl.setDateTimeResolution(resolution);
-					consumer.accept(impl);
+					for (int i = 0; i < 3; i++) {
+						PropertyDateTimeDefinitionImpl impl = PropertyDateTimeDefinitionImpl.class
+							.cast(TypeDataCodec.constructDefinition(mpd.getPropertyType()));
+						mpd.copyTo(impl);
+						impl.setDateTimeResolution(resolution);
+
+						impl.setDefaultValue(renderDefaultValues(type, i));
+						impl.setChoices(renderChoices(mpd.getPropertyType(), i));
+
+						// Return the value
+						consumer.accept(impl);
+					}
 				}
 				return;
 
 			case STRING:
 				for (BigInteger maxLen : TypeDataCodecTest.BIG_INTEGERS) {
-					PropertyStringDefinitionImpl impl = PropertyStringDefinitionImpl.class
-						.cast(TypeDataCodec.constructDefinition(mpd.getPropertyType()));
-					mpd.copyTo(impl);
-					impl.setMaxLength(maxLen);
-					consumer.accept(impl);
+					for (int i = 0; i < 3; i++) {
+						PropertyStringDefinitionImpl impl = PropertyStringDefinitionImpl.class
+							.cast(TypeDataCodec.constructDefinition(mpd.getPropertyType()));
+						mpd.copyTo(impl);
+						impl.setMaxLength(maxLen);
+
+						impl.setDefaultValue(renderDefaultValues(type, i));
+						impl.setChoices(renderChoices(mpd.getPropertyType(), i));
+
+						// Return the value
+						consumer.accept(impl);
+					}
 				}
 				break;
 
 			default:
-				MutablePropertyDefinition<?> def = TypeDataCodec.constructDefinition(mpd.getPropertyType());
-				mpd.copyTo(def);
-				consumer.accept(def);
+				for (int i = 0; i < 3; i++) {
+					MutablePropertyDefinition<?> def = TypeDataCodec.constructDefinition(mpd.getPropertyType());
+					mpd.copyTo(def);
+
+					def.setDefaultValue(renderDefaultValues(type, i));
+					def.setChoices(renderChoices(mpd.getPropertyType(), i));
+
+					// Return the value
+					consumer.accept(def);
+				}
 				return;
 		}
 	}
@@ -175,13 +287,15 @@ public class TypeDataCodecTest {
 		}
 	}
 
-	private void verifyValidity(PropertyDefinition<?> original) {
+	private <V> void verifyValidity(PropertyDefinition<V> original) {
 		Assertions.assertNotNull(original);
 
-		PropertyDefinition<?> decoded = null;
+		PropertyDefinition<V> decoded = null;
+		String encoded = null;
 		try {
-			String str = TypeDataCodec.encodeProperty(original);
-			decoded = TypeDataCodec.decodeProperty(str);
+			encoded = TypeDataCodec.encodeProperty(original);
+			Assertions.assertNotNull(encoded);
+			decoded = TypeDataCodec.decodeProperty(encoded);
 		} catch (JsonProcessingException e) {
 			Assertions.fail(e);
 		}
@@ -203,6 +317,8 @@ public class TypeDataCodecTest {
 		Assertions.assertEquals(original.isOrderable(), decoded.isOrderable());
 		Assertions.assertEquals(original.isQueryable(), decoded.isQueryable());
 		Assertions.assertEquals(original.isRequired(), decoded.isRequired());
+		Assertions.assertEquals(original.getDefaultValue(), decoded.getDefaultValue());
+		validateChoices(original.getChoices(), decoded.getChoices());
 
 		switch (original.getPropertyType()) {
 			case INTEGER: {
@@ -242,8 +358,26 @@ public class TypeDataCodecTest {
 
 	}
 
-	@Test
-	public void testEncodeChoice() throws Exception {
+	private <V> void validateChoices(List<Choice<V>> expected, List<Choice<V>> actual) {
+		Assertions.assertFalse((expected == null) != (actual == null));
+		Assertions.assertNotSame(expected, actual);
+		Assertions.assertEquals(expected.size(), actual.size(), String.format("%s vs %s", expected, actual));
+
+		final int total = expected.size();
+		for (int i = 0; i < total; i++) {
+			Choice<V> e = expected.get(i);
+			Choice<V> a = actual.get(i);
+			validateChoice(e, a);
+		}
+	}
+
+	private <V> void validateChoice(Choice<V> expected, Choice<V> actual) {
+		Assertions.assertFalse((expected == null) != (actual == null));
+		Assertions.assertNotSame(expected, actual);
+
+		Assertions.assertEquals(expected.getDisplayName(), actual.getDisplayName());
+		Assertions.assertEquals(expected.getValue(), actual.getValue());
+		validateChoices(expected.getChoice(), actual.getChoice());
 	}
 
 }

@@ -76,7 +76,8 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 
 	private static final String LBL_PROPERTY_TYPE = "propertyType";
 	private static final String LBL_DEFAULT_VALUE = "defaultValue";
-	private static final String LBL_VALUE = "value";
+	private static final String LBL_CHOICE_NAME = "displayName";
+	private static final String LBL_CHOICE_VALUE = "value";
 	private static final String LBL_CHOICE = "choice";
 
 	private static class PropertyDefinitionAccessor<V, R extends PropertyDefinition<?>, W extends MutablePropertyDefinition<?>> {
@@ -270,9 +271,9 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 		}
 
 		// Finally, the choices
-		Map<String, Map<String, Object>> choices = new HashMap<>();
+		List<Object> choices = new LinkedList<>();
 		for (Choice<?> c : property.getChoices()) {
-			choices.put(c.getDisplayName(), TypeDataCodec.encodeChoice(codec, c));
+			choices.add(TypeDataCodec.encodeChoice(codec, c));
 		}
 		if (!choices.isEmpty()) {
 			values.put(TypeDataCodec.LBL_CHOICE, choices);
@@ -303,24 +304,25 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 		return values;
 	}
 
-	protected static <T> Map<String, Object> encodeChoice(Codec<Object, String> codec, Choice<T> choice) {
+	protected static Object encodeChoice(Codec<Object, String> codec, Choice<?> choice) {
 		if (choice == null) { return null; }
 
 		Map<String, Object> encodedChoice = new LinkedHashMap<>();
 
+		encodedChoice.put(TypeDataCodec.LBL_CHOICE_NAME, choice.getDisplayName());
+
 		// Does this choice have values associated?
 		List<String> values = new LinkedList<>();
-		for (T v : choice.getValue()) {
+		for (Object v : choice.getValue()) {
 			values.add(codec.encode(v));
 		}
-		encodedChoice.put(TypeDataCodec.LBL_VALUE, values);
+		encodedChoice.put(TypeDataCodec.LBL_CHOICE_VALUE, values);
 
 		// Does this choice have hierarchical children?
-		Map<String, Object> children = new HashMap<>();
-		List<Choice<T>> choices = choice.getChoice();
+		List<Object> children = new LinkedList<>();
 		// There are hierarchical children - encode each one
-		for (Choice<T> c : choices) {
-			children.put(c.getDisplayName(), TypeDataCodec.encodeChoice(codec, c));
+		for (Choice<?> c : choice.getChoice()) {
+			children.add(TypeDataCodec.encodeChoice(codec, c));
 		}
 
 		// Stow the children...
@@ -341,7 +343,7 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 		// Next, the default values
 		Object dv = values.get(TypeDataCodec.LBL_DEFAULT_VALUE);
 		if (dv != null) {
-			List<V> defaultValue = new LinkedList<>();
+			List<V> defaultValue = new ArrayList<>();
 			List<?> defaults = List.class.cast(dv);
 			if ((defaults != null) && !defaults.isEmpty()) {
 				for (Object v : defaults) {
@@ -354,16 +356,14 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 		Object c = values.get(TypeDataCodec.LBL_CHOICE);
 		if (c != null) {
 			@SuppressWarnings("unchecked")
-			Map<String, Object> choicesRoot = (Map<String, Object>) c;
-
+			List<Object> choicesRoot = (List<Object>) c;
 			List<Choice<V>> choices = new ArrayList<>(choicesRoot.size());
-			for (String displayName : choicesRoot.keySet()) {
-				Choice<V> choice = TypeDataCodec.decodeChoice(codec, displayName, choicesRoot.get(displayName));
+			for (Object choiceObj : choicesRoot) {
+				Choice<V> choice = TypeDataCodec.decodeChoice(codec, choiceObj);
 				if (choice != null) {
 					choices.add(choice);
 				}
 			}
-
 			if (!choices.isEmpty()) {
 				property.setChoices(choices);
 			}
@@ -414,18 +414,18 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 		return Pair.of(codec, property);
 	}
 
-	protected static <V> Choice<V> decodeChoice(Codec<V, String> codec, String name, Object choiceObj) {
+	protected static <V> Choice<V> decodeChoice(Codec<V, String> codec, Object choiceObj) {
 		if (choiceObj == null) { return null; }
 
 		@SuppressWarnings("unchecked")
 		Map<String, Object> choiceMap = (Map<String, Object>) choiceObj;
 
 		ChoiceImpl<V> choice = new ChoiceImpl<>();
-		choice.setDisplayName(name);
+		choice.setDisplayName(Tools.toString(choiceMap.get(TypeDataCodec.LBL_CHOICE_NAME)));
 
-		Object valueObj = choiceMap.get(TypeDataCodec.LBL_VALUE);
+		Object valueObj = choiceMap.get(TypeDataCodec.LBL_CHOICE_VALUE);
 		if (valueObj != null) {
-			List<V> value = new LinkedList<>();
+			List<V> value = new ArrayList<>();
 			for (Object o : List.class.cast(valueObj)) {
 				V v = codec.decode(Tools.toString(o));
 				if (v != null) {
@@ -440,15 +440,14 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 		Object c = choiceMap.get(TypeDataCodec.LBL_CHOICE);
 		if (c != null) {
 			@SuppressWarnings("unchecked")
-			Map<String, Object> childrenMap = (Map<String, Object>) c;
-			List<Choice<V>> children = new ArrayList<>(childrenMap.size());
-			for (String displayName : childrenMap.keySet()) {
-				Choice<V> child = TypeDataCodec.decodeChoice(codec, displayName, childrenMap.get(displayName));
+			List<Object> childrenList = (List<Object>) c;
+			List<Choice<V>> children = new ArrayList<>(childrenList.size());
+			for (Object childObj : childrenList) {
+				Choice<V> child = TypeDataCodec.decodeChoice(codec, childObj);
 				if (child != null) {
 					children.add(child);
 				}
 			}
-
 			if (!children.isEmpty()) {
 				choice.setChoice(children);
 			}
