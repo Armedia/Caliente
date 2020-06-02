@@ -1,20 +1,118 @@
 package com.armedia.caliente.engine.exporter;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import org.apache.chemistry.opencmis.commons.definitions.MutablePropertyDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
 import org.apache.chemistry.opencmis.commons.enums.Cardinality;
+import org.apache.chemistry.opencmis.commons.enums.DateTimeResolution;
+import org.apache.chemistry.opencmis.commons.enums.DecimalPrecision;
 import org.apache.chemistry.opencmis.commons.enums.PropertyType;
 import org.apache.chemistry.opencmis.commons.enums.Updatability;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.AbstractPropertyDefinition;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyDateTimeDefinitionImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyDecimalDefinitionImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyIntegerDefinitionImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyStringDefinitionImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class TypeDataCodecTest {
+
+	public class MPD<T> extends AbstractPropertyDefinition<T> {
+		private static final long serialVersionUID = 1L;
+
+		private void copyTo(MutablePropertyDefinition<?> p) {
+			p.setCardinality(getCardinality());
+			p.setDescription(getDescription());
+			p.setDisplayName(getDisplayName());
+			p.setId(getId());
+			p.setIsInherited(isInherited());
+			p.setIsOpenChoice(isOpenChoice());
+			p.setIsOrderable(isOrderable());
+			p.setIsQueryable(isQueryable());
+			p.setIsRequired(isRequired());
+			p.setLocalName(getLocalName());
+			p.setLocalNamespace(getLocalNamespace());
+			p.setPropertyType(getPropertyType());
+			p.setQueryName(getQueryName());
+			p.setUpdatability(getUpdatability());
+		}
+
+	}
+
+	private static final BigInteger[] BIG_INTEGERS = {
+		BigInteger.ZERO, BigInteger.ONE, BigInteger.TEN
+	};
+	private static final BigDecimal[] BIG_DECIMALS = {
+		BigDecimal.ZERO, BigDecimal.ONE, BigDecimal.TEN
+	};
+
+	private void populateSpecificVariations(MPD<?> mpd, Consumer<MutablePropertyDefinition<?>> consumer) {
+		switch (mpd.getPropertyType()) {
+			case INTEGER:
+				for (BigInteger min : TypeDataCodecTest.BIG_INTEGERS) {
+					for (BigInteger max : TypeDataCodecTest.BIG_INTEGERS) {
+						PropertyIntegerDefinitionImpl impl = PropertyIntegerDefinitionImpl.class
+							.cast(TypeDataCodec.buildDefinition(mpd.getPropertyType()));
+						mpd.copyTo(impl);
+						impl.setMinValue(min);
+						impl.setMaxValue(max);
+						consumer.accept(impl);
+					}
+				}
+				return;
+
+			case DECIMAL:
+				for (BigDecimal min : TypeDataCodecTest.BIG_DECIMALS) {
+					for (BigDecimal max : TypeDataCodecTest.BIG_DECIMALS) {
+						for (DecimalPrecision precision : DecimalPrecision.values()) {
+							PropertyDecimalDefinitionImpl impl = PropertyDecimalDefinitionImpl.class
+								.cast(TypeDataCodec.buildDefinition(mpd.getPropertyType()));
+							mpd.copyTo(impl);
+							impl.setMinValue(min);
+							impl.setMaxValue(max);
+							impl.setPrecision(precision);
+							consumer.accept(impl);
+						}
+					}
+				}
+				return;
+
+			case DATETIME:
+				for (DateTimeResolution resolution : DateTimeResolution.values()) {
+					PropertyDateTimeDefinitionImpl impl = PropertyDateTimeDefinitionImpl.class
+						.cast(TypeDataCodec.buildDefinition(mpd.getPropertyType()));
+					mpd.copyTo(impl);
+					impl.setDateTimeResolution(resolution);
+					consumer.accept(impl);
+				}
+				return;
+
+			case STRING:
+				for (BigInteger maxLen : TypeDataCodecTest.BIG_INTEGERS) {
+					PropertyStringDefinitionImpl impl = PropertyStringDefinitionImpl.class
+						.cast(TypeDataCodec.buildDefinition(mpd.getPropertyType()));
+					mpd.copyTo(impl);
+					impl.setMaxLength(maxLen);
+					consumer.accept(impl);
+				}
+				break;
+
+			default:
+				MutablePropertyDefinition<?> def = TypeDataCodec.buildDefinition(mpd.getPropertyType());
+				mpd.copyTo(def);
+				consumer.accept(def);
+				return;
+		}
+	}
 
 	@Test
 	public void testEncodeProperty() throws Exception {
@@ -43,8 +141,7 @@ public class TypeDataCodecTest {
 													for (String queryName : strings) {
 														for (String displayName : strings) {
 															for (String description : strings) {
-																MutablePropertyDefinition<?> pd = TypeDataCodec
-																	.buildDefinition(propertyType);
+																MPD<?> pd = new MPD<>();
 																pd.setPropertyType(propertyType);
 																pd.setCardinality(cardinality);
 																pd.setUpdatability(updatability);
@@ -65,7 +162,7 @@ public class TypeDataCodecTest {
 																pd.setDisplayName(displayName);
 																description = "description-" + description;
 																pd.setDescription(description);
-																original.add(pd);
+																populateSpecificVariations(pd, original::add);
 															}
 														}
 													}
@@ -112,6 +209,43 @@ public class TypeDataCodecTest {
 		Assertions.assertEquals(original.isOrderable(), decoded.isOrderable());
 		Assertions.assertEquals(original.isQueryable(), decoded.isQueryable());
 		Assertions.assertEquals(original.isRequired(), decoded.isRequired());
+
+		switch (original.getPropertyType()) {
+			case INTEGER: {
+				PropertyIntegerDefinitionImpl originalImpl = PropertyIntegerDefinitionImpl.class.cast(original);
+				PropertyIntegerDefinitionImpl decodedImpl = PropertyIntegerDefinitionImpl.class.cast(decoded);
+				Assertions.assertEquals(originalImpl.getMinValue(), decodedImpl.getMinValue());
+				Assertions.assertEquals(originalImpl.getMaxValue(), decodedImpl.getMaxValue());
+				break;
+			}
+
+			case DECIMAL: {
+				PropertyDecimalDefinitionImpl originalImpl = PropertyDecimalDefinitionImpl.class.cast(original);
+				PropertyDecimalDefinitionImpl decodedImpl = PropertyDecimalDefinitionImpl.class.cast(decoded);
+				Assertions.assertEquals(originalImpl.getMinValue(), decodedImpl.getMinValue());
+				Assertions.assertEquals(originalImpl.getMaxValue(), decodedImpl.getMaxValue());
+				Assertions.assertEquals(originalImpl.getPrecision(), decodedImpl.getPrecision());
+				break;
+			}
+
+			case DATETIME: {
+				PropertyDateTimeDefinitionImpl originalImpl = PropertyDateTimeDefinitionImpl.class.cast(original);
+				PropertyDateTimeDefinitionImpl decodedImpl = PropertyDateTimeDefinitionImpl.class.cast(decoded);
+				Assertions.assertEquals(originalImpl.getDateTimeResolution(), decodedImpl.getDateTimeResolution());
+				break;
+			}
+
+			case STRING: {
+				PropertyStringDefinitionImpl originalImpl = PropertyStringDefinitionImpl.class.cast(original);
+				PropertyStringDefinitionImpl decodedImpl = PropertyStringDefinitionImpl.class.cast(decoded);
+				Assertions.assertEquals(originalImpl.getMaxLength(), decodedImpl.getMaxLength());
+				break;
+			}
+
+			default:
+				break;
+		}
+
 	}
 
 	@Test
