@@ -59,7 +59,7 @@ public class TypeDataCodecTest {
 				for (BigInteger min : TypeDataCodecTest.BIG_INTEGERS) {
 					for (BigInteger max : TypeDataCodecTest.BIG_INTEGERS) {
 						PropertyIntegerDefinitionImpl impl = PropertyIntegerDefinitionImpl.class
-							.cast(TypeDataCodec.buildDefinition(mpd.getPropertyType()));
+							.cast(TypeDataCodec.constructDefinition(mpd.getPropertyType()));
 						mpd.copyTo(impl);
 						impl.setMinValue(min);
 						impl.setMaxValue(max);
@@ -73,7 +73,7 @@ public class TypeDataCodecTest {
 					for (BigDecimal max : TypeDataCodecTest.BIG_DECIMALS) {
 						for (DecimalPrecision precision : DecimalPrecision.values()) {
 							PropertyDecimalDefinitionImpl impl = PropertyDecimalDefinitionImpl.class
-								.cast(TypeDataCodec.buildDefinition(mpd.getPropertyType()));
+								.cast(TypeDataCodec.constructDefinition(mpd.getPropertyType()));
 							mpd.copyTo(impl);
 							impl.setMinValue(min);
 							impl.setMaxValue(max);
@@ -87,7 +87,7 @@ public class TypeDataCodecTest {
 			case DATETIME:
 				for (DateTimeResolution resolution : DateTimeResolution.values()) {
 					PropertyDateTimeDefinitionImpl impl = PropertyDateTimeDefinitionImpl.class
-						.cast(TypeDataCodec.buildDefinition(mpd.getPropertyType()));
+						.cast(TypeDataCodec.constructDefinition(mpd.getPropertyType()));
 					mpd.copyTo(impl);
 					impl.setDateTimeResolution(resolution);
 					consumer.accept(impl);
@@ -97,7 +97,7 @@ public class TypeDataCodecTest {
 			case STRING:
 				for (BigInteger maxLen : TypeDataCodecTest.BIG_INTEGERS) {
 					PropertyStringDefinitionImpl impl = PropertyStringDefinitionImpl.class
-						.cast(TypeDataCodec.buildDefinition(mpd.getPropertyType()));
+						.cast(TypeDataCodec.constructDefinition(mpd.getPropertyType()));
 					mpd.copyTo(impl);
 					impl.setMaxLength(maxLen);
 					consumer.accept(impl);
@@ -105,7 +105,7 @@ public class TypeDataCodecTest {
 				break;
 
 			default:
-				MutablePropertyDefinition<?> def = TypeDataCodec.buildDefinition(mpd.getPropertyType());
+				MutablePropertyDefinition<?> def = TypeDataCodec.constructDefinition(mpd.getPropertyType());
 				mpd.copyTo(def);
 				consumer.accept(def);
 				return;

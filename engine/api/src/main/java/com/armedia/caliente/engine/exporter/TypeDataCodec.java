@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import org.apache.chemistry.opencmis.commons.enums.DateTimeResolution;
 import org.apache.chemistry.opencmis.commons.enums.DecimalPrecision;
 import org.apache.chemistry.opencmis.commons.enums.PropertyType;
 import org.apache.chemistry.opencmis.commons.enums.Updatability;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.ChoiceImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyBooleanDefinitionImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyDateTimeDefinitionImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyDecimalDefinitionImpl;
@@ -39,6 +41,7 @@ import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyIdDefiniti
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyIntegerDefinitionImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyStringDefinitionImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyUriDefinitionImpl;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.commons.utilities.Tools;
@@ -206,36 +209,49 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 		VALUE_CODECS = Tools.freezeMap(valueCodecs);
 	}
 
-	protected static MutablePropertyDefinition<?> buildDefinition(PropertyType propertyType) {
+	protected static MutablePropertyDefinition<?> constructDefinition(PropertyType propertyType) {
+		MutablePropertyDefinition<?> ret = null;
 		switch (Objects.requireNonNull(propertyType, "Must provide the type of property to instantiate")) {
 			case BOOLEAN:
-				return new PropertyBooleanDefinitionImpl();
+				ret = new PropertyBooleanDefinitionImpl();
+				break;
 
 			case ID:
-				return new PropertyIdDefinitionImpl();
+				ret = new PropertyIdDefinitionImpl();
+				break;
 
 			case INTEGER:
-				return new PropertyIntegerDefinitionImpl();
+				ret = new PropertyIntegerDefinitionImpl();
+				break;
 
 			case DATETIME:
-				return new PropertyDateTimeDefinitionImpl();
+				ret = new PropertyDateTimeDefinitionImpl();
+				break;
 
 			case DECIMAL:
-				return new PropertyDecimalDefinitionImpl();
+				ret = new PropertyDecimalDefinitionImpl();
+				break;
 
 			case HTML:
-				return new PropertyHtmlDefinitionImpl();
+				ret = new PropertyHtmlDefinitionImpl();
+				break;
 
 			case STRING:
-				return new PropertyStringDefinitionImpl();
+				ret = new PropertyStringDefinitionImpl();
+				break;
 
 			case URI:
-				return new PropertyUriDefinitionImpl();
+				ret = new PropertyUriDefinitionImpl();
+				break;
 
 			default:
 				break;
 		}
-		throw new IllegalArgumentException("The property type " + propertyType.name() + " is not yet supported");
+		if (ret == null) {
+			throw new IllegalArgumentException("The property type " + propertyType.name() + " is not yet supported");
+		}
+		ret.setPropertyType(propertyType);
+		return ret;
 	}
 
 	protected static String encodeProperty(PropertyDefinition<?> property) throws JsonProcessingException {
@@ -293,50 +309,88 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 		Map<String, Object> encodedChoice = new LinkedHashMap<>();
 
 		// Does this choice have values associated?
-		List<String> values = null;
+		List<String> values = new LinkedList<>();
 		for (T v : choice.getValue()) {
-			if (values == null) {
-				values = new LinkedList<>();
-			}
 			values.add(codec.encode(v));
 		}
-
-		// if there are values, stow them
-		if (!values.isEmpty()) {
-			encodedChoice.put(TypeDataCodec.LBL_VALUE, values);
-		}
+		encodedChoice.put(TypeDataCodec.LBL_VALUE, values);
 
 		// Does this choice have hierarchical children?
-		Map<String, Map<String, Object>> children = new HashMap<>();
+		Map<String, Object> children = new HashMap<>();
 		List<Choice<T>> choices = choice.getChoice();
-		if ((choices != null) && !choices.isEmpty()) {
-			// There are hierarchical children - encode each one
-			for (Choice<T> c : choices) {
-				children.put(c.getDisplayName(), TypeDataCodec.encodeChoice(codec, c));
-			}
+		// There are hierarchical children - encode each one
+		for (Choice<T> c : choices) {
+			children.put(c.getDisplayName(), TypeDataCodec.encodeChoice(codec, c));
 		}
 
 		// Stow the children...
-		if (!children.isEmpty()) {
-			encodedChoice.put(TypeDataCodec.LBL_CHOICE, children);
-		}
+		encodedChoice.put(TypeDataCodec.LBL_CHOICE, children);
 
 		return encodedChoice;
 	}
 
-	protected static PropertyDefinition<?> decodeProperty(String json) throws JsonProcessingException {
+	protected static <V> PropertyDefinition<V> decodeProperty(String json) throws JsonProcessingException {
 		// First: the common properties
 		Map<?, ?> values = new ObjectMapper().readValue(json, Map.class);
 
+		Pair<Codec<V, String>, MutablePropertyDefinition<V>> newDef = TypeDataCodec.decodeCommonValues(values);
+
+		final Codec<V, String> codec = newDef.getKey();
+		final MutablePropertyDefinition<V> property = newDef.getValue();
+
+		// Next, the default values
+		Object dv = values.get(TypeDataCodec.LBL_DEFAULT_VALUE);
+		if (dv != null) {
+			List<V> defaultValue = new LinkedList<>();
+			List<?> defaults = List.class.cast(dv);
+			if ((defaults != null) && !defaults.isEmpty()) {
+				for (Object v : defaults) {
+					defaultValue.add(codec.decode(Tools.toString(v)));
+				}
+			}
+			property.setDefaultValue(defaultValue);
+		}
+
+		Object c = values.get(TypeDataCodec.LBL_CHOICE);
+		if (c != null) {
+			@SuppressWarnings("unchecked")
+			Map<String, Object> choicesRoot = (Map<String, Object>) c;
+
+			List<Choice<V>> choices = new ArrayList<>(choicesRoot.size());
+			for (String displayName : choicesRoot.keySet()) {
+				Choice<V> choice = TypeDataCodec.decodeChoice(codec, displayName, choicesRoot.get(displayName));
+				if (choice != null) {
+					choices.add(choice);
+				}
+			}
+
+			if (!choices.isEmpty()) {
+				property.setChoices(choices);
+			}
+		}
+
+		return property;
+	}
+
+	protected static <V> Pair<Codec<V, String>, MutablePropertyDefinition<V>> decodeCommonValues(Map<?, ?> values) {
 		// First things first: get the type
 		Object type = values.get(TypeDataCodec.LBL_PROPERTY_TYPE);
 		if (type == null) {
 			throw new IllegalArgumentException("The given JSON doesn't contain a propertyType attribute");
 		}
 
-		PropertyType propertyType = PropertyType.valueOf(type.toString());
-		MutablePropertyDefinition<?> property = TypeDataCodec.buildDefinition(propertyType);
-		property.setPropertyType(propertyType);
+		final PropertyType propertyType = PropertyType.valueOf(type.toString());
+
+		// This is less than ideal, but it's the simplest way to make things work
+		// we just need to be careful to never let this code fall out of sync
+		// with what CMIS implements
+
+		@SuppressWarnings("unchecked")
+		final Codec<V, String> codec = (Codec<V, String>) TypeDataCodec.VALUE_CODECS.get(propertyType);
+
+		@SuppressWarnings("unchecked")
+		final MutablePropertyDefinition<V> property = (MutablePropertyDefinition<V>) TypeDataCodec
+			.constructDefinition(propertyType);
 
 		for (String name : TypeDataCodec.COMMON_ACCESSORS.keySet()) {
 			Object v = values.get(name);
@@ -357,75 +411,51 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 			}
 		}
 
-		// Next, the default values
-		Codec<Object, String> codec = TypeDataCodec.VALUE_CODECS.get(propertyType);
-		Object dv = values.get(TypeDataCodec.LBL_DEFAULT_VALUE);
-		if (dv != null) {
-			List<Object> defaultValue = new LinkedList<>();
-			List<?> defaults = List.class.cast(dv);
-			if ((defaults != null) && !defaults.isEmpty()) {
-				for (Object v : defaults) {
-					defaultValue.add(codec.decode(Tools.toString(v)));
+		return Pair.of(codec, property);
+	}
+
+	protected static <V> Choice<V> decodeChoice(Codec<V, String> codec, String name, Object choiceObj) {
+		if (choiceObj == null) { return null; }
+
+		@SuppressWarnings("unchecked")
+		Map<String, Object> choiceMap = (Map<String, Object>) choiceObj;
+
+		ChoiceImpl<V> choice = new ChoiceImpl<>();
+		choice.setDisplayName(name);
+
+		Object valueObj = choiceMap.get(TypeDataCodec.LBL_VALUE);
+		if (valueObj != null) {
+			List<V> value = new LinkedList<>();
+			for (Object o : List.class.cast(valueObj)) {
+				V v = codec.decode(Tools.toString(o));
+				if (v != null) {
+					value.add(v);
 				}
 			}
-			// property.setDefaultValue(defaultValue);
+			if (!value.isEmpty()) {
+				choice.setValue(value);
+			}
 		}
 
-		Object c = values.get(TypeDataCodec.LBL_CHOICE);
+		Object c = choiceMap.get(TypeDataCodec.LBL_CHOICE);
 		if (c != null) {
-			/*
-			// Finally, the choices
-			Map<String, Map<String, Object>> choices = new HashMap<>();
-			for (Choice<?> c : property.getChoices()) {
-				choices.put(c.getDisplayName(), TypeDataCodec.encodeChoice(codec, c));
+			@SuppressWarnings("unchecked")
+			Map<String, Object> childrenMap = (Map<String, Object>) c;
+			List<Choice<V>> children = new ArrayList<>(childrenMap.size());
+			for (String displayName : childrenMap.keySet()) {
+				Choice<V> child = TypeDataCodec.decodeChoice(codec, displayName, childrenMap.get(displayName));
+				if (child != null) {
+					children.add(child);
+				}
 			}
-			if (!choices.isEmpty()) {
-				values.put("choice", choices);
+
+			if (!children.isEmpty()) {
+				choice.setChoice(children);
 			}
-			*/
 		}
 
-		return property;
+		return choice;
 	}
-
-	/*-
-	protected static <T> Choice<T> decodeChoice(Codec<Object, String> codec, Map<String, Object> choice) {
-		if (choice == null) { return null; }
-	
-		Map<String, Object> encodedChoice = new LinkedHashMap<>();
-	
-		// Does this choice have values associated?
-		List<String> values = null;
-		for (T v : choice.getValue()) {
-			if (values == null) {
-				values = new LinkedList<>();
-			}
-			values.add(codec.encode(v));
-		}
-	
-		// if there are values, stow them
-		if (!values.isEmpty()) {
-			encodedChoice.put("value", values);
-		}
-	
-		// Does this choice have hierarchical children?
-		Map<String, Map<String, Object>> children = new HashMap<>();
-		List<Choice<T>> choices = choice.getChoice();
-		if ((choices != null) && !choices.isEmpty()) {
-			// There are hierarchical children - encode each one
-			for (Choice<T> c : choices) {
-				children.put(c.getDisplayName(), TypeDataCodec.encodeChoice(codec, c));
-			}
-		}
-	
-		// Stow the children...
-		if (!children.isEmpty()) {
-			encodedChoice.put("choice", children);
-		}
-	
-		return encodedChoice;
-	}
-	*/
 
 	@Override
 	public List<CmfAttribute<T>> encode(List<PropertyDefinition<?>> v) {
