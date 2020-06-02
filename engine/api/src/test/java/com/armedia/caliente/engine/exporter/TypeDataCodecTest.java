@@ -2,8 +2,6 @@ package com.armedia.caliente.engine.exporter;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -116,8 +114,6 @@ public class TypeDataCodecTest {
 
 	@Test
 	public void testEncodeProperty() throws Exception {
-		Collection<MutablePropertyDefinition<?>> original = new ArrayList<>();
-
 		final Boolean[] booleanValues = {
 			false, true
 		};
@@ -162,7 +158,7 @@ public class TypeDataCodecTest {
 																pd.setDisplayName(displayName);
 																description = "description-" + description;
 																pd.setDescription(description);
-																populateSpecificVariations(pd, original::add);
+																populateSpecificVariations(pd, this::verifyValidity);
 															}
 														}
 													}
@@ -177,8 +173,6 @@ public class TypeDataCodecTest {
 				}
 			}
 		}
-
-		original.forEach(this::verifyValidity);
 	}
 
 	private void verifyValidity(PropertyDefinition<?> original) {
