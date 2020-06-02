@@ -77,8 +77,8 @@ public class PropertyDefinitionEncoder {
 		.from(ZonedDateTime.from(PropertyDefinitionEncoder.FORMATTER.parse(str)));
 	private static final Function<Object, String> DATETIME_ENC = (cal) -> PropertyDefinitionEncoder.FORMATTER
 		.format(GregorianCalendar.class.cast(cal).toZonedDateTime());
-	private static final Codec<Object, String> DATETIME_CODEC = new StringCodec<>(PropertyDefinitionEncoder.DATETIME_ENC,
-		PropertyDefinitionEncoder.DATETIME_DEC);
+	private static final Codec<Object, String> DATETIME_CODEC = new StringCodec<>(
+		PropertyDefinitionEncoder.DATETIME_ENC, PropertyDefinitionEncoder.DATETIME_DEC);
 
 	private static final String LBL_PROPERTY_TYPE = "propertyType";
 	private static final String LBL_DEFAULT_VALUE = "defaultValue";
@@ -216,7 +216,7 @@ public class PropertyDefinitionEncoder {
 		VALUE_CODECS = Tools.freezeMap(valueCodecs);
 	}
 
-	static MutablePropertyDefinition<?> constructDefinition(PropertyType propertyType) {
+	public static MutablePropertyDefinition<?> constructDefinition(PropertyType propertyType) {
 		MutablePropertyDefinition<?> ret = null;
 		switch (Objects.requireNonNull(propertyType, "Must provide the type of property to instantiate")) {
 			case BOOLEAN:
@@ -341,7 +341,8 @@ public class PropertyDefinitionEncoder {
 		// First: the common properties
 		Map<?, ?> values = new ObjectMapper().readValue(json, Map.class);
 
-		Pair<Codec<V, String>, MutablePropertyDefinition<V>> newDef = PropertyDefinitionEncoder.decodeCommonValues(values);
+		Pair<Codec<V, String>, MutablePropertyDefinition<V>> newDef = PropertyDefinitionEncoder
+			.decodeCommonValues(values);
 
 		final Codec<V, String> codec = newDef.getKey();
 		final MutablePropertyDefinition<V> property = newDef.getValue();
@@ -469,6 +470,15 @@ public class PropertyDefinitionEncoder {
 
 	public static <T> void encode(Map<String, PropertyDefinition<?>> m, CmfObject<T> object,
 		Function<String, T> encoder) throws ExportException {
+		object.setProperty(PropertyDefinitionEncoder.encode(m, encoder));
+	}
+
+	public static <T> CmfProperty<T> encode(ObjectType type, Function<String, T> encoder) throws ExportException {
+		return PropertyDefinitionEncoder.encode(type.getPropertyDefinitions(), encoder);
+	}
+
+	public static <T> CmfProperty<T> encode(Map<String, PropertyDefinition<?>> m, Function<String, T> encoder)
+		throws ExportException {
 		CmfProperty<T> property = new CmfProperty<>(IntermediateProperty.PROPERTY_DEFINITIONS, CmfValue.Type.STRING,
 			true);
 
@@ -480,12 +490,11 @@ public class PropertyDefinitionEncoder {
 			}
 		}
 
-		object.setProperty(property);
+		return property;
 	}
 
-	public static <T> Map<String, PropertyDefinition<?>> decode(CmfObject<T> object, Function<T, String> decoder)
+	public static <T> Map<String, PropertyDefinition<?>> decode(CmfProperty<T> property, Function<T, String> decoder)
 		throws ImportException {
-		CmfProperty<T> property = object.getProperty(IntermediateProperty.PROPERTY_DEFINITIONS);
 		Map<String, PropertyDefinition<?>> map = new LinkedHashMap<>();
 		if ((property != null) && property.hasValues()) {
 			for (T t : property) {
@@ -498,5 +507,10 @@ public class PropertyDefinitionEncoder {
 			}
 		}
 		return map;
+	}
+
+	public static <T> Map<String, PropertyDefinition<?>> decode(CmfObject<T> object, Function<T, String> decoder)
+		throws ImportException {
+		return PropertyDefinitionEncoder.decode(object.getProperty(IntermediateProperty.PROPERTY_DEFINITIONS), decoder);
 	}
 }
