@@ -44,8 +44,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
-import com.armedia.caliente.engine.SessionFactory;
-import com.armedia.caliente.engine.SessionFactoryException;
+import com.armedia.caliente.engine.common.SessionFactory;
+import com.armedia.caliente.engine.common.SessionFactoryException;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.CryptException;
 import com.armedia.commons.utilities.CfgTools;
