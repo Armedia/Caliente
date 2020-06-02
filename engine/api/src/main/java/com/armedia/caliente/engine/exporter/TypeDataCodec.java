@@ -71,6 +71,11 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 	private static final Codec<Object, String> DATETIME_CODEC = new StringCodec<>(TypeDataCodec.DATETIME_ENC,
 		TypeDataCodec.DATETIME_DEC);
 
+	private static final String LBL_PROPERTY_TYPE = "propertyType";
+	private static final String LBL_DEFAULT_VALUE = "defaultValue";
+	private static final String LBL_VALUE = "value";
+	private static final String LBL_CHOICE = "choice";
+
 	private static class PropertyDefinitionAccessor<V, R extends PropertyDefinition<?>, W extends MutablePropertyDefinition<?>> {
 		private final Function<R, V> reader;
 		private final BiConsumer<W, V> writer;
@@ -245,7 +250,7 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 			defaultValue.add(codec.encode(o));
 		}
 		if (!defaultValue.isEmpty()) {
-			values.put("defaultValue", defaultValue);
+			values.put(TypeDataCodec.LBL_DEFAULT_VALUE, defaultValue);
 		}
 
 		// Finally, the choices
@@ -254,7 +259,7 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 			choices.put(c.getDisplayName(), TypeDataCodec.encodeChoice(codec, c));
 		}
 		if (!choices.isEmpty()) {
-			values.put("choice", choices);
+			values.put(TypeDataCodec.LBL_CHOICE, choices);
 		}
 		return new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValueAsString(values);
 	}
@@ -298,7 +303,7 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 
 		// if there are values, stow them
 		if (!values.isEmpty()) {
-			encodedChoice.put("value", values);
+			encodedChoice.put(TypeDataCodec.LBL_VALUE, values);
 		}
 
 		// Does this choice have hierarchical children?
@@ -313,7 +318,7 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 
 		// Stow the children...
 		if (!children.isEmpty()) {
-			encodedChoice.put("choice", children);
+			encodedChoice.put(TypeDataCodec.LBL_CHOICE, children);
 		}
 
 		return encodedChoice;
@@ -324,7 +329,7 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 		Map<?, ?> values = new ObjectMapper().readValue(json, Map.class);
 
 		// First things first: get the type
-		Object type = values.get("propertyType");
+		Object type = values.get(TypeDataCodec.LBL_PROPERTY_TYPE);
 		if (type == null) {
 			throw new IllegalArgumentException("The given JSON doesn't contain a propertyType attribute");
 		}
@@ -354,9 +359,10 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 
 		// Next, the default values
 		Codec<Object, String> codec = TypeDataCodec.VALUE_CODECS.get(propertyType);
-		List<Object> defaultValue = new LinkedList<>();
-		if (values.containsKey("defaultValue")) {
-			List<?> defaults = List.class.cast(values.get("defaultValue"));
+		Object dv = values.get(TypeDataCodec.LBL_DEFAULT_VALUE);
+		if (dv != null) {
+			List<Object> defaultValue = new LinkedList<>();
+			List<?> defaults = List.class.cast(dv);
 			if ((defaults != null) && !defaults.isEmpty()) {
 				for (Object v : defaults) {
 					defaultValue.add(codec.decode(Tools.toString(v)));
@@ -365,16 +371,19 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 			// property.setDefaultValue(defaultValue);
 		}
 
-		/*
-		// Finally, the choices
-		Map<String, Map<String, Object>> choices = new HashMap<>();
-		for (Choice<?> c : property.getChoices()) {
-			choices.put(c.getDisplayName(), TypeDataCodec.encodeChoice(codec, c));
+		Object c = values.get(TypeDataCodec.LBL_CHOICE);
+		if (c != null) {
+			/*
+			// Finally, the choices
+			Map<String, Map<String, Object>> choices = new HashMap<>();
+			for (Choice<?> c : property.getChoices()) {
+				choices.put(c.getDisplayName(), TypeDataCodec.encodeChoice(codec, c));
+			}
+			if (!choices.isEmpty()) {
+				values.put("choice", choices);
+			}
+			*/
 		}
-		if (!choices.isEmpty()) {
-			values.put("choice", choices);
-		}
-		*/
 
 		return property;
 	}
