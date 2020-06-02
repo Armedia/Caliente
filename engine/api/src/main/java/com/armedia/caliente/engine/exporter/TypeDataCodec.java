@@ -1,5 +1,7 @@
 package com.armedia.caliente.engine.exporter;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,186 +21,141 @@ import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.PropertyIntegerDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.PropertyStringDefinition;
 import org.apache.chemistry.opencmis.commons.enums.Cardinality;
+import org.apache.chemistry.opencmis.commons.enums.DateTimeResolution;
+import org.apache.chemistry.opencmis.commons.enums.DecimalPrecision;
 import org.apache.chemistry.opencmis.commons.enums.PropertyType;
 import org.apache.chemistry.opencmis.commons.enums.Updatability;
 
-import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfValue.Type;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.codec.Codec;
+import com.armedia.commons.utilities.codec.EnumCodec;
+import com.armedia.commons.utilities.codec.StringCodec;
 
 public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List<CmfAttribute<T>>> {
 
-	private static class PropertyReader<T extends PropertyDefinition<?>> {
-		private final Class<T> propertyClass;
-		private final Function<T, Object> reader;
+	private static final Function<String, String> STRING = Function.identity();
+	private static final Function<String, Boolean> BOOLEAN = Boolean::valueOf;
+	private static final Function<String, BigInteger> BIGINTEGER = BigInteger::new;
+	private static final Function<String, BigDecimal> BIGDECIMAL = BigDecimal::new;
 
-		private PropertyReader(Function<T, Object> reader) {
-			this(null, reader);
-		}
+	private static class PropertyAccessor<V, R extends PropertyDefinition<?>, W extends MutablePropertyDefinition<?>> {
+		private final Function<R, V> reader;
+		private final BiConsumer<W, V> writer;
+		private final Codec<V, String> codec;
 
-		private PropertyReader(Class<T> propertyClass, Function<T, Object> reader) {
-			this.propertyClass = propertyClass;
+		private PropertyAccessor(Function<R, V> reader, BiConsumer<W, V> writer, Function<String, V> decoder) {
 			this.reader = reader;
-		}
-
-		public Object readValue(Object def) {
-			if (this.propertyClass != null) {
-				if (!this.propertyClass.isInstance(def)) { return null; }
-				return this.reader.apply(this.propertyClass.cast(def));
-			}
-
-			if (!PropertyDefinition.class.isInstance(def)) { return null; }
-
-			@SuppressWarnings("unchecked")
-			T t = (T) def;
-			return this.reader.apply(t);
-		}
-	}
-
-	private static class PropertyWriter<V, T extends MutablePropertyDefinition<?>> {
-		private final Class<T> propertyClass;
-		private final BiConsumer<T, V> writer;
-
-		private PropertyWriter(BiConsumer<T, V> writer) {
-			this(null, writer);
-		}
-
-		private PropertyWriter(Class<T> propertyClass, BiConsumer<T, V> writer) {
-			this.propertyClass = propertyClass;
 			this.writer = writer;
+			this.codec = new StringCodec<>(decoder);
 		}
 
-		public void writeValue(Object def, V value) {
-			if (this.propertyClass != null) {
-				if (!this.propertyClass.isInstance(def)) { return; }
-				this.writer.accept(this.propertyClass.cast(def), value);
-			}
+		private PropertyAccessor(Function<R, V> reader, BiConsumer<W, V> writer, Codec<V, String> codec) {
+			this.reader = reader;
+			this.writer = writer;
+			this.codec = codec;
+		}
 
-			if (!MutablePropertyDefinition.class.isInstance(def)) { return; }
+		public String readValue(PropertyDefinition<?> def) {
+			if (this.reader == null) { return null; }
+
+			// I don't like this, but this is the easiest way to get it done
+			// Adding the classes for stricter type validation adds unnecessary overhead
 
 			@SuppressWarnings("unchecked")
-			T t = (T) def;
-			this.writer.accept(t, value);
+			R r = (R) def;
+
+			return this.codec.encode(this.reader.apply(r));
+		}
+
+		public void writeValue(Object def, String value) {
+			if (def == null) { return; }
+			if (!MutablePropertyDecimalDefinition.class.isInstance(def)) { return; }
+
+			// I don't like this, but this is the easiest way to get it done
+			// Adding the classes for stricter type validation adds unnecessary overhead
+
+			@SuppressWarnings("unchecked")
+			W w = (W) def;
+
+			this.writer.accept(w, this.codec.decode(value));
 		}
 	}
 
-	private static final Map<String, PropertyReader<?>> COMMON_READERS;
-	private static final Map<String, PropertyWriter<?, ?>> COMMON_WRITERS;
-	private static final Map<PropertyType, Map<String, PropertyReader<?>>> TYPED_READERS;
-	private static final Map<PropertyType, Map<String, PropertyWriter<?, ?>>> TYPED_WRITERS;
+	private static final Map<String, PropertyAccessor<?, ?, ?>> COMMON_ACCESSORS;
+	private static final Map<PropertyType, Map<String, PropertyAccessor<?, ?, ?>>> TYPED_ACCESSORS;
 	static {
-		Map<String, PropertyReader<?>> readers = new HashMap<>();
-		Map<String, PropertyWriter<?, ?>> writers = new HashMap<>();
-		readers.put("id", new PropertyReader<>(PropertyDefinition::getId));
-		writers.put("id", new PropertyWriter<String, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setId));
-		readers.put("localNamespace", new PropertyReader<>(PropertyDefinition::getLocalNamespace));
-		writers.put("localNamespace",
-			new PropertyWriter<String, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setLocalNamespace));
-		readers.put("localName", new PropertyReader<>(PropertyDefinition::getLocalName));
-		writers.put("localName",
-			new PropertyWriter<String, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setLocalName));
-		readers.put("queryName", new PropertyReader<>(PropertyDefinition::getQueryName));
-		writers.put("queryName",
-			new PropertyWriter<String, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setQueryName));
-		readers.put("displayName", new PropertyReader<>(PropertyDefinition::getDisplayName));
-		writers.put("displayName",
-			new PropertyWriter<String, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setDisplayName));
-		readers.put("description", new PropertyReader<>(PropertyDefinition::getDescription));
-		writers.put("description",
-			new PropertyWriter<String, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setDescription));
-		readers.put("propertyType", new PropertyReader<>(PropertyDefinition::getPropertyType));
-		writers.put("propertyType",
-			new PropertyWriter<PropertyType, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setPropertyType));
-		readers.put("cardinality", new PropertyReader<>(PropertyDefinition::getCardinality));
-		writers.put("cardinality",
-			new PropertyWriter<Cardinality, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setCardinality));
-		readers.put("updatability", new PropertyReader<>(PropertyDefinition::getUpdatability));
-		writers.put("updatability",
-			new PropertyWriter<Updatability, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setUpdatability));
-		readers.put("inherited", new PropertyReader<>(PropertyDefinition::isInherited));
-		writers.put("inherited",
-			new PropertyWriter<Boolean, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setIsInherited));
-		readers.put("required", new PropertyReader<>(PropertyDefinition::isRequired));
-		writers.put("required",
-			new PropertyWriter<Boolean, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setIsRequired));
-		readers.put("queryable", new PropertyReader<>(PropertyDefinition::isQueryable));
-		writers.put("queryable",
-			new PropertyWriter<Boolean, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setIsQueryable));
-		readers.put("orderable", new PropertyReader<>(PropertyDefinition::isOrderable));
-		writers.put("orderable",
-			new PropertyWriter<Boolean, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setIsOrderable));
-		readers.put("openChoice", new PropertyReader<>(PropertyDefinition::isOpenChoice));
-		writers.put("openChoice",
-			new PropertyWriter<Boolean, MutablePropertyDefinition<?>>(MutablePropertyDefinition::setIsOpenChoice));
-		COMMON_READERS = Tools.freezeMap(readers);
-		COMMON_WRITERS = Tools.freezeMap(writers);
+		Map<String, PropertyAccessor<?, ?, ?>> accessors = new HashMap<>();
 
-		Map<PropertyType, Map<String, PropertyReader<?>>> typedReaders = new EnumMap<>(PropertyType.class);
-		Map<PropertyType, Map<String, PropertyWriter<?, ?>>> typedWriters = new EnumMap<>(PropertyType.class);
+		accessors.put("id",
+			new PropertyAccessor<>(PropertyDefinition::getId, MutablePropertyDefinition::setId, TypeDataCodec.STRING));
+		accessors.put("localNamespace", new PropertyAccessor<>(PropertyDefinition::getLocalNamespace,
+			MutablePropertyDefinition::setLocalNamespace, TypeDataCodec.STRING));
+		accessors.put("localName", new PropertyAccessor<>(PropertyDefinition::getLocalName,
+			MutablePropertyDefinition::setLocalName, TypeDataCodec.STRING));
+		accessors.put("queryName", new PropertyAccessor<>(PropertyDefinition::getQueryName,
+			MutablePropertyDefinition::setQueryName, TypeDataCodec.STRING));
+		accessors.put("displayName", new PropertyAccessor<>(PropertyDefinition::getDisplayName,
+			MutablePropertyDefinition::setDisplayName, TypeDataCodec.STRING));
+		accessors.put("description", new PropertyAccessor<>(PropertyDefinition::getDescription,
+			MutablePropertyDefinition::setDescription, TypeDataCodec.STRING));
+		accessors.put("propertyType", new PropertyAccessor<>(PropertyDefinition::getPropertyType,
+			MutablePropertyDefinition::setPropertyType, new EnumCodec<>(PropertyType.class)));
+		accessors.put("cardinality", new PropertyAccessor<>(PropertyDefinition::getCardinality,
+			MutablePropertyDefinition::setCardinality, new EnumCodec<>(Cardinality.class)));
+		accessors.put("updatability", new PropertyAccessor<>(PropertyDefinition::getUpdatability,
+			MutablePropertyDefinition::setUpdatability, new EnumCodec<>(Updatability.class)));
+		accessors.put("inherited", new PropertyAccessor<>(PropertyDefinition::isInherited,
+			MutablePropertyDefinition::setIsInherited, TypeDataCodec.BOOLEAN));
+		accessors.put("required", new PropertyAccessor<>(PropertyDefinition::isRequired,
+			MutablePropertyDefinition::setIsRequired, TypeDataCodec.BOOLEAN));
+		accessors.put("queryable", new PropertyAccessor<>(PropertyDefinition::isQueryable,
+			MutablePropertyDefinition::setIsQueryable, TypeDataCodec.BOOLEAN));
+		accessors.put("orderable", new PropertyAccessor<>(PropertyDefinition::isOrderable,
+			MutablePropertyDefinition::setIsOrderable, TypeDataCodec.BOOLEAN));
+		accessors.put("openChoice", new PropertyAccessor<>(PropertyDefinition::isOpenChoice,
+			MutablePropertyDefinition::setIsOpenChoice, TypeDataCodec.BOOLEAN));
+		COMMON_ACCESSORS = Tools.freezeMap(accessors);
+
+		Map<PropertyType, Map<String, PropertyAccessor<?, ?, ?>>> typedAccessors = new EnumMap<>(PropertyType.class);
 
 		// Integer
-		readers = new HashMap<>();
-		writers = new HashMap<>();
-		readers.put("minValue",
-			new PropertyReader<>(PropertyIntegerDefinition.class, PropertyIntegerDefinition::getMinValue));
-		writers.put("minValue", new PropertyWriter<>(MutablePropertyIntegerDefinition.class,
-			MutablePropertyIntegerDefinition::setMinValue));
-		readers.put("maxValue",
-			new PropertyReader<>(PropertyIntegerDefinition.class, PropertyIntegerDefinition::getMaxValue));
-		writers.put("maxValue", new PropertyWriter<>(MutablePropertyIntegerDefinition.class,
-			MutablePropertyIntegerDefinition::setMinValue));
-		typedReaders.put(PropertyType.INTEGER, Tools.freezeMap(readers));
-		typedWriters.put(PropertyType.INTEGER, Tools.freezeMap(writers));
+		accessors = new HashMap<>();
+		accessors.put("minValue", new PropertyAccessor<>(PropertyIntegerDefinition::getMinValue,
+			MutablePropertyIntegerDefinition::setMinValue, TypeDataCodec.BIGINTEGER));
+		accessors.put("minValue", new PropertyAccessor<>(PropertyIntegerDefinition::getMaxValue,
+			MutablePropertyIntegerDefinition::setMaxValue, TypeDataCodec.BIGINTEGER));
+		typedAccessors.put(PropertyType.INTEGER, Tools.freezeMap(accessors));
 
 		// Decimal
-		readers = new HashMap<>();
-		writers = new HashMap<>();
-		readers.put("minValue",
-			new PropertyReader<>(PropertyDecimalDefinition.class, PropertyDecimalDefinition::getMinValue));
-		writers.put("minValue", new PropertyWriter<>(MutablePropertyDecimalDefinition.class,
-			MutablePropertyDecimalDefinition::setMinValue));
-		readers.put("maxValue",
-			new PropertyReader<>(PropertyDecimalDefinition.class, PropertyDecimalDefinition::getMaxValue));
-		writers.put("maxValue", new PropertyWriter<>(MutablePropertyDecimalDefinition.class,
-			MutablePropertyDecimalDefinition::setMinValue));
-		readers.put("precision",
-			new PropertyReader<>(PropertyDecimalDefinition.class, PropertyDecimalDefinition::getPrecision));
-		writers.put("precision", new PropertyWriter<>(MutablePropertyDecimalDefinition.class,
-			MutablePropertyDecimalDefinition::setPrecision));
-		typedReaders.put(PropertyType.DECIMAL, Tools.freezeMap(readers));
-		typedWriters.put(PropertyType.DECIMAL, Tools.freezeMap(writers));
+		accessors = new HashMap<>();
+		accessors.put("minValue", new PropertyAccessor<>(PropertyDecimalDefinition::getMinValue,
+			MutablePropertyDecimalDefinition::setMinValue, TypeDataCodec.BIGDECIMAL));
+		accessors.put("maxValue", new PropertyAccessor<>(PropertyDecimalDefinition::getMaxValue,
+			MutablePropertyDecimalDefinition::setMaxValue, TypeDataCodec.BIGDECIMAL));
+		accessors.put("precision", new PropertyAccessor<>(PropertyDecimalDefinition::getPrecision,
+			MutablePropertyDecimalDefinition::setPrecision, DecimalPrecision::valueOf));
+		typedAccessors.put(PropertyType.DECIMAL, Tools.freezeMap(accessors));
 
-		// Date
-		readers = new HashMap<>();
-		writers = new HashMap<>();
-		readers.put("dateTimeResolution",
-			new PropertyReader<>(PropertyDateTimeDefinition.class, PropertyDateTimeDefinition::getDateTimeResolution));
-		writers.put("dateTimeResolution", new PropertyWriter<>(MutablePropertyDateTimeDefinition.class,
-			MutablePropertyDateTimeDefinition::setDateTimeResolution));
-		typedReaders.put(PropertyType.DATETIME, Tools.freezeMap(readers));
-		typedWriters.put(PropertyType.DATETIME, Tools.freezeMap(writers));
+		// DateTime
+		accessors = new HashMap<>();
+		accessors.put("dateTimeResolution", new PropertyAccessor<>(PropertyDateTimeDefinition::getDateTimeResolution,
+			MutablePropertyDateTimeDefinition::setDateTimeResolution, new EnumCodec<>(DateTimeResolution.class)));
+		typedAccessors.put(PropertyType.DATETIME, Tools.freezeMap(accessors));
 
 		// String
-		readers = new HashMap<>();
-		writers = new HashMap<>();
-		readers.put("maxLength",
-			new PropertyReader<>(PropertyStringDefinition.class, PropertyStringDefinition::getMaxLength));
-		writers.put("maxLength",
-			new PropertyWriter<>(MutablePropertyStringDefinition.class, MutablePropertyStringDefinition::setMaxLength));
-		typedReaders.put(PropertyType.STRING, Tools.freezeMap(readers));
-		typedWriters.put(PropertyType.STRING, Tools.freezeMap(writers));
+		accessors = new HashMap<>();
+		accessors.put("maxLength", new PropertyAccessor<>(PropertyStringDefinition::getMaxLength,
+			MutablePropertyStringDefinition::setMaxLength, TypeDataCodec.BIGINTEGER));
+		typedAccessors.put(PropertyType.STRING, Tools.freezeMap(accessors));
 
-		TYPED_READERS = Tools.freezeMap(typedReaders);
-		TYPED_WRITERS = Tools.freezeMap(typedWriters);
+		TYPED_ACCESSORS = Tools.freezeMap(typedAccessors);
 	}
 
 	protected static String encodeProperty(PropertyDefinition<?> property) {
-		Map<String, String> values = new LinkedHashMap<>();
-		for (String name : TypeDataCodec.COMMON_READERS.keySet()) {
-			Object o = TypeDataCodec.COMMON_READERS.get(name).readValue(property);
+		Map<String, Object> values = new LinkedHashMap<>();
+		for (String name : TypeDataCodec.COMMON_ACCESSORS.keySet()) {
+			Object o = TypeDataCodec.COMMON_ACCESSORS.get(name).readValue(property);
 			if (o == null) {
 				continue;
 			}
@@ -212,10 +169,11 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 			values.put(name, o.toString());
 		}
 
-		Map<String, PropertyReader<?>> typedReaders = TypeDataCodec.TYPED_READERS.get(property.getPropertyType());
-		if (typedReaders != null) {
-			for (String name : typedReaders.keySet()) {
-				Object o = typedReaders.get(name).readValue(property);
+		Map<String, PropertyAccessor<?, ?, ?>> typedAccessors = TypeDataCodec.TYPED_ACCESSORS
+			.get(property.getPropertyType());
+		if (typedAccessors != null) {
+			for (String name : typedAccessors.keySet()) {
+				Object o = typedAccessors.get(name).readValue(property);
 				if (o == null) {
 					continue;
 				}
@@ -229,68 +187,10 @@ public class TypeDataCodec<T> implements Codec<List<PropertyDefinition<?>>, List
 				values.put(name, o.toString());
 			}
 		}
-		return values;
-	}
 
-	protected static <T> CmfProperty<T> encodeProperties(Function<String, T> converter,
-		PropertyDefinition<?> property) {
+		// Now handle the default values and choices
 
-		final CmfProperty<T> attribute = new CmfProperty<>(IntermediateProperty.PROPERTY_DEFINITIONS, Type.STRING,
-			true);
-
-		/*-
-		"my:stringProperty":{
-		    "id":"my:stringProperty",
-		    "localNamespace":"local",
-		    "localName":"my:stringProperty",
-		    "queryName":"my:stringProperty",
-		    "displayName":"My String Property",
-		    "description":"This is a String.~,
-		    "propertyType":"string",
-		    "updatability":"readwrite",
-		    "inherited":false,
-		    "openChoice":false,
-		    "required":false,
-		    "cardinality":"single",
-		    "queryable":true,
-		    "orderable":true,
-		}
-		*/
-
-		Map<String, String> values = new LinkedHashMap<>();
-		for (String name : TypeDataCodec.COMMON_READERS.keySet()) {
-			Object o = TypeDataCodec.COMMON_READERS.get(name).readValue(property);
-			if (o == null) {
-				continue;
-			}
-
-			if (o.getClass().isEnum()) {
-				o = Enum.class.cast(o).name();
-			} else {
-				o = Tools.toString(o);
-			}
-
-			values.put(name, o.toString());
-		}
-
-		Map<String, PropertyReader<?>> typedReaders = TypeDataCodec.TYPED_READERS.get(property.getPropertyType());
-		if (typedReaders != null) {
-			for (String name : typedReaders.keySet()) {
-				Object o = typedReaders.get(name).readValue(property);
-				if (o == null) {
-					continue;
-				}
-
-				if (o.getClass().isEnum()) {
-					o = Enum.class.cast(o).name();
-				} else {
-					o = Tools.toString(o);
-				}
-
-				values.put(name, o.toString());
-			}
-		}
-		return values;
+		return null;
 	}
 
 	@Override
