@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.commons.definitions.Choice;
 import org.apache.chemistry.opencmis.commons.definitions.MutablePropertyDateTimeDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.MutablePropertyDecimalDefinition;
@@ -57,7 +58,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-public class TypeDataEncoder {
+public class PropertyDefinitionEncoder {
 
 	private static final Function<String, String> STRING = Function.identity();
 	private static final Codec<Object, String> STRING_CODEC = new StringCodec<>(Tools::toString);
@@ -73,11 +74,11 @@ public class TypeDataEncoder {
 
 	private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
 	private static final Function<String, Object> DATETIME_DEC = (str) -> GregorianCalendar
-		.from(ZonedDateTime.from(TypeDataEncoder.FORMATTER.parse(str)));
-	private static final Function<Object, String> DATETIME_ENC = (cal) -> TypeDataEncoder.FORMATTER
+		.from(ZonedDateTime.from(PropertyDefinitionEncoder.FORMATTER.parse(str)));
+	private static final Function<Object, String> DATETIME_ENC = (cal) -> PropertyDefinitionEncoder.FORMATTER
 		.format(GregorianCalendar.class.cast(cal).toZonedDateTime());
-	private static final Codec<Object, String> DATETIME_CODEC = new StringCodec<>(TypeDataEncoder.DATETIME_ENC,
-		TypeDataEncoder.DATETIME_DEC);
+	private static final Codec<Object, String> DATETIME_CODEC = new StringCodec<>(PropertyDefinitionEncoder.DATETIME_ENC,
+		PropertyDefinitionEncoder.DATETIME_DEC);
 
 	private static final String LBL_PROPERTY_TYPE = "propertyType";
 	private static final String LBL_DEFAULT_VALUE = "defaultValue";
@@ -135,17 +136,17 @@ public class TypeDataEncoder {
 		Map<String, PropertyDefinitionAccessor<?, ?, ?>> accessors = new HashMap<>();
 
 		accessors.put("id", new PropertyDefinitionAccessor<>(PropertyDefinition::getId,
-			MutablePropertyDefinition::setId, TypeDataEncoder.STRING));
+			MutablePropertyDefinition::setId, PropertyDefinitionEncoder.STRING));
 		accessors.put("localNamespace", new PropertyDefinitionAccessor<>(PropertyDefinition::getLocalNamespace,
-			MutablePropertyDefinition::setLocalNamespace, TypeDataEncoder.STRING));
+			MutablePropertyDefinition::setLocalNamespace, PropertyDefinitionEncoder.STRING));
 		accessors.put("localName", new PropertyDefinitionAccessor<>(PropertyDefinition::getLocalName,
-			MutablePropertyDefinition::setLocalName, TypeDataEncoder.STRING));
+			MutablePropertyDefinition::setLocalName, PropertyDefinitionEncoder.STRING));
 		accessors.put("queryName", new PropertyDefinitionAccessor<>(PropertyDefinition::getQueryName,
-			MutablePropertyDefinition::setQueryName, TypeDataEncoder.STRING));
+			MutablePropertyDefinition::setQueryName, PropertyDefinitionEncoder.STRING));
 		accessors.put("displayName", new PropertyDefinitionAccessor<>(PropertyDefinition::getDisplayName,
-			MutablePropertyDefinition::setDisplayName, TypeDataEncoder.STRING));
+			MutablePropertyDefinition::setDisplayName, PropertyDefinitionEncoder.STRING));
 		accessors.put("description", new PropertyDefinitionAccessor<>(PropertyDefinition::getDescription,
-			MutablePropertyDefinition::setDescription, TypeDataEncoder.STRING));
+			MutablePropertyDefinition::setDescription, PropertyDefinitionEncoder.STRING));
 		accessors.put("propertyType", new PropertyDefinitionAccessor<>(PropertyDefinition::getPropertyType,
 			MutablePropertyDefinition::setPropertyType, new EnumCodec<>(PropertyType.class)));
 		accessors.put("cardinality", new PropertyDefinitionAccessor<>(PropertyDefinition::getCardinality,
@@ -153,15 +154,15 @@ public class TypeDataEncoder {
 		accessors.put("updatability", new PropertyDefinitionAccessor<>(PropertyDefinition::getUpdatability,
 			MutablePropertyDefinition::setUpdatability, new EnumCodec<>(Updatability.class)));
 		accessors.put("inherited", new PropertyDefinitionAccessor<>(PropertyDefinition::isInherited,
-			MutablePropertyDefinition::setIsInherited, TypeDataEncoder.BOOLEAN));
+			MutablePropertyDefinition::setIsInherited, PropertyDefinitionEncoder.BOOLEAN));
 		accessors.put("required", new PropertyDefinitionAccessor<>(PropertyDefinition::isRequired,
-			MutablePropertyDefinition::setIsRequired, TypeDataEncoder.BOOLEAN));
+			MutablePropertyDefinition::setIsRequired, PropertyDefinitionEncoder.BOOLEAN));
 		accessors.put("queryable", new PropertyDefinitionAccessor<>(PropertyDefinition::isQueryable,
-			MutablePropertyDefinition::setIsQueryable, TypeDataEncoder.BOOLEAN));
+			MutablePropertyDefinition::setIsQueryable, PropertyDefinitionEncoder.BOOLEAN));
 		accessors.put("orderable", new PropertyDefinitionAccessor<>(PropertyDefinition::isOrderable,
-			MutablePropertyDefinition::setIsOrderable, TypeDataEncoder.BOOLEAN));
+			MutablePropertyDefinition::setIsOrderable, PropertyDefinitionEncoder.BOOLEAN));
 		accessors.put("openChoice", new PropertyDefinitionAccessor<>(PropertyDefinition::isOpenChoice,
-			MutablePropertyDefinition::setIsOpenChoice, TypeDataEncoder.BOOLEAN));
+			MutablePropertyDefinition::setIsOpenChoice, PropertyDefinitionEncoder.BOOLEAN));
 		COMMON_ACCESSORS = Tools.freezeMap(accessors);
 
 		Map<PropertyType, Map<String, PropertyDefinitionAccessor<?, ?, ?>>> typedAccessors = new EnumMap<>(
@@ -170,17 +171,17 @@ public class TypeDataEncoder {
 		// Integer
 		accessors = new HashMap<>();
 		accessors.put("minValue", new PropertyDefinitionAccessor<>(PropertyIntegerDefinition::getMinValue,
-			MutablePropertyIntegerDefinition::setMinValue, TypeDataEncoder.BIGINTEGER));
+			MutablePropertyIntegerDefinition::setMinValue, PropertyDefinitionEncoder.BIGINTEGER));
 		accessors.put("maxValue", new PropertyDefinitionAccessor<>(PropertyIntegerDefinition::getMaxValue,
-			MutablePropertyIntegerDefinition::setMaxValue, TypeDataEncoder.BIGINTEGER));
+			MutablePropertyIntegerDefinition::setMaxValue, PropertyDefinitionEncoder.BIGINTEGER));
 		typedAccessors.put(PropertyType.INTEGER, Tools.freezeMap(accessors));
 
 		// Decimal
 		accessors = new HashMap<>();
 		accessors.put("minValue", new PropertyDefinitionAccessor<>(PropertyDecimalDefinition::getMinValue,
-			MutablePropertyDecimalDefinition::setMinValue, TypeDataEncoder.BIGDECIMAL));
+			MutablePropertyDecimalDefinition::setMinValue, PropertyDefinitionEncoder.BIGDECIMAL));
 		accessors.put("maxValue", new PropertyDefinitionAccessor<>(PropertyDecimalDefinition::getMaxValue,
-			MutablePropertyDecimalDefinition::setMaxValue, TypeDataEncoder.BIGDECIMAL));
+			MutablePropertyDecimalDefinition::setMaxValue, PropertyDefinitionEncoder.BIGDECIMAL));
 		accessors.put("precision", new PropertyDefinitionAccessor<>(PropertyDecimalDefinition::getPrecision,
 			MutablePropertyDecimalDefinition::setPrecision, DecimalPrecision::valueOf));
 		typedAccessors.put(PropertyType.DECIMAL, Tools.freezeMap(accessors));
@@ -195,7 +196,7 @@ public class TypeDataEncoder {
 		// String
 		accessors = new HashMap<>();
 		accessors.put("maxLength", new PropertyDefinitionAccessor<>(PropertyStringDefinition::getMaxLength,
-			MutablePropertyStringDefinition::setMaxLength, TypeDataEncoder.BIGINTEGER));
+			MutablePropertyStringDefinition::setMaxLength, PropertyDefinitionEncoder.BIGINTEGER));
 		typedAccessors.put(PropertyType.STRING, Tools.freezeMap(accessors));
 
 		TYPED_ACCESSORS = Tools.freezeMap(typedAccessors);
@@ -204,14 +205,14 @@ public class TypeDataEncoder {
 	private static final Map<PropertyType, Codec<Object, String>> VALUE_CODECS;
 	static {
 		Map<PropertyType, Codec<Object, String>> valueCodecs = new EnumMap<>(PropertyType.class);
-		valueCodecs.put(PropertyType.BOOLEAN, TypeDataEncoder.BOOLEAN_CODEC);
-		valueCodecs.put(PropertyType.ID, TypeDataEncoder.STRING_CODEC);
-		valueCodecs.put(PropertyType.INTEGER, TypeDataEncoder.BIGINTEGER_CODEC);
-		valueCodecs.put(PropertyType.DATETIME, TypeDataEncoder.DATETIME_CODEC);
-		valueCodecs.put(PropertyType.DECIMAL, TypeDataEncoder.BIGDECIMAL_CODEC);
-		valueCodecs.put(PropertyType.HTML, TypeDataEncoder.STRING_CODEC);
-		valueCodecs.put(PropertyType.STRING, TypeDataEncoder.STRING_CODEC);
-		valueCodecs.put(PropertyType.URI, TypeDataEncoder.STRING_CODEC);
+		valueCodecs.put(PropertyType.BOOLEAN, PropertyDefinitionEncoder.BOOLEAN_CODEC);
+		valueCodecs.put(PropertyType.ID, PropertyDefinitionEncoder.STRING_CODEC);
+		valueCodecs.put(PropertyType.INTEGER, PropertyDefinitionEncoder.BIGINTEGER_CODEC);
+		valueCodecs.put(PropertyType.DATETIME, PropertyDefinitionEncoder.DATETIME_CODEC);
+		valueCodecs.put(PropertyType.DECIMAL, PropertyDefinitionEncoder.BIGDECIMAL_CODEC);
+		valueCodecs.put(PropertyType.HTML, PropertyDefinitionEncoder.STRING_CODEC);
+		valueCodecs.put(PropertyType.STRING, PropertyDefinitionEncoder.STRING_CODEC);
+		valueCodecs.put(PropertyType.URI, PropertyDefinitionEncoder.STRING_CODEC);
 		VALUE_CODECS = Tools.freezeMap(valueCodecs);
 	}
 
@@ -262,40 +263,40 @@ public class TypeDataEncoder {
 
 	static String encodeProperty(PropertyDefinition<?> property) throws JsonProcessingException {
 		// First: the common properties
-		Map<String, Object> values = TypeDataEncoder.encodeCommonValues(property);
+		Map<String, Object> values = PropertyDefinitionEncoder.encodeCommonValues(property);
 
 		// Next, the default values
-		Codec<Object, String> codec = TypeDataEncoder.VALUE_CODECS.get(property.getPropertyType());
+		Codec<Object, String> codec = PropertyDefinitionEncoder.VALUE_CODECS.get(property.getPropertyType());
 
 		List<String> defaultValue = new LinkedList<>();
 		for (Object o : property.getDefaultValue()) {
 			defaultValue.add(codec.encode(o));
 		}
 		if (!defaultValue.isEmpty()) {
-			values.put(TypeDataEncoder.LBL_DEFAULT_VALUE, defaultValue);
+			values.put(PropertyDefinitionEncoder.LBL_DEFAULT_VALUE, defaultValue);
 		}
 
 		// Finally, the choices
 		List<Object> choices = new LinkedList<>();
 		for (Choice<?> c : property.getChoices()) {
-			choices.add(TypeDataEncoder.encodeChoice(codec, c));
+			choices.add(PropertyDefinitionEncoder.encodeChoice(codec, c));
 		}
 		if (!choices.isEmpty()) {
-			values.put(TypeDataEncoder.LBL_CHOICE, choices);
+			values.put(PropertyDefinitionEncoder.LBL_CHOICE, choices);
 		}
 		return new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValueAsString(values);
 	}
 
 	static Map<String, Object> encodeCommonValues(PropertyDefinition<?> property) {
 		Map<String, Object> values = new LinkedHashMap<>();
-		for (String name : TypeDataEncoder.COMMON_ACCESSORS.keySet()) {
-			String value = TypeDataEncoder.COMMON_ACCESSORS.get(name).get(property);
+		for (String name : PropertyDefinitionEncoder.COMMON_ACCESSORS.keySet()) {
+			String value = PropertyDefinitionEncoder.COMMON_ACCESSORS.get(name).get(property);
 			if (value != null) {
 				values.put(name, value);
 			}
 		}
 
-		Map<String, PropertyDefinitionAccessor<?, ?, ?>> typedAccessors = TypeDataEncoder.TYPED_ACCESSORS
+		Map<String, PropertyDefinitionAccessor<?, ?, ?>> typedAccessors = PropertyDefinitionEncoder.TYPED_ACCESSORS
 			.get(property.getPropertyType());
 		// Then, the ones specifically for each type
 		if (typedAccessors != null) {
@@ -314,24 +315,24 @@ public class TypeDataEncoder {
 
 		Map<String, Object> encodedChoice = new LinkedHashMap<>();
 
-		encodedChoice.put(TypeDataEncoder.LBL_CHOICE_NAME, choice.getDisplayName());
+		encodedChoice.put(PropertyDefinitionEncoder.LBL_CHOICE_NAME, choice.getDisplayName());
 
 		// Does this choice have values associated?
 		List<String> values = new LinkedList<>();
 		for (Object v : choice.getValue()) {
 			values.add(codec.encode(v));
 		}
-		encodedChoice.put(TypeDataEncoder.LBL_CHOICE_VALUE, values);
+		encodedChoice.put(PropertyDefinitionEncoder.LBL_CHOICE_VALUE, values);
 
 		// Does this choice have hierarchical children?
 		List<Object> children = new LinkedList<>();
 		// There are hierarchical children - encode each one
 		for (Choice<?> c : choice.getChoice()) {
-			children.add(TypeDataEncoder.encodeChoice(codec, c));
+			children.add(PropertyDefinitionEncoder.encodeChoice(codec, c));
 		}
 
 		// Stow the children...
-		encodedChoice.put(TypeDataEncoder.LBL_CHOICE, children);
+		encodedChoice.put(PropertyDefinitionEncoder.LBL_CHOICE, children);
 
 		return encodedChoice;
 	}
@@ -340,13 +341,13 @@ public class TypeDataEncoder {
 		// First: the common properties
 		Map<?, ?> values = new ObjectMapper().readValue(json, Map.class);
 
-		Pair<Codec<V, String>, MutablePropertyDefinition<V>> newDef = TypeDataEncoder.decodeCommonValues(values);
+		Pair<Codec<V, String>, MutablePropertyDefinition<V>> newDef = PropertyDefinitionEncoder.decodeCommonValues(values);
 
 		final Codec<V, String> codec = newDef.getKey();
 		final MutablePropertyDefinition<V> property = newDef.getValue();
 
 		// Next, the default values
-		Object dv = values.get(TypeDataEncoder.LBL_DEFAULT_VALUE);
+		Object dv = values.get(PropertyDefinitionEncoder.LBL_DEFAULT_VALUE);
 		if (dv != null) {
 			List<V> defaultValue = new ArrayList<>();
 			List<?> defaults = List.class.cast(dv);
@@ -358,13 +359,13 @@ public class TypeDataEncoder {
 			property.setDefaultValue(defaultValue);
 		}
 
-		Object c = values.get(TypeDataEncoder.LBL_CHOICE);
+		Object c = values.get(PropertyDefinitionEncoder.LBL_CHOICE);
 		if (c != null) {
 			@SuppressWarnings("unchecked")
 			List<Object> choicesRoot = (List<Object>) c;
 			List<Choice<V>> choices = new ArrayList<>(choicesRoot.size());
 			for (Object choiceObj : choicesRoot) {
-				Choice<V> choice = TypeDataEncoder.decodeChoice(codec, choiceObj);
+				Choice<V> choice = PropertyDefinitionEncoder.decodeChoice(codec, choiceObj);
 				if (choice != null) {
 					choices.add(choice);
 				}
@@ -379,7 +380,7 @@ public class TypeDataEncoder {
 
 	static <V> Pair<Codec<V, String>, MutablePropertyDefinition<V>> decodeCommonValues(Map<?, ?> values) {
 		// First things first: get the type
-		Object type = values.get(TypeDataEncoder.LBL_PROPERTY_TYPE);
+		Object type = values.get(PropertyDefinitionEncoder.LBL_PROPERTY_TYPE);
 		if (type == null) {
 			throw new IllegalArgumentException("The given JSON doesn't contain a propertyType attribute");
 		}
@@ -391,20 +392,20 @@ public class TypeDataEncoder {
 		// with what CMIS implements
 
 		@SuppressWarnings("unchecked")
-		final Codec<V, String> codec = (Codec<V, String>) TypeDataEncoder.VALUE_CODECS.get(propertyType);
+		final Codec<V, String> codec = (Codec<V, String>) PropertyDefinitionEncoder.VALUE_CODECS.get(propertyType);
 
 		@SuppressWarnings("unchecked")
-		final MutablePropertyDefinition<V> property = (MutablePropertyDefinition<V>) TypeDataEncoder
+		final MutablePropertyDefinition<V> property = (MutablePropertyDefinition<V>) PropertyDefinitionEncoder
 			.constructDefinition(propertyType);
 
-		for (String name : TypeDataEncoder.COMMON_ACCESSORS.keySet()) {
+		for (String name : PropertyDefinitionEncoder.COMMON_ACCESSORS.keySet()) {
 			Object v = values.get(name);
 			if (v != null) {
-				TypeDataEncoder.COMMON_ACCESSORS.get(name).set(property, v.toString());
+				PropertyDefinitionEncoder.COMMON_ACCESSORS.get(name).set(property, v.toString());
 			}
 		}
 
-		Map<String, PropertyDefinitionAccessor<?, ?, ?>> typedAccessors = TypeDataEncoder.TYPED_ACCESSORS
+		Map<String, PropertyDefinitionAccessor<?, ?, ?>> typedAccessors = PropertyDefinitionEncoder.TYPED_ACCESSORS
 			.get(property.getPropertyType());
 		// Then, the ones specifically for each type
 		if (typedAccessors != null) {
@@ -426,9 +427,9 @@ public class TypeDataEncoder {
 		Map<String, Object> choiceMap = (Map<String, Object>) choiceObj;
 
 		ChoiceImpl<V> choice = new ChoiceImpl<>();
-		choice.setDisplayName(Tools.toString(choiceMap.get(TypeDataEncoder.LBL_CHOICE_NAME)));
+		choice.setDisplayName(Tools.toString(choiceMap.get(PropertyDefinitionEncoder.LBL_CHOICE_NAME)));
 
-		Object valueObj = choiceMap.get(TypeDataEncoder.LBL_CHOICE_VALUE);
+		Object valueObj = choiceMap.get(PropertyDefinitionEncoder.LBL_CHOICE_VALUE);
 		if (valueObj != null) {
 			List<V> value = new ArrayList<>();
 			for (Object o : List.class.cast(valueObj)) {
@@ -442,13 +443,13 @@ public class TypeDataEncoder {
 			}
 		}
 
-		Object c = choiceMap.get(TypeDataEncoder.LBL_CHOICE);
+		Object c = choiceMap.get(PropertyDefinitionEncoder.LBL_CHOICE);
 		if (c != null) {
 			@SuppressWarnings("unchecked")
 			List<Object> childrenList = (List<Object>) c;
 			List<Choice<V>> children = new ArrayList<>(childrenList.size());
 			for (Object childObj : childrenList) {
-				Choice<V> child = TypeDataEncoder.decodeChoice(codec, childObj);
+				Choice<V> child = PropertyDefinitionEncoder.decodeChoice(codec, childObj);
 				if (child != null) {
 					children.add(child);
 				}
@@ -461,14 +462,19 @@ public class TypeDataEncoder {
 		return choice;
 	}
 
-	public static <T> void encode(List<PropertyDefinition<?>> v, CmfObject<T> object, Function<String, T> encoder)
+	public static <T> void encode(ObjectType type, CmfObject<T> object, Function<String, T> encoder)
 		throws ExportException {
+		PropertyDefinitionEncoder.encode(type.getPropertyDefinitions(), object, encoder);
+	}
+
+	public static <T> void encode(Map<String, PropertyDefinition<?>> m, CmfObject<T> object,
+		Function<String, T> encoder) throws ExportException {
 		CmfProperty<T> property = new CmfProperty<>(IntermediateProperty.PROPERTY_DEFINITIONS, CmfValue.Type.STRING,
 			true);
 
-		for (PropertyDefinition<?> p : v) {
+		for (PropertyDefinition<?> p : m.values()) {
 			try {
-				property.addValue(encoder.apply(TypeDataEncoder.encodeProperty(p)));
+				property.addValue(encoder.apply(PropertyDefinitionEncoder.encodeProperty(p)));
 			} catch (JsonProcessingException e) {
 				throw new ExportException("Failed to encode the property: " + p, e);
 			}
@@ -477,19 +483,20 @@ public class TypeDataEncoder {
 		object.setProperty(property);
 	}
 
-	public static <T> List<PropertyDefinition<?>> decode(CmfObject<T> object, Function<T, String> decoder)
+	public static <T> Map<String, PropertyDefinition<?>> decode(CmfObject<T> object, Function<T, String> decoder)
 		throws ImportException {
 		CmfProperty<T> property = object.getProperty(IntermediateProperty.PROPERTY_DEFINITIONS);
-		List<PropertyDefinition<?>> list = new ArrayList<>();
+		Map<String, PropertyDefinition<?>> map = new LinkedHashMap<>();
 		if ((property != null) && property.hasValues()) {
 			for (T t : property) {
 				try {
-					list.add(TypeDataEncoder.decodeProperty(decoder.apply(t)));
+					PropertyDefinition<?> p = PropertyDefinitionEncoder.decodeProperty(decoder.apply(t));
+					map.put(p.getId(), p);
 				} catch (JsonProcessingException e) {
 					throw new ImportException("Failed to decode the property: " + t, e);
 				}
 			}
 		}
-		return list;
+		return map;
 	}
 }

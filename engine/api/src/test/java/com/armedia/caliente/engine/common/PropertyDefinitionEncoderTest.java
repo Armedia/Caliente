@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-public class TypeDataEncoderTest {
+public class PropertyDefinitionEncoderTest {
 
 	public class MPD<T> extends AbstractPropertyDefinition<T> {
 		private static final long serialVersionUID = 1L;
@@ -133,11 +133,11 @@ public class TypeDataEncoderTest {
 		final PropertyType type = mpd.getPropertyType();
 		switch (type) {
 			case INTEGER:
-				for (BigInteger min : TypeDataEncoderTest.BIG_INTEGERS) {
-					for (BigInteger max : TypeDataEncoderTest.BIG_INTEGERS) {
+				for (BigInteger min : PropertyDefinitionEncoderTest.BIG_INTEGERS) {
+					for (BigInteger max : PropertyDefinitionEncoderTest.BIG_INTEGERS) {
 						for (int i = 0; i < 3; i++) {
 							PropertyIntegerDefinitionImpl impl = PropertyIntegerDefinitionImpl.class
-								.cast(TypeDataEncoder.constructDefinition(mpd.getPropertyType()));
+								.cast(PropertyDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
 							mpd.copyTo(impl);
 							impl.setMinValue(min);
 							impl.setMaxValue(max);
@@ -153,12 +153,12 @@ public class TypeDataEncoderTest {
 				return;
 
 			case DECIMAL:
-				for (BigDecimal min : TypeDataEncoderTest.BIG_DECIMALS) {
-					for (BigDecimal max : TypeDataEncoderTest.BIG_DECIMALS) {
+				for (BigDecimal min : PropertyDefinitionEncoderTest.BIG_DECIMALS) {
+					for (BigDecimal max : PropertyDefinitionEncoderTest.BIG_DECIMALS) {
 						for (DecimalPrecision precision : DecimalPrecision.values()) {
 							for (int i = 0; i < 3; i++) {
 								PropertyDecimalDefinitionImpl impl = PropertyDecimalDefinitionImpl.class
-									.cast(TypeDataEncoder.constructDefinition(mpd.getPropertyType()));
+									.cast(PropertyDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
 								mpd.copyTo(impl);
 								impl.setMinValue(min);
 								impl.setMaxValue(max);
@@ -179,7 +179,7 @@ public class TypeDataEncoderTest {
 				for (DateTimeResolution resolution : DateTimeResolution.values()) {
 					for (int i = 0; i < 3; i++) {
 						PropertyDateTimeDefinitionImpl impl = PropertyDateTimeDefinitionImpl.class
-							.cast(TypeDataEncoder.constructDefinition(mpd.getPropertyType()));
+							.cast(PropertyDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
 						mpd.copyTo(impl);
 						impl.setDateTimeResolution(resolution);
 
@@ -193,10 +193,10 @@ public class TypeDataEncoderTest {
 				return;
 
 			case STRING:
-				for (BigInteger maxLen : TypeDataEncoderTest.BIG_INTEGERS) {
+				for (BigInteger maxLen : PropertyDefinitionEncoderTest.BIG_INTEGERS) {
 					for (int i = 0; i < 3; i++) {
 						PropertyStringDefinitionImpl impl = PropertyStringDefinitionImpl.class
-							.cast(TypeDataEncoder.constructDefinition(mpd.getPropertyType()));
+							.cast(PropertyDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
 						mpd.copyTo(impl);
 						impl.setMaxLength(maxLen);
 
@@ -211,7 +211,7 @@ public class TypeDataEncoderTest {
 
 			default:
 				for (int i = 0; i < 3; i++) {
-					MutablePropertyDefinition<?> def = TypeDataEncoder.constructDefinition(mpd.getPropertyType());
+					MutablePropertyDefinition<?> def = PropertyDefinitionEncoder.constructDefinition(mpd.getPropertyType());
 					mpd.copyTo(def);
 
 					def.setDefaultValue(renderDefaultValues(type, i));
@@ -293,9 +293,9 @@ public class TypeDataEncoderTest {
 		PropertyDefinition<V> decoded = null;
 		String encoded = null;
 		try {
-			encoded = TypeDataEncoder.encodeProperty(original);
+			encoded = PropertyDefinitionEncoder.encodeProperty(original);
 			Assertions.assertNotNull(encoded);
-			decoded = TypeDataEncoder.decodeProperty(encoded);
+			decoded = PropertyDefinitionEncoder.decodeProperty(encoded);
 		} catch (JsonProcessingException e) {
 			Assertions.fail(e);
 		}
