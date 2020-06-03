@@ -60,6 +60,7 @@ public class TypeDefinitionEncoder {
 		XMLStreamWriter writer = null;
 		try {
 			writer = TypeDefinitionEncoder.XML_OUTPUT_FACTORY.get().createXMLStreamWriter(out);
+			XMLUtils.startXmlDocument(writer);
 			XMLConverter.writeTypeDefinition(writer, CmisVersion.CMIS_1_1, XMLConstants.NAMESPACE_CMIS, type);
 			XMLUtils.endXmlDocument(writer);
 		} finally {
