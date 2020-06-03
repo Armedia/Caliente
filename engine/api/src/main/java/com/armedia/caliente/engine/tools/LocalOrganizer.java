@@ -135,10 +135,9 @@ public class LocalOrganizer extends CmfContentOrganizer {
 		if (StringUtils.isEmpty(objectName)) {
 			// Uh-oh ... an empty filename!!! Can't have that!!
 			objectName = String.format("[history-%s]", object.getHistoryId());
-		} else {
-			objectName = this.fixer.fixName(objectName);
 		}
-		return objectName;
+
+		return this.fixer.fixName(objectName);
 	}
 
 	protected <VALUE> String calculateBaseName(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,

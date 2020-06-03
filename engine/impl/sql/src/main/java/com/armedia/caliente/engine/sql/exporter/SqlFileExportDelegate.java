@@ -64,7 +64,6 @@ import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.sql.common.SqlCommon;
 import com.armedia.caliente.engine.sql.common.SqlFile;
 import com.armedia.caliente.engine.sql.common.SqlRoot;
@@ -403,8 +402,7 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 
 	@Override
 	protected List<CmfContentStream> storeContent(SqlExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
-		boolean includeRenditions) {
+		CmfObject<CmfValue> marshalled, CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
 		if (getType() != CmfObject.Archetype.DOCUMENT) { return null; }
 
 		List<CmfContentStream> ret = new ArrayList<>(1);

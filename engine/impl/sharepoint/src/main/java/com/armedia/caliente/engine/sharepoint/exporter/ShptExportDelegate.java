@@ -33,7 +33,6 @@ import java.util.Map;
 
 import com.armedia.caliente.engine.exporter.ExportDelegate;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.sharepoint.ShptSession;
 import com.armedia.caliente.engine.sharepoint.ShptSessionWrapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -84,8 +83,7 @@ public abstract class ShptExportDelegate<T> extends
 
 	@Override
 	protected List<CmfContentStream> storeContent(ShptExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
-		boolean includeRenditions) {
+		CmfObject<CmfValue> marshalled, CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
 		return null;
 	}
 

@@ -140,8 +140,8 @@ public class CmisExportEngine extends
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByPath(Session session, CfgTools configuration,
-		CmisExportDelegateFactory factory, String path) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByPath(Session session, CfgTools configuration, String path)
+		throws Exception {
 		return StreamTools.of(getPathIterator(session, path));
 	}
 
@@ -165,14 +165,14 @@ public class CmisExportEngine extends
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByQuery(Session session, CfgTools configuration,
-		CmisExportDelegateFactory factory, String query) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByQuery(Session session, CfgTools configuration, String query)
+		throws Exception {
 		return StreamTools.of(getQueryIterator(session, query));
 	}
 
 	@Override
 	protected Stream<ExportTarget> findExportTargetsBySearchKey(Session session, CfgTools configuration,
-		CmisExportDelegateFactory factory, String searchKey) throws Exception {
+		String searchKey) throws Exception {
 		try {
 			CmisObject obj = session.getObject(searchKey);
 			CmfObject.Archetype type = decodeType(obj.getBaseType());
@@ -183,7 +183,7 @@ public class CmisExportEngine extends
 			}
 
 			// RECURSE!!!
-			return findExportTargetsByPath(session, configuration, factory, Folder.class.cast(obj).getPath());
+			return findExportTargetsByPath(session, configuration, Folder.class.cast(obj).getPath());
 		} catch (CmisObjectNotFoundException e) {
 			return null;
 		}

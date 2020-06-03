@@ -101,7 +101,7 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		String user = commandValues.getString(CLIParam.user);
 		String password = commandValues.getString(CLIParam.password);
 
-		settings.put(CmisSessionSetting.ATOMPUB_URL.getLabel(), baseUrl);
+		settings.put(CmisSessionSetting.URL.getLabel(), baseUrl);
 		if (user != null) {
 			settings.put(CmisSessionSetting.USER.getLabel(), user);
 		}

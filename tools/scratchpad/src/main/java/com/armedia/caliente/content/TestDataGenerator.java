@@ -42,12 +42,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.commons.utilities.BinaryMemoryBuffer;
-import com.armedia.commons.utilities.DigestInputStream;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.io.BinaryMemoryBuffer;
+import com.armedia.commons.utilities.io.DigestInputStream;
 
 public class TestDataGenerator extends BaseShareableLockable {
 

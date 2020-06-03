@@ -25,10 +25,11 @@
  * #L%
  *******************************************************************************/
 
-package com.armedia.caliente.engine;
+package com.armedia.caliente.engine.common;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;

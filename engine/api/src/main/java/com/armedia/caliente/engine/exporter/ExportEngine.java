@@ -56,15 +56,15 @@ import javax.xml.bind.JAXBException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.SessionFactory;
-import com.armedia.caliente.engine.SessionFactoryException;
-import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.common.SessionFactory;
+import com.armedia.caliente.engine.common.SessionFactoryException;
+import com.armedia.caliente.engine.common.SessionWrapper;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
@@ -646,7 +646,7 @@ public abstract class ExportEngine<//
 			try {
 				final boolean includeRenditions = !ctx.getSettings().getBoolean(TransferSetting.NO_RENDITIONS);
 				List<CmfContentStream> contentStreams = sourceObject.storeContent(ctx, getTranslator(), marshaled,
-					referrentTarget, streamStore, includeRenditions);
+					streamStore, includeRenditions);
 				if ((contentStreams != null) && !contentStreams.isEmpty()) {
 					objectStore.setContentStreams(marshaled, contentStreams);
 				}
@@ -760,8 +760,7 @@ public abstract class ExportEngine<//
 		return SearchType.QUERY;
 	}
 
-	private Stream<ExportTarget> getExportTargets(SESSION session, String source, DELEGATE_FACTORY delegateFactory)
-		throws Exception {
+	private Stream<ExportTarget> getExportTargets(SESSION session, String source) throws Exception {
 		final SearchType searchType = detectSearchType(source);
 		if (searchType == null) {
 			throw new ExportException(
@@ -782,15 +781,15 @@ public abstract class ExportEngine<//
 					throw new ExportException(
 						String.format("Invalid search key [%s] - no object can be found with an empty key"));
 				}
-				ret = findExportTargetsBySearchKey(session, this.settings, delegateFactory, searchKey);
+				ret = findExportTargetsBySearchKey(session, this.settings, searchKey);
 				break;
 			case PATH:
 				// CMS Path!
-				ret = findExportTargetsByPath(session, this.settings, delegateFactory, source);
+				ret = findExportTargetsByPath(session, this.settings, source);
 				break;
 			case QUERY:
 				// Query string!
-				ret = findExportTargetsByQuery(session, this.settings, delegateFactory, source);
+				ret = findExportTargetsByQuery(session, this.settings, source);
 			default:
 				break;
 		}
@@ -990,7 +989,7 @@ public abstract class ExportEngine<//
 						sourceCounter.set(0);
 						currentSource.set(line);
 						listener.sourceSearchStarted(line);
-						try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
+						try (Stream<ExportTarget> s = getExportTargets(session, line)) {
 							s.forEach(submitter);
 						} catch (Exception e) {
 							thrown.set(e);
@@ -1044,13 +1043,13 @@ public abstract class ExportEngine<//
 	}
 
 	protected abstract Stream<ExportTarget> findExportTargetsByQuery(SESSION session, CfgTools configuration,
-		DELEGATE_FACTORY factory, String query) throws Exception;
+		String query) throws Exception;
 
 	protected abstract Stream<ExportTarget> findExportTargetsByPath(SESSION session, CfgTools configuration,
-		DELEGATE_FACTORY factory, String path) throws Exception;
+		String path) throws Exception;
 
 	protected abstract Stream<ExportTarget> findExportTargetsBySearchKey(SESSION session, CfgTools configuration,
-		DELEGATE_FACTORY factory, String searchKey) throws Exception;
+		String searchKey) throws Exception;
 
 	@Override
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {

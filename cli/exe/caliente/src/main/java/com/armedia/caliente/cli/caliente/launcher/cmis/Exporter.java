@@ -41,6 +41,7 @@ import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
+import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 
@@ -80,13 +81,14 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 
-		final String server = null;
+		final String server = commandValues.getString(CLIParam.server);
+		final String user = commandValues.getString(CLIParam.user);
+		final String password = commandValues.getString(CLIParam.password);
 
 		URI baseUri;
 		// Ensure it has a trailing slash...this will be useful later
 		try {
-			// baseUri = new URI(String.format("%s/", this.server));
-			baseUri = new URI(server);
+			baseUri = new URI(String.format("%s/", server));
 		} catch (URISyntaxException e) {
 			throw new CalienteException(String.format("Bad URL for the the CMIS repository: [%s]", server), e);
 		}
@@ -98,12 +100,19 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 			throw new CalienteException(String.format("Bad URL for the CMIS repository: [%s]", server), e);
 		}
 
-		settings.put(CmisSessionSetting.ATOMPUB_URL.getLabel(), baseUrl);
+		settings.put(CmisSessionSetting.URL.getLabel(), baseUrl);
 		String repoName = null;
 		if (!StringUtils.isBlank(repoName)) {
 			settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), repoName);
 		}
 
+		if (!StringUtils.isEmpty(user)) {
+			settings.put(CmisSessionSetting.USER.getLabel(), user);
+		}
+
+		if (!StringUtils.isEmpty(password)) {
+			settings.put(CmisSessionSetting.PASSWORD.getLabel(), password);
+		}
 		return true;
 	}
 

@@ -46,16 +46,6 @@ import com.armedia.caliente.engine.dynamic.transformer.TestObjectFacade;
 import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.engine.dynamic.xml.RegularExpression;
-import com.armedia.caliente.engine.dynamic.xml.actions.AbortTransformation;
-import com.armedia.caliente.engine.dynamic.xml.actions.AttributeSet;
-import com.armedia.caliente.engine.dynamic.xml.actions.EndTransformation;
-import com.armedia.caliente.engine.dynamic.xml.actions.MapAttributeValue;
-import com.armedia.caliente.engine.dynamic.xml.actions.MapValueCase;
-import com.armedia.caliente.engine.dynamic.xml.actions.SecondarySubtypeAdd;
-import com.armedia.caliente.engine.dynamic.xml.actions.SecondarySubtypeRemove;
-import com.armedia.caliente.engine.dynamic.xml.actions.SecondarySubtypeReplace;
-import com.armedia.caliente.engine.dynamic.xml.actions.SubtypeReplace;
-import com.armedia.caliente.engine.dynamic.xml.actions.SubtypeSet;
 import com.armedia.caliente.store.CmfValue;
 
 public class ActionsTest {

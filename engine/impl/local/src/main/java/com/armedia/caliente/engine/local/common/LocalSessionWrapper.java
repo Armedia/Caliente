@@ -28,7 +28,7 @@ package com.armedia.caliente.engine.local.common;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.armedia.caliente.engine.SessionWrapper;
+import com.armedia.caliente.engine.common.SessionWrapper;
 
 public class LocalSessionWrapper extends SessionWrapper<LocalRoot> {
 

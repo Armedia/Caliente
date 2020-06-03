@@ -31,7 +31,7 @@ import java.util.Map;
 import org.apache.commons.collections4.map.HashedMap;
 import org.junit.jupiter.api.Test;
 
-import com.armedia.caliente.engine.SessionWrapper;
+import com.armedia.caliente.engine.common.SessionWrapper;
 import com.armedia.caliente.engine.dfc.DctmSessionFactory;
 import com.armedia.caliente.engine.dfc.DctmSetting;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.AttributeDeclaration;

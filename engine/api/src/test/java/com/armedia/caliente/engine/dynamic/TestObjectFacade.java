@@ -29,7 +29,6 @@ package com.armedia.caliente.engine.dynamic;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.armedia.caliente.engine.dynamic.DynamicObject;
 import com.armedia.caliente.store.CmfObject;
 
 public class TestObjectFacade extends DynamicObject {

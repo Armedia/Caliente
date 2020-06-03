@@ -54,7 +54,6 @@ import com.armedia.caliente.engine.dfc.DctmVdocMember;
 import com.armedia.caliente.engine.dfc.common.DctmDocument;
 import com.armedia.caliente.engine.dfc.common.DctmSysObject;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
@@ -267,11 +266,10 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 
 	@Override
 	protected List<CmfContentStream> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
-		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfSysObject document, CmfContentStore<?, ?> streamStore,
+		CmfObject<IDfValue> marshaled, IDfSysObject document, CmfContentStore<?, ?> streamStore,
 		boolean includeRenditions) throws DfException {
 		if (isDfReference(document)) {
-			return super.doStoreContent(ctx, translator, marshaled, referrent, document, streamStore,
-				includeRenditions);
+			return super.doStoreContent(ctx, translator, marshaled, document, streamStore, includeRenditions);
 		}
 
 		// We export our contents...

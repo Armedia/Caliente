@@ -24,7 +24,7 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine;
+package com.armedia.caliente.engine.common;
 
 import java.util.function.Supplier;
 
