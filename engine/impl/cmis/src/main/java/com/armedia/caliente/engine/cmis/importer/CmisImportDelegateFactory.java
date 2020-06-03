@@ -48,6 +48,8 @@ public class CmisImportDelegateFactory
 				return new CmisFolderDelegate(this, storedObject);
 			case DOCUMENT:
 				return new CmisDocumentDelegate(this, storedObject);
+			case TYPE:
+				return new CmisTypeDelegate(this, storedObject);
 			default:
 				break;
 		}
