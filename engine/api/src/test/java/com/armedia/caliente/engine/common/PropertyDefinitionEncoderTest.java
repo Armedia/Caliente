@@ -137,7 +137,7 @@ public class PropertyDefinitionEncoderTest {
 					for (BigInteger max : PropertyDefinitionEncoderTest.BIG_INTEGERS) {
 						for (int i = 0; i < 3; i++) {
 							PropertyIntegerDefinitionImpl impl = PropertyIntegerDefinitionImpl.class
-								.cast(PropertyDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
+								.cast(TypeDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
 							mpd.copyTo(impl);
 							impl.setMinValue(min);
 							impl.setMaxValue(max);
@@ -158,7 +158,7 @@ public class PropertyDefinitionEncoderTest {
 						for (DecimalPrecision precision : DecimalPrecision.values()) {
 							for (int i = 0; i < 3; i++) {
 								PropertyDecimalDefinitionImpl impl = PropertyDecimalDefinitionImpl.class
-									.cast(PropertyDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
+									.cast(TypeDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
 								mpd.copyTo(impl);
 								impl.setMinValue(min);
 								impl.setMaxValue(max);
@@ -179,7 +179,7 @@ public class PropertyDefinitionEncoderTest {
 				for (DateTimeResolution resolution : DateTimeResolution.values()) {
 					for (int i = 0; i < 3; i++) {
 						PropertyDateTimeDefinitionImpl impl = PropertyDateTimeDefinitionImpl.class
-							.cast(PropertyDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
+							.cast(TypeDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
 						mpd.copyTo(impl);
 						impl.setDateTimeResolution(resolution);
 
@@ -196,7 +196,7 @@ public class PropertyDefinitionEncoderTest {
 				for (BigInteger maxLen : PropertyDefinitionEncoderTest.BIG_INTEGERS) {
 					for (int i = 0; i < 3; i++) {
 						PropertyStringDefinitionImpl impl = PropertyStringDefinitionImpl.class
-							.cast(PropertyDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
+							.cast(TypeDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
 						mpd.copyTo(impl);
 						impl.setMaxLength(maxLen);
 
@@ -211,7 +211,7 @@ public class PropertyDefinitionEncoderTest {
 
 			default:
 				for (int i = 0; i < 3; i++) {
-					MutablePropertyDefinition<?> def = PropertyDefinitionEncoder.constructDefinition(mpd.getPropertyType());
+					MutablePropertyDefinition<?> def = TypeDefinitionEncoder.constructDefinition(mpd.getPropertyType());
 					mpd.copyTo(def);
 
 					def.setDefaultValue(renderDefaultValues(type, i));
@@ -293,9 +293,9 @@ public class PropertyDefinitionEncoderTest {
 		PropertyDefinition<V> decoded = null;
 		String encoded = null;
 		try {
-			encoded = PropertyDefinitionEncoder.encodeProperty(original);
+			encoded = TypeDefinitionEncoder.encodeProperty(original);
 			Assertions.assertNotNull(encoded);
-			decoded = PropertyDefinitionEncoder.decodeProperty(encoded);
+			decoded = TypeDefinitionEncoder.decodeProperty(encoded);
 		} catch (JsonProcessingException e) {
 			Assertions.fail(e);
 		}

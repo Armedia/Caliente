@@ -42,7 +42,7 @@ import org.apache.chemistry.opencmis.commons.enums.Cardinality;
 import org.apache.chemistry.opencmis.commons.enums.PropertyType;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.common.PropertyDefinitionEncoder;
+import com.armedia.caliente.engine.common.TypeDefinitionEncoder;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
@@ -218,7 +218,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			// a concrete type), then we simply skip adding the "target" marker property
 		}
 
-		properties.add(PropertyDefinitionEncoder.encode(createPropertyDefinitions(type), DfValueFactory::of));
+		properties.add(TypeDefinitionEncoder.encodePropertyDefinitions(createPropertyDefinitions(type), DfValueFactory::of));
 
 		return ret;
 	}
@@ -265,7 +265,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 
 			}
 
-			MutablePropertyDefinition<?> def = PropertyDefinitionEncoder.constructDefinition(propertyType);
+			MutablePropertyDefinition<?> def = TypeDefinitionEncoder.constructDefinition(propertyType);
 			def.setLocalName(name);
 			def.setLocalNamespace("dctm:" + type.getName());
 			def.setId(type.getName() + ":" + name);

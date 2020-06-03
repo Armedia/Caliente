@@ -33,7 +33,7 @@ import java.util.Set;
 import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.Session;
 
-import com.armedia.caliente.engine.common.PropertyDefinitionEncoder;
+import com.armedia.caliente.engine.common.TypeDefinitionEncoder;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
@@ -47,7 +47,7 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 
 	@Override
 	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
-		PropertyDefinitionEncoder.encode(this.object, object, CmfValue::of);
+		TypeDefinitionEncoder.encode(this.object, object, CmfValue::of);
 		return true;
 	}
 
