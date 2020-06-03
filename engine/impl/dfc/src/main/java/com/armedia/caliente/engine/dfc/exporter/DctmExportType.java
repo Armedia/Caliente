@@ -37,9 +37,18 @@ import java.util.Map;
 
 import org.apache.chemistry.opencmis.commons.definitions.MutablePropertyDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.MutablePropertyStringDefinition;
+import org.apache.chemistry.opencmis.commons.definitions.MutableTypeDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
+import org.apache.chemistry.opencmis.commons.definitions.TypeDefinition;
+import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
 import org.apache.chemistry.opencmis.commons.enums.Cardinality;
+import org.apache.chemistry.opencmis.commons.enums.ContentStreamAllowed;
 import org.apache.chemistry.opencmis.commons.enums.PropertyType;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.DocumentTypeDefinitionImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.FolderTypeDefinitionImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.ItemTypeDefinitionImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.SecondaryTypeDefinitionImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.TypeMutabilityImpl;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.common.TypeDefinitionEncoder;
@@ -218,12 +227,11 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			// a concrete type), then we simply skip adding the "target" marker property
 		}
 
-		properties.add(TypeDefinitionEncoder.encodePropertyDefinitions(createPropertyDefinitions(type), DfValueFactory::of));
-
+		TypeDefinitionEncoder.encode(createTypeDefinition(type), properties::add, DfValueFactory::of);
 		return ret;
 	}
 
-	protected Map<String, PropertyDefinition<?>> createPropertyDefinitions(IDfType type) throws DfException {
+	protected TypeDefinition createTypeDefinition(IDfType type) throws DfException {
 		Map<String, PropertyDefinition<?>> definitions = new LinkedHashMap<>();
 		final int attCount = type.getTypeAttrCount();
 		final int firstAtt = type.getInt(DctmAttributes.START_POS);
@@ -282,7 +290,61 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 
 			definitions.put(def.getId(), def);
 		}
-		return definitions;
+
+		MutableTypeDefinition typeDef = buildTypeDefinition(type);
+		boolean fileable = typeDef.isFileable();
+		typeDef.setDescription(type.getDescription());
+		typeDef.setDisplayName(type.getName());
+		typeDef.setId("dctm:" + type.getName());
+		typeDef.setIsControllableAcl(fileable);
+		typeDef.setIsControllablePolicy(fileable);
+		typeDef.setIsCreatable(true);
+		typeDef.setIsFileable(fileable);
+		typeDef.setIsFulltextIndexed(false); // TODO: How to tell?
+		typeDef.setIsIncludedInSupertypeQuery(false);
+		typeDef.setIsQueryable(true);
+		typeDef.setLocalName(type.getName());
+		typeDef.setLocalNamespace("dctm");
+		typeDef.setParentTypeId("dctm:" + type.getSuperName());
+		typeDef.setQueryName(type.getName());
+		TypeMutabilityImpl typeMutability = new TypeMutabilityImpl();
+		typeMutability.setCanCreate(true); // TODO: HOW TO TELL?
+		typeMutability.setCanDelete(true); // TODO: HOW TO TELL?
+		typeMutability.setCanUpdate(true); // TODO: HOW TO TELL?
+		typeDef.setTypeMutability(typeMutability);
+		definitions.values().forEach(typeDef::addPropertyDefinition);
+		return typeDef;
+	}
+
+	private MutableTypeDefinition buildTypeDefinition(IDfType type) throws DfException {
+		if (type.isSubTypeOf("dm_folder")) {
+			FolderTypeDefinitionImpl def = new FolderTypeDefinitionImpl();
+			def.setBaseTypeId(BaseTypeId.CMIS_FOLDER);
+			def.setIsFileable(true);
+			return def;
+		}
+
+		if (type.isSubTypeOf("dm_sysobject")) {
+			DocumentTypeDefinitionImpl def = new DocumentTypeDefinitionImpl();
+			def.setIsVersionable(true);
+			def.setIsFileable(true);
+			def.setContentStreamAllowed(ContentStreamAllowed.ALLOWED);
+			def.setBaseTypeId(BaseTypeId.CMIS_DOCUMENT);
+			return def;
+		}
+
+		int typeCategory = type.getInt(DctmAttributes.TYPE_CATEGORY);
+		if (typeCategory == 1) {
+			SecondaryTypeDefinitionImpl def = new SecondaryTypeDefinitionImpl();
+			def.setBaseTypeId(BaseTypeId.CMIS_SECONDARY);
+			def.setIsFileable(false);
+			return def;
+		}
+
+		ItemTypeDefinitionImpl def = new ItemTypeDefinitionImpl();
+		def.setBaseTypeId(BaseTypeId.CMIS_ITEM);
+		def.setIsFileable(false);
+		return def;
 	}
 
 	@Override
