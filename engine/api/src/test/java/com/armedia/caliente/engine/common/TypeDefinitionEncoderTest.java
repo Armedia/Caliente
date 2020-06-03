@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-public class PropertyDefinitionEncoderTest {
+public class TypeDefinitionEncoderTest {
 
 	public class MPD<T> extends AbstractPropertyDefinition<T> {
 		private static final long serialVersionUID = 1L;
@@ -133,8 +133,8 @@ public class PropertyDefinitionEncoderTest {
 		final PropertyType type = mpd.getPropertyType();
 		switch (type) {
 			case INTEGER:
-				for (BigInteger min : PropertyDefinitionEncoderTest.BIG_INTEGERS) {
-					for (BigInteger max : PropertyDefinitionEncoderTest.BIG_INTEGERS) {
+				for (BigInteger min : TypeDefinitionEncoderTest.BIG_INTEGERS) {
+					for (BigInteger max : TypeDefinitionEncoderTest.BIG_INTEGERS) {
 						for (int i = 0; i < 3; i++) {
 							PropertyIntegerDefinitionImpl impl = PropertyIntegerDefinitionImpl.class
 								.cast(TypeDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
@@ -153,8 +153,8 @@ public class PropertyDefinitionEncoderTest {
 				return;
 
 			case DECIMAL:
-				for (BigDecimal min : PropertyDefinitionEncoderTest.BIG_DECIMALS) {
-					for (BigDecimal max : PropertyDefinitionEncoderTest.BIG_DECIMALS) {
+				for (BigDecimal min : TypeDefinitionEncoderTest.BIG_DECIMALS) {
+					for (BigDecimal max : TypeDefinitionEncoderTest.BIG_DECIMALS) {
 						for (DecimalPrecision precision : DecimalPrecision.values()) {
 							for (int i = 0; i < 3; i++) {
 								PropertyDecimalDefinitionImpl impl = PropertyDecimalDefinitionImpl.class
@@ -193,7 +193,7 @@ public class PropertyDefinitionEncoderTest {
 				return;
 
 			case STRING:
-				for (BigInteger maxLen : PropertyDefinitionEncoderTest.BIG_INTEGERS) {
+				for (BigInteger maxLen : TypeDefinitionEncoderTest.BIG_INTEGERS) {
 					for (int i = 0; i < 3; i++) {
 						PropertyStringDefinitionImpl impl = PropertyStringDefinitionImpl.class
 							.cast(TypeDefinitionEncoder.constructDefinition(mpd.getPropertyType()));
