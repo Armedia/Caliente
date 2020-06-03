@@ -192,8 +192,8 @@ public class LocalExportEngine extends
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByQuery(LocalRoot session, CfgTools configuration,
-		LocalExportDelegateFactory factory, String indexFile) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByQuery(LocalRoot session, CfgTools configuration, String indexFile)
+		throws Exception {
 		// Skip the @ at the beginning...
 		indexFile = indexFile.substring(1);
 		Path path = new File(indexFile).toPath();
@@ -223,13 +223,13 @@ public class LocalExportEngine extends
 
 	@Override
 	protected Stream<ExportTarget> findExportTargetsBySearchKey(LocalRoot session, CfgTools configuration,
-		LocalExportDelegateFactory factory, String searchKey) throws Exception {
+		String searchKey) throws Exception {
 		throw new Exception("Local Export doesn't support ID-based searches");
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByPath(final LocalRoot root, CfgTools configuration,
-		LocalExportDelegateFactory factory, String unused) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByPath(final LocalRoot root, CfgTools configuration, String unused)
+		throws Exception {
 		Path p = root.getPath();
 		if (!Files.exists(p)) {
 			throw new FileNotFoundException(String.format("Failed to find a file or folder at [%s]", p));

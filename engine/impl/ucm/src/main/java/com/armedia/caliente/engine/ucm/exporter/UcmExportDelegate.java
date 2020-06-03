@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.List;
 
 import com.armedia.caliente.engine.exporter.ExportDelegate;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionWrapper;
 import com.armedia.caliente.engine.ucm.model.UcmModelObject;
@@ -75,8 +74,7 @@ public abstract class UcmExportDelegate<T extends UcmModelObject> extends
 
 	@Override
 	protected List<CmfContentStream> storeContent(UcmExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
-		boolean includeRenditions) {
+		CmfObject<CmfValue> marshalled, CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
 		return new ArrayList<>();
 	}
 }
