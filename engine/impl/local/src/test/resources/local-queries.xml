@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<local-queries xmlns="http://www.armedia.com/ns/caliente/engine/local" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine/local local.xsd">
+	<data-source name="dsName">
+		<url>jdbc-url</url>
+		<driver>jdbc.driver.Class</driver>
+		<user>jdbc-user</user>
+		<password>encryptable-jdbc-pass</password>
+		<setting name="setting.1">value.1</setting>
+		<setting name="setting.2">value.2</setting>
+		<!-- ... -->
+		<setting name="setting.N">value.N</setting>
+	</data-source>
+
+	<query id="targetId" dataSource="dsName" failOnError="false|true" failOnMissing="false|true">
+		<sql><![CDATA[ SQL QUERY]]></sql>
+		<skip>X</skip>
+		<count>Y</count>
+		<path-columns>
+			<path-column>option1</path-column>
+			<path-column>option2</path-column>
+			<path-column>option3</path-column>
+		</path-columns>
+		<relative-to>.....</relative-to>
+		<post-process lang=""><![CDATA[
+			// JEXL or other script that consumes ${path} and returns the post-processed value
+		]]></post-process>
+	</query>
+
+	<query>
+		<!-- ... -->
+	</query>
+
+</local-queries>
