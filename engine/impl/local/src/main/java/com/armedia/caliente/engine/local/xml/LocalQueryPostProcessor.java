@@ -51,9 +51,14 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 		private final JSR223Script script;
 
 		private ScriptProcessor(String language, String script) throws ScriptException {
+			if (StringUtils.isBlank(script)) {
+				throw new IllegalArgumentException("The post-processor script may not be blank");
+			}
 			language = (StringUtils.isBlank(language) ? LocalQueryPostProcessor.DEFAULT_LANGUAGE : language);
 			try {
 				this.script = new JSR223Script.Builder() //
+					.allowCompilation(true) //
+					.precompile(true) //
 					.language(language) //
 					.source(script) //
 					.build();
