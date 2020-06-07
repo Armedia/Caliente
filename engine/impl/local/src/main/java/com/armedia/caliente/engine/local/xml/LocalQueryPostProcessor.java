@@ -1,10 +1,12 @@
 package com.armedia.caliente.engine.local.xml;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -21,12 +23,15 @@ import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 import com.armedia.commons.utilities.function.CheckedFunction;
+import com.armedia.commons.utilities.script.JSR223Script;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "localQueryPostProcessor.t", propOrder = {
 	"value"
 })
 public class LocalQueryPostProcessor extends BaseShareableLockable {
+
+	private static final String DEFAULT_LANGUAGE = "jexl3";
 
 	private static final Class<?>[] METHOD_ARGS = {
 		String.class
@@ -40,6 +45,31 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 	@FunctionalInterface
 	private static interface Processor {
 		public String process(String value) throws Exception;
+	}
+
+	private static class ScriptProcessor implements Processor {
+		private final JSR223Script script;
+
+		private ScriptProcessor(String language, String script) throws ScriptException {
+			language = (StringUtils.isBlank(language) ? LocalQueryPostProcessor.DEFAULT_LANGUAGE : language);
+			try {
+				this.script = new JSR223Script.Builder() //
+					.language(language) //
+					.source(script) //
+					.build();
+			} catch (IOException e) {
+				throw new RuntimeException("Unexpected IOException when working in memory", e);
+			}
+		}
+
+		@Override
+		public String process(String value) throws ScriptException {
+			try {
+				return Tools.toString(this.script.eval((b) -> b.put("path", value)));
+			} catch (IOException e) {
+				throw new RuntimeException("Unexpected IOException when working in memory", e);
+			}
+		}
 	}
 
 	@XmlTransient
@@ -84,12 +114,12 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 		}
 	}
 
-	private CheckedFunction<String, String, ? extends Exception> initScriptProcessor() throws Exception {
-		return null;
-	}
-
 	private CheckedFunction<String, String, ? extends Exception> initProcessor() throws Exception {
-		if (!StringUtils.equalsIgnoreCase("CLASS", this.type)) { return initScriptProcessor(); }
+		if (!StringUtils.equalsIgnoreCase("CLASS", this.type)) {
+			// If the type is not "class", then it's definitely a script
+			return new ScriptProcessor(this.type, this.value)::process;
+		}
+
 		Processor processor = null;
 		// This is a classname
 		Matcher m = LocalQueryPostProcessor.CLASS_PARSER.matcher(this.value);
