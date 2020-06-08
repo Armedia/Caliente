@@ -40,7 +40,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "localQuery.t", propOrder = {
 	"sql", "skip", "count", "pathColumns", "relativeTo", "postProcessors"
 })
-public class LocalQueryT {
+public class LocalQuery {
 
 	@XmlElement(name = "sql", required = true)
 	protected String sql;

@@ -44,7 +44,7 @@ public class LocalQueries {
 
 	@XmlElement(name = "data-source", required = true)
 	protected List<LocalQueriesDataSource> dataSource;
-	protected List<LocalQueryT> query;
+	protected List<LocalQuery> query;
 
 	/**
 	 * Gets the value of the dataSource property.
@@ -91,11 +91,11 @@ public class LocalQueries {
 	 *
 	 *
 	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link LocalQueryT }
+	 * Objects of the following type(s) are allowed in the list {@link LocalQuery }
 	 *
 	 *
 	 */
-	public List<LocalQueryT> getQuery() {
+	public List<LocalQuery> getQuery() {
 		if (this.query == null) {
 			this.query = new ArrayList<>();
 		}
