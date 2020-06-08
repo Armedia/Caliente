@@ -248,30 +248,32 @@ public class LocalQuery {
 
 			private Result buildResult() throws SQLException {
 				try {
-					nextRecord: while (true) {
-						if (!this.rs.next()) { return null; }
-
-						String str = null;
+					while (this.rs.next()) {
 						for (Integer column : this.candidates) {
-							str = this.rs.getString(column);
-							if (!this.rs.wasNull()) {
-								// Relativize the path, if necessary
-								str = relativize(str);
-
-								// Apply postProcessor
-								str = postProcess(str);
-
-								if (!StringUtils.isEmpty(str)) {
-									// If we ended up with a non-empty string, we return it!
-									return found(targetConverter.apply(str));
-								}
+							String str = this.rs.getString(column);
+							if (this.rs.wasNull() || StringUtils.isEmpty(str)) {
+								continue;
 							}
+
+							// Relativize the path, if necessary
+							str = relativize(str);
+
+							// Apply postProcessor
+							str = postProcess(str);
 
 							if (StringUtils.isEmpty(str)) {
-								continue nextRecord;
+								// If this resulted in an empty string, we try the next column
+								continue;
 							}
+
+							// If we ended up with a non-empty string, we return it!
+							return found(targetConverter.apply(str));
 						}
+
+						// If we get here, we found nothing, so we try the next record
+						// on the result set
 					}
+					return null;
 				} finally {
 					this.count--;
 				}
