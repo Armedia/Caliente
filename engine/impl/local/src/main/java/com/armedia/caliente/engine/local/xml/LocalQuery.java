@@ -26,8 +26,11 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -35,6 +38,9 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
+
+import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.commons.utilities.function.CheckedSupplier;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "localQuery.t", propOrder = {
@@ -158,5 +164,10 @@ public class LocalQuery {
 			this.postProcessors = new ArrayList<>();
 		}
 		return this.postProcessors;
+	}
+
+	public Stream<ExportTarget> getStream(CheckedSupplier<Connection, SQLException> connectionSource)
+		throws SQLException {
+		return Stream.empty();
 	}
 }

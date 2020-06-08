@@ -27,79 +27,82 @@
 package com.armedia.caliente.engine.local.xml;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.armedia.caliente.engine.exporter.ExportTarget;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-	"dataSource", "query"
+	"dataSources", "queries"
 })
 @XmlRootElement(name = "local-queries")
 public class LocalQueries {
 
-	@XmlElement(name = "data-source", required = true)
-	protected List<LocalQueriesDataSource> dataSource;
-	protected List<LocalQuery> query;
+	@XmlTransient
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	/**
-	 * Gets the value of the dataSource property.
-	 *
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any
-	 * modification you make to the returned list will be present inside the JAXB object. This is
-	 * why there is not a <CODE>set</CODE> method for the dataSource property.
-	 *
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getDataSource().add(newItem);
-	 * </pre>
-	 *
-	 *
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link LocalQueriesDataSource }
-	 *
-	 *
-	 */
-	public List<LocalQueriesDataSource> getDataSource() {
-		if (this.dataSource == null) {
-			this.dataSource = new ArrayList<>();
+	@XmlElement(name = "data-source", required = true)
+	protected List<LocalQueryDataSource> dataSources;
+
+	@XmlElement(name = "query", required = true)
+	protected List<LocalQuery> queries;
+
+	public List<LocalQueryDataSource> getDataSources() {
+		if (this.dataSources == null) {
+			this.dataSources = new ArrayList<>();
 		}
-		return this.dataSource;
+		return this.dataSources;
 	}
 
-	/**
-	 * Gets the value of the query property.
-	 *
-	 * <p>
-	 * This accessor method returns a reference to the live list, not a snapshot. Therefore any
-	 * modification you make to the returned list will be present inside the JAXB object. This is
-	 * why there is not a <CODE>set</CODE> method for the query property.
-	 *
-	 * <p>
-	 * For example, to add a new item, do as follows:
-	 * 
-	 * <pre>
-	 * getQuery().add(newItem);
-	 * </pre>
-	 *
-	 *
-	 * <p>
-	 * Objects of the following type(s) are allowed in the list {@link LocalQuery }
-	 *
-	 *
-	 */
-	public List<LocalQuery> getQuery() {
-		if (this.query == null) {
-			this.query = new ArrayList<>();
+	public List<LocalQuery> getQueries() {
+		if (this.queries == null) {
+			this.queries = new ArrayList<>();
 		}
-		return this.query;
+		return this.queries;
+	}
+
+	private Map<String, LocalQueryDataSource> buildDataSources() throws Exception {
+		Map<String, LocalQueryDataSource> dataSources = new LinkedHashMap<>();
+		for (LocalQueryDataSource ds : getDataSources()) {
+			if (dataSources.containsKey(ds.getName())) {
+				this.log.warn("Duplicate data source names found: [{}]] - will only use the first one defined",
+					ds.getName());
+				continue;
+			}
+
+			dataSources.put(ds.getName(), ds);
+		}
+		if (dataSources.isEmpty()) { throw new Exception("No datasources were successfully built"); }
+		return dataSources;
+	}
+
+	public Stream<ExportTarget> execute() throws Exception {
+		Map<String, LocalQueryDataSource> dataSources = buildDataSources();
+		Stream<ExportTarget> ret = Stream.empty();
+		for (LocalQuery q : getQueries()) {
+			LocalQueryDataSource ds = dataSources.get(q.getDataSource());
+			if (ds == null) {
+				this.log.warn("Query [{}] references undefined DataSource [{}], ignoring", q.getId(),
+					q.getDataSource());
+				continue;
+			}
+			ret = Stream.concat(ret, q.getStream(ds::getConnection));
+		}
+
+		return ret.onClose(() -> dataSources.values().forEach(LocalQueryDataSource::close));
 	}
 
 }
