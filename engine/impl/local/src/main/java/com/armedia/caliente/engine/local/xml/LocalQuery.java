@@ -90,12 +90,6 @@ public class LocalQuery {
 	@XmlAttribute(name = "dataSource", required = true)
 	protected String dataSource;
 
-	@XmlAttribute(name = "failOnError", required = false)
-	protected Boolean failOnError;
-
-	@XmlAttribute(name = "failOnMissing", required = false)
-	protected Boolean failOnMissing;
-
 	public String getSql() {
 		return this.sql;
 	}
@@ -144,30 +138,6 @@ public class LocalQuery {
 		this.dataSource = value;
 	}
 
-	public boolean isFailOnError() {
-		if (this.failOnError == null) {
-			return false;
-		} else {
-			return this.failOnError;
-		}
-	}
-
-	public void setFailOnError(Boolean value) {
-		this.failOnError = value;
-	}
-
-	public boolean isFailOnMissing() {
-		if (this.failOnMissing == null) {
-			return false;
-		} else {
-			return this.failOnMissing;
-		}
-	}
-
-	public void setFailOnMissing(Boolean value) {
-		this.failOnMissing = value;
-	}
-
 	public List<String> getPathColumns() {
 		if (this.pathColumns == null) {
 			this.pathColumns = new ArrayList<>();
@@ -188,8 +158,6 @@ public class LocalQuery {
 		@SuppressWarnings("resource")
 		CloseableIterator<ExportTarget> it = new CloseableIterator<ExportTarget>() {
 			private final String id = getId();
-			private final boolean failOnMissing = isFailOnMissing();
-			private final boolean failOnError = isFailOnError();
 			private int skip = Math.max(0, getSkip());
 			private int count = Integer.MAX_VALUE;
 			private final String sql = getSql();
@@ -248,12 +216,26 @@ public class LocalQuery {
 				return buildResult();
 			}
 
-			private String postProcess(String str) throws Exception {
+			private String postProcess(String str) {
 				if (StringUtils.isEmpty(str)) { return str; }
+				final String orig = str;
 				for (LocalQueryPostProcessor p : this.postProcessors) {
-					str = p.postProcess(str);
-					if (StringUtils.isEmpty(str)) { return null; }
+					try {
+						str = p.postProcess(str);
+					} catch (Exception e) {
+						if (LocalQuery.this.log.isDebugEnabled()) {
+							LocalQuery.this.log.warn("Exception caught from {} post-processor for [{}] (from [{}])",
+								p.getType(), str, orig, e);
+							return null;
+						}
+					}
+					if (StringUtils.isEmpty(str)) {
+						LocalQuery.this.log.warn("Post-processing result for [{}] is null or empty, returning null",
+							orig);
+						return null;
+					}
 				}
+				LocalQuery.this.log.debug("String [{}] post processed as [{}]", orig, str);
 				return str;
 			}
 
