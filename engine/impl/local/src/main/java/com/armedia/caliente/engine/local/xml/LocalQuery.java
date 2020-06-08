@@ -248,30 +248,30 @@ public class LocalQuery {
 
 			private Result buildResult() throws SQLException {
 				try {
-					if (!this.rs.next()) { return null; }
+					nextRecord: while (true) {
+						if (!this.rs.next()) { return null; }
 
-					String str = null;
-					for (Integer column : this.candidates) {
-						str = this.rs.getString(column);
-						if (!this.rs.wasNull()) {
-							// Relativize the path, if necessary
-							str = relativize(str);
+						String str = null;
+						for (Integer column : this.candidates) {
+							str = this.rs.getString(column);
+							if (!this.rs.wasNull()) {
+								// Relativize the path, if necessary
+								str = relativize(str);
 
-							// Apply postProcessor
-							try {
+								// Apply postProcessor
 								str = postProcess(str);
-							} catch (Exception e) {
-								// Ok...so...we can't post-process...skip?
-								str = null;
+
+								if (!StringUtils.isEmpty(str)) {
+									// If we ended up with a non-empty string, we return it!
+									return found(targetConverter.apply(str));
+								}
 							}
 
-							if (!StringUtils.isEmpty(str)) {
-								break;
+							if (StringUtils.isEmpty(str)) {
+								continue nextRecord;
 							}
 						}
 					}
-
-					return found(targetConverter.apply(str));
 				} finally {
 					this.count--;
 				}
