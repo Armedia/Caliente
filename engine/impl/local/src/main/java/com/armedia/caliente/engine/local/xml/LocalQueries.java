@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -89,7 +90,7 @@ public class LocalQueries {
 		return dataSources;
 	}
 
-	public Stream<ExportTarget> execute() throws Exception {
+	public Stream<ExportTarget> execute(Function<String, ExportTarget> targetConverter) throws Exception {
 		Map<String, LocalQueryDataSource> dataSources = buildDataSources();
 		Stream<ExportTarget> ret = Stream.empty();
 		for (LocalQuery q : getQueries()) {
@@ -99,7 +100,7 @@ public class LocalQueries {
 					q.getDataSource());
 				continue;
 			}
-			ret = Stream.concat(ret, q.getStream(ds::getConnection));
+			ret = Stream.concat(ret, q.getStream(ds::getConnection, targetConverter));
 		}
 
 		return ret.onClose(() -> dataSources.values().forEach(LocalQueryDataSource::close));
