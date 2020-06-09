@@ -376,7 +376,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		return true;
 	}
 
-	protected Set<String> calculateParentTreeIds(T object) throws DfException {
+	protected Set<String> calculateParentTreeIds(IDfSysObject object) throws DfException {
 		Set<String> ptid = new LinkedHashSet<>();
 		final int parentCount = object.getValueCount(DctmAttributes.I_FOLDER_ID);
 		for (int i = 0; i < parentCount; i++) {
