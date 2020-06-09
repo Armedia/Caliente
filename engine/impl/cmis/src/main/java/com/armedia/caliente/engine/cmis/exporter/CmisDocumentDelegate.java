@@ -165,11 +165,17 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			IntermediateProperty.VERSION_COUNT.type, CmfValue.of(this.previous.size() + this.successors.size() + 1)));
 		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
 			IntermediateProperty.VERSION_HEAD_INDEX.type, CmfValue.of(this.previous.size() + this.successors.size())));
-
-		if (!this.object.isLatestVersion()) {
-			marshalParentsAndPaths(ctx, object, this.object.getObjectOfLatestVersion(false));
-		}
 		return true;
+	}
+
+	@Override
+	protected void marshalParentsAndPaths(CmisExportContext ctx, CmfObject<CmfValue> marshaled, Document object)
+		throws ExportException {
+		Document doc = object;
+		if (!doc.isLatestVersion()) {
+			doc = object.getObjectOfLatestVersion(false);
+		}
+		super.marshalParentsAndPaths(ctx, marshaled, doc);
 	}
 
 	@Override
