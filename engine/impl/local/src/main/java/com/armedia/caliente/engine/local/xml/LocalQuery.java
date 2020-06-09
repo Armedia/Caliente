@@ -276,10 +276,9 @@ public class LocalQuery {
 				Path p = Paths.get(str);
 				if (!p.startsWith(this.root)) {
 					LocalQuery.this.log.warn("Path [{}] is not a child of [{}] and thus can't be relativized");
-				} else {
-					p = this.root.relativize(p);
+					return null;
 				}
-				return p.toString();
+				return this.root.relativize(p).toString();
 			}
 
 			private Result buildResult() throws SQLException {
