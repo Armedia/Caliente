@@ -85,7 +85,10 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 	protected String type;
 
 	@XmlTransient
-	private volatile CheckedFunction<String, String, ? extends Exception> postProcessor = null;
+	private CheckedFunction<String, String, ? extends Exception> postProcessor = null;
+
+	@XmlTransient
+	private volatile boolean initialized = false;
 
 	public String getValue() {
 		return this.value;
@@ -113,6 +116,7 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 
 	private void reset() {
 		this.postProcessor = null;
+		this.initialized = false;
 	}
 
 	private CheckedFunction<String, String, ? extends Exception> initProcessor() throws Exception {
@@ -147,29 +151,33 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 
 	private CheckedFunction<String, String, ? extends Exception> getPostProcessor() throws Exception {
 		try (SharedAutoLock shared = autoSharedLock()) {
-			CheckedFunction<String, String, ? extends Exception> postProcessor = this.postProcessor;
-			if (postProcessor == null) {
+			boolean initialized = this.initialized;
+			if (!initialized) {
 				try (MutexAutoLock mutex = shared.upgrade()) {
-					postProcessor = this.postProcessor;
-					if (postProcessor == null) {
+					initialized = this.initialized;
+					if (!initialized) {
 						try {
-							postProcessor = initProcessor();
+							this.postProcessor = initProcessor();
 						} catch (Exception e) {
 							this.log.error(
 								"Exception caught when initializing the {} LocalQueryPostProcessor with [{}]",
 								this.type, this.value, e);
-							reset();
+							// Rethrow the exception each time...
+							this.postProcessor = (str) -> {
+								throw e;
+							};
 							throw e;
+						} finally {
+							this.initialized = true;
 						}
-						this.postProcessor = postProcessor;
 					}
 				}
 			}
-			return postProcessor;
+			return this.postProcessor;
 		}
 	}
 
 	public String postProcess(String path) throws Exception {
-		return getPostProcessor().apply(path);
+		return getPostProcessor().applyChecked(path);
 	}
 }

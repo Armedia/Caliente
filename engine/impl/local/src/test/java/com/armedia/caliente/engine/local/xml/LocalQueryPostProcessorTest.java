@@ -108,6 +108,20 @@ public class LocalQueryPostProcessorTest {
 		lqpp.setValue("");
 		Assertions.assertThrows(IllegalArgumentException.class, () -> lqpp.postProcess("kaka"));
 
+		// Make sure the same exception is tossed up at us if we have an issue
+		lqpp.setValue("this classname is invalid");
+		Exception thrown = null;
+		try {
+			lqpp.postProcess("kaka");
+		} catch (Exception e) {
+			thrown = e;
+		}
+		try {
+			lqpp.postProcess("kaka");
+		} catch (Exception e) {
+			Assertions.assertSame(thrown, e);
+		}
+
 		// a class that doesn't implement Processor
 		lqpp.setValue("java.lang.Object");
 		Assertions.assertThrows(ClassCastException.class, () -> lqpp.postProcess("kaka"));
