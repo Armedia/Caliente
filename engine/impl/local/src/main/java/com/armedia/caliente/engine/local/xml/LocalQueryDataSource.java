@@ -26,14 +26,10 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 
 import javax.sql.DataSource;
@@ -45,7 +41,6 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
-import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
@@ -61,7 +56,7 @@ import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 @XmlType(name = "localQueriesDataSource.t", propOrder = {
 	"url", "driver", "user", "password", "settings"
 })
-public class LocalQueryDataSource extends BaseShareableLockable implements AutoCloseable {
+public class LocalQueryDataSource extends BaseShareableLockable {
 
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@XmlType(name = "setting.t", propOrder = {
@@ -113,9 +108,6 @@ public class LocalQueryDataSource extends BaseShareableLockable implements AutoC
 
 	@XmlAttribute(name = "name", required = true)
 	protected String name;
-
-	@XmlTransient
-	private DataSource dataSource = null;
 
 	public String getUrl() {
 		return this.url;
@@ -183,8 +175,8 @@ public class LocalQueryDataSource extends BaseShareableLockable implements AutoC
 		}
 	}
 
-	public void initialize() throws SQLException {
-		shareLockedUpgradable(() -> this.dataSource, Objects::isNull, (e) -> {
+	public DataSource getInstance() throws SQLException {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			Map<String, String> settingsMap = getSettingsMap();
 			String url = StringUtils.strip(getUrl());
 			if (StringUtils.isEmpty(url)) { throw new SQLException("The JDBC url may not be empty or null"); }
@@ -199,60 +191,21 @@ public class LocalQueryDataSource extends BaseShareableLockable implements AutoC
 
 			CfgTools cfg = new CfgTools(settingsMap);
 			for (DataSourceLocator locator : DataSourceLocator.getAllLocatorsFor("pooled")) {
-				final DataSourceDescriptor<?> ds;
+				final DataSourceDescriptor<?> desc;
 				try {
-					ds = locator.locateDataSource(cfg);
+					desc = locator.locateDataSource(cfg);
 				} catch (Exception ex) {
 					// This one failed...try the next one
+					if (this.log.isDebugEnabled()) {
+						this.log.warn("Failed to initialize a candidate datasource", ex);
+					}
 					continue;
 				}
 
 				// Set the context with the newly-found DataSource
-				DataSource dataSource = ds.getDataSource();
-				DbUtils.closeQuietly(dataSource.getConnection());
-				this.dataSource = dataSource;
-				return;
+				return desc.getDataSource();
 			}
-			throw new SQLException("Failed to initialize this metadata source - no datasources located!");
-		});
-	}
-
-	public Connection getConnection() throws SQLException {
-		initialize();
-		try (SharedAutoLock lock = autoSharedLock()) {
-			if (this.dataSource == null) {
-				throw new IllegalStateException(String.format("The datasource [%s] is not yet initialized", this.name));
-			}
-			return this.dataSource.getConnection();
+			return null;
 		}
-	}
-
-	@Override
-	public void close() {
-		shareLockedUpgradable(() -> this.dataSource, Objects::nonNull, (dataSource) -> {
-			try {
-				// We do it like this since this is faster than reflection
-				if (AutoCloseable.class.isInstance(dataSource)) {
-					AutoCloseable.class.cast(dataSource).close();
-				} else {
-					// No dice on the static linking, does it have a public void close() method?
-					Method m = null;
-					try {
-						m = dataSource.getClass().getMethod("close");
-					} catch (Exception ex) {
-						// Do nothing...
-					}
-					if ((m != null) && Modifier.isPublic(m.getModifiers())) {
-						m.invoke(dataSource);
-					}
-				}
-			} catch (Exception e) {
-				if (this.log.isDebugEnabled()) {
-					this.log.warn("Failed to close the DataSource {}", this.name, e);
-				}
-			} finally {
-				this.dataSource = null;
-			}
-		});
 	}
 }

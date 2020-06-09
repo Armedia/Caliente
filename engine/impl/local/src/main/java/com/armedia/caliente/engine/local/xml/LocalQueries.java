@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -35,6 +37,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import javax.sql.DataSource;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -92,8 +95,8 @@ public class LocalQueries {
 		return this.queries;
 	}
 
-	private Map<String, LocalQueryDataSource> buildDataSources() throws Exception {
-		Map<String, LocalQueryDataSource> dataSources = new LinkedHashMap<>();
+	private Map<String, DataSource> buildDataSources() throws Exception {
+		Map<String, DataSource> dataSources = new LinkedHashMap<>();
 		for (LocalQueryDataSource ds : getDataSources()) {
 			if (dataSources.containsKey(ds.getName())) {
 				this.log.warn("Duplicate data source names found: [{}]] - will only use the first one defined",
@@ -101,17 +104,23 @@ public class LocalQueries {
 				continue;
 			}
 
-			dataSources.put(ds.getName(), ds);
+			DataSource dataSource = ds.getInstance();
+			if (dataSource == null) {
+				this.log.warn("DataSource [{}] failed to construct", ds.getName());
+				continue;
+			}
+
+			dataSources.put(ds.getName(), dataSource);
 		}
 		if (dataSources.isEmpty()) { throw new Exception("No datasources were successfully built"); }
 		return dataSources;
 	}
 
 	public Stream<ExportTarget> execute(Function<String, ExportTarget> targetConverter) throws Exception {
-		Map<String, LocalQueryDataSource> dataSources = buildDataSources();
+		Map<String, DataSource> dataSources = buildDataSources();
 		Stream<ExportTarget> ret = Stream.empty();
 		for (LocalQuery q : getQueries()) {
-			LocalQueryDataSource ds = dataSources.get(q.getDataSource());
+			DataSource ds = dataSources.get(q.getDataSource());
 			if (ds == null) {
 				this.log.warn("Query [{}] references undefined DataSource [{}], ignoring", q.getId(),
 					q.getDataSource());
@@ -120,7 +129,31 @@ public class LocalQueries {
 			ret = Stream.concat(ret, q.getStream(ds::getConnection, targetConverter));
 		}
 
-		return ret.onClose(() -> dataSources.values().forEach(LocalQueryDataSource::close));
+		return ret.onClose(() -> dataSources.values().forEach(this::close));
 	}
 
+	private void close(DataSource dataSource) {
+		if (dataSource == null) { return; }
+		try {
+			// We do it like this since this is faster than reflection
+			if (AutoCloseable.class.isInstance(dataSource)) {
+				AutoCloseable.class.cast(dataSource).close();
+			} else {
+				// No dice on the static linking, does it have a public void close() method?
+				Method m = null;
+				try {
+					m = dataSource.getClass().getMethod("close");
+				} catch (Exception ex) {
+					// Do nothing...
+				}
+				if ((m != null) && Modifier.isPublic(m.getModifiers())) {
+					m.invoke(dataSource);
+				}
+			}
+		} catch (Exception e) {
+			if (this.log.isDebugEnabled()) {
+				this.log.debug("Failed to close a datasource", e);
+			}
+		}
+	}
 }

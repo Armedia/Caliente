@@ -13,61 +13,56 @@ public class LocalQueryDataSourceTest {
 
 	@Test
 	public void testUrl() {
-		try (final LocalQueryDataSource lqds = new LocalQueryDataSource()) {
-			for (int i = 0; i < 10; i++) {
-				String value = String.format("url-%02d", i);
+		final LocalQueryDataSource lqds = new LocalQueryDataSource();
+		for (int i = 0; i < 10; i++) {
+			String value = String.format("url-%02d", i);
 
-				lqds.setUrl(value);
-				Assertions.assertEquals(value, lqds.getUrl());
-			}
+			lqds.setUrl(value);
+			Assertions.assertEquals(value, lqds.getUrl());
 		}
 	}
 
 	@Test
 	public void testDriver() {
-		try (final LocalQueryDataSource lqds = new LocalQueryDataSource()) {
-			for (int i = 0; i < 10; i++) {
-				String value = String.format("driver-%02d", i);
+		final LocalQueryDataSource lqds = new LocalQueryDataSource();
+		for (int i = 0; i < 10; i++) {
+			String value = String.format("driver-%02d", i);
 
-				lqds.setDriver(value);
-				Assertions.assertEquals(value, lqds.getDriver());
-			}
+			lqds.setDriver(value);
+			Assertions.assertEquals(value, lqds.getDriver());
 		}
 	}
 
 	@Test
 	public void testUser() {
-		try (final LocalQueryDataSource lqds = new LocalQueryDataSource()) {
-			for (int i = 0; i < 10; i++) {
-				String value = String.format("user-%02d", i);
+		final LocalQueryDataSource lqds = new LocalQueryDataSource();
+		for (int i = 0; i < 10; i++) {
+			String value = String.format("user-%02d", i);
 
-				lqds.setUser(value);
-				Assertions.assertEquals(value, lqds.getUser());
-			}
+			lqds.setUser(value);
+			Assertions.assertEquals(value, lqds.getUser());
 		}
 	}
 
 	@Test
 	public void testPassword() {
-		try (final LocalQueryDataSource lqds = new LocalQueryDataSource()) {
-			for (int i = 0; i < 10; i++) {
-				String value = String.format("password-%02d", i);
+		final LocalQueryDataSource lqds = new LocalQueryDataSource();
+		for (int i = 0; i < 10; i++) {
+			String value = String.format("password-%02d", i);
 
-				lqds.setPassword(value);
-				Assertions.assertEquals(value, lqds.getPassword());
-			}
+			lqds.setPassword(value);
+			Assertions.assertEquals(value, lqds.getPassword());
 		}
 	}
 
 	@Test
 	public void testName() {
-		try (final LocalQueryDataSource lqds = new LocalQueryDataSource()) {
-			for (int i = 0; i < 10; i++) {
-				String value = String.format("name-%02d", i);
+		final LocalQueryDataSource lqds = new LocalQueryDataSource();
+		for (int i = 0; i < 10; i++) {
+			String value = String.format("name-%02d", i);
 
-				lqds.setName(value);
-				Assertions.assertEquals(value, lqds.getName());
-			}
+			lqds.setName(value);
+			Assertions.assertEquals(value, lqds.getName());
 		}
 	}
 
@@ -85,39 +80,37 @@ public class LocalQueryDataSourceTest {
 			Assertions.assertEquals(value, s.getValue());
 		}
 
-		try (final LocalQueryDataSource lqds = new LocalQueryDataSource()) {
-			List<Setting> l = lqds.getSettings();
-			for (int i = 0; i < 100; i++) {
-				Assertions.assertSame(l, lqds.getSettings());
-			}
+		final LocalQueryDataSource lqds = new LocalQueryDataSource();
+		List<Setting> l = lqds.getSettings();
+		for (int i = 0; i < 100; i++) {
+			Assertions.assertSame(l, lqds.getSettings());
 		}
 	}
 
 	@Test
 	public void testSettingsMap() {
-		try (final LocalQueryDataSource lqds = new LocalQueryDataSource()) {
-			List<Setting> l = lqds.getSettings();
-			Map<String, String> expected = new LinkedHashMap<>();
-			for (int i = 0; i < 100; i++) {
-				Setting s = new Setting();
-				String name = String.format("setting-%02d", i);
-				String value = String.format("value-%02d", i);
-				s.setName(name);
-				s.setValue(value);
-				expected.put("jdbc." + name, value);
-				l.add(s);
-			}
+		final LocalQueryDataSource lqds = new LocalQueryDataSource();
+		List<Setting> l = lqds.getSettings();
+		Map<String, String> expected = new LinkedHashMap<>();
+		for (int i = 0; i < 100; i++) {
 			Setting s = new Setting();
+			String name = String.format("setting-%02d", i);
+			String value = String.format("value-%02d", i);
+			s.setName(name);
+			s.setValue(value);
+			expected.put("jdbc." + name, value);
 			l.add(s);
-			s = new Setting();
-			s.setName("nameWithNullValue");
-			l.add(s);
-			s = new Setting();
-			s.setValue("valueWithNullName");
-			l.add(s);
-
-			Assertions.assertEquals(expected, lqds.getSettingsMap());
 		}
+		Setting s = new Setting();
+		l.add(s);
+		s = new Setting();
+		s.setName("nameWithNullValue");
+		l.add(s);
+		s = new Setting();
+		s.setValue("valueWithNullName");
+		l.add(s);
+
+		Assertions.assertEquals(expected, lqds.getSettingsMap());
 	}
 
 	@Test
