@@ -28,12 +28,13 @@ package com.armedia.caliente.engine.local.xml;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import javax.sql.DataSource;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -52,6 +53,7 @@ import com.armedia.caliente.tools.datasource.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.ShareableMap;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -109,10 +111,34 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 	protected List<Setting> settings;
 
 	@XmlTransient
-	protected Map<String, Setting> settingsMap = new HashMap<>();
+	protected ShareableMap<String, String> settingsMap = new ShareableMap<>(new TreeMap<>());
 
 	@XmlAttribute(name = "name", required = true)
 	protected String name;
+
+	protected void afterUnmarshal(Unmarshaller u, Object parent) {
+		this.settingsMap = new ShareableMap<>(new TreeMap<>());
+		if ((this.settings != null) && !this.settings.isEmpty()) {
+			this.settings.removeIf((s) -> StringUtils.isEmpty(s.getName()));
+			this.settings.forEach((s) -> {
+				String k = s.getName();
+				String v = s.getValue();
+				if ((k != null) && (v != null)) {
+					this.settingsMap.put(k, v);
+				}
+			});
+		}
+	}
+
+	protected void beforeMarshal(Marshaller m) {
+		this.settings = new ArrayList<>(this.settingsMap.size());
+		this.settingsMap.entrySet().forEach((e) -> {
+			Setting s = new Setting();
+			s.setName(e.getKey());
+			s.setValue(e.getValue());
+			this.settings.add(s);
+		});
+	}
 
 	public String getUrl() {
 		return shareLocked(() -> this.url);
@@ -154,21 +180,19 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 		}
 	}
 
-	public List<Setting> getSettings() {
-		if (this.settings == null) {
-			this.settings = new ArrayList<>();
-		}
-		return this.settings;
+	public Map<String, String> getSettings() {
+		return this.settingsMap;
 	}
 
-	protected Map<String, String> getSettingsMap() {
-		try (MutexAutoLock lock = autoMutexLock()) {
+	protected Map<String, String> buildSettingsMap() {
+		try (SharedAutoLock lock = autoSharedLock()) {
 			Map<String, String> ret = new TreeMap<>();
-			for (Setting s : getSettings()) {
-				String name = s.getName();
-				String value = s.getValue();
-				if ((name != null) && (value != null)) {
-					ret.put(String.format("jdbc.%s", name), StringSubstitutor.replaceSystemProperties(value));
+			try (SharedAutoLock mapLock = this.settingsMap.autoSharedLock()) {
+				for (String name : this.settingsMap.keySet()) {
+					String value = this.settingsMap.get(name);
+					if ((name != null) && (value != null)) {
+						setValue(name, value, ret);
+					}
 				}
 			}
 			return ret;
@@ -194,7 +218,7 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 
 	public DataSource getInstance() throws SQLException {
 		try (SharedAutoLock lock = autoSharedLock()) {
-			Map<String, String> settingsMap = getSettingsMap();
+			Map<String, String> settingsMap = buildSettingsMap();
 			String url = StringUtils.strip(getUrl());
 			if (StringUtils.isEmpty(url)) { throw new SQLException("The JDBC url may not be empty or null"); }
 			setValue("url", url, settingsMap);

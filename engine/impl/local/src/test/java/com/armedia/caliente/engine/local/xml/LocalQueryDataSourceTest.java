@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.local.xml;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Assertions;
@@ -79,18 +78,12 @@ public class LocalQueryDataSourceTest {
 			s.setValue(value);
 			Assertions.assertEquals(value, s.getValue());
 		}
-
-		final LocalQueryDataSource lqds = new LocalQueryDataSource();
-		List<Setting> l = lqds.getSettings();
-		for (int i = 0; i < 100; i++) {
-			Assertions.assertSame(l, lqds.getSettings());
-		}
 	}
 
 	@Test
 	public void testSettingsMap() {
 		final LocalQueryDataSource lqds = new LocalQueryDataSource();
-		List<Setting> l = lqds.getSettings();
+		final Map<String, String> settings = lqds.getSettings();
 		Map<String, String> expected = new LinkedHashMap<>();
 		for (int i = 0; i < 100; i++) {
 			Setting s = new Setting();
@@ -99,29 +92,13 @@ public class LocalQueryDataSourceTest {
 			s.setName(name);
 			s.setValue(value);
 			expected.put("jdbc." + name, value);
-			l.add(s);
+			settings.put(name, value);
 		}
-		Setting s = new Setting();
-		l.add(s);
-		s = new Setting();
-		s.setName("nameWithNullValue");
-		l.add(s);
-		s = new Setting();
-		s.setValue("valueWithNullName");
-		l.add(s);
 
-		Assertions.assertEquals(expected, lqds.getSettingsMap());
+		Assertions.assertEquals(expected, lqds.buildSettingsMap());
 	}
 
 	@Test
-	public void testInitialize() {
-	}
-
-	@Test
-	public void testGetConnection() {
-	}
-
-	@Test
-	public void testClose() {
+	public void getInstance() {
 	}
 }
