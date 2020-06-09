@@ -26,10 +26,12 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -43,6 +45,9 @@ import javax.xml.bind.annotation.XmlType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
+import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
+import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -51,6 +56,18 @@ import com.armedia.caliente.engine.exporter.ExportTarget;
 })
 @XmlRootElement(name = "local-queries")
 public class LocalQueries {
+
+	private static final XmlInstances<LocalQueries> INSTANCES = new XmlInstances<>(LocalQueries.class);
+
+	public static LocalQueries getInstance(URL location) throws XmlInstanceException {
+		return LocalQueries.INSTANCES
+			.getInstance(Objects.requireNonNull(location, "Must provide a location to load the queries from"));
+	}
+
+	public static LocalQueries getInstance(String location) throws XmlInstanceException, XmlNotFoundException {
+		return LocalQueries.INSTANCES
+			.getInstance(Objects.requireNonNull(location, "Must provide a location to load the queries from"));
+	}
 
 	@XmlTransient
 	private final Logger log = LoggerFactory.getLogger(getClass());
