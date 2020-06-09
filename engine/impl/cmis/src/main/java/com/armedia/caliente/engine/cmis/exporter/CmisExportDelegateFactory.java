@@ -26,7 +26,11 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.cmis.exporter;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
@@ -43,6 +47,8 @@ import com.armedia.commons.utilities.CfgTools;
 
 public class CmisExportDelegateFactory
 	extends ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
+
+	final Map<String, Set<String>> pathIdCache = Collections.synchronizedMap(new HashMap<String, Set<String>>());
 
 	CmisExportDelegateFactory(CmisExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
@@ -84,5 +90,11 @@ public class CmisExportDelegateFactory
 				break;
 		}
 		return null;
+	}
+
+	@Override
+	public void close() {
+		this.pathIdCache.clear();
+		super.close();
 	}
 }
