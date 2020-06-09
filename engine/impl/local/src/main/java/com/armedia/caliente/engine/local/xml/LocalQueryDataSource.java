@@ -28,6 +28,7 @@ package com.armedia.caliente.engine.local.xml;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -50,6 +51,7 @@ import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.caliente.tools.datasource.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -106,39 +108,50 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 	@XmlElement(name = "setting", required = true)
 	protected List<Setting> settings;
 
+	@XmlTransient
+	protected Map<String, Setting> settingsMap = new HashMap<>();
+
 	@XmlAttribute(name = "name", required = true)
 	protected String name;
 
 	public String getUrl() {
-		return this.url;
+		return shareLocked(() -> this.url);
 	}
 
 	public void setUrl(String url) {
-		this.url = url;
+		try (MutexAutoLock lock = autoMutexLock()) {
+			this.url = url;
+		}
 	}
 
 	public String getDriver() {
-		return this.driver;
+		return shareLocked(() -> this.driver);
 	}
 
 	public void setDriver(String driver) {
-		this.driver = driver;
+		try (MutexAutoLock lock = autoMutexLock()) {
+			this.driver = driver;
+		}
 	}
 
 	public String getUser() {
-		return this.user;
+		return shareLocked(() -> this.user);
 	}
 
 	public void setUser(String user) {
-		this.user = user;
+		try (MutexAutoLock lock = autoMutexLock()) {
+			this.user = user;
+		}
 	}
 
 	public String getPassword() {
-		return this.password;
+		return shareLocked(() -> this.password);
 	}
 
 	public void setPassword(String password) {
-		this.password = password;
+		try (MutexAutoLock lock = autoMutexLock()) {
+			this.password = password;
+		}
 	}
 
 	public List<Setting> getSettings() {
@@ -148,24 +161,28 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 		return this.settings;
 	}
 
-	public Map<String, String> getSettingsMap() {
-		Map<String, String> ret = new TreeMap<>();
-		for (Setting s : getSettings()) {
-			String name = s.getName();
-			String value = s.getValue();
-			if ((name != null) && (value != null)) {
-				ret.put(String.format("jdbc.%s", name), StringSubstitutor.replaceSystemProperties(value));
+	protected Map<String, String> getSettingsMap() {
+		try (MutexAutoLock lock = autoMutexLock()) {
+			Map<String, String> ret = new TreeMap<>();
+			for (Setting s : getSettings()) {
+				String name = s.getName();
+				String value = s.getValue();
+				if ((name != null) && (value != null)) {
+					ret.put(String.format("jdbc.%s", name), StringSubstitutor.replaceSystemProperties(value));
+				}
 			}
+			return ret;
 		}
-		return ret;
 	}
 
 	public String getName() {
-		return this.name;
+		return shareLocked(() -> this.name);
 	}
 
 	public void setName(String name) {
-		this.name = name;
+		try (MutexAutoLock lock = autoMutexLock()) {
+			this.name = name;
+		}
 	}
 
 	private void setValue(String name, String value, Map<String, String> map) {

@@ -126,9 +126,8 @@ public class LocalQueries {
 					q.getDataSource());
 				continue;
 			}
-			ret = Stream.concat(ret, q.getStream(ds::getConnection, targetConverter));
+			ret = Stream.concat(ret, q.getStream(ds, targetConverter));
 		}
-
 		return ret.onClose(() -> dataSources.values().forEach(this::close));
 	}
 

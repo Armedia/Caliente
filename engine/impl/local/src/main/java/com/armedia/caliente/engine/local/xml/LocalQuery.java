@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import javax.sql.DataSource;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -55,7 +56,6 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.function.CheckedSupplier;
 import com.armedia.commons.utilities.io.CloseUtils;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -155,8 +155,8 @@ public class LocalQuery {
 		return this.postProcessors;
 	}
 
-	public Stream<ExportTarget> getStream(CheckedSupplier<Connection, SQLException> connectionSource,
-		final Function<String, ExportTarget> targetConverter) throws SQLException {
+	public Stream<ExportTarget> getStream(DataSource dataSource, final Function<String, ExportTarget> targetConverter)
+		throws SQLException {
 
 		@SuppressWarnings("resource")
 		CloseableIterator<ExportTarget> it = new CloseableIterator<ExportTarget>() {
@@ -189,12 +189,11 @@ public class LocalQuery {
 
 			@Override
 			protected void initialize() throws Exception {
-				Connection c = connectionSource.get();
 				try {
-					this.c = connectionSource.get();
+					this.c = dataSource.getConnection();
 					this.c.setAutoCommit(false);
 					// Execute the query, stow the result set
-					this.s = c.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+					this.s = this.c.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 					this.rs = this.s.executeQuery(this.sql);
 
 					Set<Integer> candidates = new LinkedHashSet<>();
