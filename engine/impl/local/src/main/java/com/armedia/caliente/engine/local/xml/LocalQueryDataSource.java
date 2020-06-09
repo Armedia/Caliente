@@ -24,7 +24,7 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine.dynamic.xml.metadata;
+package com.armedia.caliente.engine.local.xml;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -58,10 +58,10 @@ import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "externalMetadataSource.t", propOrder = {
-	"url", "driver", "user", "password", "settings",
+@XmlType(name = "localQueriesDataSource.t", propOrder = {
+	"url", "driver", "user", "password", "settings"
 })
-public class MetadataSource extends BaseShareableLockable {
+public class LocalQueryDataSource extends BaseShareableLockable implements AutoCloseable {
 
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@XmlType(name = "setting.t", propOrder = {
@@ -183,12 +183,11 @@ public class MetadataSource extends BaseShareableLockable {
 		}
 	}
 
-	public void initialize() throws Exception {
+	public void initialize() throws SQLException {
 		shareLockedUpgradable(() -> this.dataSource, Objects::isNull, (e) -> {
 			Map<String, String> settingsMap = getSettingsMap();
-
 			String url = StringUtils.strip(getUrl());
-			if (StringUtils.isEmpty(url)) { throw new Exception("The JDBC url may not be empty or null"); }
+			if (StringUtils.isEmpty(url)) { throw new SQLException("The JDBC url may not be empty or null"); }
 			setValue("url", url, settingsMap);
 
 			setValue("driver", getDriver(), settingsMap);
@@ -214,11 +213,12 @@ public class MetadataSource extends BaseShareableLockable {
 				this.dataSource = dataSource;
 				return;
 			}
-			throw new Exception("Failed to initialize this metadata source - no datasources located!");
+			throw new SQLException("Failed to initialize this metadata source - no datasources located!");
 		});
 	}
 
 	public Connection getConnection() throws SQLException {
+		initialize();
 		try (SharedAutoLock lock = autoSharedLock()) {
 			if (this.dataSource == null) {
 				throw new IllegalStateException(String.format("The datasource [%s] is not yet initialized", this.name));
@@ -227,27 +227,28 @@ public class MetadataSource extends BaseShareableLockable {
 		}
 	}
 
+	@Override
 	public void close() {
-		shareLockedUpgradable(() -> this.dataSource, Objects::nonNull, (e) -> {
+		shareLockedUpgradable(() -> this.dataSource, Objects::nonNull, (dataSource) -> {
 			try {
 				// We do it like this since this is faster than reflection
-				if (AutoCloseable.class.isInstance(this.dataSource)) {
-					AutoCloseable.class.cast(this.dataSource).close();
+				if (AutoCloseable.class.isInstance(dataSource)) {
+					AutoCloseable.class.cast(dataSource).close();
 				} else {
 					// No dice on the static linking, does it have a public void close() method?
 					Method m = null;
 					try {
-						m = this.dataSource.getClass().getMethod("close");
+						m = dataSource.getClass().getMethod("close");
 					} catch (Exception ex) {
 						// Do nothing...
 					}
 					if ((m != null) && Modifier.isPublic(m.getModifiers())) {
-						m.invoke(this.dataSource);
+						m.invoke(dataSource);
 					}
 				}
-			} catch (Exception ex) {
+			} catch (Exception e) {
 				if (this.log.isDebugEnabled()) {
-					this.log.warn("Failed to close the DataSource for metadataSource {}", this.name, ex);
+					this.log.warn("Failed to close the DataSource {}", this.name, e);
 				}
 			} finally {
 				this.dataSource = null;

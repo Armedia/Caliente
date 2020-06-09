@@ -41,7 +41,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -85,6 +88,8 @@ public class LocalExportEngine extends
 		LocalExportEngine.VERSION_SCHEME_ALPHANUMERIC //
 	))));
 
+	private static final Pattern QUERY_PREFIX_PARSER = Pattern.compile("^@([^:]+):(.+)$");
+
 	// FLAT (a/b.v1, a/b.v2, a/b)
 	public static final String VERSION_LAYOUT_FLAT = "flat";
 	// HIERARCHICAL (a/b/v1[/stream] a/b/v2[/stream] a/b/v3[/stream])
@@ -94,6 +99,46 @@ public class LocalExportEngine extends
 		LocalExportEngine.VERSION_LAYOUT_FLAT, //
 		LocalExportEngine.VERSION_LAYOUT_HIERARCHICAL //
 	))));
+
+	private static enum QueryMode {
+		//
+		SCANXML, //
+		JDBC, //
+		//
+		;
+	}
+
+	private interface LocalQuery extends Callable<Stream<ExportTarget>> {
+	}
+
+	private final class ScanXMLQuery implements LocalQuery {
+
+		private final Path specFile;
+
+		private ScanXMLQuery(Path specFile) {
+			this.specFile = specFile;
+		}
+
+		@Override
+		public Stream<ExportTarget> call() throws Exception {
+			Predicate<ScanIndexItem> p = ScanIndexItem::isDirectory;
+			Stream<ScanIndexItem> directories = BulkImportManager.scanItems(this.specFile, p);
+			Stream<ScanIndexItem> files = BulkImportManager.scanItems(this.specFile, p.negate());
+			return Stream.concat(directories, files).flatMap(LocalExportEngine.this::getExportTargets)
+				.filter(Objects::nonNull);
+		}
+	}
+
+	private final class JDBCQuery implements LocalQuery {
+		private JDBCQuery(CfgTools configuration, Path specFile) throws Exception {
+		}
+
+		@Override
+		public Stream<ExportTarget> call() throws Exception {
+			// TODO: Not implemented yet
+			return Stream.empty();
+		}
+	}
 
 	private final LocalRoot root;
 	private final LocalVersionLayout versionLayout;
@@ -183,24 +228,59 @@ public class LocalExportEngine extends
 	@Override
 	protected SearchType detectSearchType(String source) {
 		if (source == null) { return null; }
-		if (source.startsWith("@")) {
-			// If the file exists and is a regular file, this is to be treated as a scan index
-			Path p = new File(source.substring(1)).toPath();
-			if (Files.exists(p) && Files.isRegularFile(p)) { return SearchType.QUERY; }
-		}
+		Matcher m = LocalExportEngine.QUERY_PREFIX_PARSER.matcher(source);
+		if (m.matches()) { return SearchType.QUERY; }
 		return SearchType.PATH;
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByQuery(LocalRoot session, CfgTools configuration, String indexFile)
+	protected Stream<ExportTarget> findExportTargetsByQuery(LocalRoot session, CfgTools configuration, String querySpec)
 		throws Exception {
-		// Skip the @ at the beginning...
-		indexFile = indexFile.substring(1);
-		Path path = new File(indexFile).toPath();
-		Predicate<ScanIndexItem> p = ScanIndexItem::isDirectory;
-		Stream<ScanIndexItem> directories = BulkImportManager.scanItems(path, p);
-		Stream<ScanIndexItem> files = BulkImportManager.scanItems(path, p.negate());
-		return Stream.concat(directories, files).flatMap(this::getExportTargets).filter(Objects::nonNull);
+		Matcher m = LocalExportEngine.QUERY_PREFIX_PARSER.matcher(querySpec);
+		if (!m.matches()) {
+			throw new ExportException(
+				"The string spec [" + querySpec + "] was identified as a query, but is not valid as one");
+		}
+
+		final String type = m.group(1);
+		final String indexFile = m.group(2);
+
+		final QueryMode mode;
+		try {
+			mode = QueryMode.valueOf(type.toUpperCase());
+		} catch (IllegalArgumentException e) {
+			throw new ExportException("Unknown query mode [" + type + "] from query file spec [" + querySpec + "]");
+		}
+
+		final Path path = new File(indexFile).toPath();
+		if (!Files.exists(path)) {
+			throw new ExportException("No file found at [" + path + "] to execute the " + mode.name() + " query");
+		}
+		if (!Files.isRegularFile(path)) {
+			throw new ExportException(
+				"The path [" + path + "] is not a regular file for the " + mode.name() + " query");
+		}
+		if (!Files.isReadable(path)) {
+			throw new ExportException("The file at [" + path + "] is not readable for the " + mode.name() + " query");
+		}
+
+		LocalQuery executor = null;
+		switch (mode) {
+			case JDBC:
+				executor = new JDBCQuery(configuration, path);
+				break;
+
+			case SCANXML:
+				executor = new ScanXMLQuery(path);
+				break;
+
+			default:
+				break;
+		}
+
+		if (executor == null) { throw new Exception("Query type " + mode.name() + " is not implemented yet"); }
+
+		return executor.call();
 	}
 
 	protected Stream<ExportTarget> getExportTargets(ScanIndexItem item) {

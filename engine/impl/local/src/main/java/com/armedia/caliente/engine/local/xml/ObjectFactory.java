@@ -24,40 +24,13 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine.dynamic.xml.metadata;
+package com.armedia.caliente.engine.local.xml;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
+import javax.xml.bind.annotation.XmlRegistry;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "setting.t", propOrder = {
-	"value"
-})
-public class MetadataSourceSetting {
+@XmlRegistry
+public class ObjectFactory {
 
-	@XmlValue
-	protected String value;
-
-	@XmlAttribute(name = "name", required = true)
-	protected String name;
-
-	public String getValue() {
-		return this.value;
-	}
-
-	public void setValue(String value) {
-		this.value = value;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public void setName(String value) {
-		this.name = value;
-	}
+	public static final String NAMESPACE = "http://www.armedia.com/ns/caliente/engine/local";
 
 }
