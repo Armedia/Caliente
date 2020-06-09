@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.local.xml;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -39,11 +40,8 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 	private static final Pattern CLASS_PARSER = Pattern
 		.compile("^((?:[\\w$&&[^\\d]][\\w$]*)(?:\\.[\\w$&&[^\\d]][\\w$]*)*)(?:::([\\w$&&[^\\d]][\\w$]*))?$");
 
-	private static final CheckedFunction<String, String, ? extends Exception> CHECKED_IDENTITY = CheckedFunction
-		.checkedIdentity();
-
 	@FunctionalInterface
-	private static interface Processor {
+	public static interface Processor {
 		public String process(String value) throws Exception;
 	}
 
@@ -63,7 +61,7 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 					.source(script) //
 					.build();
 			} catch (IOException e) {
-				throw new RuntimeException("Unexpected IOException when working in memory", e);
+				throw new UncheckedIOException("Unexpected IOException when working in memory", e);
 			}
 		}
 
@@ -72,7 +70,7 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 			try {
 				return Tools.toString(this.script.eval((b) -> b.put("path", value)));
 			} catch (IOException e) {
-				throw new RuntimeException("Unexpected IOException when working in memory", e);
+				throw new UncheckedIOException("Unexpected IOException when working in memory", e);
 			}
 		}
 	}
@@ -97,7 +95,7 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 		Objects.requireNonNull(value, "Must provide a non-null value");
 		try (MutexAutoLock lock = autoMutexLock()) {
 			this.value = value;
-			this.postProcessor = null;
+			reset();
 		}
 	}
 
@@ -109,14 +107,12 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 		Objects.requireNonNull(type, "Must provide a non-null type");
 		try (MutexAutoLock lock = autoMutexLock()) {
 			this.type = type;
-			this.postProcessor = null;
+			reset();
 		}
 	}
 
-	public void reset() {
-		try (MutexAutoLock lock = autoMutexLock()) {
-			this.postProcessor = null;
-		}
+	private void reset() {
+		this.postProcessor = null;
 	}
 
 	private CheckedFunction<String, String, ? extends Exception> initProcessor() throws Exception {
@@ -129,7 +125,7 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 		// This is a classname
 		Matcher m = LocalQueryPostProcessor.CLASS_PARSER.matcher(this.value);
 		if (!m.matches()) {
-			throw new Exception("The class specification [" + this.value
+			throw new IllegalArgumentException("The class specification [" + this.value
 				+ "] is not valid, must match this pattern: fully.qualified.className(::methodName)?");
 		}
 
@@ -137,7 +133,7 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 		String methodName = m.group(2);
 		if (StringUtils.isBlank(methodName)) {
 			if (!Processor.class.isAssignableFrom(klass)) {
-				throw new Exception("The class [" + klass.getCanonicalName() + "] does not implement "
+				throw new ClassCastException("The class [" + klass.getCanonicalName() + "] does not implement "
 					+ Processor.class.getCanonicalName() + " and no method name was given, can't proceed");
 			}
 			processor = Processor.class.cast(klass.getConstructor().newInstance());
@@ -162,10 +158,8 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 							this.log.error(
 								"Exception caught when initializing the {} LocalQueryPostProcessor with [{}]",
 								this.type, this.value, e);
-							postProcessor = null;
-						}
-						if (postProcessor == null) {
-							postProcessor = LocalQueryPostProcessor.CHECKED_IDENTITY;
+							reset();
+							throw e;
 						}
 						this.postProcessor = postProcessor;
 					}
