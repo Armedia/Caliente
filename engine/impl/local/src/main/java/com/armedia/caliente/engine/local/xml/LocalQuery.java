@@ -30,10 +30,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -162,7 +165,7 @@ public class LocalQuery {
 			private int count = Integer.MAX_VALUE;
 			private final String sql = getSql();
 			private final Path root;
-			private List<Integer> candidates = null;
+			private Set<Integer> candidates = null;
 			private List<LocalQueryPostProcessor> postProcessors = Tools.freezeList(getPostProcessors());
 
 			{
@@ -194,9 +197,37 @@ public class LocalQuery {
 					this.s = c.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 					this.rs = this.s.executeQuery(this.sql);
 
-					// Examine the result set to identify the candidate column indexes,
-					// and explode if there are no candidates
+					Set<Integer> candidates = new LinkedHashSet<>();
+					ResultSetMetaData md = this.rs.getMetaData();
 
+					for (String p : getPathColumns()) {
+						int index = -1;
+						try {
+							index = Integer.valueOf(p);
+							if ((index < 1) || (index > md.getColumnCount())) {
+								LocalQuery.this.log.warn("The column index [{}] is not valid for query [{}]", p,
+									getId());
+								continue;
+							}
+						} catch (NumberFormatException e) {
+							// Must be a column name
+							try {
+								index = this.rs.findColumn(p);
+							} catch (SQLException ex) {
+								LocalQuery.this.log.warn("No column named [{}] for query [{}]", p, getId());
+								continue;
+							}
+						}
+
+						candidates.add(index);
+					}
+
+					if (candidates.isEmpty()) {
+						throw new Exception(
+							"No candidate columns selected - can't continue with query [" + getId() + "]");
+					}
+
+					this.candidates = Tools.freezeSet(candidates);
 				} catch (SQLException e) {
 					doClose();
 					throw e;
@@ -283,14 +314,20 @@ public class LocalQuery {
 			protected void doClose() {
 				if (this.c != null) {
 					try {
-						this.c.rollback();
-					} catch (SQLException e) {
-						if (LocalQuery.this.log.isDebugEnabled()) {
-							LocalQuery.this.log.debug("Rollback failed on connection for query [{}]", this.id, e);
+						try {
+							this.c.rollback();
+						} catch (SQLException e) {
+							if (LocalQuery.this.log.isDebugEnabled()) {
+								LocalQuery.this.log.debug("Rollback failed on connection for query [{}]", this.id, e);
+							}
 						}
+						CloseUtils.closeQuietly(this.rs, this.s, this.c);
+					} finally {
+						this.rs = null;
+						this.s = null;
+						this.c = null;
 					}
 				}
-				CloseUtils.closeQuietly(this.rs, this.s, this.c);
 			}
 		};
 
