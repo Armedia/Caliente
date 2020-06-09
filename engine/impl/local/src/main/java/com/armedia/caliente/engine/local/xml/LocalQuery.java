@@ -205,8 +205,8 @@ public class LocalQuery {
 						try {
 							index = Integer.valueOf(p);
 							if ((index < 1) || (index > md.getColumnCount())) {
-								LocalQuery.this.log.warn("The column index [{}] is not valid for query [{}]", p,
-									getId());
+								LocalQuery.this.log
+									.warn("The column index [{}] is not valid for query [{}], ignoring it", p, getId());
 								continue;
 							}
 						} catch (NumberFormatException e) {
@@ -214,7 +214,8 @@ public class LocalQuery {
 							try {
 								index = this.rs.findColumn(p);
 							} catch (SQLException ex) {
-								LocalQuery.this.log.warn("No column named [{}] for query [{}]", p, getId());
+								LocalQuery.this.log.warn("No column named [{}] for query [{}], ignoring it", p,
+									getId());
 								continue;
 							}
 						}
@@ -224,7 +225,7 @@ public class LocalQuery {
 
 					if (candidates.isEmpty()) {
 						throw new Exception(
-							"No candidate columns selected - can't continue with query [" + getId() + "]");
+							"No valid candidate columns found - can't continue with query [" + getId() + "]");
 					}
 
 					this.candidates = Tools.freezeSet(candidates);
@@ -255,13 +256,13 @@ public class LocalQuery {
 						str = p.postProcess(str);
 					} catch (Exception e) {
 						if (LocalQuery.this.log.isDebugEnabled()) {
-							LocalQuery.this.log.warn("Exception caught from {} post-processor for [{}] (from [{}])",
+							LocalQuery.this.log.error("Exception caught from {} post-processor for [{}] (from [{}])",
 								p.getType(), str, orig, e);
 							return null;
 						}
 					}
 					if (StringUtils.isEmpty(str)) {
-						LocalQuery.this.log.warn("Post-processing result for [{}] is null or empty, returning null",
+						LocalQuery.this.log.error("Post-processing result for [{}] is null or empty, returning null",
 							orig);
 						return null;
 					}
@@ -273,7 +274,11 @@ public class LocalQuery {
 			private String relativize(String str) {
 				if (this.root == null) { return str; }
 				Path p = Paths.get(str);
-				p = this.root.relativize(p);
+				if (!p.startsWith(this.root)) {
+					LocalQuery.this.log.warn("Path [{}] is not a child of [{}] and thus can't be relativized");
+				} else {
+					p = this.root.relativize(p);
+				}
 				return p.toString();
 			}
 
