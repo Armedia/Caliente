@@ -161,8 +161,8 @@ public class LocalQuery {
 		@SuppressWarnings("resource")
 		CloseableIterator<ExportTarget> it = new CloseableIterator<ExportTarget>() {
 			private final String id = getId();
-			private int skip = Math.max(0, getSkip());
-			private int count = Integer.MAX_VALUE;
+			private int skip = 0;
+			private int count = 0;
 			private final String sql = getSql();
 			private final Path root;
 			private Set<Integer> candidates = null;
@@ -171,11 +171,17 @@ public class LocalQuery {
 			private List<String> pathColumns = Tools.freezeCopy(LocalQuery.this.pathColumns, true);
 
 			{
-				int count = getCount();
-				if (count < 0) {
+				Integer skip = getSkip();
+				if ((skip == null) || (skip < 0)) {
+					skip = 0;
+				}
+				this.skip = skip.intValue();
+
+				Integer count = getCount();
+				if ((count == null) || (count < 0)) {
 					count = Integer.MAX_VALUE;
 				}
-				this.count = count;
+				this.count = count.intValue();
 
 				String relativeTo = getRelativeTo();
 				if (StringUtils.isBlank(relativeTo)) {
