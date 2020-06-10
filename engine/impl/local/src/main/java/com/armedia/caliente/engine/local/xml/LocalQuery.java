@@ -36,6 +36,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -157,6 +158,8 @@ public class LocalQuery {
 
 	public Stream<ExportTarget> getStream(DataSource dataSource, final Function<String, ExportTarget> targetConverter)
 		throws SQLException {
+		Objects.requireNonNull(dataSource, "Must provide a non-null DataSource");
+		Objects.requireNonNull(targetConverter, "Must provide a non-null target converter function");
 
 		@SuppressWarnings("resource")
 		CloseableIterator<ExportTarget> it = new CloseableIterator<ExportTarget>() {
