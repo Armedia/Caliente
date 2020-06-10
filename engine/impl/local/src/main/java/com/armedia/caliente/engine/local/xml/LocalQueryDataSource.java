@@ -123,7 +123,7 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 			this.settings.forEach((s) -> {
 				String k = s.getName();
 				String v = s.getValue();
-				if ((k != null) && (v != null)) {
+				if (StringUtils.isNotEmpty(k) && (v != null)) {
 					this.settingsMap.put(k, v);
 				}
 			});
@@ -136,7 +136,9 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 			Setting s = new Setting();
 			s.setName(e.getKey());
 			s.setValue(e.getValue());
-			this.settings.add(s);
+			if (StringUtils.isNotEmpty(s.getName()) && (s.getValue() != null)) {
+				this.settings.add(s);
+			}
 		});
 	}
 
