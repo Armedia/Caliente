@@ -96,7 +96,8 @@ public class LocalQueries {
 	}
 
 	private Map<String, DataSource> buildDataSources() throws Exception {
-		Map<String, DataSource> dataSources = new LinkedHashMap<>();
+		final Map<String, DataSource> dataSources = new LinkedHashMap<>();
+		try {
 			for (LocalQueryDataSource ds : getDataSources()) {
 				if (dataSources.containsKey(ds.getName())) {
 					this.log.warn("Duplicate data source names found: [{}]] - will only use the first one defined",
@@ -112,6 +113,11 @@ public class LocalQueries {
 
 				dataSources.put(ds.getName(), dataSource);
 			}
+		} catch (Exception e) {
+			// If there's an exception, we close whatever was opened
+			dataSources.values().forEach(this::close);
+			throw e;
+		}
 		if (dataSources.isEmpty()) { throw new Exception("No datasources were successfully built"); }
 		return dataSources;
 	}
