@@ -218,19 +218,19 @@ public class LocalQueryTest {
 		return bds;
 	}
 
-	private Stream<String> loadLines(String resource) throws IOException {
+	private Stream<Path> loadPaths(String resource) throws IOException {
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		InputStream in = cl.getResourceAsStream(resource);
-		return new LineNumberReader(new InputStreamReader(in, StandardCharsets.UTF_8)).lines();
+		return new LineNumberReader(new InputStreamReader(in, StandardCharsets.UTF_8)).lines().map(Paths::get);
 	}
 
 	// paths-1 is the happy path - one column, bunch of rows, no nulls, no nothing
 	private void renderFirstPaths(QueryRunner qr) throws Exception {
 		qr.update("create table paths_one ( path varchar(2048) not null, primary key (path) )");
 		List<Object[]> params = new ArrayList<>();
-		loadLines("paths-1.txt").forEach((l) -> {
+		loadPaths("paths-1.txt").forEach((p) -> {
 			params.add(new String[] {
-				l.replace('/', File.separatorChar)
+				p.toString()
 			});
 		});
 		Object[][] paramsArray = params.toArray(LocalQueryTest.NO_PARAMS);
@@ -243,9 +243,9 @@ public class LocalQueryTest {
 		Path current = Paths.get(".").toRealPath();
 		List<Object[]> params = new ArrayList<>();
 		final AtomicInteger counter = new AtomicInteger(0);
-		loadLines("paths-2.txt").forEach((l) -> {
+		loadPaths("paths-2.txt").forEach((p) -> {
 			String[] data = new String[3];
-			data[counter.getAndIncrement() % 3] = current.resolve(l.replace('/', File.separatorChar)).toString();
+			data[counter.getAndIncrement() % 3] = current.resolve(p).toString();
 			params.add(data);
 		});
 		Object[][] paramsArray = params.toArray(LocalQueryTest.NO_PARAMS);
@@ -260,11 +260,11 @@ public class LocalQueryTest {
 		Path alternate = Paths.get(".").toRealPath().getParent();
 		List<Object[]> params = new ArrayList<>();
 		final AtomicInteger counter = new AtomicInteger(0);
-		loadLines("paths-3.txt").forEach((l) -> {
+		loadPaths("paths-3.txt").forEach((p) -> {
 			final int c = counter.getAndIncrement();
-			Path p = ((c % 2) == 0 ? current : alternate);
+			Path parent = ((c % 2) == 0 ? current : alternate);
 			params.add(new String[] {
-				p.resolve(l.replace('/', File.separatorChar)).toString()
+				parent.resolve(p).toString()
 			});
 		});
 		Object[][] paramsArray = params.toArray(LocalQueryTest.NO_PARAMS);
@@ -281,7 +281,7 @@ public class LocalQueryTest {
 		Assertions.assertThrows(NullPointerException.class, () -> lq.getStream(null));
 
 		@SuppressWarnings("resource")
-		Stream<String> s = null;
+		Stream<Path> s = null;
 
 		Assertions.assertThrows(SQLException.class, () -> lq.getStream(mockDS));
 
@@ -324,13 +324,12 @@ public class LocalQueryTest {
 		Assertions.assertNotNull(s = lq.getStream(mockDS));
 		s.close();
 
-		final Set<String> baseLinesOne = loadLines("paths-1.txt").collect(Collectors.toCollection(LinkedHashSet::new));
-		final Set<String> baseLinesTwo = loadLines("paths-2.txt").collect(Collectors.toCollection(LinkedHashSet::new));
-		final Set<String> baseLinesThree = loadLines("paths-3.txt")
-			.collect(Collectors.toCollection(LinkedHashSet::new));
+		final Set<Path> baseLinesOne = loadPaths("paths-1.txt").collect(Collectors.toCollection(LinkedHashSet::new));
+		final Set<Path> baseLinesTwo = loadPaths("paths-2.txt").collect(Collectors.toCollection(LinkedHashSet::new));
+		final Set<Path> baseLinesThree = loadPaths("paths-3.txt").collect(Collectors.toCollection(LinkedHashSet::new));
 
-		final Set<String> lines = new HashSet<>();
-		final Set<String> found = new LinkedHashSet<>();
+		final Set<Path> lines = new HashSet<>();
+		final Set<Path> found = new LinkedHashSet<>();
 
 		try (BasicDataSource dataSource = buildDataSource(this::renderFirstPaths)) {
 			lq.setSkip(0);
@@ -353,7 +352,7 @@ public class LocalQueryTest {
 			lines.addAll(baseLinesOne);
 			found.clear();
 
-			try (Stream<String> targets = lq.getStream(dataSource)) {
+			try (Stream<Path> targets = lq.getStream(dataSource)) {
 				targets.forEach((str) -> {
 					Assertions.assertTrue(lines.remove(str));
 					found.add(str);
@@ -382,7 +381,7 @@ public class LocalQueryTest {
 			lines.addAll(baseLinesTwo);
 			found.clear();
 
-			try (Stream<String> targets = lq.getStream(dataSource)) {
+			try (Stream<Path> targets = lq.getStream(dataSource)) {
 				targets.forEach((str) -> {
 					Assertions.assertTrue(lines.remove(str));
 					found.add(str);
@@ -409,7 +408,7 @@ public class LocalQueryTest {
 			lines.addAll(baseLinesThree);
 			found.clear();
 
-			try (Stream<String> targets = lq.getStream(dataSource)) {
+			try (Stream<Path> targets = lq.getStream(dataSource)) {
 				targets.forEach((str) -> {
 					Assertions.assertTrue(lines.remove(str));
 					found.add(str);
@@ -445,7 +444,7 @@ public class LocalQueryTest {
 			lines.addAll(baseLinesOne);
 			found.clear();
 
-			try (Stream<String> targets = lq.getStream(dataSource)) {
+			try (Stream<Path> targets = lq.getStream(dataSource)) {
 				targets.forEach((str) -> {
 					Assertions.assertTrue(lines.remove(str));
 					found.add(str);

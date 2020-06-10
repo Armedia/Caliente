@@ -34,10 +34,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -61,10 +59,9 @@ import com.armedia.caliente.engine.local.common.LocalSessionFactory;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.caliente.engine.local.common.LocalTranslator;
-import com.armedia.caliente.engine.tools.PathTools;
+import com.armedia.caliente.engine.local.xml.LocalQueries;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -121,6 +118,7 @@ public class LocalExportEngine extends
 
 		@Override
 		public Stream<ExportTarget> call() throws Exception {
+			// TODO:
 			Predicate<ScanIndexItem> p = ScanIndexItem::isDirectory;
 			Stream<ScanIndexItem> directories = BulkImportManager.scanItems(this.specFile, p);
 			Stream<ScanIndexItem> files = BulkImportManager.scanItems(this.specFile, p.negate());
@@ -130,13 +128,19 @@ public class LocalExportEngine extends
 	}
 
 	private final class JDBCQuery implements LocalQuery {
-		private JDBCQuery(CfgTools configuration, Path specFile) throws Exception {
+		private final Path specFile;
+
+		private JDBCQuery(Path specFile) throws Exception {
+			this.specFile = specFile;
 		}
 
 		@Override
 		public Stream<ExportTarget> call() throws Exception {
-			// TODO: Not implemented yet
-			return Stream.empty();
+			LocalQueries q = LocalQueries.getInstance(this.specFile.toUri().toURL());
+			return q.execute() //
+				.map(LocalExportEngine.this.root::makeAbsolute) //
+				.map(LocalExportEngine.this::toExportTarget) //
+			;
 		}
 	}
 
@@ -267,7 +271,7 @@ public class LocalExportEngine extends
 		LocalQuery executor = null;
 		switch (mode) {
 			case JDBC:
-				executor = new JDBCQuery(configuration, path);
+				executor = new JDBCQuery(path);
 				break;
 
 			case SCANXML:
@@ -284,21 +288,20 @@ public class LocalExportEngine extends
 	}
 
 	protected Stream<ExportTarget> getExportTargets(ScanIndexItem item) {
-		String path = item.getSourcePath();
-		String name = item.getSourceName();
-		if (!StringUtils.isEmpty(path)) {
-			name = path + "/" + name;
-		}
-		// Convert to a local path?
-		final Archetype type = (item.isDirectory() ? Archetype.FOLDER : Archetype.DOCUMENT);
+		String sourcePath = item.getSourcePath();
+		String sourceName = item.getSourceName();
 
-		// The path from the XML is ALWAYS separated with forward slashes
-		List<String> r = new ArrayList<>();
-		for (String s : FileNameTools.tokenize(name, '/')) {
-			r.add(PathTools.makeSafe(s));
+		// If there's a source directory, pre-pend it
+		if (!StringUtils.isEmpty(sourcePath)) {
+			sourceName = sourcePath + "/" + sourceName;
 		}
-		return Stream.of(
-			new ExportTarget(type, LocalCommon.calculateId(name), FileNameTools.reconstitute(r, false, false, '/')));
+
+		// The path from the XML is ALWAYS separated with forward slashes, so make them "local"
+		if (File.separatorChar != '/') {
+			sourceName = sourceName.replace('/', File.separatorChar);
+		}
+
+		return Stream.of(toExportTarget(this.root.makeAbsolute(sourceName)));
 	}
 
 	@Override

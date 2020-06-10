@@ -154,7 +154,7 @@ public class LocalQuery {
 		return this.postProcessors;
 	}
 
-	public Stream<String> getStream(DataSource dataSource) throws SQLException {
+	public Stream<Path> getStream(DataSource dataSource) throws SQLException {
 		Objects.requireNonNull(dataSource, "Must provide a non-null DataSource");
 
 		final List<String> pathColumns = Tools.freezeCopy(LocalQuery.this.pathColumns, true);
@@ -171,7 +171,7 @@ public class LocalQuery {
 		}
 
 		@SuppressWarnings("resource")
-		CloseableIterator<String> it = new CloseableIterator<String>() {
+		CloseableIterator<Path> it = new CloseableIterator<Path>() {
 			private final String id = getId();
 			private final List<LocalQueryPostProcessor> postProcessors = Tools
 				.freezeCopy(LocalQuery.this.postProcessors, true);
@@ -269,14 +269,18 @@ public class LocalQuery {
 				return str;
 			}
 
-			private String relativize(String str) {
-				if (this.root == null) { return str; }
+			private Path relativize(String str) {
+				if (StringUtils.isEmpty(str)) { return null; }
+
 				Path p = Paths.get(str);
-				if (!p.startsWith(this.root)) {
-					LocalQuery.this.log.warn("Path [{}] is not a child of [{}] and thus can't be relativized");
-					return null;
+				if ((this.root != null) && p.isAbsolute()) {
+					if (!p.startsWith(this.root)) {
+						LocalQuery.this.log.warn("Path [{}] is not a child of [{}] and thus can't be relativized");
+						return null;
+					}
+					p = this.root.relativize(p);
 				}
-				return this.root.relativize(p).toString();
+				return p;
 			}
 
 			@Override
@@ -291,16 +295,18 @@ public class LocalQuery {
 						// Apply postProcessor
 						str = postProcess(str);
 
-						// Relativize the path, if necessary
-						str = relativize(str);
-
 						if (StringUtils.isEmpty(str)) {
 							// If this resulted in an empty string, we try the next column
 							continue;
 						}
 
+						Path p = relativize(str);
+						if (p == null) {
+							continue;
+						}
+
 						// If we ended up with a non-empty string, we return it!
-						return found(str);
+						return found(p.normalize());
 					}
 
 					// If we get here, we found nothing, so we try the next record
@@ -331,8 +337,8 @@ public class LocalQuery {
 		};
 
 		// Make sure we skip all null and empty strings, and apply the conversion
-		Stream<String> stream = it.stream() //
-			.filter(StringUtils::isNotEmpty) //
+		Stream<Path> stream = it.stream() //
+			.filter(Objects::nonNull) //
 		//
 		;
 

@@ -29,12 +29,12 @@ package com.armedia.caliente.engine.local.xml;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.sql.DataSource;
@@ -51,7 +51,6 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
@@ -122,9 +121,9 @@ public class LocalQueries {
 		return dataSources;
 	}
 
-	public Stream<ExportTarget> execute(Function<String, ExportTarget> targetConverter) throws Exception {
+	public Stream<Path> execute() throws Exception {
 		Map<String, DataSource> dataSources = buildDataSources();
-		Stream<ExportTarget> ret = Stream.empty();
+		Stream<Path> ret = Stream.empty();
 		for (LocalQuery q : getQueries()) {
 			DataSource ds = dataSources.get(q.getDataSource());
 			if (ds == null) {
@@ -133,7 +132,7 @@ public class LocalQueries {
 				continue;
 			}
 			try {
-				ret = Stream.concat(ret, q.getStream(ds).map(targetConverter));
+				ret = Stream.concat(ret, q.getStream(ds));
 			} catch (Exception e) {
 				this.log.warn("Query [{}] failed to construct the stream, ignoring", q.getId(), e);
 			}

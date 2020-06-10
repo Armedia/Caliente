@@ -80,11 +80,11 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 		return this.path.relativize(path);
 	}
 
-	public Path makeAbsolute(String path) throws IOException {
+	public Path makeAbsolute(String path) {
 		return makeAbsolute(Paths.get(path));
 	}
 
-	public Path makeAbsolute(Path path) throws IOException {
+	public Path makeAbsolute(Path path) {
 		return Tools.canonicalize(this.path.resolve(path), false);
 	}
 
