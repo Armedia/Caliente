@@ -248,7 +248,7 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 				// We have a winner, so return it
 				return desc.getDataSource();
 			}
-			return null;
+			throw new SQLException("Failed to find a suitable DataSource for the given configuration");
 		}
 	}
 }

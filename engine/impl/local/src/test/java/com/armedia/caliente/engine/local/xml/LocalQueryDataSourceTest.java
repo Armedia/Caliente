@@ -1,7 +1,12 @@
 package com.armedia.caliente.engine.local.xml;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
+
+import javax.sql.DataSource;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -99,6 +104,26 @@ public class LocalQueryDataSourceTest {
 	}
 
 	@Test
-	public void getInstance() {
+	public void getInstance() throws Exception {
+		// Create a test in-memory database to which we'll attach the driver
+		final LocalQueryDataSource lqds = new LocalQueryDataSource();
+		String url = "jdbc:h2:mem:" + UUID.randomUUID().toString();
+		String driver = "org.h2.Driver";
+
+		lqds.setUrl(url);
+		lqds.setDriver(driver);
+
+		DataSource ds = lqds.getInstance();
+		Assertions.assertNotNull(ds);
+		try (Connection c = ds.getConnection()) {
+			Assertions.assertNotNull(c);
+		}
+		if (AutoCloseable.class.isInstance(ds)) {
+			AutoCloseable.class.cast(ds).close();
+		}
+
+		lqds.setDriver("some.weird.driver.class");
+		lqds.setUrl("jdbc:weird:driver");
+		Assertions.assertThrows(SQLException.class, lqds::getInstance);
 	}
 }
