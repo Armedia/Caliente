@@ -21,14 +21,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
@@ -37,8 +35,6 @@ import org.easymock.EasyMock;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.armedia.caliente.engine.exporter.ExportTarget;
-import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.function.CheckedConsumer;
 
 public class LocalQueryTest {
@@ -280,55 +276,52 @@ public class LocalQueryTest {
 		final LocalQuery lq = new LocalQuery();
 
 		final DataSource mockDS = EasyMock.createStrictMock(DataSource.class);
-		final Function<String, ExportTarget> mockConverter = EasyMock.createStrictMock(Function.class);
 
 		// First things first: what happens with null arguments?
-		Assertions.assertThrows(NullPointerException.class, () -> lq.getStream(null, null));
-		Assertions.assertThrows(NullPointerException.class, () -> lq.getStream(null, mockConverter));
-		Assertions.assertThrows(NullPointerException.class, () -> lq.getStream(mockDS, null));
+		Assertions.assertThrows(NullPointerException.class, () -> lq.getStream(null));
 
 		@SuppressWarnings("resource")
-		Stream<ExportTarget> s = null;
+		Stream<String> s = null;
 
-		Assertions.assertThrows(SQLException.class, () -> lq.getStream(mockDS, mockConverter));
+		Assertions.assertThrows(SQLException.class, () -> lq.getStream(mockDS));
 
 		lq.getPathColumns().add("1");
 
-		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
+		Assertions.assertNotNull(s = lq.getStream(mockDS));
 		s.close();
 
 		lq.setSkip(null);
-		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
+		Assertions.assertNotNull(s = lq.getStream(mockDS));
 		s.close();
 		lq.setSkip(-1);
-		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
+		Assertions.assertNotNull(s = lq.getStream(mockDS));
 		s.close();
 		lq.setSkip(0);
-		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
+		Assertions.assertNotNull(s = lq.getStream(mockDS));
 		s.close();
 		lq.setSkip(1);
-		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
+		Assertions.assertNotNull(s = lq.getStream(mockDS));
 		s.close();
 
 		lq.setCount(null);
-		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
+		Assertions.assertNotNull(s = lq.getStream(mockDS));
 		s.close();
 		lq.setCount(-1);
-		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
+		Assertions.assertNotNull(s = lq.getStream(mockDS));
 		s.close();
 		lq.setCount(0);
-		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
+		Assertions.assertNotNull(s = lq.getStream(mockDS));
 		s.close();
 		lq.setCount(1);
-		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
+		Assertions.assertNotNull(s = lq.getStream(mockDS));
 		s.close();
 
 		final Path current = Paths.get(".").toRealPath();
 		lq.setRelativeTo(null);
-		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
+		Assertions.assertNotNull(s = lq.getStream(mockDS));
 		s.close();
 		lq.setRelativeTo(current.toString());
-		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
+		Assertions.assertNotNull(s = lq.getStream(mockDS));
 		s.close();
 
 		final Set<String> baseLinesOne = loadLines("paths-1.txt").collect(Collectors.toCollection(LinkedHashSet::new));
@@ -337,7 +330,7 @@ public class LocalQueryTest {
 			.collect(Collectors.toCollection(LinkedHashSet::new));
 
 		final Set<String> lines = new HashSet<>();
-		final Set<ExportTarget> found = new LinkedHashSet<>();
+		final Set<String> found = new LinkedHashSet<>();
 
 		try (BasicDataSource dataSource = buildDataSource(this::renderFirstPaths)) {
 			lq.setSkip(0);
@@ -360,13 +353,10 @@ public class LocalQueryTest {
 			lines.addAll(baseLinesOne);
 			found.clear();
 
-			Function<String, ExportTarget> f = (str) -> new ExportTarget(CmfObject.Archetype.DOCUMENT,
-				DigestUtils.sha256Hex(str), str);
-
-			try (Stream<ExportTarget> targets = lq.getStream(dataSource, f)) {
-				targets.forEach((t) -> {
-					Assertions.assertTrue(lines.remove(t.getSearchKey()));
-					found.add(t);
+			try (Stream<String> targets = lq.getStream(dataSource)) {
+				targets.forEach((str) -> {
+					Assertions.assertTrue(lines.remove(str));
+					found.add(str);
 				});
 				Assertions.assertTrue(lines.isEmpty());
 				Assertions.assertEquals(baseLinesOne.size(), found.size());
@@ -392,13 +382,10 @@ public class LocalQueryTest {
 			lines.addAll(baseLinesTwo);
 			found.clear();
 
-			Function<String, ExportTarget> f = (str) -> new ExportTarget(CmfObject.Archetype.DOCUMENT,
-				DigestUtils.sha256Hex(str), str);
-
-			try (Stream<ExportTarget> targets = lq.getStream(dataSource, f)) {
-				targets.forEach((t) -> {
-					Assertions.assertTrue(lines.remove(t.getSearchKey()));
-					found.add(t);
+			try (Stream<String> targets = lq.getStream(dataSource)) {
+				targets.forEach((str) -> {
+					Assertions.assertTrue(lines.remove(str));
+					found.add(str);
 				});
 				Assertions.assertTrue(lines.isEmpty());
 				Assertions.assertEquals(baseLinesTwo.size(), found.size());
@@ -422,13 +409,10 @@ public class LocalQueryTest {
 			lines.addAll(baseLinesThree);
 			found.clear();
 
-			Function<String, ExportTarget> f = (str) -> new ExportTarget(CmfObject.Archetype.DOCUMENT,
-				DigestUtils.sha256Hex(str), str);
-
-			try (Stream<ExportTarget> targets = lq.getStream(dataSource, f)) {
-				targets.forEach((t) -> {
-					Assertions.assertTrue(lines.remove(t.getSearchKey()));
-					found.add(t);
+			try (Stream<String> targets = lq.getStream(dataSource)) {
+				targets.forEach((str) -> {
+					Assertions.assertTrue(lines.remove(str));
+					found.add(str);
 				});
 				Assertions.assertFalse(lines.isEmpty());
 				Assertions.assertFalse(found.isEmpty());
@@ -461,13 +445,10 @@ public class LocalQueryTest {
 			lines.addAll(baseLinesOne);
 			found.clear();
 
-			Function<String, ExportTarget> f = (str) -> new ExportTarget(CmfObject.Archetype.DOCUMENT,
-				DigestUtils.sha256Hex(str), str);
-
-			try (Stream<ExportTarget> targets = lq.getStream(dataSource, f)) {
-				targets.forEach((t) -> {
-					Assertions.assertTrue(lines.remove(t.getSearchKey()));
-					found.add(t);
+			try (Stream<String> targets = lq.getStream(dataSource)) {
+				targets.forEach((str) -> {
+					Assertions.assertTrue(lines.remove(str));
+					found.add(str);
 				});
 				Assertions.assertTrue(lines.isEmpty());
 				Assertions.assertEquals(baseLinesOne.size(), found.size());

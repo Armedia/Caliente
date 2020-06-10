@@ -38,7 +38,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.sql.DataSource;
@@ -54,7 +53,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.io.CloseUtils;
@@ -156,10 +154,8 @@ public class LocalQuery {
 		return this.postProcessors;
 	}
 
-	public Stream<ExportTarget> getStream(DataSource dataSource, final Function<String, ExportTarget> targetConverter)
-		throws SQLException {
+	public Stream<String> getStream(DataSource dataSource) throws SQLException {
 		Objects.requireNonNull(dataSource, "Must provide a non-null DataSource");
-		Objects.requireNonNull(targetConverter, "Must provide a non-null target converter function");
 
 		final List<String> pathColumns = Tools.freezeCopy(LocalQuery.this.pathColumns, true);
 		if (pathColumns.isEmpty()) { throw new SQLException("No candidate columns given"); }
@@ -335,9 +331,8 @@ public class LocalQuery {
 		};
 
 		// Make sure we skip all null and empty strings, and apply the conversion
-		Stream<ExportTarget> stream = it.stream() //
+		Stream<String> stream = it.stream() //
 			.filter(StringUtils::isNotEmpty) //
-			.map(targetConverter) //
 		//
 		;
 

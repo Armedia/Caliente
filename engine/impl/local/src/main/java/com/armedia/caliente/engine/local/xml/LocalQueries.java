@@ -97,21 +97,21 @@ public class LocalQueries {
 
 	private Map<String, DataSource> buildDataSources() throws Exception {
 		Map<String, DataSource> dataSources = new LinkedHashMap<>();
-		for (LocalQueryDataSource ds : getDataSources()) {
-			if (dataSources.containsKey(ds.getName())) {
-				this.log.warn("Duplicate data source names found: [{}]] - will only use the first one defined",
-					ds.getName());
-				continue;
-			}
+			for (LocalQueryDataSource ds : getDataSources()) {
+				if (dataSources.containsKey(ds.getName())) {
+					this.log.warn("Duplicate data source names found: [{}]] - will only use the first one defined",
+						ds.getName());
+					continue;
+				}
 
-			DataSource dataSource = ds.getInstance();
-			if (dataSource == null) {
-				this.log.warn("DataSource [{}] failed to construct", ds.getName());
-				continue;
-			}
+				DataSource dataSource = ds.getInstance();
+				if (dataSource == null) {
+					this.log.warn("DataSource [{}] failed to construct", ds.getName());
+					continue;
+				}
 
-			dataSources.put(ds.getName(), dataSource);
-		}
+				dataSources.put(ds.getName(), dataSource);
+			}
 		if (dataSources.isEmpty()) { throw new Exception("No datasources were successfully built"); }
 		return dataSources;
 	}
@@ -126,7 +126,11 @@ public class LocalQueries {
 					q.getDataSource());
 				continue;
 			}
-			ret = Stream.concat(ret, q.getStream(ds, targetConverter));
+			try {
+				ret = Stream.concat(ret, q.getStream(ds).map(targetConverter));
+			} catch (Exception e) {
+				this.log.warn("Query [{}] failed to construct the stream, ignoring", q.getId(), e);
+			}
 		}
 		return ret.onClose(() -> dataSources.values().forEach(this::close));
 	}
