@@ -166,7 +166,9 @@ public class LocalQuery {
 			private final String sql = getSql();
 			private final Path root;
 			private Set<Integer> candidates = null;
-			private List<LocalQueryPostProcessor> postProcessors = Tools.freezeList(getPostProcessors());
+			private List<LocalQueryPostProcessor> postProcessors = Tools.freezeCopy(LocalQuery.this.postProcessors,
+				true);
+			private List<String> pathColumns = Tools.freezeCopy(LocalQuery.this.pathColumns, true);
 
 			{
 				int count = getCount();
@@ -199,7 +201,7 @@ public class LocalQuery {
 					Set<Integer> candidates = new LinkedHashSet<>();
 					ResultSetMetaData md = this.rs.getMetaData();
 
-					for (String p : getPathColumns()) {
+					for (String p : this.pathColumns) {
 						int index = -1;
 						try {
 							index = Integer.valueOf(p);
