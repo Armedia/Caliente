@@ -249,21 +249,27 @@ public class LocalQuery {
 				final String orig = str;
 				for (LocalQueryPostProcessor p : this.postProcessors) {
 					try {
+						final String prev = str;
 						str = p.postProcess(str);
+						if (LocalQuery.this.log.isTraceEnabled()) {
+							LocalQuery.this.log.trace("Post-processed [{}] into [{}] (by {})", prev, str, p);
+						}
 					} catch (Exception e) {
 						if (LocalQuery.this.log.isDebugEnabled()) {
-							LocalQuery.this.log.error("Exception caught from {} post-processor for [{}] (from [{}])",
+							LocalQuery.this.log.error(
+								"Exception caught from {} post-processor for [{}] (from [{}]), returning null",
 								p.getType(), str, orig, e);
-							return null;
 						}
+						str = null;
 					}
+
 					if (StringUtils.isEmpty(str)) {
 						LocalQuery.this.log.error("Post-processing result for [{}] is null or empty, returning null",
 							orig);
 						return null;
 					}
 				}
-				LocalQuery.this.log.debug("String [{}] post processed as [{}]", orig, str);
+				LocalQuery.this.log.debug("Final result of string post-processing: [{}] -> [{}]", orig, str);
 				return str;
 			}
 
