@@ -34,6 +34,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -161,31 +162,36 @@ public class LocalQuery {
 		Objects.requireNonNull(dataSource, "Must provide a non-null DataSource");
 		Objects.requireNonNull(targetConverter, "Must provide a non-null target converter function");
 
+		final List<String> pathColumns;
+		{
+			List<String> cols = Tools.freezeCopy(LocalQuery.this.pathColumns, true);
+			if (cols.isEmpty()) {
+				cols = Collections.unmodifiableList(Collections.singletonList("1"));
+			}
+			pathColumns = cols;
+		}
+
+		Integer skip = getSkip();
+		if ((skip != null) && (skip < 0)) {
+			skip = null;
+		}
+
+		Integer count = getCount();
+		if ((count != null) && (count < 0)) {
+			count = null;
+		}
+
 		@SuppressWarnings("resource")
-		CloseableIterator<ExportTarget> it = new CloseableIterator<ExportTarget>() {
+		CloseableIterator<String> it = new CloseableIterator<String>() {
 			private final String id = getId();
-			private int skip = 0;
-			private int count = 0;
+			private final List<LocalQueryPostProcessor> postProcessors = Tools
+				.freezeCopy(LocalQuery.this.postProcessors, true);
 			private final String sql = getSql();
 			private final Path root;
+
 			private Set<Integer> candidates = null;
-			private List<LocalQueryPostProcessor> postProcessors = Tools.freezeCopy(LocalQuery.this.postProcessors,
-				true);
-			private List<String> pathColumns = Tools.freezeCopy(LocalQuery.this.pathColumns, true);
 
 			{
-				Integer skip = getSkip();
-				if ((skip == null) || (skip < 0)) {
-					skip = 0;
-				}
-				this.skip = skip.intValue();
-
-				Integer count = getCount();
-				if ((count == null) || (count < 0)) {
-					count = Integer.MAX_VALUE;
-				}
-				this.count = count.intValue();
-
 				String relativeTo = getRelativeTo();
 				if (StringUtils.isBlank(relativeTo)) {
 					this.root = null;
@@ -210,7 +216,7 @@ public class LocalQuery {
 					Set<Integer> candidates = new LinkedHashSet<>();
 					ResultSetMetaData md = this.rs.getMetaData();
 
-					for (String p : this.pathColumns) {
+					for (String p : pathColumns) {
 						int index = -1;
 						try {
 							index = Integer.valueOf(p);
@@ -243,19 +249,6 @@ public class LocalQuery {
 					doClose();
 					throw e;
 				}
-			}
-
-			@Override
-			protected Result findNext() throws Exception {
-				// First, skip whatever needs skipping
-				while (this.skip > 0) {
-					if (!this.rs.next()) { return null; }
-					this.skip--;
-				}
-
-				if (this.count <= 0) { return null; }
-
-				return buildResult();
 			}
 
 			private String postProcess(String str) {
@@ -291,37 +284,34 @@ public class LocalQuery {
 				return this.root.relativize(p).toString();
 			}
 
-			private Result buildResult() throws SQLException {
-				try {
-					while (this.rs.next()) {
-						for (Integer column : this.candidates) {
-							String str = this.rs.getString(column);
-							if (this.rs.wasNull() || StringUtils.isEmpty(str)) {
-								continue;
-							}
-
-							// Relativize the path, if necessary
-							str = relativize(str);
-
-							// Apply postProcessor
-							str = postProcess(str);
-
-							if (StringUtils.isEmpty(str)) {
-								// If this resulted in an empty string, we try the next column
-								continue;
-							}
-
-							// If we ended up with a non-empty string, we return it!
-							return found(targetConverter.apply(str));
+			@Override
+			protected Result findNext() throws Exception {
+				while (this.rs.next()) {
+					for (Integer column : this.candidates) {
+						String str = this.rs.getString(column);
+						if (this.rs.wasNull() || StringUtils.isEmpty(str)) {
+							continue;
 						}
 
-						// If we get here, we found nothing, so we try the next record
-						// on the result set
+						// Relativize the path, if necessary
+						str = relativize(str);
+
+						// Apply postProcessor
+						str = postProcess(str);
+
+						if (StringUtils.isEmpty(str)) {
+							// If this resulted in an empty string, we try the next column
+							continue;
+						}
+
+						// If we ended up with a non-empty string, we return it!
+						return found(str);
 					}
-					return null;
-				} finally {
-					this.count--;
+
+					// If we get here, we found nothing, so we try the next record
+					// on the result set
 				}
+				return null;
 			}
 
 			@Override
@@ -345,6 +335,20 @@ public class LocalQuery {
 			}
 		};
 
-		return it.stream();
+		// Make sure we skip all null and empty strings, and apply the conversion
+		Stream<ExportTarget> stream = it.stream() //
+			.filter(StringUtils::isNotEmpty) //
+			.map(targetConverter) //
+		//
+		;
+
+		if (skip != null) {
+			stream = stream.skip(skip.longValue());
+		}
+		if (count != null) {
+			stream = stream.limit(count.longValue());
+		}
+
+		return stream;
 	}
 }
