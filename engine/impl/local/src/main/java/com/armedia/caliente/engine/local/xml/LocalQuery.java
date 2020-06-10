@@ -257,8 +257,8 @@ public class LocalQuery {
 					} catch (Exception e) {
 						if (LocalQuery.this.log.isDebugEnabled()) {
 							LocalQuery.this.log.error(
-								"Exception caught from {} post-processor for [{}] (from [{}]), returning null",
-								p.getType(), str, orig, e);
+								"Exception caught from {} post-processor for [{}] (from [{}]), returning null", p, str,
+								orig, e);
 						}
 						str = null;
 					}

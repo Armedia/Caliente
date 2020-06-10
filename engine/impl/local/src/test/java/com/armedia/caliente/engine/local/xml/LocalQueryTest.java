@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.local.xml;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -8,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -231,11 +234,45 @@ public class LocalQueryTest {
 		List<Object[]> params = new ArrayList<>();
 		loadLines("paths-1.txt").forEach((l) -> {
 			params.add(new String[] {
-				l
+				l.replace('/', File.separatorChar)
 			});
 		});
 		Object[][] paramsArray = params.toArray(LocalQueryTest.NO_PARAMS);
 		qr.insertBatch("insert into paths_one (path) values (?)", LocalQueryTest.NO_HANDLER, paramsArray);
+	}
+
+	// paths-2 requires relativization
+	private void renderSecondPaths(QueryRunner qr) throws Exception {
+		qr.update("create table paths_two ( one varchar(2048), two varchar(2048), three varchar(2048) )");
+		Path current = Paths.get(".").toRealPath();
+		List<Object[]> params = new ArrayList<>();
+		final AtomicInteger counter = new AtomicInteger(0);
+		loadLines("paths-2.txt").forEach((l) -> {
+			String[] data = new String[3];
+			data[counter.getAndIncrement() % 3] = current.resolve(l.replace('/', File.separatorChar)).toString();
+			params.add(data);
+		});
+		Object[][] paramsArray = params.toArray(LocalQueryTest.NO_PARAMS);
+		qr.insertBatch("insert into paths_two (one, two, three) values (?, ?, ?)", LocalQueryTest.NO_HANDLER,
+			paramsArray);
+	}
+
+	// paths-3 requires relativization
+	private void renderThirdPaths(QueryRunner qr) throws Exception {
+		qr.update("create table paths_three ( path varchar(2048) )");
+		Path current = Paths.get(".").toRealPath();
+		Path alternate = Paths.get(".").toRealPath().getParent();
+		List<Object[]> params = new ArrayList<>();
+		final AtomicInteger counter = new AtomicInteger(0);
+		loadLines("paths-3.txt").forEach((l) -> {
+			final int c = counter.getAndIncrement();
+			Path p = ((c % 2) == 0 ? current : alternate);
+			params.add(new String[] {
+				p.resolve(l.replace('/', File.separatorChar)).toString()
+			});
+		});
+		Object[][] paramsArray = params.toArray(LocalQueryTest.NO_PARAMS);
+		qr.insertBatch("insert into paths_three (path) values (?)", LocalQueryTest.NO_HANDLER, paramsArray);
 	}
 
 	@Test
@@ -252,6 +289,10 @@ public class LocalQueryTest {
 
 		@SuppressWarnings("resource")
 		Stream<ExportTarget> s = null;
+
+		Assertions.assertThrows(SQLException.class, () -> lq.getStream(mockDS, mockConverter));
+
+		lq.getPathColumns().add("1");
 
 		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
 		s.close();
@@ -282,7 +323,7 @@ public class LocalQueryTest {
 		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
 		s.close();
 
-		Path current = Paths.get(".").toRealPath();
+		final Path current = Paths.get(".").toRealPath();
 		lq.setRelativeTo(null);
 		Assertions.assertNotNull(s = lq.getStream(mockDS, mockConverter));
 		s.close();
@@ -291,8 +332,13 @@ public class LocalQueryTest {
 		s.close();
 
 		final Set<String> baseLinesOne = loadLines("paths-1.txt").collect(Collectors.toCollection(LinkedHashSet::new));
+		final Set<String> baseLinesTwo = loadLines("paths-2.txt").collect(Collectors.toCollection(LinkedHashSet::new));
+		final Set<String> baseLinesThree = loadLines("paths-3.txt")
+			.collect(Collectors.toCollection(LinkedHashSet::new));
+
 		final Set<String> lines = new HashSet<>();
 		final Set<ExportTarget> found = new LinkedHashSet<>();
+
 		try (BasicDataSource dataSource = buildDataSource(this::renderFirstPaths)) {
 			lq.setSkip(0);
 			lq.setCount(-1);
@@ -310,12 +356,13 @@ public class LocalQueryTest {
 
 			lq.setSql("select path from paths_one");
 
-			Function<String, ExportTarget> f = (str) -> {
-				return new ExportTarget(CmfObject.Archetype.DOCUMENT, DigestUtils.sha256Hex(str), str);
-			};
-
 			lines.clear();
 			lines.addAll(baseLinesOne);
+			found.clear();
+
+			Function<String, ExportTarget> f = (str) -> new ExportTarget(CmfObject.Archetype.DOCUMENT,
+				DigestUtils.sha256Hex(str), str);
+
 			try (Stream<ExportTarget> targets = lq.getStream(dataSource, f)) {
 				targets.forEach((t) -> {
 					Assertions.assertTrue(lines.remove(t.getSearchKey()));
@@ -324,10 +371,99 @@ public class LocalQueryTest {
 				Assertions.assertTrue(lines.isEmpty());
 				Assertions.assertEquals(baseLinesOne.size(), found.size());
 			}
+		}
+
+		try (BasicDataSource dataSource = buildDataSource(this::renderSecondPaths)) {
+			lq.setSkip(0);
+			lq.setCount(-1);
+
+			lq.setId("someId");
+			lq.setDataSource("someDataSource");
+			lq.setRelativeTo(current.toString());
+
+			lq.getPathColumns().clear();
+			lq.getPathColumns().add("one");
+			lq.getPathColumns().add("2");
+			lq.getPathColumns().add("three");
+
+			lq.setSql("select * from paths_two");
+
+			lines.clear();
+			lines.addAll(baseLinesTwo);
 			found.clear();
+
+			Function<String, ExportTarget> f = (str) -> new ExportTarget(CmfObject.Archetype.DOCUMENT,
+				DigestUtils.sha256Hex(str), str);
+
+			try (Stream<ExportTarget> targets = lq.getStream(dataSource, f)) {
+				targets.forEach((t) -> {
+					Assertions.assertTrue(lines.remove(t.getSearchKey()));
+					found.add(t);
+				});
+				Assertions.assertTrue(lines.isEmpty());
+				Assertions.assertEquals(baseLinesTwo.size(), found.size());
+			}
+		}
+
+		try (BasicDataSource dataSource = buildDataSource(this::renderThirdPaths)) {
+			lq.setSkip(0);
+			lq.setCount(-1);
+
+			lq.setId("someId");
+			lq.setDataSource("someDataSource");
+			lq.setRelativeTo(current.toString());
+
+			lq.getPathColumns().clear();
+			lq.getPathColumns().add("path");
+
+			lq.setSql("select * from paths_three");
+
+			lines.clear();
+			lines.addAll(baseLinesThree);
+			found.clear();
+
+			Function<String, ExportTarget> f = (str) -> new ExportTarget(CmfObject.Archetype.DOCUMENT,
+				DigestUtils.sha256Hex(str), str);
+
+			try (Stream<ExportTarget> targets = lq.getStream(dataSource, f)) {
+				targets.forEach((t) -> {
+					Assertions.assertTrue(lines.remove(t.getSearchKey()));
+					found.add(t);
+				});
+				Assertions.assertFalse(lines.isEmpty());
+				Assertions.assertFalse(found.isEmpty());
+				Assertions.assertEquals(baseLinesThree.size(), lines.size() + found.size());
+			}
+		}
+
+		try (BasicDataSource dataSource = buildDataSource(this::renderFirstPaths)) {
+
+			LocalQueryPostProcessor lqpp = new LocalQueryPostProcessor();
+			lqpp.setType("jexl3");
+			lqpp.setValue("return '" + current.toString() + File.separatorChar + "' + path");
+
+			lq.setSkip(0);
+			lq.setCount(-1);
+
+			lq.setId("someId");
+			lq.setDataSource("someDataSource");
+			lq.setRelativeTo(current.toString());
+
+			lq.getPathColumns().clear();
+			lq.getPathColumns().add("path");
+
+			lq.getPostProcessors().clear();
+			lq.getPostProcessors().add(lqpp);
+
+			lq.setSql("select * from paths_one");
 
 			lines.clear();
 			lines.addAll(baseLinesOne);
+			found.clear();
+
+			Function<String, ExportTarget> f = (str) -> new ExportTarget(CmfObject.Archetype.DOCUMENT,
+				DigestUtils.sha256Hex(str), str);
+
 			try (Stream<ExportTarget> targets = lq.getStream(dataSource, f)) {
 				targets.forEach((t) -> {
 					Assertions.assertTrue(lines.remove(t.getSearchKey()));
@@ -336,7 +472,6 @@ public class LocalQueryTest {
 				Assertions.assertTrue(lines.isEmpty());
 				Assertions.assertEquals(baseLinesOne.size(), found.size());
 			}
-			found.clear();
 		}
 	}
 }
