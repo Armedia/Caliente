@@ -180,4 +180,11 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 	public String postProcess(String path) throws Exception {
 		return getPostProcessor().applyChecked(path);
 	}
+
+	@Override
+	public String toString() {
+		String type = Tools.coalesce(this.type, LocalQueryPostProcessor.DEFAULT_LANGUAGE);
+		String value = (StringUtils.equalsIgnoreCase("CLASS", type) ? this.value : "<script>");
+		return String.format("LocalQueryPostProcessor [type=%s, value=%s]", type, value);
+	}
 }
