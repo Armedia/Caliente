@@ -34,7 +34,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -162,14 +161,8 @@ public class LocalQuery {
 		Objects.requireNonNull(dataSource, "Must provide a non-null DataSource");
 		Objects.requireNonNull(targetConverter, "Must provide a non-null target converter function");
 
-		final List<String> pathColumns;
-		{
-			List<String> cols = Tools.freezeCopy(LocalQuery.this.pathColumns, true);
-			if (cols.isEmpty()) {
-				cols = Collections.unmodifiableList(Collections.singletonList("1"));
-			}
-			pathColumns = cols;
-		}
+		final List<String> pathColumns = Tools.freezeCopy(LocalQuery.this.pathColumns, true);
+		if (pathColumns.isEmpty()) { throw new SQLException("No candidate columns given"); }
 
 		Integer skip = getSkip();
 		if ((skip != null) && (skip < 0)) {
@@ -293,11 +286,11 @@ public class LocalQuery {
 							continue;
 						}
 
-						// Relativize the path, if necessary
-						str = relativize(str);
-
 						// Apply postProcessor
 						str = postProcess(str);
+
+						// Relativize the path, if necessary
+						str = relativize(str);
 
 						if (StringUtils.isEmpty(str)) {
 							// If this resulted in an empty string, we try the next column
