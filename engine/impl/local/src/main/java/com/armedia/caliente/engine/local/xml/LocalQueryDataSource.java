@@ -245,7 +245,7 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 					continue;
 				}
 
-				// Set the context with the newly-found DataSource
+				// We have a winner, so return it
 				return desc.getDataSource();
 			}
 			return null;
