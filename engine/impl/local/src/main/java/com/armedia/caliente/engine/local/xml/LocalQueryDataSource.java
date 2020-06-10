@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import javax.sql.DataSource;
@@ -51,16 +52,13 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.caliente.tools.datasource.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
-import com.armedia.commons.utilities.concurrent.MutexAutoLock;
-import com.armedia.commons.utilities.concurrent.ShareableMap;
-import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "localQueriesDataSource.t", propOrder = {
 	"url", "driver", "user", "password", "settings"
 })
-public class LocalQueryDataSource extends BaseShareableLockable {
+public class LocalQueryDataSource {
 
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@XmlType(name = "setting.t", propOrder = {
@@ -73,6 +71,15 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 
 		@XmlAttribute(name = "name", required = true)
 		protected String name;
+
+		public Setting() {
+
+		}
+
+		public Setting(String name, String value) {
+			this.name = name;
+			this.value = value;
+		}
 
 		public String getValue() {
 			return this.value;
@@ -88,6 +95,25 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 
 		public void setName(String value) {
 			this.name = value;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("Setting [value=%s, name=%s]", this.value, this.name);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(this.name);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (!Tools.baseEquals(this, obj)) { return false; }
+			Setting other = Setting.class.cast(obj);
+			if (!Objects.equals(this.name, other.name)) { return false; }
+			if (!Objects.equals(this.value, other.value)) { return false; }
+			return true;
 		}
 
 	}
@@ -111,7 +137,7 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 	protected List<Setting> settings;
 
 	@XmlTransient
-	protected final ShareableMap<String, String> settingsMap = new ShareableMap<>(new TreeMap<>());
+	protected final Map<String, String> settingsMap = new TreeMap<>();
 
 	@XmlAttribute(name = "name", required = true)
 	protected String name;
@@ -133,9 +159,7 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 	protected void beforeMarshal(Marshaller m) {
 		this.settings = new ArrayList<>(this.settingsMap.size());
 		this.settingsMap.entrySet().forEach((e) -> {
-			Setting s = new Setting();
-			s.setName(e.getKey());
-			s.setValue(e.getValue());
+			Setting s = new Setting(e.getKey(), e.getValue());
 			if (StringUtils.isNotEmpty(s.getName()) && (s.getValue() != null)) {
 				this.settings.add(s);
 			}
@@ -143,43 +167,35 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 	}
 
 	public String getUrl() {
-		return shareLocked(() -> this.url);
+		return this.url;
 	}
 
 	public void setUrl(String url) {
-		try (MutexAutoLock lock = autoMutexLock()) {
-			this.url = url;
-		}
+		this.url = url;
 	}
 
 	public String getDriver() {
-		return shareLocked(() -> this.driver);
+		return this.driver;
 	}
 
 	public void setDriver(String driver) {
-		try (MutexAutoLock lock = autoMutexLock()) {
-			this.driver = driver;
-		}
+		this.driver = driver;
 	}
 
 	public String getUser() {
-		return shareLocked(() -> this.user);
+		return this.user;
 	}
 
 	public void setUser(String user) {
-		try (MutexAutoLock lock = autoMutexLock()) {
-			this.user = user;
-		}
+		this.user = user;
 	}
 
 	public String getPassword() {
-		return shareLocked(() -> this.password);
+		return this.password;
 	}
 
 	public void setPassword(String password) {
-		try (MutexAutoLock lock = autoMutexLock()) {
-			this.password = password;
-		}
+		this.password = password;
 	}
 
 	public Map<String, String> getSettings() {
@@ -187,28 +203,22 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 	}
 
 	protected Map<String, String> buildSettingsMap() {
-		try (SharedAutoLock lock = autoSharedLock()) {
-			try (SharedAutoLock mapLock = this.settingsMap.autoSharedLock()) {
-				Map<String, String> ret = new TreeMap<>();
-				for (String name : this.settingsMap.keySet()) {
-					String value = this.settingsMap.get(name);
-					if ((name != null) && (value != null)) {
-						setValue(name, value, ret);
-					}
-				}
-				return ret;
+		Map<String, String> ret = new TreeMap<>();
+		for (String name : this.settingsMap.keySet()) {
+			String value = this.settingsMap.get(name);
+			if ((name != null) && (value != null)) {
+				setValue(name, value, ret);
 			}
 		}
+		return ret;
 	}
 
 	public String getName() {
-		return shareLocked(() -> this.name);
+		return this.name;
 	}
 
 	public void setName(String name) {
-		try (MutexAutoLock lock = autoMutexLock()) {
-			this.name = name;
-		}
+		this.name = name;
 	}
 
 	private void setValue(String name, String value, Map<String, String> map) {
@@ -219,36 +229,34 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 	}
 
 	public DataSource getInstance() throws SQLException {
-		try (SharedAutoLock lock = autoSharedLock()) {
-			Map<String, String> settingsMap = buildSettingsMap();
-			String url = StringUtils.strip(getUrl());
-			if (StringUtils.isEmpty(url)) { throw new SQLException("The JDBC url may not be empty or null"); }
-			setValue("url", url, settingsMap);
+		Map<String, String> settingsMap = buildSettingsMap();
+		String url = StringUtils.strip(getUrl());
+		if (StringUtils.isEmpty(url)) { throw new SQLException("The JDBC url may not be empty or null"); }
+		setValue("url", url, settingsMap);
 
-			setValue("driver", getDriver(), settingsMap);
-			setValue("user", getUser(), settingsMap);
+		setValue("driver", getDriver(), settingsMap);
+		setValue("user", getUser(), settingsMap);
 
-			String password = getPassword();
-			// TODO: Potentially try to decrypt the password...
-			setValue("password", password, settingsMap);
+		String password = getPassword();
+		// TODO: Potentially try to decrypt the password...
+		setValue("password", password, settingsMap);
 
-			CfgTools cfg = new CfgTools(settingsMap);
-			for (DataSourceLocator locator : DataSourceLocator.getAllLocatorsFor("pooled")) {
-				final DataSourceDescriptor<?> desc;
-				try {
-					desc = locator.locateDataSource(cfg);
-				} catch (Exception ex) {
-					// This one failed...try the next one
-					if (this.log.isDebugEnabled()) {
-						this.log.warn("Failed to initialize a candidate datasource", ex);
-					}
-					continue;
+		CfgTools cfg = new CfgTools(settingsMap);
+		for (DataSourceLocator locator : DataSourceLocator.getAllLocatorsFor("pooled")) {
+			final DataSourceDescriptor<?> desc;
+			try {
+				desc = locator.locateDataSource(cfg);
+			} catch (Exception ex) {
+				// This one failed...try the next one
+				if (this.log.isDebugEnabled()) {
+					this.log.warn("Failed to initialize a candidate datasource", ex);
 				}
-
-				// We have a winner, so return it
-				return desc.getDataSource();
+				continue;
 			}
-			throw new SQLException("Failed to find a suitable DataSource for the given configuration");
+
+			// We have a winner, so return it
+			return desc.getDataSource();
 		}
+		throw new SQLException("Failed to find a suitable DataSource for the given configuration");
 	}
 }

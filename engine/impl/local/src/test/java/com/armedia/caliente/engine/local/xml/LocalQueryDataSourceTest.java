@@ -2,8 +2,11 @@ package com.armedia.caliente.engine.local.xml;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import javax.sql.DataSource;
@@ -83,6 +86,36 @@ public class LocalQueryDataSourceTest {
 			s.setValue(value);
 			Assertions.assertEquals(value, s.getValue());
 		}
+
+		for (int nA = 0; nA < 10; nA++) {
+			for (int vA = 0; vA < 10; vA++) {
+				Setting a = new Setting("name-" + nA, "value-" + vA);
+
+				Assertions.assertFalse(a.equals(null));
+				Assertions.assertTrue(a.equals(a));
+				Assertions.assertFalse(a.equals(this));
+
+				for (int nB = 0; nB < 10; nB++) {
+					for (int vB = 0; vB < 10; vB++) {
+						Setting b = new Setting("name-" + nB, "value-" + vB);
+
+						if ((nA == nB) && (vA == vB)) {
+							Assertions.assertEquals(a, b);
+							Assertions.assertEquals(a.hashCode(), b.hashCode());
+							Assertions.assertEquals(a.toString(), b.toString());
+						} else {
+							Assertions.assertNotEquals(a, b);
+							Assertions.assertNotEquals(a.toString(), b.toString());
+							if (nA == nB) {
+								Assertions.assertEquals(a.hashCode(), b.hashCode());
+							} else {
+								Assertions.assertNotEquals(a.hashCode(), b.hashCode());
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	@Test
@@ -91,11 +124,8 @@ public class LocalQueryDataSourceTest {
 		final Map<String, String> settings = lqds.getSettings();
 		Map<String, String> expected = new LinkedHashMap<>();
 		for (int i = 0; i < 100; i++) {
-			Setting s = new Setting();
 			String name = String.format("setting-%02d", i);
 			String value = String.format("value-%02d", i);
-			s.setName(name);
-			s.setValue(value);
 			expected.put("jdbc." + name, value);
 			settings.put(name, value);
 		}
@@ -125,5 +155,46 @@ public class LocalQueryDataSourceTest {
 		lqds.setDriver("some.weird.driver.class");
 		lqds.setUrl("jdbc:weird:driver");
 		Assertions.assertThrows(SQLException.class, lqds::getInstance);
+
+		lqds.setUrl(null);
+		Assertions.assertThrows(SQLException.class, lqds::getInstance);
+	}
+
+	@Test
+	public void testAfterUnmarshal() {
+		final LocalQueryDataSource lqds = new LocalQueryDataSource();
+
+		Map<String, String> expected = new TreeMap<>();
+		lqds.settings = new ArrayList<>();
+		for (int i = 0; i < 100; i++) {
+			String name = String.format("setting-%02d", i);
+			String value = String.format("value-%02d", i);
+			lqds.settings.add(new Setting(name, value));
+			expected.put(name, value);
+		}
+		lqds.settings.add(new Setting("", ""));
+		lqds.settings.add(new Setting("nullValue", null));
+		lqds.settings.add(new Setting(null, "nullName"));
+		lqds.settings.add(new Setting(null, null));
+
+		lqds.afterUnmarshal(null, null);
+		Assertions.assertEquals(expected, lqds.getSettings());
+	}
+
+	@Test
+	public void testBeforeMarshal() {
+		final LocalQueryDataSource lqds = new LocalQueryDataSource();
+
+		Map<String, String> settings = lqds.getSettings();
+		List<Setting> expected = new ArrayList<>();
+		for (int i = 0; i < 100; i++) {
+			String name = String.format("setting-%02d", i);
+			String value = String.format("value-%02d", i);
+			settings.put(name, value);
+			expected.add(new Setting(name, value));
+		}
+
+		lqds.beforeMarshal(null);
+		Assertions.assertEquals(expected, lqds.settings);
 	}
 }
