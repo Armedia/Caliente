@@ -111,13 +111,13 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 	protected List<Setting> settings;
 
 	@XmlTransient
-	protected ShareableMap<String, String> settingsMap = new ShareableMap<>(new TreeMap<>());
+	protected final ShareableMap<String, String> settingsMap = new ShareableMap<>(new TreeMap<>());
 
 	@XmlAttribute(name = "name", required = true)
 	protected String name;
 
 	protected void afterUnmarshal(Unmarshaller u, Object parent) {
-		this.settingsMap = new ShareableMap<>(new TreeMap<>());
+		this.settingsMap.clear();
 		if ((this.settings != null) && !this.settings.isEmpty()) {
 			this.settings.removeIf((s) -> StringUtils.isEmpty(s.getName()));
 			this.settings.forEach((s) -> {
@@ -188,16 +188,16 @@ public class LocalQueryDataSource extends BaseShareableLockable {
 
 	protected Map<String, String> buildSettingsMap() {
 		try (SharedAutoLock lock = autoSharedLock()) {
-			Map<String, String> ret = new TreeMap<>();
 			try (SharedAutoLock mapLock = this.settingsMap.autoSharedLock()) {
+				Map<String, String> ret = new TreeMap<>();
 				for (String name : this.settingsMap.keySet()) {
 					String value = this.settingsMap.get(name);
 					if ((name != null) && (value != null)) {
 						setValue(name, value, ret);
 					}
 				}
+				return ret;
 			}
-			return ret;
 		}
 	}
 
