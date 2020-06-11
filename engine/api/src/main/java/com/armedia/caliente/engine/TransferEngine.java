@@ -421,7 +421,11 @@ public abstract class TransferEngine< //
 			}
 			work(counter);
 		} finally {
-			this.runLock.unlock();
+			try {
+				cleanup();
+			} finally {
+				this.runLock.unlock();
+			}
 		}
 	}
 
@@ -432,4 +436,8 @@ public abstract class TransferEngine< //
 	protected abstract EXCEPTION newException(String message, Throwable cause);
 
 	protected abstract void work(CmfObjectCounter<RESULT> counter) throws EXCEPTION, CmfStorageException;
+
+	protected void cleanup() {
+
+	}
 }
