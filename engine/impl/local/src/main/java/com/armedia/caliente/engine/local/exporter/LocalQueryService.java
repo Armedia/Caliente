@@ -70,7 +70,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		public String process(String value) throws Exception;
 	}
 
-	private static class ScriptProcessor implements Processor {
+	protected static class ScriptProcessor implements Processor {
 		private final JSR223Script script;
 
 		private ScriptProcessor(String language, String script) throws ScriptException {
@@ -100,7 +100,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
-	class Search {
+	protected class Search {
 		private final DataSource dataSource;
 		private final String id;
 		private final List<String> pathColumns;
@@ -141,7 +141,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			if (this.pathColumns.isEmpty()) { throw new Exception("No candidate columns given"); }
 		}
 
-		Stream<Path> build() {
+		public Stream<Path> build() {
 			@SuppressWarnings("resource")
 			CloseableIterator<Path> it = new CloseableIterator<Path>() {
 
@@ -320,7 +320,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		return ret;
 	};
 
-	private class Query<T> {
+	protected class Query<T> {
 		private final DataSource dataSource;
 		private final String id;
 		private final String sql;
@@ -347,7 +347,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			this.qr = new QueryRunner(this.dataSource);
 		}
 
-		private T run(Object... params) throws SQLException {
+		public T run(Object... params) throws SQLException {
 			return this.qr.query(this.sql, this.handler, params);
 		}
 	}
@@ -425,8 +425,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				continue;
 			}
 
-			historyMap.put(id,
-				new Query<>("History id", sql, LocalQueryService.HANDLER_HISTORY_ID, this.dataSources::get));
+			historyMap.put(id, buildHistoryIdQuery(sql, this.dataSources::get));
 		}
 		this.history = Tools.freezeMap(historyMap);
 
@@ -438,8 +437,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				continue;
 			}
 
-			membersMap.put(id,
-				new Query<>("Member list", sql, LocalQueryService.HANDLER_MEMBER_LIST, this.dataSources::get));
+			membersMap.put(id, buildVersionsListQuery(sql, this.dataSources::get));
 		}
 		this.members = Tools.freezeMap(membersMap);
 	}
@@ -461,10 +459,6 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			}
 		}
 		return ret;
-	}
-
-	protected DataSource findDataSource(String name) {
-		return this.dataSources.get(name);
 	}
 
 	protected Search buildSearch(LocalQuerySearch search, Function<String, DataSource> dataSourceFinder)
@@ -538,6 +532,20 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			processor = (str) -> Tools.toString(method.invoke(o, str));
 		}
 		return processor;
+	}
+
+	private <T> Query<T> buildQuery(String label, LocalQuerySql sql, ResultSetHandler<T> handler,
+		Function<String, DataSource> dataSourceFinder) {
+		return new Query<>(label, sql, handler, dataSourceFinder);
+	}
+
+	protected Query<String> buildHistoryIdQuery(LocalQuerySql sql, Function<String, DataSource> dataSourceFinder) {
+		return buildQuery("History id", sql, LocalQueryService.HANDLER_HISTORY_ID, dataSourceFinder);
+	}
+
+	protected Query<List<Pair<String, Path>>> buildVersionsListQuery(LocalQuerySql sql,
+		Function<String, DataSource> dataSourceFinder) {
+		return buildQuery("Version list", sql, LocalQueryService.HANDLER_MEMBER_LIST, dataSourceFinder);
 	}
 
 	public Stream<Path> searchPaths() throws Exception {

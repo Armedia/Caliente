@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
@@ -29,12 +30,15 @@ import org.easymock.EasyMock;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.exporter.LocalQueryService.Processor;
+import com.armedia.caliente.engine.local.exporter.LocalQueryService.Query;
 import com.armedia.caliente.engine.local.exporter.LocalQueryService.Search;
 import com.armedia.caliente.engine.local.xml.LocalQueries;
 import com.armedia.caliente.engine.local.xml.LocalQueryDataSource;
 import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessor;
 import com.armedia.caliente.engine.local.xml.LocalQuerySearch;
+import com.armedia.caliente.engine.local.xml.LocalQuerySql;
 import com.armedia.commons.utilities.function.CheckedConsumer;
 
 public class LocalQueryServiceTest {
@@ -455,5 +459,53 @@ public class LocalQueryServiceTest {
 
 		lqds.setUrl(null);
 		Assertions.assertThrows(SQLException.class, () -> srv.buildDataSource(lqds));
+	}
+
+	// paths-3 requires relativization
+	private void renderHistoryIds(QueryRunner qr) throws Exception {
+		qr.update(
+			"create table history ( object_id varchar(64) not null, history_id varchar(64) not null, primary key (object_id) )");
+		List<Object[]> params = new ArrayList<>();
+		loadPaths("paths-1.txt").forEach((p) -> {
+			params.add(new String[] {
+				LocalCommon.calculateId(p), DigestUtils.md5Hex(p.toString())
+			});
+		});
+		Object[][] paramsArray = params.toArray(LocalQueryServiceTest.NO_PARAMS);
+		qr.insertBatch("insert into history (object_id, history_id) values (?, ?)", LocalQueryServiceTest.NO_HANDLER,
+			paramsArray);
+	}
+
+	@Test
+	public void testHistoryIds() throws Exception {
+		final LocalQueryService srv = buildEmptyService();
+
+		try (BasicDataSource dataSource = buildDataSource(this::renderHistoryIds)) {
+			final LocalQuerySql lqs = new LocalQuerySql();
+
+			Assertions.assertThrows(NullPointerException.class, () -> srv.buildHistoryIdQuery(lqs, (str) -> null));
+			Assertions.assertThrows(NullPointerException.class,
+				() -> srv.buildHistoryIdQuery(lqs, (str) -> dataSource));
+
+			lqs.setId("garbage");
+			lqs.setDataSource("garbage");
+			lqs.setSql("select history_id from history where object_id = ?");
+
+			final Query<String> q = srv.buildHistoryIdQuery(lqs, (str) -> dataSource);
+
+			loadPaths("paths-1.txt").forEach((p) -> {
+				try {
+					Assertions.assertEquals(DigestUtils.md5Hex(p.toString()), q.run(LocalCommon.calculateId(p)),
+						"Failed while checking [" + p + "]");
+				} catch (SQLException e) {
+					Assertions.fail("Failed to fetch the history ID for " + p, e);
+				}
+			});
+
+			for (int i = 0; i < 100; i++) {
+				Assertions.assertNull(q.run("bad-id-" + i));
+			}
+		}
+
 	}
 }
