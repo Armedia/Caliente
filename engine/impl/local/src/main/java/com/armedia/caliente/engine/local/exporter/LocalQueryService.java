@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.local.xml;
+package com.armedia.caliente.engine.local.exporter;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -37,6 +37,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
+import com.armedia.caliente.engine.local.xml.LocalQueries;
+import com.armedia.caliente.engine.local.xml.LocalQueryDataSource;
+import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessor;
+import com.armedia.caliente.engine.local.xml.LocalQuerySearch;
+import com.armedia.caliente.engine.local.xml.LocalQuerySql;
 import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.caliente.tools.datasource.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
@@ -441,7 +446,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
-	private Map<String, String> buildSettingsMap(LocalQueryDataSource dataSourceDef) {
+	protected Map<String, String> buildSettingsMap(LocalQueryDataSource dataSourceDef) {
 		Map<String, String> settingsMap = dataSourceDef.getSettings();
 		Map<String, String> ret = new TreeMap<>();
 		for (String name : settingsMap.keySet()) {
@@ -453,7 +458,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		return ret;
 	}
 
-	private DataSource buildDataSource(LocalQueryDataSource dataSourceDef) throws SQLException {
+	protected DataSource buildDataSource(LocalQueryDataSource dataSourceDef) throws SQLException {
 		Map<String, String> settingsMap = buildSettingsMap(dataSourceDef);
 		String url = StringUtils.strip(dataSourceDef.getUrl());
 		if (StringUtils.isEmpty(url)) { throw new SQLException("The JDBC url may not be empty or null"); }
@@ -485,7 +490,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		throw new SQLException("Failed to find a suitable DataSource for the given configuration");
 	}
 
-	private Processor buildProcessor(LocalQueryPostProcessor processorDef) throws Exception {
+	protected static Processor buildProcessor(LocalQueryPostProcessor processorDef) throws Exception {
 		final String type = processorDef.getType();
 		final String value = processorDef.getValue();
 		if (!StringUtils.equalsIgnoreCase("CLASS", type)) {
