@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -99,7 +100,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
-	private class Search {
+	class Search {
 		private final DataSource dataSource;
 		private final String id;
 		private final List<String> pathColumns;
@@ -108,8 +109,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		private final int count;
 		private final List<Processor> postProcessors;
 
-		private Search(LocalQuerySearch definition) throws Exception {
-			this.dataSource = LocalQueryService.this.dataSources.get(definition.getDataSource());
+		private Search(LocalQuerySearch definition, Function<String, DataSource> dataSourceFinder) throws Exception {
+			this.dataSource = dataSourceFinder.apply(definition.getDataSource());
 			Objects.requireNonNull(this.dataSource, "Must provide a non-null DataSource");
 
 			this.id = definition.getId();
@@ -127,11 +128,12 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			this.count = (count != null ? count.intValue() : -1);
 
 			this.sql = definition.getSql();
-			// TODO: Perform a sanity check?
+			// TODO: Perform a deeper sanity check?
+			if (StringUtils.isBlank(this.sql)) { throw new SQLException("Must provide a SQL query to execute"); }
 
 			List<Processor> postProcessors = new LinkedList<>();
 			for (LocalQueryPostProcessor processorDef : definition.getPostProcessors()) {
-				postProcessors.add(buildProcessor(processorDef));
+				postProcessors.add(LocalQueryService.buildProcessor(processorDef));
 			}
 			this.postProcessors = Tools.freezeCopy(postProcessors);
 
@@ -139,7 +141,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			if (this.pathColumns.isEmpty()) { throw new Exception("No candidate columns given"); }
 		}
 
-		private Stream<Path> build() {
+		Stream<Path> build() {
 			@SuppressWarnings("resource")
 			CloseableIterator<Path> it = new CloseableIterator<Path>() {
 
@@ -325,12 +327,13 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		private final QueryRunner qr;
 		private final ResultSetHandler<T> handler;
 
-		private Query(String label, LocalQuerySql sql, ResultSetHandler<T> handler) {
+		private Query(String label, LocalQuerySql sql, ResultSetHandler<T> handler,
+			Function<String, DataSource> dataSourceFinder) {
 			Objects.requireNonNull(sql, "Must provide a non-null LocalQuerySql instance");
 			this.handler = Objects.requireNonNull(handler, "Must provide a non-null ResultSetHandler instance");
 			this.id = sql.getId();
 
-			this.dataSource = LocalQueryService.this.dataSources.get(sql.getDataSource());
+			this.dataSource = dataSourceFinder.apply(sql.getDataSource());
 			if (this.dataSource == null) {
 				throw new NullPointerException(String.format("No dataSource named [%s] was found for %s query [%s]",
 					sql.getDataSource(), label, this.id));
@@ -407,7 +410,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			}
 
 			try {
-				searchMap.put(id, new Search(search));
+				searchMap.put(id, buildSearch(search, this.dataSources::get));
 			} catch (Exception e) {
 				this.log.error("Failed to construct the search [{}]", id, e);
 			}
@@ -422,7 +425,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				continue;
 			}
 
-			historyMap.put(id, new Query<>("History id", sql, LocalQueryService.HANDLER_HISTORY_ID));
+			historyMap.put(id,
+				new Query<>("History id", sql, LocalQueryService.HANDLER_HISTORY_ID, this.dataSources::get));
 		}
 		this.history = Tools.freezeMap(historyMap);
 
@@ -434,7 +438,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				continue;
 			}
 
-			membersMap.put(id, new Query<>("Member list", sql, LocalQueryService.HANDLER_MEMBER_LIST));
+			membersMap.put(id,
+				new Query<>("Member list", sql, LocalQueryService.HANDLER_MEMBER_LIST, this.dataSources::get));
 		}
 		this.members = Tools.freezeMap(membersMap);
 	}
@@ -458,7 +463,19 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		return ret;
 	}
 
+	protected DataSource findDataSource(String name) {
+		return this.dataSources.get(name);
+	}
+
+	protected Search buildSearch(LocalQuerySearch search, Function<String, DataSource> dataSourceFinder)
+		throws Exception {
+		Objects.requireNonNull(search, "Must provide a LocalQuerySearch instance");
+		return new Search(search, dataSourceFinder);
+
+	}
+
 	protected DataSource buildDataSource(LocalQueryDataSource dataSourceDef) throws SQLException {
+		Objects.requireNonNull(dataSourceDef, "Must provide a LocalQueryDataSource instance");
 		Map<String, String> settingsMap = buildSettingsMap(dataSourceDef);
 		String url = StringUtils.strip(dataSourceDef.getUrl());
 		if (StringUtils.isEmpty(url)) { throw new SQLException("The JDBC url may not be empty or null"); }
@@ -491,6 +508,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	}
 
 	protected static Processor buildProcessor(LocalQueryPostProcessor processorDef) throws Exception {
+		Objects.requireNonNull(processorDef, "Must provide a LocalQueryPostProcessor instance");
 		final String type = processorDef.getType();
 		final String value = processorDef.getValue();
 		if (!StringUtils.equalsIgnoreCase("CLASS", type)) {
