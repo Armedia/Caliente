@@ -58,10 +58,10 @@ import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.io.CloseUtils;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "localQuery.t", propOrder = {
-	"sql", "skip", "count", "pathColumns", "relativeTo", "postProcessors"
+@XmlType(name = "localQuerySearch.t", propOrder = {
+	"sql", "skip", "count", "pathColumns", "postProcessors"
 })
-public class LocalQuery {
+public class LocalQuerySearch {
 
 	@XmlTransient
 	private final Logger log = LoggerFactory.getLogger(getClass());
@@ -79,11 +79,8 @@ public class LocalQuery {
 	@XmlElement(name = "path-column", required = true)
 	protected List<String> pathColumns;
 
-	@XmlElement(name = "relative-to", required = false)
-	protected String relativeTo;
-
 	@XmlElementWrapper(name = "post-processors", required = false)
-	@XmlElement(name = "post-processor") //
+	@XmlElement(name = "post-processor", required = false)
 	protected List<LocalQueryPostProcessor> postProcessors;
 
 	@XmlAttribute(name = "id", required = true)
@@ -114,14 +111,6 @@ public class LocalQuery {
 
 	public void setCount(Integer value) {
 		this.count = value;
-	}
-
-	public String getRelativeTo() {
-		return this.relativeTo;
-	}
-
-	public void setRelativeTo(String value) {
-		this.relativeTo = value;
 	}
 
 	public String getId() {
@@ -157,7 +146,7 @@ public class LocalQuery {
 	public Stream<Path> getStream(DataSource dataSource) throws SQLException {
 		Objects.requireNonNull(dataSource, "Must provide a non-null DataSource");
 
-		final List<String> pathColumns = Tools.freezeCopy(LocalQuery.this.pathColumns, true);
+		final List<String> pathColumns = Tools.freezeCopy(LocalQuerySearch.this.pathColumns, true);
 		if (pathColumns.isEmpty()) { throw new SQLException("No candidate columns given"); }
 
 		Integer skip = getSkip();
@@ -174,20 +163,10 @@ public class LocalQuery {
 		CloseableIterator<Path> it = new CloseableIterator<Path>() {
 			private final String id = getId();
 			private final List<LocalQueryPostProcessor> postProcessors = Tools
-				.freezeCopy(LocalQuery.this.postProcessors, true);
+				.freezeCopy(LocalQuerySearch.this.postProcessors, true);
 			private final String sql = getSql();
-			private final Path root;
 
 			private Set<Integer> candidates = null;
-
-			{
-				String relativeTo = getRelativeTo();
-				if (StringUtils.isBlank(relativeTo)) {
-					this.root = null;
-				} else {
-					this.root = Tools.canonicalize(Paths.get(relativeTo));
-				}
-			}
 
 			private Connection c = null;
 			private Statement s = null;
@@ -210,7 +189,7 @@ public class LocalQuery {
 						try {
 							index = Integer.valueOf(p);
 							if ((index < 1) || (index > md.getColumnCount())) {
-								LocalQuery.this.log
+								LocalQuerySearch.this.log
 									.warn("The column index [{}] is not valid for query [{}], ignoring it", p, getId());
 								continue;
 							}
@@ -219,7 +198,7 @@ public class LocalQuery {
 							try {
 								index = this.rs.findColumn(p);
 							} catch (SQLException ex) {
-								LocalQuery.this.log.warn("No column named [{}] for query [{}], ignoring it", p,
+								LocalQuerySearch.this.log.warn("No column named [{}] for query [{}], ignoring it", p,
 									getId());
 								continue;
 							}
@@ -247,12 +226,12 @@ public class LocalQuery {
 					try {
 						final String prev = str;
 						str = p.postProcess(str);
-						if (LocalQuery.this.log.isTraceEnabled()) {
-							LocalQuery.this.log.trace("Post-processed [{}] into [{}] (by {})", prev, str, p);
+						if (LocalQuerySearch.this.log.isTraceEnabled()) {
+							LocalQuerySearch.this.log.trace("Post-processed [{}] into [{}] (by {})", prev, str, p);
 						}
 					} catch (Exception e) {
-						if (LocalQuery.this.log.isDebugEnabled()) {
-							LocalQuery.this.log.error(
+						if (LocalQuerySearch.this.log.isDebugEnabled()) {
+							LocalQuerySearch.this.log.error(
 								"Exception caught from {} post-processor for [{}] (from [{}]), returning null", p, str,
 								orig, e);
 						}
@@ -260,27 +239,13 @@ public class LocalQuery {
 					}
 
 					if (StringUtils.isEmpty(str)) {
-						LocalQuery.this.log.error("Post-processing result for [{}] is null or empty, returning null",
-							orig);
+						LocalQuerySearch.this.log
+							.error("Post-processing result for [{}] is null or empty, returning null", orig);
 						return null;
 					}
 				}
-				LocalQuery.this.log.debug("Final result of string post-processing: [{}] -> [{}]", orig, str);
+				LocalQuerySearch.this.log.debug("Final result of string post-processing: [{}] -> [{}]", orig, str);
 				return str;
-			}
-
-			private Path relativize(String str) {
-				if (StringUtils.isEmpty(str)) { return null; }
-
-				Path p = Paths.get(str);
-				if ((this.root != null) && p.isAbsolute()) {
-					if (!p.startsWith(this.root)) {
-						LocalQuery.this.log.warn("Path [{}] is not a child of [{}] and thus can't be relativized");
-						return null;
-					}
-					p = this.root.relativize(p);
-				}
-				return p;
 			}
 
 			@Override
@@ -300,13 +265,8 @@ public class LocalQuery {
 							continue;
 						}
 
-						Path p = relativize(str);
-						if (p == null) {
-							continue;
-						}
-
 						// If we ended up with a non-empty string, we return it!
-						return found(p.normalize());
+						return found(Paths.get(str).normalize());
 					}
 
 					// If we get here, we found nothing, so we try the next record
@@ -322,8 +282,9 @@ public class LocalQuery {
 						try {
 							this.c.rollback();
 						} catch (SQLException e) {
-							if (LocalQuery.this.log.isDebugEnabled()) {
-								LocalQuery.this.log.debug("Rollback failed on connection for query [{}]", this.id, e);
+							if (LocalQuerySearch.this.log.isDebugEnabled()) {
+								LocalQuerySearch.this.log.debug("Rollback failed on connection for query [{}]", this.id,
+									e);
 							}
 						}
 						CloseUtils.closeQuietly(this.rs, this.s, this.c);

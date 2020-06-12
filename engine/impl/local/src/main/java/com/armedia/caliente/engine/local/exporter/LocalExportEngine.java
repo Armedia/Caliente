@@ -128,16 +128,16 @@ public class LocalExportEngine extends
 	}
 
 	private final class JDBCQuery implements LocalQuery {
-		private final Path specFile;
 
-		private JDBCQuery(Path specFile) throws Exception {
-			this.specFile = specFile;
+		private final LocalQueries queries;
+
+		private JDBCQuery(LocalQueries queries) {
+			this.queries = queries;
 		}
 
 		@Override
 		public Stream<ExportTarget> call() throws Exception {
-			LocalQueries q = LocalQueries.getInstance(this.specFile.toUri().toURL());
-			return q.execute() //
+			return this.queries.searchPaths() //
 				.map(LocalExportEngine.this.root::makeAbsolute) //
 				.map(LocalExportEngine.this::toExportTarget) //
 			;
@@ -147,6 +147,7 @@ public class LocalExportEngine extends
 	private final LocalRoot root;
 	private final LocalVersionLayout versionLayout;
 	private final LocalVersionHistoryCache histories;
+	private LocalQueries localQueries = null;
 
 	public LocalExportEngine(LocalExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
@@ -271,7 +272,9 @@ public class LocalExportEngine extends
 		LocalQuery executor = null;
 		switch (mode) {
 			case JDBC:
-				executor = new JDBCQuery(path);
+				LocalQueries q = LocalQueries.getInstance(path.toUri().toURL());
+				JDBCQuery jdbcQuery = new JDBCQuery(q);
+				executor = jdbcQuery;
 				break;
 
 			case SCANXML:
@@ -398,5 +401,10 @@ public class LocalExportEngine extends
 	@Override
 	protected LocalExportDelegateFactory newDelegateFactory(LocalRoot session, CfgTools cfg) throws Exception {
 		return new LocalExportDelegateFactory(this, cfg);
+	}
+
+	@Override
+	protected void cleanup() {
+		// CloseUtils.closeQuietly(this.dataSources);
 	}
 }

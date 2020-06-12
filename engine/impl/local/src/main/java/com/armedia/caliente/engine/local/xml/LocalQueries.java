@@ -26,142 +26,152 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
 import javax.sql.DataSource;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
+import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.ShareableList;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.function.CheckedLazySupplier;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-	"dataSources", "queries"
+	"rootPath", "dataSourceDefinitions", "searches", "historyIds", "versionLists"
 })
 @XmlRootElement(name = "local-queries")
-public class LocalQueries {
+public class LocalQueries extends BaseShareableLockable implements AutoCloseable {
 
 	private static final XmlInstances<LocalQueries> INSTANCES = new XmlInstances<>(LocalQueries.class);
 
 	public static LocalQueries getInstance(URL location) throws XmlInstanceException {
 		return LocalQueries.INSTANCES
-			.getInstance(Objects.requireNonNull(location, "Must provide a location to load the queries from"));
+			.getInstance(Objects.requireNonNull(location, "Must provide a location to load the searches from"));
 	}
 
 	public static LocalQueries getInstance(String location) throws XmlInstanceException, XmlNotFoundException {
 		return LocalQueries.INSTANCES
-			.getInstance(Objects.requireNonNull(location, "Must provide a location to load the queries from"));
+			.getInstance(Objects.requireNonNull(location, "Must provide a location to load the searches from"));
 	}
 
 	@XmlTransient
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	@XmlElement(name = "data-source", required = true)
-	protected List<LocalQueryDataSource> dataSources;
+	@XmlElement(name = "root-path", required = false)
+	protected String rootPath;
 
-	@XmlElement(name = "query", required = true)
-	protected List<LocalQuery> queries;
+	@XmlElementWrapper(name = "data-sources", required = false)
+	@XmlElement(name = "data-source", required = false)
+	protected List<LocalQueryDataSource> dataSourceDefinitions;
 
-	public List<LocalQueryDataSource> getDataSources() {
-		if (this.dataSources == null) {
-			this.dataSources = new ArrayList<>();
+	@XmlElementWrapper(name = "searches", required = false)
+	@XmlElement(name = "search", required = false)
+	protected List<LocalQuerySearch> searches;
+
+	@XmlElementWrapper(name = "history-ids", required = false)
+	@XmlElement(name = "history-id", required = false)
+	protected List<LocalQuerySql> historyIds;
+
+	@XmlElementWrapper(name = "version-lists", required = false)
+	@XmlElement(name = "version-list", required = false)
+	protected List<LocalQuerySql> versionLists;
+
+	@XmlTransient
+	private final CheckedLazySupplier<LocalDataSources, Exception> dataSources = new CheckedLazySupplier<>(() -> {
+		try (MutexAutoLock lock = autoMutexLock()) {
+			return new LocalDataSources(getDataSourceDefinitions());
 		}
-		return this.dataSources;
+	});
+
+	protected void afterUnmarshal(Unmarshaller u, Object parent) {
+		if (this.dataSourceDefinitions != null) {
+			if (!ShareableList.class.isInstance(this.dataSourceDefinitions)) {
+				this.dataSourceDefinitions = new ShareableList<>(this, this.dataSourceDefinitions);
+			}
+		}
+		if (this.searches != null) {
+			if (!ShareableList.class.isInstance(this.searches)) {
+				this.searches = new ShareableList<>(this, this.searches);
+			}
+		}
 	}
 
-	public List<LocalQuery> getQueries() {
-		if (this.queries == null) {
-			this.queries = new ArrayList<>();
+	public List<LocalQueryDataSource> getDataSourceDefinitions() {
+		try (SharedAutoLock lock = autoSharedLock()) {
+			if (this.dataSourceDefinitions == null) {
+				this.dataSourceDefinitions = new ShareableList<>(this, new ArrayList<>());
+			}
+			return this.dataSourceDefinitions;
 		}
-		return this.queries;
 	}
 
-	private Map<String, DataSource> buildDataSources() throws Exception {
-		final Map<String, DataSource> dataSources = new LinkedHashMap<>();
-		try {
-			for (LocalQueryDataSource ds : getDataSources()) {
-				if (dataSources.containsKey(ds.getName())) {
-					this.log.warn("Duplicate data source names found: [{}]] - will only use the first one defined",
-						ds.getName());
+	public List<LocalQuerySearch> getSearches() {
+		try (SharedAutoLock lock = autoSharedLock()) {
+			if (this.searches == null) {
+				this.searches = new ShareableList<>(this, new ArrayList<>());
+			}
+			return this.searches;
+		}
+	}
+
+	public Stream<Path> searchPaths() throws Exception {
+		try (SharedAutoLock lock = autoSharedLock()) {
+			LocalDataSources dataSources = this.dataSources.getChecked();
+			Stream<Path> ret = Stream.empty();
+			for (LocalQuerySearch q : getSearches()) {
+				DataSource ds = dataSources.getDataSource(q.getDataSource());
+				if (ds == null) {
+					this.log.warn("Query [{}] references undefined DataSource [{}], ignoring", q.getId(),
+						q.getDataSource());
 					continue;
 				}
-
-				DataSource dataSource = ds.getInstance();
-				if (dataSource == null) {
-					this.log.warn("DataSource [{}] failed to construct", ds.getName());
-					continue;
-				}
-
-				dataSources.put(ds.getName(), dataSource);
-			}
-		} catch (Exception e) {
-			// If there's an exception, we close whatever was opened
-			dataSources.values().forEach(this::close);
-			throw e;
-		}
-		if (dataSources.isEmpty()) { throw new Exception("No datasources were successfully built"); }
-		return dataSources;
-	}
-
-	public Stream<Path> execute() throws Exception {
-		Map<String, DataSource> dataSources = buildDataSources();
-		Stream<Path> ret = Stream.empty();
-		for (LocalQuery q : getQueries()) {
-			DataSource ds = dataSources.get(q.getDataSource());
-			if (ds == null) {
-				this.log.warn("Query [{}] references undefined DataSource [{}], ignoring", q.getId(),
-					q.getDataSource());
-				continue;
-			}
-			try {
-				ret = Stream.concat(ret, q.getStream(ds));
-			} catch (Exception e) {
-				this.log.warn("Query [{}] failed to construct the stream, ignoring", q.getId(), e);
-			}
-		}
-		return ret.onClose(() -> dataSources.values().forEach(this::close));
-	}
-
-	private void close(DataSource dataSource) {
-		if (dataSource == null) { return; }
-		try {
-			// We do it like this since this is faster than reflection
-			if (AutoCloseable.class.isInstance(dataSource)) {
-				AutoCloseable.class.cast(dataSource).close();
-			} else {
-				// No dice on the static linking, does it have a public void close() method?
-				Method m = null;
 				try {
-					m = dataSource.getClass().getMethod("close");
-				} catch (Exception ex) {
-					// Do nothing...
-				}
-				if ((m != null) && Modifier.isPublic(m.getModifiers())) {
-					m.invoke(dataSource);
+					ret = Stream.concat(ret, q.getStream(ds));
+				} catch (Exception e) {
+					this.log.warn("Query [{}] failed to construct the stream, ignoring", q.getId(), e);
 				}
 			}
-		} catch (Exception e) {
-			if (this.log.isDebugEnabled()) {
-				this.log.debug("Failed to close a datasource", e);
-			}
+			return ret;
+		}
+	}
+
+	public String getHistoryId(ExportTarget sourceTarget) throws SQLException {
+		return null;
+	}
+
+	// Pair = versionLabel:path
+	public List<Pair<String, Path>> getHistoryMembers(String historyId) throws SQLException {
+		return null;
+	}
+
+	@Override
+	public void close() throws Exception {
+		try (MutexAutoLock lock = autoMutexLock()) {
+			this.dataSources.applyIfSet(LocalDataSources::close);
+			this.dataSources.reset();
 		}
 	}
 }
