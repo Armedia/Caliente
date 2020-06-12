@@ -26,38 +26,17 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
-import java.sql.SQLException;
-import java.util.Objects;
-
-import javax.sql.DataSource;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
-
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.ResultSetHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.armedia.commons.utilities.function.CheckedFunction;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "localQuerySql.t", propOrder = {
 	"sql"
 })
 public class LocalQuerySql {
-
-	private static final ResultSetHandler<String> SINGLE_STRING = (rs) -> {
-		if (!rs.next()) { return null; }
-		String val = rs.getString(1);
-		return (!rs.wasNull() ? val : null);
-	};
-
-	@XmlTransient
-	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	@XmlValue
 	protected String sql;
@@ -92,14 +71,4 @@ public class LocalQuerySql {
 		this.id = value;
 	}
 
-	public CheckedFunction<String, String, SQLException> getSearch(final DataSource dataSource) throws SQLException {
-		Objects.requireNonNull(dataSource, "Must provide a non-null DataSource");
-		Objects.requireNonNull(this.sql, "Must provide a non-null SQL Query");
-		final String sql = this.sql;
-		final QueryRunner qr = new QueryRunner(dataSource);
-		return (param) -> {
-			Objects.requireNonNull(param, "Must provide a parameter value");
-			return qr.query(sql, LocalQuerySql.SINGLE_STRING, param);
-		};
-	}
 }

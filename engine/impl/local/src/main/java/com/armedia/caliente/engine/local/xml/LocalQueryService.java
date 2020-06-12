@@ -1,5 +1,7 @@
 package com.armedia.caliente.engine.local.xml;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -18,27 +20,79 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import javax.script.ScriptException;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
+import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
+import com.armedia.caliente.tools.datasource.DataSourceLocator;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 import com.armedia.commons.utilities.io.CloseUtils;
+import com.armedia.commons.utilities.script.JSR223Script;
 
 public class LocalQueryService extends BaseShareableLockable implements AutoCloseable {
 
 	private static final XmlInstances<LocalQueries> LOCAL_QUERIES = new XmlInstances<>(LocalQueries.class);
+
+	private static final String DEFAULT_LANGUAGE = "jexl3";
+
+	private static final Class<?>[] METHOD_ARGS = {
+		String.class
+	};
+	private static final Pattern CLASS_PARSER = Pattern
+		.compile("^((?:[\\w$&&[^\\d]][\\w$]*)(?:\\.[\\w$&&[^\\d]][\\w$]*)*)(?:::([\\w$&&[^\\d]][\\w$]*))?$");
+
+	@FunctionalInterface
+	public static interface Processor {
+		public String process(String value) throws Exception;
+	}
+
+	private static class ScriptProcessor implements Processor {
+		private final JSR223Script script;
+
+		private ScriptProcessor(String language, String script) throws ScriptException {
+			if (StringUtils.isBlank(script)) {
+				throw new IllegalArgumentException("The post-processor script may not be blank");
+			}
+			language = (StringUtils.isBlank(language) ? LocalQueryService.DEFAULT_LANGUAGE : language);
+			try {
+				this.script = new JSR223Script.Builder() //
+					.allowCompilation(true) //
+					.precompile(true) //
+					.language(language) //
+					.source(script) //
+					.build();
+			} catch (IOException e) {
+				throw new UncheckedIOException("Unexpected IOException when working in memory", e);
+			}
+		}
+
+		@Override
+		public String process(String value) throws ScriptException {
+			try {
+				return Tools.toString(this.script.eval((b) -> b.put("path", value)));
+			} catch (IOException e) {
+				throw new UncheckedIOException("Unexpected IOException when working in memory", e);
+			}
+		}
+	}
 
 	private class Search {
 		private final DataSource dataSource;
@@ -47,7 +101,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		private final String sql;
 		private final int skip;
 		private final int count;
-		private final List<LocalQueryPostProcessor> postProcessors;
+		private final List<Processor> postProcessors;
 
 		private Search(LocalQuerySearch definition) throws Exception {
 			this.dataSource = LocalQueryService.this.dataSources.get(definition.getDataSource());
@@ -70,7 +124,11 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			this.sql = definition.getSql();
 			// TODO: Perform a sanity check?
 
-			this.postProcessors = Tools.freezeCopy(definition.getPostProcessors(), true);
+			List<Processor> postProcessors = new LinkedList<>();
+			for (LocalQueryPostProcessor processorDef : definition.getPostProcessors()) {
+				postProcessors.add(buildProcessor(processorDef));
+			}
+			this.postProcessors = Tools.freezeCopy(postProcessors);
 
 			this.pathColumns = Tools.freezeCopy(definition.getPathColumns(), true);
 			if (this.pathColumns.isEmpty()) { throw new Exception("No candidate columns given"); }
@@ -136,10 +194,10 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				private String postProcess(String str) {
 					if (StringUtils.isEmpty(str)) { return str; }
 					final String orig = str;
-					for (LocalQueryPostProcessor p : Search.this.postProcessors) {
+					for (Processor p : Search.this.postProcessors) {
 						try {
 							final String prev = str;
-							str = p.postProcess(str);
+							str = p.process(str);
 							if (LocalQueryService.this.log.isTraceEnabled()) {
 								LocalQueryService.this.log.trace("Post-processed [{}] into [{}] (by {})", prev, str, p);
 							}
@@ -319,7 +377,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 					continue;
 				}
 
-				DataSource dataSource = ds.build();
+				DataSource dataSource = buildDataSource(ds);
 				if (dataSource == null) {
 					this.log.warn("DataSource [{}] failed to be built", ds.getName());
 					continue;
@@ -374,6 +432,89 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			membersMap.put(id, new Query<>("Member list", sql, LocalQueryService.HANDLER_MEMBER_LIST));
 		}
 		this.members = Tools.freezeMap(membersMap);
+	}
+
+	private void setValue(String name, String value, Map<String, String> map) {
+		value = StringUtils.strip(value);
+		if (!StringUtils.isEmpty(value)) {
+			map.put(String.format("jdbc.%s", name), StringSubstitutor.replaceSystemProperties(value));
+		}
+	}
+
+	private Map<String, String> buildSettingsMap(LocalQueryDataSource dataSourceDef) {
+		Map<String, String> settingsMap = dataSourceDef.getSettings();
+		Map<String, String> ret = new TreeMap<>();
+		for (String name : settingsMap.keySet()) {
+			String value = settingsMap.get(name);
+			if ((name != null) && (value != null)) {
+				setValue(name, value, ret);
+			}
+		}
+		return ret;
+	}
+
+	private DataSource buildDataSource(LocalQueryDataSource dataSourceDef) throws SQLException {
+		Map<String, String> settingsMap = buildSettingsMap(dataSourceDef);
+		String url = StringUtils.strip(dataSourceDef.getUrl());
+		if (StringUtils.isEmpty(url)) { throw new SQLException("The JDBC url may not be empty or null"); }
+		setValue("url", url, settingsMap);
+
+		setValue("driver", dataSourceDef.getDriver(), settingsMap);
+		setValue("user", dataSourceDef.getUser(), settingsMap);
+
+		String password = dataSourceDef.getPassword();
+		// TODO: Potentially try to decrypt the password...
+		setValue("password", password, settingsMap);
+
+		CfgTools cfg = new CfgTools(settingsMap);
+		for (DataSourceLocator locator : DataSourceLocator.getAllLocatorsFor("pooled")) {
+			final DataSourceDescriptor<?> desc;
+			try {
+				desc = locator.locateDataSource(cfg);
+			} catch (Exception ex) {
+				// This one failed...try the next one
+				if (this.log.isDebugEnabled()) {
+					this.log.warn("Failed to initialize a candidate datasource", ex);
+				}
+				continue;
+			}
+
+			// We have a winner, so return it
+			return desc.getDataSource();
+		}
+		throw new SQLException("Failed to find a suitable DataSource for the given configuration");
+	}
+
+	private Processor buildProcessor(LocalQueryPostProcessor processorDef) throws Exception {
+		final String type = processorDef.getType();
+		final String value = processorDef.getValue();
+		if (!StringUtils.equalsIgnoreCase("CLASS", type)) {
+			// If the type is not "class", then it's definitely a script
+			return new ScriptProcessor(type, value);
+		}
+
+		Processor processor = null;
+		// This is a classname
+		Matcher m = LocalQueryService.CLASS_PARSER.matcher(value);
+		if (!m.matches()) {
+			throw new IllegalArgumentException("The class specification [" + value
+				+ "] is not valid, must match this pattern: fully.qualified.className(::methodName)?");
+		}
+
+		Class<?> klass = Class.forName(m.group(1));
+		String methodName = m.group(2);
+		if (StringUtils.isBlank(methodName)) {
+			if (!Processor.class.isAssignableFrom(klass)) {
+				throw new ClassCastException("The class [" + klass.getCanonicalName() + "] does not implement "
+					+ Processor.class.getCanonicalName() + " and no method name was given, can't proceed");
+			}
+			processor = Processor.class.cast(klass.getConstructor().newInstance());
+		} else {
+			final Method method = klass.getMethod(m.group(2), LocalQueryService.METHOD_ARGS);
+			final Object o = klass.getConstructor().newInstance();
+			processor = (str) -> Tools.toString(method.invoke(o, str));
+		}
+		return processor;
 	}
 
 	public Stream<Path> searchPaths() throws Exception {

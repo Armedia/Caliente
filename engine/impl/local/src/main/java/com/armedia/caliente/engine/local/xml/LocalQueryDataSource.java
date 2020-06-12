@@ -26,14 +26,12 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
-import javax.sql.DataSource;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -45,13 +43,7 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.StringSubstitutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
-import com.armedia.caliente.tools.datasource.DataSourceLocator;
-import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -117,9 +109,6 @@ public class LocalQueryDataSource {
 		}
 
 	}
-
-	@XmlTransient
-	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@XmlElement(name = "url", required = true)
 	protected String url;
@@ -202,61 +191,11 @@ public class LocalQueryDataSource {
 		return this.settingsMap;
 	}
 
-	protected Map<String, String> buildSettingsMap() {
-		Map<String, String> ret = new TreeMap<>();
-		for (String name : this.settingsMap.keySet()) {
-			String value = this.settingsMap.get(name);
-			if ((name != null) && (value != null)) {
-				setValue(name, value, ret);
-			}
-		}
-		return ret;
-	}
-
 	public String getName() {
 		return this.name;
 	}
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	private void setValue(String name, String value, Map<String, String> map) {
-		value = StringUtils.strip(value);
-		if (!StringUtils.isEmpty(value)) {
-			map.put(String.format("jdbc.%s", name), StringSubstitutor.replaceSystemProperties(value));
-		}
-	}
-
-	DataSource build() throws SQLException {
-		Map<String, String> settingsMap = buildSettingsMap();
-		String url = StringUtils.strip(getUrl());
-		if (StringUtils.isEmpty(url)) { throw new SQLException("The JDBC url may not be empty or null"); }
-		setValue("url", url, settingsMap);
-
-		setValue("driver", getDriver(), settingsMap);
-		setValue("user", getUser(), settingsMap);
-
-		String password = getPassword();
-		// TODO: Potentially try to decrypt the password...
-		setValue("password", password, settingsMap);
-
-		CfgTools cfg = new CfgTools(settingsMap);
-		for (DataSourceLocator locator : DataSourceLocator.getAllLocatorsFor("pooled")) {
-			final DataSourceDescriptor<?> desc;
-			try {
-				desc = locator.locateDataSource(cfg);
-			} catch (Exception ex) {
-				// This one failed...try the next one
-				if (this.log.isDebugEnabled()) {
-					this.log.warn("Failed to initialize a candidate datasource", ex);
-				}
-				continue;
-			}
-
-			// We have a winner, so return it
-			return desc.getDataSource();
-		}
-		throw new SQLException("Failed to find a suitable DataSource for the given configuration");
 	}
 }

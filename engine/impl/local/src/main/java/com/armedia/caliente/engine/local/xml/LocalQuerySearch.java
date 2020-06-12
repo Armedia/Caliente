@@ -26,45 +26,21 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Stream;
 
-import javax.sql.DataSource;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.armedia.commons.utilities.CloseableIterator;
-import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.io.CloseUtils;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "localQuerySearch.t", propOrder = {
 	"sql", "skip", "count", "pathColumns", "postProcessors"
 })
 public class LocalQuerySearch {
-
-	@XmlTransient
-	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	@XmlElement(name = "sql", required = true)
 	protected String sql;
@@ -143,173 +119,4 @@ public class LocalQuerySearch {
 		return this.postProcessors;
 	}
 
-	public Stream<Path> getStream(DataSource dataSource) throws SQLException {
-		Objects.requireNonNull(dataSource, "Must provide a non-null DataSource");
-
-		final List<String> pathColumns = Tools.freezeCopy(LocalQuerySearch.this.pathColumns, true);
-		if (pathColumns.isEmpty()) { throw new SQLException("No candidate columns given"); }
-
-		Integer skip = getSkip();
-		if ((skip != null) && (skip < 0)) {
-			skip = null;
-		}
-
-		Integer count = getCount();
-		if ((count != null) && (count < 0)) {
-			count = null;
-		}
-
-		@SuppressWarnings("resource")
-		CloseableIterator<Path> it = new CloseableIterator<Path>() {
-			private final String id = getId();
-			private final List<LocalQueryPostProcessor> postProcessors = Tools
-				.freezeCopy(LocalQuerySearch.this.postProcessors, true);
-			private final String sql = getSql();
-
-			private Set<Integer> candidates = null;
-
-			private Connection c = null;
-			private Statement s = null;
-			private ResultSet rs = null;
-
-			@Override
-			protected void initialize() throws Exception {
-				try {
-					this.c = dataSource.getConnection();
-					this.c.setAutoCommit(false);
-					// Execute the query, stow the result set
-					this.s = this.c.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-					this.rs = this.s.executeQuery(this.sql);
-
-					Set<Integer> candidates = new LinkedHashSet<>();
-					ResultSetMetaData md = this.rs.getMetaData();
-
-					for (String p : pathColumns) {
-						int index = -1;
-						try {
-							index = Integer.valueOf(p);
-							if ((index < 1) || (index > md.getColumnCount())) {
-								LocalQuerySearch.this.log
-									.warn("The column index [{}] is not valid for query [{}], ignoring it", p, getId());
-								continue;
-							}
-						} catch (NumberFormatException e) {
-							// Must be a column name
-							try {
-								index = this.rs.findColumn(p);
-							} catch (SQLException ex) {
-								LocalQuerySearch.this.log.warn("No column named [{}] for query [{}], ignoring it", p,
-									getId());
-								continue;
-							}
-						}
-
-						candidates.add(index);
-					}
-
-					if (candidates.isEmpty()) {
-						throw new Exception(
-							"No valid candidate columns found - can't continue with query [" + getId() + "]");
-					}
-
-					this.candidates = Tools.freezeSet(candidates);
-				} catch (SQLException e) {
-					doClose();
-					throw e;
-				}
-			}
-
-			private String postProcess(String str) {
-				if (StringUtils.isEmpty(str)) { return str; }
-				final String orig = str;
-				for (LocalQueryPostProcessor p : this.postProcessors) {
-					try {
-						final String prev = str;
-						str = p.postProcess(str);
-						if (LocalQuerySearch.this.log.isTraceEnabled()) {
-							LocalQuerySearch.this.log.trace("Post-processed [{}] into [{}] (by {})", prev, str, p);
-						}
-					} catch (Exception e) {
-						if (LocalQuerySearch.this.log.isDebugEnabled()) {
-							LocalQuerySearch.this.log.error(
-								"Exception caught from {} post-processor for [{}] (from [{}]), returning null", p, str,
-								orig, e);
-						}
-						str = null;
-					}
-
-					if (StringUtils.isEmpty(str)) {
-						LocalQuerySearch.this.log
-							.error("Post-processing result for [{}] is null or empty, returning null", orig);
-						return null;
-					}
-				}
-				LocalQuerySearch.this.log.debug("Final result of string post-processing: [{}] -> [{}]", orig, str);
-				return str;
-			}
-
-			@Override
-			protected Result findNext() throws Exception {
-				while (this.rs.next()) {
-					for (Integer column : this.candidates) {
-						String str = this.rs.getString(column);
-						if (this.rs.wasNull() || StringUtils.isEmpty(str)) {
-							continue;
-						}
-
-						// Apply postProcessor
-						str = postProcess(str);
-
-						if (StringUtils.isEmpty(str)) {
-							// If this resulted in an empty string, we try the next column
-							continue;
-						}
-
-						// If we ended up with a non-empty string, we return it!
-						return found(Paths.get(str).normalize());
-					}
-
-					// If we get here, we found nothing, so we try the next record
-					// on the result set
-				}
-				return null;
-			}
-
-			@Override
-			protected void doClose() {
-				if (this.c != null) {
-					try {
-						try {
-							this.c.rollback();
-						} catch (SQLException e) {
-							if (LocalQuerySearch.this.log.isDebugEnabled()) {
-								LocalQuerySearch.this.log.debug("Rollback failed on connection for query [{}]", this.id,
-									e);
-							}
-						}
-						CloseUtils.closeQuietly(this.rs, this.s, this.c);
-					} finally {
-						this.rs = null;
-						this.s = null;
-						this.c = null;
-					}
-				}
-			}
-		};
-
-		// Make sure we skip all null and empty strings, and apply the conversion
-		Stream<Path> stream = it.stream() //
-			.filter(Objects::nonNull) //
-		//
-		;
-
-		if (skip != null) {
-			stream = stream.skip(skip.longValue());
-		}
-		if (count != null) {
-			stream = stream.limit(count.longValue());
-		}
-
-		return stream;
-	}
 }
