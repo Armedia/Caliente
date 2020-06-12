@@ -228,7 +228,7 @@ public class LocalQueryDataSource {
 		}
 	}
 
-	public DataSource getInstance() throws SQLException {
+	DataSource build() throws SQLException {
 		Map<String, String> settingsMap = buildSettingsMap();
 		String url = StringUtils.strip(getUrl());
 		if (StringUtils.isEmpty(url)) { throw new SQLException("The JDBC url may not be empty or null"); }

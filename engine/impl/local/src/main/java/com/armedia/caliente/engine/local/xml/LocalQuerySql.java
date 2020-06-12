@@ -65,6 +65,9 @@ public class LocalQuerySql {
 	@XmlAttribute(name = "dataSource", required = true)
 	protected String dataSource;
 
+	@XmlAttribute(name = "id", required = true)
+	protected String id;
+
 	public String getSql() {
 		return this.sql;
 	}
@@ -79,6 +82,14 @@ public class LocalQuerySql {
 
 	public void setDataSource(String value) {
 		this.dataSource = value;
+	}
+
+	public String getId() {
+		return this.id;
+	}
+
+	public void setId(String value) {
+		this.id = value;
 	}
 
 	public CheckedFunction<String, String, SQLException> getSearch(final DataSource dataSource) throws SQLException {

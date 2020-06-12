@@ -143,7 +143,7 @@ public class LocalQueryDataSourceTest {
 		lqds.setUrl(url);
 		lqds.setDriver(driver);
 
-		DataSource ds = lqds.getInstance();
+		DataSource ds = lqds.build();
 		Assertions.assertNotNull(ds);
 		try (Connection c = ds.getConnection()) {
 			Assertions.assertNotNull(c);
@@ -154,10 +154,10 @@ public class LocalQueryDataSourceTest {
 
 		lqds.setDriver("some.weird.driver.class");
 		lqds.setUrl("jdbc:weird:driver");
-		Assertions.assertThrows(SQLException.class, lqds::getInstance);
+		Assertions.assertThrows(SQLException.class, lqds::build);
 
 		lqds.setUrl(null);
-		Assertions.assertThrows(SQLException.class, lqds::getInstance);
+		Assertions.assertThrows(SQLException.class, lqds::build);
 	}
 
 	@Test

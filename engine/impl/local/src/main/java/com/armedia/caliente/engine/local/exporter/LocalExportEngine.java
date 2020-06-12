@@ -35,7 +35,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -46,6 +48,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
@@ -59,7 +62,7 @@ import com.armedia.caliente.engine.local.common.LocalSessionFactory;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.caliente.engine.local.common.LocalTranslator;
-import com.armedia.caliente.engine.local.xml.LocalQueries;
+import com.armedia.caliente.engine.local.xml.LocalQueryService;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
@@ -72,6 +75,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.StreamTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.io.CloseUtils;
 
 public class LocalExportEngine extends
 	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory, LocalExportEngineFactory> {
@@ -129,15 +133,9 @@ public class LocalExportEngine extends
 
 	private final class JDBCQuery implements LocalQuery {
 
-		private final LocalQueries queries;
-
-		private JDBCQuery(LocalQueries queries) {
-			this.queries = queries;
-		}
-
 		@Override
 		public Stream<ExportTarget> call() throws Exception {
-			return this.queries.searchPaths() //
+			return LocalExportEngine.this.localQueryService.searchPaths() //
 				.map(LocalExportEngine.this.root::makeAbsolute) //
 				.map(LocalExportEngine.this::toExportTarget) //
 			;
@@ -147,7 +145,7 @@ public class LocalExportEngine extends
 	private final LocalRoot root;
 	private final LocalVersionLayout versionLayout;
 	private final LocalVersionHistoryCache histories;
-	private LocalQueries localQueries = null;
+	private LocalQueryService localQueryService = null;
 
 	public LocalExportEngine(LocalExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
@@ -203,6 +201,16 @@ public class LocalExportEngine extends
 		}
 
 		this.histories = new LocalVersionHistoryCache(this.root, this.versionLayout);
+	}
+
+	protected final String getHistoryId(String objectId) throws Exception {
+		if (this.localQueryService == null) { return null; }
+		return this.localQueryService.getHistoryId(objectId);
+	}
+
+	protected final List<Pair<String, Path>> getHistoryMembers(String historyId) throws Exception {
+		if (this.localQueryService == null) { return Collections.emptyList(); }
+		return this.localQueryService.getHistoryMembers(historyId);
 	}
 
 	protected LocalRoot getRoot() {
@@ -272,8 +280,8 @@ public class LocalExportEngine extends
 		LocalQuery executor = null;
 		switch (mode) {
 			case JDBC:
-				LocalQueries q = LocalQueries.getInstance(path.toUri().toURL());
-				JDBCQuery jdbcQuery = new JDBCQuery(q);
+				this.localQueryService = new LocalQueryService(path.toUri().toURL());
+				JDBCQuery jdbcQuery = new JDBCQuery();
 				executor = jdbcQuery;
 				break;
 
@@ -405,6 +413,6 @@ public class LocalExportEngine extends
 
 	@Override
 	protected void cleanup() {
-		// CloseUtils.closeQuietly(this.dataSources);
+		CloseUtils.closeQuietly(this.localQueryService);
 	}
 }
