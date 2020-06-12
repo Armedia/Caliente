@@ -83,8 +83,12 @@ public class LocalQuerySql {
 
 	public CheckedFunction<String, String, SQLException> getSearch(final DataSource dataSource) throws SQLException {
 		Objects.requireNonNull(dataSource, "Must provide a non-null DataSource");
+		Objects.requireNonNull(this.sql, "Must provide a non-null SQL Query");
 		final String sql = this.sql;
 		final QueryRunner qr = new QueryRunner(dataSource);
-		return (param) -> qr.query(sql, LocalQuerySql.SINGLE_STRING);
+		return (param) -> {
+			Objects.requireNonNull(param, "Must provide a parameter value");
+			return qr.query(sql, LocalQuerySql.SINGLE_STRING, param);
+		};
 	}
 }
