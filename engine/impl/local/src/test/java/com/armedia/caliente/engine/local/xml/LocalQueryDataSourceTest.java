@@ -1,15 +1,10 @@
 package com.armedia.caliente.engine.local.xml;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.UUID;
-
-import javax.sql.DataSource;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -126,38 +121,11 @@ public class LocalQueryDataSourceTest {
 		for (int i = 0; i < 100; i++) {
 			String name = String.format("setting-%02d", i);
 			String value = String.format("value-%02d", i);
-			expected.put("jdbc." + name, value);
+			expected.put(name, value);
 			settings.put(name, value);
 		}
 
-		Assertions.assertEquals(expected, lqds.buildSettingsMap());
-	}
-
-	@Test
-	public void getInstance() throws Exception {
-		// Create a test in-memory database to which we'll attach the driver
-		final LocalQueryDataSource lqds = new LocalQueryDataSource();
-		String url = "jdbc:h2:mem:" + UUID.randomUUID().toString();
-		String driver = "org.h2.Driver";
-
-		lqds.setUrl(url);
-		lqds.setDriver(driver);
-
-		DataSource ds = lqds.build();
-		Assertions.assertNotNull(ds);
-		try (Connection c = ds.getConnection()) {
-			Assertions.assertNotNull(c);
-		}
-		if (AutoCloseable.class.isInstance(ds)) {
-			AutoCloseable.class.cast(ds).close();
-		}
-
-		lqds.setDriver("some.weird.driver.class");
-		lqds.setUrl("jdbc:weird:driver");
-		Assertions.assertThrows(SQLException.class, lqds::build);
-
-		lqds.setUrl(null);
-		Assertions.assertThrows(SQLException.class, lqds::build);
+		Assertions.assertEquals(expected, lqds.getSettings());
 	}
 
 	@Test

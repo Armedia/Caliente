@@ -69,4 +69,10 @@ public class LocalQueryPostProcessor extends BaseShareableLockable {
 		this.type = type;
 	}
 
+	@Override
+	public String toString() {
+		String value = ("CLASS".equalsIgnoreCase(this.type) ? this.value : "<script>");
+		return String.format("LocalQueryPostProcessor [type=%s, value=%s]", this.type, value);
+	}
+
 }
