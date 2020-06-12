@@ -26,6 +26,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.lang3.tuple.Pair;
 import org.easymock.EasyMock;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -461,7 +462,6 @@ public class LocalQueryServiceTest {
 		Assertions.assertThrows(SQLException.class, () -> srv.buildDataSource(lqds));
 	}
 
-	// paths-3 requires relativization
 	private void renderHistoryIds(QueryRunner qr) throws Exception {
 		qr.update(
 			"create table history ( object_id varchar(64) not null, history_id varchar(64) not null, primary key (object_id) )");
@@ -507,5 +507,72 @@ public class LocalQueryServiceTest {
 			}
 		}
 
+	}
+
+	private int renderVersionLists(QueryRunner qr) throws Exception {
+		qr.update(
+			"create table versions ( history_id int not null, version_label varchar(64) not null, path varchar(2048) not null, primary key (history_id, version_label) )");
+		List<Object[]> params = new ArrayList<>();
+		AtomicInteger counter = new AtomicInteger(0);
+		AtomicInteger historyId = new AtomicInteger(-1);
+		AtomicInteger versionNumber = new AtomicInteger(0);
+
+		final int[] offsets = {
+			0, 1, 1, 2, 2, 2, 3, 3, 3, 3
+		};
+		final boolean[] switches = {
+			true, true, false, true, false, false, true, false, false, false
+		};
+
+		loadPaths("paths-2.txt").forEach((p) -> {
+			final int pos = counter.getAndIncrement();
+			final int mod = pos % 10;
+			final int off = offsets[mod];
+			final int hid = ((pos / 10) * 4) + off;
+			historyId.set(hid);
+			if (switches[mod]) {
+				// New history ID...
+				versionNumber.set(0);
+			}
+
+			params.add(new Object[] {
+				hid, //
+				String.format("%d.0", versionNumber.incrementAndGet()), //
+				p.toString()
+			});
+		});
+		Object[][] paramsArray = params.toArray(LocalQueryServiceTest.NO_PARAMS);
+		qr.insertBatch("insert into versions (history_id, version_label, path) values (?, ?, ?)",
+			LocalQueryServiceTest.NO_HANDLER, paramsArray);
+		return historyId.get();
+	}
+
+	@Test
+	public void testVersionLists() throws Exception {
+		final LocalQueryService srv = buildEmptyService();
+		final AtomicInteger maxHistoryId = new AtomicInteger(-1);
+		try (BasicDataSource dataSource = buildDataSource((qr) -> maxHistoryId.set(renderVersionLists(qr)))) {
+			final LocalQuerySql lqs = new LocalQuerySql();
+
+			Assertions.assertThrows(NullPointerException.class, () -> srv.buildHistoryIdQuery(lqs, (str) -> null));
+			Assertions.assertThrows(NullPointerException.class,
+				() -> srv.buildHistoryIdQuery(lqs, (str) -> dataSource));
+
+			lqs.setId("garbage");
+			lqs.setDataSource("garbage");
+			lqs.setSql("select version_label, path from versions where history_id = ? order by version_label");
+
+			final Query<List<Pair<String, Path>>> q = srv.buildVersionsListQuery(lqs, (str) -> dataSource);
+
+			for (int i = 0; i < maxHistoryId.get(); i++) {
+				List<Pair<String, Path>> versions = q.run(i);
+				Assertions.assertEquals((i % 4) + 1, versions.size());
+			}
+			for (int i = 1; i <= 10; i++) {
+				List<Pair<String, Path>> versions = q.run(i + maxHistoryId.get());
+				Assertions.assertNotNull(versions);
+				Assertions.assertTrue(versions.isEmpty());
+			}
+		}
 	}
 }
