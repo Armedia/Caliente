@@ -625,7 +625,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 
 	@Override
 	public void close() {
-		shareLockedUpgradable(() -> this.closed, () -> {
+		shareLockedUpgradable(() -> !this.closed, () -> {
 			this.dataSources.values().forEach(this::close);
 			this.closed = true;
 		});
