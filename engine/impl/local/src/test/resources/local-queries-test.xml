@@ -57,7 +57,6 @@
 					return path.trim();
 				]]></post-processor>
 				<post-processor type="class">com.armedia.caliente.engine.local.exporter.LocalQueryServiceTest::processorMethod</post-processor>
-				<post-processor type="class">com.armedia.caliente.engine.local.exporter.LocalQueryServiceTest</post-processor>
 			</post-processors>
 		</search>
 
