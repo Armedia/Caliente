@@ -35,6 +35,14 @@ public final class StreamConcatenation {
 	}
 
 	/**
+	 * @see #concat(Collection)
+	 */
+	@SafeVarargs
+	public static <T> Stream<T> concat(Stream<T>... streams) {
+		return StreamConcatenation.concat(Arrays.asList(streams));
+	}
+
+	/**
 	 * Creates a lazily concatenated stream whose elements are the elements of each of the input
 	 * streams. In other words, the returned stream contains all the elements of the first input
 	 * stream followed by all the elements of the second input stream, and so on.
@@ -64,17 +72,19 @@ public final class StreamConcatenation {
 	 * @throws NullPointerException
 	 *             if the argument array or any of the input streams are {@code null}
 	 */
-	@SafeVarargs
-	public static <T> Stream<T> concat(Stream<T>... streams) {
-		return StreamConcatenation.concat(Arrays.asList(streams));
-	}
-
 	public static <T> Stream<T> concat(Collection<Stream<T>> streams) {
 		return StreamConcatenation.concatInternal(StreamConcatenation.toList(streams), Stream::spliterator,
 			ConcatSpliterator.OfRef::new, StreamSupport::stream, Stream::empty);
 	}
 
 	/**
+	 * @see #concatInt(Collection)
+	 */
+	public static IntStream concatInt(IntStream... streams) {
+		return StreamConcatenation.concatInt(Arrays.asList(streams));
+	}
+
+	/**
 	 * Creates a lazily concatenated stream whose elements are the elements of each of the input
 	 * streams. In other words, the returned stream contains all the elements of the first input
 	 * stream followed by all the elements of the second input stream, and so on.
@@ -102,50 +112,16 @@ public final class StreamConcatenation {
 	 * @throws NullPointerException
 	 *             if the argument array or any of the input streams are {@code null}
 	 */
-	public static IntStream concatInt(IntStream... streams) {
-		return StreamConcatenation.concatInt(Arrays.asList(streams));
-	}
-
 	public static IntStream concatInt(Collection<IntStream> streams) {
 		return StreamConcatenation.concatInternal(StreamConcatenation.toList(streams), IntStream::spliterator,
 			ConcatSpliterator.OfInt::new, StreamSupport::intStream, IntStream::empty);
 	}
 
 	/**
-	 * Creates a lazily concatenated stream whose elements are the elements of each of the input
-	 * streams. In other words, the returned stream contains all the elements of the first input
-	 * stream followed by all the elements of the second input stream, and so on.
-	 *
-	 * <p>
-	 * Although this method does not eagerly consume the elements of the input streams, this method
-	 * is a terminal operation for the input streams.
-	 *
-	 * <p>
-	 * The returned stream is parallel if any of the input streams is parallel.
-	 *
-	 * <p>
-	 * When the returned stream is closed, the close handlers for all the input streams are invoked.
-	 * If one of those handlers throws an exception, that exception will be rethrown after the
-	 * remaining handlers are invoked. If the remaining handlers throw exceptions, those exceptions
-	 * are added as suppressed exceptions of the first.
-	 *
-	 * <p>
-	 * If the argument array or any of the input streams are modified after being passed to this
-	 * method, the behavior of this method is undefined.
-	 *
-	 * @param streams
-	 *            the streams to be concatenated
-	 * @return the concatenation of the input streams
-	 * @throws NullPointerException
-	 *             if the argument array or any of the input streams are {@code null}
+	 * @see #concatLong(Collection)
 	 */
 	public static LongStream concatLong(LongStream... streams) {
 		return StreamConcatenation.concatLong(Arrays.asList(streams));
-	}
-
-	public static LongStream concatLong(Collection<LongStream> streams) {
-		return StreamConcatenation.concatInternal(StreamConcatenation.toList(streams), LongStream::spliterator,
-			ConcatSpliterator.OfLong::new, StreamSupport::longStream, LongStream::empty);
 	}
 
 	/**
@@ -176,10 +152,46 @@ public final class StreamConcatenation {
 	 * @throws NullPointerException
 	 *             if the argument array or any of the input streams are {@code null}
 	 */
+	public static LongStream concatLong(Collection<LongStream> streams) {
+		return StreamConcatenation.concatInternal(StreamConcatenation.toList(streams), LongStream::spliterator,
+			ConcatSpliterator.OfLong::new, StreamSupport::longStream, LongStream::empty);
+	}
+
+	/**
+	 * @see #concatDouble(Collection)
+	 */
 	public static DoubleStream concatDouble(DoubleStream... streams) {
 		return StreamConcatenation.concatDouble(Arrays.asList(streams));
 	}
 
+	/**
+	 * Creates a lazily concatenated stream whose elements are the elements of each of the input
+	 * streams. In other words, the returned stream contains all the elements of the first input
+	 * stream followed by all the elements of the second input stream, and so on.
+	 *
+	 * <p>
+	 * Although this method does not eagerly consume the elements of the input streams, this method
+	 * is a terminal operation for the input streams.
+	 *
+	 * <p>
+	 * The returned stream is parallel if any of the input streams is parallel.
+	 *
+	 * <p>
+	 * When the returned stream is closed, the close handlers for all the input streams are invoked.
+	 * If one of those handlers throws an exception, that exception will be rethrown after the
+	 * remaining handlers are invoked. If the remaining handlers throw exceptions, those exceptions
+	 * are added as suppressed exceptions of the first.
+	 *
+	 * <p>
+	 * If the argument array or any of the input streams are modified after being passed to this
+	 * method, the behavior of this method is undefined.
+	 *
+	 * @param streams
+	 *            the streams to be concatenated
+	 * @return the concatenation of the input streams
+	 * @throws NullPointerException
+	 *             if the argument array or any of the input streams are {@code null}
+	 */
 	public static DoubleStream concatDouble(Collection<DoubleStream> streams) {
 		return StreamConcatenation.concatInternal(StreamConcatenation.toList(streams), DoubleStream::spliterator,
 			ConcatSpliterator.OfDouble::new, StreamSupport::doubleStream, DoubleStream::empty);
