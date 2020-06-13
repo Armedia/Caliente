@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -554,13 +555,24 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 
 	public Stream<Path> searchPaths() throws Exception {
 		final SharedAutoLock lock = autoSharedLock();
-		Stream<Path> ret = Stream.empty();
+		List<Stream<Path>> streams = new ArrayList<>(this.searches.size());
 		for (String id : this.searches.keySet()) {
 			Search search = this.searches.get(id);
-			ret = Stream.concat(ret, search.build());
+			streams.add(search.build());
 		}
-		// Make sure we hold the read lock all the way until the streams are exhausted
-		return ret.onClose(lock::close);
+		if (streams.isEmpty()) { return Stream.empty(); }
+
+		/*
+		@SuppressWarnings("unchecked")
+		Stream<Path>[] arr = (Stream<Path>[]) LocalQueryService.NO_OBJECTS;
+		return StreamConcatenation //
+			.concat(streams.toArray(arr)) //
+		;
+		*/
+
+		return streams.get(0) //
+			.onClose(lock::close) //
+		;
 	}
 
 	public String getHistoryId(String objectId) throws Exception {
