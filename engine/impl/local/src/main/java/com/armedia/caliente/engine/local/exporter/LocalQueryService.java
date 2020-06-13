@@ -39,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
-import com.armedia.caliente.engine.local.tools.StreamConcatenation;
 import com.armedia.caliente.engine.local.xml.LocalQueries;
 import com.armedia.caliente.engine.local.xml.LocalQueryDataSource;
 import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessor;
@@ -49,6 +48,7 @@ import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.caliente.tools.datasource.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.CloseableIterator;
+import com.armedia.commons.utilities.StreamConcatenation;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
