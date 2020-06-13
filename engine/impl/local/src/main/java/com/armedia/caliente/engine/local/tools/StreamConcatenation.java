@@ -67,7 +67,6 @@ public final class StreamConcatenation {
 	@SafeVarargs
 	public static <T> Stream<T> concat(Stream<T>... streams) {
 		return StreamConcatenation.concat(Arrays.asList(streams));
-
 	}
 
 	public static <T> Stream<T> concat(Collection<Stream<T>> streams) {
