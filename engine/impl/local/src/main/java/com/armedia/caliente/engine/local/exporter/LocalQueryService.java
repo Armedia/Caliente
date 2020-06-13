@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
+import com.armedia.caliente.engine.local.tools.StreamConcatenation;
 import com.armedia.caliente.engine.local.xml.LocalQueries;
 import com.armedia.caliente.engine.local.xml.LocalQueryDataSource;
 import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessor;
@@ -284,10 +285,10 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			;
 
 			if (this.skip > 0) {
-				// stream = stream.skip(this.skip);
+				stream = stream.skip(this.skip);
 			}
 			if (this.count >= 0) {
-				// stream = stream.limit(this.count);
+				stream = stream.limit(this.count);
 			}
 
 			return stream;
@@ -562,15 +563,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 		if (streams.isEmpty()) { return Stream.empty(); }
 
-		/*
-		@SuppressWarnings("unchecked")
-		Stream<Path>[] arr = (Stream<Path>[]) LocalQueryService.NO_OBJECTS;
 		return StreamConcatenation //
-			.concat(streams.toArray(arr)) //
-		;
-		*/
-
-		return streams.get(0) //
+			.concat(streams) //
 			.onClose(lock::close) //
 		;
 	}
