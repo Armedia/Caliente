@@ -46,10 +46,10 @@ public class LocalQuerySearch {
 	protected String sql;
 
 	@XmlElement(name = "skip", required = false)
-	protected Integer skip = 0;
+	protected Integer skip;
 
 	@XmlElement(name = "count", required = false)
-	protected Integer count = 0;
+	protected Integer count;
 
 	@XmlElementWrapper(name = "path-columns", required = true)
 	@XmlElement(name = "path-column", required = true)
