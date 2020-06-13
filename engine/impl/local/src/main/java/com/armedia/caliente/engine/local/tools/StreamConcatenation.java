@@ -1,7 +1,11 @@
 package com.armedia.caliente.engine.local.tools;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -10,16 +14,14 @@ import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
-import java.util.function.IntFunction;
 import java.util.function.LongConsumer;
+import java.util.function.Supplier;
 import java.util.stream.BaseStream;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-
-import com.armedia.commons.utilities.ArrayIterator;
 
 /**
  * Utility methods for concatenating streams. Taken from <a href=
@@ -63,13 +65,14 @@ public final class StreamConcatenation {
 	 *             if the argument array or any of the input streams are {@code null}
 	 */
 	@SafeVarargs
-	@SuppressWarnings({
-		"unchecked"
-	}) // TODO: Explain why this is ok.
-	public static <T> Stream<T> concat(Stream<? extends T>... streams) {
-		return StreamConcatenation.concatInternal((Stream<T>[]) streams,
-			size -> (Spliterator<T>[]) new Spliterator<?>[size], Stream::spliterator, ConcatSpliterator.OfRef::new,
-			StreamSupport::stream);
+	public static <T> Stream<T> concat(Stream<T>... streams) {
+		return StreamConcatenation.concat(Arrays.asList(streams));
+
+	}
+
+	public static <T> Stream<T> concat(Collection<Stream<T>> streams) {
+		return StreamConcatenation.concatInternal(StreamConcatenation.toList(streams), Stream::spliterator,
+			ConcatSpliterator.OfRef::new, StreamSupport::stream, Stream::empty);
 	}
 
 	/**
@@ -100,9 +103,13 @@ public final class StreamConcatenation {
 	 * @throws NullPointerException
 	 *             if the argument array or any of the input streams are {@code null}
 	 */
-	public static IntStream concat(IntStream... streams) {
-		return StreamConcatenation.concatInternal(streams, Spliterator.OfInt[]::new, IntStream::spliterator,
-			ConcatSpliterator.OfInt::new, StreamSupport::intStream);
+	public static IntStream concatInt(IntStream... streams) {
+		return StreamConcatenation.concatInt(Arrays.asList(streams));
+	}
+
+	public static IntStream concatInt(Collection<IntStream> streams) {
+		return StreamConcatenation.concatInternal(StreamConcatenation.toList(streams), IntStream::spliterator,
+			ConcatSpliterator.OfInt::new, StreamSupport::intStream, IntStream::empty);
 	}
 
 	/**
@@ -133,9 +140,13 @@ public final class StreamConcatenation {
 	 * @throws NullPointerException
 	 *             if the argument array or any of the input streams are {@code null}
 	 */
-	public static LongStream concat(LongStream... streams) {
-		return StreamConcatenation.concatInternal(streams, Spliterator.OfLong[]::new, LongStream::spliterator,
-			ConcatSpliterator.OfLong::new, StreamSupport::longStream);
+	public static LongStream concatLong(LongStream... streams) {
+		return StreamConcatenation.concatLong(Arrays.asList(streams));
+	}
+
+	public static LongStream concatLong(Collection<LongStream> streams) {
+		return StreamConcatenation.concatInternal(StreamConcatenation.toList(streams), LongStream::spliterator,
+			ConcatSpliterator.OfLong::new, StreamSupport::longStream, LongStream::empty);
 	}
 
 	/**
@@ -166,37 +177,56 @@ public final class StreamConcatenation {
 	 * @throws NullPointerException
 	 *             if the argument array or any of the input streams are {@code null}
 	 */
-	public static DoubleStream concat(DoubleStream... streams) {
-		return StreamConcatenation.concatInternal(streams, Spliterator.OfDouble[]::new, DoubleStream::spliterator,
-			ConcatSpliterator.OfDouble::new, StreamSupport::doubleStream);
+	public static DoubleStream concatDouble(DoubleStream... streams) {
+		return StreamConcatenation.concatDouble(Arrays.asList(streams));
+	}
+
+	public static DoubleStream concatDouble(Collection<DoubleStream> streams) {
+		return StreamConcatenation.concatInternal(StreamConcatenation.toList(streams), DoubleStream::spliterator,
+			ConcatSpliterator.OfDouble::new, StreamSupport::doubleStream, DoubleStream::empty);
+	}
+
+	private static <T, SPLITERATOR extends Spliterator<T>, STREAM extends BaseStream<T, STREAM>> List<STREAM> toList(
+		Collection<STREAM> c) {
+		if (c == null) { return null; }
+		return new ArrayList<>(c);
 	}
 
 	// The generics and function objects are ugly, but this method lets us reuse
 	// the same logic in all the public concat(...) methods.
-	private static <T, T_SPLITR extends Spliterator<T>, T_STREAM extends BaseStream<T, T_STREAM>> T_STREAM concatInternal(
-		T_STREAM[] streams, IntFunction<T_SPLITR[]> arrayFunction, Function<T_STREAM, T_SPLITR> spliteratorFunction,
-		Function<T_SPLITR[], T_SPLITR> concatFunction, BiFunction<T_SPLITR, Boolean, T_STREAM> streamFunction) {
-		T_SPLITR[] spliterators = arrayFunction.apply(streams.length);
+	private static <T, SPLITERATOR extends Spliterator<T>, STREAM extends BaseStream<T, STREAM>> STREAM concatInternal(
+		List<STREAM> streams, //
+		Function<STREAM, SPLITERATOR> spliteratorFunction, //
+		Function<List<SPLITERATOR>, SPLITERATOR> concatFunction, //
+		BiFunction<SPLITERATOR, Boolean, STREAM> streamFunction, //
+		Supplier<STREAM> empty) {
+
+		// First, some basic sanity checks
+		if (streams == null) { return empty.get(); }
+		List<STREAM> list = new ArrayList<>(streams);
+		list.removeIf(Objects::isNull);
+		if (list.isEmpty()) { return empty.get(); }
+
+		List<SPLITERATOR> spliterators = new ArrayList<>(streams.size());
 		boolean parallel = false;
-		for (int i = 0; i < streams.length; i++) {
-			T_STREAM inStream = streams[i];
-			T_SPLITR inSpliterator = spliteratorFunction.apply(inStream);
-			spliterators[i] = inSpliterator;
+		for (STREAM inStream : streams) {
+			SPLITERATOR inSpliterator = spliteratorFunction.apply(inStream);
+			spliterators.add(inSpliterator);
 			parallel = parallel || inStream.isParallel();
 		}
-		T_SPLITR outSpliterator = concatFunction.apply(spliterators);
-		T_STREAM outStream = streamFunction.apply(outSpliterator, parallel);
+		SPLITERATOR outSpliterator = concatFunction.apply(spliterators);
+		STREAM outStream = streamFunction.apply(outSpliterator, parallel);
 		return outStream.onClose(new ComposedClose(streams));
 	}
 
-	abstract static class ConcatSpliterator<T, T_SPLITR extends Spliterator<T>> implements Spliterator<T> {
+	abstract static class ConcatSpliterator<T, SPLITERATOR extends Spliterator<T>> implements Spliterator<T> {
 
-		final T_SPLITR[] spliterators;
+		final List<SPLITERATOR> spliterators;
 		int low; // increases only after trySplit()
 		int cursor; // increases after iteration or trySplit()
 		final int high;
 
-		ConcatSpliterator(T_SPLITR[] spliterators, int fromIndex, int toIndex) {
+		ConcatSpliterator(List<SPLITERATOR> spliterators, int fromIndex, int toIndex) {
 			this.spliterators = spliterators;
 			this.low = this.cursor = fromIndex;
 			this.high = toIndex;
@@ -206,10 +236,10 @@ public final class StreamConcatenation {
 		// implementation in all subclasses.
 
 		// invokes spliterator.trySplit() on the argument
-		abstract T_SPLITR invokeTrySplit(T_SPLITR spliterator);
+		abstract SPLITERATOR invokeTrySplit(SPLITERATOR spliterator);
 
 		// invokes our constructor with the same array but modified bounds
-		abstract T_SPLITR slice(int fromIndex, int toIndex);
+		abstract SPLITERATOR slice(int fromIndex, int toIndex);
 
 		@Override
 		public int characteristics() {
@@ -220,7 +250,7 @@ public final class StreamConcatenation {
 			}
 			if (i == (this.high - 1)) {
 				// note for getComparator(): this is the only time we might be SORTED
-				return this.spliterators[i].characteristics();
+				return this.spliterators.get(i).characteristics();
 			}
 			//
 			// DISTINCT and SORTED are *not* safe to inherit. Imagine our input
@@ -241,27 +271,24 @@ public final class StreamConcatenation {
 			int characteristics = Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.NONNULL
 				| Spliterator.IMMUTABLE | Spliterator.CONCURRENT;
 			long size = 0;
-			do {
-				Spliterator<T> spliterator = this.spliterators[i];
-				characteristics &= spliterator.characteristics();
+			for (SPLITERATOR s : this.spliterators.subList(this.cursor, this.high)) {
+				characteristics &= s.characteristics();
 				if ((characteristics & Spliterator.SIZED) == Spliterator.SIZED) {
-					size += spliterator.estimateSize();
+					size += s.estimateSize();
 					if (size < 0) { // overflow
 						characteristics &= ~(Spliterator.SIZED | Spliterator.SUBSIZED);
 					}
 				}
-			} while (++i < this.high);
+			}
 			return characteristics;
 		}
 
 		@Override
 		public long estimateSize() {
 			long size = 0;
-			for (int i = this.cursor; i < this.high; i++) {
-				size += this.spliterators[i].estimateSize();
-				if (size < 0) { // overflow
-					return Long.MAX_VALUE;
-				}
+			for (SPLITERATOR s : this.spliterators.subList(this.cursor, this.high)) {
+				size += s.estimateSize();
+				if (size < 0) { return Long.MAX_VALUE; }
 			}
 			return size;
 		}
@@ -269,12 +296,9 @@ public final class StreamConcatenation {
 		@Override
 		public void forEachRemaining(Consumer<? super T> action) {
 			Objects.requireNonNull(action);
-			int i = this.cursor;
-			if (i < this.high) {
-				do {
-					this.spliterators[i].forEachRemaining(action);
-				} while (++i < this.high);
-				this.cursor = this.high;
+			for (SPLITERATOR s : this.spliterators.subList(this.cursor, this.high)) {
+				s.forEachRemaining(action);
+				this.cursor++;
 			}
 		}
 
@@ -283,7 +307,7 @@ public final class StreamConcatenation {
 			int i = this.low; // like characteristics()
 			if (i == (this.high - 1)) {
 				// this is the only time we might be SORTED; see characteristics()
-				return this.spliterators[i].getComparator();
+				return this.spliterators.get(i).getComparator();
 			}
 			throw new IllegalStateException();
 		}
@@ -291,21 +315,23 @@ public final class StreamConcatenation {
 		@Override
 		public boolean tryAdvance(Consumer<? super T> action) {
 			Objects.requireNonNull(action);
-			int i = this.cursor;
-			if (i < this.high) {
-				do {
-					if (this.spliterators[i].tryAdvance(action)) {
-						this.cursor = i;
+			if (this.cursor < this.high) {
+				int i = 0;
+				for (SPLITERATOR s : this.spliterators.subList(this.cursor, this.high)) {
+					i++;
+					if (s.tryAdvance(action)) {
+						// Mark the current position
+						this.cursor += i;
 						return true;
 					}
-				} while (++i < this.high);
+				}
 				this.cursor = this.high;
 			}
 			return false;
 		}
 
 		@Override
-		public T_SPLITR trySplit() {
+		public SPLITERATOR trySplit() {
 			//
 			// TODO(perf): Should we split differently when we're SIZED?
 			//
@@ -317,20 +343,20 @@ public final class StreamConcatenation {
 			//
 			int i = this.cursor;
 			if (i >= this.high) { return null; }
-			if (i == (this.high - 1)) { return invokeTrySplit(this.spliterators[i]); }
+			if (i == (this.high - 1)) { return invokeTrySplit(this.spliterators.get(i)); }
 			int mid = (i + this.high) >>> 1;
 			this.low = this.cursor = mid;
-			if (mid == (i + 1)) { return this.spliterators[i]; }
+			if (mid == (i + 1)) { return this.spliterators.get(i); }
 			return slice(i, mid);
 		}
 
 		static final class OfRef<T> extends ConcatSpliterator<T, Spliterator<T>> {
 
-			OfRef(Spliterator<T>[] spliterators) {
-				super(spliterators, 0, spliterators.length);
+			OfRef(List<Spliterator<T>> spliterators) {
+				super(spliterators, 0, spliterators.size());
 			}
 
-			OfRef(Spliterator<T>[] spliterators, int fromIndex, int toIndex) {
+			OfRef(List<Spliterator<T>> spliterators, int fromIndex, int toIndex) {
 				super(spliterators, fromIndex, toIndex);
 			}
 
@@ -345,34 +371,30 @@ public final class StreamConcatenation {
 			}
 		}
 
-		abstract static class OfPrimitive<T, T_CONS, T_SPLITR extends Spliterator.OfPrimitive<T, T_CONS, T_SPLITR>>
-			extends ConcatSpliterator<T, T_SPLITR> implements Spliterator.OfPrimitive<T, T_CONS, T_SPLITR> {
+		abstract static class OfPrimitive<VALUE, CONSUMER, SPLITERATOR extends Spliterator.OfPrimitive<VALUE, CONSUMER, SPLITERATOR>>
+			extends ConcatSpliterator<VALUE, SPLITERATOR>
+			implements Spliterator.OfPrimitive<VALUE, CONSUMER, SPLITERATOR> {
 
-			OfPrimitive(T_SPLITR[] spliterators, int fromIndex, int toIndex) {
+			OfPrimitive(List<SPLITERATOR> spliterators, int fromIndex, int toIndex) {
 				super(spliterators, fromIndex, toIndex);
 			}
 
-			// TODO: Is there a good way to share this logic with the base class?
-
 			@Override
-			public void forEachRemaining(T_CONS action) {
+			public void forEachRemaining(CONSUMER action) {
 				Objects.requireNonNull(action);
-				int i = this.cursor;
-				if (i < this.high) {
-					do {
-						this.spliterators[i].forEachRemaining(action);
-					} while (++i < this.high);
-					this.cursor = this.high;
+				for (SPLITERATOR s : this.spliterators.subList(this.cursor, this.high)) {
+					s.forEachRemaining(action);
+					this.cursor++;
 				}
 			}
 
 			@Override
-			public boolean tryAdvance(T_CONS action) {
+			public boolean tryAdvance(CONSUMER action) {
 				Objects.requireNonNull(action);
 				int i = this.cursor;
 				if (i < this.high) {
 					do {
-						if (this.spliterators[i].tryAdvance(action)) {
+						if (this.spliterators.get(i).tryAdvance(action)) {
 							this.cursor = i;
 							return true;
 						}
@@ -386,11 +408,11 @@ public final class StreamConcatenation {
 		static final class OfInt extends ConcatSpliterator.OfPrimitive<Integer, IntConsumer, Spliterator.OfInt>
 			implements Spliterator.OfInt {
 
-			OfInt(Spliterator.OfInt[] spliterators) {
-				super(spliterators, 0, spliterators.length);
+			OfInt(List<Spliterator.OfInt> spliterators) {
+				super(spliterators, 0, spliterators.size());
 			}
 
-			OfInt(Spliterator.OfInt[] spliterators, int fromIndex, int toIndex) {
+			OfInt(List<Spliterator.OfInt> spliterators, int fromIndex, int toIndex) {
 				super(spliterators, fromIndex, toIndex);
 			}
 
@@ -408,11 +430,11 @@ public final class StreamConcatenation {
 		static final class OfLong extends ConcatSpliterator.OfPrimitive<Long, LongConsumer, Spliterator.OfLong>
 			implements Spliterator.OfLong {
 
-			OfLong(Spliterator.OfLong[] spliterators) {
-				super(spliterators, 0, spliterators.length);
+			OfLong(List<Spliterator.OfLong> spliterators) {
+				super(spliterators, 0, spliterators.size());
 			}
 
-			OfLong(Spliterator.OfLong[] spliterators, int fromIndex, int toIndex) {
+			OfLong(List<Spliterator.OfLong> spliterators, int fromIndex, int toIndex) {
 				super(spliterators, fromIndex, toIndex);
 			}
 
@@ -430,11 +452,11 @@ public final class StreamConcatenation {
 		static final class OfDouble extends ConcatSpliterator.OfPrimitive<Double, DoubleConsumer, Spliterator.OfDouble>
 			implements Spliterator.OfDouble {
 
-			OfDouble(Spliterator.OfDouble[] spliterators) {
-				super(spliterators, 0, spliterators.length);
+			OfDouble(List<Spliterator.OfDouble> spliterators) {
+				super(spliterators, 0, spliterators.size());
 			}
 
-			OfDouble(Spliterator.OfDouble[] spliterators, int fromIndex, int toIndex) {
+			OfDouble(List<Spliterator.OfDouble> spliterators, int fromIndex, int toIndex) {
 				super(spliterators, fromIndex, toIndex);
 			}
 
@@ -451,15 +473,15 @@ public final class StreamConcatenation {
 	}
 
 	static final class ComposedClose implements Runnable {
-		final BaseStream<?, ?>[] streams;
+		final Collection<? extends BaseStream<?, ?>> streams;
 
-		ComposedClose(BaseStream<?, ?>[] streams) {
+		ComposedClose(Collection<? extends BaseStream<?, ?>> streams) {
 			this.streams = streams;
 		}
 
 		@Override
 		public void run() {
-			Iterator<BaseStream<?, ?>> it = new ArrayIterator<>(this.streams);
+			Iterator<? extends BaseStream<?, ?>> it = this.streams.iterator();
 			while (it.hasNext()) {
 				try {
 					it.next().close();
