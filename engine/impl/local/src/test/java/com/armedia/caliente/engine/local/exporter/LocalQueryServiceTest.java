@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -499,7 +500,7 @@ public class LocalQueryServiceTest {
 
 			final Query<String> q = srv.buildHistoryIdQuery(lqs, (str) -> dataSource);
 
-			loadPaths("paths-1.txt").forEach((p) -> {
+			loadPaths("paths-2.txt").forEach((p) -> {
 				try {
 					Assertions.assertEquals(DigestUtils.md5Hex(p.toString()), q.run(LocalCommon.calculateId(p)),
 						"Failed while checking [" + p + "]");
@@ -649,20 +650,26 @@ public class LocalQueryServiceTest {
 			final AtomicReference<String> firstHistory = new AtomicReference<>();
 			final AtomicReference<String> lastHistory = new AtomicReference<>();
 
-			srv.searchPaths().forEach((p) -> {
-				count.incrementAndGet();
-				final String objectId = LocalCommon.calculateId(p);
-				try {
-					final String historyId = srv.getHistoryId(objectId);
-					lastHistory.set(historyId);
-					firstHistory.compareAndSet(null, historyId);
-					List<Pair<String, Path>> versions = srv.getVersionList(historyId);
-					final int hid = Integer.valueOf(historyId, 16);
-					// Assertions.assertEquals((hid % 4) + 1, versions.size());
-				} catch (Exception e) {
-					Assertions.fail("Failed to get the history ID for [" + p + "] (" + objectId + ")");
-				}
-			});
+			try (Stream<Path> stream = srv.searchPaths()) {
+				stream.forEach((p) -> {
+					count.incrementAndGet();
+					final String objectId = LocalCommon.calculateId(p);
+					try {
+						final String historyId = srv.getHistoryId(objectId);
+						lastHistory.set(historyId);
+						firstHistory.compareAndSet(null, historyId);
+						List<Pair<String, Path>> versions = srv.getVersionList(historyId);
+						final int hid = Integer.valueOf(historyId, 16);
+						int expected = (hid % 4) + 1;
+						if (Objects.equals(historyId, historyIdLimits.getRight())) {
+							expected = 1;
+						}
+						Assertions.assertEquals(expected, versions.size(), "Mismatch with history " + historyId);
+					} catch (Exception e) {
+						Assertions.fail("Failed to get the history ID for [" + p + "] (" + objectId + ")");
+					}
+				});
+			}
 
 			Assertions.assertEquals(records, count.get());
 			Assertions.assertEquals(historyIdLimits.getLeft(), firstHistory.get());
