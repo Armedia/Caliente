@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -159,24 +161,28 @@ public class LocalQueryServiceTest {
 	}
 
 	@SafeVarargs
-	private final BasicDataSource buildDataSource(CheckedConsumer<QueryRunner, ? extends Exception>... initializers)
-		throws Exception {
+	private final BasicDataSource buildDataSource(String name,
+		CheckedConsumer<QueryRunner, ? extends Exception>... initializers) throws Exception {
 		BasicDataSource bds = new BasicDataSource();
-		bds.setUrl("jdbc:h2:mem:testDataSource-" + UUID.randomUUID().toString());
+		if (name == null) {
+			name = "testDataSource-" + UUID.randomUUID().toString();
+		}
+		bds.setUrl("jdbc:h2:mem:" + name);
 		bds.setDriverClassName("org.h2.Driver");
 
 		if (initializers.length > 0) {
 			final QueryRunner qr = new QueryRunner(bds);
-			try (Connection c = bds.getConnection()) {
-				c.setAutoCommit(false);
-				for (CheckedConsumer<QueryRunner, ? extends Exception> i : initializers) {
-					i.accept(qr);
-					c.commit();
-				}
-				c.setAutoCommit(true);
+			for (CheckedConsumer<QueryRunner, ? extends Exception> i : initializers) {
+				i.accept(qr);
 			}
 		}
 		return bds;
+	}
+
+	@SafeVarargs
+	private final BasicDataSource buildDataSource(CheckedConsumer<QueryRunner, ? extends Exception>... initializers)
+		throws Exception {
+		return buildDataSource(null, initializers);
 	}
 
 	private Stream<Path> loadPaths(String resource) throws IOException {
@@ -466,7 +472,7 @@ public class LocalQueryServiceTest {
 		qr.update(
 			"create table history ( object_id varchar(64) not null, history_id varchar(64) not null, primary key (object_id) )");
 		List<Object[]> params = new ArrayList<>();
-		loadPaths("paths-1.txt").forEach((p) -> {
+		loadPaths("paths-2.txt").forEach((p) -> {
 			params.add(new String[] {
 				LocalCommon.calculateId(p), DigestUtils.md5Hex(p.toString())
 			});
@@ -573,6 +579,94 @@ public class LocalQueryServiceTest {
 				Assertions.assertNotNull(versions);
 				Assertions.assertTrue(versions.isEmpty());
 			}
+		}
+	}
+
+	private int renderXmlDB(QueryRunner qr) throws Exception {
+		qr.update(
+			"create table fsobject ( object_id varchar(64) not null, path varchar(2048) not null, history_id varchar(64) not null, version_label varchar(64) not null, primary key (object_id), unique index (path), unique index (history_id, version_label) )");
+		List<Object[]> params = new ArrayList<>();
+		AtomicInteger counter = new AtomicInteger(0);
+		AtomicInteger historyId = new AtomicInteger(-1);
+		AtomicInteger versionNumber = new AtomicInteger(0);
+
+		final int[] offsets = {
+			0, 1, 1, 2, 2, 2, 3, 3, 3, 3
+		};
+		final boolean[] switches = {
+			true, true, false, true, false, false, true, false, false, false
+		};
+
+		loadPaths("paths-2.txt").forEach((p) -> {
+			final int pos = counter.getAndIncrement();
+			final int mod = pos % 10;
+			final int off = offsets[mod];
+			final int hid = ((pos / 10) * 4) + off;
+			historyId.set(hid);
+			if (switches[mod]) {
+				// New history ID...
+				versionNumber.set(0);
+			}
+
+			params.add(new Object[] {
+				LocalCommon.calculateId(p), //
+				p.toString(), //
+				String.format("%08x", hid), //
+				String.format("%d.0", versionNumber.incrementAndGet()) //
+			});
+		});
+		Object[][] paramsArray = params.toArray(LocalQueryServiceTest.NO_PARAMS);
+		qr.insertBatch("insert into fsobject (object_id, path, history_id, version_label) values (?, ?, ?, ?)",
+			LocalQueryServiceTest.NO_HANDLER, paramsArray);
+		return historyId.get();
+	}
+
+	public static String processorMethod(String str) {
+		Assertions.assertNotNull(str);
+		return str;
+	}
+
+	@Test
+	public void testXml() throws Exception {
+		final URL url = Thread.currentThread().getContextClassLoader().getResource("local-queries-test.xml");
+		Assertions.assertNotNull(url);
+		try (LocalQueryService srv = new LocalQueryService(url)) {
+			final QueryRunner qr = new QueryRunner(srv.getDataSource("xmlds"));
+			renderXmlDB(qr);
+
+			final int records = qr.query("select count(*) from fsobject", (rs) -> {
+				Assertions.assertTrue(rs.next());
+				return Integer.valueOf(rs.getString(1));
+			});
+
+			final Pair<String, String> historyIdLimits = qr
+				.query("select min(history_id), max(history_id) from fsobject", (rs) -> {
+					Assertions.assertTrue(rs.next());
+					return Pair.of(rs.getString(1), rs.getString(2));
+				});
+
+			final AtomicInteger count = new AtomicInteger();
+			final AtomicReference<String> firstHistory = new AtomicReference<>();
+			final AtomicReference<String> lastHistory = new AtomicReference<>();
+
+			srv.searchPaths().forEach((p) -> {
+				count.incrementAndGet();
+				final String objectId = LocalCommon.calculateId(p);
+				try {
+					final String historyId = srv.getHistoryId(objectId);
+					lastHistory.set(historyId);
+					firstHistory.compareAndSet(null, historyId);
+					List<Pair<String, Path>> versions = srv.getVersionList(historyId);
+					final int hid = Integer.valueOf(historyId, 16);
+					// Assertions.assertEquals((hid % 4) + 1, versions.size());
+				} catch (Exception e) {
+					Assertions.fail("Failed to get the history ID for [" + p + "] (" + objectId + ")");
+				}
+			});
+
+			Assertions.assertEquals(records, count.get());
+			Assertions.assertEquals(historyIdLimits.getLeft(), firstHistory.get());
+			Assertions.assertEquals(historyIdLimits.getRight(), lastHistory.get());
 		}
 	}
 }

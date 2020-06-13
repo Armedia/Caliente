@@ -209,7 +209,7 @@ public class LocalExportEngine extends
 
 	protected final List<Pair<String, Path>> getHistoryMembers(String historyId) throws Exception {
 		if (this.localQueryService == null) { return Collections.emptyList(); }
-		return this.localQueryService.getHistoryMembers(historyId);
+		return this.localQueryService.getVersionList(historyId);
 	}
 
 	protected LocalRoot getRoot() {

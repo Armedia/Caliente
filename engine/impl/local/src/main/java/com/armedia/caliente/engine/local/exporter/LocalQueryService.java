@@ -283,10 +283,10 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			;
 
 			if (this.skip > 0) {
-				stream = stream.skip(this.skip);
+				// stream = stream.skip(this.skip);
 			}
 			if (this.count >= 0) {
-				stream = stream.limit(this.count);
+				// stream = stream.limit(this.count);
 			}
 
 			return stream;
@@ -430,10 +430,10 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		this.history = Tools.freezeMap(historyMap);
 
 		Map<String, Query<List<Pair<String, Path>>>> membersMap = new LinkedHashMap<>();
-		for (LocalQuerySql sql : queries.getHistoryIdQueries()) {
+		for (LocalQuerySql sql : queries.getVersionListQueries()) {
 			String id = sql.getId();
 			if (StringUtils.isEmpty(id)) {
-				this.log.warn("Empty ID found for a historyId query - can't use it!");
+				this.log.warn("Empty ID found for a versionList query - can't use it!");
 				continue;
 			}
 
@@ -447,6 +447,10 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		if (!StringUtils.isEmpty(value)) {
 			map.put(String.format("jdbc.%s", name), StringSubstitutor.replaceSystemProperties(value));
 		}
+	}
+
+	protected DataSource getDataSource(String dataSource) {
+		return this.dataSources.get(dataSource);
 	}
 
 	protected Map<String, String> buildSettingsMap(LocalQueryDataSource dataSourceDef) {
@@ -576,7 +580,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
-	public List<Pair<String, Path>> getHistoryMembers(String historyId) throws Exception {
+	public List<Pair<String, Path>> getVersionList(String historyId) throws Exception {
 		try (SharedAutoLock lock = autoSharedLock()) {
 			for (String id : this.members.keySet()) {
 				Query<List<Pair<String, Path>>> q = this.members.get(id);
