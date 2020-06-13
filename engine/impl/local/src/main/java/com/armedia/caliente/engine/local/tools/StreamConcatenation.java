@@ -3,6 +3,7 @@ package com.armedia.caliente.engine.local.tools;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -199,8 +200,10 @@ public final class StreamConcatenation {
 
 	private static <T, SPLITERATOR extends Spliterator<T>, STREAM extends BaseStream<T, STREAM>> List<STREAM> toList(
 		Collection<STREAM> c) {
-		if (c == null) { return null; }
-		return new ArrayList<>(c);
+		if (c == null) { return Collections.emptyList(); }
+		List<STREAM> l = new ArrayList<>(c);
+		l.removeIf(Objects::isNull);
+		return l;
 	}
 
 	// The generics and function objects are ugly, but this method lets us reuse
@@ -211,12 +214,6 @@ public final class StreamConcatenation {
 		Function<List<SPLITERATOR>, SPLITERATOR> concatFunction, //
 		BiFunction<SPLITERATOR, Boolean, STREAM> streamFunction, //
 		Supplier<STREAM> empty) {
-
-		// First, some basic sanity checks
-		if (streams == null) { return empty.get(); }
-		List<STREAM> list = new ArrayList<>(streams);
-		list.removeIf(Objects::isNull);
-		if (list.isEmpty()) { return empty.get(); }
 
 		List<SPLITERATOR> spliterators = new ArrayList<>(streams.size());
 		boolean parallel = false;
@@ -282,7 +279,7 @@ public final class StreamConcatenation {
 			int characteristics = Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.NONNULL
 				| Spliterator.IMMUTABLE | Spliterator.CONCURRENT;
 			long size = 0;
-			for (SPLITERATOR s : this.spliterators.subList(this.cursor, this.high)) {
+			for (SPLITERATOR s : this.spliterators.subList(this.low, this.high)) {
 				characteristics &= s.characteristics();
 				if ((characteristics & Spliterator.SIZED) == Spliterator.SIZED) {
 					size += s.estimateSize();
@@ -309,8 +306,8 @@ public final class StreamConcatenation {
 			Objects.requireNonNull(action);
 			for (SPLITERATOR s : this.spliterators.subList(this.cursor, this.high)) {
 				s.forEachRemaining(action);
-				this.cursor++;
 			}
+			this.cursor = this.high;
 		}
 
 		@Override
@@ -327,14 +324,12 @@ public final class StreamConcatenation {
 		public boolean tryAdvance(Consumer<? super T> action) {
 			Objects.requireNonNull(action);
 			if (this.cursor < this.high) {
-				int i = 0;
 				for (SPLITERATOR s : this.spliterators.subList(this.cursor, this.high)) {
-					i++;
 					if (s.tryAdvance(action)) {
 						// Mark the current position
-						this.cursor += i;
 						return true;
 					}
+					this.cursor++;
 				}
 				this.cursor = this.high;
 			}
