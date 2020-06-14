@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -146,8 +145,6 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 
 		public Stream<Path> build() {
-			final AtomicBoolean resultSetSkipped = new AtomicBoolean(false);
-
 			@SuppressWarnings("resource")
 			CloseableIterator<Path> it = new CloseableIterator<Path>() {
 
@@ -204,17 +201,27 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 
 						if (Search.this.skip > 0) {
 							boolean skipped = false;
+							boolean callFailed = false;
 							try {
-								skipped = this.rs.relative(Search.this.skip + 1);
-								resultSetSkipped.set(true);
+								skipped = this.rs.relative(Search.this.skip);
 							} catch (SQLFeatureNotSupportedException e) {
-								// Can't skip here, must skip on the stream...
+								// Can't skip in bulk, must do it manually
+								callFailed = true;
 							}
 
-							// if the relative() call succeeded, but we didn't land on a row,
-							// then this iterator is dead at birth
-							if (resultSetSkipped.get() && !skipped) {
-								// We're already past the end, so we signal a failed iterator
+							if (callFailed) {
+								// Assume we'll be OK...
+								skipped = true;
+								for (int i = 0; i < Search.this.skip; i++) {
+									// If we run past the edge, we short-circuit
+									if (!this.rs.next()) {
+										skipped = false;
+										break;
+									}
+								}
+							}
+
+							if (!skipped) {
 								doClose();
 								return false;
 							}
@@ -312,10 +319,6 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				.filter(Objects::nonNull) //
 			//
 			;
-
-			if (!resultSetSkipped.get() && (this.skip > 0)) {
-				stream = stream.skip(this.skip);
-			}
 
 			if (this.count >= 0) {
 				stream = stream.limit(this.count);
