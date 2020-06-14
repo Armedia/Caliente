@@ -157,7 +157,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				private Set<Integer> candidates = null;
 
 				@Override
-				protected boolean initialize() {
+				protected boolean initialize() throws SQLException {
 					try {
 						this.c = Search.this.dataSource.getConnection();
 						this.c.setAutoCommit(false);
@@ -197,7 +197,9 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 								"No valid candidate columns found - can't continue with search query [{}]",
 								Search.this.id);
 							doClose();
-							return false;
+							throw new SQLException(String.format(
+								"No valid candidate columns found - can't continue with search query [%s]",
+								Search.this.id));
 						}
 
 						if (Search.this.skip > 0) {
@@ -221,9 +223,9 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 						this.candidates = Tools.freezeSet(candidates);
 						return true;
 					} catch (SQLException e) {
-						doClose();
 						LocalQueryService.this.log.error("Failed to execute the search query [{}]", Search.this.id, e);
-						return false;
+						doClose();
+						throw e;
 					}
 				}
 
@@ -256,7 +258,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 					return str;
 				}
 
-				private Result nextRow() throws SQLException {
+				@Override
+				protected Result findNext() throws SQLException {
 					while (this.rs.next()) {
 						for (Integer column : this.candidates) {
 							String str = this.rs.getString(column);
@@ -280,18 +283,6 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 						// on the result set
 					}
 					return null;
-				}
-
-				@Override
-				protected Result findNext() {
-					try {
-						return nextRow();
-					} catch (SQLException e) {
-						LocalQueryService.this.log.error(
-							"Exception caught while traversing the result set for search query [{}]", Search.this.id,
-							e);
-						return null;
-					}
 				}
 
 				@Override
