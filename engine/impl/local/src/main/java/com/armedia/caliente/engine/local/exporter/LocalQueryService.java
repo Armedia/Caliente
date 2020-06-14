@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -144,6 +146,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 
 		public Stream<Path> build() {
+			final AtomicBoolean resultSetSkipped = new AtomicBoolean(false);
+
 			@SuppressWarnings("resource")
 			CloseableIterator<Path> it = new CloseableIterator<Path>() {
 
@@ -153,7 +157,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				private Set<Integer> candidates = null;
 
 				@Override
-				protected void initialize() throws Exception {
+				protected boolean initialize() {
 					try {
 						this.c = Search.this.dataSource.getConnection();
 						this.c.setAutoCommit(false);
@@ -170,7 +174,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 								index = Integer.valueOf(p);
 								if ((index < 1) || (index > md.getColumnCount())) {
 									LocalQueryService.this.log.warn(
-										"The column index [{}] is not valid for query [{}], ignoring it", p,
+										"The column index [{}] is not valid for search query [{}], ignoring it", p,
 										Search.this.id);
 									continue;
 								}
@@ -179,8 +183,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 								try {
 									index = this.rs.findColumn(p);
 								} catch (SQLException ex) {
-									LocalQueryService.this.log.warn("No column named [{}] for query [{}], ignoring it",
-										p, Search.this.id);
+									LocalQueryService.this.log.warn(
+										"No column named [{}] for search query [{}], ignoring it", p, Search.this.id);
 									continue;
 								}
 							}
@@ -189,14 +193,37 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 						}
 
 						if (candidates.isEmpty()) {
-							throw new Exception("No valid candidate columns found - can't continue with query ["
-								+ Search.this.id + "]");
+							LocalQueryService.this.log.error(
+								"No valid candidate columns found - can't continue with search query [{}]",
+								Search.this.id);
+							doClose();
+							return false;
+						}
+
+						if (Search.this.skip > 0) {
+							boolean skipped = false;
+							try {
+								skipped = this.rs.relative(Search.this.skip + 1);
+								resultSetSkipped.set(true);
+							} catch (SQLFeatureNotSupportedException e) {
+								// Can't skip here, must skip on the stream...
+							}
+
+							// if the relative() call succeeded, but we didn't land on a row,
+							// then this iterator is dead at birth
+							if (resultSetSkipped.get() && !skipped) {
+								// We're already past the end, so we signal a failed iterator
+								doClose();
+								return false;
+							}
 						}
 
 						this.candidates = Tools.freezeSet(candidates);
+						return true;
 					} catch (SQLException e) {
 						doClose();
-						throw e;
+						LocalQueryService.this.log.error("Failed to execute the search query [{}]", Search.this.id, e);
+						return false;
 					}
 				}
 
@@ -229,8 +256,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 					return str;
 				}
 
-				@Override
-				protected Result findNext() throws Exception {
+				private Result nextRow() throws SQLException {
 					while (this.rs.next()) {
 						for (Integer column : this.candidates) {
 							String str = this.rs.getString(column);
@@ -257,6 +283,18 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				}
 
 				@Override
+				protected Result findNext() {
+					try {
+						return nextRow();
+					} catch (SQLException e) {
+						LocalQueryService.this.log.error(
+							"Exception caught while traversing the result set for search query [{}]", Search.this.id,
+							e);
+						return null;
+					}
+				}
+
+				@Override
 				protected void doClose() {
 					if (this.c != null) {
 						try {
@@ -264,8 +302,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 								this.c.rollback();
 							} catch (SQLException e) {
 								if (LocalQueryService.this.log.isDebugEnabled()) {
-									LocalQueryService.this.log.debug("Rollback failed on connection for query [{}]",
-										Search.this.id, e);
+									LocalQueryService.this.log.debug(
+										"Rollback failed on connection for search query [{}]", Search.this.id, e);
 								}
 							}
 							CloseUtils.closeQuietly(this.rs, this.s, this.c);
@@ -284,9 +322,10 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			//
 			;
 
-			if (this.skip > 0) {
+			if (!resultSetSkipped.get() && (this.skip > 0)) {
 				stream = stream.skip(this.skip);
 			}
+
 			if (this.count >= 0) {
 				stream = stream.limit(this.count);
 			}
