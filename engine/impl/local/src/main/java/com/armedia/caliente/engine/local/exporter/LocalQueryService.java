@@ -200,28 +200,25 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 						}
 
 						if (Search.this.skip > 0) {
-							boolean skipped = false;
-							boolean callFailed = false;
+							boolean foundRow = false;
 							try {
-								skipped = this.rs.relative(Search.this.skip);
+								foundRow = this.rs.relative(Search.this.skip);
 							} catch (SQLFeatureNotSupportedException e) {
-								// Can't skip in bulk, must do it manually
-								callFailed = true;
-							}
-
-							if (callFailed) {
+								// Can't skip in bulk, must do it manually...
 								// Assume we'll be OK...
-								skipped = true;
+								foundRow = true;
 								for (int i = 0; i < Search.this.skip; i++) {
 									// If we run past the edge, we short-circuit
 									if (!this.rs.next()) {
-										skipped = false;
+										// This means that we didn't find any rows
+										foundRow = false;
 										break;
 									}
 								}
 							}
 
-							if (!skipped) {
+							// If there are no rows to return, we take a shortcut
+							if (!foundRow) {
 								doClose();
 								return false;
 							}
