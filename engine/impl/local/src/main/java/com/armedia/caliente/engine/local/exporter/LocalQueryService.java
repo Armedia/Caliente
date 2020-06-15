@@ -469,8 +469,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				final String origValue = value;
 				try {
 					value = this.processor.process(value);
-					if (LocalQueryService.this.log.isDebugEnabled()) {
-						LocalQueryService.this.log.debug("Post-processed path [{}] --> [{}]", origValue, value);
+					if (LocalQueryService.this.log.isTraceEnabled()) {
+						LocalQueryService.this.log.trace("Post-processed path [{}] --> [{}]", origValue, value);
 					}
 				} catch (Exception e) {
 					throw new SQLException(String.format("Failed to post-process the path [%s]", value), e);
