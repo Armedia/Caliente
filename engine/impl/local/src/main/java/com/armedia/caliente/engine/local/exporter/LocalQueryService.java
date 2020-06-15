@@ -276,9 +276,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			if (this.pathColumns.isEmpty()) { throw new Exception("No candidate columns given"); }
 		}
 
-		public Stream<Path> build() {
-			@SuppressWarnings("resource")
-			CloseableIterator<Path> it = new CloseableIterator<Path>() {
+		private CloseableIterator<Path> buildIterator() {
+			return new CloseableIterator<Path>() {
 
 				private Connection c = null;
 				private Statement s = null;
@@ -421,6 +420,10 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 					}
 				}
 			};
+		}
+
+		public Stream<Path> build() {
+			CloseableIterator<Path> it = buildIterator();
 
 			// Make sure we skip all null and empty strings, and apply the conversion
 			Stream<Path> stream = it.stream() //
