@@ -80,6 +80,7 @@
 				<post-processor type="class">com.armedia.caliente.engine.local.exporter.LocalQueryServiceTest::processorMethod</post-processor>
 			</post-processors>
 		</search>
+
 	</searches>
 
 	<!-- A list of historyId queries. The first one to return a value, wins -->
@@ -100,6 +101,7 @@
 		<history-id id="final" dataSource="xmlds">
 			<![CDATA[ select history_id from fsobject where object_id = ? ]]>
 		</history-id>
+
 	</history-ids>
 
 	<!-- A list of version-list queries. The first one to return non-empty history, wins -->
