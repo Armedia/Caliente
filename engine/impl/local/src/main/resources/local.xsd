@@ -143,7 +143,7 @@
 			</xsd:sequence>
 		</xsd:complexType>
 		<xsd:keyref name="FK.DataSource.Search" refer="tns:PK.DataSource">
-			<xsd:selector xpath="tns:search" />
+			<xsd:selector xpath="tns:searches/tns:search" />
 			<xsd:field xpath="@dataSource" />
 		</xsd:keyref>
 		<xsd:keyref name="FK.DataSource.HistoryId" refer="tns:PK.DataSource">
