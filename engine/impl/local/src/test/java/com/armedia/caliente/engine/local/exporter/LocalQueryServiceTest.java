@@ -43,6 +43,7 @@ import com.armedia.caliente.engine.local.xml.LocalQueryDataSource;
 import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessor;
 import com.armedia.caliente.engine.local.xml.LocalQuerySearch;
 import com.armedia.caliente.engine.local.xml.LocalQuerySql;
+import com.armedia.caliente.engine.local.xml.LocalQueryVersionList;
 import com.armedia.commons.utilities.function.CheckedConsumer;
 
 public class LocalQueryServiceTest {
@@ -95,17 +96,18 @@ public class LocalQueryServiceTest {
 
 	@Test
 	public void testPostProcess() throws Exception {
+		LocalQueryService srv = buildEmptyService();
 		LocalQueryPostProcessor lqpp = new LocalQueryPostProcessor();
 
 		// First things first: try with nothing, ensure it explodes
-		Assertions.assertThrows(IllegalArgumentException.class, () -> LocalQueryService.buildProcessor(lqpp));
+		Assertions.assertThrows(IllegalArgumentException.class, () -> srv.buildProcessor(lqpp));
 
 		// Next, ensure it returns the same value from the given script
 		lqpp.setType("jexl3");
 		for (int i = 0; i < 10; i++) {
 			String expected = "Value-" + i;
 			lqpp.setValue("return 'Value-' + path;");
-			Processor p = LocalQueryService.buildProcessor(lqpp);
+			Processor p = srv.buildProcessor(lqpp);
 			Assertions.assertEquals(expected, p.process(String.valueOf(i)));
 		}
 
@@ -115,7 +117,7 @@ public class LocalQueryServiceTest {
 		lqpp.setValue(LQPPTest.class.getName());
 		for (int i = 0; i < 10; i++) {
 			String path = String.format("path-number-%02d", i);
-			Processor p = LocalQueryService.buildProcessor(lqpp);
+			Processor p = srv.buildProcessor(lqpp);
 			Assertions.assertEquals(LocalQueryServiceTest.lqppTestProcess(path), p.process(path));
 		}
 
@@ -123,42 +125,35 @@ public class LocalQueryServiceTest {
 		lqpp.setValue(getClass().getName() + "::testProcess");
 		for (int i = 0; i < 10; i++) {
 			String path = String.format("path-number-%02d", i);
-			Processor p = LocalQueryService.buildProcessor(lqpp);
+			Processor p = srv.buildProcessor(lqpp);
 			Assertions.assertEquals(LocalQueryServiceTest.testProcess(path), p.process(path));
 		}
 
 		// a class that doesn't exist
 		lqpp.setValue("this.class.does.not.exist.ever.default.for.while.Class");
-		Assertions.assertThrows(ClassNotFoundException.class,
-			() -> LocalQueryService.buildProcessor(lqpp).process("kaka"));
+		Assertions.assertThrows(ClassNotFoundException.class, () -> srv.buildProcessor(lqpp).process("kaka"));
 
 		// bad class syntaxes
 		lqpp.setValue("this classname is invalid");
-		Assertions.assertThrows(IllegalArgumentException.class,
-			() -> LocalQueryService.buildProcessor(lqpp).process("kaka"));
+		Assertions.assertThrows(IllegalArgumentException.class, () -> srv.buildProcessor(lqpp).process("kaka"));
 		lqpp.setValue("com.some.class.Name:");
-		Assertions.assertThrows(IllegalArgumentException.class,
-			() -> LocalQueryService.buildProcessor(lqpp).process("kaka"));
+		Assertions.assertThrows(IllegalArgumentException.class, () -> srv.buildProcessor(lqpp).process("kaka"));
 		lqpp.setValue("com.some.class.Name::");
-		Assertions.assertThrows(IllegalArgumentException.class,
-			() -> LocalQueryService.buildProcessor(lqpp).process("kaka"));
+		Assertions.assertThrows(IllegalArgumentException.class, () -> srv.buildProcessor(lqpp).process("kaka"));
 		lqpp.setValue("");
-		Assertions.assertThrows(IllegalArgumentException.class,
-			() -> LocalQueryService.buildProcessor(lqpp).process("kaka"));
+		Assertions.assertThrows(IllegalArgumentException.class, () -> srv.buildProcessor(lqpp).process("kaka"));
 
 		// a class that doesn't implement Processor
 		lqpp.setValue("java.lang.Object");
-		Assertions.assertThrows(ClassCastException.class, () -> LocalQueryService.buildProcessor(lqpp).process("kaka"));
+		Assertions.assertThrows(ClassCastException.class, () -> srv.buildProcessor(lqpp).process("kaka"));
 
 		// a method that doesn't exist
 		lqpp.setValue("java.lang.Object::process");
-		Assertions.assertThrows(NoSuchMethodException.class,
-			() -> LocalQueryService.buildProcessor(lqpp).process("kaka"));
+		Assertions.assertThrows(NoSuchMethodException.class, () -> srv.buildProcessor(lqpp).process("kaka"));
 
 		// a method that has the wrong signature
 		lqpp.setValue(getClass().getName() + "::badMethod");
-		Assertions.assertThrows(NoSuchMethodException.class,
-			() -> LocalQueryService.buildProcessor(lqpp).process("kaka"));
+		Assertions.assertThrows(NoSuchMethodException.class, () -> srv.buildProcessor(lqpp).process("kaka"));
 	}
 
 	@SafeVarargs
@@ -559,17 +554,17 @@ public class LocalQueryServiceTest {
 		final LocalQueryService srv = buildEmptyService();
 		final AtomicInteger maxHistoryId = new AtomicInteger(-1);
 		try (BasicDataSource dataSource = buildDataSource((qr) -> maxHistoryId.set(renderVersionLists(qr)))) {
-			final LocalQuerySql lqs = new LocalQuerySql();
+			final LocalQueryVersionList lqvl = new LocalQueryVersionList();
 
-			Assertions.assertThrows(NullPointerException.class, () -> srv.buildHistoryIdQuery(lqs, (str) -> null));
+			Assertions.assertThrows(NullPointerException.class, () -> srv.buildVersionsListQuery(lqvl, (str) -> null));
 			Assertions.assertThrows(NullPointerException.class,
-				() -> srv.buildHistoryIdQuery(lqs, (str) -> dataSource));
+				() -> srv.buildVersionsListQuery(lqvl, (str) -> dataSource));
 
-			lqs.setId("garbage");
-			lqs.setDataSource("garbage");
-			lqs.setSql("select version_label, path from versions where history_id = ? order by version_label");
+			lqvl.setId("garbage");
+			lqvl.setDataSource("garbage");
+			lqvl.setSql("select version_label, path from versions where history_id = ? order by version_label");
 
-			final Query<List<Pair<String, Path>>> q = srv.buildVersionsListQuery(lqs, (str) -> dataSource);
+			final Query<List<Pair<String, Path>>> q = srv.buildVersionsListQuery(lqvl, (str) -> dataSource);
 
 			for (int i = 0; i < maxHistoryId.get(); i++) {
 				List<Pair<String, Path>> versions = q.run(i);
