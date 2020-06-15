@@ -88,9 +88,9 @@ public class LocalQueryVersionList {
 
 	public LocalQuerySql toQuery() {
 		LocalQuerySql sql = new LocalQuerySql();
-		sql.setId(this.id);
-		sql.setSql(this.sql);
-		sql.setDataSource(this.dataSource);
+		sql.setId(getId());
+		sql.setSql(getSql());
+		sql.setDataSource(getDataSource());
 		return sql;
 	}
 }
