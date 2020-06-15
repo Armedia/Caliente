@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-	"rootPath", "dataSourceDefinitions", "searches", "historyIds", "versionLists"
+	"rootPath", "dataSourceDefinitions", "postProcessors", "searches", "historyIds", "versionLists"
 })
 @XmlRootElement(name = "local-queries")
 public class LocalQueries {
@@ -52,6 +52,10 @@ public class LocalQueries {
 
 	@XmlElement(name = "root-path", required = false)
 	protected String rootPath;
+
+	@XmlElementWrapper(name = "common-post-processors")
+	@XmlElement(name = "post-processors")
+	protected List<LocalQueryPostProcessorDef> postProcessors;
 
 	@XmlElementWrapper(name = "data-sources", required = false)
 	@XmlElement(name = "data-source", required = false)
@@ -67,13 +71,20 @@ public class LocalQueries {
 
 	@XmlElementWrapper(name = "version-lists", required = false)
 	@XmlElement(name = "version-list", required = false)
-	protected List<LocalQuerySql> versionLists;
+	protected List<LocalQueryVersionList> versionLists;
 
 	public List<LocalQueryDataSource> getDataSourceDefinitions() {
 		if (this.dataSourceDefinitions == null) {
 			this.dataSourceDefinitions = new ArrayList<>();
 		}
 		return this.dataSourceDefinitions;
+	}
+
+	public List<LocalQueryPostProcessorDef> getPostProcessorDefs() {
+		if (this.postProcessors == null) {
+			this.postProcessors = new ArrayList<>();
+		}
+		return this.postProcessors;
 	}
 
 	public List<LocalQuerySearch> getSearches() {
@@ -90,7 +101,7 @@ public class LocalQueries {
 		return this.historyIds;
 	}
 
-	public List<LocalQuerySql> getVersionListQueries() {
+	public List<LocalQueryVersionList> getVersionListQueries() {
 		if (this.versionLists == null) {
 			this.versionLists = new ArrayList<>();
 		}

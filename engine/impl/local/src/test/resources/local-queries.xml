@@ -18,6 +18,11 @@
 		</data-source>
 	</data-sources>
 
+	<common-post-processors>
+		<post-processors id="ppId">
+		</post-processors>
+	</common-post-processors>
+
 	<!-- One or more SQL queries can be run to obtain path information -->
 	<searches>
 
@@ -71,7 +76,12 @@
 		<!-- A query that accepts the historyId as a parameter for lookups, and returns a list of key-value pairs -->
 		<!-- containing the versionLabel and path for each version in the given history, in proper order -->
 		<version-list id="kaka" dataSource="dsName">
-			<![CDATA[... query to obtain the history ID, including ${historyId} parameter]]>
+			<sql>
+				<![CDATA[... query to obtain the history ID, including ${historyId} parameter]]>
+			</sql>
+			<post-processors>
+				<post-processor ref="ppId" />
+			</post-processors>
 		</version-list>
 
 		<!-- more <version-list> -->

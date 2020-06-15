@@ -26,66 +26,71 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "localQueryPostProcessor.t", propOrder = {
-	"value"
+@XmlType(name = "localQueryVersionList.t", propOrder = {
+	"sql", "postProcessors"
 })
-public class LocalQueryPostProcessor {
+public class LocalQueryVersionList {
 
-	public static final String DEFAULT_TYPE = "jexl3";
+	@XmlElement(name = "sql", required = true)
+	protected String sql;
 
-	@XmlTransient
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	@XmlElementWrapper(name = "post-processors", required = false)
+	@XmlElement(name = "post-processor", required = false)
+	protected List<LocalQueryPostProcessor> postProcessors;
 
-	@XmlValue
-	protected String value;
+	@XmlAttribute(name = "id", required = true)
+	protected String id;
 
-	@XmlAttribute(name = "type", required = false)
-	protected String type;
+	@XmlAttribute(name = "dataSource", required = true)
+	protected String dataSource;
 
-	@XmlAttribute(name = "ref", required = false)
-	protected String ref;
-
-	public String getValue() {
-		return this.value;
+	public String getSql() {
+		return this.sql;
 	}
 
-	public void setValue(String value) {
-		this.value = value;
+	public void setSql(String value) {
+		this.sql = value;
 	}
 
-	public String getType() {
-		return this.type;
+	public String getId() {
+		return this.id;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setId(String value) {
+		this.id = value;
 	}
 
-	public String getRef() {
-		return this.ref;
+	public String getDataSource() {
+		return this.dataSource;
 	}
 
-	public void setRef(String ref) {
-		this.ref = ref;
+	public void setDataSource(String value) {
+		this.dataSource = value;
 	}
 
-	@Override
-	public String toString() {
-		if (!StringUtils.isBlank(this.ref)) { return String.format("LegacyQueryPostProcessor [ref=%s]", this.ref); }
-		String value = ("CLASS".equalsIgnoreCase(this.type) ? this.value : "<script>");
-		return String.format("LocalQueryPostProcessor [type=%s, value=%s]", this.type, value);
+	public List<LocalQueryPostProcessor> getPostProcessors() {
+		if (this.postProcessors == null) {
+			this.postProcessors = new ArrayList<>();
+		}
+		return this.postProcessors;
 	}
 
+	public LocalQuerySql toQuery() {
+		LocalQuerySql sql = new LocalQuerySql();
+		sql.setId(this.id);
+		sql.setSql(this.sql);
+		sql.setDataSource(this.dataSource);
+		return sql;
+	}
 }

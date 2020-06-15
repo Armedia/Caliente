@@ -43,8 +43,10 @@ import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.local.xml.LocalQueries;
 import com.armedia.caliente.engine.local.xml.LocalQueryDataSource;
 import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessor;
+import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessorDef;
 import com.armedia.caliente.engine.local.xml.LocalQuerySearch;
 import com.armedia.caliente.engine.local.xml.LocalQuerySql;
+import com.armedia.caliente.engine.local.xml.LocalQueryVersionList;
 import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.caliente.tools.datasource.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
@@ -53,6 +55,7 @@ import com.armedia.commons.utilities.StreamConcatenation;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.function.LazySupplier;
 import com.armedia.commons.utilities.io.CloseUtils;
 import com.armedia.commons.utilities.script.JSR223Script;
 
@@ -70,8 +73,15 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 
 	@FunctionalInterface
 	public static interface Processor {
+
+		public default void validateRecursion(Processor original) throws Exception {
+			if (original == this) { throw new Exception("Recursion loop detected!"); }
+		}
+
 		public String process(String value) throws Exception;
 	}
+
+	private static final Processor NULL_PROCESSOR = (str) -> str;
 
 	protected static class ScriptProcessor implements Processor {
 		private final JSR223Script script;
@@ -103,6 +113,132 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
+	private class ListProcessor implements Processor {
+		private final List<Processor> processors;
+
+		private ListProcessor(List<Processor> processors) {
+			this.processors = Tools.freezeList(processors);
+		}
+
+		@Override
+		public void validateRecursion(Processor original) throws Exception {
+			if (original != null) {
+				Processor.super.validateRecursion(original);
+			} else {
+				original = this;
+			}
+			for (Processor p : this.processors) {
+				p.validateRecursion(original);
+			}
+		}
+
+		@Override
+		public String process(String value) throws Exception {
+			if (StringUtils.isEmpty(value)) { return value; }
+			final String orig = value;
+			for (Processor p : this.processors) {
+				final String prev = value;
+				value = p.process(value);
+				if (LocalQueryService.this.log.isTraceEnabled()) {
+					LocalQueryService.this.log.trace("Post-processed [{}] into [{}] (by {})", prev, value, p);
+				}
+
+				if (StringUtils.isEmpty(value)) {
+					LocalQueryService.this.log.error("Post-processing result for [{}] is null or empty, returning null",
+						orig);
+					return null;
+				}
+			}
+			LocalQueryService.this.log.debug("Final result of string post-processing: [{}] -> [{}]", orig, value);
+			return value;
+		}
+	}
+
+	private class ReferencedProcessor implements Processor {
+		private final String id;
+		private final LazySupplier<Processor> processor;
+
+		ReferencedProcessor(String id) {
+			this.id = id;
+			this.processor = new LazySupplier<>(() -> LocalQueryService.this.processors.get(id));
+		}
+
+		private Processor getProcessor() throws Exception {
+			Processor p = this.processor.get();
+			if (p == null) {
+				throw new Exception(String.format("Bad processor reference name [%s] - not found!", this.id));
+			}
+			return p;
+		}
+
+		@Override
+		public void validateRecursion(Processor original) throws Exception {
+			if (original != null) {
+				Processor.super.validateRecursion(original);
+			} else {
+				original = this;
+			}
+			getProcessor().validateRecursion(original);
+		}
+
+		@Override
+		public String process(String value) throws Exception {
+			return getProcessor().process(value);
+		}
+	}
+
+	private static class ClassProcessor implements Processor {
+		private final String spec;
+		private final Processor processor;
+
+		private ClassProcessor(LocalQueryPostProcessor processorDef) throws Exception {
+			this.spec = processorDef.getValue();
+
+			// This is a classname
+			Matcher m = LocalQueryService.CLASS_PARSER.matcher(this.spec);
+			if (!m.matches()) {
+				throw new IllegalArgumentException("The class specification [" + this.spec
+					+ "] is not valid, must match this pattern: fully.qualified.className(::methodName)?");
+			}
+
+			Class<?> klass = Class.forName(m.group(1));
+			String methodName = m.group(2);
+			if (StringUtils.isBlank(methodName)) {
+				if (!Processor.class.isAssignableFrom(klass)) {
+					throw new ClassCastException("The class [" + klass.getCanonicalName() + "] does not implement "
+						+ Processor.class.getCanonicalName() + " and no method name was given, can't proceed");
+				}
+				this.processor = Processor.class.cast(klass.getConstructor().newInstance());
+			} else {
+				final Method method = klass.getMethod(m.group(2), LocalQueryService.METHOD_ARGS);
+				final Object o;
+				// Make the distinction between static and non-static methods
+				if (Modifier.isStatic(method.getModifiers())) {
+					o = null;
+				} else {
+					// For non-static, we have to instantiate...
+					o = klass.getConstructor().newInstance();
+				}
+				this.processor = (str) -> Tools.toString(method.invoke(o, str));
+			}
+		}
+
+		@Override
+		public void validateRecursion(Processor original) throws Exception {
+			if (original != null) {
+				Processor.super.validateRecursion(original);
+			} else {
+				original = this;
+			}
+			this.processor.validateRecursion(original);
+		}
+
+		@Override
+		public String process(String value) throws Exception {
+			return this.processor.process(value);
+		}
+	}
+
 	protected class Search {
 		private final DataSource dataSource;
 		private final String id;
@@ -110,7 +246,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		private final String sql;
 		private final int skip;
 		private final int count;
-		private final List<Processor> postProcessors;
+		private final Processor processor;
 
 		private Search(LocalQuerySearch definition, Function<String, DataSource> dataSourceFinder) throws Exception {
 			this.dataSource = dataSourceFinder.apply(definition.getDataSource());
@@ -134,11 +270,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			// TODO: Perform a deeper sanity check?
 			if (StringUtils.isBlank(this.sql)) { throw new SQLException("Must provide a SQL query to execute"); }
 
-			List<Processor> postProcessors = new LinkedList<>();
-			for (LocalQueryPostProcessor processorDef : definition.getPostProcessors()) {
-				postProcessors.add(LocalQueryService.buildProcessor(processorDef));
-			}
-			this.postProcessors = Tools.freezeCopy(postProcessors);
+			this.processor = buildProcessor(definition.getPostProcessors());
 
 			this.pathColumns = Tools.freezeCopy(definition.getPathColumns(), true);
 			if (this.pathColumns.isEmpty()) { throw new Exception("No candidate columns given"); }
@@ -233,35 +365,6 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 					}
 				}
 
-				private String postProcess(String str) {
-					if (StringUtils.isEmpty(str)) { return str; }
-					final String orig = str;
-					for (Processor p : Search.this.postProcessors) {
-						try {
-							final String prev = str;
-							str = p.process(str);
-							if (LocalQueryService.this.log.isTraceEnabled()) {
-								LocalQueryService.this.log.trace("Post-processed [{}] into [{}] (by {})", prev, str, p);
-							}
-						} catch (Exception e) {
-							if (LocalQueryService.this.log.isDebugEnabled()) {
-								LocalQueryService.this.log.error(
-									"Exception caught from {} post-processor for [{}] (from [{}]), returning null", p,
-									str, orig, e);
-							}
-							str = null;
-						}
-
-						if (StringUtils.isEmpty(str)) {
-							LocalQueryService.this.log
-								.error("Post-processing result for [{}] is null or empty, returning null", orig);
-							return null;
-						}
-					}
-					LocalQueryService.this.log.debug("Final result of string post-processing: [{}] -> [{}]", orig, str);
-					return str;
-				}
-
 				@Override
 				protected Result findNext() throws SQLException {
 					while (this.rs.next()) {
@@ -272,7 +375,15 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 							}
 
 							// Apply postProcessor
-							str = postProcess(str);
+							try {
+								str = Search.this.processor.process(str);
+							} catch (Exception e) {
+								if (LocalQueryService.this.log.isDebugEnabled()) {
+									LocalQueryService.this.log
+										.warn("Post processor raised an exception while processing [{}]", str, e);
+								}
+								continue;
+							}
 
 							if (StringUtils.isEmpty(str)) {
 								// If this resulted in an empty string, we try the next column
@@ -332,25 +443,48 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		return (!rs.wasNull() ? val : null);
 	};
 
-	private static final ResultSetHandler<List<Pair<String, Path>>> HANDLER_MEMBER_LIST = (rs) -> {
-		List<Pair<String, Path>> ret = new LinkedList<>();
-		while (rs.next()) {
-			String key = rs.getString(1);
-			if (rs.wasNull()) {
-				continue;
-			}
-			String value = rs.getString(2);
-			if (rs.wasNull()) {
-				continue;
-			}
-			if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value)) {
-				continue;
-			}
+	private final class VersionListHandler implements ResultSetHandler<List<Pair<String, Path>>> {
+		private final Processor processor;
 
-			ret.add(Pair.of(key, Paths.get(value)));
+		private VersionListHandler(Processor processor) {
+			this.processor = processor;
 		}
-		return ret;
-	};
+
+		@Override
+		public List<Pair<String, Path>> handle(ResultSet rs) throws SQLException {
+			List<Pair<String, Path>> ret = new LinkedList<>();
+			while (rs.next()) {
+				String key = rs.getString(1);
+				if (rs.wasNull()) {
+					continue;
+				}
+				String value = rs.getString(2);
+				if (rs.wasNull()) {
+					continue;
+				}
+				if (StringUtils.isEmpty(key) || StringUtils.isEmpty(value)) {
+					continue;
+				}
+
+				final String origValue = value;
+				try {
+					value = this.processor.process(value);
+					if (LocalQueryService.this.log.isDebugEnabled()) {
+						LocalQueryService.this.log.debug("Post-processed path [{}] --> [{}]", origValue, value);
+					}
+				} catch (Exception e) {
+					throw new SQLException(String.format("Failed to post-process the path [%s]", value), e);
+				}
+
+				if (StringUtils.isEmpty(value)) {
+					continue;
+				}
+
+				ret.add(Pair.of(key, Paths.get(value)));
+			}
+			return ret;
+		}
+	}
 
 	protected class Query<T> {
 		private final DataSource dataSource;
@@ -384,9 +518,18 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
+	protected class VersionListQuery extends Query<List<Pair<String, Path>>> {
+
+		private VersionListQuery(LocalQueryVersionList vl, Processor processor,
+			Function<String, DataSource> dataSourceFinder) {
+			super("Version list", vl.toQuery(), new VersionListHandler(processor), dataSourceFinder);
+		}
+	}
+
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private volatile boolean closed = false;
 	private final Map<String, DataSource> dataSources;
+	private final Map<String, Processor> processors;
 	private final Map<String, Search> searches;
 	private final Map<String, Query<String>> history;
 	private final Map<String, Query<List<Pair<String, Path>>>> members;
@@ -433,6 +576,16 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		if (dataSources.isEmpty()) { throw new Exception("No datasources were successfully built"); }
 		this.dataSources = Tools.freezeMap(dataSources);
 
+		Map<String, Processor> processors = new LinkedHashMap<>();
+		for (LocalQueryPostProcessorDef def : queries.getPostProcessorDefs()) {
+			processors.put(def.getId(), buildProcessor(def.getPostProcessors()));
+		}
+		this.processors = Tools.freezeMap(processors);
+		for (Processor p : this.processors.values()) {
+			// Hunt for reference loops...
+			p.validateRecursion(null);
+		}
+
 		Map<String, Search> searchMap = new LinkedHashMap<>();
 		for (LocalQuerySearch search : queries.getSearches()) {
 			String id = search.getId();
@@ -462,14 +615,14 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		this.history = Tools.freezeMap(historyMap);
 
 		Map<String, Query<List<Pair<String, Path>>>> membersMap = new LinkedHashMap<>();
-		for (LocalQuerySql sql : queries.getVersionListQueries()) {
-			String id = sql.getId();
+		for (LocalQueryVersionList vl : queries.getVersionListQueries()) {
+			String id = vl.getId();
 			if (StringUtils.isEmpty(id)) {
 				this.log.warn("Empty ID found for a versionList query - can't use it!");
 				continue;
 			}
 
-			membersMap.put(id, buildVersionsListQuery(sql, this.dataSources::get));
+			membersMap.put(id, buildVersionsListQuery(vl, this.dataSources::get));
 		}
 		this.members = Tools.freezeMap(membersMap);
 	}
@@ -537,37 +690,32 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		throw new SQLException("Failed to find a suitable DataSource for the given configuration");
 	}
 
-	protected static Processor buildProcessor(LocalQueryPostProcessor processorDef) throws Exception {
-		Objects.requireNonNull(processorDef, "Must provide a LocalQueryPostProcessor instance");
-		final String type = processorDef.getType();
-		final String value = processorDef.getValue();
-		if (!StringUtils.equalsIgnoreCase("CLASS", type)) {
-			// If the type is not "class", then it's definitely a script
-			return new ScriptProcessor(type, value);
-		}
-
-		Processor processor = null;
-		// This is a classname
-		Matcher m = LocalQueryService.CLASS_PARSER.matcher(value);
-		if (!m.matches()) {
-			throw new IllegalArgumentException("The class specification [" + value
-				+ "] is not valid, must match this pattern: fully.qualified.className(::methodName)?");
-		}
-
-		Class<?> klass = Class.forName(m.group(1));
-		String methodName = m.group(2);
-		if (StringUtils.isBlank(methodName)) {
-			if (!Processor.class.isAssignableFrom(klass)) {
-				throw new ClassCastException("The class [" + klass.getCanonicalName() + "] does not implement "
-					+ Processor.class.getCanonicalName() + " and no method name was given, can't proceed");
-			}
-			processor = Processor.class.cast(klass.getConstructor().newInstance());
+	protected Processor buildProcessor(List<LocalQueryPostProcessor> processorDefs) throws Exception {
+		if (processorDefs != null) {
+			processorDefs.removeIf(Objects::isNull);
 		} else {
-			final Method method = klass.getMethod(m.group(2), LocalQueryService.METHOD_ARGS);
-			final Object o = klass.getConstructor().newInstance();
-			processor = (str) -> Tools.toString(method.invoke(o, str));
+			processorDefs = Collections.emptyList();
 		}
-		return processor;
+
+		List<Processor> processors = new ArrayList<>();
+		for (LocalQueryPostProcessor processorDef : processorDefs) {
+			processors.add(buildProcessor(processorDef));
+		}
+
+		if (!processors.isEmpty()) { return new ListProcessor(processors); }
+		return LocalQueryService.NULL_PROCESSOR;
+	}
+
+	protected Processor buildProcessor(LocalQueryPostProcessor processorDef) throws Exception {
+		Objects.requireNonNull(processorDef, "Must provide a LocalQueryPostProcessor instance");
+		final String ref = processorDef.getRef();
+		if (!StringUtils.isBlank(ref)) { return new ReferencedProcessor(ref); }
+
+		final String type = processorDef.getType();
+		if (StringUtils.equalsIgnoreCase("CLASS", type)) { return new ClassProcessor(processorDef); }
+
+		// Not a class-based processor, must be a script
+		return new ScriptProcessor(type, processorDef.getValue());
 	}
 
 	private <T> Query<T> buildQuery(String label, LocalQuerySql sql, ResultSetHandler<T> handler,
@@ -579,9 +727,9 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		return buildQuery("History id", sql, LocalQueryService.HANDLER_HISTORY_ID, dataSourceFinder);
 	}
 
-	protected Query<List<Pair<String, Path>>> buildVersionsListQuery(LocalQuerySql sql,
-		Function<String, DataSource> dataSourceFinder) {
-		return buildQuery("Version list", sql, LocalQueryService.HANDLER_MEMBER_LIST, dataSourceFinder);
+	protected Query<List<Pair<String, Path>>> buildVersionsListQuery(LocalQueryVersionList vl,
+		Function<String, DataSource> dataSourceFinder) throws Exception {
+		return new VersionListQuery(vl, buildProcessor(vl.getPostProcessors()), dataSourceFinder);
 	}
 
 	public Stream<Path> searchPaths() throws Exception {

@@ -12,6 +12,16 @@
 		</data-source>
 	</data-sources>
 
+	<!-- One or more post-processor scripts that will be applied, in turn, to each found path -->
+	<!-- (the first non-null, non-empty value *after post-processing*, will be returned per record) -->
+	<common-post-processors>
+		<post-processors id="testId">
+			<post-processor type="jexl3"><![CDATA[
+				return path.trim();
+			]]></post-processor>
+		</post-processors>
+	</common-post-processors>
+
 	<!-- One or more SQL queries can be run to obtain path information -->
 	<searches>
 
@@ -30,9 +40,7 @@
 			<!-- One or more post-processor scripts that will be applied, in turn, to each found path -->
 			<!-- (the first non-null, non-empty value *after post-processing*, will be returned per record) -->
 			<post-processors>
-				<post-processor type="jexl3"><![CDATA[
-					return path.trim();
-				]]></post-processor>
+				<post-processor ref="testId" />
 				<post-processor type="class">com.armedia.caliente.engine.local.exporter.LocalQueryServiceTest::processorMethod</post-processor>
 			</post-processors>
 		</search>
@@ -53,9 +61,7 @@
 			<!-- One or more post-processor scripts that will be applied, in turn, to each found path -->
 			<!-- (the first non-null, non-empty value *after post-processing*, will be returned per record) -->
 			<post-processors>
-				<post-processor type="jexl3"><![CDATA[
-					return path.trim();
-				]]></post-processor>
+				<post-processor ref="testId" />
 				<post-processor type="class">com.armedia.caliente.engine.local.exporter.LocalQueryServiceTest::processorMethod</post-processor>
 			</post-processors>
 		</search>
@@ -108,19 +114,39 @@
 	<version-lists>
 
 		<version-list id="primary" dataSource="xmlds">
-			<![CDATA[ select version_label, path from fsobject where history_id = ? and history_id < '0000000F' order by 1 ]]>
+			<sql>
+				<![CDATA[ select version_label, path from fsobject where history_id = ? and history_id < '0000000F' order by 1 ]]>
+			</sql>
+			<post-processors>
+				<!-- ... -->
+			</post-processors>
 		</version-list>
 
 		<version-list id="secondary" dataSource="xmlds">
-			<![CDATA[ select version_label, path from fsobject where history_id = ? and history_id < '000000FF' order by 1 ]]>
+			<sql>
+				<![CDATA[ select version_label, path from fsobject where history_id = ? and history_id < '000000FF' order by 1 ]]>
+			</sql>
+			<post-processors>
+				<!-- ... -->
+			</post-processors>
 		</version-list>
 
 		<version-list id="broken" dataSource="xmlds">
-			<![CDATA[ this isn't valid sql ]]>
+			<sql>
+				<![CDATA[ this isn't valid sql ]]>
+			</sql>
+			<post-processors>
+				<!-- ... -->
+			</post-processors>
 		</version-list>
 
 		<version-list id="final" dataSource="xmlds">
-			<![CDATA[ select version_label, path from fsobject where history_id = ? order by 1 ]]>
+			<sql>
+				<![CDATA[ select version_label, path from fsobject where history_id = ? order by 1 ]]>
+			</sql>
+			<post-processors>
+				<post-processor ref="testId" />
+			</post-processors>
 		</version-list>
 
 	</version-lists>
