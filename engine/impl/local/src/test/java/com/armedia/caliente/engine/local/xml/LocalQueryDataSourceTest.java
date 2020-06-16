@@ -88,7 +88,7 @@ public class LocalQueryDataSourceTest {
 
 				Assertions.assertFalse(a.equals(null));
 				Assertions.assertTrue(a.equals(a));
-				Assertions.assertFalse(a.equals(this));
+				Assertions.assertFalse(a.equals(new Object()));
 
 				for (int nB = 0; nB < 10; nB++) {
 					for (int vB = 0; vB < 10; vB++) {
