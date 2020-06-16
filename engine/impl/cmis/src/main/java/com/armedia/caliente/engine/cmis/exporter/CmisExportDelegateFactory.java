@@ -41,6 +41,7 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
 import com.armedia.caliente.engine.exporter.ExportException;
+import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
@@ -62,8 +63,9 @@ public class CmisExportDelegateFactory
 	}
 
 	@Override
-	protected CmisExportDelegate<?> newExportDelegate(Session session, CmfObject.Archetype type, String searchKey)
-		throws Exception {
+	protected CmisExportDelegate<?> newExportDelegate(Session session, ExportTarget target) throws Exception {
+		CmfObject.Archetype type = target.getType();
+		String searchKey = target.getSearchKey();
 		CmisObject obj = session.getObject(searchKey);
 		switch (type) {
 			case FOLDER:

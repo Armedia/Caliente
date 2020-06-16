@@ -31,12 +31,12 @@ import java.nio.file.FileSystems;
 import java.nio.file.attribute.UserPrincipalLookupService;
 
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
+import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.sql.common.SqlCommon;
 import com.armedia.caliente.engine.sql.common.SqlFile;
 import com.armedia.caliente.engine.sql.common.SqlRoot;
 import com.armedia.caliente.engine.sql.common.SqlSessionWrapper;
 import com.armedia.caliente.engine.sql.common.SqlSetting;
-import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -65,21 +65,21 @@ public class SqlExportDelegateFactory
 	}
 
 	@Override
-	protected SqlExportDelegate<?> newExportDelegate(SqlRoot session, CmfObject.Archetype type, String searchKey)
-		throws Exception {
-		switch (type) {
+	protected SqlExportDelegate<?> newExportDelegate(SqlRoot session, ExportTarget target) throws Exception {
+		String searchKey = target.getSearchKey();
+		switch (target.getType()) {
 			case FOLDER:
 			case DOCUMENT:
 				return new SqlFileExportDelegate(this, session, SqlFile.newFromSafePath(session, searchKey));
 			case USER:
 				return new SqlPrincipalExportDelegate(this, session, this.userDb.lookupPrincipalByName(searchKey));
 			case GROUP:
-				return new SqlPrincipalExportDelegate(this, session,
-					this.userDb.lookupPrincipalByGroupName(searchKey));
+				return new SqlPrincipalExportDelegate(this, session, this.userDb.lookupPrincipalByGroupName(searchKey));
 			default:
 				break;
 		}
-		this.log.warn("Type [{}] is not supported - no delegate created for search key [{}]", type, searchKey);
+		this.log.warn("Type [{}] is not supported - no delegate created for search key [{}]", target.getType(),
+			searchKey);
 		return null;
 	}
 }

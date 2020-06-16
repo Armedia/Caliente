@@ -31,6 +31,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.attribute.UserPrincipalLookupService;
 
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
+import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.engine.local.common.LocalSetting;
@@ -64,8 +65,9 @@ public class LocalExportDelegateFactory
 	}
 
 	@Override
-	protected LocalExportDelegate<?> newExportDelegate(LocalRoot session, CmfObject.Archetype type, String searchKey)
-		throws Exception {
+	protected LocalExportDelegate<?> newExportDelegate(LocalRoot session, ExportTarget target) throws Exception {
+		CmfObject.Archetype type = target.getType();
+		String searchKey = target.getSearchKey();
 		switch (type) {
 			case FOLDER:
 			case DOCUMENT:

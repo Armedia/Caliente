@@ -859,7 +859,7 @@ public abstract class ExportEngine<//
 					// Begin transaction
 
 					final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> exportDelegate = delegateFactory
-						.newExportDelegate(s, nextType, nextKey);
+						.newExportDelegate(s, target);
 					if (exportDelegate == null) {
 						// No object found with that ID...
 						ExportEngine.this.log.warn("No {} object found with searchKey[{}]",
