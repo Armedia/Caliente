@@ -35,6 +35,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -53,12 +54,19 @@ import com.armedia.commons.utilities.function.LazySupplier;
 class LocalFile {
 
 	static ExportTarget toExportTarget(LocalRoot root, Path path) {
+		return LocalFile.toExportTarget(root, path, LocalCommon::calculateId);
+	}
+
+	static ExportTarget toExportTarget(LocalRoot root, Path path, Function<Path, String> calculateId) {
 		try {
 			if (!Files.exists(path)) { return null; }
+			if (calculateId == null) {
+				calculateId = LocalCommon::calculateId;
+			}
 			path = root.relativize(path);
 			final Archetype archetype = Files.isDirectory(path) ? CmfObject.Archetype.FOLDER
 				: CmfObject.Archetype.DOCUMENT;
-			final String objectId = LocalCommon.calculateId(path);
+			final String objectId = calculateId.apply(path);
 			final String safePath = PathTools.encodeSafePath(path.toString());
 			return new ExportTarget(archetype, objectId, safePath);
 		} catch (IOException e) {
