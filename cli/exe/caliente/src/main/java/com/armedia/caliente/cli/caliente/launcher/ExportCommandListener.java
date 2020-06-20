@@ -26,12 +26,15 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.caliente.launcher;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 
@@ -47,10 +50,15 @@ import com.armedia.commons.utilities.Tools;
 public class ExportCommandListener extends AbstractCommandListener implements ExportEngineListener {
 
 	protected final CmfObjectCounter<ExportResult> counter = new CmfObjectCounter<>(ExportResult.class);
-	protected final AtomicLong start = new AtomicLong(0);
+	protected final AtomicReference<Instant> start = new AtomicReference<>(null);
 	protected final AtomicLong previous = new AtomicLong(0);
-	protected final AtomicLong objectCounter = new AtomicLong();
+	protected final AtomicLong objectCounter = new AtomicLong(0);
 	protected final Set<String> sources = new LinkedHashSet<>();
+
+	private static final long NANOS_IN_SECOND = TimeUnit.NANOSECONDS.convert(1, TimeUnit.SECONDS);
+
+	private static final long PROGRESS_NANOS = AbstractCommandListener.PROGRESS_INTERVAL
+		* ExportCommandListener.NANOS_IN_SECOND;
 
 	public ExportCommandListener(Logger console) {
 		super(console);
@@ -60,41 +68,45 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 		return this.counter;
 	}
 
-	private void showProgress() {
-		showProgress(false);
+	private boolean showProgress() {
+		return showProgress(false);
 	}
 
-	private void showProgress(boolean forced) {
-		final Long current = this.objectCounter.get();
-		final boolean milestone = (forced || ((current % 1000) == 0));
+	private boolean showProgress(boolean forced) {
+		final long totalItems = this.objectCounter.get();
+		final boolean milestone = (forced || ((totalItems % 1000) == 0));
 
 		// Is it time to show progress? Have 10 seconds passed?
-		long now = System.currentTimeMillis();
-		long last = this.progressReporter.get();
-		boolean shouldDisplay = (milestone || ((now - last) >= TimeUnit.MILLISECONDS
-			.convert(AbstractCommandListener.PROGRESS_INTERVAL, TimeUnit.SECONDS)));
+		final long now = System.nanoTime();
+		final long last = this.progressReporter.get();
+		final long sinceLast = (now - last);
+		final boolean shouldDisplay = (milestone || ((now - last) >= ExportCommandListener.PROGRESS_NANOS));
 
 		// This avoids a race condition where we don't show successive progress reports from
 		// different threads
-		if (shouldDisplay && this.progressReporter.compareAndSet(last, now)) {
+		final boolean shown = (shouldDisplay && this.progressReporter.compareAndSet(last, now));
+		if (shown) {
 			String objectLine = "";
-			final Double prev = this.previous.doubleValue();
-			final Long duration = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - this.start.get());
-			this.previous.set(current.longValue());
-			final long count = (current.longValue() - prev.longValue());
-			final Double itemRate = (count / AbstractCommandListener.PROGRESS_INTERVAL.doubleValue());
-			final Double startRate = (current.doubleValue() / duration.doubleValue());
+			final Duration totalDuration = Duration.between(this.start.get(), Instant.now());
+			final Duration currentDuration = Duration.ofNanos(sinceLast);
+			final long currentItems = (totalItems - this.previous.getAndSet(totalItems));
+			final double currentRate = ((double) currentItems / (double) currentDuration.toNanos())
+				* ExportCommandListener.NANOS_IN_SECOND;
+			final double totalRate = ((double) totalItems / (double) totalDuration.toNanos())
+				* ExportCommandListener.NANOS_IN_SECOND;
 
-			objectLine = String.format("Exported %d objects (~%.2f/s, %d since last report, ~%.2f/s average)",
-				current.longValue(), itemRate, count, startRate);
+			objectLine = String.format(
+				"Exported %d messages (~%.2f/s, %d since last report ~%s ago (%d ns), ~%.2f/s average)", totalItems,
+				currentRate, currentItems, currentDuration, currentDuration.toNanos(), totalRate);
 			this.console.info("PROGRESS REPORT{}\t{}{}{}{}", Tools.NL, objectLine, Tools.NL, Tools.NL,
 				this.counter.generateCummulativeReport(1));
 		}
+		return shown;
 	}
 
 	@Override
 	public void exportStarted(ExportState exportState) {
-		this.start.set(System.currentTimeMillis());
+		this.start.set(Instant.now());
 		this.console.info("Export process started with settings:{}{}\t{}{}{}", exportState.cfg);
 	}
 
