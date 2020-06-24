@@ -36,7 +36,7 @@ import com.armedia.caliente.tools.VersionNumberScheme;
 public class NullVersionLayout extends LocalVersionLayout {
 
 	public NullVersionLayout(VersionNumberScheme numberScheme) {
-		super(numberScheme, null);
+		super(numberScheme);
 	}
 
 	@Override

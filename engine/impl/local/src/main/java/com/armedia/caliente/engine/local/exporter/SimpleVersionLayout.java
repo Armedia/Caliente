@@ -57,7 +57,7 @@ public class SimpleVersionLayout extends LocalVersionLayout {
 	}
 
 	public SimpleVersionLayout(VersionNumberScheme numberScheme, String tagSeparator) {
-		super(numberScheme, null);
+		super(numberScheme);
 		String schemePattern = SimpleVersionLayout.NULL_SCHEME_PATTERN;
 		if (numberScheme != null) {
 			schemePattern = numberScheme.toPattern().pattern();
