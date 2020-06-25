@@ -49,19 +49,28 @@ import com.armedia.commons.utilities.Tools;
 
 public class ExportCommandListener extends AbstractCommandListener implements ExportEngineListener {
 
+	public static final Duration DEFAULT_PROGRESS_INTERVAL = Duration
+		.ofSeconds(AbstractCommandListener.PROGRESS_INTERVAL);
+	private static final long NANOS_IN_SECOND = TimeUnit.NANOSECONDS.convert(1, TimeUnit.SECONDS);
+
+	protected final Duration progressInterval;
+	protected final long progressNanos;
+	protected final double progressIntervalSeconds;
 	protected final CmfObjectCounter<ExportResult> counter = new CmfObjectCounter<>(ExportResult.class);
 	protected final AtomicReference<Instant> start = new AtomicReference<>(null);
 	protected final AtomicLong previous = new AtomicLong(0);
 	protected final AtomicLong objectCounter = new AtomicLong(0);
 	protected final Set<String> sources = new LinkedHashSet<>();
 
-	private static final long NANOS_IN_SECOND = TimeUnit.NANOSECONDS.convert(1, TimeUnit.SECONDS);
-
-	private static final long PROGRESS_NANOS = AbstractCommandListener.PROGRESS_INTERVAL
-		* ExportCommandListener.NANOS_IN_SECOND;
-
 	public ExportCommandListener(Logger console) {
+		this(console, null);
+	}
+
+	public ExportCommandListener(Logger console, Duration progressInterval) {
 		super(console);
+		this.progressInterval = Tools.coalesce(progressInterval, ExportCommandListener.DEFAULT_PROGRESS_INTERVAL);
+		this.progressNanos = this.progressInterval.toNanos();
+		this.progressIntervalSeconds = Long.valueOf(this.progressInterval.getSeconds()).doubleValue();
 	}
 
 	public final CmfObjectCounter<ExportResult> getCounter() {
@@ -74,13 +83,13 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 
 	private boolean showProgress(boolean forced) {
 		final long totalItems = this.objectCounter.get();
-		final boolean milestone = (forced || ((totalItems % 1000) == 0));
+		final boolean milestone = (forced || ((totalItems > 0) && ((totalItems % 1000) == 0)));
 
 		// Is it time to show progress? Have 10 seconds passed?
 		final long now = System.nanoTime();
 		final long last = this.progressReporter.get();
 		final long sinceLast = (now - last);
-		final boolean shouldDisplay = (milestone || ((now - last) >= ExportCommandListener.PROGRESS_NANOS));
+		final boolean shouldDisplay = (milestone || ((now - last) >= this.progressNanos));
 
 		// This avoids a race condition where we don't show successive progress reports from
 		// different threads
