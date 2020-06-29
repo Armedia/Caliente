@@ -49,7 +49,7 @@ import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.tools.VersionNumberScheme;
 import com.armedia.commons.utilities.Tools;
 
-public class LocalPathVersionFinder implements LocalVersionFinder {
+public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 
 	protected static final class VersionInfo {
 		private final Path path;
@@ -122,9 +122,7 @@ public class LocalPathVersionFinder implements LocalVersionFinder {
 		return Files.list(baseFolder);
 	}
 
-	protected VersionInfo parseVersionInfo(LocalRoot root, Path p) {
-		return null;
-	}
+	protected abstract VersionInfo parseVersionInfo(LocalRoot root, Path p);
 
 	private final LocalVersionHistory calculateSingleHistory(LocalRoot root, Path path) throws IOException {
 		final Path truePath = root.makeAbsolute(path);

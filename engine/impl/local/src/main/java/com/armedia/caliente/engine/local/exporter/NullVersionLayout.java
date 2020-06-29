@@ -43,4 +43,9 @@ public class NullVersionLayout extends LocalPathVersionFinder {
 	protected Stream<Path> findSiblingCandidates(LocalRoot root, Path path) throws IOException {
 		return Stream.empty();
 	}
+
+	@Override
+	protected VersionInfo parseVersionInfo(LocalRoot root, Path p) {
+		return null;
+	}
 }
