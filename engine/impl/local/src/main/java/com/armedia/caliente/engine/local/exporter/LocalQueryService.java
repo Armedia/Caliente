@@ -735,7 +735,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		return new VersionListQuery(vl, buildProcessor(vl.getPostProcessors()), dataSourceFinder);
 	}
 
-	public Stream<Path> searchPaths() throws Exception {
+	public Stream<Path> searchPaths() {
 		final SharedAutoLock lock = autoSharedLock();
 		List<Stream<Path>> streams = new ArrayList<>(this.searches.size());
 		for (String id : this.searches.keySet()) {
@@ -750,7 +750,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		;
 	}
 
-	public String getHistoryId(String objectId) throws Exception {
+	public String getHistoryId(String objectId) {
 		try (SharedAutoLock lock = autoSharedLock()) {
 			for (String id : this.history.keySet()) {
 				Query<String> q = this.history.get(id);
@@ -767,7 +767,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
-	public List<Pair<String, Path>> getVersionList(String historyId) throws Exception {
+	public List<Pair<String, Path>> getVersionList(String historyId) {
 		try (SharedAutoLock lock = autoSharedLock()) {
 			for (String id : this.members.keySet()) {
 				Query<List<Pair<String, Path>>> q = this.members.get(id);
