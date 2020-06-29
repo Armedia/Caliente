@@ -127,11 +127,6 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 	@Override
 	public LocalVersionHistory getFullHistory(final LocalRoot root, final Path path,
 		final Function<Path, Path> pathConverter) throws IOException {
-		final Path truePath = root.makeAbsolute(path);
-		if (Files.isDirectory(truePath) || (this.versionNumberScheme == null)) {
-			return LocalVersionHistory.getSingleHistory(root, path);
-		}
-
 		final VersionInfo info = parseVersionInfo(root, path);
 		final String historyId = info.getHistoryId();
 		final Map<String, VersionInfo> versions = new TreeMap<>(this.versionNumberScheme);

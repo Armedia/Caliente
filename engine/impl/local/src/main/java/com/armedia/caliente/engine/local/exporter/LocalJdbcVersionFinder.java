@@ -38,9 +38,6 @@ public class LocalJdbcVersionFinder implements LocalVersionFinder {
 		throws Exception {
 		final String historyId = getHistoryId(root, path, pathConverter);
 		final Path truePath = root.makeAbsolute(path);
-
-		if (Files.isDirectory(truePath)) { return LocalVersionHistory.getSingleHistory(root, path); }
-
 		final List<Pair<String, Path>> versions = this.service.getVersionList(historyId);
 		Map<String, Integer> byPath = new HashMap<>();
 		Map<String, Integer> byHistoryId = new HashMap<>();

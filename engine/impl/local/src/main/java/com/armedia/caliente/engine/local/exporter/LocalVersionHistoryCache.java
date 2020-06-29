@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.local.exporter;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -35,6 +36,10 @@ public class LocalVersionHistoryCache {
 
 	private LocalVersionHistory getVersionHistory(String path) throws Exception {
 		final Path truePath = this.root.makeAbsolute(Paths.get(path));
+		// Slight optimization...
+		if (Files.isDirectory(truePath) || (this.versionFinder == null)) {
+			return LocalVersionHistory.getSingleHistory(this.root, truePath);
+		}
 		final String key = this.versionFinder.getHistoryId(this.root, truePath);
 		return this.histories.computeIfAbsent(key, (k) -> {
 			try {
