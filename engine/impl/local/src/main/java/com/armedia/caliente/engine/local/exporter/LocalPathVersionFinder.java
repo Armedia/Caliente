@@ -160,7 +160,7 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 		try (Stream<Path> candidates = findSiblingCandidates(root, path)) {
 			candidates //
 				.filter(Objects::nonNull) // Is the converted path non-null?
-				.map(Tools.coalesce(pathConverter, LocalVersionFinder.IDENTITY)) // Do I need to
+				.map(Tools.coalesce(pathConverter, LocalVersionFinder.PATH_IDENTITY)) // Do I need to
 																					// swap to
 																					// another file?
 				.filter(Objects::nonNull) // Is the converted path non-null?
@@ -204,7 +204,7 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 
 	@Override
 	public String getHistoryId(LocalRoot root, Path path, Function<Path, Path> pathConverter) throws Exception {
-		path = root.makeAbsolute(Tools.coalesce(pathConverter, LocalVersionFinder.IDENTITY).apply(path));
+		path = root.makeAbsolute(Tools.coalesce(pathConverter, LocalVersionFinder.PATH_IDENTITY).apply(path));
 		if (Files.isDirectory(path)) {
 			return LocalCommon.calculateId(LocalCommon.toPortablePath(root.relativize(path).toString()));
 		}
