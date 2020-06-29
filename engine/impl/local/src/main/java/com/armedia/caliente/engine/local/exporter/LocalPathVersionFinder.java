@@ -124,31 +124,12 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 
 	protected abstract VersionInfo parseVersionInfo(LocalRoot root, Path p);
 
-	private final LocalVersionHistory calculateSingleHistory(LocalRoot root, Path path) throws IOException {
-		final Path truePath = root.makeAbsolute(path);
-		Map<String, Integer> byPath = new HashMap<>();
-		Map<String, Integer> byHistoryId = new HashMap<>();
-		List<LocalFile> fullHistory = new ArrayList<>(1);
-		VersionInfo thisInfo = new VersionInfo(truePath, root.relativize(truePath), "");
-		byHistoryId.put("", 0);
-		LocalFile lf = new LocalFile(root, thisInfo.getPath().toString(), thisInfo, true);
-		byPath.put(lf.getFullPath(), 0);
-		fullHistory.add(lf);
-		byPath = Tools.freezeMap(byPath);
-		fullHistory = Tools.freezeList(fullHistory);
-		byHistoryId = Tools.freezeMap(byHistoryId);
-		LocalFile rootVersion = lf;
-		LocalFile currentVersion = lf;
-		return new LocalVersionHistory(lf.getHistoryId(), rootVersion, currentVersion, byHistoryId, byPath,
-			fullHistory);
-	}
-
 	@Override
 	public LocalVersionHistory getFullHistory(final LocalRoot root, final Path path,
 		final Function<Path, Path> pathConverter) throws IOException {
 		final Path truePath = root.makeAbsolute(path);
 		if (Files.isDirectory(truePath) || (this.versionNumberScheme == null)) {
-			return calculateSingleHistory(root, path);
+			return LocalVersionHistory.getSingleHistory(root, path);
 		}
 
 		final VersionInfo info = parseVersionInfo(root, path);
@@ -160,9 +141,11 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 		try (Stream<Path> candidates = findSiblingCandidates(root, path)) {
 			candidates //
 				.filter(Objects::nonNull) // Is the converted path non-null?
-				.map(Tools.coalesce(pathConverter, LocalVersionFinder.PATH_IDENTITY)) // Do I need to
-																					// swap to
-																					// another file?
+				.map(Tools.coalesce(pathConverter, LocalVersionFinder.PATH_IDENTITY)) // Do I need
+																						// to
+																						// swap to
+																						// another
+																						// file?
 				.filter(Objects::nonNull) // Is the converted path non-null?
 				.filter(Files::exists) // Does the converted path exist?
 				.map((p) -> parseVersionInfo(root, p)) // parse the version info
