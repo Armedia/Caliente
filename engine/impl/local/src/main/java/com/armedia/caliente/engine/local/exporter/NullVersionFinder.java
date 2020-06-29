@@ -33,9 +33,9 @@ import java.util.stream.Stream;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.tools.VersionNumberScheme;
 
-public class NullVersionLayout extends LocalPathVersionFinder {
+public class NullVersionFinder extends LocalPathVersionFinder {
 
-	public NullVersionLayout(VersionNumberScheme numberScheme) {
+	public NullVersionFinder(VersionNumberScheme numberScheme) {
 		super(numberScheme);
 	}
 

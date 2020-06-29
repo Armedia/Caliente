@@ -94,6 +94,7 @@ public class LocalExportEngine extends
 	public static final String VERSION_LAYOUT_FLAT = "flat";
 	// HIERARCHICAL (a/b/v1[/stream] a/b/v2[/stream] a/b/v3[/stream])
 	public static final String VERSION_LAYOUT_HIERARCHICAL = "hierarchical";
+	public static final String VERSION_LAYOUT_JDBC = "jdbc";
 	private static final String VERSION_LAYOUT_DEFAULT = LocalExportEngine.VERSION_LAYOUT_FLAT;
 	public static final Set<String> VERSION_LAYOUTS = Tools.freezeSet(new LinkedHashSet<>(new TreeSet<>(Arrays.asList( //
 		LocalExportEngine.VERSION_LAYOUT_FLAT, //
@@ -142,7 +143,7 @@ public class LocalExportEngine extends
 	}
 
 	private final LocalRoot root;
-	private final LocalPathVersionFinder versionLayout;
+	private final LocalVersionFinder versionFinder;
 	private final LocalVersionHistoryCache histories;
 	private LocalQueryService localQueryService = null;
 
@@ -191,7 +192,11 @@ public class LocalExportEngine extends
 			case VERSION_LAYOUT_HIERARCHICAL:
 				// TODO: Implement this
 			case VERSION_LAYOUT_FLAT:
-				this.versionLayout = new SimpleVersionLayout(scheme, tagSeparator);
+				this.versionFinder = new SimpleVersionFinder(scheme, tagSeparator);
+				break;
+
+			case VERSION_LAYOUT_JDBC:
+				this.versionFinder = new LocalJdbcVersionFinder(this.localQueryService);
 				break;
 
 			default:
@@ -199,7 +204,7 @@ public class LocalExportEngine extends
 					String.format("Support for version scheme [%s] is not yet implemented", layoutName));
 		}
 
-		this.histories = new LocalVersionHistoryCache(this.root, this.versionLayout);
+		this.histories = new LocalVersionHistoryCache(this.root, this.versionFinder);
 	}
 
 	protected final String getHistoryId(String objectId) throws Exception {
@@ -216,8 +221,8 @@ public class LocalExportEngine extends
 		return this.root;
 	}
 
-	public LocalPathVersionFinder getVersionLayout() {
-		return this.versionLayout;
+	public LocalVersionFinder getVersionFinder() {
+		return this.versionFinder;
 	}
 
 	public LocalVersionHistory getHistory(Path p) throws ExportException {

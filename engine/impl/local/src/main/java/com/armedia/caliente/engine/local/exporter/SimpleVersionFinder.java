@@ -45,26 +45,26 @@ import com.armedia.caliente.tools.VersionNumberScheme;
  * @author diego
  *
  */
-public class SimpleVersionLayout extends LocalPathVersionFinder {
+public class SimpleVersionFinder extends LocalPathVersionFinder {
 
 	private static final String DEFAULT_TAG_SEPARATOR = ".v";
 
 	private static final String NULL_SCHEME_PATTERN = "(.*)";
 	private final Pattern pattern;
 
-	public SimpleVersionLayout(VersionNumberScheme numberScheme) {
-		this(numberScheme, SimpleVersionLayout.DEFAULT_TAG_SEPARATOR);
+	public SimpleVersionFinder(VersionNumberScheme numberScheme) {
+		this(numberScheme, SimpleVersionFinder.DEFAULT_TAG_SEPARATOR);
 	}
 
-	public SimpleVersionLayout(VersionNumberScheme numberScheme, String tagSeparator) {
+	public SimpleVersionFinder(VersionNumberScheme numberScheme, String tagSeparator) {
 		super(numberScheme);
-		String schemePattern = SimpleVersionLayout.NULL_SCHEME_PATTERN;
+		String schemePattern = SimpleVersionFinder.NULL_SCHEME_PATTERN;
 		if (numberScheme != null) {
 			schemePattern = numberScheme.toPattern().pattern();
 		}
 
 		if (tagSeparator == null) {
-			tagSeparator = SimpleVersionLayout.DEFAULT_TAG_SEPARATOR;
+			tagSeparator = SimpleVersionFinder.DEFAULT_TAG_SEPARATOR;
 		}
 		if (StringUtils.isEmpty(tagSeparator)) {
 			tagSeparator = StringUtils.EMPTY;
