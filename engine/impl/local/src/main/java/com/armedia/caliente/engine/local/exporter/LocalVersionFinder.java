@@ -35,11 +35,12 @@ public interface LocalVersionFinder {
 
 	public static final Function<Path, Path> IDENTITY = Function.identity();
 
-	public default String getHistoryId(final LocalRoot root, final Path path) {
+	public default String getHistoryId(final LocalRoot root, final Path path) throws Exception {
 		return getHistoryId(root, path, LocalVersionFinder.IDENTITY);
 	}
 
-	public String getHistoryId(final LocalRoot root, final Path path, final Function<Path, Path> pathConverter);
+	public String getHistoryId(final LocalRoot root, final Path path, final Function<Path, Path> pathConverter)
+		throws Exception;
 
 	public default LocalVersionHistory getFullHistory(final LocalRoot root, final Path path) throws Exception {
 		return getFullHistory(root, path, LocalVersionFinder.IDENTITY);

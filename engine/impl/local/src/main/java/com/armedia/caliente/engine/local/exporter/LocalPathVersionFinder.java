@@ -203,9 +203,11 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 	}
 
 	@Override
-	public String getHistoryId(LocalRoot root, Path path, Function<Path, Path> pathConverter) {
+	public String getHistoryId(LocalRoot root, Path path, Function<Path, Path> pathConverter) throws Exception {
 		path = root.makeAbsolute(Tools.coalesce(pathConverter, LocalVersionFinder.IDENTITY).apply(path));
-		if (Files.isDirectory(path)) { return null; }
+		if (Files.isDirectory(path)) {
+			return LocalCommon.calculateId(LocalCommon.toPortablePath(root.relativize(path).toString()));
+		}
 		return parseVersionInfo(root, path).historyId;
 	}
 }
