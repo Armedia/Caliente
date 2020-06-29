@@ -92,6 +92,7 @@
 	<!-- A list of historyId queries. The first one to return a value, wins -->
 	<history-ids>
 
+		<!-- ${objectId} -->
 		<history-id id="primary" dataSource="xmlds">
 			<![CDATA[ select history_id from fsobject where object_id = ? and history_id < '0000000F' ]]>
 		</history-id>
@@ -113,6 +114,7 @@
 	<!-- A list of version-list queries. The first one to return non-empty history, wins -->
 	<version-lists>
 
+		<!-- ${objectId} ${historyId} ${path} (?) -->
 		<version-list id="primary" dataSource="xmlds">
 			<sql>
 				<![CDATA[ select version_label, path from fsobject where history_id = ? and history_id < '0000000F' order by 1 ]]>

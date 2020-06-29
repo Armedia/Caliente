@@ -49,7 +49,7 @@ import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.tools.VersionNumberScheme;
 import com.armedia.commons.utilities.Tools;
 
-public class LocalVersionLayout {
+public class LocalPathVersionFinder implements LocalVersionFinder {
 
 	protected static final class VersionInfo {
 		private final Path path;
@@ -88,18 +88,11 @@ public class LocalVersionLayout {
 	}
 
 	protected static final Predicate<Path> PATH_FALSE = (a) -> false;
-	protected static final Function<Path, Path> IDENTITY = Function.identity();
 
-	private final Function<Path, Path> converter;
 	protected final VersionNumberScheme versionNumberScheme;
 
-	public LocalVersionLayout(VersionNumberScheme numberScheme) {
-		this(numberScheme, null);
-	}
-
-	public LocalVersionLayout(VersionNumberScheme numberScheme, Function<Path, Path> converter) {
+	public LocalPathVersionFinder(VersionNumberScheme numberScheme) {
 		this.versionNumberScheme = numberScheme;
-		this.converter = Tools.coalesce(converter, LocalVersionLayout.IDENTITY);
 	}
 
 	public VersionNumberScheme getVersionNumberScheme() {
@@ -133,7 +126,7 @@ public class LocalVersionLayout {
 		return null;
 	}
 
-	final LocalVersionHistory calculateSingleHistory(LocalRoot root, Path path) throws IOException {
+	private final LocalVersionHistory calculateSingleHistory(LocalRoot root, Path path) throws IOException {
 		final Path truePath = root.makeAbsolute(path);
 		Map<String, Integer> byPath = new HashMap<>();
 		Map<String, Integer> byHistoryId = new HashMap<>();
@@ -152,7 +145,9 @@ public class LocalVersionLayout {
 			fullHistory);
 	}
 
-	final LocalVersionHistory calculateHistory(final LocalRoot root, final Path path) throws IOException {
+	@Override
+	public LocalVersionHistory getFullHistory(final LocalRoot root, final Path path,
+		final Function<Path, Path> pathConverter) throws IOException {
 		final Path truePath = root.makeAbsolute(path);
 		if (Files.isDirectory(truePath) || (this.versionNumberScheme == null)) {
 			return calculateSingleHistory(root, path);
@@ -167,7 +162,9 @@ public class LocalVersionLayout {
 		try (Stream<Path> candidates = findSiblingCandidates(root, path)) {
 			candidates //
 				.filter(Objects::nonNull) // Is the converted path non-null?
-				.map(this.converter) // Do I need to swap to another file?
+				.map(Tools.coalesce(pathConverter, LocalVersionFinder.IDENTITY)) // Do I need to
+																					// swap to
+																					// another file?
 				.filter(Objects::nonNull) // Is the converted path non-null?
 				.filter(Files::exists) // Does the converted path exist?
 				.map((p) -> parseVersionInfo(root, p)) // parse the version info
@@ -205,5 +202,12 @@ public class LocalVersionLayout {
 		LocalFile rootVersion = fullHistory.get(0);
 		LocalFile currentVersion = fullHistory.get(fullHistory.size() - 1);
 		return new LocalVersionHistory(historyId, rootVersion, currentVersion, byHistoryId, byPath, fullHistory);
+	}
+
+	@Override
+	public String getHistoryId(LocalRoot root, Path path, Function<Path, Path> pathConverter) {
+		path = root.makeAbsolute(Tools.coalesce(pathConverter, LocalVersionFinder.IDENTITY).apply(path));
+		if (Files.isDirectory(path)) { return null; }
+		return parseVersionInfo(root, path).historyId;
 	}
 }

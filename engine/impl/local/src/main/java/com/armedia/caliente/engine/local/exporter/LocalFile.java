@@ -42,7 +42,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.caliente.engine.local.exporter.LocalVersionLayout.VersionInfo;
+import com.armedia.caliente.engine.local.exporter.LocalPathVersionFinder.VersionInfo;
 import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObject.Archetype;

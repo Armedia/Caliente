@@ -45,7 +45,7 @@ import com.armedia.caliente.tools.VersionNumberScheme;
  * @author diego
  *
  */
-public class SimpleVersionLayout extends LocalVersionLayout {
+public class SimpleVersionLayout extends LocalPathVersionFinder {
 
 	private static final String DEFAULT_TAG_SEPARATOR = ".v";
 

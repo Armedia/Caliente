@@ -26,21 +26,26 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.exporter;
 
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.stream.Stream;
+import java.util.function.Function;
 
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.caliente.tools.VersionNumberScheme;
 
-public class NullVersionLayout extends LocalPathVersionFinder {
+public interface LocalVersionFinder {
 
-	public NullVersionLayout(VersionNumberScheme numberScheme) {
-		super(numberScheme);
+	public static final Function<Path, Path> IDENTITY = Function.identity();
+
+	public default String getHistoryId(final LocalRoot root, final Path path) {
+		return getHistoryId(root, path, LocalVersionFinder.IDENTITY);
 	}
 
-	@Override
-	protected Stream<Path> findSiblingCandidates(LocalRoot root, Path path) throws IOException {
-		return Stream.empty();
+	public String getHistoryId(final LocalRoot root, final Path path, final Function<Path, Path> pathConverter);
+
+	public default LocalVersionHistory getFullHistory(final LocalRoot root, final Path path) throws Exception {
+		return getFullHistory(root, path, LocalVersionFinder.IDENTITY);
 	}
+
+	public LocalVersionHistory getFullHistory(final LocalRoot root, final Path path,
+		final Function<Path, Path> pathConverter) throws Exception;
+
 }

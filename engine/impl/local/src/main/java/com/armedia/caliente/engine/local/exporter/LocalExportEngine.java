@@ -142,7 +142,7 @@ public class LocalExportEngine extends
 	}
 
 	private final LocalRoot root;
-	private final LocalVersionLayout versionLayout;
+	private final LocalPathVersionFinder versionLayout;
 	private final LocalVersionHistoryCache histories;
 	private LocalQueryService localQueryService = null;
 
@@ -216,7 +216,7 @@ public class LocalExportEngine extends
 		return this.root;
 	}
 
-	public LocalVersionLayout getVersionLayout() {
+	public LocalPathVersionFinder getVersionLayout() {
 		return this.versionLayout;
 	}
 
@@ -379,7 +379,7 @@ public class LocalExportEngine extends
 		return null;
 	}
 
-	protected LocalFile getLocalFile(String path) throws IOException {
+	protected LocalFile getLocalFile(String path) throws Exception {
 		return this.histories.getLocalFile(Paths.get(path));
 	}
 

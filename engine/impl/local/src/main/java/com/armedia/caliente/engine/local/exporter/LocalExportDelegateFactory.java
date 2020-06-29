@@ -26,7 +26,6 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.exporter;
 
-import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.attribute.UserPrincipalLookupService;
 
@@ -56,7 +55,7 @@ public class LocalExportDelegateFactory
 		return this.engine.getRoot();
 	}
 
-	public final LocalFile getLocalFile(String p) throws IOException {
+	public final LocalFile getLocalFile(String p) throws Exception {
 		return this.engine.getLocalFile(p);
 	}
 
