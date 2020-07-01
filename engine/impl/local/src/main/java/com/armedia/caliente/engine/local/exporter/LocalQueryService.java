@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,7 +33,6 @@ import javax.sql.DataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -446,7 +444,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		return (!rs.wasNull() ? val : null);
 	};
 
-	private final class VersionListHandler implements ResultSetHandler<List<Pair<String, Path>>> {
+	private final class VersionListHandler implements ResultSetHandler<Map<String, Path>> {
 		private final Processor processor;
 
 		private VersionListHandler(Processor processor) {
@@ -454,8 +452,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 
 		@Override
-		public List<Pair<String, Path>> handle(ResultSet rs) throws SQLException {
-			List<Pair<String, Path>> ret = new LinkedList<>();
+		public Map<String, Path> handle(ResultSet rs) throws SQLException {
+			Map<String, Path> ret = new LinkedHashMap<>();
 			while (rs.next()) {
 				String key = rs.getString(1);
 				if (rs.wasNull()) {
@@ -483,7 +481,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 					continue;
 				}
 
-				ret.add(Pair.of(key, Paths.get(value)));
+				ret.put(key, Paths.get(value));
 			}
 			return ret;
 		}
@@ -521,7 +519,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
-	protected class VersionListQuery extends Query<List<Pair<String, Path>>> {
+	protected class VersionListQuery extends Query<Map<String, Path>> {
 
 		private VersionListQuery(LocalQueryVersionList vl, Processor processor,
 			Function<String, DataSource> dataSourceFinder) {
@@ -535,7 +533,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	private final Map<String, Processor> processors;
 	private final Map<String, Search> searches;
 	private final Map<String, Query<String>> history;
-	private final Map<String, Query<List<Pair<String, Path>>>> members;
+	private final Map<String, Query<Map<String, Path>>> members;
 
 	public LocalQueryService() throws Exception {
 		this(LocalQueryService.LOCAL_QUERIES.getInstance());
@@ -617,7 +615,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 		this.history = Tools.freezeMap(historyMap);
 
-		Map<String, Query<List<Pair<String, Path>>>> membersMap = new LinkedHashMap<>();
+		Map<String, Query<Map<String, Path>>> membersMap = new LinkedHashMap<>();
 		for (LocalQueryVersionList vl : queries.getVersionListQueries()) {
 			String id = vl.getId();
 			if (StringUtils.isEmpty(id)) {
@@ -730,7 +728,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		return buildQuery("History id", sql, LocalQueryService.HANDLER_HISTORY_ID, dataSourceFinder);
 	}
 
-	protected Query<List<Pair<String, Path>>> buildVersionsListQuery(LocalQueryVersionList vl,
+	protected Query<Map<String, Path>> buildVersionsListQuery(LocalQueryVersionList vl,
 		Function<String, DataSource> dataSourceFinder) throws Exception {
 		return new VersionListQuery(vl, buildProcessor(vl.getPostProcessors()), dataSourceFinder);
 	}
@@ -767,21 +765,22 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
-	public List<Pair<String, Path>> getVersionList(String historyId) {
+	public Map<String, Path> getVersionList(String historyId) {
 		try (SharedAutoLock lock = autoSharedLock()) {
 			for (String id : this.members.keySet()) {
-				Query<List<Pair<String, Path>>> q = this.members.get(id);
+				Query<Map<String, Path>> q = this.members.get(id);
 				try {
-					final List<Pair<String, Path>> ret = q.run(historyId);
-					ret.removeIf(Objects::isNull);
-					if ((ret != null) && !ret.isEmpty()) { return Tools.freezeList(ret); }
+					final Map<String, Path> ret = q.run(historyId);
+					ret.keySet().removeIf(Objects::isNull);
+					ret.values().removeIf(Objects::isNull);
+					if ((ret != null) && !ret.isEmpty()) { return Tools.freezeMap(ret); }
 				} catch (Exception e) {
 					this.log.warn("Exception caught from history members query [{}] while searching for ID [{}]", id,
 						historyId, e);
 					continue;
 				}
 			}
-			return Collections.emptyList();
+			return Collections.emptyMap();
 		}
 	}
 

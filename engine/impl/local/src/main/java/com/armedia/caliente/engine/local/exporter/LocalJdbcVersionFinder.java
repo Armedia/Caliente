@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.exporter.LocalPathVersionFinder.LocalVersionInfo;
@@ -43,15 +41,21 @@ public class LocalJdbcVersionFinder implements LocalVersionFinder {
 	public LocalVersionHistory getFullHistory(LocalRoot root, Path path, Function<Path, Path> pathConverter)
 		throws Exception {
 		final String historyId = getHistoryId(root, path, pathConverter);
-		final List<Pair<String, Path>> versions = this.service.getVersionList(historyId);
+		final Map<String, Path> versions = this.service.getVersionList(historyId);
 		Map<String, Integer> byPath = new HashMap<>();
 		Map<String, Integer> byHistoryId = new HashMap<>();
 		List<LocalFile> fullHistory = new ArrayList<>(versions.size());
-		final Path radix = root.makeAbsolute(versions.get(versions.size() - 1).getValue());
+
+		// TODO: How to more efficiently find the last entry in the map?
+		Path radix = null;
+		for (Path p : versions.values()) {
+			radix = p;
+		}
+		radix = root.makeAbsolute(radix);
+
 		int i = 0;
-		for (Pair<String, Path> v : versions) {
-			final String tag = v.getKey();
-			Path versionPath = root.makeAbsolute(v.getValue());
+		for (String tag : versions.keySet()) {
+			Path versionPath = root.makeAbsolute(versions.get(tag));
 			byHistoryId.put(tag, i);
 			final boolean latest = (i == (versions.size() - 1));
 			LocalFile lf = new LocalFile(root, versionPath.toString(),
