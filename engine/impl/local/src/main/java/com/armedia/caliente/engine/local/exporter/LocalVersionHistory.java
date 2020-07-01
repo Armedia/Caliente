@@ -36,7 +36,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.caliente.engine.local.exporter.LocalPathVersionFinder.LocalVersionInfo;
 import com.armedia.commons.utilities.Tools;
 
 public final class LocalVersionHistory implements Iterable<LocalFile> {

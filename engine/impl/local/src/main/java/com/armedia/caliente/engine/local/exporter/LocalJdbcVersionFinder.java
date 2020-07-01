@@ -11,7 +11,6 @@ import java.util.function.Function;
 
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.caliente.engine.local.exporter.LocalPathVersionFinder.LocalVersionInfo;
 import com.armedia.commons.utilities.Tools;
 
 public class LocalJdbcVersionFinder implements LocalVersionFinder {

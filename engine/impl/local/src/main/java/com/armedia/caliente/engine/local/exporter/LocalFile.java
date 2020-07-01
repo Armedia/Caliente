@@ -40,7 +40,6 @@ import java.util.function.Function;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.caliente.engine.local.exporter.LocalPathVersionFinder.LocalVersionInfo;
 import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObject.Archetype;
