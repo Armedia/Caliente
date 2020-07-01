@@ -45,7 +45,7 @@ public class NullVersionFinder extends LocalPathVersionFinder {
 	}
 
 	@Override
-	protected VersionInfo parseVersionInfo(LocalRoot root, Path p) {
+	protected LocalVersionInfo parseVersionInfo(LocalRoot root, Path p) {
 		return null;
 	}
 }

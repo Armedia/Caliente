@@ -51,16 +51,24 @@ import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 
-	protected static final class VersionInfo {
+	protected static final class LocalVersionInfo {
 		private final Path path;
 		private final Path radix;
 		private final String historyId;
 		private final String tag;
 
-		VersionInfo(Path path, Path radix, String tag) {
+		LocalVersionInfo(Path path, Path radix, String tag) {
+			this(path, radix, null, tag);
+		}
+
+		LocalVersionInfo(Path path, Path radix, String historyId, String tag) {
 			this.path = path;
 			this.radix = radix;
-			this.historyId = LocalCommon.calculateId(LocalCommon.toPortablePath(radix.toString()));
+			if (!StringUtils.isBlank(historyId)) {
+				this.historyId = historyId;
+			} else {
+				this.historyId = LocalCommon.calculateId(LocalCommon.toPortablePath(radix.toString()));
+			}
 			this.tag = (StringUtils.isBlank(tag) ? StringUtils.EMPTY : tag);
 		}
 
@@ -82,7 +90,7 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 
 		@Override
 		public String toString() {
-			return String.format("VersionInfo [path=%s, radix=%s, historyId=%s, tag=%s]", this.path, this.radix,
+			return String.format("LocalVersionInfo [path=%s, radix=%s, historyId=%s, tag=%s]", this.path, this.radix,
 				this.historyId, this.tag);
 		}
 	}
@@ -99,11 +107,11 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 		return this.versionNumberScheme;
 	}
 
-	protected final Predicate<VersionInfo> getSiblingCheck(final LocalFile baseFile) {
+	protected final Predicate<LocalVersionInfo> getSiblingCheck(final LocalFile baseFile) {
 		return (p) -> isSibling(baseFile, p);
 	}
 
-	private boolean isSibling(LocalFile baseFile, VersionInfo candidate) {
+	private boolean isSibling(LocalFile baseFile, LocalVersionInfo candidate) {
 		try {
 			return (baseFile != null) && (candidate != null)
 				&& (Files.isSameFile(baseFile.getAbsolute().toPath(), candidate.getPath())
@@ -122,16 +130,22 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 		return Files.list(baseFolder);
 	}
 
-	protected abstract VersionInfo parseVersionInfo(LocalRoot root, Path p);
+	protected abstract LocalVersionInfo parseVersionInfo(LocalRoot root, Path p);
+
+	@Override
+	public String getObjectId(LocalRoot root, Path path, Function<Path, Path> pathConverter) throws Exception {
+		path = Tools.coalesce(pathConverter, LocalVersionFinder.PATH_IDENTITY).apply(path);
+		return LocalCommon.calculateId(LocalCommon.toPortablePath(root.relativize(path).toString()));
+	}
 
 	@Override
 	public LocalVersionHistory getFullHistory(final LocalRoot root, final Path path,
 		final Function<Path, Path> pathConverter) throws IOException {
-		final VersionInfo info = parseVersionInfo(root, path);
+		final LocalVersionInfo info = parseVersionInfo(root, path);
 		final String historyId = info.getHistoryId();
-		final Map<String, VersionInfo> versions = new TreeMap<>(this.versionNumberScheme);
-		final Collector<? super VersionInfo, ?, Map<String, VersionInfo>> collector = Collectors
-			.toMap(VersionInfo::getTag, Function.identity(), (a, b) -> a, () -> versions);
+		final Map<String, LocalVersionInfo> versions = new TreeMap<>(this.versionNumberScheme);
+		final Collector<? super LocalVersionInfo, ?, Map<String, LocalVersionInfo>> collector = Collectors
+			.toMap(LocalVersionInfo::getTag, Function.identity(), (a, b) -> a, () -> versions);
 
 		try (Stream<Path> candidates = findSiblingCandidates(root, path)) {
 			candidates //
@@ -164,7 +178,7 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 		List<LocalFile> fullHistory = new ArrayList<>(versions.size());
 		int i = 0;
 		for (String tag : versions.keySet()) {
-			VersionInfo thisInfo = versions.get(tag);
+			LocalVersionInfo thisInfo = versions.get(tag);
 			byHistoryId.put(tag, i);
 			final boolean latest = (i == (versions.size() - 1));
 			LocalFile lf = new LocalFile(root, thisInfo.getPath().toString(), thisInfo, latest);
@@ -183,9 +197,7 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 	@Override
 	public String getHistoryId(LocalRoot root, Path path, Function<Path, Path> pathConverter) throws Exception {
 		path = root.makeAbsolute(Tools.coalesce(pathConverter, LocalVersionFinder.PATH_IDENTITY).apply(path));
-		if (Files.isDirectory(path)) {
-			return LocalCommon.calculateId(LocalCommon.toPortablePath(root.relativize(path).toString()));
-		}
+		if (Files.isDirectory(path)) { return getObjectId(root, path, pathConverter); }
 		return parseVersionInfo(root, path).historyId;
 	}
 }

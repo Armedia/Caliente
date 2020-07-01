@@ -66,6 +66,12 @@ public interface LocalVersionFinder {
 		return LocalVersionFinder.convert(path, StringUtils::lowerCase);
 	}
 
+	public default String getObjectId(LocalRoot root, Path path) throws Exception {
+		return getObjectId(root, path, LocalVersionFinder.PATH_IDENTITY);
+	}
+
+	public String getObjectId(LocalRoot root, Path path, final Function<Path, Path> pathConverter) throws Exception;
+
 	public default String getHistoryId(final LocalRoot root, final Path path) throws Exception {
 		return getHistoryId(root, path, LocalVersionFinder.PATH_IDENTITY);
 	}

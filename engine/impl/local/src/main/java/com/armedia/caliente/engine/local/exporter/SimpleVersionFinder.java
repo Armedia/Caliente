@@ -76,11 +76,11 @@ public class SimpleVersionFinder extends LocalPathVersionFinder {
 	}
 
 	@Override
-	protected VersionInfo parseVersionInfo(LocalRoot root, Path path) {
+	protected LocalVersionInfo parseVersionInfo(LocalRoot root, Path path) {
 		Matcher m = this.pattern.matcher(path.toString());
 		final Path rawRadix = (m.matches() ? Paths.get(m.group(1)) : path);
 		final Path radix = LocalCommon.uncheck(() -> root.relativize(rawRadix));
-		return new VersionInfo(path, radix, m.group(2));
+		return new LocalVersionInfo(path, radix, m.group(2));
 	}
 
 	protected boolean siblingCheck(LocalFile baseFile, Path candidate) throws IOException {

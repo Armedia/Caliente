@@ -37,12 +37,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.caliente.engine.local.exporter.LocalPathVersionFinder.VersionInfo;
+import com.armedia.caliente.engine.local.exporter.LocalPathVersionFinder.LocalVersionInfo;
 import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObject.Archetype;
@@ -91,7 +89,7 @@ class LocalFile {
 
 	private final LazySupplier<String> id = new LazySupplier<>(() -> LocalCommon.calculateId(getPortableFullPath()));
 	private final LazySupplier<String> parentId = new LazySupplier<>(() -> LocalCommon.calculateId(getParentPath()));
-	private final LazySupplier<String> historyId = new LazySupplier<>(() -> LocalCommon.calculateId(getHistoryRadix()));
+	private final String historyId;
 
 	private final LazySupplier<String> portableFullPath = new LazySupplier<>(
 		() -> LocalCommon.toPortablePath(getFullPath()));
@@ -106,7 +104,7 @@ class LocalFile {
 	private final LazySupplier<Integer> hash;
 	private final LazyFormatter string;
 
-	LocalFile(LocalRoot root, String path, VersionInfo versionInfo, boolean current) throws IOException {
+	LocalFile(LocalRoot root, String path, LocalVersionInfo localVersionInfo, boolean current) throws IOException {
 		this.root = root;
 		Path p = root.relativize(Paths.get(path));
 		this.relativeFile = p.toFile();
@@ -119,13 +117,9 @@ class LocalFile {
 			r.add(PathTools.makeSafe(s));
 		}
 
-		if (versionInfo != null) {
-			this.historyRadix = LocalCommon.toPortablePath(versionInfo.getRadix().toString());
-			this.versionTag = versionInfo.getTag();
-		} else {
-			this.historyRadix = LocalCommon.toPortablePath(p.toString());
-			this.versionTag = StringUtils.EMPTY;
-		}
+		this.historyId = localVersionInfo.getHistoryId();
+		this.versionTag = localVersionInfo.getTag();
+		this.historyRadix = LocalCommon.toPortablePath(localVersionInfo.getRadix().toString());
 
 		this.safePath = FileNameTools.reconstitute(r, false, false, '/');
 		this.pathCount = r.size();
@@ -160,7 +154,7 @@ class LocalFile {
 	}
 
 	public String getHistoryId() {
-		return this.historyId.get();
+		return this.historyId;
 	}
 
 	public String getVersionTag() {
