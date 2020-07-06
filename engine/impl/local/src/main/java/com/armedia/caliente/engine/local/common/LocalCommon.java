@@ -88,4 +88,8 @@ public final class LocalCommon {
 		}
 		return FileNameTools.reconstitute(FileNameTools.tokenize(path, '/'), true, false, '/');
 	}
+
+	public static String toLocalizedPath(String path) {
+		return path.replace((File.separatorChar == '\\') ? '/' : '\\', File.separatorChar);
+	}
 }
