@@ -73,6 +73,14 @@ public class LocalQueries {
 	@XmlElement(name = "version-list", required = false)
 	protected List<LocalQueryVersionList> versionLists;
 
+	public String getRootPath() {
+		return this.rootPath;
+	}
+
+	public void setRootPath(String rootPath) {
+		this.rootPath = rootPath;
+	}
+
 	public List<LocalQueryDataSource> getDataSourceDefinitions() {
 		if (this.dataSourceDefinitions == null) {
 			this.dataSourceDefinitions = new ArrayList<>();

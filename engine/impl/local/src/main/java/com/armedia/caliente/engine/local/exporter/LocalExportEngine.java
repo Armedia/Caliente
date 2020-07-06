@@ -93,7 +93,6 @@ public class LocalExportEngine extends
 	public static final String VERSION_LAYOUT_FLAT = "flat";
 	// HIERARCHICAL (a/b/v1[/stream] a/b/v2[/stream] a/b/v3[/stream])
 	public static final String VERSION_LAYOUT_HIERARCHICAL = "hierarchical";
-	public static final String VERSION_LAYOUT_JDBC = "jdbc";
 	private static final String VERSION_LAYOUT_DEFAULT = LocalExportEngine.VERSION_LAYOUT_FLAT;
 	public static final Set<String> VERSION_LAYOUTS = Tools.freezeSet(new LinkedHashSet<>(new TreeSet<>(Arrays.asList( //
 		LocalExportEngine.VERSION_LAYOUT_FLAT, //
@@ -106,6 +105,27 @@ public class LocalExportEngine extends
 		JDBC, //
 		//
 		;
+	}
+
+	private static class Source {
+		private final SearchType searchType;
+		private final String data;
+
+		private Source(CfgTools settings) throws ExportException {
+			String source = settings.getString(LocalSetting.SOURCE);
+			if (StringUtils.isEmpty(source)) {
+				throw new ExportException("Must provide a non-empty source specification");
+			}
+
+			Matcher m = LocalExportEngine.QUERY_PREFIX_PARSER.matcher(source);
+			if (m.matches()) {
+				this.searchType = SearchType.QUERY;
+				this.data = m.group(2);
+			} else {
+				this.searchType = SearchType.PATH;
+				this.data = source;
+			}
+		}
 	}
 
 	private interface LocalQuery extends Callable<Stream<ExportTarget>> {
@@ -144,63 +164,93 @@ public class LocalExportEngine extends
 	private final LocalRoot root;
 	private final LocalVersionFinder versionFinder;
 	private final LocalVersionHistoryCache histories;
-	private LocalQueryService localQueryService = null;
+	private final LocalQueryService localQueryService;
+
+	static Path sanitizePath(String root, Predicate<Path> validator) throws ExportException {
+		Path source = Tools.canonicalize(Paths.get(root));
+		// Make sure a source has been specified
+		if (source == null) { throw new IllegalArgumentException("Must specify a non-null path"); }
+		if (!Files.exists(source)) {
+			throw new ExportException(String.format("The specified path [%s] does not exist", source));
+		}
+		if ((validator != null) && !validator.test(source)) {
+			throw new ExportException(String.format("The specified source at [%s] is not valid", source));
+		}
+		if (!Files.isReadable(source)) {
+			throw new ExportException(String.format("The specified source at [%s] is not readable", source));
+		}
+		return source;
+	}
 
 	public LocalExportEngine(LocalExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
 		throws ExportException {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, false, SearchType.PATH);
 
-		try {
-			this.root = LocalCommon.getLocalRoot(settings);
-		} catch (IOException e) {
-			throw new ExportException("Failed to construct the root session", e);
-		}
+		// First, identify the source...
+		Source src = new Source(settings);
+		Path root = null;
+		if (src.searchType == SearchType.QUERY) {
+			Path path = LocalExportEngine.sanitizePath(src.data, Files::isRegularFile);
+			try {
+				this.localQueryService = new LocalQueryService(path.toUri().toURL());
+			} catch (Exception e) {
+				throw new ExportException(
+					String.format("Failed to initialize the LocalQueryService instance from [%s]", src.data), e);
+			}
+			root = this.localQueryService.getRoot();
+			this.versionFinder = new LocalJdbcVersionFinder(this.localQueryService);
+		} else {
+			this.localQueryService = null;
+			root = LocalExportEngine.sanitizePath(src.data, Files::isDirectory);
 
-		final VersionNumberScheme scheme;
-		final String schemeName = settings.getString(LocalSetting.VERSION_SCHEME);
-		final String tagSeparator = settings.getString(LocalSetting.VERSION_TAG_SEPARATOR);
-		if (!StringUtils.isBlank(schemeName)) {
-			final boolean emptyIsRoot = Tools.coalesce(settings.getBoolean(LocalSetting.VERSION_SCHEME_EMPTY_IS_ROOT),
-				Boolean.FALSE);
-			// TODO: Make the separator configurable?
-			final char sep = '.';
-			switch (schemeName.toLowerCase()) {
-				case VERSION_SCHEME_ALPHABETIC:
-					scheme = VersionNumberScheme.getAlphabetic(sep, emptyIsRoot);
+			final VersionNumberScheme scheme;
+			final String schemeName = settings.getString(LocalSetting.VERSION_SCHEME);
+			final String tagSeparator = settings.getString(LocalSetting.VERSION_TAG_SEPARATOR);
+			if (!StringUtils.isBlank(schemeName)) {
+				final boolean emptyIsRoot = Tools
+					.coalesce(settings.getBoolean(LocalSetting.VERSION_SCHEME_EMPTY_IS_ROOT), Boolean.FALSE);
+				// TODO: Make the separator configurable?
+				final char sep = '.';
+				switch (schemeName.toLowerCase()) {
+					case VERSION_SCHEME_ALPHABETIC:
+						scheme = VersionNumberScheme.getAlphabetic(sep, emptyIsRoot);
+						break;
+					case VERSION_SCHEME_ALPHANUMERIC:
+						scheme = VersionNumberScheme.getAlphanumeric(null, emptyIsRoot);
+						break;
+					case VERSION_SCHEME_NUMERIC:
+						scheme = VersionNumberScheme.getNumeric(sep, emptyIsRoot);
+						break;
+					default:
+						throw new ExportException(
+							String.format("Support for version scheme [%s] is not yet implemented", schemeName));
+				}
+			} else {
+				scheme = null;
+			}
+
+			final String layoutName = Tools.coalesce(settings.getString(LocalSetting.VERSION_LAYOUT),
+				LocalExportEngine.VERSION_LAYOUT_DEFAULT);
+			// final String layoutStreamName =
+			// settings.getString(LocalSetting.VERSION_LAYOUT_STREAM_NAME);
+			switch (layoutName.toLowerCase()) {
+				case VERSION_LAYOUT_HIERARCHICAL:
+					// TODO: Implement this
+				case VERSION_LAYOUT_FLAT:
+					this.versionFinder = new SimpleVersionFinder(scheme, tagSeparator);
 					break;
-				case VERSION_SCHEME_ALPHANUMERIC:
-					scheme = VersionNumberScheme.getAlphanumeric(null, emptyIsRoot);
-					break;
-				case VERSION_SCHEME_NUMERIC:
-					scheme = VersionNumberScheme.getNumeric(sep, emptyIsRoot);
-					break;
+
 				default:
 					throw new ExportException(
-						String.format("Support for version scheme [%s] is not yet implemented", schemeName));
+						String.format("Support for version scheme [%s] is not yet implemented", layoutName));
 			}
-		} else {
-			scheme = null;
 		}
 
-		final String layoutName = Tools.coalesce(settings.getString(LocalSetting.VERSION_LAYOUT),
-			LocalExportEngine.VERSION_LAYOUT_DEFAULT);
-		// final String layoutStreamName =
-		// settings.getString(LocalSetting.VERSION_LAYOUT_STREAM_NAME);
-		switch (layoutName.toLowerCase()) {
-			case VERSION_LAYOUT_HIERARCHICAL:
-				// TODO: Implement this
-			case VERSION_LAYOUT_FLAT:
-				this.versionFinder = new SimpleVersionFinder(scheme, tagSeparator);
-				break;
-
-			case VERSION_LAYOUT_JDBC:
-				this.versionFinder = new LocalJdbcVersionFinder(this.localQueryService);
-				break;
-
-			default:
-				throw new ExportException(
-					String.format("Support for version scheme [%s] is not yet implemented", layoutName));
+		try {
+			this.root = new LocalRoot(root);
+		} catch (IOException e) {
+			throw new ExportException(String.format("Failed to validate the root path at [%s]", root), e);
 		}
 
 		this.histories = new LocalVersionHistoryCache(this.root, this.versionFinder);
@@ -252,6 +302,7 @@ public class LocalExportEngine extends
 	@Override
 	protected Stream<ExportTarget> findExportTargetsByQuery(LocalRoot session, CfgTools configuration, String querySpec)
 		throws Exception {
+
 		Matcher m = LocalExportEngine.QUERY_PREFIX_PARSER.matcher(querySpec);
 		if (!m.matches()) {
 			throw new ExportException(
@@ -268,7 +319,7 @@ public class LocalExportEngine extends
 			throw new ExportException("Unknown query mode [" + type + "] from query file spec [" + querySpec + "]");
 		}
 
-		final Path path = new File(indexFile).toPath();
+		final Path path = Paths.get(indexFile).toRealPath();
 		if (!Files.exists(path)) {
 			throw new ExportException("No file found at [" + path + "] to execute the " + mode.name() + " query");
 		}
@@ -283,9 +334,7 @@ public class LocalExportEngine extends
 		LocalQuery executor = null;
 		switch (mode) {
 			case JDBC:
-				this.localQueryService = new LocalQueryService(path.toUri().toURL());
-				JDBCQuery jdbcQuery = new JDBCQuery();
-				executor = jdbcQuery;
+				executor = new JDBCQuery();
 				break;
 
 			case SCANXML:
@@ -399,7 +448,7 @@ public class LocalExportEngine extends
 
 	@Override
 	protected LocalSessionFactory newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception {
-		return new LocalSessionFactory(cfg, crypto);
+		return new LocalSessionFactory(cfg, this.root, crypto);
 	}
 
 	@Override

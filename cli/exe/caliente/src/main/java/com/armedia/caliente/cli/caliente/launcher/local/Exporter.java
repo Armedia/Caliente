@@ -26,8 +26,9 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.caliente.launcher.local;
 
-import java.io.File;
 import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionGroup;
@@ -48,7 +49,6 @@ import com.armedia.caliente.engine.local.exporter.LocalExportEngine;
 import com.armedia.caliente.engine.tools.LocalOrganizer;
 import com.armedia.caliente.store.local.LocalContentStoreSetting;
 import com.armedia.caliente.store.xml.StoreConfiguration;
-import com.armedia.commons.utilities.Tools;
 
 class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 
@@ -157,27 +157,10 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 
-		File source = Tools.canonicalize(new File(commandValues.getString(CLIParam.from)));
+		String source = commandValues.getString(CLIParam.from);
+		if (StringUtils.isEmpty(source)) { throw new CalienteException("Must specify a source to export from"); }
 
-		// Make sure a source has been specified
-		if (source == null) { throw new CalienteException("Must specify a source to export from"); }
-		if (!source.exists()) {
-			throw new CalienteException(String.format("The specified source at [%s] does not exist", source.getPath()));
-		}
-		if (!source.exists()) {
-			throw new CalienteException(String.format("The specified source at [%s] does not exist", source.getPath()));
-		}
-		if (!source.isDirectory()) {
-			throw new CalienteException(
-				String.format("The specified source at [%s] is not a directory", source.getPath()));
-		}
-		if (!source.canRead()) {
-			throw new CalienteException(
-				String.format("The specified source at [%s] is not readable", source.getPath()));
-		}
-		source = Tools.canonicalize(source);
-
-		settings.put(LocalSetting.ROOT.getLabel(), source.getAbsolutePath());
+		settings.put(LocalSetting.SOURCE.getLabel(), source);
 		settings.put(LocalSetting.COPY_CONTENT.getLabel(), isCopyContent(commandValues));
 		settings.put(LocalSetting.IGNORE_EMPTY_FOLDERS.getLabel(),
 			commandValues.isPresent(Exporter.IGNORE_EMPTY_FOLDERS));

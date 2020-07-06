@@ -5,6 +5,7 @@ import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -529,6 +530,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private volatile boolean closed = false;
+	private final Path root;
 	private final Map<String, DataSource> dataSources;
 	private final Map<String, Processor> processors;
 	private final Map<String, Search> searches;
@@ -626,6 +628,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			membersMap.put(id, buildVersionsListQuery(vl, this.dataSources::get));
 		}
 		this.members = Tools.freezeMap(membersMap);
+
+		this.root = LocalExportEngine.sanitizePath(queries.getRootPath(), Files::isDirectory);
 	}
 
 	private void setValue(String name, String value, Map<String, String> map) {
@@ -633,6 +637,10 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		if (!StringUtils.isEmpty(value)) {
 			map.put(String.format("jdbc.%s", name), StringSubstitutor.replaceSystemProperties(value));
 		}
+	}
+
+	public Path getRoot() {
+		return this.root;
 	}
 
 	protected DataSource getDataSource(String dataSource) {
