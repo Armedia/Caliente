@@ -107,7 +107,7 @@
 		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
 	</xsd:complexType>
 
-	<xsd:complexType name="localQueriesDataSource.t">
+	<xsd:complexType name="localQueryDataSource.t">
 		<xsd:sequence>
 			<xsd:element name="url" type="tns:noSpaces.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="driver" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
@@ -125,7 +125,7 @@
 				<xsd:element name="data-sources" minOccurs="0" maxOccurs="1">
 					<xsd:complexType>
 						<xsd:sequence>
-							<xsd:element name="data-source" type="tns:localQueriesDataSource.t" minOccurs="0" maxOccurs="unbounded">
+							<xsd:element name="data-source" type="tns:localQueryDataSource.t" minOccurs="0" maxOccurs="unbounded">
 								<xsd:unique name="uniqueDataSourceSettingName">
 									<xsd:selector xpath="tns:setting" />
 									<xsd:field xpath="@name" />

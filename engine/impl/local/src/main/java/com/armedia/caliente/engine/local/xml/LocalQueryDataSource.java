@@ -47,7 +47,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "localQueriesDataSource.t", propOrder = {
+@XmlType(name = "localQueryDataSource.t", propOrder = {
 	"url", "driver", "user", "password", "settings"
 })
 public class LocalQueryDataSource {
