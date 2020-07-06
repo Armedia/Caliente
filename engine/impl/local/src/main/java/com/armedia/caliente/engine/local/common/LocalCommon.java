@@ -78,7 +78,7 @@ public final class LocalCommon {
 	public static String calculateId(String path) {
 		path = LocalCommon.toPortablePath(path);
 		if ((path == null) || Objects.equals("/", path)) { return null; }
-		return DigestUtils.sha256Hex(path);
+		return DigestUtils.sha256Hex(path).toUpperCase();
 	}
 
 	public static String toPortablePath(String path) {

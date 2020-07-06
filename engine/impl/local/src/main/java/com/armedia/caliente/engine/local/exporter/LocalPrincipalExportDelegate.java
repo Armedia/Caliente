@@ -93,7 +93,8 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 
 	@Override
 	protected String calculateObjectId(LocalRoot root, Principal object) throws Exception {
-		return DigestUtils.sha256Hex(String.format("%s:%s", object.getClass().getCanonicalName(), object.getName()));
+		return DigestUtils.sha256Hex(String.format("%s:%s", object.getClass().getCanonicalName(), object.getName()))
+			.toUpperCase();
 	}
 
 	@Override
