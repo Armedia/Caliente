@@ -87,7 +87,7 @@ public class LocalExportEngine extends
 		LocalExportEngine.VERSION_SCHEME_ALPHANUMERIC //
 	))));
 
-	private static final Pattern QUERY_PREFIX_PARSER = Pattern.compile("^@([^:]+):(.+)$");
+	private static final Pattern QUERY_PREFIX_PARSER = Pattern.compile("^%([^:]+):(.+)$");
 
 	// FLAT (a/b.v1, a/b.v2, a/b)
 	public static final String VERSION_LAYOUT_FLAT = "flat";
@@ -185,7 +185,8 @@ public class LocalExportEngine extends
 	public LocalExportEngine(LocalExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
 		throws ExportException {
-		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, false, SearchType.PATH);
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, false, SearchType.PATH,
+			SearchType.QUERY);
 
 		// First, identify the source...
 		Source src = new Source(settings);
@@ -303,6 +304,10 @@ public class LocalExportEngine extends
 	protected Stream<ExportTarget> findExportTargetsByQuery(LocalRoot session, CfgTools configuration, String querySpec)
 		throws Exception {
 
+		if (this.localQueryService == null) {
+			throw new ExportException("Can't run a query-based search if no local query service was configured");
+		}
+
 		Matcher m = LocalExportEngine.QUERY_PREFIX_PARSER.matcher(querySpec);
 		if (!m.matches()) {
 			throw new ExportException(
@@ -319,18 +324,7 @@ public class LocalExportEngine extends
 			throw new ExportException("Unknown query mode [" + type + "] from query file spec [" + querySpec + "]");
 		}
 
-		final Path path = Paths.get(indexFile).toRealPath();
-		if (!Files.exists(path)) {
-			throw new ExportException("No file found at [" + path + "] to execute the " + mode.name() + " query");
-		}
-		if (!Files.isRegularFile(path)) {
-			throw new ExportException(
-				"The path [" + path + "] is not a regular file for the " + mode.name() + " query");
-		}
-		if (!Files.isReadable(path)) {
-			throw new ExportException("The file at [" + path + "] is not readable for the " + mode.name() + " query");
-		}
-
+		final Path path = LocalExportEngine.sanitizePath(indexFile, Files::isRegularFile);
 		LocalQuery executor = null;
 		switch (mode) {
 			case JDBC:
