@@ -34,16 +34,19 @@ public class LocalVersionHistoryCache {
 		}
 	}
 
-	private LocalVersionHistory getVersionHistory(String path) throws Exception {
-		final Path truePath = this.root.makeAbsolute(Paths.get(path));
+	private LocalVersionHistory getVersionHistory(String pathStr) throws Exception {
+		final Path truePath = this.root.makeAbsolute(Paths.get(pathStr));
+		final Path path = this.root.relativize(truePath);
+
 		// Slight optimization...
 		if (Files.isDirectory(truePath) || (this.versionFinder == null)) {
 			return LocalVersionHistory.getSingleHistory(this.root, truePath);
 		}
+
 		final String key = this.versionFinder.getHistoryId(this.root, truePath);
 		return this.histories.computeIfAbsent(key, (k) -> {
 			try {
-				return this.versionFinder.getFullHistory(this.root, truePath);
+				return this.versionFinder.getFullHistory(this.root, path);
 			} catch (Exception e) {
 				throw new RuntimeException(String.format("Failed to calculate the history for path [%s]", k, path), e);
 			}
