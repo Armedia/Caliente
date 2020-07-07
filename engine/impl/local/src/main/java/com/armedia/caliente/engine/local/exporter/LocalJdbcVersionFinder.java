@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
@@ -22,24 +21,21 @@ public class LocalJdbcVersionFinder implements LocalVersionFinder {
 	}
 
 	@Override
-	public String getObjectId(LocalRoot root, Path path, Function<Path, Path> pathConverter) throws Exception {
-		path = Tools.coalesce(pathConverter, LocalVersionFinder.PATH_IDENTITY).apply(path);
-		// TODO: Actually fetch the objectId from the mapping table
+	public String getObjectId(LocalRoot root, Path path) throws Exception {
+		// TODO: Actually fetch the objectId from the mapping table?
 		return LocalCommon.calculateId(LocalCommon.toPortablePath(root.relativize(path).toString()));
 	}
 
 	@Override
-	public String getHistoryId(LocalRoot root, Path path, Function<Path, Path> pathConverter) throws Exception {
-		path = Tools.coalesce(pathConverter, LocalVersionFinder.PATH_IDENTITY).apply(path);
-		String objectId = getObjectId(root, path, pathConverter);
+	public String getHistoryId(LocalRoot root, Path path) throws Exception {
+		String objectId = getObjectId(root, path);
 		if (Files.isDirectory(root.makeAbsolute(path))) { return objectId; }
 		return this.service.getHistoryId(objectId);
 	}
 
 	@Override
-	public LocalVersionHistory getFullHistory(LocalRoot root, Path path, Function<Path, Path> pathConverter)
-		throws Exception {
-		final String historyId = getHistoryId(root, path, pathConverter);
+	public LocalVersionHistory getFullHistory(LocalRoot root, Path path) throws Exception {
+		final String historyId = getHistoryId(root, path);
 		final Map<String, Path> versions = this.service.getVersionList(historyId);
 		Map<String, Integer> byPath = new HashMap<>();
 		Map<String, Integer> byHistoryId = new HashMap<>();

@@ -27,63 +27,15 @@
 package com.armedia.caliente.engine.local.exporter;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.function.Function;
-
-import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.local.common.LocalRoot;
 
 public interface LocalVersionFinder {
 
-	public static final Function<Path, Path> PATH_IDENTITY = Function.identity();
+	public String getObjectId(LocalRoot root, Path path) throws Exception;
 
-	public static Path convert(Path path, Function<String, String> converter) {
-		if ((path == null) || (converter == null)) { return path; }
-		Path newPath = null;
-		if (path.isAbsolute()) {
-			Path parent = path.getParent();
-			if (parent != null) {
-				newPath = parent;
-			}
-		}
-		for (Path p : path) {
-			String P = converter.apply(p.toString());
-			if (newPath == null) {
-				newPath = Paths.get(P);
-			} else {
-				newPath = newPath.resolve(P);
-			}
-		}
-		return newPath;
-	}
+	public String getHistoryId(final LocalRoot root, final Path path) throws Exception;
 
-	public static Path upperCase(Path path) {
-		return LocalVersionFinder.convert(path, StringUtils::upperCase);
-	}
-
-	public static Path lowerCase(Path path) {
-		return LocalVersionFinder.convert(path, StringUtils::lowerCase);
-	}
-
-	public default String getObjectId(LocalRoot root, Path path) throws Exception {
-		return getObjectId(root, path, LocalVersionFinder.PATH_IDENTITY);
-	}
-
-	public String getObjectId(LocalRoot root, Path path, final Function<Path, Path> pathConverter) throws Exception;
-
-	public default String getHistoryId(final LocalRoot root, final Path path) throws Exception {
-		return getHistoryId(root, path, LocalVersionFinder.PATH_IDENTITY);
-	}
-
-	public String getHistoryId(final LocalRoot root, final Path path, final Function<Path, Path> pathConverter)
-		throws Exception;
-
-	public default LocalVersionHistory getFullHistory(final LocalRoot root, final Path path) throws Exception {
-		return getFullHistory(root, path, LocalVersionFinder.PATH_IDENTITY);
-	}
-
-	public LocalVersionHistory getFullHistory(final LocalRoot root, final Path path,
-		final Function<Path, Path> pathConverter) throws Exception;
+	public LocalVersionHistory getFullHistory(final LocalRoot root, final Path path) throws Exception;
 
 }

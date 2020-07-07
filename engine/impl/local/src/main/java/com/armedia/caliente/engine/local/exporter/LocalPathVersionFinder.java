@@ -87,14 +87,12 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 	protected abstract LocalVersionInfo parseVersionInfo(LocalRoot root, Path p);
 
 	@Override
-	public String getObjectId(LocalRoot root, Path path, Function<Path, Path> pathConverter) throws Exception {
-		path = Tools.coalesce(pathConverter, LocalVersionFinder.PATH_IDENTITY).apply(path);
+	public String getObjectId(LocalRoot root, Path path) throws Exception {
 		return LocalCommon.calculateId(LocalCommon.toPortablePath(root.relativize(path).toString()));
 	}
 
 	@Override
-	public LocalVersionHistory getFullHistory(final LocalRoot root, final Path path,
-		final Function<Path, Path> pathConverter) throws IOException {
+	public LocalVersionHistory getFullHistory(final LocalRoot root, final Path path) throws IOException {
 		final LocalVersionInfo info = parseVersionInfo(root, path);
 		final String historyId = info.getHistoryId();
 		final Map<String, LocalVersionInfo> versions = new TreeMap<>(this.versionNumberScheme);
@@ -103,12 +101,6 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 
 		try (Stream<Path> candidates = findSiblingCandidates(root, path)) {
 			candidates //
-				.filter(Objects::nonNull) // Is the converted path non-null?
-				.map(Tools.coalesce(pathConverter, LocalVersionFinder.PATH_IDENTITY)) // Do I need
-																						// to
-																						// swap to
-																						// another
-																						// file?
 				.filter(Objects::nonNull) // Is the converted path non-null?
 				.filter(Files::exists) // Does the converted path exist?
 				.map((p) -> parseVersionInfo(root, p)) // parse the version info
@@ -149,9 +141,8 @@ public abstract class LocalPathVersionFinder implements LocalVersionFinder {
 	}
 
 	@Override
-	public String getHistoryId(LocalRoot root, Path path, Function<Path, Path> pathConverter) throws Exception {
-		path = root.makeAbsolute(Tools.coalesce(pathConverter, LocalVersionFinder.PATH_IDENTITY).apply(path));
-		if (Files.isDirectory(path)) { return getObjectId(root, path, pathConverter); }
+	public String getHistoryId(LocalRoot root, Path path) throws Exception {
+		if (Files.isDirectory(path)) { return getObjectId(root, path); }
 		return parseVersionInfo(root, path).getHistoryId();
 	}
 }
