@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
+import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.xml.LocalQueries;
 import com.armedia.caliente.engine.local.xml.LocalQueryDataSource;
 import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessor;
@@ -554,6 +555,13 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			queries = LocalQueryService.LOCAL_QUERIES.getInstance();
 		}
 		Objects.requireNonNull(queries, "Must provide a LocalQueries instance");
+
+		String localized = LocalCommon.toLocalizedPath(queries.getRootPath());
+		if (StringUtils.isEmpty(queries.getRootPath())) {
+			throw new IllegalArgumentException("Must provide a rootPath element");
+		}
+		this.root = LocalExportEngine.sanitizePath(localized, Files::isDirectory);
+
 		final Map<String, DataSource> dataSources = new LinkedHashMap<>();
 		try {
 			for (LocalQueryDataSource ds : queries.getDataSourceDefinitions()) {
@@ -628,8 +636,6 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			membersMap.put(id, buildVersionsListQuery(vl, this.dataSources::get));
 		}
 		this.members = Tools.freezeMap(membersMap);
-
-		this.root = LocalExportEngine.sanitizePath(queries.getRootPath(), Files::isDirectory);
 	}
 
 	private void setValue(String name, String value, Map<String, String> map) {
