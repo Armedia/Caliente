@@ -27,6 +27,9 @@
 package com.armedia.caliente.engine.local.exporter;
 
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import com.armedia.caliente.engine.local.common.LocalRoot;
 
@@ -34,8 +37,11 @@ public interface LocalVersionFinder {
 
 	public String getObjectId(LocalRoot root, Path path) throws Exception;
 
-	public String getHistoryId(final LocalRoot root, final Path path) throws Exception;
+	public String getHistoryId(LocalRoot root, Path path) throws Exception;
 
-	public LocalVersionHistory getFullHistory(final LocalRoot root, final Path path) throws Exception;
+	public LocalVersionHistory getFullHistory(LocalRoot root, Path path) throws Exception;
 
+	public default Map<String, List<?>> getMetadata(LocalRoot root, Path path) throws Exception {
+		return Collections.emptyMap();
+	}
 }
