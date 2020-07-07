@@ -389,6 +389,9 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 								continue;
 							}
 
+							// Make sure it's localized...
+							str = LocalCommon.toLocalizedPath(str);
+
 							// If we ended up with a non-empty string, we return it!
 							return found(Paths.get(str).normalize());
 						}
