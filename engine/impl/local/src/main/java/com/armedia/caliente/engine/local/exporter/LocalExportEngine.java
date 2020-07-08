@@ -34,6 +34,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -63,6 +64,7 @@ import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.caliente.engine.local.common.LocalTranslator;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -298,6 +300,16 @@ public class LocalExportEngine extends
 		Matcher m = LocalExportEngine.QUERY_PREFIX_PARSER.matcher(source);
 		if (m.matches()) { return SearchType.QUERY; }
 		return SearchType.PATH;
+	}
+
+	public final void loadAttributes(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
+		if (this.localQueryService == null) { return; }
+		try {
+			this.localQueryService.loadAttributes(object);
+		} catch (SQLException e) {
+			throw new ExportException(String.format("Failed to load the extra attributes for %s", object.getLabel()),
+				e);
+		}
 	}
 
 	@Override

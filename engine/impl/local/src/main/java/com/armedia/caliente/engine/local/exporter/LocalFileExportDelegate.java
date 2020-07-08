@@ -304,7 +304,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	@Override
-	protected boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> encoded) throws ExportException {
+	protected boolean baseMarshal(LocalExportContext ctx, CmfObject<CmfValue> encoded) throws ExportException {
 		final Path path = this.object.getAbsolute().toPath();
 		CmfAttribute<CmfValue> att = null;
 		att = new CmfAttribute<>(IntermediateAttribute.NAME, IntermediateAttribute.NAME.type, false);

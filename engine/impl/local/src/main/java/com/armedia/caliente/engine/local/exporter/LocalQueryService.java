@@ -47,6 +47,8 @@ import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessorDef;
 import com.armedia.caliente.engine.local.xml.LocalQuerySearch;
 import com.armedia.caliente.engine.local.xml.LocalQuerySql;
 import com.armedia.caliente.engine.local.xml.LocalQueryVersionList;
+import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.caliente.tools.datasource.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
@@ -798,6 +800,12 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				}
 			}
 			return Collections.emptyMap();
+		}
+	}
+
+	public void loadAttributes(CmfObject<CmfValue> object) throws SQLException {
+		try (SharedAutoLock lock = autoSharedLock()) {
+			// TODO: Do the same thing as ExternalMetadata...
 		}
 	}
 

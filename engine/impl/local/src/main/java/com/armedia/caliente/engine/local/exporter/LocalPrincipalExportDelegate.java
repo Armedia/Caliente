@@ -60,7 +60,7 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 	}
 
 	@Override
-	protected boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
+	protected boolean baseMarshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		CmfAttribute<CmfValue> att = null;
 		att = new CmfAttribute<>(IntermediateAttribute.NAME, CmfValue.Type.STRING, false);
 		att.setValue(CmfValue.of(this.object.getName()));

@@ -30,6 +30,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.attribute.UserPrincipalLookupService;
 
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
+import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
@@ -61,6 +62,10 @@ public class LocalExportDelegateFactory
 
 	public final boolean isCopyContent() {
 		return this.copyContent;
+	}
+
+	public final void loadAttributes(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
+		this.engine.loadAttributes(ctx, object);
 	}
 
 	@Override
