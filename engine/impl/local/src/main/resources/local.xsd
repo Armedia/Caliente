@@ -1,8 +1,15 @@
 <?xml version="1.1" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<xsd:schema
+	targetNamespace="http://www.armedia.com/ns/caliente/engine/local"
 	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd"
-	targetNamespace="http://www.armedia.com/ns/caliente/engine/local" xmlns:tns="http://www.armedia.com/ns/caliente/engine/local"
-	elementFormDefault="qualified" attributeFormDefault="unqualified" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.0">
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+	xmlns:tns="http://www.armedia.com/ns/caliente/engine/local"
+	xmlns:eng="http://www.armedia.com/ns/caliente/engine"
+	elementFormDefault="qualified" attributeFormDefault="unqualified" jaxb:version="2.0">
+
+	<xsd:import namespace="http://www.armedia.com/ns/caliente/engine" schemaLocation="engine.xsd" />
 
 	<xsd:simpleType name="noSpaces.t">
 		<xsd:restriction base="xsd:string">
@@ -186,6 +193,13 @@
 						<xsd:field xpath="@id" />
 					</xsd:key>
 				</xsd:element>
+				<xsd:element name="metadata" minOccurs="0" maxOccurs="1">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element name="metadata-set" type="eng:externalMetadataSet.t" minOccurs="0" maxOccurs="unbounded" />
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
 			</xsd:sequence>
 		</xsd:complexType>
 		<xsd:keyref name="FK.DataSource.Search" refer="tns:PK.DataSource">
@@ -198,6 +212,14 @@
 		</xsd:keyref>
 		<xsd:keyref name="FK.DataSource.VersionList" refer="tns:PK.DataSource">
 			<xsd:selector xpath="tns:version-lists/tns:version-list" />
+			<xsd:field xpath="@dataSource" />
+		</xsd:keyref>
+		<xsd:keyref name="FK.DataSource.Metadata.DDL" refer="tns:PK.DataSource">
+			<xsd:selector xpath="tns:metadata/tns:metadata-set/eng:from-ddl" />
+			<xsd:field xpath="@dataSource" />
+		</xsd:keyref>
+		<xsd:keyref name="FK.DataSource.Metadata.SQL" refer="tns:PK.DataSource">
+			<xsd:selector xpath="tns:metadata/tns:metadata-set/eng:from-sql" />
 			<xsd:field xpath="@dataSource" />
 		</xsd:keyref>
 	</xsd:element>

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<local-queries xmlns="http://www.armedia.com/ns/caliente/engine/local" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<local-queries
+	xmlns="http://www.armedia.com/ns/caliente/engine/local"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:eng="http://www.armedia.com/ns/caliente/engine"
 	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine/local ../../main/resources/local.xsd">
 
 	<!-- All paths given are expected to be relative to this directory -->
@@ -86,5 +89,15 @@
 
 		<!-- more <version-list> -->
 	</version-lists>
+
+	<metadata>
+		<metadata-set id="asdf">
+			<eng:from-ddl dataSource="dsName">
+				<eng:query>
+					<eng:sql>asdfasf</eng:sql>
+				</eng:query>
+			</eng:from-ddl>
+		</metadata-set>
+	</metadata>
 
 </local-queries>
