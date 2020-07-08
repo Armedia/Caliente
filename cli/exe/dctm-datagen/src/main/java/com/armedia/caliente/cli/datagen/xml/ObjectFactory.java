@@ -31,7 +31,7 @@ import javax.xml.bind.annotation.XmlRegistry;
 @XmlRegistry
 public class ObjectFactory {
 
-	static final String NS = "http://www.armedia.com/ns/data-generator";
+	static final String NS = "http://www.armedia.com/ns/caliente/tools/data-generator";
 
 	/**
 	 * Create a new ObjectFactory that can be used to create new instances of schema derived classes
