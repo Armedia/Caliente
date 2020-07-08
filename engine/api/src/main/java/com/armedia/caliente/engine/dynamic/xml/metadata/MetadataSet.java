@@ -27,6 +27,7 @@
 package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +50,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.function.CheckedFunction;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSet.t", propOrder = {
@@ -78,7 +80,7 @@ public class MetadataSet extends BaseShareableLockable {
 	private List<AttributeValuesLoader> initializedLoaders;
 
 	@XmlTransient
-	private Map<String, MetadataSource> dataSources;
+	private CheckedFunction<String, Connection, SQLException> connectionSource;
 
 	public List<AttributeValuesLoader> getLoaders() {
 		if (this.loaders == null) {
@@ -111,11 +113,11 @@ public class MetadataSet extends BaseShareableLockable {
 		this.failOnMissing = value;
 	}
 
-	public void initialize(Map<String, MetadataSource> ds) throws Exception {
+	public void initialize(CheckedFunction<String, Connection, SQLException> connectionSource) throws Exception {
+		Objects.requireNonNull(connectionSource, "Must provide a DataSource lookup function");
 		shareLockedUpgradable(() -> this.initializedLoaders, Objects::isNull, (e) -> {
 			if (this.initializedLoaders != null) { return; }
 			List<AttributeValuesLoader> initializedLoaders = new ArrayList<>();
-			Map<String, MetadataSource> dataSources = new HashMap<>();
 			boolean ok = false;
 			try {
 				for (AttributeValuesLoader loader : getLoaders()) {
@@ -124,16 +126,14 @@ public class MetadataSet extends BaseShareableLockable {
 					}
 
 					final String dsName = loader.getDataSource();
-					final MetadataSource mds = ds.get(dsName);
-					if (mds == null) {
-						throw new Exception(String.format(
-							"A %s loader in MetadataSet %s references a non-existent metadata source [%s]",
-							loader.getClass().getSimpleName(), getId(), dsName));
-					}
-					try (final Connection c = mds.getConnection()) {
+					try (final Connection c = connectionSource.apply(dsName)) {
+						if (c == null) {
+							throw new Exception(String.format(
+								"A %s loader in MetadataSet %s references a non-existent metadata source [%s]",
+								loader.getClass().getSimpleName(), getId(), dsName));
+						}
 						loader.initialize(c);
 						initializedLoaders.add(loader);
-						dataSources.put(dsName, mds);
 					}
 				}
 				ok = true;
@@ -151,7 +151,7 @@ public class MetadataSet extends BaseShareableLockable {
 				}
 			}
 			this.initializedLoaders = Tools.freezeList(initializedLoaders);
-			this.dataSources = Tools.freezeMap(dataSources);
+			this.connectionSource = connectionSource;
 		});
 	}
 
@@ -169,9 +169,8 @@ public class MetadataSet extends BaseShareableLockable {
 					continue;
 				}
 
-				MetadataSource mds = this.dataSources.get(l.getDataSource());
 				Map<String, CmfAttribute<V>> newAttributes = null;
-				try (Connection c = mds.getConnection()) {
+				try (Connection c = this.connectionSource.apply(l.getDataSource())) {
 					newAttributes = l.getAttributeValues(c, object);
 				} catch (Exception e) {
 					if (isFailOnError()) {
