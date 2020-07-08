@@ -1,7 +1,7 @@
 <?xml version="1.1" encoding="UTF-8"?>
 <external-metadata xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
-	
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine ../../main/resources/engine.xsd">
+
 	<!-- Many different datasources can be defined -->
 	<!-- (at this point it starts to make sense to turn Caliente into a Spring application) -->
 	<data-source name="bi.db">
@@ -62,10 +62,10 @@
 				<default lang="jexl">`cmf:${sqlName}`</default>
 			</transform-names>
 		</from-ddl>
-		
+
 		<from-sql dataSource="bi.db.2">
 			<!-- from-sql captures from a query where a single column holds all the attribute values (i.e. columnar mode) -->
-			
+
 			<!-- The query that lists the names of the attributes we're going to be wanting to retrieve -->
 			<search-names-query>select distinct name from cmf_attribute order by name</search-names-query>
 			<!-- Optionally, we can list the names explicitly, in a comma-separated list -->
