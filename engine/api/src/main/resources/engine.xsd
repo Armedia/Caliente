@@ -1019,7 +1019,6 @@
 			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="attribute-types" type="tns:externalMetadataAttributeTypes.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
-		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
 	</xsd:complexType>
 
 	<xsd:complexType name="externalMetadataFromDDL.t">
@@ -1034,7 +1033,6 @@
 			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t"  minOccurs="0" maxOccurs="1" />
 			<xsd:element name="attribute-types" type="tns:externalMetadataAttributeTypes.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
-		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
 	</xsd:complexType>
 
 	<xsd:complexType name="setting.t">
@@ -1059,6 +1057,7 @@
 			</xsd:choice>
 		</xsd:sequence>
 		<xsd:attribute name="id" type="tns:noSpaces.t" use="required" />
+		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
 		<xsd:attribute name="failOnError" type="xsd:boolean" use="optional" default="false" />
 		<xsd:attribute name="failOnMissing" type="xsd:boolean" use="optional" default="false" />
 	</xsd:complexType>
@@ -1090,12 +1089,8 @@
             <xsd:selector xpath="tns:data-source"/>
             <xsd:field xpath="@name"/>
         </xsd:key>
-        <xsd:keyref name="FK.DataSource.FromSQL" refer="tns:PK.DataSource">
-            <xsd:selector xpath="tns:metadata-set/tns:from-sql"/>
-            <xsd:field xpath="@dataSource"/>
-        </xsd:keyref>
-        <xsd:keyref name="FK.DataSource.FromDDL" refer="tns:PK.DataSource">
-            <xsd:selector xpath="tns:metadata-set/tns:from-ddl"/>
+        <xsd:keyref name="FK.DataSource" refer="tns:PK.DataSource">
+            <xsd:selector xpath="tns:metadata-set"/>
             <xsd:field xpath="@dataSource"/>
         </xsd:keyref>
 		<xsd:unique name="uniqueMetadataSetId">

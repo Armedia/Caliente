@@ -5,8 +5,8 @@
 		<url>jdbc:h2:${h2.test.path};AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</url>
 		<driver>org.h2.Driver</driver>
 	</data-source>
-	<metadata-set id="primary" failOnError="true" failOnMissing="false">
-		<from-sql dataSource="default">
+	<metadata-set id="primary" dataSource="default" failOnError="true" failOnMissing="false">
+		<from-sql>
 			<search-names-query>select distinct name from cmf_attribute order by name</search-names-query>
 
 			<query>

@@ -70,6 +70,9 @@ public class MetadataSet extends BaseShareableLockable {
 	@XmlAttribute(name = "id", required = true)
 	protected String id;
 
+	@XmlAttribute(name = "dataSource", required = true)
+	protected String dataSource;
+
 	@XmlAttribute(name = "failOnError", required = false)
 	protected Boolean failOnError;
 
@@ -97,6 +100,14 @@ public class MetadataSet extends BaseShareableLockable {
 		this.id = id;
 	}
 
+	public final String getDataSource() {
+		return this.dataSource;
+	}
+
+	public final void setDataSource(String dataSource) {
+		this.dataSource = dataSource;
+	}
+
 	public boolean isFailOnError() {
 		return Tools.coalesce(this.failOnError, Boolean.FALSE);
 	}
@@ -120,17 +131,16 @@ public class MetadataSet extends BaseShareableLockable {
 			List<AttributeValuesLoader> initializedLoaders = new ArrayList<>();
 			boolean ok = false;
 			try {
-				for (AttributeValuesLoader loader : getLoaders()) {
-					if (loader == null) {
-						continue;
+				final String dsName = this.dataSource;
+				try (final Connection c = connectionSource.apply(dsName)) {
+					if (c == null) {
+						throw new Exception(String.format(
+							"A MetadataSet %s references a non-existent metadata source [%s]", getId(), dsName));
 					}
 
-					final String dsName = loader.getDataSource();
-					try (final Connection c = connectionSource.apply(dsName)) {
-						if (c == null) {
-							throw new Exception(String.format(
-								"A %s loader in MetadataSet %s references a non-existent metadata source [%s]",
-								loader.getClass().getSimpleName(), getId(), dsName));
+					for (AttributeValuesLoader loader : getLoaders()) {
+						if (loader == null) {
+							continue;
 						}
 						loader.initialize(c);
 						initializedLoaders.add(loader);
@@ -164,36 +174,39 @@ public class MetadataSet extends BaseShareableLockable {
 			if (this.initializedLoaders.isEmpty()) { return null; }
 
 			Map<String, CmfAttribute<V>> finalAttributes = new HashMap<>();
-			for (AttributeValuesLoader l : this.initializedLoaders) {
-				if (l == null) {
-					continue;
-				}
-
-				Map<String, CmfAttribute<V>> newAttributes = null;
-				try (Connection c = this.connectionSource.apply(l.getDataSource())) {
-					newAttributes = l.getAttributeValues(c, object);
-				} catch (Exception e) {
-					if (isFailOnError()) {
-						// An exceptikon was caught, but we need to fail on it
-						throw new Exception(
-							String.format("Exception raised while loading external metadata attributes for %s",
-								object.getDescription()),
-							e);
-					} else {
-						this.log.warn("Failed to load the external metadata for set [{}] for {}", this.id,
-							object.getDescription(), e);
+			final String dataSource = getDataSource();
+			try (Connection c = this.connectionSource.apply(dataSource)) {
+				for (AttributeValuesLoader l : this.initializedLoaders) {
+					if (l == null) {
+						continue;
 					}
-				}
 
-				if ((newAttributes == null) && isFailOnMissing()) {
-					// The attribute values are required, but none were found...this is an
-					// error!
-					throw new Exception(String.format("Did not find the required external metadata attributes for %s",
-						object.getDescription()));
-				}
+					Map<String, CmfAttribute<V>> newAttributes = null;
+					try {
+						newAttributes = l.getAttributeValues(c, object);
+					} catch (Exception e) {
+						if (isFailOnError()) {
+							// An exceptikon was caught, but we need to fail on it
+							throw new Exception(
+								String.format("Exception raised while loading external metadata attributes for %s",
+									object.getDescription()),
+								e);
+						} else {
+							this.log.warn("Failed to load the external metadata for set [{}] for {}", this.id,
+								object.getDescription(), e);
+						}
+					}
 
-				if (newAttributes != null) {
-					finalAttributes.putAll(newAttributes);
+					if ((newAttributes == null) && isFailOnMissing()) {
+						// The attribute values are required, but none were found...this is an
+						// error!
+						throw new Exception(String.format(
+							"Did not find the required external metadata attributes for %s", object.getDescription()));
+					}
+
+					if (newAttributes != null) {
+						finalAttributes.putAll(newAttributes);
+					}
 				}
 			}
 			if (finalAttributes.isEmpty()) {

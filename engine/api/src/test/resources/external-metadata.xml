@@ -34,9 +34,9 @@
 	<!-- When the transformation engine wishes to pull data from a data set, it references it by its id -->
 	<!-- failOnError = if an error occurs, fail the fetch operation -->
 	<!-- failOnMissing = if a record is not found, fail the fetch operation -->
-	<metadata-set id="bi.leasing" failOnError="true" failOnMissing="false">
+	<metadata-set id="bi.leasing" dataSource="bi.db" failOnError="true" failOnMissing="false">
 		<!-- from-ddl captures each column as a different metadata field (i.e. tabular mode) -->
-		<from-ddl dataSource="bi.db">
+		<from-ddl>
 			<query>
 				<sql>select * from cmf_object where object_id = ${objectId}</sql>
 				<parameter>
@@ -63,7 +63,7 @@
 			</transform-names>
 		</from-ddl>
 
-		<from-sql dataSource="bi.db.2">
+		<from-sql>
 			<!-- from-sql captures from a query where a single column holds all the attribute values (i.e. columnar mode) -->
 
 			<!-- The query that lists the names of the attributes we're going to be wanting to retrieve -->
