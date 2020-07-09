@@ -91,8 +91,8 @@
 	</version-lists>
 
 	<metadata>
-		<metadata-set id="asdf">
-			<eng:from-ddl dataSource="dsName">
+		<metadata-set id="asdf" dataSource="dsName">
+			<eng:from-ddl>
 				<eng:query>
 					<eng:sql>asdfasf</eng:sql>
 				</eng:query>

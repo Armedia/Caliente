@@ -214,12 +214,8 @@
 			<xsd:selector xpath="tns:version-lists/tns:version-list" />
 			<xsd:field xpath="@dataSource" />
 		</xsd:keyref>
-		<xsd:keyref name="FK.DataSource.Metadata.DDL" refer="tns:PK.DataSource">
-			<xsd:selector xpath="tns:metadata/tns:metadata-set/eng:from-ddl" />
-			<xsd:field xpath="@dataSource" />
-		</xsd:keyref>
-		<xsd:keyref name="FK.DataSource.Metadata.SQL" refer="tns:PK.DataSource">
-			<xsd:selector xpath="tns:metadata/tns:metadata-set/eng:from-sql" />
+		<xsd:keyref name="FK.DataSource.Metadata" refer="tns:PK.DataSource">
+			<xsd:selector xpath="tns:metadata/tns:metadata-set" />
 			<xsd:field xpath="@dataSource" />
 		</xsd:keyref>
 	</xsd:element>
