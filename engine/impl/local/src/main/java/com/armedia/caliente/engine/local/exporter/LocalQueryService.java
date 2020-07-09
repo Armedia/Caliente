@@ -842,6 +842,10 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	private void close(DataSource dataSource) {
 		if (dataSource == null) { return; }
 		try {
+			for (MetadataSet mds : this.metadataSets.values()) {
+				CloseUtils.closeQuietly(mds);
+			}
+
 			// We do it like this since this is faster than reflection
 			if (AutoCloseable.class.isInstance(dataSource)) {
 				AutoCloseable.class.cast(dataSource).close();
