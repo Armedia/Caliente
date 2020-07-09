@@ -90,6 +90,7 @@ public final class LocalCommon {
 	}
 
 	public static String toLocalizedPath(String path) {
+		if (path == null) { return null; }
 		return path.replace((File.separatorChar == '\\') ? '/' : '\\', File.separatorChar);
 	}
 }
