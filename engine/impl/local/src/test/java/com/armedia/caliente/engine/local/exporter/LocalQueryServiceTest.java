@@ -77,6 +77,8 @@ public class LocalQueryServiceTest {
 		final LocalQueryPostProcessor lqpp = new LocalQueryPostProcessor();
 		final LocalQueries lq = new LocalQueries();
 
+		lq.setRootPath(System.getProperty("user.dir"));
+
 		lqds.setName("dataSource");
 		lqds.setUrl("jdbc:h2:mem:test-" + UUID.randomUUID());
 		lqds.setDriver("org.h2.Driver");
