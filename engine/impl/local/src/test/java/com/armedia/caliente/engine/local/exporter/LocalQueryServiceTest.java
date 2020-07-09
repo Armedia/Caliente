@@ -45,6 +45,7 @@ import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessor;
 import com.armedia.caliente.engine.local.xml.LocalQuerySearch;
 import com.armedia.caliente.engine.local.xml.LocalQuerySql;
 import com.armedia.caliente.engine.local.xml.LocalQueryVersionList;
+import com.armedia.commons.utilities.function.CheckedBiConsumer;
 import com.armedia.commons.utilities.function.CheckedConsumer;
 
 public class LocalQueryServiceTest {
@@ -629,7 +630,14 @@ public class LocalQueryServiceTest {
 	public void testXml() throws Exception {
 		final URL url = Thread.currentThread().getContextClassLoader().getResource("local-queries-test.xml");
 		Assertions.assertNotNull(url);
-		try (LocalQueryService srv = new LocalQueryService(url)) {
+
+		CheckedBiConsumer<String, DataSource, SQLException> dsInit = (name, ds) -> {
+			try (Connection c = ds.getConnection()) {
+				// TODO: Initialize a test schema so we can re-test the code...?
+			}
+		};
+
+		try (LocalQueryService srv = new LocalQueryService(url, dsInit)) {
 			final QueryRunner qr = new QueryRunner(srv.getDataSource("xmlds"));
 			renderXmlDB(qr);
 
