@@ -56,7 +56,7 @@ import com.armedia.commons.utilities.function.CheckedSupplier;
 @XmlType(name = "externalMetadataSet.t", propOrder = {
 	"loaders"
 })
-public class MetadataSet extends BaseShareableLockable {
+public class MetadataSet extends BaseShareableLockable implements AutoCloseable {
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -209,6 +209,7 @@ public class MetadataSet extends BaseShareableLockable {
 		}
 	}
 
+	@Override
 	public void close() {
 		shareLockedUpgradable(() -> this.initializedLoaders, Objects::nonNull, (e) -> {
 			if (this.initializedLoaders == null) { return; }
