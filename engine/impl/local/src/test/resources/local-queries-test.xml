@@ -6,7 +6,7 @@
 	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine/local ../../main/resources/local.xsd">
 
 	<!-- All paths given are expected to be relative to this directory -->
-	<root-path>/some/root/path</root-path>
+	<root-path>.</root-path>
 
 	<data-sources>
 		<data-source name="xmlds">
@@ -155,5 +155,15 @@
 		</version-list>
 
 	</version-lists>
+
+	<metadata>
+		<metadata-set dataSource="xmlds" id="mds">
+			<eng:from-ddl>
+				<eng:query>
+					<eng:sql>select version_label, path from fsobject where history_id = ? order by 1</eng:sql>
+				</eng:query>
+			</eng:from-ddl>
+		</metadata-set>
+	</metadata>
 
 </local-queries>
