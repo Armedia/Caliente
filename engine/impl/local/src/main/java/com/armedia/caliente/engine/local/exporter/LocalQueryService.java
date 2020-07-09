@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
+import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSet;
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.xml.LocalQueries;
 import com.armedia.caliente.engine.local.xml.LocalQueryDataSource;
@@ -47,6 +48,7 @@ import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessorDef;
 import com.armedia.caliente.engine.local.xml.LocalQuerySearch;
 import com.armedia.caliente.engine.local.xml.LocalQuerySql;
 import com.armedia.caliente.engine.local.xml.LocalQueryVersionList;
+import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
@@ -542,6 +544,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	private final Map<String, Search> searches;
 	private final Map<String, Query<String>> history;
 	private final Map<String, Query<Map<String, Path>>> members;
+	private final Map<String, MetadataSet> metadataSets;
 
 	public LocalQueryService() throws Exception {
 		this(LocalQueryService.LOCAL_QUERIES.getInstance());
@@ -641,6 +644,25 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			membersMap.put(id, buildVersionsListQuery(vl, this.dataSources::get));
 		}
 		this.members = Tools.freezeMap(membersMap);
+
+		Map<String, MetadataSet> metadataSets = new LinkedHashMap<>();
+		for (MetadataSet mds : queries.getMetadata()) {
+			String id = mds.getId();
+			if (StringUtils.isEmpty(id)) {
+				this.log.warn("Empty ID found for a metadata set - can't use it!");
+				continue;
+			}
+			String ds = mds.getDataSource();
+			DataSource dataSource = this.dataSources.get(ds);
+			if (dataSource == null) {
+				throw new SQLException(
+					String.format("No DataSource named [%s] referenced from MetadataSet [%s]", ds, id));
+			}
+
+			mds.initialize(dataSource::getConnection);
+			metadataSets.put(id, mds);
+		}
+		this.metadataSets = Tools.freezeMap(metadataSets);
 	}
 
 	private void setValue(String name, String value, Map<String, String> map) {
@@ -803,9 +825,17 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
-	public void loadAttributes(CmfObject<CmfValue> object) throws SQLException {
+	public void loadAttributes(CmfObject<CmfValue> object) throws Exception {
 		try (SharedAutoLock lock = autoSharedLock()) {
-			// TODO: Do the same thing as ExternalMetadata...
+			for (final String id : this.metadataSets.keySet()) {
+				final MetadataSet metadataSet = this.metadataSets.get(id);
+				Map<String, CmfAttribute<CmfValue>> attributes = metadataSet.getAttributeValues(object);
+				if (attributes == null) {
+					// Nothing was fetched, ignore it...
+					continue;
+				}
+				object.setAttributes(attributes.values());
+			}
 		}
 	}
 

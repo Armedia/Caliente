@@ -40,9 +40,11 @@ import javax.xml.bind.annotation.XmlType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSet;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-	"rootPath", "dataSourceDefinitions", "postProcessors", "searches", "historyIds", "versionLists"
+	"rootPath", "dataSourceDefinitions", "postProcessors", "searches", "historyIds", "versionLists", "metadata"
 })
 @XmlRootElement(name = "local-queries")
 public class LocalQueries {
@@ -72,6 +74,10 @@ public class LocalQueries {
 	@XmlElementWrapper(name = "version-lists", required = false)
 	@XmlElement(name = "version-list", required = false)
 	protected List<LocalQueryVersionList> versionLists;
+
+	@XmlElementWrapper(name = "metadata", required = false)
+	@XmlElement(name = "metadata-set", required = false)
+	protected List<MetadataSet> metadata;
 
 	public String getRootPath() {
 		return this.rootPath;
@@ -114,5 +120,12 @@ public class LocalQueries {
 			this.versionLists = new ArrayList<>();
 		}
 		return this.versionLists;
+	}
+
+	public List<MetadataSet> getMetadata() {
+		if (this.metadata == null) {
+			this.metadata = new ArrayList<>();
+		}
+		return this.metadata;
 	}
 }
