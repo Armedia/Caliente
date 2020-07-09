@@ -50,7 +50,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
-import com.armedia.commons.utilities.function.CheckedFunction;
+import com.armedia.commons.utilities.function.CheckedSupplier;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSet.t", propOrder = {
@@ -83,7 +83,7 @@ public class MetadataSet extends BaseShareableLockable {
 	private List<AttributeValuesLoader> initializedLoaders;
 
 	@XmlTransient
-	private CheckedFunction<String, Connection, SQLException> connectionSource;
+	private CheckedSupplier<Connection, SQLException> connectionSource;
 
 	public List<AttributeValuesLoader> getLoaders() {
 		if (this.loaders == null) {
@@ -124,20 +124,14 @@ public class MetadataSet extends BaseShareableLockable {
 		this.failOnMissing = value;
 	}
 
-	public void initialize(CheckedFunction<String, Connection, SQLException> connectionSource) throws Exception {
+	public void initialize(CheckedSupplier<Connection, SQLException> connectionSource) throws Exception {
 		Objects.requireNonNull(connectionSource, "Must provide a DataSource lookup function");
 		shareLockedUpgradable(() -> this.initializedLoaders, Objects::isNull, (e) -> {
 			if (this.initializedLoaders != null) { return; }
 			List<AttributeValuesLoader> initializedLoaders = new ArrayList<>();
 			boolean ok = false;
 			try {
-				final String dsName = this.dataSource;
-				try (final Connection c = connectionSource.apply(dsName)) {
-					if (c == null) {
-						throw new Exception(String.format(
-							"A MetadataSet %s references a non-existent metadata source [%s]", getId(), dsName));
-					}
-
+				try (final Connection c = connectionSource.get()) {
 					for (AttributeValuesLoader loader : getLoaders()) {
 						if (loader == null) {
 							continue;
@@ -174,8 +168,7 @@ public class MetadataSet extends BaseShareableLockable {
 			if (this.initializedLoaders.isEmpty()) { return null; }
 
 			Map<String, CmfAttribute<V>> finalAttributes = new HashMap<>();
-			final String dataSource = getDataSource();
-			try (Connection c = this.connectionSource.apply(dataSource)) {
+			try (Connection c = this.connectionSource.get()) {
 				for (AttributeValuesLoader l : this.initializedLoaders) {
 					if (l == null) {
 						continue;

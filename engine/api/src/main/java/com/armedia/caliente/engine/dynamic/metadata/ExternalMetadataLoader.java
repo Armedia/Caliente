@@ -26,8 +26,6 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.dynamic.metadata;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,7 +49,6 @@ import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.MutexAutoLock;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
-import com.armedia.commons.utilities.function.CheckedFunction;
 
 public class ExternalMetadataLoader extends BaseShareableLockable {
 
@@ -120,22 +117,20 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 				}
 
 				final Map<String, MetadataSource> frozenSources = Tools.freezeMap(this.metadataSources);
-				final CheckedFunction<String, Connection, SQLException> connectionSource = (key) -> {
-					MetadataSource mds = frozenSources.get(key);
-					if (mds == null) {
-						throw new SQLException(String.format("No DataSource named [%s] to get a connection from", key));
-					}
-					return mds.getConnection();
-				};
-
 				for (final MetadataSet desc : this.metadata.getMetadataSets()) {
 					// It's OK to repeat this check...no harm in it at this point
 					if (this.metadataSources.isEmpty()) {
 						throw new ExternalMetadataException(
 							"No metadata sources are defined - this is a configuration error!");
 					}
+					String dataSource = desc.getDataSource();
+					MetadataSource mds = frozenSources.get(dataSource);
+					if (mds == null) {
+						throw new ExternalMetadataException(String.format(
+							"MetadataSet [%s] references non-existent DataSource [%s]", desc.getId(), dataSource));
+					}
 					try {
-						desc.initialize(connectionSource);
+						desc.initialize(mds::getConnection);
 					} catch (Exception e) {
 						if (desc.isFailOnError()) {
 							// This item is required, so we must abort
