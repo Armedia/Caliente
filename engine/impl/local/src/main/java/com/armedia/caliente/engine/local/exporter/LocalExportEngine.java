@@ -34,7 +34,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -306,7 +305,7 @@ public class LocalExportEngine extends
 		if (this.localQueryService == null) { return; }
 		try {
 			this.localQueryService.loadAttributes(object);
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			throw new ExportException(String.format("Failed to load the extra attributes for %s", object.getLabel()),
 				e);
 		}
