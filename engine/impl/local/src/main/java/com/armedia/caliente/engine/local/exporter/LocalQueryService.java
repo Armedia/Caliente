@@ -59,6 +59,7 @@ import com.armedia.commons.utilities.StreamConcatenation;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.function.CheckedBiConsumer;
 import com.armedia.commons.utilities.function.LazySupplier;
 import com.armedia.commons.utilities.io.CloseUtils;
 import com.armedia.commons.utilities.script.JSR223Script;
@@ -550,15 +551,34 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		this(LocalQueryService.LOCAL_QUERIES.getInstance());
 	}
 
+	LocalQueryService(CheckedBiConsumer<String, DataSource, SQLException> datasourceInitializer) throws Exception {
+		this(LocalQueryService.LOCAL_QUERIES.getInstance(), datasourceInitializer);
+	}
+
 	public LocalQueryService(String location) throws Exception {
-		this(LocalQueryService.LOCAL_QUERIES.getInstance(location));
+		this(location, null);
+	}
+
+	LocalQueryService(String location, CheckedBiConsumer<String, DataSource, SQLException> datasourceInitializer)
+		throws Exception {
+		this(LocalQueryService.LOCAL_QUERIES.getInstance(location), datasourceInitializer);
 	}
 
 	public LocalQueryService(URL location) throws Exception {
-		this(LocalQueryService.LOCAL_QUERIES.getInstance(location));
+		this(location, null);
+	}
+
+	LocalQueryService(URL location, CheckedBiConsumer<String, DataSource, SQLException> datasourceInitializer)
+		throws Exception {
+		this(LocalQueryService.LOCAL_QUERIES.getInstance(location), datasourceInitializer);
 	}
 
 	public LocalQueryService(LocalQueries queries) throws Exception {
+		this(queries, null);
+	}
+
+	LocalQueryService(LocalQueries queries, CheckedBiConsumer<String, DataSource, SQLException> datasourceInitializer)
+		throws Exception {
 		if (queries == null) {
 			queries = LocalQueryService.LOCAL_QUERIES.getInstance();
 		}
@@ -586,6 +606,9 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				}
 
 				dataSources.put(ds.getName(), dataSource);
+				if (datasourceInitializer != null) {
+					datasourceInitializer.accept(ds.getName(), dataSource);
+				}
 			}
 		} catch (Exception e) {
 			// If there's an exception, we close whatever was opened
