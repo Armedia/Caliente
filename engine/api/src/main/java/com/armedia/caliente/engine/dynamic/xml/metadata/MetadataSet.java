@@ -74,10 +74,10 @@ public class MetadataSet extends BaseShareableLockable implements AutoCloseable 
 	protected String dataSource;
 
 	@XmlAttribute(name = "failOnError", required = false)
-	protected Boolean failOnError;
+	protected boolean failOnError = false;
 
 	@XmlAttribute(name = "failOnMissing", required = false)
-	protected Boolean failOnMissing;
+	protected boolean failOnMissing = false;
 
 	@XmlTransient
 	private List<AttributeValuesLoader> initializedLoaders;
@@ -109,18 +109,18 @@ public class MetadataSet extends BaseShareableLockable implements AutoCloseable 
 	}
 
 	public boolean isFailOnError() {
-		return Tools.coalesce(this.failOnError, Boolean.FALSE);
+		return this.failOnError;
 	}
 
-	public void setFailOnError(Boolean value) {
+	public void setFailOnError(boolean value) {
 		this.failOnError = value;
 	}
 
 	public boolean isFailOnMissing() {
-		return Tools.coalesce(this.failOnMissing, Boolean.FALSE);
+		return this.failOnMissing;
 	}
 
-	public void setFailOnMissing(Boolean value) {
+	public void setFailOnMissing(boolean value) {
 		this.failOnMissing = value;
 	}
 
