@@ -59,7 +59,6 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 		.setLongOpt("lib") //
 		.setMinArguments(1) //
 		.setMaxArguments(-1) //
-		.setDefault(LibLaunchHelper.DEFAULT_LIB) //
 		.setArgumentName("directory-or-file") //
 		.setDescription(
 			"A JAR/ZIP library file, or a directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
@@ -157,36 +156,44 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 		List<URL> ret = new ArrayList<>();
 		String currentPath = null;
 		try {
-			if (!cli.isPresent(LibLaunchHelper.LIB)) {
-				// No option given, use the default or environment variable
-				Collection<String> paths = Collections.emptyList();
-				if (this.envVarName != null) {
-					// Use the environment variable
-					String str = System.getenv(this.envVarName);
-					if (str != null) {
-						paths = Tools.splitEscaped(File.pathSeparatorChar, str);
-					}
-				} else if (this.defaultLib != null) {
-					// Use the configured default
-					paths = Collections.singleton(this.defaultLib);
-				}
-
-				if (paths != null) {
-					for (String path : paths) {
-						collectEntries(currentPath = path, ret);
-					}
+			// If the lib path is explicitly set, use only it
+			if (cli.isPresent(LibLaunchHelper.LIB)) {
+				for (String path : cli.getStrings(LibLaunchHelper.LIB)) {
+					collectEntries(currentPath = path, ret);
 				}
 				return ret;
 			}
 
-			for (String path : cli.getStrings(LibLaunchHelper.LIB)) {
+			Collection<String> paths = Collections.emptyList();
+			// Not explicitly set, so gather it by priority
+			boolean resolved = false;
+
+			// First, check the environment variable...
+			if (!resolved && StringUtils.isNotEmpty(this.envVarName)) {
+				// Use the environment variable
+				String str = System.getenv(this.envVarName);
+				if (StringUtils.isNotBlank(str)) {
+					paths = Tools.splitEscaped(File.pathSeparatorChar, str);
+					paths.removeIf(StringUtils::isEmpty);
+					resolved = !paths.isEmpty();
+				}
+			}
+
+			// Nothing on the environment variable? Then use the set default path
+			if (!resolved && StringUtils.isNotEmpty(this.defaultLib)) {
+				// Use the configured default
+				paths = Collections.singleton(this.defaultLib);
+			}
+
+			// Whatever was resolved, we collect from it!
+			for (String path : paths) {
 				collectEntries(currentPath = path, ret);
 			}
+			return ret;
 		} catch (IOException e) {
 			throw new UncheckedIOException(
 				String.format("Failed to configure the dynamic library classpath from [%s]", currentPath), e);
 		}
-		return ret;
 	}
 
 	@Override
