@@ -59,6 +59,7 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 		.setLongOpt("lib") //
 		.setMinArguments(1) //
 		.setMaxArguments(-1) //
+		.setDefault(LibLaunchHelper.DEFAULT_LIB) //
 		.setArgumentName("directory-or-file") //
 		.setDescription(
 			"A JAR/ZIP library file, or a directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
