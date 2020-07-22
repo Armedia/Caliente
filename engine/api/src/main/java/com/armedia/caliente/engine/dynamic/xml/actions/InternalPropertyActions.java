@@ -13,7 +13,7 @@ import com.armedia.caliente.store.CmfValue;
 public class InternalPropertyActions {
 
 	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlType(name = "actionCopyAttribute.t", propOrder = {
+	@XmlType(name = "actionCopyInternalProperty.t", propOrder = {
 		"from", "to"
 	})
 	public static class Copy extends AbstractCopyRenameValue {
@@ -29,7 +29,7 @@ public class InternalPropertyActions {
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlType(name = "actionJoinAttribute.t", propOrder = {
+	@XmlType(name = "actionJoinInternalProperty.t", propOrder = {
 		"comparison", "name", "separator", "keepEmpty"
 	})
 	public static class Join extends AbstractJoinValueAttribute {
@@ -40,7 +40,7 @@ public class InternalPropertyActions {
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlType(name = "actionRemoveAttribute.t", propOrder = {
+	@XmlType(name = "actionRemoveInternalProperty.t", propOrder = {
 		"comparison", "name"
 	})
 	public static class Remove extends AbstractTransformValueAttribute {
@@ -52,7 +52,7 @@ public class InternalPropertyActions {
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlType(name = "actionRenameAttribute.t")
+	@XmlType(name = "actionRenameInternalProperty.t")
 	public static class Rename extends Copy {
 		@Override
 		protected void storeValue(DynamicElementContext<?> ctx, DynamicValue src, DynamicValue copy) {
@@ -62,7 +62,7 @@ public class InternalPropertyActions {
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlType(name = "actionReplaceAttribute.t", propOrder = {
+	@XmlType(name = "actionReplaceInternalProperty.t", propOrder = {
 		"comparison", "name", "cardinality", "regex", "replacement"
 	})
 	public static class Replace extends AbstractReplaceValue {
@@ -73,7 +73,7 @@ public class InternalPropertyActions {
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlType(name = "actionSetAttribute.t", propOrder = {
+	@XmlType(name = "actionSetInternalProperty.t", propOrder = {
 		"name", "type", "value"
 	})
 	public static class Set extends AbstractSetValue {
@@ -87,7 +87,7 @@ public class InternalPropertyActions {
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlType(name = "actionSplitAttribute.t", propOrder = {
+	@XmlType(name = "actionSplitInternalProperty.t", propOrder = {
 		"comparison", "name", "separator", "keepEmpty"
 	})
 	public static class Split extends AbstractSplitValueAttribute {
@@ -98,7 +98,7 @@ public class InternalPropertyActions {
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlType(name = "actionMapAttributeValue.t", propOrder = {
+	@XmlType(name = "actionMapInternalPropertyValue.t", propOrder = {
 		"comparison", "name", "cardinality", "cases", "defVal"
 	})
 	public static class MapValue extends AbstractMapValue {
