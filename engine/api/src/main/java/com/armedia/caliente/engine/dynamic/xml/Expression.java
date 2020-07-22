@@ -189,6 +189,9 @@ public class Expression {
 					throw new ScriptException(e);
 				}
 			}
+			if (!b.containsKey("log")) {
+				b.put("log", this.log);
+			}
 
 			this.log.trace("Evaluating {} expression script:{}{}{}", this.lang, Tools.NL, this.script, Tools.NL);
 			Object ret = executable.eval(scriptCtx);
