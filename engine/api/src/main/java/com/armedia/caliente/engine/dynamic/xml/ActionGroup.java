@@ -47,7 +47,6 @@ import com.armedia.caliente.engine.dynamic.xml.actions.InternalPropertyActions;
 import com.armedia.caliente.engine.dynamic.xml.actions.LoadExternalMetadata;
 import com.armedia.caliente.engine.dynamic.xml.actions.MapOriginalSubtype;
 import com.armedia.caliente.engine.dynamic.xml.actions.MapSubtype;
-import com.armedia.caliente.engine.dynamic.xml.actions.MapVariableValue;
 import com.armedia.caliente.engine.dynamic.xml.actions.OriginalSecondarySubtypeRemove;
 import com.armedia.caliente.engine.dynamic.xml.actions.OriginalSecondarySubtypeReset;
 import com.armedia.caliente.engine.dynamic.xml.actions.PrincipalMappingApply;
@@ -59,13 +58,7 @@ import com.armedia.caliente.engine.dynamic.xml.actions.SubtypeSet;
 import com.armedia.caliente.engine.dynamic.xml.actions.ValueMappingApply;
 import com.armedia.caliente.engine.dynamic.xml.actions.ValueMappingClear;
 import com.armedia.caliente.engine.dynamic.xml.actions.ValueMappingSet;
-import com.armedia.caliente.engine.dynamic.xml.actions.VariableCopy;
-import com.armedia.caliente.engine.dynamic.xml.actions.VariableJoin;
-import com.armedia.caliente.engine.dynamic.xml.actions.VariableRemove;
-import com.armedia.caliente.engine.dynamic.xml.actions.VariableRename;
-import com.armedia.caliente.engine.dynamic.xml.actions.VariableReplace;
-import com.armedia.caliente.engine.dynamic.xml.actions.VariableSet;
-import com.armedia.caliente.engine.dynamic.xml.actions.VariableSplit;
+import com.armedia.caliente.engine.dynamic.xml.actions.VariableActions;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionGroup.t", propOrder = {
@@ -85,41 +78,41 @@ public class ActionGroup extends ConditionalAction {
 		@XmlElement(name = "clear-value-mapping", type = ValueMappingClear.class), //
 		@XmlElement(name = "copy-attribute", type = AttributeActions.Copy.class), //
 		@XmlElement(name = "copy-internal-property", type = InternalPropertyActions.Copy.class), //
-		@XmlElement(name = "copy-variable", type = VariableCopy.class), //
+		@XmlElement(name = "copy-variable", type = VariableActions.Copy.class), //
 		@XmlElement(name = "custom-action", type = CustomAction.class), //
 		@XmlElement(name = "end-transformation", type = EndTransformation.class), //
 		@XmlElement(name = "join-attribute", type = AttributeActions.Join.class), //
 		@XmlElement(name = "join-internal-property", type = InternalPropertyActions.Join.class), //
-		@XmlElement(name = "join-variable", type = VariableJoin.class), //
+		@XmlElement(name = "join-variable", type = VariableActions.Join.class), //
 		@XmlElement(name = "load-external-metadata", type = LoadExternalMetadata.class), //
 		@XmlElement(name = "map-attribute-value", type = AttributeActions.MapValue.class), //
 		@XmlElement(name = "map-internal-property-value", type = InternalPropertyActions.MapValue.class), //
 		@XmlElement(name = "map-original-subtype", type = MapOriginalSubtype.class), //
 		@XmlElement(name = "map-principal", type = PrincipalMappingApply.class), //
 		@XmlElement(name = "map-subtype", type = MapSubtype.class), //
-		@XmlElement(name = "map-variable-value", type = MapVariableValue.class), //
+		@XmlElement(name = "map-variable-value", type = VariableActions.MapValue.class), //
 		@XmlElement(name = "remove-attribute", type = AttributeActions.Remove.class), //
 		@XmlElement(name = "remove-internal-property", type = InternalPropertyActions.Remove.class), //
 		@XmlElement(name = "remove-original-secondary-subtypes", type = OriginalSecondarySubtypeRemove.class), //
 		@XmlElement(name = "remove-secondary-subtype", type = SecondarySubtypeRemove.class), //
-		@XmlElement(name = "remove-variable", type = VariableRemove.class), //
+		@XmlElement(name = "remove-variable", type = VariableActions.Remove.class), //
 		@XmlElement(name = "rename-attribute", type = AttributeActions.Rename.class), //
 		@XmlElement(name = "rename-internal-property", type = InternalPropertyActions.Rename.class), //
-		@XmlElement(name = "rename-variable", type = VariableRename.class), //
+		@XmlElement(name = "rename-variable", type = VariableActions.Rename.class), //
 		@XmlElement(name = "replace-attribute", type = AttributeActions.Replace.class), //
 		@XmlElement(name = "replace-internal-property", type = InternalPropertyActions.Replace.class), //
 		@XmlElement(name = "replace-secondary-subtype", type = SecondarySubtypeReplace.class), //
 		@XmlElement(name = "replace-subtype", type = SubtypeReplace.class), //
-		@XmlElement(name = "replace-variable", type = VariableReplace.class), //
+		@XmlElement(name = "replace-variable", type = VariableActions.Replace.class), //
 		@XmlElement(name = "reset-original-secondary-subtypes", type = OriginalSecondarySubtypeReset.class), //
 		@XmlElement(name = "set-attribute", type = AttributeActions.Set.class), //
 		@XmlElement(name = "set-internal-property", type = InternalPropertyActions.Set.class), //
 		@XmlElement(name = "set-subtype", type = SubtypeSet.class), //
 		@XmlElement(name = "set-value-mapping", type = ValueMappingSet.class), //
-		@XmlElement(name = "set-variable", type = VariableSet.class), //
+		@XmlElement(name = "set-variable", type = VariableActions.Set.class), //
 		@XmlElement(name = "split-attribute", type = AttributeActions.Split.class), //
 		@XmlElement(name = "split-internal-property", type = InternalPropertyActions.Split.class), //
-		@XmlElement(name = "split-variable", type = VariableSplit.class), //
+		@XmlElement(name = "split-variable", type = VariableActions.Split.class), //
 	})
 	protected List<Action> actions;
 

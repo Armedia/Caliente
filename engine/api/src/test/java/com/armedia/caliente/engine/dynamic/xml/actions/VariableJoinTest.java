@@ -20,7 +20,7 @@ public class VariableJoinTest {
 		final Random r = new Random(System.nanoTime());
 		TestObjectContext ctx = new TestObjectContext();
 
-		VariableJoin action = new VariableJoin();
+		VariableActions.Join action = new VariableActions.Join();
 		try {
 			action.apply(ctx);
 			Assertions.fail("Did not fail with a null name");
