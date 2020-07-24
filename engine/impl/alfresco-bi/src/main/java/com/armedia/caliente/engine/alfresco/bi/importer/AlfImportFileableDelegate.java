@@ -429,7 +429,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 							i + 1, (is_group ? "group" : "user"), accessor, count, permitTypes.getValueCount());
 						permitType = 0;
 					}
-
 					if (permitType != 0) {
 						// We can't handle other permit types than AccessPermit yet...
 						continue;
@@ -540,7 +539,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 
 		String prefix = (!pathProp.isNull() ? pathProp.asString() : "");
-		path = String.format("%s%s%s", prefix, StringUtils.isEmpty(prefix) ? "" : "/", this.cmfObject.getId());
+		// TODO: Don't like calculating this twice... once here, once in generateItemMarker()
+		prefix = this.factory.resolveTreeIds(ctx, prefix);
+		path = String.format("%s%s%s", prefix, StringUtils.isEmpty(prefix) ? "" : "/",
+			ctx.getHeadObject(this.cmfObject).getName());
 
 		// Step 1: copy over all the attributes that need copying over, un-mapping them as needed
 		Collection<CmfContentStream> contents = ctx.getContentStreams(this.cmfObject);

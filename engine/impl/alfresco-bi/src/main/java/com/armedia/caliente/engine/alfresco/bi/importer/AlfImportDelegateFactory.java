@@ -358,7 +358,7 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	private final String resolveTreeIds(final AlfImportContext ctx, String cmsPath) throws ImportException {
+	final String resolveTreeIds(final AlfImportContext ctx, String cmsPath) throws ImportException {
 		List<CmfObjectRef> refs = new ArrayList<>();
 		for (String id : PathIdHelper.decodePaths(cmsPath)) {
 			// They're all known to be folders, so...
@@ -469,10 +469,16 @@ public class AlfImportDelegateFactory
 		}
 		thisMarker.setNumber(number);
 
-		CmfProperty<CmfValue> sourcePathProp = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
-		String targetPath = ((sourcePathProp == null) || !sourcePathProp.hasValues() ? ""
-			: sourcePathProp.getValue().asString());
-		targetPath = resolveTreeIds(ctx, targetPath);
+		CmfValue sourcePath = getPropertyValue(cmfObject, IntermediateProperty.LATEST_PARENT_TREE_IDS);
+		if ((sourcePath == null) || sourcePath.isNull()) {
+			sourcePath = getPropertyValue(cmfObject, IntermediateProperty.PARENT_TREE_IDS);
+		}
+		if (sourcePath == null) {
+			throw new ImportException(String.format("Failed to find the required property [%s] in %s",
+				IntermediateProperty.PARENT_TREE_IDS.encode(), cmfObject.getDescription()));
+		}
+
+		String targetPath = resolveTreeIds(ctx, sourcePath.asString());
 
 		final boolean unfiled;
 		{
