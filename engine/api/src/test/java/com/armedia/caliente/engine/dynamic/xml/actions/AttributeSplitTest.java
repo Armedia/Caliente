@@ -23,7 +23,7 @@ public class AttributeSplitTest {
 		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getDynamicObject();
 
-		AttributeSplit action = new AttributeSplit();
+		AttributeActions.Split action = new AttributeActions.Split();
 		try {
 			action.apply(ctx);
 			Assertions.fail("Did not fail with a null name");

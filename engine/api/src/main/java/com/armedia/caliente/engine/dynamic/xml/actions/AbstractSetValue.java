@@ -81,8 +81,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		this.value = value;
 	}
 
-	protected abstract DynamicValue createValue(DynamicElementContext<?> ctx, String name, CmfValue.Type type,
-		boolean multivalue);
+	protected abstract void storeValue(DynamicElementContext<?> ctx, DynamicValue value);
 
 	private Iterable<?> toIterable(Object o) {
 		if (o == null) { return null; }
@@ -112,7 +111,8 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		final CmfValue.Type type = getType();
 		final Object value = ActionTools.eval(getValue(), ctx);
 		final boolean repeating = (Iterable.class.isInstance(value) || ((value != null) && value.getClass().isArray()));
-		final DynamicValue variable = createValue(ctx, name, type, repeating);
+		final DynamicValue variable = new DynamicValue(name, type, repeating);
+		storeValue(ctx, variable);
 		if (value != null) {
 			if (repeating) {
 				// Make sure we take all available values

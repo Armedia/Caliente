@@ -79,8 +79,9 @@
 		<stax-utils.version>20070216</stax-utils.version>
 		<tomcat.version>9.0.27</tomcat.version>
 		<unboundid-ldapsdk.version>4.0.12</unboundid-ldapsdk.version>
-		<utilities.version>1.0.19</utilities.version>
+		<utilities.version>1.0.22</utilities.version>
 		<woodstox.version>5.2.0</woodstox.version>
+		<jackson.version>2.11.0</jackson.version>
 
 		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
 		<dfc.jar>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</dfc.jar>
@@ -317,6 +318,12 @@
 				<groupId>com.fasterxml.woodstox</groupId>
 				<artifactId>woodstox-core</artifactId>
 				<version>${woodstox.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>${jackson.version}</version>
 			</dependency>
 
 			<dependency>

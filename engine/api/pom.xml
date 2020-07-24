@@ -27,9 +27,10 @@
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.apache.chemistry.opencmis</groupId>
-			<artifactId>chemistry-opencmis-commons-api</artifactId>
+			<artifactId>chemistry-opencmis-client-impl</artifactId>
 			<scope>compile</scope>
 		</dependency>
 
@@ -73,6 +74,12 @@
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-jsr223</artifactId>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
 			<scope>compile</scope>
 		</dependency>
 

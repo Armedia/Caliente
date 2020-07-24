@@ -36,6 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -67,12 +68,14 @@ import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.converter.PathIdHelper;
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfContentStream;
+import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
@@ -225,6 +228,48 @@ public class AlfImportDelegateFactory
 		return this.schema.buildType(name, aspects);
 	}
 
+	protected final CmfValue getAttributeValue(CmfObject<CmfValue> cmfObject, CmfEncodeableName attribute) {
+		return getAttributeValue(cmfObject, attribute.encode());
+	}
+
+	protected final CmfValue getAttributeValue(CmfObject<CmfValue> cmfObject, String attribute) {
+		CmfAttribute<CmfValue> att = cmfObject.getAttribute(attribute);
+		if (att == null) { return CmfValue.Type.OTHER.getNull(); }
+		if (att.hasValues()) { return att.getValue(); }
+		return att.getType().getNull();
+	}
+
+	protected final List<CmfValue> getAttributeValues(CmfObject<CmfValue> cmfObject, CmfEncodeableName attribute) {
+		return getAttributeValues(cmfObject, attribute.encode());
+	}
+
+	protected final List<CmfValue> getAttributeValues(CmfObject<CmfValue> cmfObject, String attribute) {
+		CmfAttribute<CmfValue> att = cmfObject.getAttribute(attribute);
+		if (att == null) { return Collections.emptyList(); }
+		return att.getValues();
+	}
+
+	protected final CmfValue getPropertyValue(CmfObject<CmfValue> cmfObject, CmfEncodeableName attribute) {
+		return getPropertyValue(cmfObject, attribute.encode());
+	}
+
+	protected final CmfValue getPropertyValue(CmfObject<CmfValue> cmfObject, String attribute) {
+		CmfProperty<CmfValue> att = cmfObject.getProperty(attribute);
+		if (att == null) { return CmfValue.Type.OTHER.getNull(); }
+		if (att.hasValues()) { return att.getValue(); }
+		return att.getType().getNull();
+	}
+
+	protected final List<CmfValue> getPropertyValues(CmfObject<CmfValue> cmfObject, CmfEncodeableName attribute) {
+		return getPropertyValues(cmfObject, attribute.encode());
+	}
+
+	protected final List<CmfValue> getPropertyValues(CmfObject<CmfValue> cmfObject, String attribute) {
+		CmfProperty<CmfValue> att = cmfObject.getProperty(attribute);
+		if (att == null) { return Collections.emptyList(); }
+		return att.getValues();
+	}
+
 	boolean initializeVdocSupport() {
 		try (SharedAutoLock shared = autoSharedLock()) {
 			Boolean result = this.initializedVdocs.get();
@@ -313,9 +358,9 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	private final String resolveTreeIds(final AlfImportContext ctx, String cmsPath) throws ImportException {
+	final String resolveTreeIds(final AlfImportContext ctx, String cmsPath) throws ImportException {
 		List<CmfObjectRef> refs = new ArrayList<>();
-		for (String id : StringUtils.split(cmsPath, '/')) {
+		for (String id : PathIdHelper.decodePaths(cmsPath)) {
 			// They're all known to be folders, so...
 			refs.add(new CmfObjectRef(CmfObject.Archetype.FOLDER, id));
 		}
@@ -424,10 +469,16 @@ public class AlfImportDelegateFactory
 		}
 		thisMarker.setNumber(number);
 
-		CmfProperty<CmfValue> sourcePathProp = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
-		String targetPath = ((sourcePathProp == null) || !sourcePathProp.hasValues() ? ""
-			: sourcePathProp.getValue().asString());
-		targetPath = resolveTreeIds(ctx, targetPath);
+		CmfValue sourcePath = getPropertyValue(cmfObject, IntermediateProperty.LATEST_PARENT_TREE_IDS);
+		if ((sourcePath == null) || sourcePath.isNull()) {
+			sourcePath = getPropertyValue(cmfObject, IntermediateProperty.PARENT_TREE_IDS);
+		}
+		if (sourcePath == null) {
+			throw new ImportException(String.format("Failed to find the required property [%s] in %s",
+				IntermediateProperty.PARENT_TREE_IDS.encode(), cmfObject.getDescription()));
+		}
+
+		String targetPath = resolveTreeIds(ctx, sourcePath.asString());
 
 		final boolean unfiled;
 		{

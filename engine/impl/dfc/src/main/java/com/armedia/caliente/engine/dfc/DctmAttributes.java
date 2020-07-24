@@ -290,6 +290,9 @@ public class DctmAttributes {
 	/** The start_pos attribute of dm_type. */
 	public static final String START_POS = "start_pos";
 
+	/** The type_category attribute of dm_type. */
+	public static final String TYPE_CATEGORY = "type_category";
+
 	// dmi_type_info attributes
 	/** The default_aspects attribute of dmi_type_info. */
 	public static final String DEFAULT_ASPECTS = "default_aspects";

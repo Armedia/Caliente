@@ -29,9 +29,9 @@ package com.armedia.caliente.engine.ucm.exporter;
 import java.net.URI;
 
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
+import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionWrapper;
-import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -43,10 +43,9 @@ public class UcmExportDelegateFactory
 	}
 
 	@Override
-	protected UcmExportDelegate<?> newExportDelegate(UcmSession session, CmfObject.Archetype type, String searchKey)
-		throws Exception {
-		URI uri = URI.create(searchKey);
-		switch (type) {
+	protected UcmExportDelegate<?> newExportDelegate(UcmSession session, ExportTarget target) throws Exception {
+		URI uri = URI.create(target.getSearchKey());
+		switch (target.getType()) {
 			case DOCUMENT:
 				return new UcmFileExportDelegate(this, session, session.getFile(uri));
 			case FOLDER:

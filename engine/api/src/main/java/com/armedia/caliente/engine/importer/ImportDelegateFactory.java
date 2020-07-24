@@ -26,8 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.importer;
 
-import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferDelegateFactory;
+import com.armedia.caliente.engine.common.SessionWrapper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.CfgTools;
 

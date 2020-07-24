@@ -1,6 +1,6 @@
 <?xml version="1.1" encoding="UTF-8"?>
 <external-metadata xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine ../../main/resources/engine.xsd">
 
 	<data-source name="dsName">
 		<url>jdbc-url</url>
@@ -13,19 +13,8 @@
 		<setting name="setting.N">value.N</setting>
 	</data-source>
 
-	<data-source name="dsName2">
-		<url>jdbc-url</url>
-		<driver>jdbc.driver.Class</driver>
-		<user>jdbc-user</user>
-		<password>encryptable-jdbc-pass</password>
-		<setting name="setting.1">value.1</setting>
-		<setting name="setting.2">value.2</setting>
-		<!-- ... -->
-		<setting name="setting.N">value.N</setting>
-	</data-source>
-
-	<metadata-set id="primary" failOnError="true" failOnMissing="false">
-		<from-sql dataSource="dsName">
+	<metadata-set id="primary" dataSource="dsName" failOnError="true" failOnMissing="false">
+		<from-sql>
 			<search-names-list>.....</search-names-list>
 
 			<query>
@@ -65,83 +54,7 @@
 			</attribute-types>
 		</from-sql>
 
-		<from-ddl dataSource="dsName2">
-			<query>
-				<sql>select att_type, att_value from att_table where col1 = ${param2} and col2 = ${param3} and att_name = ${param1} order by ....</sql>
-				<parameter>
-					<name>param1</name>
-					<value>...JEXL...</value>
-				</parameter>
-				<parameter>
-					<name>param2</name>
-					<value>...JEXL...</value>
-				</parameter>
-				<parameter>
-					<name>param3</name>
-					<value>...JEXL...</value>
-				</parameter>
-			</query>
-
-			<ignore-columns>col1,col2,col3</ignore-columns>
-			<transform-names>
-				<map>
-					<from>att_value_1</from>
-					<to>cmis:someAttributeName</to>
-				</map>
-				<default>...JEXL...</default>
-			</transform-names>
-
-			<attribute-types>
-				<attribute>
-					<name>asdfsdf</name>
-					<type>BOOLEAN</type>
-				</attribute>
-				<default>STRING</default>
-			</attribute-types>
-		</from-ddl>
-	</metadata-set>
-	<metadata-set id="secondary" failOnError="true" failOnMissing="false">
-		<from-sql dataSource="dsName">
-			<search-names-list>.....</search-names-list>
-
-			<query>
-				<sql>select att_type, att_value from att_table where col1 = ${param2} and col2 = ${param3} and att_name = ${param1} order by ....</sql>
-				<skip>1</skip>
-				<count>222</count>
-				<parameter>
-					<name>param1</name>
-					<value>...JEXL...</value>
-				</parameter>
-				<parameter>
-					<name>param2</name>
-					<value>...JEXL...</value>
-				</parameter>
-				<parameter>
-					<name>param3</name>
-					<value>...JEXL...</value>
-				</parameter>
-			</query>
-
-			<value-column>att_value</value-column>
-
-			<transform-names>
-				<map>
-					<from>att_name_1</from>
-					<to>cmis:someAttributeName1</to>
-				</map>
-				<default>...JEXL...</default>
-			</transform-names>
-
-			<attribute-types>
-				<attribute>
-					<name>asdfsdf</name>
-					<type>INTEGER</type>
-				</attribute>
-				<default>OTHER</default>
-			</attribute-types>
-		</from-sql>
-
-		<from-ddl dataSource="dsName">
+		<from-ddl>
 			<query>
 				<sql>select att_type, att_value from att_table where col1 = ${param2} and col2 = ${param3} and att_name = ${param1} order by ....</sql>
 				<parameter>

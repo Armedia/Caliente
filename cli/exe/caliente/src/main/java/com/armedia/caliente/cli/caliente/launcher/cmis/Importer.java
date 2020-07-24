@@ -32,6 +32,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 
+import org.apache.chemistry.opencmis.commons.enums.BindingType;
+
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
@@ -101,7 +103,7 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		String user = commandValues.getString(CLIParam.user);
 		String password = commandValues.getString(CLIParam.password);
 
-		settings.put(CmisSessionSetting.ATOMPUB_URL.getLabel(), baseUrl);
+		settings.put(CmisSessionSetting.URL.getLabel(), baseUrl);
 		if (user != null) {
 			settings.put(CmisSessionSetting.USER.getLabel(), user);
 		}
@@ -115,6 +117,9 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		} else if (commandValues.hasValues(CLIParam.except_types)) {
 			settings.put(TransferSetting.EXCEPT_TYPES.getLabel(), commandValues.getStrings(CLIParam.except_types));
 		}
+
+		BindingType bindingType = commandValues.getEnum(BindingType.class, EngineInterface.BINDING_TYPE);
+		settings.put(CmisSessionSetting.BINDING_TYPE.getLabel(), bindingType.value());
 
 		return true;
 	}

@@ -28,12 +28,36 @@ package com.armedia.caliente.engine.local.exporter;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.armedia.caliente.engine.local.common.LocalRoot;
+import com.armedia.commons.utilities.Tools;
+
 public final class LocalVersionHistory implements Iterable<LocalFile> {
+
+	static LocalVersionHistory getSingleHistory(LocalRoot root, Path path) throws IOException {
+		final Path truePath = root.makeAbsolute(path);
+		Map<String, Integer> byPath = new HashMap<>();
+		Map<String, Integer> byHistoryId = new HashMap<>();
+		List<LocalFile> fullHistory = new ArrayList<>(1);
+		LocalVersionInfo thisInfo = new LocalVersionInfo(truePath, root.relativize(truePath), "");
+		byHistoryId.put("", 0);
+		LocalFile lf = new LocalFile(root, thisInfo.getPath().toString(), thisInfo, true);
+		byPath.put(lf.getFullPath(), 0);
+		fullHistory.add(lf);
+		byPath = Tools.freezeMap(byPath);
+		fullHistory = Tools.freezeList(fullHistory);
+		byHistoryId = Tools.freezeMap(byHistoryId);
+		LocalFile rootVersion = lf;
+		LocalFile currentVersion = lf;
+		return new LocalVersionHistory(lf.getHistoryId(), rootVersion, currentVersion, byHistoryId, byPath,
+			fullHistory);
+	}
 
 	private final String historyId;
 	private final String radix;

@@ -58,16 +58,17 @@ import javax.xml.bind.JAXBException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.SessionFactory;
-import com.armedia.caliente.engine.SessionFactoryException;
-import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.common.SessionFactory;
+import com.armedia.caliente.engine.common.SessionFactoryException;
+import com.armedia.caliente.engine.common.SessionWrapper;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.converter.PathIdHelper;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
@@ -327,7 +328,7 @@ public abstract class ExportEngine<//
 		Collection<VALUE> values = new ArrayList<>(parentPathIds.getValueCount());
 		for (VALUE v : parentPathIds) {
 			final String fixed = ConcurrentTools.createIfAbsent(this.idPathFixes, v.toString(), (idPath) -> {
-				List<String> ids = FileNameTools.tokenize(idPath, '/');
+				List<String> ids = PathIdHelper.decodePaths(idPath);
 				List<String> names = new ArrayList<>(ids.size());
 				for (String id : ids) {
 					String name = getFixedFolderName(ctx, object, id, ecmObject);
@@ -922,7 +923,7 @@ public abstract class ExportEngine<//
 					// Begin transaction
 
 					final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> exportDelegate = delegateFactory
-						.newExportDelegate(s, nextType, nextKey);
+						.newExportDelegate(s, target);
 					if (exportDelegate == null) {
 						// No object found with that ID...
 						ExportEngine.this.log.warn("No {} object found with searchKey[{}]",
