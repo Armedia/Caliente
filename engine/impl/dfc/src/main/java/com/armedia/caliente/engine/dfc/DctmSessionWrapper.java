@@ -32,8 +32,8 @@ package com.armedia.caliente.engine.dfc;
 
 import java.util.Stack;
 
-import com.armedia.caliente.engine.SessionFactoryException;
-import com.armedia.caliente.engine.SessionWrapper;
+import com.armedia.caliente.engine.common.SessionFactoryException;
+import com.armedia.caliente.engine.common.SessionWrapper;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;

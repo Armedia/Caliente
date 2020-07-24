@@ -76,8 +76,8 @@ public class UcmExportEngine extends
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByQuery(UcmSession session, CfgTools configuration,
-		UcmExportDelegateFactory factory, String query) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByQuery(UcmSession session, CfgTools configuration, String query)
+		throws Exception {
 		if (StringUtils.isEmpty(query)) { return Stream.empty(); }
 
 		// TODO: Not like!! Doesn't match the spirit of what we're trying to do
@@ -88,8 +88,8 @@ public class UcmExportEngine extends
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsBySearchKey(UcmSession session, CfgTools configuration,
-		UcmExportDelegateFactory factory, String line) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsBySearchKey(UcmSession session, CfgTools configuration, String line)
+		throws Exception {
 		// Remove leading and trailing space
 		line = StringUtils.strip(line);
 
@@ -118,15 +118,15 @@ public class UcmExportEngine extends
 		try {
 			UcmFolder folder = session.getFolder(uri);
 			if (folder == null) { return null; }
-			return findExportTargetsByPath(session, configuration, factory, folder.getPath());
+			return findExportTargetsByPath(session, configuration, folder.getPath());
 		} catch (UcmFolderNotFoundException e) {
 			return null;
 		}
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByPath(UcmSession session, CfgTools configuration,
-		UcmExportDelegateFactory factory, String path) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByPath(UcmSession session, CfgTools configuration, String path)
+		throws Exception {
 		UcmFSObject object = session.getObject(path);
 		switch (object.getType()) {
 			case FILE:

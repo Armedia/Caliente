@@ -27,7 +27,6 @@
 package com.armedia.caliente.cli.caliente.utils;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -223,21 +222,21 @@ public class SmtpServer {
 		try (Socket s = new Socket(addx, port)) {
 			OutputStream out = s.getOutputStream();
 			PrintWriter pw = new PrintWriter(out);
-			InputStream in = s.getInputStream();
-			BufferedReader r = new BufferedReader(new InputStreamReader(in));
-			// Read up...
-			while (r.readLine() != null) {
-				;
-			}
-			// Send the hello...
-			pw.printf("HELO%n");
-			while (true) {
-				String str = r.readLine();
-				if (str == null) {
-					break;
+			try (BufferedReader r = new BufferedReader(new InputStreamReader(s.getInputStream()))) {
+				// Read up...
+				while (r.readLine() != null) {
+
 				}
-				// Make sure the command elicited a "OK" response
-				if (str.matches("^\\s*250(\\s.*)?$")) { return addx; }
+				// Send the hello...
+				pw.printf("HELO%n");
+				while (true) {
+					String str = r.readLine();
+					if (str == null) {
+						break;
+					}
+					// Make sure the command elicited a "OK" response
+					if (str.matches("^\\s*250(\\s.*)?$")) { return addx; }
+				}
 			}
 		}
 		return null;

@@ -37,7 +37,6 @@ import org.apache.chemistry.opencmis.commons.data.Ace;
 import org.apache.chemistry.opencmis.commons.data.Acl;
 import org.apache.chemistry.opencmis.commons.data.Principal;
 
-import com.armedia.caliente.engine.cmis.CmisProperty;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.tools.AclTools;
@@ -99,11 +98,10 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 		name.setValue(CmfValue.of(this.object.getId()));
 
 		if (acl != null) {
-			String permissionsName = String.format(CmisProperty.PERMISSION_PROPERTY_FMT,
-				ctx.getRepositoryInfo().getProductName().toLowerCase());
 			CmfProperty<CmfValue> accessors = new CmfProperty<>(IntermediateProperty.ACL_ACCESSOR_NAME,
 				CmfValue.Type.STRING, true);
-			CmfProperty<CmfValue> permissions = new CmfProperty<>(permissionsName, CmfValue.Type.STRING, true);
+			CmfProperty<CmfValue> permissions = new CmfProperty<>(IntermediateProperty.ACL_PERMISSION_NAME,
+				CmfValue.Type.STRING, true);
 			CmfProperty<CmfValue> accessorActions = new CmfProperty<>(IntermediateProperty.ACL_ACCESSOR_ACTIONS,
 				CmfValue.Type.STRING, true);
 

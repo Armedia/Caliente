@@ -28,6 +28,8 @@ package com.armedia.caliente.engine.cmis.exporter;
 
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -39,6 +41,7 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.converter.PathIdHelper;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -93,8 +96,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	protected void marshalParentsAndPaths(CmisExportContext ctx, CmfObject<CmfValue> marshaled, T object)
 		throws ExportException {
 		CmfProperty<CmfValue> parents = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfValue.Type.ID, true);
-		CmfProperty<CmfValue> parentIds = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfValue.Type.STRING,
-			true);
 		CmfProperty<CmfValue> paths = new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING, true);
 		CmfProperty<CmfValue> fullPaths = new CmfProperty<>(IntermediateProperty.FULL_PATH, CmfValue.Type.STRING, true);
 		final String rootPath = ctx.getSession().getRootFolder().getName();
@@ -111,19 +112,43 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				paths.addValue(CmfValue.of(path));
 				fullPaths.addValue(CmfValue.of(String.format("%s/%s", path, object.getName())));
 			}
-			// TODO: Calculate the parentTreeID values
 		}
 		marshaled.setProperty(paths);
 		marshaled.setProperty(fullPaths);
-		marshaled.setProperty(parentIds);
 		marshaled.setProperty(parents);
 	}
 
 	@Override
-	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
-		if (!super.marshal(ctx, object)) { return false; }
+	protected void prepareForStorage(CmisExportContext ctx, CmfObject<CmfValue> object) throws Exception {
+		super.prepareForStorage(ctx, object);
+
 		marshalParentsAndPaths(ctx, object, this.object);
-		return true;
+
+		CmfProperty<CmfValue> prop = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfValue.Type.STRING,
+			true);
+		object.setProperty(prop);
+		Set<String> ptid = calculateParentTreeIds(this.object);
+		for (String s : ptid) {
+			prop.addValue(CmfValue.of(s));
+		}
+		this.factory.pathIdCache.put(this.object.getId(), Collections.unmodifiableSet(ptid));
+	}
+
+	protected Set<String> calculateParentTreeIds(FileableCmisObject object) throws ExportException {
+		Set<String> ptid = new LinkedHashSet<>();
+		for (Folder parent : object.getParents()) {
+			final String folderId = parent.getId();
+			final String encodedFolderId = PathIdHelper.encode(folderId);
+			Set<String> parentIdPaths = this.factory.pathIdCache.get(folderId);
+			if ((parentIdPaths != null) && !parentIdPaths.isEmpty()) {
+				for (String s : parentIdPaths) {
+					ptid.add(String.format("%s/%s", s, encodedFolderId));
+				}
+			} else {
+				ptid.add(encodedFolderId);
+			}
+		}
+		return ptid;
 	}
 
 	@Override

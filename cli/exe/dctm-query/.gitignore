@@ -1,0 +1,6 @@
+/target/
+/documentum/
+/dfc.properties
+/dfc.keystore
+/caliente-dctm-query-*.log
+/dql-results.xml

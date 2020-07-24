@@ -1,0 +1,6 @@
+.vs
+bin
+obj
+sample
+*.csproj.user
+cache.*.xml

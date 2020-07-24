@@ -27,6 +27,7 @@
 package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,12 +50,13 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
+import com.armedia.commons.utilities.function.CheckedSupplier;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSet.t", propOrder = {
 	"loaders"
 })
-public class MetadataSet extends BaseShareableLockable {
+public class MetadataSet extends BaseShareableLockable implements AutoCloseable {
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -68,17 +70,20 @@ public class MetadataSet extends BaseShareableLockable {
 	@XmlAttribute(name = "id", required = true)
 	protected String id;
 
+	@XmlAttribute(name = "dataSource", required = true)
+	protected String dataSource;
+
 	@XmlAttribute(name = "failOnError", required = false)
-	protected Boolean failOnError;
+	protected boolean failOnError = false;
 
 	@XmlAttribute(name = "failOnMissing", required = false)
-	protected Boolean failOnMissing;
+	protected boolean failOnMissing = false;
 
 	@XmlTransient
 	private List<AttributeValuesLoader> initializedLoaders;
 
 	@XmlTransient
-	private Map<String, MetadataSource> dataSources;
+	private CheckedSupplier<Connection, SQLException> connectionSource;
 
 	public List<AttributeValuesLoader> getLoaders() {
 		if (this.loaders == null) {
@@ -95,45 +100,44 @@ public class MetadataSet extends BaseShareableLockable {
 		this.id = id;
 	}
 
-	public boolean isFailOnError() {
-		return Tools.coalesce(this.failOnError, Boolean.FALSE);
+	public final String getDataSource() {
+		return this.dataSource;
 	}
 
-	public void setFailOnError(Boolean value) {
+	public final void setDataSource(String dataSource) {
+		this.dataSource = dataSource;
+	}
+
+	public boolean isFailOnError() {
+		return this.failOnError;
+	}
+
+	public void setFailOnError(boolean value) {
 		this.failOnError = value;
 	}
 
 	public boolean isFailOnMissing() {
-		return Tools.coalesce(this.failOnMissing, Boolean.FALSE);
+		return this.failOnMissing;
 	}
 
-	public void setFailOnMissing(Boolean value) {
+	public void setFailOnMissing(boolean value) {
 		this.failOnMissing = value;
 	}
 
-	public void initialize(Map<String, MetadataSource> ds) throws Exception {
+	public void initialize(CheckedSupplier<Connection, SQLException> connectionSource) throws Exception {
+		Objects.requireNonNull(connectionSource, "Must provide a DataSource lookup function");
 		shareLockedUpgradable(() -> this.initializedLoaders, Objects::isNull, (e) -> {
 			if (this.initializedLoaders != null) { return; }
 			List<AttributeValuesLoader> initializedLoaders = new ArrayList<>();
-			Map<String, MetadataSource> dataSources = new HashMap<>();
 			boolean ok = false;
 			try {
-				for (AttributeValuesLoader loader : getLoaders()) {
-					if (loader == null) {
-						continue;
-					}
-
-					final String dsName = loader.getDataSource();
-					final MetadataSource mds = ds.get(dsName);
-					if (mds == null) {
-						throw new Exception(String.format(
-							"A %s loader in MetadataSet %s references a non-existent metadata source [%s]",
-							loader.getClass().getSimpleName(), getId(), dsName));
-					}
-					try (final Connection c = mds.getConnection()) {
+				try (final Connection c = connectionSource.get()) {
+					for (AttributeValuesLoader loader : getLoaders()) {
+						if (loader == null) {
+							continue;
+						}
 						loader.initialize(c);
 						initializedLoaders.add(loader);
-						dataSources.put(dsName, mds);
 					}
 				}
 				ok = true;
@@ -151,7 +155,7 @@ public class MetadataSet extends BaseShareableLockable {
 				}
 			}
 			this.initializedLoaders = Tools.freezeList(initializedLoaders);
-			this.dataSources = Tools.freezeMap(dataSources);
+			this.connectionSource = connectionSource;
 		});
 	}
 
@@ -164,37 +168,38 @@ public class MetadataSet extends BaseShareableLockable {
 			if (this.initializedLoaders.isEmpty()) { return null; }
 
 			Map<String, CmfAttribute<V>> finalAttributes = new HashMap<>();
-			for (AttributeValuesLoader l : this.initializedLoaders) {
-				if (l == null) {
-					continue;
-				}
-
-				MetadataSource mds = this.dataSources.get(l.getDataSource());
-				Map<String, CmfAttribute<V>> newAttributes = null;
-				try (Connection c = mds.getConnection()) {
-					newAttributes = l.getAttributeValues(c, object);
-				} catch (Exception e) {
-					if (isFailOnError()) {
-						// An exceptikon was caught, but we need to fail on it
-						throw new Exception(
-							String.format("Exception raised while loading external metadata attributes for %s",
-								object.getDescription()),
-							e);
-					} else {
-						this.log.warn("Failed to load the external metadata for set [{}] for {}", this.id,
-							object.getDescription(), e);
+			try (Connection c = this.connectionSource.get()) {
+				for (AttributeValuesLoader l : this.initializedLoaders) {
+					if (l == null) {
+						continue;
 					}
-				}
 
-				if ((newAttributes == null) && isFailOnMissing()) {
-					// The attribute values are required, but none were found...this is an
-					// error!
-					throw new Exception(String.format("Did not find the required external metadata attributes for %s",
-						object.getDescription()));
-				}
+					Map<String, CmfAttribute<V>> newAttributes = null;
+					try {
+						newAttributes = l.getAttributeValues(c, object);
+					} catch (Exception e) {
+						if (isFailOnError()) {
+							// An exceptikon was caught, but we need to fail on it
+							throw new Exception(
+								String.format("Exception raised while loading external metadata attributes for %s",
+									object.getDescription()),
+								e);
+						} else {
+							this.log.warn("Failed to load the external metadata for set [{}] for {}", this.id,
+								object.getDescription(), e);
+						}
+					}
 
-				if (newAttributes != null) {
-					finalAttributes.putAll(newAttributes);
+					if ((newAttributes == null) && isFailOnMissing()) {
+						// The attribute values are required, but none were found...this is an
+						// error!
+						throw new Exception(String.format(
+							"Did not find the required external metadata attributes for %s", object.getDescription()));
+					}
+
+					if (newAttributes != null) {
+						finalAttributes.putAll(newAttributes);
+					}
 				}
 			}
 			if (finalAttributes.isEmpty()) {
@@ -204,6 +209,7 @@ public class MetadataSet extends BaseShareableLockable {
 		}
 	}
 
+	@Override
 	public void close() {
 		shareLockedUpgradable(() -> this.initializedLoaders, Objects::nonNull, (e) -> {
 			if (this.initializedLoaders == null) { return; }

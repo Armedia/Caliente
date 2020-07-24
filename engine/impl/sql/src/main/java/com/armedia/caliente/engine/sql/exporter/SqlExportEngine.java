@@ -69,20 +69,20 @@ public class SqlExportEngine extends
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByQuery(SqlRoot session, CfgTools configuration,
-		SqlExportDelegateFactory factory, String query) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByQuery(SqlRoot session, CfgTools configuration, String query)
+		throws Exception {
 		throw new Exception("Local Export doesn't support queries");
 	}
 
 	@Override
 	protected Stream<ExportTarget> findExportTargetsBySearchKey(SqlRoot session, CfgTools configuration,
-		SqlExportDelegateFactory factory, String searchKey) throws Exception {
+		String searchKey) throws Exception {
 		throw new Exception("Local Export doesn't support ID-based searches");
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByPath(SqlRoot session, CfgTools configuration,
-		SqlExportDelegateFactory factory, String path) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByPath(SqlRoot session, CfgTools configuration, String path)
+		throws Exception {
 		File f = session.getFile();
 		if (!f.exists()) {
 			throw new FileNotFoundException(String.format("Failed to find a file or folder at [%s]", f));

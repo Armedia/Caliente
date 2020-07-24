@@ -28,7 +28,7 @@ package com.armedia.caliente.engine.xml.common;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.armedia.caliente.engine.SessionWrapper;
+import com.armedia.caliente.engine.common.SessionWrapper;
 
 public class XmlSessionWrapper extends SessionWrapper<XmlRoot> {
 

@@ -64,9 +64,9 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.converter.PathIdHelper;
 import com.armedia.caliente.engine.exporter.ExportDelegate;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
@@ -305,7 +305,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	@Override
-	protected boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> encoded) throws ExportException {
+	protected boolean baseMarshal(LocalExportContext ctx, CmfObject<CmfValue> encoded) throws ExportException {
 		final Path path = this.object.getAbsolute().toPath();
 		CmfAttribute<CmfValue> att = null;
 		att = new CmfAttribute<>(IntermediateAttribute.NAME, IntermediateAttribute.NAME.type, false);
@@ -419,7 +419,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			}
 			parents.add(0, LocalCommon.calculateId(p));
 		}
-		return CmfValue.of(FileNameTools.reconstitute(parents, false, false, '/'));
+		return CmfValue.of(PathIdHelper.encodePaths(parents));
 	}
 
 	@Override
@@ -476,8 +476,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 	@Override
 	protected List<CmfContentStream> storeContent(LocalExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
-		boolean includeRenditions) {
+		CmfObject<CmfValue> marshalled, CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
 		if (getType() != CmfObject.Archetype.DOCUMENT) { return null; }
 
 		List<CmfContentStream> ret = new ArrayList<>(1);

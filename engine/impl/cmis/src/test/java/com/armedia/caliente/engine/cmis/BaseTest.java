@@ -48,8 +48,8 @@ public class BaseTest {
 		Logger output = LoggerFactory.getLogger("console");
 
 		Map<String, String> settings = new TreeMap<>();
-		settings.put(CmisSessionSetting.ATOMPUB_URL.getLabel(),
-			"http://armedia-vm.rivera.prv/alfresco/api/-default-/public/cmis/versions/1.0/atom");
+		settings.put(CmisSessionSetting.URL.getLabel(),
+			"http://armedia-vm.rivera.prv/alfresco/api/-default-/public/cmis/versions/1.1/atom");
 		settings.put(CmisSessionSetting.USER.getLabel(), "admin");
 		settings.put(CmisSessionSetting.PASSWORD.getLabel(), "123");
 		settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), "-default-");

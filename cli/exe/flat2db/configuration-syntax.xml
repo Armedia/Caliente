@@ -1,6 +1,6 @@
 <?xml version="1.1"?>
 <!--
-<flat-2-db xmlns="http://www.armedia.com/ns/caliente/flat2db" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.armedia.com/ns/caliente/flat2db src/main/resources/flat2db.xsd ">
+<flat-2-db xmlns="http://www.armedia.com/ns/caliente/tools/flat2db" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.armedia.com/ns/caliente/tools/flat2db src/main/resources/flat2db.xsd ">
 -->
 <flat-2-db>
 	<data-sources>

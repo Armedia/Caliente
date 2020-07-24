@@ -528,9 +528,11 @@ public class TestLoop {
 						final IDfSysObject so = payload.object;
 						if (so == null) {
 							// Object must be deleted
-							new DfcQuery(session,
+							try (DfcQuery delete = new DfcQuery(session,
 								String.format("delete from dm_dbo.caliente_status where r_object_id = %s",
-									DfcUtils.quoteString(payload.objectId.getId())));
+									DfcUtils.quoteString(payload.objectId.getId())))) {
+
+							}
 						} else {
 							// Object needs to be created or updated
 							// Identify the object

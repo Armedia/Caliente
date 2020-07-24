@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.chemistry.opencmis.client.api.Session;
 
-import com.armedia.caliente.engine.SessionWrapper;
+import com.armedia.caliente.engine.common.SessionWrapper;
 
 public class CmisSessionWrapper extends SessionWrapper<Session> {
 

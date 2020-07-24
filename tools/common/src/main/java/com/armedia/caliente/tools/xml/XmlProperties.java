@@ -59,6 +59,7 @@ import javax.xml.stream.XMLStreamWriter;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 
+import com.armedia.commons.utilities.xml.XmlStreamElement;
 import com.ctc.wstx.api.WstxOutputProperties;
 import com.ctc.wstx.stax.WstxInputFactory;
 import com.ctc.wstx.stax.WstxOutputFactory;
@@ -276,39 +277,38 @@ public final class XmlProperties {
 			xml.writeStartDocument(charsetName, "1.1");
 			// Remove the DTD declaration - this can cause problems in some environments
 			xml.writeDTD(XmlProperties.PROPERTIES_DTD);
-			xml.writeStartElement("properties");
-			xml.flush();
-			out.flush();
-			if (comment != null) {
-				PropertiesComment c = new PropertiesComment();
-				c.setValue(comment);
-				marshaller.marshal(c, xml);
-				xml.flush();
+			try (XmlStreamElement xmlProperties = new XmlStreamElement(xml, "properties")) {
 				out.flush();
-			}
+				if (comment != null) {
+					PropertiesComment c = new PropertiesComment();
+					c.setValue(comment);
+					marshaller.marshal(c, xml);
+					xml.flush();
+					out.flush();
+				}
 
-			Set<String> keys = new TreeSet<>();
-			// Filter out null keys
-			for (String key : p.keySet()) {
-				if (key != null) {
-					keys.add(key);
+				Set<String> keys = new TreeSet<>();
+				// Filter out null keys
+				for (String key : p.keySet()) {
+					if (key != null) {
+						keys.add(key);
+					}
+				}
+
+				// Output the the values...
+				PropertiesEntry entry = new PropertiesEntry();
+				for (final String key : keys) {
+					String value = serializer.apply(p.get(key));
+					if (value == null) {
+						continue;
+					}
+					entry.setKey(key);
+					entry.setValue(value);
+					marshaller.marshal(entry, xml);
+					xml.flush();
+					out.flush();
 				}
 			}
-
-			// Output the the values...
-			PropertiesEntry entry = new PropertiesEntry();
-			for (final String key : keys) {
-				String value = serializer.apply(p.get(key));
-				if (value == null) {
-					continue;
-				}
-				entry.setKey(key);
-				entry.setValue(value);
-				marshaller.marshal(entry, xml);
-				xml.flush();
-				out.flush();
-			}
-			xml.writeEndElement();
 			xml.writeEndDocument();
 			xml.flush();
 			out.flush();

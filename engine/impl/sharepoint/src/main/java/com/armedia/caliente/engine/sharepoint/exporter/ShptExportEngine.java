@@ -71,20 +71,20 @@ public class ShptExportEngine extends
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByQuery(ShptSession session, CfgTools configuration,
-		ShptExportDelegateFactory factory, String query) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByQuery(ShptSession session, CfgTools configuration, String query)
+		throws Exception {
 		throw new Exception("SharePoint export doesn't yet support query-based export");
 	}
 
 	@Override
 	protected Stream<ExportTarget> findExportTargetsBySearchKey(ShptSession session, CfgTools configuration,
-		ShptExportDelegateFactory factory, String searchKey) throws Exception {
+		String searchKey) throws Exception {
 		throw new Exception("SharePoint export doesn't yet support ID-based export");
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByPath(ShptSession service, CfgTools configuration,
-		ShptExportDelegateFactory factory, String path) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByPath(ShptSession service, CfgTools configuration, String path)
+		throws Exception {
 		// support query by path (i.e. all files in these paths)
 		// support query by Sharepoint query language
 		if (service == null) {

@@ -27,7 +27,7 @@ public class AttributeReplaceTest {
 		v.setValue(initialValue);
 		object.getAtt().put(attribute, v);
 
-		AttributeReplace action = new AttributeReplace();
+		AttributeActions.Replace action = new AttributeActions.Replace();
 
 		action.setName(null);
 		action.setRegex(null);

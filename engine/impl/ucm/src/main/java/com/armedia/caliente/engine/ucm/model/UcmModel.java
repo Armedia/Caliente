@@ -213,7 +213,7 @@ public class UcmModel {
 	}
 
 	public static boolean isRoot(URI uri) {
-		return UcmModel.ROOT_URI.equals(uri);
+		return UcmModel.ROOT_URI.equals(uri) || UcmModel.NULL_FOLDER_URI.equals(uri);
 	}
 
 	private final Logger log = LoggerFactory.getLogger(getClass());

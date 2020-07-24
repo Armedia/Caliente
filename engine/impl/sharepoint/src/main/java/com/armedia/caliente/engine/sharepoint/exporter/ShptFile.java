@@ -47,7 +47,6 @@ import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.sharepoint.IncompleteDataException;
 import com.armedia.caliente.engine.sharepoint.ShptAttributes;
 import com.armedia.caliente.engine.sharepoint.ShptSession;
@@ -62,8 +61,8 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.tools.MimeTools;
-import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.io.BinaryMemoryBuffer;
 import com.independentsoft.share.CheckOutType;
 import com.independentsoft.share.CustomizedPageStatus;
 import com.independentsoft.share.File;
@@ -426,8 +425,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 	@Override
 	protected List<CmfContentStream> storeContent(ShptExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
-		boolean includeRenditions) {
+		CmfObject<CmfValue> marshaled, CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
 		final ShptSession session = ctx.getSession();
 		CmfContentStream info = new CmfContentStream(marshaled, 0);
 		final String name = this.object.getName();

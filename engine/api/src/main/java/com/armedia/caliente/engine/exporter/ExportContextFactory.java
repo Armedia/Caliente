@@ -32,11 +32,11 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.common.SessionWrapper;
 import com.armedia.caliente.engine.tools.DefaultNameFixer;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfContentStore;
