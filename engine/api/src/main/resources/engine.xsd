@@ -545,6 +545,64 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="mapValueCase.t">
+		<xsd:sequence>
+			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="replacement" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+		<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eqi" />
+	</xsd:complexType>
+
+	<xsd:complexType name="actionMapSubtypeBase.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="case" type="tns:mapValueCase.t"  minOccurs="0" maxOccurs="unbounded" />
+					<xsd:element name="default" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionMapSubtype.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionMapSubtypeBase.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionMapOriginalSubtype.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionMapSubtypeBase.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionSplitJoin.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="separator" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="keepEmpty" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionMapValue.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="case" type="tns:mapValueCase.t"  minOccurs="0" maxOccurs="unbounded" />
+					<xsd:element name="default" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="actionSetAttribute.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
@@ -604,26 +662,7 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionSplitJoin.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:conditionalAction.t">
-				<xsd:sequence>
-					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
-					<xsd:element name="separator" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
-					<xsd:element name="keepEmpty" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
-				</xsd:sequence>
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-
 	<xsd:complexType name="actionSplitAttribute.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:actionSplitJoin.t" />
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="actionSplitVariable.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:actionSplitJoin.t" />
 		</xsd:complexContent>
@@ -635,64 +674,7 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionJoinVariable.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:actionSplitJoin.t" />
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="mapValueCase.t">
-		<xsd:sequence>
-			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="replacement" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
-		</xsd:sequence>
-		<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eqi" />
-	</xsd:complexType>
-
-	<xsd:complexType name="actionMapValue.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:conditionalAction.t">
-				<xsd:sequence>
-					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
-					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="case" type="tns:mapValueCase.t"  minOccurs="0" maxOccurs="unbounded" />
-					<xsd:element name="default" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
-				</xsd:sequence>
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="actionMapSubtypeBase.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:conditionalAction.t">
-				<xsd:sequence>
-					<xsd:element name="case" type="tns:mapValueCase.t"  minOccurs="0" maxOccurs="unbounded" />
-					<xsd:element name="default" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
-				</xsd:sequence>
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="actionMapSubtype.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:actionMapSubtypeBase.t" />
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="actionMapOriginalSubtype.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:actionMapSubtypeBase.t" />
-		</xsd:complexContent>
-	</xsd:complexType>
-
 	<xsd:complexType name="actionMapAttributeValue.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:actionMapValue.t" />
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="actionMapVariableValue.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:actionMapValue.t" />
 		</xsd:complexContent>
@@ -754,6 +736,101 @@
 					<xsd:element name="replacement" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionSplitVariable.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionSplitJoin.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionJoinVariable.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionSplitJoin.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionMapVariableValue.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionMapValue.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionSetInternalProperty.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="type" type="tns:cmfDataType.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionCopyInternalProperty.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="from" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="to" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionRenameInternalProperty.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="from" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="to" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionRemoveInternalProperty.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionReplaceInternalProperty.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="regex" type="tns:regularExpression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="replacement" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionSplitInternalProperty.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionSplitJoin.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionJoinInternalProperty.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionSplitJoin.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionMapInternalPropertyValue.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionMapValue.t" />
 		</xsd:complexContent>
 	</xsd:complexType>
 
@@ -831,34 +908,42 @@
 			<xsd:element name="apply-value-mapping" type="tns:actionApplyValueMapping.t" />
 			<xsd:element name="clear-value-mapping" type="tns:actionClearValueMapping.t" />
 			<xsd:element name="copy-attribute" type="tns:actionCopyAttribute.t" />
+			<xsd:element name="copy-internal-property" type="tns:actionCopyInternalProperty.t" />
 			<xsd:element name="copy-variable" type="tns:actionCopyVariable.t" />
 			<xsd:element name="custom-action" type="tns:actionCustomAction.t" />
 			<xsd:element name="end-transformation" type="tns:actionEndTransformation.t" />
 			<xsd:element name="group" type="tns:actionGroup.t" />
 			<xsd:element name="join-attribute" type="tns:actionJoinAttribute.t" />
+			<xsd:element name="join-internal-property" type="tns:actionJoinInternalProperty.t" />
 			<xsd:element name="join-variable" type="tns:actionJoinVariable.t" />
 			<xsd:element name="load-external-metadata" type="tns:actionLoadExternalMetadata.t" />
 			<xsd:element name="map-attribute-value" type="tns:actionMapAttributeValue.t" />
+			<xsd:element name="map-internal-property-value" type="tns:actionMapInternalPropertyValue.t" />
 			<xsd:element name="map-original-subtype" type="tns:actionMapOriginalSubtype.t" />
 			<xsd:element name="map-principal" type="tns:actionApplyPrincipalMapping.t" />
 			<xsd:element name="map-subtype" type="tns:actionMapSubtype.t" />
 			<xsd:element name="map-variable-value" type="tns:actionMapVariableValue.t" />
 			<xsd:element name="remove-attribute" type="tns:actionRemoveAttribute.t" />
+			<xsd:element name="remove-internal-property" type="tns:actionRemoveInternalProperty.t" />
 			<xsd:element name="remove-original-secondary-subtypes" type="tns:actionRemoveOriginalSecondarySubtypes.t" />
 			<xsd:element name="remove-secondary-subtype" type="tns:actionRemoveSecondarySubtype.t" />
 			<xsd:element name="remove-variable" type="tns:actionRemoveVariable.t" />
 			<xsd:element name="rename-attribute" type="tns:actionRenameAttribute.t" />
+			<xsd:element name="rename-internal-property" type="tns:actionRenameInternalProperty.t" />
 			<xsd:element name="rename-variable" type="tns:actionRenameVariable.t" />
 			<xsd:element name="replace-attribute" type="tns:actionReplaceAttribute.t" />
+			<xsd:element name="replace-internal-property" type="tns:actionReplaceInternalProperty.t" />
 			<xsd:element name="replace-secondary-subtype" type="tns:actionReplaceSecondarySubtype.t" />
 			<xsd:element name="replace-subtype" type="tns:actionReplaceSubtype.t" />
 			<xsd:element name="replace-variable" type="tns:actionReplaceVariable.t" />
 			<xsd:element name="reset-original-secondary-subtypes" type="tns:actionResetOriginalSecondarySubtypes.t" />
 			<xsd:element name="set-attribute" type="tns:actionSetAttribute.t" />
+			<xsd:element name="set-internal-property" type="tns:actionSetInternalProperty.t" />
 			<xsd:element name="set-subtype" type="tns:actionSetSubtype.t" />
 			<xsd:element name="set-value-mapping" type="tns:actionSetValueMapping.t" />
 			<xsd:element name="set-variable" type="tns:actionSetVariable.t" />
 			<xsd:element name="split-attribute" type="tns:actionSplitAttribute.t" />
+			<xsd:element name="split-internal-property" type="tns:actionSplitInternalProperty.t" />
 			<xsd:element name="split-variable" type="tns:actionSplitVariable.t" />
 		</xsd:choice>
 	</xsd:group>
@@ -1019,7 +1104,6 @@
 			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="attribute-types" type="tns:externalMetadataAttributeTypes.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
-		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
 	</xsd:complexType>
 
 	<xsd:complexType name="externalMetadataFromDDL.t">
@@ -1034,7 +1118,6 @@
 			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t"  minOccurs="0" maxOccurs="1" />
 			<xsd:element name="attribute-types" type="tns:externalMetadataAttributeTypes.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
-		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
 	</xsd:complexType>
 
 	<xsd:complexType name="setting.t">
@@ -1059,6 +1142,7 @@
 			</xsd:choice>
 		</xsd:sequence>
 		<xsd:attribute name="id" type="tns:noSpaces.t" use="required" />
+		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
 		<xsd:attribute name="failOnError" type="xsd:boolean" use="optional" default="false" />
 		<xsd:attribute name="failOnMissing" type="xsd:boolean" use="optional" default="false" />
 	</xsd:complexType>
@@ -1090,12 +1174,8 @@
             <xsd:selector xpath="tns:data-source"/>
             <xsd:field xpath="@name"/>
         </xsd:key>
-        <xsd:keyref name="FK.DataSource.FromSQL" refer="tns:PK.DataSource">
-            <xsd:selector xpath="tns:metadata-set/tns:from-sql"/>
-            <xsd:field xpath="@dataSource"/>
-        </xsd:keyref>
-        <xsd:keyref name="FK.DataSource.FromDDL" refer="tns:PK.DataSource">
-            <xsd:selector xpath="tns:metadata-set/tns:from-ddl"/>
+        <xsd:keyref name="FK.DataSource" refer="tns:PK.DataSource">
+            <xsd:selector xpath="tns:metadata-set"/>
             <xsd:field xpath="@dataSource"/>
         </xsd:keyref>
 		<xsd:unique name="uniqueMetadataSetId">

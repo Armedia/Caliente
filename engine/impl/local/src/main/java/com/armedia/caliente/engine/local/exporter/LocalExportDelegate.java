@@ -29,6 +29,7 @@ package com.armedia.caliente.engine.local.exporter;
 import java.util.List;
 
 import com.armedia.caliente.engine.exporter.ExportDelegate;
+import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -59,4 +60,15 @@ abstract class LocalExportDelegate<T> extends
 		CmfObject<CmfValue> marshalled, CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
 		return null;
 	}
+
+	@Override
+	protected final boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
+		boolean base = baseMarshal(ctx, object);
+		if (base) {
+			this.factory.loadAttributes(ctx, object);
+		}
+		return base;
+	}
+
+	protected abstract boolean baseMarshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException;
 }

@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.ticketdecoder;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -48,13 +50,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.script.Bindings;
-import javax.script.Compilable;
-import javax.script.CompiledScript;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import javax.script.SimpleBindings;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -70,6 +66,7 @@ import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.function.CheckedPredicate;
+import com.armedia.commons.utilities.script.JSR223Script;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfLocalTransaction;
@@ -90,7 +87,6 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		b.getModifier());
 
 	// Documentum trims spaces so let's use that "feature"
-	private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
 	private static final Pattern SIMPLE_PRIORITY_PARSER = Pattern
 		.compile("^(?:([0-3]{1,4}):)?(?:([*]|[^*:@%]+)(?:%(.*?))?)?(?:@(old|new)(?:est)?)?$", Pattern.CASE_INSENSITIVE);
 	private static final String TYPE_CANDIDATES = "0123";
@@ -228,27 +224,25 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 		CheckedPredicate<T, ScriptException> p = klazz::isInstance;
 		if (expression != null) {
 			// Compile the script
-			ScriptEngine engine = ExtractorLogic.ENGINE_MANAGER.getEngineByName("jexl");
-			if (engine != null) {
-				CheckedPredicate<T, ScriptException> scriptPredicate = null;
+			try {
+				JSR223Script script = new JSR223Script.Builder("jexl").source(expression).build();
 				final String varName = klazz.getSimpleName().toLowerCase();
-				if (Compilable.class.isInstance(engine)) {
-					// Compile, for speed
-					Compilable compiler = Compilable.class.cast(engine);
-					CompiledScript script = compiler.compile(expression);
-					scriptPredicate = (obj) -> {
-						final Bindings b = new SimpleBindings();
-						b.put(varName, obj);
-						return ExtractorLogic.coerceBooleanResult(script.eval(b));
-					};
-				} else {
-					scriptPredicate = (obj) -> {
-						final Bindings b = new SimpleBindings();
-						b.put(varName, obj);
-						return ExtractorLogic.coerceBooleanResult(engine.eval(expression, b));
-					};
-				}
+				CheckedPredicate<T, ScriptException> scriptPredicate = (obj) -> {
+					final Object result;
+					try {
+						result = script.eval((b) -> b.put(varName, obj));
+					} catch (IOException e) {
+						throw new UncheckedIOException(e);
+					}
+					return ExtractorLogic.coerceBooleanResult(result);
+				};
 				p = p.and(scriptPredicate);
+			} catch (UncheckedIOException | IOException e) {
+				Throwable cause = e;
+				if (UncheckedIOException.class.isInstance(cause)) {
+					cause = e.getCause();
+				}
+				throw new RuntimeException("Unexpected IOException working in memory", cause);
 			}
 		}
 		return p;

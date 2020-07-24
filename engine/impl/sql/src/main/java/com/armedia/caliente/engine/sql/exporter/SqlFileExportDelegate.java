@@ -63,6 +63,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.converter.PathIdHelper;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.sql.common.SqlCommon;
 import com.armedia.caliente.engine.sql.common.SqlFile;
@@ -76,7 +77,6 @@ import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.tools.MimeTools;
-import com.armedia.commons.utilities.FileNameTools;
 
 public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 
@@ -391,7 +391,7 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 			String id = SqlCommon.calculateId(path);
 			parents.add(0, id);
 		}
-		return CmfValue.of(FileNameTools.reconstitute(parents, false, false, '/'));
+		return CmfValue.of(PathIdHelper.encodePaths(parents));
 	}
 
 	@Override

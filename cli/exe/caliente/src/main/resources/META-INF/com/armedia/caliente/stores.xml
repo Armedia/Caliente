@@ -11,6 +11,7 @@
 		<!-- H2 Support -->
 		<setting name="db.driver">org.h2.Driver</setting>
 		<setting name="db.type">h2</setting>
+		<!-- TODO: Add ;IFEXISTS=TRUE here but only for import mode? -->
 		<setting name="db.flags">AUTO_SERVER=TRUE;MODE=PostgreSQL;TRACE_LEVEL_FILE=4</setting>
 	</settings>
 

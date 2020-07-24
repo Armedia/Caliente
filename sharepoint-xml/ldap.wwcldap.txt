@@ -1,0 +1,169 @@
+Example user:
+	zleblanc / S-1-5-21-2988012886-1982706548-2620503850-31928 / 2708d9ff1301834e97727df4377989b0
+
+Mappings:
+
+	dm_user
+		ldap.cn -> dm_user.user_name
+		ldap.saAMAccountName -> dm_user.user_login_name
+		ldap.mail -> dm_user.user_address
+		2	-> dm_user.client_capability
+	dm_group
+		ldap.cn -> dm_group.group_name
+
+API>dump,c,0801fbdb800019d0
+...
+USER ATTRIBUTES
+
+  object_name                     : wwcldap
+  title                           :
+  subject                         :
+  authors                       []: <none>
+  keywords                      []: <none>
+  resolution_label                :
+  owner_name                      : emchou
+  owner_permit                    : 7
+  group_name                      : docu
+  group_permit                    : 5
+  world_permit                    : 2
+  log_entry                       :
+  acl_domain                      : emchou
+  acl_name                        : dm_4501fbdb80015d2f
+  language_code                   :
+  map_attr                     [0]: user_name
+                               [1]: user_login_name
+                               [2]: user_address
+                               [3]: group_name
+                               [4]: client_capability
+  map_val                      [0]: cn
+                               [1]: sAMAccountName
+                               [2]: mail
+                               [3]: cn
+                               [4]: 2
+  map_attr_type                [0]: dm_user
+                               [1]: dm_user
+                               [2]: dm_user
+                               [3]: dm_group
+                               [4]: dm_user
+  map_val_type                 [0]: A
+                               [1]: A
+                               [2]: A
+                               [3]: A
+                               [4]: V
+  map_const_attr                []: <none>
+  map_const_val                 []: <none>
+  ldap_host                       : 10.1.10.71
+  port_number                     : 389
+  person_obj_class                : user
+  group_obj_class                 : group
+  per_search_base                 : ou=emc,dc=wildwell,dc=com
+  grp_search_base                 : ou=emc,dc=wildwell,dc=com
+  per_search_filter               : cn=*
+  grp_search_filter               : cn=*
+  bind_dn                         : wwci\emctest
+  bind_pwd                        :
+  user_subtype                    : dm_user
+  rename_user_option              : T
+  deactivate_user_option          : T
+  rename_group_option             : T
+  import_mode                     : both
+  bind_type                       : bind_by_dn
+  use_ext_auth_prog               : F
+  ssl_mode                        : 0
+  ssl_port                        : 0
+  certdb_location                 :
+  first_time_sync                 : F
+  map_rejection                [0]: 2
+                               [1]: 2
+                               [2]: 2
+                               [3]: 2
+                               [4]: 2
+  retry_count                     : 3
+  retry_interval                  : 3
+  failover_ldap_config_ids      []: <none>
+  failover_use_interval           : 300
+
+SYSTEM ATTRIBUTES
+
+  r_object_type                   : dm_ldap_config
+  r_creation_date                 : 10/6/2009 12:59:54 PM
+  r_modify_date                   : 7/24/2014 8:13:30 PM
+  r_modifier                      : emchou
+  r_access_date                   : nulldate
+  r_composite_id                []: <none>
+  r_composite_label             []: <none>
+  r_component_label             []: <none>
+  r_order_no                    []: <none>
+  r_link_cnt                      : 0
+  r_link_high_cnt                 : 0
+  r_assembled_from_id             : 0000000000000000
+  r_frzn_assembly_cnt             : 0
+  r_has_frzn_assembly             : F
+  r_is_virtual_doc                : 0
+  r_page_cnt                      : 0
+  r_content_size                  : 0
+  r_lock_owner                    :
+  r_lock_date                     : nulldate
+  r_lock_machine                  :
+  r_version_label              [0]: 1.0
+                               [1]: CURRENT
+  r_immutable_flag                : F
+  r_frozen_flag                   : F
+  r_has_events                    : F
+  r_creator_name                  : emchou
+  r_is_public                     : F
+  r_policy_id                     : 0000000000000000
+  r_resume_state                  : 0
+  r_current_state                 : 0
+  r_alias_set_id                  : 0000000000000000
+  r_full_content_size             : 0
+  r_aspect_name                 []: <none>
+  r_object_id                     : 0801fbdb800019d0
+
+APPLICATION ATTRIBUTES
+
+  a_application_type              : microsoft
+  a_status                        :
+  a_is_hidden                     : F
+  a_retention_date                : nulldate
+  a_archive                       : F
+  a_compound_architecture         :
+  a_link_resolved                 : F
+  a_content_type                  :
+  a_full_text                     : T
+  a_storage_type                  :
+  a_special_app                   :
+  a_effective_date              []: <none>
+  a_expiration_date             []: <none>
+  a_publish_formats             []: <none>
+  a_effective_label             []: <none>
+  a_effective_flag              []: <none>
+  a_category                      :
+  a_is_template                   : F
+  a_controlling_app               :
+  a_extended_properties         []: <none>
+  a_is_signed                     : F
+  a_last_review_date              : nulldate
+  a_last_run                      : 20130320093035.0Z
+  a_last_no                       : 46983574
+
+INTERNAL ATTRIBUTES
+
+  i_is_deleted                    : F
+  i_reference_cnt                 : 1
+  i_has_folder                    : T
+  i_folder_id                  [0]: 0c01fbdb80000104
+  i_contents_id                   : 0000000000000000
+  i_cabinet_id                    : 0c01fbdb80000104
+  i_antecedent_id                 : 0000000000000000
+  i_chronicle_id                  : 0801fbdb800019d0
+  i_latest_flag                   : T
+  i_branch_cnt                    : 0
+  i_direct_dsc                    : F
+  i_is_reference                  : F
+  i_retain_until                  : nulldate
+  i_retainer_id                 []: <none>
+  i_partition                     : 0
+  i_is_replica                    : F
+  i_vstamp                        : 2246
+

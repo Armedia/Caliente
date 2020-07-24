@@ -1,0 +1,38 @@
+- get export target instances (type-objectId-searchKey)
+	- By path (?)
+	- By query
+	- By ID
+
+- find core metadata by...
+	- type+searchKey
+	- objectId
+
+	* returned Attributes:
+		* name (String)
+		* objectId (String)
+		* archetype (CmfObject.Archetype)
+		* subType (String)
+		* secondaries (Set<String>)
+		* parentIds (Set<String>)
+		* dependencyTier (int)
+		* historyId (String)
+		* versionLabel (String)
+		* historyCurrent (boolean)
+
+- find metadata attributes by objectId
+	- Based on what ExternalMetadata already does
+
+- find required object targets by objectId
+	(i.e. which objects does this object depend upon to exist)
+
+- find dependent objects targets by objectId
+	(i.e. which objects are known to be dependent on this object)
+
+- find history members by historyId
+	- members will contain historyId, versionLabel, and either objectId or searchKey, and will be ordered in historical order (oldest first)
+
+- find content stream infos by objectId
+	- direct FS access?
+	- DB Streams? (blobs)
+	- URL?
+	- Other?

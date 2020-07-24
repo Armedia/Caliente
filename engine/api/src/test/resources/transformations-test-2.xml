@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <transformations xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine ../../main/resources/engine.xsd">
 	<transformation>
 		<if>
 			<and>

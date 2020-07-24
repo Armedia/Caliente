@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE import>
+<import>
+	<ldapSyncDomain>ARMEDIA</ldapSyncDomain>
+	<ldapUrl>LDAP://DC=ARMEDIA,DC=com</ldapUrl>
+	<!--
+	<ldapBindDn></ldapBindDn>
+	<ldapBindPw></ldapBindPw>
+	-->
+	<siteUrl>http://daltew8aapp03/sites/dctm</siteUrl>
+	<!-- <siteUrl>http://arm-rd-w8x-sp02/sites/cmf</siteUrl> -->
+	<!-- <siteUrl>http://arm-rd-w8x-ap1/sites/dctmtest</siteUrl> -->
+	<library>Documents</library>
+
+	<user>drivera</user>
+	<password>K4Rz0T8KLlX5WxL6fHrLOA==</password>
+
+	<content>E:/workspace/Armedia/CMSMF/cmsmf/dctm</content>
+	<!-- <content>E:/workspace/Armedia/SharePoint.CMSMF/Import/sample</content> -->
+
+	<fallbackUser>jshinnick</fallbackUser>
+	<internalUser>cstephenson</internalUser>
+	<fallbackGroup>linuxadmins</fallbackGroup>
+	<internalGroup>armediaemployees</internalGroup>
+	<threads>10</threads>
+	<reuseCount>10</reuseCount>
+	<cleanTypes>false</cleanTypes>
+	<simulationMode>none</simulationMode>
+	<locationMode>current</locationMode>
+	<fixExtensions>true</fixExtensions>
+	<autoPublish>true</autoPublish>
+	<retries>3</retries>
+	<cmsmf.indexOnly>false</cmsmf.indexOnly>
+</import>

@@ -64,6 +64,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.converter.PathIdHelper;
 import com.armedia.caliente.engine.exporter.ExportDelegate;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.local.common.LocalCommon;
@@ -304,7 +305,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	@Override
-	protected boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> encoded) throws ExportException {
+	protected boolean baseMarshal(LocalExportContext ctx, CmfObject<CmfValue> encoded) throws ExportException {
 		final Path path = this.object.getAbsolute().toPath();
 		CmfAttribute<CmfValue> att = null;
 		att = new CmfAttribute<>(IntermediateAttribute.NAME, IntermediateAttribute.NAME.type, false);
@@ -418,7 +419,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			}
 			parents.add(0, LocalCommon.calculateId(p));
 		}
-		return CmfValue.of(FileNameTools.reconstitute(parents, false, false, '/'));
+		return CmfValue.of(PathIdHelper.encodePaths(parents));
 	}
 
 	@Override

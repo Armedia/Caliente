@@ -26,7 +26,11 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.cmis.exporter;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
@@ -37,12 +41,15 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
 import com.armedia.caliente.engine.exporter.ExportException;
+import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisExportDelegateFactory
 	extends ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
+
+	final Map<String, Set<String>> pathIdCache = Collections.synchronizedMap(new HashMap<String, Set<String>>());
 
 	CmisExportDelegateFactory(CmisExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
@@ -56,8 +63,9 @@ public class CmisExportDelegateFactory
 	}
 
 	@Override
-	protected CmisExportDelegate<?> newExportDelegate(Session session, CmfObject.Archetype type, String searchKey)
-		throws Exception {
+	protected CmisExportDelegate<?> newExportDelegate(Session session, ExportTarget target) throws Exception {
+		CmfObject.Archetype type = target.getType();
+		String searchKey = target.getSearchKey();
 		CmisObject obj = session.getObject(searchKey);
 		switch (type) {
 			case FOLDER:
@@ -84,5 +92,11 @@ public class CmisExportDelegateFactory
 				break;
 		}
 		return null;
+	}
+
+	@Override
+	public void close() {
+		this.pathIdCache.clear();
+		super.close();
 	}
 }

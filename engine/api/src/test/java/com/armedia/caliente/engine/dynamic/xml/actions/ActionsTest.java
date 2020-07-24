@@ -617,7 +617,7 @@ public class ActionsTest {
 		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getDynamicObject();
 
-		AttributeSet action = new AttributeSet();
+		AttributeActions.Set action = new AttributeActions.Set();
 		try {
 			action.apply(ctx);
 			Assertions.fail("Did not fail with a null name");
@@ -642,7 +642,7 @@ public class ActionsTest {
 		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getDynamicObject();
 
-		MapAttributeValue action = new MapAttributeValue();
+		AttributeActions.MapValue action = new AttributeActions.MapValue();
 		action.apply(ctx);
 
 		List<MapValueCase> cases = action.getCases();

@@ -32,6 +32,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 
+import org.apache.chemistry.opencmis.commons.enums.BindingType;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.OptionScheme;
@@ -113,6 +114,9 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		if (!StringUtils.isEmpty(password)) {
 			settings.put(CmisSessionSetting.PASSWORD.getLabel(), password);
 		}
+
+		BindingType bindingType = commandValues.getEnum(BindingType.class, EngineInterface.BINDING_TYPE);
+		settings.put(CmisSessionSetting.BINDING_TYPE.getLabel(), bindingType.value());
 		return true;
 	}
 
