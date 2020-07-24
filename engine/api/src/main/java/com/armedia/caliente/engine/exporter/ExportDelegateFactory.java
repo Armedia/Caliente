@@ -26,9 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.exporter;
 
-import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferDelegateFactory;
-import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.engine.common.SessionWrapper;
 import com.armedia.commons.utilities.CfgTools;
 
 public abstract class ExportDelegateFactory< //
@@ -44,5 +43,5 @@ public abstract class ExportDelegateFactory< //
 	}
 
 	protected abstract ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ENGINE> newExportDelegate(
-		SESSION session, CmfObject.Archetype type, String searchKey) throws Exception;
+		SESSION session, ExportTarget target) throws Exception;
 }

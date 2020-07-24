@@ -34,8 +34,8 @@ import java.io.File;
 
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.common.SessionFactory;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionFactory;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;

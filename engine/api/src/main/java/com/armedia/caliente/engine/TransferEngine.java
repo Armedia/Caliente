@@ -52,6 +52,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.engine.common.PrincipalType;
+import com.armedia.caliente.engine.common.SessionFactory;
+import com.armedia.caliente.engine.common.SessionFactoryException;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
@@ -418,7 +421,11 @@ public abstract class TransferEngine< //
 			}
 			work(counter);
 		} finally {
-			this.runLock.unlock();
+			try {
+				cleanup();
+			} finally {
+				this.runLock.unlock();
+			}
 		}
 	}
 
@@ -429,4 +436,8 @@ public abstract class TransferEngine< //
 	protected abstract EXCEPTION newException(String message, Throwable cause);
 
 	protected abstract void work(CmfObjectCounter<RESULT> counter) throws EXCEPTION, CmfStorageException;
+
+	protected void cleanup() {
+
+	}
 }

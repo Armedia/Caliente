@@ -25,7 +25,7 @@ public class AttributeRenameTest {
 		v.setValue(uuid);
 		object.getAtt().put(originalName, v);
 
-		AttributeRename action = new AttributeRename();
+		AttributeActions.Rename action = new AttributeActions.Rename();
 
 		action.setFrom(null);
 		action.setTo(null);

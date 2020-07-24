@@ -35,8 +35,11 @@ import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
 
 public class UcmFolder extends UcmFSObject {
 
+	private final boolean root;
+
 	UcmFolder(UcmModel model, URI uri, UcmAttributes data) {
 		super(model, uri, data, UcmAtt.fFolderName);
+		this.root = UcmModel.isRoot(uri);
 	}
 
 	@Override
@@ -46,7 +49,7 @@ public class UcmFolder extends UcmFSObject {
 	}
 
 	public boolean isRoot() {
-		return UcmModel.ROOT_URI.equals(getURI());
+		return this.root;
 	}
 
 	public String getDisplayDescription() throws UcmException {

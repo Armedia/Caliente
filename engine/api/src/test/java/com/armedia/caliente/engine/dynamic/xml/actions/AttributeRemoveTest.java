@@ -16,7 +16,7 @@ public class AttributeRemoveTest {
 		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getDynamicObject();
 
-		AttributeRemove action = new AttributeRemove();
+		AttributeActions.Remove action = new AttributeActions.Remove();
 		try {
 			action.apply(ctx);
 			Assertions.fail("Did not fail with a null name");

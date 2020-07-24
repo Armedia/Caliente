@@ -42,6 +42,6 @@ public enum PersistenceFormat {
 	}
 
 	public TypePersistor newPersistor() throws Exception {
-		return this.persistor.newInstance();
+		return this.persistor.getConstructor().newInstance();
 	}
 }

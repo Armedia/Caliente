@@ -193,7 +193,13 @@ public final class HelpRenderer {
 			maxPositionals = baseScheme.getMaxArguments();
 		}
 
-		HelpRenderer.renderPositionals(sb, "arg", ' ', minPositionals, maxPositionals);
+		String positionalLabel = (commandScheme != null ? commandScheme.getArgumentName()
+			: baseScheme.getArgumentName());
+		if (StringUtils.isBlank(positionalLabel)) {
+			positionalLabel = "arg";
+		}
+
+		HelpRenderer.renderPositionals(sb, positionalLabel, ' ', minPositionals, maxPositionals);
 		HelpRenderer.printWrapped(pw, width, sb.toString());
 		HelpRenderer.printWrapped(pw, width, "(* = option is required)");
 	}

@@ -75,7 +75,7 @@ public class DctmImportStore extends DctmImportDelegate<IDfStore> {
 	@Override
 	protected boolean isSameObject(IDfStore store, DctmImportContext ctx) throws DfException {
 		IDfValue name = this.cmfObject.getAttribute(DctmAttributes.NAME).getValue();
-		return Objects.equals(name, store.getName());
+		return Objects.equals(name.asString(), store.getName());
 	}
 
 	@Override

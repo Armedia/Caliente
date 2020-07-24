@@ -60,7 +60,7 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 	}
 
 	@Override
-	protected boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
+	protected boolean baseMarshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		CmfAttribute<CmfValue> att = null;
 		att = new CmfAttribute<>(IntermediateAttribute.NAME, CmfValue.Type.STRING, false);
 		att.setValue(CmfValue.of(this.object.getName()));
@@ -93,7 +93,8 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 
 	@Override
 	protected String calculateObjectId(LocalRoot root, Principal object) throws Exception {
-		return DigestUtils.sha256Hex(String.format("%s:%s", object.getClass().getCanonicalName(), object.getName()));
+		return DigestUtils.sha256Hex(String.format("%s:%s", object.getClass().getCanonicalName(), object.getName()))
+			.toUpperCase();
 	}
 
 	@Override

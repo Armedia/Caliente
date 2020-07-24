@@ -34,7 +34,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
-import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.engine.common.SessionFactory;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -42,11 +42,15 @@ public class LocalSessionFactory extends SessionFactory<LocalRoot> {
 	private final LocalRoot root;
 
 	public LocalSessionFactory(CfgTools settings, CmfCrypt crypto) throws IOException {
+		this(settings, LocalCommon.getLocalRoot(settings), crypto);
+	}
+
+	public LocalSessionFactory(CfgTools settings, LocalRoot root, CmfCrypt crypto) throws IOException {
 		super(settings, crypto);
-		this.root = LocalCommon.getLocalRoot(settings);
-		final Path root = this.root.getPath();
-		FileUtils.forceMkdir(root.toFile());
-		if (!Files.isDirectory(root)) {
+		this.root = root;
+		final Path p = this.root.getPath();
+		FileUtils.forceMkdir(p.toFile());
+		if (!Files.isDirectory(p)) {
 			throw new IllegalArgumentException(
 				String.format("Root directory [%s] could not be found, nor could it be created", root));
 		}

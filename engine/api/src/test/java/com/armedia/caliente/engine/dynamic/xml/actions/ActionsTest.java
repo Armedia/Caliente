@@ -46,16 +46,6 @@ import com.armedia.caliente.engine.dynamic.transformer.TestObjectFacade;
 import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.engine.dynamic.xml.RegularExpression;
-import com.armedia.caliente.engine.dynamic.xml.actions.AbortTransformation;
-import com.armedia.caliente.engine.dynamic.xml.actions.AttributeSet;
-import com.armedia.caliente.engine.dynamic.xml.actions.EndTransformation;
-import com.armedia.caliente.engine.dynamic.xml.actions.MapAttributeValue;
-import com.armedia.caliente.engine.dynamic.xml.actions.MapValueCase;
-import com.armedia.caliente.engine.dynamic.xml.actions.SecondarySubtypeAdd;
-import com.armedia.caliente.engine.dynamic.xml.actions.SecondarySubtypeRemove;
-import com.armedia.caliente.engine.dynamic.xml.actions.SecondarySubtypeReplace;
-import com.armedia.caliente.engine.dynamic.xml.actions.SubtypeReplace;
-import com.armedia.caliente.engine.dynamic.xml.actions.SubtypeSet;
 import com.armedia.caliente.store.CmfValue;
 
 public class ActionsTest {
@@ -627,7 +617,7 @@ public class ActionsTest {
 		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getDynamicObject();
 
-		AttributeSet action = new AttributeSet();
+		AttributeActions.Set action = new AttributeActions.Set();
 		try {
 			action.apply(ctx);
 			Assertions.fail("Did not fail with a null name");
@@ -652,7 +642,7 @@ public class ActionsTest {
 		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getDynamicObject();
 
-		MapAttributeValue action = new MapAttributeValue();
+		AttributeActions.MapValue action = new AttributeActions.MapValue();
 		action.apply(ctx);
 
 		List<MapValueCase> cases = action.getCases();

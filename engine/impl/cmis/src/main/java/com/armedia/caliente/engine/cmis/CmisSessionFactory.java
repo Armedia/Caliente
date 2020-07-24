@@ -44,8 +44,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
-import com.armedia.caliente.engine.SessionFactory;
-import com.armedia.caliente.engine.SessionFactoryException;
+import com.armedia.caliente.engine.common.SessionFactory;
+import com.armedia.caliente.engine.common.SessionFactoryException;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.CryptException;
 import com.armedia.commons.utilities.CfgTools;
@@ -60,9 +60,11 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 	private final Map<String, String> parameters;
 	private final int defaultPageSize;
 
-	public CmisSessionFactory(CfgTools settings, CmfCrypt crypto) throws CryptException {
+	public CmisSessionFactory(CfgTools settings, CmfCrypt crypto) throws Exception, CryptException {
 		super(settings, crypto);
 		Map<String, String> parameters = new HashMap<>();
+
+		final String url = settings.getString(CmisSessionSetting.URL);
 
 		String repoId = null;
 		for (CmisSessionSetting s : CmisSessionSetting.values()) {
@@ -84,9 +86,38 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 				parameters.put(s.getSessionParameter(), v);
 			}
 		}
-		if (!parameters.containsKey(SessionParameter.BINDING_TYPE)) {
-			parameters.put(SessionParameter.BINDING_TYPE, BindingType.BROWSER.value());
+
+		BindingType bindingType = BindingType.BROWSER;
+
+		if (parameters.containsKey(SessionParameter.BINDING_TYPE)) {
+			String bt = parameters.get(SessionParameter.BINDING_TYPE);
+			bindingType = BindingType.fromValue(bt);
 		}
+
+		String urlParameterName = SessionParameter.BROWSER_URL;
+		switch (bindingType) {
+			case ATOMPUB:
+				urlParameterName = SessionParameter.ATOMPUB_URL;
+				break;
+
+			case BROWSER:
+				urlParameterName = SessionParameter.BROWSER_URL;
+				break;
+
+			case CUSTOM:
+			case LOCAL:
+			case WEBSERVICES:
+				urlParameterName = null;
+				break;
+		}
+
+		if (urlParameterName != null) {
+			if (StringUtils.isBlank(url)) { throw new Exception("No URL given for " + bindingType + " binding"); }
+			parameters.put(urlParameterName, url);
+		}
+
+		parameters.put(SessionParameter.BINDING_TYPE, bindingType.value());
+
 		int ps = settings.getInteger(CmisSessionSetting.DEFAULT_PAGE_SIZE);
 		if (ps <= 0) {
 			// Any value <= 0 means don't alter the default page size setting

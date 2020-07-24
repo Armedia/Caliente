@@ -25,7 +25,7 @@ public class AttributeCopyTest {
 		v.setValue(uuid);
 		object.getAtt().put(srcName, v);
 
-		AttributeCopy action = new AttributeCopy();
+		AttributeActions.Copy action = new AttributeActions.Copy();
 
 		action.setFrom(null);
 		action.setTo(null);

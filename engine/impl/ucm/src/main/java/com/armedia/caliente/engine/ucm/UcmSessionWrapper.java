@@ -28,7 +28,7 @@ package com.armedia.caliente.engine.ucm;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.armedia.caliente.engine.SessionWrapper;
+import com.armedia.caliente.engine.common.SessionWrapper;
 
 public class UcmSessionWrapper extends SessionWrapper<UcmSession> {
 

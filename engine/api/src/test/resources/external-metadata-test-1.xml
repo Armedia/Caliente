@@ -1,6 +1,6 @@
 <?xml version="1.1" encoding="UTF-8"?>
 <external-metadata xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine ../../main/resources/engine.xsd">
 
 	<data-source name="dsName">
 		<url>jdbc-url</url>
@@ -13,8 +13,8 @@
 		<setting name="setting.N">value.N</setting>
 	</data-source>
 
-	<metadata-set id="primary" failOnError="true" failOnMissing="false">
-		<from-sql dataSource="dsName">
+	<metadata-set id="primary" dataSource="dsName" failOnError="true" failOnMissing="false">
+		<from-sql>
 			<search-names-list>.....</search-names-list>
 
 			<query>
@@ -44,7 +44,7 @@
 				</map>
 				<default>...JEXL...</default>
 			</transform-names>
-			
+
 			<attribute-types>
 				<attribute>
 					<name>asdfsdf</name>
@@ -54,7 +54,7 @@
 			</attribute-types>
 		</from-sql>
 
-		<from-ddl dataSource="dsName">
+		<from-ddl>
 			<query>
 				<sql>select att_type, att_value from att_table where col1 = ${param2} and col2 = ${param3} and att_name = ${param1} order by ....</sql>
 				<parameter>
@@ -79,7 +79,7 @@
 				</map>
 				<default>...JEXL...</default>
 			</transform-names>
-			
+
 			<attribute-types>
 				<attribute>
 					<name>asdfsdf</name>

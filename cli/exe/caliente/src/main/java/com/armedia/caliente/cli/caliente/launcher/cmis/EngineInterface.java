@@ -29,11 +29,18 @@ package com.armedia.caliente.cli.caliente.launcher.cmis;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.apache.chemistry.opencmis.commons.enums.BindingType;
+
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionGroup;
+import com.armedia.caliente.cli.OptionGroupImpl;
+import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
+import com.armedia.caliente.cli.filter.EnumValueFilter;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.cmis.CmisCommon;
 import com.armedia.caliente.engine.cmis.exporter.CmisExportEngineFactory;
@@ -42,6 +49,19 @@ import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
 
 public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
+
+	static final Option BINDING_TYPE = new OptionImpl() //
+		.setLongOpt("binding-type") //
+		.setArgumentLimits(1) //
+		.setArgumentName("binding-type") //
+		.setDefault(BindingType.BROWSER) //
+		.setValueFilter(new EnumValueFilter<>(false, BindingType.class)) //
+		.setDescription("The type of binding the URL points to") //
+	;
+
+	private static final OptionGroup CMIS_OPTIONS = new OptionGroupImpl("CMIS Configuration") //
+		.add(EngineInterface.BINDING_TYPE) //
+	;
 
 	static final String ID_PREFIX = "id:";
 
@@ -86,6 +106,9 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 				.addGroup(CLIGroup.DOMAIN_CONNECTION) //
 			;
 		}
+		scheme //
+			.addGroup(EngineInterface.CMIS_OPTIONS) //
+		;
 	}
 
 }
