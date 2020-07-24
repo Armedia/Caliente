@@ -1,7 +1,7 @@
 <?xml version="1.1" encoding="UTF-8"?>
 <external-metadata xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
-	
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine ../../main/resources/engine.xsd">
+
 	<!-- Many different datasources can be defined -->
 	<!-- (at this point it starts to make sense to turn Caliente into a Spring application) -->
 	<data-source name="bi.db">
@@ -34,9 +34,9 @@
 	<!-- When the transformation engine wishes to pull data from a data set, it references it by its id -->
 	<!-- failOnError = if an error occurs, fail the fetch operation -->
 	<!-- failOnMissing = if a record is not found, fail the fetch operation -->
-	<metadata-set id="bi.leasing" failOnError="true" failOnMissing="false">
+	<metadata-set id="bi.leasing" dataSource="bi.db" failOnError="true" failOnMissing="false">
 		<!-- from-ddl captures each column as a different metadata field (i.e. tabular mode) -->
-		<from-ddl dataSource="bi.db">
+		<from-ddl>
 			<query>
 				<sql>select * from cmf_object where object_id = ${objectId}</sql>
 				<parameter>
@@ -62,10 +62,10 @@
 				<default lang="jexl">`cmf:${sqlName}`</default>
 			</transform-names>
 		</from-ddl>
-		
-		<from-sql dataSource="bi.db.2">
+
+		<from-sql>
 			<!-- from-sql captures from a query where a single column holds all the attribute values (i.e. columnar mode) -->
-			
+
 			<!-- The query that lists the names of the attributes we're going to be wanting to retrieve -->
 			<search-names-query>select distinct name from cmf_attribute order by name</search-names-query>
 			<!-- Optionally, we can list the names explicitly, in a comma-separated list -->

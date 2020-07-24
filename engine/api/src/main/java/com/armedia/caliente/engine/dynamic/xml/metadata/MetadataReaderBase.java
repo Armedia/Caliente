@@ -45,7 +45,6 @@ import java.util.function.Consumer;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -73,9 +72,6 @@ public abstract class MetadataReaderBase extends BaseShareableLockable implement
 	@XmlElement(name = "attribute-types", required = false)
 	protected AttributeTypeMapping attributeTypeMapping;
 
-	@XmlAttribute(name = "dataSource", required = true)
-	protected String dataSource;
-
 	@XmlTransient
 	protected String finalSql = null;
 
@@ -93,15 +89,6 @@ public abstract class MetadataReaderBase extends BaseShareableLockable implement
 
 	@XmlTransient
 	protected Boolean columnNamesCaseSensitive = false;
-
-	@Override
-	public final String getDataSource() {
-		return this.dataSource;
-	}
-
-	public final void setDataSource(String dataSource) {
-		this.dataSource = dataSource;
-	}
 
 	public final ParameterizedQuery getQuery() {
 		return this.query;

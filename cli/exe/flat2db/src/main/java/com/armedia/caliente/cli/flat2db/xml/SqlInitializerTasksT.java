@@ -74,10 +74,10 @@ import javax.xml.bind.annotation.XmlType;
 public class SqlInitializerTasksT {
 
 	@XmlElementRefs({
-		@XmlElementRef(name = "rollback-changeset", namespace = "http://www.armedia.com/ns/caliente/flat2db", type = JAXBElement.class, required = false),
-		@XmlElementRef(name = "changeset", namespace = "http://www.armedia.com/ns/caliente/flat2db", type = JAXBElement.class, required = false),
-		@XmlElementRef(name = "sql", namespace = "http://www.armedia.com/ns/caliente/flat2db", type = JAXBElement.class, required = false),
-		@XmlElementRef(name = "sql-script", namespace = "http://www.armedia.com/ns/caliente/flat2db", type = JAXBElement.class, required = false)
+		@XmlElementRef(name = "rollback-changeset", namespace = ObjectFactory.NAMESPACE, type = JAXBElement.class, required = false),
+		@XmlElementRef(name = "changeset", namespace = ObjectFactory.NAMESPACE, type = JAXBElement.class, required = false),
+		@XmlElementRef(name = "sql", namespace = ObjectFactory.NAMESPACE, type = JAXBElement.class, required = false),
+		@XmlElementRef(name = "sql-script", namespace = ObjectFactory.NAMESPACE, type = JAXBElement.class, required = false)
 	})
 	protected List<JAXBElement<?>> sqlOrSqlScriptOrChangeset;
 

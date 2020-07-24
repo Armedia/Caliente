@@ -46,7 +46,6 @@ import com.armedia.caliente.engine.cmis.CmisCustomAttributes;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -157,28 +156,32 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		}
 		object.setProperty(new CmfProperty<>(IntermediateProperty.HEAD_NAME, IntermediateProperty.HEAD_NAME.type,
 			CmfValue.of(headVersion.getName())));
-		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
-			IntermediateProperty.VERSION_TREE_ROOT.type,
-			CmfValue.of((this.antecedentId == null) || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY))));
+		object.setProperty(
+			new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT, IntermediateProperty.VERSION_TREE_ROOT.type,
+				CmfValue.of((this.antecedentId == null) || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY))));
 		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_INDEX,
 			IntermediateProperty.VERSION_INDEX.type, CmfValue.of(this.previous.size())));
 		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_COUNT,
 			IntermediateProperty.VERSION_COUNT.type, CmfValue.of(this.previous.size() + this.successors.size() + 1)));
 		object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
 			IntermediateProperty.VERSION_HEAD_INDEX.type, CmfValue.of(this.previous.size() + this.successors.size())));
-
-		if (!this.object.isLatestVersion()) {
-			marshalParentsAndPaths(ctx, object, this.object.getObjectOfLatestVersion(false));
-		}
 		return true;
 	}
 
 	@Override
+	protected void marshalParentsAndPaths(CmisExportContext ctx, CmfObject<CmfValue> marshaled, Document object)
+		throws ExportException {
+		Document doc = object;
+		if (!doc.isLatestVersion()) {
+			doc = object.getObjectOfLatestVersion(false);
+		}
+		super.marshalParentsAndPaths(ctx, marshaled, doc);
+	}
+
+	@Override
 	protected List<CmfContentStream> storeContent(CmisExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
-		boolean includeRenditions) {
-		List<CmfContentStream> ret = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
-			includeRenditions);
+		CmfObject<CmfValue> marshalled, CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
+		List<CmfContentStream> ret = super.storeContent(ctx, translator, marshalled, streamStore, includeRenditions);
 		ContentStream main = this.object.getContentStream();
 		CmfContentStream mainInfo = new CmfContentStream(marshalled, 0);
 		mainInfo.setMimeType(MimeTools.resolveMimeType(main.getMimeType()));

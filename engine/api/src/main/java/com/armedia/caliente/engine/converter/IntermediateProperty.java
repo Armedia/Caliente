@@ -60,6 +60,7 @@ public enum IntermediateProperty implements Supplier<String>, CmfEncodeableName 
 	ACL_ACCESSOR_NAME(CmfValue.Type.STRING),
 	ACL_ACCESSOR_TYPE(CmfValue.Type.STRING),
 	ACL_ACCESSOR_ACTIONS(CmfValue.Type.STRING),
+	ACL_PERMISSION_NAME(CmfValue.Type.STRING),
 	VERSION_TREE_ROOT(CmfValue.Type.BOOLEAN),
 	VERSION_COUNT(CmfValue.Type.INTEGER),
 	VERSION_HEAD_INDEX(CmfValue.Type.INTEGER),
@@ -87,6 +88,9 @@ public enum IntermediateProperty implements Supplier<String>, CmfEncodeableName 
 	FIXED_NAME(CmfValue.Type.STRING),
 	FIXED_PATH(CmfValue.Type.STRING),
 	PRESERVED_NAME(CmfValue.Type.STRING),
+	PROPERTY_DEFINITIONS(CmfValue.Type.STRING),
+	TYPE_DEFINITION_XML(CmfValue.Type.STRING),
+	TYPE_DEFINITION_JSON(CmfValue.Type.STRING),
 	//
 	;
 

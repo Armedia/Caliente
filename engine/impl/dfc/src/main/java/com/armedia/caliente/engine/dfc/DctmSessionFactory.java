@@ -32,8 +32,8 @@ package com.armedia.caliente.engine.dfc;
 
 import org.apache.commons.pool2.PooledObject;
 
-import com.armedia.caliente.engine.SessionFactory;
-import com.armedia.caliente.engine.SessionFactoryException;
+import com.armedia.caliente.engine.common.SessionFactory;
+import com.armedia.caliente.engine.common.SessionFactoryException;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.utilities.CfgTools;

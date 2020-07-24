@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd"
-	targetNamespace="http://www.armedia.com/ns/caliente/flat2db" xmlns:tns="http://www.armedia.com/ns/caliente/flat2db"
+	targetNamespace="http://www.armedia.com/ns/caliente/tools/flat2db" xmlns:tns="http://www.armedia.com/ns/caliente/tools/flat2db"
 	elementFormDefault="qualified" attributeFormDefault="unqualified" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.0">
 
 	<xsd:simpleType name="naturalNumber.t">

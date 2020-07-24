@@ -27,24 +27,14 @@
 
 package com.armedia.caliente.engine.dynamic.xml;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 
 import javax.script.Bindings;
-import javax.script.Compilable;
-import javax.script.CompiledScript;
 import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 import javax.xml.bind.Marshaller;
@@ -56,37 +46,21 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.dynamic.RuntimeDynamicElementException;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.script.JSR223Script;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "expression.t", propOrder = {
 	"script"
 })
 public class Expression {
-	private static final ScriptEngineManager ENGINE_FACTORY;
-	private static final Map<String, String> ENGINE_ALIASES;
-
-	static {
-		ENGINE_FACTORY = new ScriptEngineManager();
-		Map<String, String> m = new TreeMap<>();
-		for (ScriptEngineFactory f : Expression.ENGINE_FACTORY.getEngineFactories()) {
-			for (String s : f.getNames()) {
-				m.put(StringUtils.lowerCase(s), s);
-			}
-		}
-		ENGINE_ALIASES = Tools.freezeMap(new LinkedHashMap<>(m));
-	}
-
 	private static final LazyInitializer<Object> TOOLS = new LazyInitializer<Object>() {
 		@Override
 		protected Object initialize() throws ConcurrentException {
@@ -106,8 +80,6 @@ public class Expression {
 		}
 	};
 
-	private static final ConcurrentMap<String, ConcurrentMap<String, CompiledScript>> COMPILER_CACHE = new ConcurrentHashMap<>();
-
 	public static final Expression NULL = new Expression() {
 
 		{
@@ -126,54 +98,6 @@ public class Expression {
 		}
 	};
 
-	private static final ConcurrentMap<String, CompiledScript> getCompilerCache(String lang) {
-		Objects.requireNonNull(lang, "Must provide a language to scan the cache for");
-		return ConcurrentUtils.createIfAbsentUnchecked(Expression.COMPILER_CACHE, lang,
-			() -> new ConcurrentHashMap<>());
-	}
-
-	private static final ScriptEngine getEngine(String language) {
-		if (language == null) { return null; }
-		language = StringUtils.strip(language);
-		ScriptEngine engine = null;
-		if (language != null) {
-			String actualLanguage = Expression.ENGINE_ALIASES.get(StringUtils.lowerCase(language));
-			if (!StringUtils.isEmpty(actualLanguage)) {
-				engine = Expression.ENGINE_FACTORY.getEngineByName(actualLanguage);
-			}
-			if (engine == null) {
-				throw new IllegalArgumentException(
-					String.format("Unknown script language [%s] - supported languages are (case-insensitive): %s",
-						language, Expression.ENGINE_ALIASES.keySet()));
-			}
-		}
-		return engine;
-	}
-
-	private static final CompiledScript compileScript(String language, final String source) throws ScriptException {
-		final ScriptEngine engine = Expression.getEngine(language);
-		if (!Compilable.class.isInstance(engine)) { return null; }
-
-		final ConcurrentMap<String, CompiledScript> cache = Expression.getCompilerCache(language);
-		final Compilable compiler = Compilable.class.cast(engine);
-		// The key will be the source's SHA256 checksum
-		final String key = DigestUtils.sha256Hex(source);
-		try {
-			return ConcurrentUtils.createIfAbsent(cache, key, () -> {
-				try {
-					return compiler.compile(source);
-				} catch (ScriptException e) {
-					throw new ConcurrentException(e);
-				}
-			});
-		} catch (ConcurrentException e) {
-			final Throwable cause = e.getCause();
-			if (ScriptException.class.isInstance(cause)) { throw ScriptException.class.cast(cause); }
-			throw new RuntimeDynamicElementException(
-				String.format("Failed to pre-compile the %s script:%n%s%n", language, source), cause);
-		}
-	}
-
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -184,7 +108,7 @@ public class Expression {
 	protected String lang;
 
 	@XmlTransient
-	private ScriptEngine engine = null;
+	private final JSR223Script.Builder scriptBuilder = new JSR223Script.Builder();
 
 	protected void beforeMarshal(Marshaller m) {
 		this.lang = StringUtils.strip(this.lang);
@@ -192,17 +116,6 @@ public class Expression {
 
 	protected void afterUnmarshal(Unmarshaller u, Object parent) {
 		this.lang = StringUtils.strip(this.lang);
-		if (this.lang != null) {
-			this.engine = Expression.ENGINE_FACTORY.getEngineByName(this.lang);
-			if (this.engine == null) {
-				Map<String, List<String>> m = new TreeMap<>();
-				for (ScriptEngineFactory f : Expression.ENGINE_FACTORY.getEngineFactories()) {
-					m.put(String.format("%s %s", f.getLanguageName(), f.getLanguageVersion()), f.getNames());
-				}
-				throw new RuntimeDynamicElementException(
-					String.format("Unknown script language [%s] - supported languages: %s", this.lang, m));
-			}
-		}
 	}
 
 	public Expression() {
@@ -215,9 +128,18 @@ public class Expression {
 
 	public Expression(String lang, String script) {
 		lang = StringUtils.strip(lang);
-		this.engine = Expression.getEngine(lang);
 		this.lang = lang;
 		this.script = script;
+	}
+
+	private JSR223Script getExecutable() throws ScriptException, IOException {
+		if (StringUtils.isBlank(this.lang)) { return null; }
+		return this.scriptBuilder //
+			.language(this.lang) //
+			.allowCompilation(true) //
+			.source(StringUtils.strip(this.script)) //
+			.build() //
+		;
 	}
 
 	public String getScript() {
@@ -229,17 +151,11 @@ public class Expression {
 	}
 
 	public String getLang() {
-		return StringUtils.strip(this.lang);
+		return this.lang;
 	}
 
 	public void setLang(String lang) {
-		lang = StringUtils.strip(lang);
-		this.engine = Expression.getEngine(lang);
-		this.lang = lang;
-	}
-
-	private ScriptEngine getEngine() {
-		return this.engine = Expression.getEngine(getLang());
+		this.lang = StringUtils.strip(lang);
 	}
 
 	public Object evaluate() throws ScriptException {
@@ -247,50 +163,49 @@ public class Expression {
 	}
 
 	public Object evaluate(Consumer<ScriptContext> cfg) throws ScriptException {
-		// If there is no engine needed, then we simply return the contents of the script as a
-		// literal string script
-		final ScriptEngine engine = getEngine();
-		if (engine == null) { return getScript(); }
+		try {
+			// If there is no engine needed, then we simply return the contents of the script as a
+			// literal string script
+			final JSR223Script executable = getExecutable();
+			if (executable == null) { return getScript(); }
 
-		// We have an engine, so strip out the script for (slightly) faster parsing
-		final String script = StringUtils.strip(getScript());
-		final String lang = getLang();
-		final ScriptContext scriptCtx = new SimpleScriptContext();
-		engine.setContext(scriptCtx);
+			// We have an engine, so strip out the script for (slightly) faster parsing
+			final ScriptContext scriptCtx = new SimpleScriptContext();
 
-		scriptCtx.setWriter(new PrintWriter(System.out));
-		scriptCtx.setErrorWriter(new PrintWriter(System.err));
+			scriptCtx.setWriter(new PrintWriter(System.out));
+			scriptCtx.setErrorWriter(new PrintWriter(System.err));
 
-		if (cfg != null) {
-			cfg.accept(scriptCtx);
-		}
-		Bindings b = scriptCtx.getBindings(ScriptContext.GLOBAL_SCOPE);
-		if (b == null) {
-			b = scriptCtx.getBindings(ScriptContext.ENGINE_SCOPE);
-		}
-		if (!b.containsKey("tools")) {
-			try {
-				b.put("tools", Expression.TOOLS.get());
-			} catch (ConcurrentException e) {
-				throw new ScriptException(e);
+			if (cfg != null) {
+				cfg.accept(scriptCtx);
 			}
-		}
+			Bindings b = scriptCtx.getBindings(ScriptContext.GLOBAL_SCOPE);
+			if (b == null) {
+				b = scriptCtx.getBindings(ScriptContext.ENGINE_SCOPE);
+			}
+			if (!b.containsKey("tools")) {
+				try {
+					b.put("tools", Expression.TOOLS.get());
+				} catch (ConcurrentException e) {
+					throw new ScriptException(e);
+				}
+			}
+			if (!b.containsKey("log")) {
+				b.put("log", this.log);
+			}
 
-		this.log.trace("Compiling {} expression script:{}{}{}", lang, Tools.NL, script, Tools.NL);
-		final CompiledScript compiled = Expression.compileScript(lang, script);
-		if (compiled != null) {
-			this.log.trace("The {} script was compiled - will use the precompiled version", lang);
-			return compiled.eval(scriptCtx);
+			this.log.trace("Evaluating {} expression script:{}{}{}", this.lang, Tools.NL, this.script, Tools.NL);
+			Object ret = executable.eval(scriptCtx);
+			if (ret != null) {
+				this.log.trace("Returned [{}] from {} expression script:{}{}{}", ret, this.lang, Tools.NL, this.script,
+					Tools.NL);
+			} else {
+				this.log.trace("Returned <null> from {} expression script:{}{}{}", this.lang, Tools.NL, this.script,
+					Tools.NL);
+			}
+			return ret;
+		} catch (IOException e) {
+			throw new RuntimeException("Unexpected IOException while operating from memory", e);
 		}
-
-		this.log.trace("Evaluating {} expression script:{}{}{}", lang, Tools.NL, script, Tools.NL);
-		Object ret = engine.eval(script);
-		if (ret != null) {
-			this.log.trace("Returned [{}] from {} expression script:{}{}{}", ret, lang, Tools.NL, script, Tools.NL);
-		} else {
-			this.log.trace("Returned <null> from {} expression script:{}{}{}", lang, Tools.NL, script, Tools.NL);
-		}
-		return ret;
 	}
 
 	@Override

@@ -36,7 +36,7 @@ public enum CmisSessionSetting implements ConfigurationSetting {
 	PASSWORD(SessionParameter.PASSWORD),
 	BINDING_TYPE(SessionParameter.BINDING_TYPE),
 	BINDING_SPI_CLASS(SessionParameter.BINDING_SPI_CLASS),
-	ATOMPUB_URL(SessionParameter.ATOMPUB_URL),
+	URL(null),
 	REPOSITORY_ID(SessionParameter.REPOSITORY_ID),
 	AUTHENTICATION_PROVIDER_CLASS(SessionParameter.AUTHENTICATION_PROVIDER_CLASS),
 	OBJECT_FACTORY_CLASS(SessionParameter.OBJECT_FACTORY_CLASS),

@@ -36,6 +36,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.converter.PathIdHelper;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.model.UcmException;
@@ -49,7 +50,6 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends UcmExportDelegate<T> {
@@ -213,7 +213,7 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 				}
 				l.addFirst(parentFolder.getURI().toString());
 			}
-			p.addValue(CmfValue.of(FileNameTools.reconstitute(l, false, false, '/')));
+			p.addValue(CmfValue.of(PathIdHelper.encodePaths(l)));
 		}
 		return true;
 	}

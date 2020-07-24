@@ -1,0 +1,222 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<xsd:schema
+	targetNamespace="http://www.armedia.com/ns/caliente/engine/local"
+	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+	xmlns:tns="http://www.armedia.com/ns/caliente/engine/local"
+	xmlns:eng="http://www.armedia.com/ns/caliente/engine"
+	elementFormDefault="qualified" attributeFormDefault="unqualified" jaxb:version="2.0">
+
+	<xsd:import namespace="http://www.armedia.com/ns/caliente/engine" schemaLocation="engine.xsd" />
+
+	<xsd:simpleType name="noSpaces.t">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+			<xsd:whiteSpace value="collapse" />
+			<xsd:pattern value="[^\s]+" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="nonEmpty.t">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:complexType name="setting.t">
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="name" type="tns:noSpaces.t" use="required" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="settings.t">
+		<xsd:sequence>
+			<xsd:element name="setting" type="tns:setting.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="localQueryPostProcessor.t">
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="type" type="tns:noSpaces.t" use="optional" default="jexl3" />
+				<xsd:attribute name="ref" type="tns:noSpaces.t" use="optional" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="localQueryPostProcessorDef.t">
+		<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+			<xsd:element name="post-processor" type="tns:localQueryPostProcessor.t" />
+		</xsd:sequence>
+		<xsd:attribute name="id" type="tns:noSpaces.t" use="required" />
+	</xsd:complexType>
+
+	<xsd:complexType name="localQuerySearch.t">
+		<xsd:sequence>
+			<xsd:element name="sql" type="tns:nonEmpty.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="skip" type="xsd:int" minOccurs="0" maxOccurs="1" default="0" />
+			<xsd:element name="count" type="xsd:int" minOccurs="0" maxOccurs="1" default="0" />
+			<xsd:element name="path-columns" minOccurs="1" maxOccurs="1">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="path-column" type="tns:nonEmpty.t" minOccurs="1" maxOccurs="unbounded" />
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="post-processors" minOccurs="0" maxOccurs="1">
+				<xsd:complexType>
+					<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+						<xsd:element name="post-processor" type="tns:localQueryPostProcessor.t" />
+					</xsd:sequence>
+				</xsd:complexType>
+			    <xsd:key name="singlePostProcessorAttribute1">
+			        <xsd:selector xpath="tns:post-processor" />
+			        <xsd:field xpath="@ref|@type" />
+			    </xsd:key>
+			</xsd:element>
+		</xsd:sequence>
+
+		<xsd:attribute name="id" type="tns:noSpaces.t" use="required" />
+		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
+		<xsd:attribute name="failOnError" type="xsd:boolean" use="optional" default="false" />
+		<xsd:attribute name="failOnMissing" type="xsd:boolean" use="optional" default="false" />
+	</xsd:complexType>
+
+	<xsd:complexType name="localQuerySql.t">
+		<xsd:simpleContent>
+			<xsd:extension base="tns:nonEmpty.t">
+				<xsd:attribute name="id" type="tns:noSpaces.t" use="required" />
+				<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="localQueryVersionList.t">
+		<xsd:sequence>
+			<xsd:element name="sql" type="tns:nonEmpty.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="post-processors" minOccurs="0" maxOccurs="1">
+				<xsd:complexType>
+					<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+						<xsd:element name="post-processor" type="tns:localQueryPostProcessor.t" />
+					</xsd:sequence>
+				</xsd:complexType>
+			    <xsd:key name="singlePostProcessorAttribute2">
+			        <xsd:selector xpath="tns:post-processor" />
+			        <xsd:field xpath="@ref|@type" />
+			    </xsd:key>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="id" type="tns:noSpaces.t" use="required" />
+		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
+	</xsd:complexType>
+
+	<xsd:complexType name="localQueryDataSource.t">
+		<xsd:sequence>
+			<xsd:element name="url" type="tns:noSpaces.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="driver" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="user" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="password" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="setting" type="tns:setting.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+		<xsd:attribute name="name" type="tns:noSpaces.t" use="required" />
+	</xsd:complexType>
+
+	<xsd:element name="local-queries">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="root-path" type="tns:nonEmpty.t" minOccurs="1" maxOccurs="1" />
+				<xsd:element name="data-sources" minOccurs="0" maxOccurs="1">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element name="data-source" type="tns:localQueryDataSource.t" minOccurs="0" maxOccurs="unbounded">
+								<xsd:unique name="uniqueDataSourceSettingName">
+									<xsd:selector xpath="tns:setting" />
+									<xsd:field xpath="@name" />
+								</xsd:unique>
+							</xsd:element>
+						</xsd:sequence>
+					</xsd:complexType>
+					<xsd:key name="PK.DataSource">
+						<xsd:selector xpath="tns:data-source" />
+						<xsd:field xpath="@name" />
+					</xsd:key>
+				</xsd:element>
+				<xsd:element name="common-post-processors" minOccurs="0" maxOccurs="1">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element name="post-processors" type="tns:localQueryPostProcessorDef.t" minOccurs="0" maxOccurs="unbounded" />
+						</xsd:sequence>
+					</xsd:complexType>
+				    <xsd:key name="singlePostProcessorAttribute3">
+				        <xsd:selector xpath="tns:post-processor" />
+				        <xsd:field xpath="@ref|@type" />
+				    </xsd:key>
+					<xsd:key name="PK.PostProcessors">
+						<xsd:selector xpath="tns:post-processors" />
+						<xsd:field xpath="@id" />
+					</xsd:key>
+				</xsd:element>
+				<xsd:element name="searches" minOccurs="0" maxOccurs="1">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element name="search" type="tns:localQuerySearch.t" minOccurs="0" maxOccurs="unbounded" />
+						</xsd:sequence>
+					</xsd:complexType>
+					<xsd:key name="PK.Search">
+						<xsd:selector xpath="tns:search" />
+						<xsd:field xpath="@id" />
+					</xsd:key>
+				</xsd:element>
+				<xsd:element name="history-ids" minOccurs="0" maxOccurs="1">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element name="history-id" type="tns:localQuerySql.t" minOccurs="0" maxOccurs="unbounded" />
+						</xsd:sequence>
+					</xsd:complexType>
+					<xsd:key name="PK.HistoryId">
+						<xsd:selector xpath="tns:history-id" />
+						<xsd:field xpath="@id" />
+					</xsd:key>
+				</xsd:element>
+				<xsd:element name="version-lists" minOccurs="0" maxOccurs="1">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element name="version-list" type="tns:localQueryVersionList.t" minOccurs="0" maxOccurs="unbounded" />
+						</xsd:sequence>
+					</xsd:complexType>
+					<xsd:key name="PK.VersionList">
+						<xsd:selector xpath="tns:version-list" />
+						<xsd:field xpath="@id" />
+					</xsd:key>
+				</xsd:element>
+				<xsd:element name="metadata" minOccurs="0" maxOccurs="1">
+					<xsd:complexType>
+						<xsd:sequence>
+							<xsd:element name="metadata-set" type="eng:externalMetadataSet.t" minOccurs="0" maxOccurs="unbounded" />
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+		<xsd:keyref name="FK.DataSource.Search" refer="tns:PK.DataSource">
+			<xsd:selector xpath="tns:searches/tns:search" />
+			<xsd:field xpath="@dataSource" />
+		</xsd:keyref>
+		<xsd:keyref name="FK.DataSource.HistoryId" refer="tns:PK.DataSource">
+			<xsd:selector xpath="tns:history-ids/tns:history-id" />
+			<xsd:field xpath="@dataSource" />
+		</xsd:keyref>
+		<xsd:keyref name="FK.DataSource.VersionList" refer="tns:PK.DataSource">
+			<xsd:selector xpath="tns:version-lists/tns:version-list" />
+			<xsd:field xpath="@dataSource" />
+		</xsd:keyref>
+		<xsd:keyref name="FK.DataSource.Metadata" refer="tns:PK.DataSource">
+			<xsd:selector xpath="tns:metadata/tns:metadata-set" />
+			<xsd:field xpath="@dataSource" />
+		</xsd:keyref>
+	</xsd:element>
+</xsd:schema>

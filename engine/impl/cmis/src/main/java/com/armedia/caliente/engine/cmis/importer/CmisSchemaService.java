@@ -72,7 +72,7 @@ public class CmisSchemaService implements SchemaService {
 			// ignore them
 			ObjectType node = tree.getItem();
 			// Ignore secondary types
-			if (secondary != Objects.equals(BaseTypeId.CMIS_SECONDARY, node.getId())) {
+			if (secondary != Objects.equals(BaseTypeId.CMIS_SECONDARY.value(), node.getId())) {
 				continue;
 			}
 			harvestChildTypes(tree, objectTypes);
@@ -91,7 +91,7 @@ public class CmisSchemaService implements SchemaService {
 
 		ObjectType baseType = type.getBaseType();
 		// Check to see if the root base type is the secondary type
-		if (secondary != Objects.equals(BaseTypeId.CMIS_SECONDARY, baseType.getId())) { return null; }
+		if (secondary != Objects.equals(BaseTypeId.CMIS_SECONDARY.value(), baseType.getId())) { return null; }
 		Map<String, PropertyDefinition<?>> properties = type.getPropertyDefinitions();
 		Map<String, AttributeDeclaration> attributes = new TreeMap<>();
 		for (String name : properties.keySet()) {

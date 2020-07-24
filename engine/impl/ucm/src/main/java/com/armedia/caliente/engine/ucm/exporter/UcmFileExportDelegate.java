@@ -39,7 +39,6 @@ import javax.activation.MimeTypeParseException;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.model.UcmAtt;
 import com.armedia.caliente.engine.ucm.model.UcmException;
@@ -130,8 +129,8 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 		UcmFile object) throws ExportException {
 		if (!super.getDataProperties(ctx, properties, object)) { return false; }
 
-		properties.add(new CmfProperty<>(IntermediateProperty.IS_UNFILED, CmfValue.Type.BOOLEAN,
-			CmfValue.of(object.isUnfiled())));
+		properties.add(
+			new CmfProperty<>(IntermediateProperty.IS_UNFILED, CmfValue.Type.BOOLEAN, CmfValue.of(object.isUnfiled())));
 
 		final boolean newestVersion;
 		final int versionCount;
@@ -217,9 +216,8 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 
 	@Override
 	protected List<CmfContentStream> storeContent(UcmExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
-		boolean includeRenditions) {
-		List<CmfContentStream> contents = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
+		CmfObject<CmfValue> marshalled, CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
+		List<CmfContentStream> contents = super.storeContent(ctx, translator, marshalled, streamStore,
 			includeRenditions);
 
 		// Don't export content streams for shortcuts...

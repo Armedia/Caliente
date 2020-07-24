@@ -33,8 +33,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferDelegate;
+import com.armedia.caliente.engine.common.SessionWrapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
@@ -210,8 +210,7 @@ public abstract class ExportDelegate< //
 	protected abstract boolean marshal(CONTEXT ctx, CmfObject<VALUE> object) throws ExportException;
 
 	protected abstract List<CmfContentStream> storeContent(CONTEXT ctx, CmfAttributeTranslator<VALUE> translator,
-		CmfObject<VALUE> marshalled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
-		boolean includeRenditions);
+		CmfObject<VALUE> marshalled, CmfContentStore<?, ?> streamStore, boolean includeRenditions);
 
 	protected abstract Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, DELEGATE_FACTORY, ?>> identifyDependents(
 		CmfObject<VALUE> marshalled, CONTEXT ctx) throws Exception;

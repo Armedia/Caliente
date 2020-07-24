@@ -48,7 +48,7 @@ import java.util.TreeSet;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.IOUtils;
 
-import com.armedia.commons.utilities.BinaryMemoryBuffer;
+import com.armedia.commons.utilities.io.BinaryMemoryBuffer;
 
 public class KeyStoreTools {
 

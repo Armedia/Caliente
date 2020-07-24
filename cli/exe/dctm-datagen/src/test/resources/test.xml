@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <generation-plan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns="http://www.armedia.com/ns/data-generator"
-	xsi:schemaLocation="http://www.armedia.com/ns/data-generator platform:/resource/caliente-cli-datagen/src/main/resources/data-generator.xsd">
+	xmlns="http://www.armedia.com/ns/caliente/tools/data-generator"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/tools/data-generator ../../main/resources/data-generator.xsd">
 	<folder name="xxx" type="ff" />
 	<document name="xxx" type="ddd">
 		<attributes>

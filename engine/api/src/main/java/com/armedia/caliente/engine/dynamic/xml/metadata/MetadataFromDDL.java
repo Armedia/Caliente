@@ -32,7 +32,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -57,13 +56,17 @@ import com.armedia.commons.utilities.function.CheckedLazySupplier;
 public class MetadataFromDDL extends MetadataReaderBase {
 
 	private static class ColumnStructure extends CmfBaseSetting {
+		/*-
 		private final int sqlType;
 		private final String sqlTypeName;
+		*/
 
 		private ColumnStructure(String name, CmfValue.Type type, boolean repeating, int sqlType, String sqlTypeName) {
 			super(name, type, repeating);
+			/*
 			this.sqlType = sqlType;
 			this.sqlTypeName = sqlTypeName;
+			*/
 		}
 	}
 
@@ -157,8 +160,6 @@ public class MetadataFromDDL extends MetadataReaderBase {
 						for (String column : localStructure.keySet()) {
 							final ColumnStructure structure = localStructure.get(column);
 
-							Objects.equals(structure.sqlType, structure.sqlTypeName); // to disable a
-																					// warning...
 							CmfAttribute<V> attribute = tempAtts.get(column);
 							if (attribute == null) {
 								attribute = new CmfAttribute<>(structure.getName(), structure.getType(),

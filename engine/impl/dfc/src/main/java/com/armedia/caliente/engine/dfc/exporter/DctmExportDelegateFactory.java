@@ -36,6 +36,7 @@ import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
 import com.armedia.caliente.engine.exporter.ExportException;
+import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -59,11 +60,12 @@ public class DctmExportDelegateFactory
 	}
 
 	@Override
-	protected DctmExportDelegate<?> newExportDelegate(IDfSession session, CmfObject.Archetype type, String searchKey)
-		throws Exception {
+	protected DctmExportDelegate<?> newExportDelegate(IDfSession session, ExportTarget target) throws Exception {
 		if (session == null) {
 			throw new IllegalArgumentException("Must provide a session through which to retrieve the object");
 		}
+		CmfObject.Archetype type = target.getType();
+		String searchKey = target.getSearchKey();
 		if (searchKey == null) { throw new IllegalArgumentException("Must provide an object ID to retrieve"); }
 		return newExportDelegate(session, session.getObject(new DfId(searchKey)), type);
 	}

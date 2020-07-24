@@ -35,13 +35,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import org.apache.commons.lang3.StringUtils;
+import java.util.function.Function;
 
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.caliente.engine.local.exporter.LocalVersionLayout.VersionInfo;
 import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObject.Archetype;
@@ -53,12 +51,19 @@ import com.armedia.commons.utilities.function.LazySupplier;
 class LocalFile {
 
 	static ExportTarget toExportTarget(LocalRoot root, Path path) {
+		return LocalFile.toExportTarget(root, path, LocalCommon::calculateId);
+	}
+
+	static ExportTarget toExportTarget(LocalRoot root, Path path, Function<Path, String> calculateId) {
 		try {
 			if (!Files.exists(path)) { return null; }
+			if (calculateId == null) {
+				calculateId = LocalCommon::calculateId;
+			}
 			path = root.relativize(path);
 			final Archetype archetype = Files.isDirectory(path) ? CmfObject.Archetype.FOLDER
 				: CmfObject.Archetype.DOCUMENT;
-			final String objectId = LocalCommon.calculateId(path);
+			final String objectId = calculateId.apply(path);
 			final String safePath = PathTools.encodeSafePath(path.toString());
 			return new ExportTarget(archetype, objectId, safePath);
 		} catch (IOException e) {
@@ -83,7 +88,7 @@ class LocalFile {
 
 	private final LazySupplier<String> id = new LazySupplier<>(() -> LocalCommon.calculateId(getPortableFullPath()));
 	private final LazySupplier<String> parentId = new LazySupplier<>(() -> LocalCommon.calculateId(getParentPath()));
-	private final LazySupplier<String> historyId = new LazySupplier<>(() -> LocalCommon.calculateId(getHistoryRadix()));
+	private final String historyId;
 
 	private final LazySupplier<String> portableFullPath = new LazySupplier<>(
 		() -> LocalCommon.toPortablePath(getFullPath()));
@@ -98,7 +103,7 @@ class LocalFile {
 	private final LazySupplier<Integer> hash;
 	private final LazyFormatter string;
 
-	LocalFile(LocalRoot root, String path, VersionInfo versionInfo, boolean current) throws IOException {
+	LocalFile(LocalRoot root, String path, LocalVersionInfo localVersionInfo, boolean current) throws IOException {
 		this.root = root;
 		Path p = root.relativize(Paths.get(path));
 		this.relativeFile = p.toFile();
@@ -111,13 +116,9 @@ class LocalFile {
 			r.add(PathTools.makeSafe(s));
 		}
 
-		if (versionInfo != null) {
-			this.historyRadix = LocalCommon.toPortablePath(versionInfo.getRadix().toString());
-			this.versionTag = versionInfo.getTag();
-		} else {
-			this.historyRadix = LocalCommon.toPortablePath(p.toString());
-			this.versionTag = StringUtils.EMPTY;
-		}
+		this.historyId = localVersionInfo.getHistoryId();
+		this.versionTag = localVersionInfo.getTag();
+		this.historyRadix = LocalCommon.toPortablePath(localVersionInfo.getRadix().toString());
 
 		this.safePath = FileNameTools.reconstitute(r, false, false, '/');
 		this.pathCount = r.size();
@@ -152,7 +153,7 @@ class LocalFile {
 	}
 
 	public String getHistoryId() {
-		return this.historyId.get();
+		return this.historyId;
 	}
 
 	public String getVersionTag() {

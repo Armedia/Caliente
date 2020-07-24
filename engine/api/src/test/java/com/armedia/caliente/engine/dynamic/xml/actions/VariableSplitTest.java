@@ -20,7 +20,7 @@ public class VariableSplitTest {
 		final Random r = new Random(System.nanoTime());
 		TestObjectContext ctx = new TestObjectContext();
 
-		VariableSplit action = new VariableSplit();
+		VariableActions.Split action = new VariableActions.Split();
 		try {
 			action.apply(ctx);
 			Assertions.fail("Did not fail with a null name");

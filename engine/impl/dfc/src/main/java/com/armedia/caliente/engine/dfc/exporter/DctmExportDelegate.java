@@ -38,7 +38,6 @@ import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.exporter.ExportDelegate;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -220,11 +219,10 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 
 	@Override
 	protected final List<CmfContentStream> storeContent(DctmExportContext ctx,
-		CmfAttributeTranslator<IDfValue> translator, CmfObject<IDfValue> marshaled, ExportTarget referrent,
-		CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
+		CmfAttributeTranslator<IDfValue> translator, CmfObject<IDfValue> marshaled, CmfContentStore<?, ?> streamStore,
+		boolean includeRenditions) {
 		try {
-			return doStoreContent(ctx, translator, marshaled, referrent, castObject(this.object), streamStore,
-				includeRenditions);
+			return doStoreContent(ctx, translator, marshaled, castObject(this.object), streamStore, includeRenditions);
 		} catch (DfException e) {
 			this.log.error("Failed to store the content streams for {}", marshaled.getDescription(), e);
 			return new ArrayList<>();
@@ -232,8 +230,8 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	protected List<CmfContentStream> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
-		CmfObject<IDfValue> marshaled, ExportTarget referrent, T object, CmfContentStore<?, ?> streamStore,
-		boolean includeRenditions) throws DfException {
+		CmfObject<IDfValue> marshaled, T object, CmfContentStore<?, ?> streamStore, boolean includeRenditions)
+		throws DfException {
 		return new ArrayList<>();
 	}
 

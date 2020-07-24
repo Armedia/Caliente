@@ -37,8 +37,8 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.common.SessionFactory;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionFactory;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
@@ -80,7 +80,7 @@ public class DctmExportEngine extends
 
 	@Override
 	protected Stream<ExportTarget> findExportTargetsBySearchKey(IDfSession session, CfgTools configuration,
-		DctmExportDelegateFactory factory, String searchKey) throws Exception {
+		String searchKey) throws Exception {
 		// The searchKey is an r_object_id value, so treat it as such...
 		IDfId id = new DfId(searchKey);
 		if (id.isNull() || !id.isObjectId()) {
@@ -104,13 +104,13 @@ public class DctmExportEngine extends
 		}
 
 		// If it's a folder, we morph into a query-based recursion.
-		return findExportTargetsByQuery(session, configuration, factory,
+		return findExportTargetsByQuery(session, configuration,
 			String.format("dm_sysobject where folder(id(%s), DESCEND)", DfcUtils.quoteString(id.getId())));
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByPath(IDfSession session, CfgTools configuration,
-		DctmExportDelegateFactory factory, String path) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByPath(IDfSession session, CfgTools configuration, String path)
+		throws Exception {
 		IDfPersistentObject obj = session.getObjectByPath(path);
 		if (obj == null) { return null; }
 
@@ -124,13 +124,13 @@ public class DctmExportEngine extends
 		}
 
 		// If it's a folder, we morph into a query-based recursion.
-		return findExportTargetsByQuery(session, configuration, factory,
+		return findExportTargetsByQuery(session, configuration,
 			String.format("dm_sysobject where folder(id(%s), DESCEND)", DfcUtils.quoteString(id.getId())));
 	}
 
 	@Override
-	protected Stream<ExportTarget> findExportTargetsByQuery(IDfSession session, CfgTools configuration,
-		DctmExportDelegateFactory factory, String query) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByQuery(IDfSession session, CfgTools configuration, String query)
+		throws Exception {
 		if (session == null) {
 			throw new IllegalArgumentException("Must provide a session through which to retrieve the results");
 		}

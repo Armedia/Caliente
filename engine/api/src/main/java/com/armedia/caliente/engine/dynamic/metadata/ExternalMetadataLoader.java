@@ -116,13 +116,21 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 					this.metadataSources.put(src.getName(), src);
 				}
 
+				final Map<String, MetadataSource> frozenSources = Tools.freezeMap(this.metadataSources);
 				for (final MetadataSet desc : this.metadata.getMetadataSets()) {
+					// It's OK to repeat this check...no harm in it at this point
 					if (this.metadataSources.isEmpty()) {
 						throw new ExternalMetadataException(
 							"No metadata sources are defined - this is a configuration error!");
 					}
+					String dataSource = desc.getDataSource();
+					MetadataSource mds = frozenSources.get(dataSource);
+					if (mds == null) {
+						throw new ExternalMetadataException(String.format(
+							"MetadataSet [%s] references non-existent DataSource [%s]", desc.getId(), dataSource));
+					}
 					try {
-						desc.initialize(Tools.freezeMap(this.metadataSources));
+						desc.initialize(mds::getConnection);
 					} catch (Exception e) {
 						if (desc.isFailOnError()) {
 							// This item is required, so we must abort
