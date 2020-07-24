@@ -1,9 +1,12 @@
 package com.armedia.caliente.engine.converter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.CollectionTools;
 import com.armedia.commons.utilities.Tools;
@@ -44,6 +47,7 @@ public class PathIdHelper {
 	}
 
 	public static List<String> decodePaths(String path) {
+		if (StringUtils.isEmpty(path)) { return new ArrayList<>(); }
 		return Tools.splitEscaped(PathIdHelper.SEP, path);
 	}
 }
