@@ -31,6 +31,7 @@ import com.armedia.caliente.store.CmfValue;
 
 public enum LocalSetting implements TransferEngineSetting {
 	//
+	SOURCE(CmfValue.Type.STRING),
 	ROOT(CmfValue.Type.STRING),
 	COPY_CONTENT(CmfValue.Type.BOOLEAN, true),
 	INCLUDE_ALL_VERSIONS(CmfValue.Type.BOOLEAN, false),

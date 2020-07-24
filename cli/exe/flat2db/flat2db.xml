@@ -2,7 +2,7 @@
 <flat-2-db>
 <!--
 <flat-2-db xmlns="http://www.armedia.com/ns/caliente/flat2db" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/caliente/flat2db src/main/resources/flat2db.xsd ">
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/tools/flat2db src/main/resources/flat2db.xsd ">
 -->
 	<data-sources>
 		<data-source id="1" type="pooled">

@@ -78,7 +78,7 @@ public final class LocalCommon {
 	public static String calculateId(String path) {
 		path = LocalCommon.toPortablePath(path);
 		if ((path == null) || Objects.equals("/", path)) { return null; }
-		return DigestUtils.sha256Hex(path);
+		return DigestUtils.sha256Hex(path).toUpperCase();
 	}
 
 	public static String toPortablePath(String path) {
@@ -87,5 +87,10 @@ public final class LocalCommon {
 			path = path.replace(File.separatorChar, '/');
 		}
 		return FileNameTools.reconstitute(FileNameTools.tokenize(path, '/'), true, false, '/');
+	}
+
+	public static String toLocalizedPath(String path) {
+		if (path == null) { return null; }
+		return path.replace((File.separatorChar == '\\') ? '/' : '\\', File.separatorChar);
 	}
 }

@@ -76,7 +76,7 @@ public abstract class LogConfigurator {
 				try {
 					Class<?> c = Class.forName(configurator);
 					if (c.isAssignableFrom(LogConfigurator.class)) {
-						return LogConfigurator.class.cast(c.newInstance());
+						return LogConfigurator.class.cast(c.getConstructor().newInstance());
 					}
 				} catch (Exception e) {
 					throw new RuntimeException(

@@ -73,8 +73,8 @@ import javax.xml.bind.annotation.XmlType;
 public class SqlTasksT {
 
 	@XmlElementRefs({
-		@XmlElementRef(name = "sql", namespace = "http://www.armedia.com/ns/caliente/flat2db", type = JAXBElement.class, required = false),
-		@XmlElementRef(name = "sql-script", namespace = "http://www.armedia.com/ns/caliente/flat2db", type = JAXBElement.class, required = false)
+		@XmlElementRef(name = "sql", namespace = ObjectFactory.NAMESPACE, type = JAXBElement.class, required = false),
+		@XmlElementRef(name = "sql-script", namespace = ObjectFactory.NAMESPACE, type = JAXBElement.class, required = false)
 	})
 	protected List<JAXBElement<String>> sqlOrSqlScript;
 

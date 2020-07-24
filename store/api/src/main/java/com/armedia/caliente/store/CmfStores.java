@@ -171,7 +171,7 @@ public final class CmfStores extends BaseShareableLockable {
 		// Instantiate the preparation object...
 		final CmfStorePrep prepInstance;
 		try {
-			prepInstance = CmfStorePrep.class.cast(prepClass.newInstance());
+			prepInstance = CmfStorePrep.class.cast(prepClass.getConstructor().newInstance());
 		} catch (Exception e) {
 			throw new CmfStorageException(
 				String.format("Failed to instantiate the store preparation class [%s] for store [%s]", prepClassName,

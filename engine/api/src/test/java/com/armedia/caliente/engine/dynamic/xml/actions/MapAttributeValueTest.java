@@ -15,6 +15,7 @@ import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.TestObjectContext;
 import com.armedia.caliente.engine.dynamic.TestObjectFacade;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
+import com.armedia.caliente.engine.dynamic.xml.actions.AttributeActions.MapValue;
 import com.armedia.caliente.store.CmfValue;
 
 public class MapAttributeValueTest {
@@ -23,7 +24,7 @@ public class MapAttributeValueTest {
 		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getDynamicObject();
 
-		MapAttributeValue action = new MapAttributeValue();
+		MapValue action = new MapValue();
 		action.apply(ctx);
 
 		List<MapValueCase> cases = action.getCases();

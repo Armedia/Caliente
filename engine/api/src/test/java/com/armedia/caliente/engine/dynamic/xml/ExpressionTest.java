@@ -98,14 +98,6 @@ public class ExpressionTest {
 				Assertions.fail(String.format("Failed with known language [%s]", l));
 			}
 		}
-
-		try {
-			String badLang = String.format("This language certainly does not exist %s", UUID.randomUUID().toString());
-			e.setLang(badLang);
-			Assertions.fail(String.format("Did not fail with known-bad language [%s]", badLang));
-		} catch (IllegalArgumentException ex) {
-			// All is well
-		}
 	}
 
 	@Test

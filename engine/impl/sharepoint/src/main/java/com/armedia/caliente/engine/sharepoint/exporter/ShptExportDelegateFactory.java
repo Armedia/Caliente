@@ -27,6 +27,7 @@
 package com.armedia.caliente.engine.sharepoint.exporter;
 
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
+import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.sharepoint.ShptSession;
 import com.armedia.caliente.engine.sharepoint.ShptSessionWrapper;
 import com.armedia.caliente.store.CmfObject;
@@ -42,8 +43,9 @@ public class ShptExportDelegateFactory
 	}
 
 	@Override
-	protected ShptExportDelegate<?> newExportDelegate(ShptSession session, CmfObject.Archetype type, String searchKey)
-		throws Exception {
+	protected ShptExportDelegate<?> newExportDelegate(ShptSession session, ExportTarget target) throws Exception {
+		CmfObject.Archetype type = target.getType();
+		String searchKey = target.getSearchKey();
 		switch (type) {
 			case USER:
 				return new ShptUser(this, session, session.getUser(Tools.decodeInteger(searchKey)));

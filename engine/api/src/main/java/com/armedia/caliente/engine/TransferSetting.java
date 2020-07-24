@@ -26,6 +26,7 @@
  *******************************************************************************/
 package com.armedia.caliente.engine;
 
+import com.armedia.caliente.engine.common.PrincipalType;
 import com.armedia.caliente.store.CmfValue;
 
 public enum TransferSetting implements TransferEngineSetting {

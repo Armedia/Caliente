@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.exception;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.cli.OptionScheme;
 
 public class InsufficientPositionalValuesException extends CommandLineSyntaxException {
@@ -37,6 +39,10 @@ public class InsufficientPositionalValuesException extends CommandLineSyntaxExce
 
 	@Override
 	protected String renderMessage() {
-		return String.format("At least %d positional values are required", getOptionScheme().getMinArguments());
+		String label = getOptionScheme().getArgumentName();
+		if (StringUtils.isBlank(label)) {
+			label = "positional";
+		}
+		return String.format("At least %d %s values are required", getOptionScheme().getMinArguments(), label);
 	}
 }

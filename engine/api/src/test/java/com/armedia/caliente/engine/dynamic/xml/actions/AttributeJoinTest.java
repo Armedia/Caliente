@@ -20,7 +20,7 @@ public class AttributeJoinTest {
 		final Random r = new Random(System.nanoTime());
 		TestObjectContext ctx = new TestObjectContext();
 
-		AttributeJoin action = new AttributeJoin();
+		AttributeActions.Join action = new AttributeActions.Join();
 		try {
 			action.apply(ctx);
 			Assertions.fail("Did not fail with a null name");

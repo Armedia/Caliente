@@ -51,7 +51,7 @@ import javax.xml.namespace.QName;
  */
 @XmlRegistry
 public class ObjectFactory {
-	public static final String NAMESPACE = "http://www.armedia.com/ns/caliente/flat2db";
+	public static final String NAMESPACE = "http://www.armedia.com/ns/caliente/tools/flat2db";
 
 	private final static QName _SqlTasksTSql_QNAME = new QName(ObjectFactory.NAMESPACE, "sql");
 	private final static QName _SqlTasksTSqlScript_QNAME = new QName(ObjectFactory.NAMESPACE, "sql-script");

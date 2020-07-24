@@ -32,31 +32,22 @@ import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.Session;
-import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
 
+import com.armedia.caliente.engine.common.TypeDefinitionEncoder;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
 public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 
-	protected CmisObjectTypeDelegate(CmisExportDelegateFactory factory, Session session, ObjectType folder)
+	protected CmisObjectTypeDelegate(CmisExportDelegateFactory factory, Session session, ObjectType objectType)
 		throws Exception {
-		super(factory, session, ObjectType.class, folder);
+		super(factory, session, ObjectType.class, objectType);
 	}
 
 	@Override
 	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
-		// TODO: For now, do nothing...
-		if (ctx != null) { return false; }
-
-		// Don't marshal base types
-		if (this.object.isBaseType()) { return false; }
-
-		for (PropertyDefinition<?> p : this.object.getPropertyDefinitions().values()) {
-			// TODO: How to encode this information in an "engine-neutral" fashion?
-			p.hashCode();
-		}
+		TypeDefinitionEncoder.encode(this.object, object, CmfValue::of);
 		return true;
 	}
 
@@ -86,7 +77,7 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 		CmisExportContext ctx) throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
 		ObjectType objectType = this.object.getParentType();
-		if (!objectType.isBaseType()) {
+		if (objectType != null) {
 			ret.add(new CmisObjectTypeDelegate(this.factory, ctx.getSession(), objectType));
 		}
 		return ret;

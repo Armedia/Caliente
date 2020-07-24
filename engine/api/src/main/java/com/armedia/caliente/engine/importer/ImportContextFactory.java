@@ -35,9 +35,9 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.common.SessionWrapper;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;

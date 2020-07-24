@@ -7,7 +7,7 @@
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
 	<artifactId>caliente</artifactId>
-	<version>3.9.8</version>
+	<version>3.9.9</version>
 	<packaging>pom</packaging>
 	<inceptionYear>2013</inceptionYear>
 
@@ -79,8 +79,9 @@
 		<stax-utils.version>20070216</stax-utils.version>
 		<tomcat.version>9.0.27</tomcat.version>
 		<unboundid-ldapsdk.version>4.0.12</unboundid-ldapsdk.version>
-		<utilities.version>1.0.16</utilities.version>
+		<utilities.version>1.0.22</utilities.version>
 		<woodstox.version>5.2.0</woodstox.version>
+		<jackson.version>2.11.0</jackson.version>
 
 		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
 		<dfc.jar>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</dfc.jar>
@@ -320,6 +321,12 @@
 			</dependency>
 
 			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+
+			<dependency>
 				<groupId>org.easymock</groupId>
 				<artifactId>easymock</artifactId>
 				<version>${easymock.version}</version>
@@ -364,20 +371,13 @@
 					<version>1.16</version>
 					<configuration>
 						<licenseName>caliente_license</licenseName>
-						<licenseResolver>classpath://caliente</licenseResolver>
+						<licenseResolver>${project.baseUri}/license</licenseResolver>
 						<addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
 						<canUpdateCopyright>true</canUpdateCopyright>
 						<includes>
 							<include>**/*.java</include>
 						</includes>
 					</configuration>
-					<dependencies>
-						<dependency>
-							<groupId>com.armedia.caliente</groupId>
-							<artifactId>license-headers</artifactId>
-							<version>1.0.1</version>
-						</dependency>
-					</dependencies>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -641,6 +641,7 @@
 		<module>cli/exe/dctm-datagen</module>
 		<module>cli/exe/dctm-filename-mapper</module>
 		<module>cli/exe/dctm-history</module>
+		<module>cli/exe/dctm-query</module>
 		<module>cli/exe/dctm-ticket-decoder</module>
 		<module>cli/exe/dctm-type-dumper</module>
 		<module>cli/exe/dctm-user-mapper</module>

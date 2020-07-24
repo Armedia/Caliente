@@ -28,8 +28,8 @@ package com.armedia.caliente.engine.importer;
 
 import java.util.Collection;
 
-import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferDelegate;
+import com.armedia.caliente.engine.common.SessionWrapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;

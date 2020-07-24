@@ -43,6 +43,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
 
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -62,6 +63,36 @@ import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 })
 public class MetadataSource extends BaseShareableLockable {
 
+	@XmlAccessorType(XmlAccessType.FIELD)
+	@XmlType(name = "setting.t", propOrder = {
+		"value"
+	})
+	public static class Setting {
+
+		@XmlValue
+		protected String value;
+
+		@XmlAttribute(name = "name", required = true)
+		protected String name;
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String value) {
+			this.name = value;
+		}
+
+	}
+
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -78,7 +109,7 @@ public class MetadataSource extends BaseShareableLockable {
 	protected String password;
 
 	@XmlElement(name = "setting", required = true)
-	protected List<MetadataSourceSetting> settings;
+	protected List<Setting> settings;
 
 	@XmlAttribute(name = "name", required = true)
 	protected String name;
@@ -118,7 +149,7 @@ public class MetadataSource extends BaseShareableLockable {
 		this.password = password;
 	}
 
-	public List<MetadataSourceSetting> getSettings() {
+	public List<Setting> getSettings() {
 		if (this.settings == null) {
 			this.settings = new ArrayList<>();
 		}
@@ -127,7 +158,7 @@ public class MetadataSource extends BaseShareableLockable {
 
 	public Map<String, String> getSettingsMap() {
 		Map<String, String> ret = new TreeMap<>();
-		for (MetadataSourceSetting s : getSettings()) {
+		for (Setting s : getSettings()) {
 			String name = s.getName();
 			String value = s.getValue();
 			if ((name != null) && (value != null)) {
