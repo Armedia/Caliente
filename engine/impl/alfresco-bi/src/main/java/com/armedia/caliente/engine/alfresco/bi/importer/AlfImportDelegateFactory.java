@@ -67,6 +67,7 @@ import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.converter.PathIdHelper;
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
@@ -315,7 +316,7 @@ public class AlfImportDelegateFactory
 
 	private final String resolveTreeIds(final AlfImportContext ctx, String cmsPath) throws ImportException {
 		List<CmfObjectRef> refs = new ArrayList<>();
-		for (String id : StringUtils.split(cmsPath, '/')) {
+		for (String id : PathIdHelper.decodePaths(cmsPath)) {
 			// They're all known to be folders, so...
 			refs.add(new CmfObjectRef(CmfObject.Archetype.FOLDER, id));
 		}

@@ -41,6 +41,7 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.converter.PathIdHelper;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -137,13 +138,14 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		Set<String> ptid = new LinkedHashSet<>();
 		for (Folder parent : object.getParents()) {
 			final String folderId = parent.getId();
+			final String encodedFolderId = PathIdHelper.encode(folderId);
 			Set<String> parentIdPaths = this.factory.pathIdCache.get(folderId);
 			if ((parentIdPaths != null) && !parentIdPaths.isEmpty()) {
 				for (String s : parentIdPaths) {
-					ptid.add(String.format("%s/%s", s, folderId));
+					ptid.add(String.format("%s/%s", s, encodedFolderId));
 				}
 			} else {
-				ptid.add(folderId);
+				ptid.add(encodedFolderId);
 			}
 		}
 		return ptid;

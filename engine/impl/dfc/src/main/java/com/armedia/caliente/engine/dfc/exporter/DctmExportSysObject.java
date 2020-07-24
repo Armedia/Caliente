@@ -41,6 +41,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.converter.PathIdHelper;
 import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmDataType;
 import com.armedia.caliente.engine.dfc.DctmMappingUtils;
@@ -381,13 +382,14 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		final int parentCount = object.getValueCount(DctmAttributes.I_FOLDER_ID);
 		for (int i = 0; i < parentCount; i++) {
 			final IDfValue folderId = this.object.getRepeatingValue(DctmAttributes.I_FOLDER_ID, i);
+			final String encodedFolderId = PathIdHelper.encode(folderId.asString());
 			Set<String> parentIdPaths = this.factory.pathIdCache.get(folderId.asString());
 			if ((parentIdPaths != null) && !parentIdPaths.isEmpty()) {
 				for (String s : parentIdPaths) {
-					ptid.add(String.format("%s/%s", s, folderId.asString()));
+					ptid.add(String.format("%s/%s", s, encodedFolderId));
 				}
 			} else {
-				ptid.add(folderId.asString());
+				ptid.add(encodedFolderId);
 			}
 		}
 		return ptid;
