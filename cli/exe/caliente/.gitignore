@@ -17,6 +17,7 @@
 /*.sh
 /import-*.xml
 /export-*.xml
+/localfs-*.xml
 /test-*.xml
 /*-caliente-*.xml
 /*-alfresco-*.xml

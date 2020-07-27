@@ -58,7 +58,7 @@ import com.armedia.commons.utilities.Tools;
 
 public class LocalOrganizer extends CmfContentOrganizer {
 
-	private static final String MAPPINGS_FILE = "mime-extensions.xml";
+	private static final String MAPPINGS_FILE = "-mime-extensions.xml";
 	private static final List<Function<MimeType, String>> KEY_GENERATORS;
 	static {
 		List<Function<MimeType, String>> keyGenerators = new LinkedList<>();
@@ -68,8 +68,8 @@ public class LocalOrganizer extends CmfContentOrganizer {
 		KEY_GENERATORS = Tools.freezeList(keyGenerators);
 	}
 
-	private static URL getMimeMappings() throws ResourceLoaderException {
-		return ResourceLoader.getResourceOrFile(LocalOrganizer.MAPPINGS_FILE);
+	private static URL getMimeMappings(String name) throws ResourceLoaderException {
+		return ResourceLoader.getResourceOrFile(name + LocalOrganizer.MAPPINGS_FILE);
 	}
 
 	public static final String NAME = "localfs";
@@ -88,7 +88,7 @@ public class LocalOrganizer extends CmfContentOrganizer {
 		final Map<String, String> mimeMap = new HashMap<>();
 		URL mappings;
 		try {
-			mappings = LocalOrganizer.getMimeMappings();
+			mappings = LocalOrganizer.getMimeMappings(getName());
 		} catch (ResourceLoaderException e) {
 			mappings = null;
 		}
