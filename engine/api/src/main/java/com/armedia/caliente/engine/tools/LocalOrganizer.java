@@ -26,8 +26,17 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.tools;
 
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.Function;
+
+import javax.activation.MimeType;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -39,21 +48,80 @@ import com.armedia.caliente.store.CmfContentOrganizer;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.caliente.tools.FilenameFixer;
+import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.FileNameTools;
+import com.armedia.commons.utilities.ResourceLoader;
+import com.armedia.commons.utilities.ResourceLoaderException;
+import com.armedia.commons.utilities.Tools;
 
 public class LocalOrganizer extends CmfContentOrganizer {
+
+	private static final String MAPPINGS_FILE = "mime-extensions.xml";
+	private static final List<Function<MimeType, String>> KEY_GENERATORS;
+	static {
+		List<Function<MimeType, String>> keyGenerators = new LinkedList<>();
+		keyGenerators.add(MimeType::toString);
+		keyGenerators.add(MimeType::getBaseType);
+		keyGenerators.add(MimeType::getPrimaryType);
+		KEY_GENERATORS = Tools.freezeList(keyGenerators);
+	}
+
+	private static URL getMimeMappings() throws ResourceLoaderException {
+		return ResourceLoader.getResourceOrFile(LocalOrganizer.MAPPINGS_FILE);
+	}
 
 	public static final String NAME = "localfs";
 
 	private final FilenameFixer fixer = new FilenameFixer(true);
 
+	private final Map<String, String> mimeMap;
+
 	public LocalOrganizer() {
-		super(LocalOrganizer.NAME);
+		this(LocalOrganizer.NAME);
 	}
 
 	protected LocalOrganizer(String name) {
 		super(name);
+
+		final Map<String, String> mimeMap = new HashMap<>();
+		URL mappings;
+		try {
+			mappings = LocalOrganizer.getMimeMappings();
+		} catch (ResourceLoaderException e) {
+			mappings = null;
+		}
+		if (mappings != null) {
+			try (InputStream in = mappings.openStream()) {
+				Properties props = XmlProperties.loadFromXML(in);
+				for (String s : props.stringPropertyNames()) {
+					final String S = s;
+					int at = s.indexOf('@');
+					String ext = null;
+					if (at > 0) {
+						// Split at the @
+						s = s.substring(0, at - 1);
+						ext = s.substring(at + 1);
+					} else if (at == 0) {
+						// For those that have no type...?
+						s = StringUtils.EMPTY;
+						ext = s.substring(1);
+					}
+
+					final MimeType mt = MimeTools.resolveMimeType(s);
+					final String str = (mt != null ? mt.toString() : S);
+					mimeMap.put(mt.toString(), props.getProperty(S));
+					if (StringUtils.isNotBlank(ext)) {
+						mimeMap.put(str + "@" + ext, props.getProperty(S));
+					}
+				}
+			} catch (Exception e) {
+				this.log.error("Failed to load the MIME extension mappings file for {}", getClass().getName(), e);
+				mimeMap.clear();
+			}
+		}
+		this.mimeMap = Tools.freezeMap(mimeMap);
 	}
 
 	@Override
@@ -147,7 +215,28 @@ public class LocalOrganizer extends CmfContentOrganizer {
 
 	protected <VALUE> String calculateExtension(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
-		return info.getExtension();
+		MimeType mimeType = info.getMimeType();
+		String ext = info.getExtension();
+		if (mimeType == null) { return ext; }
+
+		final boolean hasExt = StringUtils.isNotBlank(ext);
+		String alt = null;
+		for (Function<MimeType, String> kg : LocalOrganizer.KEY_GENERATORS) {
+			final String baseKey = kg.apply(mimeType);
+
+			// Try with the extension appended...
+			if (hasExt) {
+				alt = this.mimeMap.get(baseKey + "@" + ext);
+				if (!StringUtils.isBlank(alt)) { return alt; }
+			}
+
+			// Now try without extension...
+			alt = this.mimeMap.get(baseKey);
+			if (!StringUtils.isBlank(alt)) { return alt; }
+		}
+
+		// Nothing was found in the map...so we move on
+		return ext;
 	}
 
 	protected <VALUE> String calculateDescriptor(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,

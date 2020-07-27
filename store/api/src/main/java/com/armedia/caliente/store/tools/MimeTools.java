@@ -68,20 +68,22 @@ public class MimeTools {
 		MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.ExtensionMimeDetector");
 	}
 
+	private static MimeType canonicalize(String type) {
+		try {
+			return new MimeType(type);
+		} catch (MimeTypeParseException e) {
+			return null;
+		}
+	}
+
 	public static MimeType resolveMimeType(String type) {
 		if (type == null) { return null; }
-		Pair<Boolean, MimeType> data = ConcurrentTools.createIfAbsent(MimeTools.MIME_CACHE, type, (t) -> {
-			boolean valid = false;
-			MimeType mimeType = null;
-			try {
-				mimeType = new MimeType(type);
-				valid = true;
-			} catch (MimeTypeParseException e) {
-				mimeType = null;
-				valid = false;
-			}
-			return Pair.of(valid, mimeType);
-		});
+		final MimeType key = MimeTools.canonicalize(type);
+		if (key != null) {
+			type = key.toString();
+		}
+		Pair<Boolean, MimeType> data = ConcurrentTools.createIfAbsent(MimeTools.MIME_CACHE, type,
+			(t) -> Pair.of(key != null, key));
 		return ((data != null) && data.getKey() ? data.getValue() : null);
 	}
 
