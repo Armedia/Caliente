@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,6 +60,7 @@ import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.StreamConcatenation;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
+import com.armedia.commons.utilities.concurrent.ConcurrentTools;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 import com.armedia.commons.utilities.function.CheckedBiConsumer;
 import com.armedia.commons.utilities.function.LazySupplier;
@@ -547,6 +550,9 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	private final Map<String, Query<Map<String, Path>>> members;
 	private final Map<String, MetadataSet> metadataSets;
 
+	private final ConcurrentMap<String, String> historyIds = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, Map<String, Path>> versionLists = new ConcurrentHashMap<>();
+
 	public LocalQueryService() throws Exception {
 		this(LocalQueryService.LOCAL_QUERIES.getInstance());
 	}
@@ -814,37 +820,41 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 
 	public String getHistoryId(String objectId) {
 		try (SharedAutoLock lock = autoSharedLock()) {
-			for (String id : this.history.keySet()) {
-				Query<String> q = this.history.get(id);
-				try {
-					final String ret = q.run(objectId);
-					if (!StringUtils.isBlank(ret)) { return ret; }
-				} catch (Exception e) {
-					this.log.warn("Exception caught from history seek query [{}] while searching for ID [{}]", id,
-						objectId, e);
-					continue;
+			return ConcurrentTools.createIfAbsent(this.historyIds, objectId, (oid) -> {
+				for (String id : this.history.keySet()) {
+					Query<String> q = this.history.get(id);
+					try {
+						final String ret = q.run(oid);
+						if (!StringUtils.isBlank(ret)) { return ret; }
+					} catch (Exception e) {
+						this.log.warn("Exception caught from history seek query [{}] while searching for ID [{}]", id,
+							oid, e);
+						continue;
+					}
 				}
-			}
-			return null;
+				return null;
+			});
 		}
 	}
 
 	public Map<String, Path> getVersionList(String historyId) {
 		try (SharedAutoLock lock = autoSharedLock()) {
-			for (String id : this.members.keySet()) {
-				Query<Map<String, Path>> q = this.members.get(id);
-				try {
-					final Map<String, Path> ret = q.run(historyId);
-					ret.keySet().removeIf(Objects::isNull);
-					ret.values().removeIf(Objects::isNull);
-					if ((ret != null) && !ret.isEmpty()) { return Tools.freezeMap(ret); }
-				} catch (Exception e) {
-					this.log.warn("Exception caught from history members query [{}] while searching for ID [{}]", id,
-						historyId, e);
-					continue;
+			return ConcurrentTools.createIfAbsent(this.versionLists, historyId, (hid) -> {
+				for (String id : this.members.keySet()) {
+					Query<Map<String, Path>> q = this.members.get(id);
+					try {
+						final Map<String, Path> ret = q.run(hid);
+						ret.keySet().removeIf(Objects::isNull);
+						ret.values().removeIf(Objects::isNull);
+						if ((ret != null) && !ret.isEmpty()) { return Tools.freezeMap(ret); }
+					} catch (Exception e) {
+						this.log.warn("Exception caught from history members query [{}] while searching for ID [{}]",
+							id, hid, e);
+						continue;
+					}
 				}
-			}
-			return Collections.emptyMap();
+				return Collections.emptyMap();
+			});
 		}
 	}
 
