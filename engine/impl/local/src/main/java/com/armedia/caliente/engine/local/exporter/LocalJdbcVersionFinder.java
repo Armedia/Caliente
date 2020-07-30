@@ -8,11 +8,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.commons.utilities.Tools;
 
 public class LocalJdbcVersionFinder implements LocalVersionFinder {
+
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final LocalQueryService service;
 
@@ -36,28 +42,30 @@ public class LocalJdbcVersionFinder implements LocalVersionFinder {
 	@Override
 	public LocalVersionHistory getFullHistory(LocalRoot root, Path path) throws Exception {
 		final String historyId = getHistoryId(root, path);
-		final Map<String, Path> versions = this.service.getVersionList(historyId);
+		final List<Pair<String, Path>> versions = this.service.getVersionList(historyId);
 		Map<String, Integer> byPath = new HashMap<>();
 		Map<String, Integer> byHistoryId = new HashMap<>();
 		List<LocalFile> fullHistory = new ArrayList<>(versions.size());
-
-		// TODO: How to more efficiently find the last entry in the map?
-		Path radix = null;
-		for (Path p : versions.values()) {
-			radix = p;
-		}
+		Path radix = versions.get(versions.size() - 1).getValue();
 		radix = root.makeAbsolute(radix);
 
 		int i = 0;
-		for (String tag : versions.keySet()) {
-			Path versionPath = root.makeAbsolute(versions.get(tag));
-			byHistoryId.put(tag, i);
-			final boolean latest = (i == (versions.size() - 1));
-			LocalFile lf = new LocalFile(root, versionPath.toString(),
-				new LocalVersionInfo(versionPath, radix, historyId, tag), latest);
-			byPath.put(lf.getFullPath(), i);
-			fullHistory.add(lf);
-			i++;
+		for (Pair<String, Path> version : versions) {
+			try {
+				final String tag = version.getKey();
+				final Path versionPath = root.makeAbsolute(version.getValue());
+				byHistoryId.put(tag, i);
+				final boolean latest = (i == (versions.size() - 1));
+				LocalFile lf = new LocalFile(root, versionPath.toString(),
+					new LocalVersionInfo(versionPath, radix, historyId, tag), latest);
+				byPath.put(lf.getFullPath(), i);
+				fullHistory.add(lf);
+				i++;
+			} catch (final RuntimeException e) {
+				this.log.error("Failed to generate the version entry for history [{}] ([{}]), entry = [{}]:[{}]",
+					historyId, path, version.getKey(), version.getValue(), e);
+				throw e;
+			}
 		}
 		byPath = Tools.freezeMap(byPath);
 		fullHistory = Tools.freezeList(fullHistory);

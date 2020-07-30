@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -568,14 +567,14 @@ public class LocalQueryServiceTest {
 			lqvl.setDataSource("garbage");
 			lqvl.setSql("select version_label, path from versions where history_id = ? order by version_label");
 
-			final Query<Map<String, Path>> q = srv.buildVersionsListQuery(lqvl, (str) -> dataSource);
+			final Query<List<Pair<String, Path>>> q = srv.buildVersionsListQuery(lqvl, (str) -> dataSource);
 
 			for (int i = 0; i < maxHistoryId.get(); i++) {
-				Map<String, Path> versions = q.run(i);
+				List<Pair<String, Path>> versions = q.run(i);
 				Assertions.assertEquals((i % 4) + 1, versions.size());
 			}
 			for (int i = 1; i <= 10; i++) {
-				Map<String, Path> versions = q.run(i + maxHistoryId.get());
+				List<Pair<String, Path>> versions = q.run(i + maxHistoryId.get());
 				Assertions.assertNotNull(versions);
 				Assertions.assertTrue(versions.isEmpty());
 			}
@@ -664,7 +663,7 @@ public class LocalQueryServiceTest {
 						final String historyId = srv.getHistoryId(objectId);
 						lastHistory.set(historyId);
 						firstHistory.compareAndSet(null, historyId);
-						Map<String, Path> versions = srv.getVersionList(historyId);
+						List<Pair<String, Path>> versions = srv.getVersionList(historyId);
 						final int hid = Integer.valueOf(historyId, 16);
 						int expected = (hid % 4) + 1;
 						if (Objects.equals(historyId, historyIdLimits.getRight())) {

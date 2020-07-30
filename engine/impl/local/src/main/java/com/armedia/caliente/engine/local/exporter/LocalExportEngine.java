@@ -37,7 +37,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -48,6 +48,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
@@ -263,8 +264,8 @@ public class LocalExportEngine extends
 		return this.localQueryService.getHistoryId(objectId);
 	}
 
-	protected final Map<String, Path> getHistoryMembers(String historyId) throws Exception {
-		if (this.localQueryService == null) { return Collections.emptyMap(); }
+	protected final List<Pair<String, Path>> getHistoryMembers(String historyId) throws Exception {
+		if (this.localQueryService == null) { return Collections.emptyList(); }
 		return this.localQueryService.getVersionList(historyId);
 	}
 
