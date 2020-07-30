@@ -840,21 +840,35 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
-	public List<Pair<String, Path>> getVersionList(String historyId) {
+	public List<Pair<String, Path>> getVersionList(String historyId) throws Exception {
 		try (SharedAutoLock lock = autoSharedLock()) {
 			return ConcurrentTools.createIfAbsent(this.versionLists, historyId, (hid) -> {
+				LinkedList<Pair<String, Exception>> errors = new LinkedList<>();
 				for (String id : this.members.keySet()) {
 					Query<List<Pair<String, Path>>> q = this.members.get(id);
+					final List<Pair<String, Path>> ret;
 					try {
-						final List<Pair<String, Path>> ret = q.run(hid);
-						if ((ret != null) && !ret.isEmpty()) { return Tools.freezeList(ret); }
+						ret = q.run(hid);
 					} catch (Exception e) {
 						this.log.warn("Exception caught from history members query [{}] while searching for ID [{}]",
 							id, hid, e);
+						errors.add(Pair.of(id, e));
 						continue;
 					}
+					if ((ret == null) || ret.isEmpty()) {
+						continue;
+					}
+					return Tools.freezeList(ret);
 				}
-				return Collections.emptyList();
+
+				// If we came here it's because we found no history, which is a problem -
+				// if we found the object, we should at least be able to find it in the
+				// history list (i.e. a history of 1)
+				Exception e = new Exception(String.format(
+					"No history entries were found for ID [%s], %d errors were detected during the search", hid,
+					errors.size()));
+				errors.forEach((p) -> e.addSuppressed(p.getValue()));
+				throw e;
 			});
 		}
 	}
