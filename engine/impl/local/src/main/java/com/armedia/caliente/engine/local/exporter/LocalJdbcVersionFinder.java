@@ -9,16 +9,12 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.commons.utilities.Tools;
 
 public class LocalJdbcVersionFinder implements LocalVersionFinder {
-
-	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final LocalQueryService service;
 
@@ -51,21 +47,15 @@ public class LocalJdbcVersionFinder implements LocalVersionFinder {
 
 		int i = 0;
 		for (Pair<String, Path> version : versions) {
-			try {
-				final String tag = version.getKey();
-				final Path versionPath = root.makeAbsolute(version.getValue());
-				byHistoryId.put(tag, i);
-				final boolean latest = (i == (versions.size() - 1));
-				LocalFile lf = new LocalFile(root, versionPath.toString(),
-					new LocalVersionInfo(versionPath, radix, historyId, tag), latest);
-				byPath.put(lf.getFullPath(), i);
-				fullHistory.add(lf);
-				i++;
-			} catch (final RuntimeException e) {
-				this.log.error("Failed to generate the version entry for history [{}] ([{}]), entry = [{}]:[{}]",
-					historyId, path, version.getKey(), version.getValue(), e);
-				throw e;
-			}
+			final String tag = version.getKey();
+			final Path versionPath = root.makeAbsolute(version.getValue());
+			byHistoryId.put(tag, i);
+			final boolean latest = (i == (versions.size() - 1));
+			LocalFile lf = new LocalFile(root, versionPath.toString(),
+				new LocalVersionInfo(versionPath, radix, historyId, tag), latest);
+			byPath.put(lf.getFullPath(), i);
+			fullHistory.add(lf);
+			i++;
 		}
 		byPath = Tools.freezeMap(byPath);
 		fullHistory = Tools.freezeList(fullHistory);
