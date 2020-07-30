@@ -48,7 +48,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.target>1.8</project.build.target>
 
-		<alfresco-opencmis-extension.version>1.0</alfresco-opencmis-extension.version>
 		<bsh.version>2.0b6</bsh.version>
 		<commons-codec.version>1.13</commons-codec.version>
 		<commons-collections4.version>4.4</commons-collections4.version>
@@ -79,8 +78,11 @@
 		<jackson.version>2.11.0</jackson.version>
 
 		<!-- These are the libraries needed for specific CMS access -->
+
+		<!-- This is for CMIS exp/imp access (Alfresco) -->
 		<!-- Can't use a newer OpenCMIS because it'll cause JAXB collisions with the DFC -->
 		<opencmis.version>0.13.0</opencmis.version>
+		<alfresco-opencmis-extension.version>1.0</alfresco-opencmis-extension.version>
 
 		<!-- DFC is for Documentum exp/imp support -->
 		<dfc.version>6.7-SP1</dfc.version>
