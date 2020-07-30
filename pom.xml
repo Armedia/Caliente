@@ -111,6 +111,11 @@
 			<name>Armedia Artifacts Repository</name>
 			<url>https://project.armedia.com/nexus/content/groups/armedia/</url>
 		</repository>
+		<repository>
+			<id>Alfresco Public Repository</id>
+			<name>Alfresco Public Repository</name>
+			<url>https://artifacts.alfresco.com/nexus/content/repositories/public/</url>
+		</repository>
 	</repositories>
 
 	<pluginRepositories>
