@@ -244,11 +244,10 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 
 		File f = newCanonicalFile(path);
-		if (f.exists() && !f.isFile() && !f.isDirectory()) {
+		if (f.exists() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
-			throw new CommandLineProcessingException(1, String.format(
-				"The object at path [%s] is neither a file nor a directory - can't use it to describe the data store root",
-				f));
+			throw new CommandLineProcessingException(1,
+				String.format("The path [%s] is not a directory - can't use it to describe the base data location", f));
 		}
 		return f;
 	}
@@ -266,8 +265,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		if (f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
-				"The object at path [%s] is neither a file nor a directory - can't use it to describe the metadata db store",
-				f));
+				"The path [%s] is neither a file nor a directory - can't use it to describe the metadata store", f));
 		}
 		return f;
 	}
@@ -308,9 +306,10 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 		if (contentLocation.exists() && !contentLocation.isFile() && !contentLocation.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
-			throw new CommandLineProcessingException(1, String.format(
-				"The object at path [%s] is neither a file nor a directory - can't use it to describe the content store",
-				contentLocation));
+			throw new CommandLineProcessingException(1,
+				String.format(
+					"The path [%s] is neither a file nor a directory - can't use it to describe the content store",
+					contentLocation));
 		}
 
 		// If the option is not present, then check to see if it's required to process
