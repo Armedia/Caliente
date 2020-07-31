@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <stores xmlns="http://www.armedia.com/ns/caliente/stores"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/caliente/stores http://www.armedia.com/ns/caliente/stores">
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/stores http://www.armedia.com/ns/caliente/stores.xsd">
 	<settings>
 		<setting name="target">${user.dir}/caliente</setting>
 		<setting name="dir.metadata">${dir.root}/db</setting>
