@@ -821,7 +821,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		;
 	}
 
-	public String getHistoryId(String objectId) {
+	public String getHistoryId(String objectId) throws Exception {
 		try (SharedAutoLock lock = autoSharedLock()) {
 			return ConcurrentTools.createIfAbsent(this.historyIds, objectId, (oid) -> {
 				for (String id : this.history.keySet()) {
@@ -835,7 +835,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 						continue;
 					}
 				}
-				return null;
+				throw new Exception(String.format("No history ID found for objectId [%s]", objectId));
 			});
 		}
 	}
