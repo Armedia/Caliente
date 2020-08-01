@@ -119,7 +119,7 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 	public Path makeAbsolute(Path path) {
 		Path newPath = this.path.resolve(path);
 		Path canonical = Tools.canonicalize(newPath, false);
-		return getCaseFolding(path).apply(canonical);
+		return getCaseFolding(canonical).apply(canonical);
 	}
 
 	@Override
