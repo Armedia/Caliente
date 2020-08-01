@@ -33,6 +33,7 @@ public enum LocalSetting implements TransferEngineSetting {
 	//
 	SOURCE(CmfValue.Type.STRING),
 	ROOT(CmfValue.Type.STRING),
+	BLIND_MODE(CmfValue.Type.STRING),
 	COPY_CONTENT(CmfValue.Type.BOOLEAN, true),
 	INCLUDE_ALL_VERSIONS(CmfValue.Type.BOOLEAN, false),
 	INCLUDE_ALL_STREAMS(CmfValue.Type.BOOLEAN, false),

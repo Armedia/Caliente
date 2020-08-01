@@ -42,8 +42,10 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
+import com.armedia.caliente.cli.filter.EnumValueFilter;
 import com.armedia.caliente.cli.filter.StringValueFilter;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
+import com.armedia.caliente.engine.local.common.LocalCaseFolding;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.caliente.engine.local.exporter.LocalExportEngine;
 import com.armedia.caliente.engine.tools.LocalOrganizer;
@@ -85,8 +87,18 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		.setValueFilter(new StringValueFilter(LocalExportEngine.VERSION_LAYOUTS)) //
 	;
 
+	private static final Option BLIND_MODE = new OptionImpl() //
+		.setLongOpt("blind-mode") //
+		.setDescription(
+			"The case folding mode to use when blind-scanning the source content (only applicable when using the JDBC engine)") //
+		.setArgumentLimits(1) //
+		.setArgumentName("caseFoldingMode") //
+		.setValueFilter(new EnumValueFilter<>(false, LocalCaseFolding.class)) //
+	;
+
 	private static final OptionGroup OPTIONS = new OptionGroupImpl("Local Export") //
 		.add(Exporter.COPY_CONTENT) //
+		.add(Exporter.BLIND_MODE) //
 		.add(Exporter.IGNORE_EMPTY_FOLDERS) //
 		.add(Exporter.VERSION_SCHEME) //
 		.add(Exporter.VERSION_TAG_SEPARATOR) //
@@ -168,6 +180,8 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		settings.put(LocalSetting.VERSION_TAG_SEPARATOR.getLabel(),
 			commandValues.getString(Exporter.VERSION_TAG_SEPARATOR));
 		settings.put(LocalSetting.VERSION_LAYOUT.getLabel(), commandValues.getString(Exporter.VERSION_LAYOUT));
+		settings.put(LocalSetting.BLIND_MODE.getLabel(),
+			commandValues.getEnum(LocalCaseFolding.class, Exporter.BLIND_MODE));
 		return EngineInterface.commonConfigure(commandValues, settings);
 	}
 

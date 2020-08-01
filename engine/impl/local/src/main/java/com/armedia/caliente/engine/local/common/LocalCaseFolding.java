@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 public enum LocalCaseFolding {
 
 	//
-	NONE(null), //
+	SAME(null), //
 	LOWER(StringUtils::lowerCase),
 	UPPER(StringUtils::upperCase),
 	//

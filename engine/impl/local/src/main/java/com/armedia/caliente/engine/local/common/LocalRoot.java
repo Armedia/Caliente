@@ -49,36 +49,24 @@ import com.armedia.commons.utilities.concurrent.ConcurrentTools;
 public final class LocalRoot implements Comparable<LocalRoot> {
 
 	protected static final Path ROOT = Paths.get(File.separator);
-	protected static final LocalCaseFolding DEFAULT_CASE_FOLDING = LocalCaseFolding.NONE;
+
+	private static final Logger LOG = LoggerFactory.getLogger(LocalRoot.class);
+	private static final ConcurrentMap<FileStore, LocalCaseFolding> CASE_FOLDING = new ConcurrentHashMap<>();
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final Path path;
-	private final ConcurrentMap<FileStore, LocalCaseFolding> caseFolding = new ConcurrentHashMap<>();
+	private final LocalCaseFolding blindCaseFolding;
 
-	public static String normalize(String path) throws IOException {
-		String p = FilenameUtils.normalize(path);
-		if (p == null) { throw new IOException(String.format("The path [%s] contains too many '..' elements", path)); }
-		return p;
-	}
-
-	public LocalRoot(String path) throws IOException {
-		this(new File(LocalRoot.normalize(path)).toPath());
-	}
-
-	public LocalRoot(Path path) throws IOException {
-		this.path = Tools.canonicalize(Objects.requireNonNull(path, "Must provide a Path to use as the root"));
-	}
-
-	private LocalCaseFolding getCaseFolding(final Path testPath) {
+	private static LocalCaseFolding getCaseFolding(final Path testPath) throws IOException {
 		try {
-			return ConcurrentTools.createIfAbsent(this.caseFolding, Files.getFileStore(testPath), (fs) -> {
+			return ConcurrentTools.createIfAbsent(LocalRoot.CASE_FOLDING, Files.getFileStore(testPath), (fs) -> {
 				Path lower = LocalCaseFolding.LOWER.apply(testPath);
 				Path upper = LocalCaseFolding.UPPER.apply(testPath);
 				LocalCaseFolding caseFolding = (Files.isSameFile(upper, lower) ? LocalCaseFolding.UPPER
-					: LocalCaseFolding.NONE);
-				if (this.log.isDebugEnabled()) {
-					this.log.debug("Computed case folding as {} for FileStore {} ({} @ {}) using path [{}]",
+					: LocalCaseFolding.SAME);
+				if (LocalRoot.LOG.isDebugEnabled()) {
+					LocalRoot.LOG.debug("Computed case folding as {} for FileStore {} ({} @ {}) using path [{}]",
 						caseFolding, fs, fs.type(), fs.hashCode(), testPath);
 				}
 				return caseFolding;
@@ -86,15 +74,36 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 		} catch (NoSuchFileException e) {
 			// Maybe try to detect its parent's folding?
 			Path parent = testPath.getParent();
-			return (parent != null ? getCaseFolding(parent) : LocalCaseFolding.NONE);
-		} catch (IOException e) {
-			throw new UncheckedIOException(
-				String.format("Failed to test for filesystem case sensitivity with path [%s]", testPath), e);
+			return (parent != null ? LocalRoot.getCaseFolding(parent) : LocalCaseFolding.SAME);
 		}
 	}
 
-	private Path foldCase(final Path testPath) {
-		return getCaseFolding(testPath).apply(testPath);
+	private static Path foldCase(final Path testPath) throws IOException {
+		return LocalRoot.getCaseFolding(testPath).apply(testPath);
+	}
+
+	public static String normalize(String path) throws IOException {
+		String p = FilenameUtils.normalizeNoEndSeparator(path);
+		if (p == null) { throw new IOException(String.format("The path [%s] contains too many '..' elements", path)); }
+		return p;
+	}
+
+	public LocalRoot(String path) throws IOException {
+		this(path, null);
+	}
+
+	public LocalRoot(String path, LocalCaseFolding blindCaseFolding) throws IOException {
+		this(Paths.get(LocalRoot.normalize(path)), blindCaseFolding);
+	}
+
+	public LocalRoot(Path path) throws IOException {
+		this(path, null);
+	}
+
+	public LocalRoot(Path path, LocalCaseFolding blindCaseFolding) throws IOException {
+		this.path = LocalRoot
+			.foldCase(Tools.canonicalize(Objects.requireNonNull(path, "Must provide a Path to use as the root")));
+		this.blindCaseFolding = blindCaseFolding;
 	}
 
 	public Path getPath() {
@@ -127,8 +136,25 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 
 	public Path makeAbsolute(Path path) {
 		Path newPath = this.path.resolve(path);
+
+		// If we're avoiding accessing the disk for speed, then we simply do normalization
+		// and case folding as needed
+		if (this.blindCaseFolding != null) {
+			String normalized = FilenameUtils.normalizeNoEndSeparator(newPath.toString());
+			if (normalized == null) { return null; }
+			return Paths.get(this.blindCaseFolding.fold(normalized));
+		}
+
 		Path canonical = Tools.canonicalize(newPath, false);
-		return foldCase(canonical);
+		if (canonical == null) { return null; }
+		try {
+			return LocalRoot.foldCase(canonical);
+		} catch (IOException e) {
+			throw new UncheckedIOException(
+				String.format("Failed to test for filesystem case sensitivity with path [%s] (canonical = [%s])", path,
+					canonical),
+				e);
+		}
 	}
 
 	@Override
