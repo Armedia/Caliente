@@ -28,19 +28,32 @@ package com.armedia.caliente.engine.local.common;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.FileStore;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ConcurrentTools;
 
 public final class LocalRoot implements Comparable<LocalRoot> {
 
 	protected static final Path ROOT = Paths.get(File.separator);
+	protected static final LocalCaseFolding DEFAULT_CASE_FOLDING = LocalCaseFolding.NONE;
+
+	protected final Logger log = LoggerFactory.getLogger(getClass());
+
 	private final Path path;
+	private final ConcurrentMap<FileStore, LocalCaseFolding> caseFolding = new ConcurrentHashMap<>();
 
 	public static String normalize(String path) throws IOException {
 		String p = FilenameUtils.normalize(path);
@@ -54,6 +67,25 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 
 	public LocalRoot(Path path) throws IOException {
 		this.path = Tools.canonicalize(Objects.requireNonNull(path, "Must provide a Path to use as the root"));
+	}
+
+	private LocalCaseFolding getCaseFolding(final Path testPath) {
+		try {
+			return ConcurrentTools.createIfAbsent(this.caseFolding, Files.getFileStore(testPath), (fs) -> {
+				Path lower = LocalCaseFolding.LOWER.apply(testPath);
+				Path upper = LocalCaseFolding.UPPER.apply(testPath);
+				LocalCaseFolding caseFolding = (Files.isSameFile(upper, lower) ? LocalCaseFolding.UPPER
+					: LocalCaseFolding.NONE);
+				if (this.log.isDebugEnabled()) {
+					this.log.debug("Computed case folding as {} for FileStore {} ({} @ {}) using path [{}]",
+						caseFolding, fs, fs.type(), fs.hashCode(), testPath);
+				}
+				return caseFolding;
+			});
+		} catch (IOException e) {
+			throw new UncheckedIOException(
+				String.format("Failed to test for filesystem case sensitivity with path [%s]", testPath), e);
+		}
 	}
 
 	public Path getPath() {
@@ -85,7 +117,9 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 	}
 
 	public Path makeAbsolute(Path path) {
-		return Tools.canonicalize(this.path.resolve(path), false);
+		Path newPath = this.path.resolve(path);
+		Path canonical = Tools.canonicalize(newPath, false);
+		return getCaseFolding(path).apply(canonical);
 	}
 
 	@Override
