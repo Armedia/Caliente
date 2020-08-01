@@ -69,7 +69,7 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 		this.path = Tools.canonicalize(Objects.requireNonNull(path, "Must provide a Path to use as the root"));
 	}
 
-	private LocalCaseFolding getCaseFolding(final Path testPath) {
+	private Path foldCase(final Path testPath) {
 		try {
 			return ConcurrentTools.createIfAbsent(this.caseFolding, Files.getFileStore(testPath), (fs) -> {
 				Path lower = LocalCaseFolding.LOWER.apply(testPath);
@@ -81,7 +81,7 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 						caseFolding, fs, fs.type(), fs.hashCode(), testPath);
 				}
 				return caseFolding;
-			});
+			}).apply(testPath);
 		} catch (IOException e) {
 			throw new UncheckedIOException(
 				String.format("Failed to test for filesystem case sensitivity with path [%s]", testPath), e);
@@ -119,7 +119,7 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 	public Path makeAbsolute(Path path) {
 		Path newPath = this.path.resolve(path);
 		Path canonical = Tools.canonicalize(newPath, false);
-		return getCaseFolding(canonical).apply(canonical);
+		return foldCase(canonical);
 	}
 
 	@Override
