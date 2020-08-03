@@ -67,7 +67,7 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 			final boolean upperExists = Files.exists(upper);
 
 			LocalCaseFolding caseFolding = LocalCaseFolding.SAME;
-			if (lowerExists && Files.isSameFile(exact, lower) && upperExists && Files.isSameFile(exact, upper)) {
+			if (lowerExists && upperExists && Files.isSameFile(exact, lower) && Files.isSameFile(exact, upper)) {
 				caseFolding = LocalCaseFolding.UPPER;
 			}
 
