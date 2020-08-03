@@ -95,6 +95,8 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	protected <T extends FileAttributeView> T getFileAttributeView(Path path, Class<T> klazz) {
+		// If we're minimizing disk access, we don't check these attribute views...
+		if (this.factory.isMinimalDiskAccess()) { return null; }
 		if (this.attributeViews.containsKey(klazz)) { return klazz.cast(this.attributeViews.get(klazz)); }
 		T view = null;
 		if (this.object.isSymbolicLink()) {
@@ -118,26 +120,24 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 	protected UserPrincipal getOwner(Path path) {
 		FileOwnerAttributeView owner = getFileAttributeView(path, FileOwnerAttributeView.class);
-		if (owner != null) {
-			try {
-				return owner.getOwner();
-			} catch (IOException e) {
-				this.log.warn("Unexpected exception reading ownership information from [{}]", path, e);
-			}
+		if (owner == null) { return null; }
+		try {
+			return owner.getOwner();
+		} catch (IOException e) {
+			this.log.warn("Unexpected exception reading ownership information from [{}]", path, e);
+			return null;
 		}
-		return null;
 	}
 
 	protected GroupPrincipal getGroup(Path path) {
 		PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
-		if (posix != null) {
-			try {
-				return posix.readAttributes().group();
-			} catch (IOException e) {
-				this.log.warn("Unexpected exception reading ownership information from [{}]", path, e);
-			}
+		if (posix == null) { return null; }
+		try {
+			return posix.readAttributes().group();
+		} catch (IOException e) {
+			this.log.warn("Unexpected exception reading ownership information from [{}]", path, e);
+			return null;
 		}
-		return null;
 	}
 
 	@Override
@@ -155,13 +155,12 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			}
 		}
 
-		PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
-
 		UserPrincipal owner = getOwner(path);
 		if (owner != null) {
 			ret.add(new LocalPrincipalExportDelegate(this.factory, ctx.getSession(), owner));
 		}
 
+		PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
 		if (posix != null) {
 			// For now, we won't support groups for two reasons:
 			// 1) in O/S land, users and groups can have identical names, whereas in CMS-land this
@@ -192,6 +191,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	protected void applyBasicFileAttributes(Path path, CmfObject<CmfValue> object) throws ExportException {
 		try {
 			final BasicFileAttributeView basic = getFileAttributeView(path, BasicFileAttributeView.class);
+			if (basic == null) { return; }
 			BasicFileAttributes basicAtts = basic.readAttributes();
 
 			object.setAttribute(new CmfAttribute<>(IntermediateAttribute.CREATION_DATE,
