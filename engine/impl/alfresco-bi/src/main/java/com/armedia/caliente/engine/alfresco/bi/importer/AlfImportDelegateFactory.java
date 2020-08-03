@@ -478,7 +478,17 @@ public class AlfImportDelegateFactory
 				IntermediateProperty.PARENT_TREE_IDS.encode(), cmfObject.getDescription()));
 		}
 
-		String targetPath = resolveTreeIds(ctx, sourcePath.asString());
+		String targetPath = null;
+
+		CmfValue fixedPath = getPropertyValue(cmfObject, IntermediateProperty.FIXED_PATH);
+		CmfValue fixedName = getPropertyValue(cmfObject, IntermediateProperty.FIXED_NAME);
+		if (fixedPath != null) {
+			targetPath = fixedPath.asString();
+		}
+
+		if (targetPath == null) {
+			targetPath = resolveTreeIds(ctx, sourcePath.asString());
+		}
 
 		final boolean unfiled;
 		{
@@ -513,10 +523,16 @@ public class AlfImportDelegateFactory
 		}
 
 		// This is the base name, others may change it...
-		thisMarker.setTargetName(contentFile.getName());
+		String targetName = ctx.getObjectName(cmfObject);
+		if (fixedName != null) {
+			String newName = fixedName.asString();
+			if (StringUtils.isNotEmpty(newName)) {
+				targetName = newName;
+			}
+		}
+		thisMarker.setTargetName(targetName);
 		switch (type) {
 			case NORMAL:
-				thisMarker.setTargetName(ctx.getObjectName(cmfObject));
 				break;
 
 			case RENDITION_ROOT:
