@@ -51,11 +51,12 @@ class JdbcSchemaManager {
 		try {
 			Database database = DatabaseFactory.getInstance()
 				.findCorrectDatabaseImplementation(new JdbcConnection(op.getConnection()));
-			Liquibase liquibase = new Liquibase(changeLog, new ClassLoaderResourceAccessor(), database);
-			if (updateSchema) {
-				liquibase.update((String) null);
-			} else {
-				liquibase.validate();
+			try (Liquibase liquibase = new Liquibase(changeLog, new ClassLoaderResourceAccessor(), database)) {
+				if (updateSchema) {
+					liquibase.update((String) null);
+				} else {
+					liquibase.validate();
+				}
 			}
 		} catch (DatabaseException e) {
 			throw new CmfStorageException(String.format(
@@ -64,6 +65,8 @@ class JdbcSchemaManager {
 			String fmt = (updateSchema ? "Failed to generate/update the SQL schema from changeLog [%s]"
 				: "The SQL schema in changeLog [%s] is of the wrong version or structure");
 			throw new CmfStorageException(String.format(fmt, changeLog), e);
+		} catch (Exception e) {
+			throw new CmfStorageException(String.format("Failed to prepare the schema from [%s]", changeLog), e);
 		}
 
 		if (schemaPreparations != null) {
