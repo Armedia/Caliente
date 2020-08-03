@@ -525,9 +525,10 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	@Override
 	protected CmfObject.Archetype calculateType(LocalRoot root, LocalFile f) throws Exception {
 		File F = f.getAbsolute();
+		if (!F.exists()) { throw new ExportException(String.format("Filesystem object [%s] does not exist", F)); }
 		if (F.isFile()) { return CmfObject.Archetype.DOCUMENT; }
 		if (F.isDirectory()) { return CmfObject.Archetype.FOLDER; }
-		throw new ExportException(String.format("Filesystem object [%s] is of an unknown type or doesn't exist", F));
+		throw new ExportException(String.format("Filesystem object [%s] is of an unknown type", F));
 	}
 
 	@Override
