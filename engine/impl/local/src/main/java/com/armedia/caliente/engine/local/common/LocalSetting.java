@@ -35,6 +35,7 @@ public enum LocalSetting implements TransferEngineSetting {
 	ROOT(CmfValue.Type.STRING),
 	BLIND_MODE(CmfValue.Type.STRING),
 	COPY_CONTENT(CmfValue.Type.BOOLEAN, true),
+	MINIMAL_DISK_ACCESS(CmfValue.Type.BOOLEAN, true),
 	INCLUDE_ALL_VERSIONS(CmfValue.Type.BOOLEAN, false),
 	INCLUDE_ALL_STREAMS(CmfValue.Type.BOOLEAN, false),
 	INCLUDE_METADATA(CmfValue.Type.BOOLEAN, false),

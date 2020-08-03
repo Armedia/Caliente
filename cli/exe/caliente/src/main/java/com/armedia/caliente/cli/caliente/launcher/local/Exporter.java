@@ -180,8 +180,12 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		settings.put(LocalSetting.VERSION_TAG_SEPARATOR.getLabel(),
 			commandValues.getString(Exporter.VERSION_TAG_SEPARATOR));
 		settings.put(LocalSetting.VERSION_LAYOUT.getLabel(), commandValues.getString(Exporter.VERSION_LAYOUT));
-		settings.put(LocalSetting.BLIND_MODE.getLabel(),
-			commandValues.getEnum(LocalCaseFolding.class, Exporter.BLIND_MODE));
+
+		if (commandValues.isPresent(Exporter.BLIND_MODE)) {
+			settings.put(LocalSetting.BLIND_MODE.getLabel(),
+				commandValues.getEnum(LocalCaseFolding.class, Exporter.BLIND_MODE));
+			settings.put(LocalSetting.MINIMAL_DISK_ACCESS.getLabel(), Boolean.TRUE);
+		}
 		return EngineInterface.commonConfigure(commandValues, settings);
 	}
 
