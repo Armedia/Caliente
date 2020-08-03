@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.FileStore;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -59,27 +58,33 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 	private final LocalCaseFolding blindCaseFolding;
 
 	private static LocalCaseFolding getCaseFolding(final Path testPath) throws IOException {
-		try {
-			return ConcurrentTools.createIfAbsent(LocalRoot.CASE_FOLDING, Files.getFileStore(testPath), (fs) -> {
-				Path lower = LocalCaseFolding.LOWER.apply(testPath);
-				Path upper = LocalCaseFolding.UPPER.apply(testPath);
-				LocalCaseFolding caseFolding = (Files.isSameFile(upper, lower) ? LocalCaseFolding.UPPER
-					: LocalCaseFolding.SAME);
-				if (LocalRoot.LOG.isDebugEnabled()) {
-					LocalRoot.LOG.debug("Computed case folding as {} for FileStore {} ({} @ {}) using path [{}]",
-						caseFolding, fs, fs.type(), fs.hashCode(), testPath);
-				}
-				return caseFolding;
-			});
-		} catch (NoSuchFileException e) {
-			// Maybe try to detect its parent's folding?
-			Path parent = testPath.getParent();
-			return (parent != null ? LocalRoot.getCaseFolding(parent) : LocalCaseFolding.SAME);
-		}
+		return ConcurrentTools.createIfAbsent(LocalRoot.CASE_FOLDING, Files.getFileStore(testPath), (fs) -> {
+			final Path exact = testPath;
+			final Path lower = LocalCaseFolding.LOWER.apply(exact);
+			final boolean lowerExists = Files.exists(lower);
+
+			final Path upper = LocalCaseFolding.UPPER.apply(exact);
+			final boolean upperExists = Files.exists(upper);
+
+			LocalCaseFolding caseFolding = LocalCaseFolding.SAME;
+			if (lowerExists && Files.isSameFile(exact, lower) && upperExists && Files.isSameFile(exact, upper)) {
+				caseFolding = LocalCaseFolding.UPPER;
+			}
+
+			if (LocalRoot.LOG.isDebugEnabled()) {
+				LocalRoot.LOG.debug("Computed case folding as {} for FileStore {} ({} @ {}) using path [{}]",
+					caseFolding, fs, fs.type(), fs.hashCode(), exact);
+			}
+			return caseFolding;
+		});
 	}
 
-	private static Path foldCase(final Path testPath) throws IOException {
-		return LocalRoot.getCaseFolding(testPath).apply(testPath);
+	private Path foldCase(final Path testPath) throws IOException {
+		LocalCaseFolding folding = this.blindCaseFolding;
+		if (folding == null) {
+			folding = LocalRoot.getCaseFolding(testPath);
+		}
+		return folding.apply(testPath);
 	}
 
 	public static String normalize(String path) throws IOException {
@@ -101,9 +106,9 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 	}
 
 	public LocalRoot(Path path, LocalCaseFolding blindCaseFolding) throws IOException {
-		this.path = LocalRoot
-			.foldCase(Tools.canonicalize(Objects.requireNonNull(path, "Must provide a Path to use as the root")));
 		this.blindCaseFolding = blindCaseFolding;
+		this.path = foldCase(
+			Tools.canonicalize(Objects.requireNonNull(path, "Must provide a Path to use as the root")));
 	}
 
 	public Path getPath() {
@@ -139,16 +144,18 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 
 		// If we're avoiding accessing the disk for speed, then we simply do normalization
 		// and case folding as needed
+		final Path canonical;
 		if (this.blindCaseFolding != null) {
 			String normalized = FilenameUtils.normalizeNoEndSeparator(newPath.toString());
 			if (normalized == null) { return null; }
-			return Paths.get(this.blindCaseFolding.fold(normalized));
+			canonical = Paths.get(normalized);
+		} else {
+			canonical = Tools.canonicalize(newPath, false);
+			if (canonical == null) { return null; }
 		}
 
-		Path canonical = Tools.canonicalize(newPath, false);
-		if (canonical == null) { return null; }
 		try {
-			return LocalRoot.foldCase(canonical);
+			return foldCase(canonical);
 		} catch (IOException e) {
 			throw new UncheckedIOException(
 				String.format("Failed to test for filesystem case sensitivity with path [%s] (canonical = [%s])", path,
