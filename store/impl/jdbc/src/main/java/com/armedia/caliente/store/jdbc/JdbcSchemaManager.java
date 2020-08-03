@@ -51,12 +51,12 @@ class JdbcSchemaManager {
 		try {
 			Database database = DatabaseFactory.getInstance()
 				.findCorrectDatabaseImplementation(new JdbcConnection(op.getConnection()));
-			try (Liquibase liquibase = new Liquibase(changeLog, new ClassLoaderResourceAccessor(), database)) {
-				if (updateSchema) {
-					liquibase.update((String) null);
-				} else {
-					liquibase.validate();
-				}
+			@SuppressWarnings("resource")
+			Liquibase liquibase = new Liquibase(changeLog, new ClassLoaderResourceAccessor(), database);
+			if (updateSchema) {
+				liquibase.update((String) null);
+			} else {
+				liquibase.validate();
 			}
 		} catch (DatabaseException e) {
 			throw new CmfStorageException(String.format(
