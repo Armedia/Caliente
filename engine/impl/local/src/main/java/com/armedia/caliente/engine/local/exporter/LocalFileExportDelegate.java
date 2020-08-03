@@ -191,35 +191,27 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 	protected void applyBasicFileAttributes(Path path, CmfObject<CmfValue> object) throws ExportException {
 		try {
-			CmfAttribute<CmfValue> att = null;
 			final BasicFileAttributeView basic = getFileAttributeView(path, BasicFileAttributeView.class);
 			BasicFileAttributes basicAtts = basic.readAttributes();
 
-			att = new CmfAttribute<>(IntermediateAttribute.CREATION_DATE, IntermediateAttribute.CREATION_DATE.type,
-				CmfValue.of(new Date(basicAtts.creationTime().toMillis())));
-			object.setAttribute(att);
+			object.setAttribute(new CmfAttribute<>(IntermediateAttribute.CREATION_DATE,
+				IntermediateAttribute.CREATION_DATE.type, CmfValue.of(new Date(basicAtts.creationTime().toMillis()))));
 
-			att = new CmfAttribute<>(IntermediateAttribute.LAST_MODIFICATION_DATE,
+			object.setAttribute(new CmfAttribute<>(IntermediateAttribute.LAST_MODIFICATION_DATE,
 				IntermediateAttribute.LAST_MODIFICATION_DATE.type,
-				CmfValue.of(new Date(basicAtts.lastModifiedTime().toMillis())));
-			object.setAttribute(att);
+				CmfValue.of(new Date(basicAtts.lastModifiedTime().toMillis()))));
 
-			att = new CmfAttribute<>(IntermediateAttribute.LAST_ACCESS_DATE,
-				IntermediateAttribute.LAST_ACCESS_DATE.type,
-				CmfValue.of(new Date(basicAtts.lastAccessTime().toMillis())));
-			object.setAttribute(att);
+			object.setAttribute(
+				new CmfAttribute<>(IntermediateAttribute.LAST_ACCESS_DATE, IntermediateAttribute.LAST_ACCESS_DATE.type,
+					CmfValue.of(new Date(basicAtts.lastAccessTime().toMillis()))));
 
 			if (getType() == CmfObject.Archetype.DOCUMENT) {
-				att = new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_LENGTH,
-					IntermediateAttribute.CONTENT_STREAM_LENGTH.type, false);
-				att.setValue(CmfValue.of(basicAtts.size()));
-				object.setAttribute(att);
+				object.setAttribute(new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_LENGTH,
+					IntermediateAttribute.CONTENT_STREAM_LENGTH.type, CmfValue.of(basicAtts.size())));
 
 				// All documents are roots...
-				CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
-					IntermediateProperty.VERSION_TREE_ROOT.type, false);
-				versionTreeRoot.setValue(CmfValue.of(true));
-				object.setProperty(versionTreeRoot);
+				object.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
+					IntermediateProperty.VERSION_TREE_ROOT.type, CmfValue.of(true)));
 			}
 		} catch (IOException e) {
 			throw new ExportException(String.format("Failed to collect the basic attribute information for [%s]", path),
@@ -231,7 +223,6 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		final UserDefinedFileAttributeView extendedAtts = getFileAttributeView(path,
 			UserDefinedFileAttributeView.class);
 		if (extendedAtts == null) { return; }
-		CmfAttribute<CmfValue> att = null;
 		try {
 			for (String name : extendedAtts.list()) {
 				int bytes = extendedAtts.size(name);
@@ -242,8 +233,6 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 				ByteBuffer buf = ByteBuffer.allocate(bytes);
 				extendedAtts.read(name, buf);
 				buf.flip();
-				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.EXT_ATT_FORMAT, name),
-					CmfValue.Type.BASE64_BINARY, false);
 				byte[] data = null;
 				if (buf.hasArray()) {
 					data = buf.array();
@@ -251,8 +240,8 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 					data = new byte[bytes];
 					buf.get(data);
 				}
-				att.setValue(CmfValue.of(data));
-				object.setAttribute(att);
+				object.setAttribute(new CmfAttribute<>(String.format(LocalFileExportDelegate.EXT_ATT_FORMAT, name),
+					CmfValue.Type.BASE64_BINARY, CmfValue.of(data)));
 			}
 		} catch (Exception e) {
 			// Do nothing
