@@ -79,6 +79,7 @@ import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.alfresco.bi.BulkImportManager;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndex;
@@ -388,6 +389,42 @@ public class AlfImportDelegateFactory
 		return this.contentRoot.relativize(contentFile.toPath());
 	}
 
+	protected String getFinalName(final AlfImportContext ctx, CmfObject<CmfValue> cmfObject) {
+		String finalName = null;
+
+		if (StringUtils.isEmpty(finalName)) {
+			CmfValue unfiled = getPropertyValue(cmfObject, IntermediateProperty.IS_UNFILED);
+			if ((unfiled != null) && unfiled.isNotNull() && unfiled.asBoolean()) {
+				// This helps protect against duplicate object names
+				finalName = getUnfiledName(ctx, cmfObject);
+			}
+		}
+
+		if (StringUtils.isEmpty(finalName)) {
+			CmfValue fixedName = getPropertyValue(cmfObject, IntermediateProperty.FIXED_NAME);
+			if ((fixedName != null) && fixedName.isNotNull()) {
+				finalName = fixedName.asString();
+			}
+		}
+
+		if (StringUtils.isEmpty(finalName)) {
+			CmfObject<CmfValue> head = cmfObject;
+			try {
+				head = ctx.getHeadObject(cmfObject);
+			} catch (CmfStorageException e) {
+				this.log.warn("Failed to load the HEAD object for {} batch [{}]", cmfObject.getType().name(),
+					cmfObject.getHistoryId(), e);
+			}
+			finalName = ctx.getObjectName(head);
+		}
+
+		if (StringUtils.isEmpty(finalName)) {
+			finalName = cmfObject.getName();
+		}
+
+		return finalName;
+	}
+
 	protected final ScanIndexItemMarker generateItemMarker(final AlfImportContext ctx, final boolean folder,
 		final CmfObject<CmfValue> cmfObject, CmfContentStream content, File contentFile, File metadataFile,
 		MarkerType type) throws ImportException {
@@ -481,7 +518,6 @@ public class AlfImportDelegateFactory
 		String targetPath = null;
 
 		CmfValue fixedPath = getPropertyValue(cmfObject, IntermediateProperty.FIXED_PATH);
-		CmfValue fixedName = getPropertyValue(cmfObject, IntermediateProperty.FIXED_NAME);
 		if (fixedPath != null) {
 			targetPath = fixedPath.asString();
 		}
@@ -523,14 +559,7 @@ public class AlfImportDelegateFactory
 		}
 
 		// This is the base name, others may change it...
-		String targetName = ctx.getObjectName(cmfObject);
-		if (fixedName != null) {
-			String newName = fixedName.asString();
-			if (StringUtils.isNotEmpty(newName)) {
-				targetName = newName;
-			}
-		}
-		thisMarker.setTargetName(targetName);
+		thisMarker.setTargetName(getFinalName(ctx, cmfObject));
 		switch (type) {
 			case NORMAL:
 				break;
