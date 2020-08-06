@@ -375,7 +375,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		// Now, get the head object
 		currentProperty = "cm:name";
 		if (includeProperty(currentProperty, targetType)) {
-			p.setProperty(currentProperty, this.factory.getFinalName(ctx, this.cmfObject));
+			p.setProperty(currentProperty, factory.getFinalName(ctx, cmfObject));
 		}
 	}
 
