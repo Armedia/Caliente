@@ -520,6 +520,12 @@ public class AlfImportDelegateFactory
 		CmfValue fixedPath = getPropertyValue(cmfObject, IntermediateProperty.FIXED_PATH);
 		if (fixedPath != null) {
 			targetPath = fixedPath.asString();
+
+			if (!StringUtils.isEmpty(targetPath)) {
+				// The FIXED_PATH property is always absolute, but we need to generate
+				// a relative path here, so we do just that: remove any leading slashes
+				targetPath = targetPath.replaceAll("^/+", "");
+			}
 		}
 
 		if (targetPath == null) {
