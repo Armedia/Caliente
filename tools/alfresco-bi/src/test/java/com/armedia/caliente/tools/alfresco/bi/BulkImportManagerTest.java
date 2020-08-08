@@ -341,4 +341,18 @@ public class BulkImportManagerTest {
 		}
 	}
 
+	@Test
+	public void testEmpty() throws Exception {
+		URL url = ResourceLoader.getResourceOrFile("classpath:/empty/alfresco-bulk-import/scan.files.xml");
+		File f = new File(url.toURI());
+		final Path root = f.getParentFile().getParentFile().toPath();
+		final BulkImportManager bim = new BulkImportManager(root, root.resolve("streams"));
+		try (Stream<ScanIndexItem> items = bim.scanItems(true)) {
+			items.forEach((i) -> Assertions.fail("Found an item where there was none!"));
+		}
+		try (Stream<ScanIndexItem> items = bim.scanItems(false)) {
+			items.forEach((i) -> Assertions.fail("Found an item where there was none!"));
+		}
+	}
+
 }
