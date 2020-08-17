@@ -339,7 +339,18 @@ public abstract class JdbcDialect {
 				"    where o.object_type = ? " + //
 				"      and o.history_id = ? " + //
 				"      and o.history_current = true " + //
-				" order by o.object_number" //
+				" order by o.object_number desc " //
+		),
+
+		LOAD_OBJECT_HISTORY_LATEST_BY_HISTORY_ID( //
+			"       select o.*, n.new_name " + //
+				"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+				"    where o.object_number = ( " + //
+				"              select max(object_number) " + //
+				"                from cmf_object " + //
+				"               where object_type = ? " + //
+				"                 and history_id = ? " + //
+				"          ) " //
 		),
 
 		LOAD_OBJECTS( //
