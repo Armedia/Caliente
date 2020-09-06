@@ -84,15 +84,16 @@
 		<opencmis.version>0.13.0</opencmis.version>
 		<alfresco-opencmis-extension.version>1.0</alfresco-opencmis-extension.version>
 
-		<!-- DFC is for Documentum exp/imp support -->
-		<dfc.version>6.7-SP1</dfc.version>
+		<!-- DFC is for Documentum support -->
 		<dfc.jar>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</dfc.jar>
 
 		<!-- JShare is for SharePoint exp support -->
 		<jshare.version>1.0.409</jshare.version>
+		<jshare.jar>${settings.localRepository}/com/independentsoft/jshare/${jshare.version}/jshare-${jshare.version}.jar</jshare.jar>
 
 		<!-- RIDC is for WebCenter exp support -->
 		<ridc.version>11.1.1.0</ridc.version>
+		<ridc.jars.pom>${settings.localRepository}/com/oracle/ridc/oracle-ridc-jars/${ridc.version}/oracle-ridc-jars-${ridc.version}.pom</ridc.jars.pom>
 
 		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
 	</properties>
@@ -279,21 +280,6 @@
 			</dependency>
 
 			<dependency>
-				<groupId>com.documentum.dfc</groupId>
-				<artifactId>dfc-jars</artifactId>
-				<version>${dfc.version}</version>
-				<scope>system</scope>
-				<systemPath>${dfc.jar}</systemPath>
-			</dependency>
-
-			<dependency>
-				<groupId>com.oracle.ridc</groupId>
-				<artifactId>oracle-ridc-jars</artifactId>
-				<version>${ridc.version}</version>
-				<type>pom</type>
-			</dependency>
-
-			<dependency>
 				<groupId>org.apache.chemistry.opencmis</groupId>
 				<artifactId>chemistry-opencmis-commons-api</artifactId>
 				<version>${opencmis.version}</version>
@@ -321,12 +307,6 @@
 				<groupId>org.apache.tomcat</groupId>
 				<artifactId>tomcat-catalina</artifactId>
 				<version>${tomcat.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>com.independentsoft</groupId>
-				<artifactId>jshare</artifactId>
-				<version>${jshare.version}</version>
 			</dependency>
 
 			<dependency>
@@ -367,16 +347,6 @@
 							<requireMavenVersion>
 								<version>${maven.min-version}</version>
 							</requireMavenVersion>
-							<requireEnvironmentVariable>
-								<variableName>DOCUMENTUM_SHARED</variableName>
-								<message>Please ensure the DOCUMENTUM_SHARED environment variable is set</message>
-							</requireEnvironmentVariable>
-							<requireFilesExist>
-								<files>
-									<file>${dfc.jar}</file>
-								</files>
-								<message>Failed to find the primary DFC JAR file in DOCUMENTUM_SHARED</message>
-							</requireFilesExist>
 						</rules>
 					</configuration>
 				</plugin>
@@ -580,6 +550,39 @@
 		</plugins>
 	</build>
 
+	<modules>
+		<!-- the base modules -->
+		<module>store/api</module>
+		<module>store/impl/jdbc</module>
+		<module>store/impl/local</module>
+
+		<!-- The Engine modules -->
+		<module>engine/api</module>
+		<module>engine/impl/alfresco-bi</module>
+		<module>engine/impl/cmis</module>
+		<module>engine/impl/local</module>
+		<module>engine/impl/sql</module>
+		<module>engine/impl/xml</module>
+
+		<!-- These modules require non-public libraries -->
+		<!-- TODO: Make them optional? I.e. within a profile? -->
+		<module>engine/impl/sharepoint</module>
+
+		<!-- The command-line tools -->
+		<module>cli/api</module>
+		<!-- <module>cli/exe/caliente</module> -->
+		<module>cli/exe/flat2db</module>
+		<module>cli/exe/validator</module>
+		<!-- These tools require non-public libraries -->
+		<!-- TODO: Make them optional? I.e. within a profile? -->
+
+		<!-- Some general-use tools -->
+		<module>tools/alfresco-bi</module>
+		<module>tools/common</module>
+		<module>tools/datasource</module>
+		<!-- <module>tools/scratchpad</module> -->
+	</modules>
+
 	<profiles>
 		<profile>
 			<id>release</id>
@@ -615,44 +618,91 @@
 				</plugins>
 			</build>
 		</profile>
+
+		<profile>
+			<id>dfc</id>
+			<activation>
+				<property>
+					<name>env.DOCUMENTUM_SHARED</name>
+				</property>
+				<file>
+					<exists>${dfc.jar}</exists>
+				</file>
+			</activation>
+			<properties>
+				<!-- DFC is for Documentum exp/imp support -->
+				<dfc.version>6.7-SP1</dfc.version>
+			</properties>
+			<dependencyManagement>
+				<dependencies>
+					<dependency>
+						<groupId>com.documentum.dfc</groupId>
+						<artifactId>dfc-jars</artifactId>
+						<version>${dfc.version}</version>
+						<scope>system</scope>
+						<systemPath>${dfc.jar}</systemPath>
+					</dependency>
+				</dependencies>
+			</dependencyManagement>
+			<modules>
+				<module>tools/dfc</module>
+
+				<module>engine/impl/dfc</module>
+
+				<module>cli/exe/dctm-bulkdel</module>
+				<module>cli/exe/dctm-datagen</module>
+				<module>cli/exe/dctm-filename-mapper</module>
+				<module>cli/exe/dctm-history</module>
+				<module>cli/exe/dctm-query</module>
+				<module>cli/exe/dctm-ticket-decoder</module>
+				<module>cli/exe/dctm-type-dumper</module>
+				<module>cli/exe/dctm-user-mapper</module>
+			</modules>
+		</profile>
+
+		<profile>
+			<id>ridc</id>
+			<activation>
+				<file>
+					<exists>${ridc.jars.pom}</exists>
+				</file>
+			</activation>
+			<properties>
+			</properties>
+			<dependencyManagement>
+				<dependencies>
+					<dependency>
+						<groupId>com.oracle.ridc</groupId>
+						<artifactId>oracle-ridc-jars</artifactId>
+						<version>${ridc.version}</version>
+						<type>pom</type>
+					</dependency>
+				</dependencies>
+			</dependencyManagement>
+			<modules>
+				<module>engine/impl/ucm</module>
+			</modules>
+		</profile>
+
+		<profile>
+			<id>jshare</id>
+			<activation>
+				<file>
+					<exists>${jshare.jar}</exists>
+				</file>
+			</activation>
+			<dependencyManagement>
+				<dependencies>
+					<dependency>
+						<groupId>com.independentsoft</groupId>
+						<artifactId>jshare</artifactId>
+						<version>${jshare.version}</version>
+					</dependency>
+				</dependencies>
+			</dependencyManagement>
+			<modules>
+				<module>engine/impl/sharepoint</module>
+			</modules>
+		</profile>
 	</profiles>
-
-	<modules>
-		<!-- the base modules -->
-		<module>store/api</module>
-		<module>store/impl/jdbc</module>
-		<module>store/impl/local</module>
-
-		<!-- The Engine modules -->
-		<module>engine/api</module>
-		<module>engine/impl/alfresco-bi</module>
-		<module>engine/impl/cmis</module>
-		<module>engine/impl/dfc</module>
-		<module>engine/impl/local</module>
-		<module>engine/impl/sharepoint</module>
-		<module>engine/impl/sql</module>
-		<module>engine/impl/ucm</module>
-		<module>engine/impl/xml</module>
-
-		<!-- The command-line tools -->
-		<module>cli/api</module>
-		<module>cli/exe/caliente</module>
-		<module>cli/exe/dctm-bulkdel</module>
-		<module>cli/exe/dctm-datagen</module>
-		<module>cli/exe/dctm-filename-mapper</module>
-		<module>cli/exe/dctm-history</module>
-		<module>cli/exe/dctm-query</module>
-		<module>cli/exe/dctm-ticket-decoder</module>
-		<module>cli/exe/dctm-type-dumper</module>
-		<module>cli/exe/dctm-user-mapper</module>
-		<module>cli/exe/flat2db</module>
-		<module>cli/exe/validator</module>
-
-		<!-- Some general-use tools -->
-		<module>tools/alfresco-bi</module>
-		<module>tools/common</module>
-		<module>tools/datasource</module>
-		<module>tools/dfc</module>
-		<module>tools/scratchpad</module>
-	</modules>
 </project>
