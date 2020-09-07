@@ -10,7 +10,7 @@
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
 		<artifactId>caliente</artifactId>
-		<version>3.9.10</version>
+		<version>3.10.0</version>
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 

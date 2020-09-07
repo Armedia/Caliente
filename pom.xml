@@ -7,7 +7,7 @@
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
 	<artifactId>caliente</artifactId>
-	<version>3.9.10</version>
+	<version>3.10.0</version>
 	<packaging>pom</packaging>
 	<inceptionYear>2013</inceptionYear>
 
@@ -73,7 +73,7 @@
 		<stax-utils.version>20070216</stax-utils.version>
 		<tomcat.version>9.0.27</tomcat.version>
 		<unboundid-ldapsdk.version>5.1.0</unboundid-ldapsdk.version>
-		<utilities.version>1.0.23</utilities.version>
+		<utilities.version>1.1.0</utilities.version>
 		<woodstox.version>6.2.1</woodstox.version>
 		<jackson.version>2.11.1</jackson.version>
 
@@ -430,7 +430,7 @@
 						<shadedClassifierName>exe</shadedClassifierName>
 						<transformers>
 							<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-								<mainClass>com.armedia.caliente.cli.launcher.Main</mainClass>
+								<mainClass>com.armedia.commons.utilities.cli.launcher.Main</mainClass>
 							</transformer>
 							<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
 							<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
@@ -570,9 +570,9 @@
 
 		<!-- The command-line tools -->
 		<module>cli/api</module>
-		<!-- <module>cli/exe/caliente</module> -->
-		<module>cli/exe/flat2db</module>
-		<module>cli/exe/validator</module>
+		<!-- <module>cli/caliente</module> -->
+		<module>cli/flat2db</module>
+		<module>cli/validator</module>
 		<!-- These tools require non-public libraries -->
 		<!-- TODO: Make them optional? I.e. within a profile? -->
 
@@ -649,14 +649,14 @@
 
 				<module>engine/impl/dfc</module>
 
-				<module>cli/exe/dctm-bulkdel</module>
-				<module>cli/exe/dctm-datagen</module>
-				<module>cli/exe/dctm-filename-mapper</module>
-				<module>cli/exe/dctm-history</module>
-				<module>cli/exe/dctm-query</module>
-				<module>cli/exe/dctm-ticket-decoder</module>
-				<module>cli/exe/dctm-type-dumper</module>
-				<module>cli/exe/dctm-user-mapper</module>
+				<module>cli/dctm-bulkdel</module>
+				<module>cli/dctm-datagen</module>
+				<module>cli/dctm-filename-mapper</module>
+				<module>cli/dctm-history</module>
+				<module>cli/dctm-query</module>
+				<module>cli/dctm-ticket-decoder</module>
+				<module>cli/dctm-type-dumper</module>
+				<module>cli/dctm-user-mapper</module>
 			</modules>
 		</profile>
 
