@@ -635,18 +635,17 @@
 		<module>engine/impl/xml</module>
 
 		<!-- The command-line tools -->
-		<module>cli/api</module>
-		<module>cli/exe/caliente</module>
-		<module>cli/exe/dctm-bulkdel</module>
-		<module>cli/exe/dctm-datagen</module>
-		<module>cli/exe/dctm-filename-mapper</module>
-		<module>cli/exe/dctm-history</module>
-		<module>cli/exe/dctm-query</module>
-		<module>cli/exe/dctm-ticket-decoder</module>
-		<module>cli/exe/dctm-type-dumper</module>
-		<module>cli/exe/dctm-user-mapper</module>
-		<module>cli/exe/flat2db</module>
-		<module>cli/exe/validator</module>
+		<module>cli/caliente</module>
+		<module>cli/dctm-bulkdel</module>
+		<module>cli/dctm-datagen</module>
+		<module>cli/dctm-filename-mapper</module>
+		<module>cli/dctm-history</module>
+		<module>cli/dctm-query</module>
+		<module>cli/dctm-ticket-decoder</module>
+		<module>cli/dctm-type-dumper</module>
+		<module>cli/dctm-user-mapper</module>
+		<module>cli/flat2db</module>
+		<module>cli/validator</module>
 
 		<!-- Some general-use tools -->
 		<module>tools/alfresco-bi</module>
