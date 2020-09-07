@@ -4,7 +4,7 @@
 
 	<name>Armedia Caliente CLI - Documentum Type Dumper</name>
 	<description>A CLI executable that dumps the DQL for declared object types</description>
-	<groupId>com.armedia.caliente.cli</groupId>
+	<groupId>com.armedia.commons.utilities.cli</groupId>
 	<artifactId>caliente-cli-dctm-type-dumper</artifactId>
 	<packaging>jar</packaging>
 

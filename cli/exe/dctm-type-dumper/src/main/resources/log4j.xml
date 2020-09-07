@@ -7,7 +7,7 @@
 		</layout>
 	</appender>
 
-	<logger name="com.armedia.caliente.cli.typedumper">
+	<logger name="com.armedia.commons.utilities.cli.typedumper">
 		<level value="INFO"/>
 	</logger>
 	

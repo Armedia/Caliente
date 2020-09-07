@@ -73,7 +73,7 @@
 		<stax-utils.version>20070216</stax-utils.version>
 		<tomcat.version>9.0.27</tomcat.version>
 		<unboundid-ldapsdk.version>5.1.0</unboundid-ldapsdk.version>
-		<utilities.version>1.0.23</utilities.version>
+		<utilities.version>1.1.0</utilities.version>
 		<woodstox.version>6.2.1</woodstox.version>
 		<jackson.version>2.11.1</jackson.version>
 
@@ -460,7 +460,7 @@
 						<shadedClassifierName>exe</shadedClassifierName>
 						<transformers>
 							<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-								<mainClass>com.armedia.caliente.cli.launcher.Main</mainClass>
+								<mainClass>com.armedia.commons.utilities.cli.launcher.Main</mainClass>
 							</transformer>
 							<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
 							<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">

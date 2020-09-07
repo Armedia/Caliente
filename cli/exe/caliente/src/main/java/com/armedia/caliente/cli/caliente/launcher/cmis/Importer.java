@@ -34,8 +34,6 @@ import java.util.Map;
 
 import org.apache.chemistry.opencmis.commons.enums.BindingType;
 
-import com.armedia.caliente.cli.OptionScheme;
-import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
@@ -46,6 +44,8 @@ import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.cli.OptionScheme;
+import com.armedia.commons.utilities.cli.OptionValues;
 
 class Importer extends ImportCommandModule implements DynamicCommandOptions {
 	Importer(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {

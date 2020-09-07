@@ -26,8 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.caliente.options;
 
-import com.armedia.caliente.cli.OptionGroup;
-import com.armedia.caliente.cli.OptionGroupImpl;
+import com.armedia.commons.utilities.cli.OptionGroup;
+import com.armedia.commons.utilities.cli.OptionGroupImpl;
 
 public class CLIGroup {
 

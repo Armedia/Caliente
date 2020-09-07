@@ -29,9 +29,9 @@ package com.armedia.caliente.cli.ticketdecoder;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
-import com.armedia.caliente.cli.Option;
-import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.filter.RegexValueFilter;
+import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionImpl;
+import com.armedia.commons.utilities.cli.filter.RegexValueFilter;
 
 public enum CLIParam implements Supplier<Option> {
 	//

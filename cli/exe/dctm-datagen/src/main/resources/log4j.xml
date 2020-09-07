@@ -7,7 +7,7 @@
 		</layout>
 	</appender>
 
-	<logger name="com.armedia.caliente.cli.datagen">
+	<logger name="com.armedia.commons.utilities.cli.datagen">
 		<level value="DEBUG"/>
 	</logger>
 

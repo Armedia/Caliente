@@ -14,7 +14,7 @@
 	</appender>
 
 	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
-	<logger name="com.armedia.caliente.cli.validator" level="INFO" />
+	<logger name="com.armedia.commons.utilities.cli.validator" level="INFO" />
 	<!-- DO NOT MODIFY ANYTHING BELOW THIS LINE -->
 
 	<root level="INFO">

@@ -36,7 +36,7 @@ import java.net.UnknownHostException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import com.armedia.caliente.cli.OptionValueFilter;
+import com.armedia.commons.utilities.cli.OptionValueFilter;
 
 public class CLIFilters {
 

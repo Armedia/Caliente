@@ -4,7 +4,7 @@
 
 	<name>Armedia Caliente CLI - Alfresco BI/BE Validator</name>
 	<description>A standalone tool to validate an Alresco BE dump against a Caliente BI ingestible</description>
-	<groupId>com.armedia.caliente.cli</groupId>
+	<groupId>com.armedia.commons.utilities.cli</groupId>
 	<artifactId>caliente-cli-validator</artifactId>
 	<packaging>jar</packaging>
 

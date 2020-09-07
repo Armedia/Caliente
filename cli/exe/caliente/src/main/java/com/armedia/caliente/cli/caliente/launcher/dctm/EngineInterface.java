@@ -32,24 +32,24 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.cli.OptionGroup;
-import com.armedia.caliente.cli.OptionGroupImpl;
-import com.armedia.caliente.cli.OptionScheme;
-import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.engine.dfc.common.DctmCommon;
 import com.armedia.caliente.engine.dfc.exporter.DctmExportEngineFactory;
 import com.armedia.caliente.engine.dfc.importer.DctmImportEngineFactory;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionFactory;
+import com.armedia.commons.utilities.cli.OptionGroup;
+import com.armedia.commons.utilities.cli.OptionGroupImpl;
+import com.armedia.commons.utilities.cli.OptionScheme;
+import com.armedia.commons.utilities.cli.OptionValues;
+import com.armedia.commons.utilities.cli.launcher.LaunchClasspathHelper;
+import com.armedia.commons.utilities.cli.utils.DfcLaunchHelper;
 import com.documentum.fc.common.DfLoggerDisabled;
 import com.documentum.fc.common.impl.logging.LoggingConfigurator;
 

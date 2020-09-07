@@ -28,12 +28,6 @@ package com.armedia.caliente.cli.caliente.launcher.dctm;
 
 import java.util.Map;
 
-import com.armedia.caliente.cli.Option;
-import com.armedia.caliente.cli.OptionGroup;
-import com.armedia.caliente.cli.OptionGroupImpl;
-import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.OptionScheme;
-import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
@@ -42,6 +36,12 @@ import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
+import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionGroup;
+import com.armedia.commons.utilities.cli.OptionGroupImpl;
+import com.armedia.commons.utilities.cli.OptionImpl;
+import com.armedia.commons.utilities.cli.OptionScheme;
+import com.armedia.commons.utilities.cli.OptionValues;
 
 class Importer extends ImportCommandModule implements DynamicCommandOptions {
 

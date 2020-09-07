@@ -1,7 +1,7 @@
 <root>
   <facet id="jpt.jaxb">
     <node name="classgen">
-      <attribute name="package" value="com.armedia.caliente.cli.classpath.xml"/>
+      <attribute name="package" value="com.armedia.commons.utilities.cli.classpath.xml"/>
     </node>
   </facet>
 </root>

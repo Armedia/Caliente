@@ -33,16 +33,16 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.engine.TransferEngineFactory;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.cli.OptionValues;
+import com.armedia.commons.utilities.cli.utils.ThreadsLaunchHelper;
 
 public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?>>
 	implements AutoCloseable {

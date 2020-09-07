@@ -28,10 +28,10 @@ package com.armedia.caliente.cli.query;
 
 import java.util.function.Supplier;
 
-import com.armedia.caliente.cli.Option;
-import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.filter.EnumValueFilter;
-import com.armedia.caliente.cli.filter.IntegerValueFilter;
+import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionImpl;
+import com.armedia.commons.utilities.cli.filter.EnumValueFilter;
+import com.armedia.commons.utilities.cli.filter.IntegerValueFilter;
 
 public enum CLIParam implements Supplier<Option> {
 	//

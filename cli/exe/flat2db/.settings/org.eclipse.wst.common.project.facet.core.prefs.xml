@@ -1,7 +1,7 @@
 <root>
   <facet id="jpt.jaxb">
     <node name="classgen">
-      <attribute name="package" value="com.armedia.caliente.cli.flat2db.xml"/>
+      <attribute name="package" value="com.armedia.commons.utilities.cli.flat2db.xml"/>
     </node>
     <node name="libprov">
       <attribute name="provider-id" value="jaxb-user-library-provider"/>

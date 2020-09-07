@@ -7,7 +7,7 @@
 		</layout>
 	</appender>
 
-	<logger name="com.armedia.caliente.cli.filenamemapper">
+	<logger name="com.armedia.commons.utilities.cli.filenamemapper">
 		<level value="DEBUG"/>
 	</logger>
 

@@ -33,13 +33,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.Entrypoint;
 import com.armedia.caliente.engine.TransferEngineFactory;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.cli.OptionValues;
 
 public class DecryptCommandModule extends CommandModule<TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?>> {
 

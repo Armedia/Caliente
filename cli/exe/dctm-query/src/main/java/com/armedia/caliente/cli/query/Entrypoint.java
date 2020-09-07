@@ -37,14 +37,14 @@ import org.apache.log4j.xml.DOMConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.Option;
-import com.armedia.caliente.cli.OptionScheme;
-import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.launcher.AbstractEntrypoint;
-import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.utils.DfcLaunchHelper;
-import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionScheme;
+import com.armedia.commons.utilities.cli.OptionValues;
+import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
+import com.armedia.commons.utilities.cli.launcher.LaunchClasspathHelper;
+import com.armedia.commons.utilities.cli.utils.DfcLaunchHelper;
+import com.armedia.commons.utilities.cli.utils.LibLaunchHelper;
 
 public class Entrypoint extends AbstractEntrypoint {
 

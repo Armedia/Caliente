@@ -29,8 +29,6 @@ package com.armedia.caliente.cli.caliente.launcher.xml;
 import java.io.File;
 import java.util.Map;
 
-import com.armedia.caliente.cli.OptionScheme;
-import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
@@ -40,6 +38,8 @@ import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.caliente.engine.xml.common.XmlSetting;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.cli.OptionScheme;
+import com.armedia.commons.utilities.cli.OptionValues;
 
 class Importer extends ImportCommandModule implements DynamicCommandOptions {
 	Importer(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {

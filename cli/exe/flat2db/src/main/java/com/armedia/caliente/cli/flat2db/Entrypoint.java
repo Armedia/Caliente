@@ -31,11 +31,11 @@ import java.util.Date;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
 
-import com.armedia.caliente.cli.Option;
-import com.armedia.caliente.cli.OptionScheme;
-import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.launcher.AbstractEntrypoint;
-import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
+import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionScheme;
+import com.armedia.commons.utilities.cli.OptionValues;
+import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
+import com.armedia.commons.utilities.cli.utils.ThreadsLaunchHelper;
 
 public class Entrypoint extends AbstractEntrypoint {
 	private static final int MIN_THREADS = 1;

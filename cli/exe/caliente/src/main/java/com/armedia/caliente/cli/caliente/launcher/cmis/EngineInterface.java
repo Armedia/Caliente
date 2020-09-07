@@ -31,22 +31,22 @@ import java.util.Collections;
 
 import org.apache.chemistry.opencmis.commons.enums.BindingType;
 
-import com.armedia.caliente.cli.Option;
-import com.armedia.caliente.cli.OptionGroup;
-import com.armedia.caliente.cli.OptionGroupImpl;
-import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
-import com.armedia.caliente.cli.filter.EnumValueFilter;
-import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.cmis.CmisCommon;
 import com.armedia.caliente.engine.cmis.exporter.CmisExportEngineFactory;
 import com.armedia.caliente.engine.cmis.importer.CmisImportEngineFactory;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
+import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionGroup;
+import com.armedia.commons.utilities.cli.OptionGroupImpl;
+import com.armedia.commons.utilities.cli.OptionImpl;
+import com.armedia.commons.utilities.cli.OptionScheme;
+import com.armedia.commons.utilities.cli.filter.EnumValueFilter;
+import com.armedia.commons.utilities.cli.launcher.LaunchClasspathHelper;
 
 public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
 

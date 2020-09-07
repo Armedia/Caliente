@@ -26,7 +26,7 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.caliente.launcher;
 
-import com.armedia.caliente.cli.OptionScheme;
+import com.armedia.commons.utilities.cli.OptionScheme;
 
 @FunctionalInterface
 public interface DynamicCommandOptions {

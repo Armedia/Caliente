@@ -7,7 +7,7 @@
 		</layout>
 	</appender>
 
-	<logger name="com.armedia.caliente.cli.history">
+	<logger name="com.armedia.commons.utilities.cli.history">
 		<level value="INFO"/>
 	</logger>
 	

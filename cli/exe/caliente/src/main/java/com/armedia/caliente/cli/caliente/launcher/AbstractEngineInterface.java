@@ -47,12 +47,12 @@ import com.armedia.caliente.cli.caliente.command.DecryptCommandModule;
 import com.armedia.caliente.cli.caliente.command.EncryptCommandModule;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
-import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.TransferEngineFactory;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.cli.launcher.LaunchClasspathHelper;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
 import com.armedia.commons.utilities.concurrent.ShareableLockable;
 

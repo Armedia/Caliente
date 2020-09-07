@@ -57,7 +57,7 @@
 		<level value="WARN" />
 	</logger>
 
-	<logger name="com.armedia.caliente.cli.caliente">
+	<logger name="com.armedia.commons.utilities.cli.caliente">
 		<level value="DEBUG" />
 	</logger>
 

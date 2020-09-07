@@ -52,24 +52,11 @@ import org.apache.log4j.xml.DOMConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.Command;
-import com.armedia.caliente.cli.CommandScheme;
-import com.armedia.caliente.cli.Option;
-import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.OptionScheme;
-import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.command.CommandModule;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
-import com.armedia.caliente.cli.exception.DynamicOptionsException;
-import com.armedia.caliente.cli.filter.StringValueFilter;
-import com.armedia.caliente.cli.launcher.AbstractEntrypoint;
-import com.armedia.caliente.cli.launcher.CommandLineProcessingException;
-import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.engine.tools.HierarchicalOrganizer;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
@@ -81,6 +68,19 @@ import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.cli.Command;
+import com.armedia.commons.utilities.cli.CommandScheme;
+import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionImpl;
+import com.armedia.commons.utilities.cli.OptionScheme;
+import com.armedia.commons.utilities.cli.OptionValues;
+import com.armedia.commons.utilities.cli.exception.CommandLineSyntaxException;
+import com.armedia.commons.utilities.cli.exception.DynamicOptionsException;
+import com.armedia.commons.utilities.cli.filter.StringValueFilter;
+import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
+import com.armedia.commons.utilities.cli.launcher.CommandLineProcessingException;
+import com.armedia.commons.utilities.cli.launcher.LaunchClasspathHelper;
+import com.armedia.commons.utilities.cli.utils.LibLaunchHelper;
 
 public class Entrypoint extends AbstractEntrypoint {
 

@@ -32,11 +32,11 @@ import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.tools.dfc.DfcCrypto;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.cli.OptionValues;
+import com.armedia.commons.utilities.cli.utils.DfcLaunchHelper;
 import com.documentum.fc.common.DfException;
 
 public class DctmQueryExecutor {

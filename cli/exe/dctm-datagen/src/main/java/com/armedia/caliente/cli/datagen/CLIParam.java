@@ -28,8 +28,8 @@ package com.armedia.caliente.cli.datagen;
 
 import java.util.function.Supplier;
 
-import com.armedia.caliente.cli.Option;
-import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionImpl;
 
 public enum CLIParam implements Supplier<Option> {
 	debug(
