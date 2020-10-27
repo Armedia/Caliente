@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -377,7 +378,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				@Override
 				protected Result findNext() throws SQLException {
 					while (this.rs.next()) {
-						for (Integer column : this.candidates) {
+						candidate: for (Integer column : this.candidates) {
 							String str = this.rs.getString(column);
 							if (this.rs.wasNull() || StringUtils.isEmpty(str)) {
 								continue;
@@ -403,7 +404,16 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 							str = LocalCommon.toLocalizedPath(str);
 
 							// If we ended up with a non-empty string, we return it!
-							return found(Paths.get(str).normalize());
+							try {
+								return found(Paths.get(str).normalize());
+							} catch (InvalidPathException e) {
+								// If this path is invalid, should we abort? Or keep going?
+								if (!LocalQueryService.this.failOnInvalid) {
+									continue candidate;
+								}
+								// We're failing on invalid paths ... so ... continue
+								throw e;
+							}
 						}
 
 						// If we get here, we found nothing, so we try the next record
@@ -545,6 +555,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private volatile boolean closed = false;
 	private final Path root;
+	private final boolean failOnInvalid;
 	private final Map<String, DataSource> dataSources;
 	private final Map<String, Processor> processors;
 	private final Map<String, Search> searches;
@@ -695,6 +706,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			metadataSets.put(id, mds);
 		}
 		this.metadataSets = Tools.freezeMap(metadataSets);
+		this.failOnInvalid = queries.isFailOnInvalidPath();
 	}
 
 	private void setValue(String name, String value, Map<String, String> map) {

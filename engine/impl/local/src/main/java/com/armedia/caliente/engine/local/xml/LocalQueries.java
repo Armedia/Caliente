@@ -44,16 +44,22 @@ import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSet;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-	"rootPath", "dataSourceDefinitions", "postProcessors", "searches", "historyIds", "versionLists", "metadata"
+	"rootPath", "failOnInvalidPath", "dataSourceDefinitions", "postProcessors", "searches", "historyIds",
+	"versionLists", "metadata"
 })
 @XmlRootElement(name = "local-queries")
 public class LocalQueries {
+
+	public static final boolean DEFAULT_FAIL_ON_INVALID_PATH = true;
 
 	@XmlTransient
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	@XmlElement(name = "root-path", required = false)
 	protected String rootPath;
+
+	@XmlElement(name = "fail-on-invalid-path", required = false)
+	protected Boolean failOnInvalidPath;
 
 	@XmlElementWrapper(name = "common-post-processors")
 	@XmlElement(name = "post-processors")
@@ -85,6 +91,15 @@ public class LocalQueries {
 
 	public void setRootPath(String rootPath) {
 		this.rootPath = rootPath;
+	}
+
+	public boolean isFailOnInvalidPath() {
+		return (this.failOnInvalidPath != null ? this.failOnInvalidPath.booleanValue()
+			: LocalQueries.DEFAULT_FAIL_ON_INVALID_PATH);
+	}
+
+	public void setFailOnInvalidPath(Boolean failOnInvalidPath) {
+		this.failOnInvalidPath = failOnInvalidPath;
 	}
 
 	public List<LocalQueryDataSource> getDataSourceDefinitions() {

@@ -129,6 +129,7 @@
 		<xsd:complexType>
 			<xsd:sequence>
 				<xsd:element name="root-path" type="tns:nonEmpty.t" minOccurs="1" maxOccurs="1" />
+				<xsd:element name="fail-on-invalid-path" type="xsd:boolean" minOccurs="0" maxOccurs="1" />
 				<xsd:element name="data-sources" minOccurs="0" maxOccurs="1">
 					<xsd:complexType>
 						<xsd:sequence>
