@@ -411,7 +411,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 								if (!LocalQueryService.this.failOnInvalid) {
 									continue candidate;
 								}
-								// We're failing on invalid paths ... so ... continue
+								// We're failing on invalid paths ... so ... fail
 								throw e;
 							}
 						}
