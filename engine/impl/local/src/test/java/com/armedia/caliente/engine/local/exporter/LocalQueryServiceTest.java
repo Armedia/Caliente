@@ -35,9 +35,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import com.armedia.caliente.engine.local.common.LocalCommon;
+import com.armedia.caliente.engine.local.exporter.LocalQueryService.PathSearch;
 import com.armedia.caliente.engine.local.exporter.LocalQueryService.Processor;
 import com.armedia.caliente.engine.local.exporter.LocalQueryService.Query;
-import com.armedia.caliente.engine.local.exporter.LocalQueryService.Search;
 import com.armedia.caliente.engine.local.xml.LocalQueries;
 import com.armedia.caliente.engine.local.xml.LocalQueryDataSource;
 import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessor;
@@ -313,7 +313,7 @@ public class LocalQueryServiceTest {
 
 				lqs.setSql("select path from paths_one");
 
-				Search search = srv.buildSearch(lqs, (str) -> dataSource);
+				PathSearch search = srv.buildSearch(lqs, (str) -> dataSource);
 
 				lines.clear();
 				lines.addAll(baseLinesOne);
@@ -347,7 +347,7 @@ public class LocalQueryServiceTest {
 
 				lqs.setSql("select * from paths_two");
 
-				Search search = srv.buildSearch(lqs, (str) -> dataSource);
+				PathSearch search = srv.buildSearch(lqs, (str) -> dataSource);
 
 				lines.clear();
 				lines.addAll(baseLinesTwo);
@@ -379,7 +379,7 @@ public class LocalQueryServiceTest {
 
 				lqs.setSql("select * from paths_three");
 
-				Search search = srv.buildSearch(lqs, (str) -> dataSource);
+				PathSearch search = srv.buildSearch(lqs, (str) -> dataSource);
 
 				lines.clear();
 				lines.addAll(baseLinesThree);
@@ -420,7 +420,7 @@ public class LocalQueryServiceTest {
 
 				lqs.setSql("select * from paths_one");
 
-				Search search = srv.buildSearch(lqs, (str) -> dataSource);
+				PathSearch search = srv.buildSearch(lqs, (str) -> dataSource);
 
 				lines.clear();
 				lines.addAll(baseLinesOne);

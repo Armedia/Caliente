@@ -250,7 +250,13 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
-	protected class Search {
+	public static interface PathSearch {
+
+		public Stream<Path> build();
+
+	}
+
+	protected class QuerySearch implements PathSearch {
 		private final DataSource dataSource;
 		private final String id;
 		private final List<String> pathColumns;
@@ -259,7 +265,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		private final int count;
 		private final Processor processor;
 
-		private Search(LocalQuerySearch definition, Function<String, DataSource> dataSourceFinder) throws Exception {
+		private QuerySearch(LocalQuerySearch definition, Function<String, DataSource> dataSourceFinder)
+			throws Exception {
 			this.dataSource = dataSourceFinder.apply(definition.getDataSource());
 			Objects.requireNonNull(this.dataSource, "Must provide a non-null DataSource");
 
@@ -298,23 +305,23 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				@Override
 				protected boolean initialize() throws SQLException {
 					try {
-						this.c = Search.this.dataSource.getConnection();
+						this.c = QuerySearch.this.dataSource.getConnection();
 						this.c.setAutoCommit(false);
 						// Execute the query, stow the result set
 						this.s = this.c.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-						this.rs = this.s.executeQuery(Search.this.sql);
+						this.rs = this.s.executeQuery(QuerySearch.this.sql);
 
 						Set<Integer> candidates = new LinkedHashSet<>();
 						ResultSetMetaData md = this.rs.getMetaData();
 
-						for (String p : Search.this.pathColumns) {
+						for (String p : QuerySearch.this.pathColumns) {
 							int index = -1;
 							try {
 								index = Integer.valueOf(p);
 								if ((index < 1) || (index > md.getColumnCount())) {
 									LocalQueryService.this.log.warn(
 										"The column index [{}] is not valid for search query [{}], ignoring it", p,
-										Search.this.id);
+										QuerySearch.this.id);
 									continue;
 								}
 							} catch (NumberFormatException e) {
@@ -323,7 +330,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 									index = this.rs.findColumn(p);
 								} catch (SQLException ex) {
 									LocalQueryService.this.log.warn(
-										"No column named [{}] for search query [{}], ignoring it", p, Search.this.id);
+										"No column named [{}] for search query [{}], ignoring it", p,
+										QuerySearch.this.id);
 									continue;
 								}
 							}
@@ -334,22 +342,22 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 						if (candidates.isEmpty()) {
 							LocalQueryService.this.log.error(
 								"No valid candidate columns found - can't continue with search query [{}]",
-								Search.this.id);
+								QuerySearch.this.id);
 							doClose();
 							throw new SQLException(String.format(
 								"No valid candidate columns found - can't continue with search query [%s]",
-								Search.this.id));
+								QuerySearch.this.id));
 						}
 
-						if (Search.this.skip > 0) {
+						if (QuerySearch.this.skip > 0) {
 							boolean foundRow = false;
 							try {
-								foundRow = this.rs.relative(Search.this.skip);
+								foundRow = this.rs.relative(QuerySearch.this.skip);
 							} catch (SQLFeatureNotSupportedException e) {
 								// Can't skip in bulk, must do it manually...
 								// Assume we'll be OK...
 								foundRow = true;
-								for (int i = 0; i < Search.this.skip; i++) {
+								for (int i = 0; i < QuerySearch.this.skip; i++) {
 									// If we run past the edge, we short-circuit
 									if (!this.rs.next()) {
 										// This means that we didn't find any rows
@@ -369,7 +377,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 						this.candidates = Tools.freezeSet(candidates);
 						return true;
 					} catch (SQLException e) {
-						LocalQueryService.this.log.error("Failed to execute the search query [{}]", Search.this.id, e);
+						LocalQueryService.this.log.error("Failed to execute the search query [{}]", QuerySearch.this.id,
+							e);
 						doClose();
 						throw e;
 					}
@@ -386,7 +395,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 
 							// Apply postProcessor
 							try {
-								str = Search.this.processor.process(str);
+								str = QuerySearch.this.processor.process(str);
 							} catch (Exception e) {
 								if (LocalQueryService.this.log.isDebugEnabled()) {
 									LocalQueryService.this.log
@@ -433,7 +442,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 							} catch (SQLException e) {
 								if (LocalQueryService.this.log.isDebugEnabled()) {
 									LocalQueryService.this.log.debug(
-										"Rollback failed on connection for search query [{}]", Search.this.id, e);
+										"Rollback failed on connection for search query [{}]", QuerySearch.this.id, e);
 								}
 							}
 							CloseUtils.closeQuietly(this.rs, this.s, this.c);
@@ -447,6 +456,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			};
 		}
 
+		@Override
 		public Stream<Path> build() {
 			CloseableIterator<Path> it = buildIterator();
 
@@ -560,7 +570,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	private final boolean failOnInvalid;
 	private final Map<String, DataSource> dataSources;
 	private final Map<String, Processor> processors;
-	private final Map<String, Search> searches;
+	private final Map<String, PathSearch> searches;
 	private final Map<String, Query<String>> history;
 	private final Map<String, Query<List<Pair<String, Path>>>> members;
 	private final Map<String, MetadataSet> metadataSets;
@@ -650,7 +660,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			p.validateRecursion(null);
 		}
 
-		Map<String, Search> searchMap = new LinkedHashMap<>();
+		Map<String, PathSearch> searchMap = new LinkedHashMap<>();
 		for (LocalQuerySearch search : queries.getSearches()) {
 			String id = search.getId();
 			if (StringUtils.isEmpty(id)) {
@@ -738,10 +748,10 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		return ret;
 	}
 
-	protected Search buildSearch(LocalQuerySearch search, Function<String, DataSource> dataSourceFinder)
+	protected PathSearch buildSearch(LocalQuerySearch search, Function<String, DataSource> dataSourceFinder)
 		throws Exception {
 		Objects.requireNonNull(search, "Must provide a LocalQuerySearch instance");
-		return new Search(search, dataSourceFinder);
+		return new QuerySearch(search, dataSourceFinder);
 
 	}
 
@@ -824,8 +834,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		final SharedAutoLock lock = autoSharedLock();
 		List<Stream<Path>> streams = new ArrayList<>(this.searches.size());
 		for (String id : this.searches.keySet()) {
-			Search search = this.searches.get(id);
-			streams.add(search.build());
+			streams.add(this.searches.get(id).build());
 		}
 		if (streams.isEmpty()) { return Stream.empty(); }
 
