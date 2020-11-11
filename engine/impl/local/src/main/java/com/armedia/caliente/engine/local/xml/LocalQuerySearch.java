@@ -26,21 +26,40 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+
+import org.apache.commons.lang3.tuple.Pair;
+
+import com.armedia.caliente.engine.local.exporter.LocalSearchType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "localQuerySearch.t", propOrder = {
-	"sql", "skip", "count", "pathColumns", "postProcessors"
+	"dataSource", "sql", "skip", "count", "pathColumns", "directoryOrList", "postProcessors"
 })
 public class LocalQuerySearch {
+
+	@XmlAttribute(name = "id", required = true)
+	protected String id;
+
+	@XmlElement(name = "dataSource", required = true)
+	protected String dataSource;
 
 	@XmlElement(name = "sql", required = true)
 	protected String sql;
@@ -55,15 +74,77 @@ public class LocalQuerySearch {
 	@XmlElement(name = "path-column", required = true)
 	protected List<String> pathColumns;
 
+	@XmlElementRefs({
+		@XmlElementRef(name = "list", namespace = ObjectFactory.NS, type = JAXBElement.class, required = false),
+		@XmlElementRef(name = "directory", namespace = ObjectFactory.NS, type = JAXBElement.class, required = false)
+	})
+	protected List<JAXBElement<String>> directoryOrList;
+
+	@XmlTransient
+	protected List<Pair<LocalSearchType, Path>> fileSystemSearches;
+
 	@XmlElementWrapper(name = "post-processors", required = false)
 	@XmlElement(name = "post-processor", required = false)
 	protected List<LocalQueryPostProcessor> postProcessors;
 
-	@XmlAttribute(name = "id", required = true)
-	protected String id;
+	protected void afterUnmarshal(Unmarshaller u, Object parent) {
+		this.fileSystemSearches = new ArrayList<>();
+		if (this.directoryOrList != null) {
+			for (JAXBElement<String> element : this.directoryOrList) {
+				String tag = element.getName().getLocalPart();
+				LocalSearchType t = LocalSearchType.CODEC.decode(tag);
+				if (t != null) {
+					try {
+						Path p = Paths.get(element.getValue());
+						this.fileSystemSearches.add(Pair.of(t, p));
+					} catch (InvalidPathException e) {
+						// invalid path - report it, move on?
+					}
+				}
+			}
+		}
+	}
 
-	@XmlAttribute(name = "dataSource", required = true)
-	protected String dataSource;
+	protected void beforeMarshal(Marshaller m) {
+		if ((this.fileSystemSearches != null) && !this.fileSystemSearches.isEmpty()) {
+			this.directoryOrList = new ArrayList<>();
+			ObjectFactory factory = new ObjectFactory();
+			for (Pair<LocalSearchType, Path> p : this.fileSystemSearches) {
+				JAXBElement<String> element = null;
+				switch (p.getKey()) {
+					case DIRECTORY:
+						element = factory.createLocalQuerySearchDirectory(p.getValue().toString());
+						break;
+					case LIST_FILE:
+						element = factory.createLocalQuerySearchList(p.getValue().toString());
+						break;
+					case SQL:
+						// Do nothing...this is handled differently
+					default:
+						continue;
+				}
+				this.directoryOrList.add(element);
+			}
+		} else {
+			this.directoryOrList = null;
+		}
+	}
+
+	public String getId() {
+		return this.id;
+	}
+
+	public void setId(String value) {
+		this.id = value;
+	}
+
+	public String getDataSource() {
+		return this.dataSource;
+	}
+
+	public void setDataSource(String value) {
+		this.dataSource = value;
+	}
 
 	public String getSql() {
 		return this.sql;
@@ -89,22 +170,6 @@ public class LocalQuerySearch {
 		this.count = value;
 	}
 
-	public String getId() {
-		return this.id;
-	}
-
-	public void setId(String value) {
-		this.id = value;
-	}
-
-	public String getDataSource() {
-		return this.dataSource;
-	}
-
-	public void setDataSource(String value) {
-		this.dataSource = value;
-	}
-
 	public List<String> getPathColumns() {
 		if (this.pathColumns == null) {
 			this.pathColumns = new ArrayList<>();
@@ -119,4 +184,10 @@ public class LocalQuerySearch {
 		return this.postProcessors;
 	}
 
+	public List<Pair<LocalSearchType, Path>> getFileSystemSearches() {
+		if (this.fileSystemSearches == null) {
+			this.fileSystemSearches = new ArrayList<>();
+		}
+		return this.fileSystemSearches;
+	}
 }

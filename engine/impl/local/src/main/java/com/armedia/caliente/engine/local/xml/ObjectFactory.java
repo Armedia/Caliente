@@ -26,11 +26,28 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.annotation.XmlElementDecl;
 import javax.xml.bind.annotation.XmlRegistry;
+import javax.xml.namespace.QName;
 
 @XmlRegistry
 public class ObjectFactory {
 
-	public static final String NAMESPACE = "http://www.armedia.com/ns/caliente/engine/local";
+	public static final String NS = "http://www.armedia.com/ns/caliente/engine/local";
 
+	private final static QName _LocalQuerySearchList_QNAME = new QName(ObjectFactory.NS, "list");
+	private final static QName _LocalQuerySearchDirectory_QNAME = new QName(ObjectFactory.NS, "directory");
+
+	@XmlElementDecl(namespace = ObjectFactory.NS, name = "list", scope = LocalQuerySearch.class)
+	public JAXBElement<String> createLocalQuerySearchList(String value) {
+		return new JAXBElement<>(ObjectFactory._LocalQuerySearchList_QNAME, String.class, LocalQuerySearch.class,
+			value);
+	}
+
+	@XmlElementDecl(namespace = ObjectFactory.NS, name = "directory", scope = LocalQuerySearch.class)
+	public JAXBElement<String> createLocalQuerySearchDirectory(String value) {
+		return new JAXBElement<>(ObjectFactory._LocalQuerySearchDirectory_QNAME, String.class, LocalQuerySearch.class,
+			value);
+	}
 }

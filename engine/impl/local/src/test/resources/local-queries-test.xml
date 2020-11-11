@@ -29,7 +29,8 @@
 	<searches>
 
 		<!-- Returned paths are expected to be relative to a single base location -->
-		<search id="primary" dataSource="xmlds">
+		<search id="primary">
+			<dataSource>xmlds</dataSource>
 			<!-- The un-parameterized query to execute -->
 			<sql><![CDATA[ select path from fsobject ]]></sql>
 
@@ -49,7 +50,8 @@
 		</search>
 
 		<!-- More searches, they'll be executed in order, and the results concatenated -->
-		<search id="secondary" dataSource="xmlds">
+		<search id="secondary">
+			<dataSource>xmlds</dataSource>
 			<!-- The un-parameterized query to execute -->
 			<sql><![CDATA[ select path from fsobject ]]></sql>
 
@@ -69,7 +71,8 @@
 			</post-processors>
 		</search>
 
-		<search id="rest" dataSource="xmlds">
+		<search id="rest">
+			<dataSource>xmlds</dataSource>
 			<!-- The un-parameterized query to execute -->
 			<sql><![CDATA[ select path from fsobject ]]></sql>
 

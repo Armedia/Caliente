@@ -30,7 +30,8 @@
 	<searches>
 
 		<!-- Returned paths are expected to be relative to a single base location -->
-		<search id="targetId" dataSource="dsName">
+		<search id="sqlSearch1">
+			<dataSource>dsName</dataSource>
 			<!-- The un-parameterized query to execute -->
 			<sql><![CDATA[ SQL QUERY]]></sql>
 
@@ -48,6 +49,47 @@
 				<path-column>option2</path-column>
 				<path-column>option3</path-column>
 			</path-columns>
+
+			<!-- One or more post-processor scripts that will be applied, in turn, to each found path -->
+			<!-- (the first non-null, non-empty value *after post-processing*, will be returned per record) -->
+			<post-processors>
+				<post-processor type="jexl3"><![CDATA[
+					// JEXL or other script that consumes ${path} and returns the post-processed value
+				]]></post-processor>
+				<post-processor type="class">com.canonical.class.Name::methodName</post-processor>
+			</post-processors>
+		</search>
+
+		<search id="fsSearch1">
+			<list>/this/is/a/list/of/paths</list>
+			<list>/this/is/a/list/of/paths</list>
+			<list>/this/is/a/list/of/paths</list>
+			<directory>/this/is/a/directory/to/search</directory>
+			<list>/this/is/a/list/of/paths</list>
+			<directory>/this/is/a/directory/to/search</directory>
+			<list>/this/is/a/list/of/paths</list>
+			<directory>/this/is/a/directory/to/search</directory>
+			<directory>/this/is/a/directory/to/search</directory>
+			<directory>/this/is/a/directory/to/search</directory>
+			<list>/this/is/a/list/of/paths</list>
+			<directory>/this/is/a/directory/to/search</directory>
+			<directory>/this/is/a/directory/to/search</directory>
+			<list>/this/is/a/list/of/paths</list>
+			<list>/this/is/a/list/of/paths</list>
+			<list>/this/is/a/list/of/paths</list>
+			<list>/this/is/a/list/of/paths</list>
+			<directory>/this/is/a/directory/to/search</directory>
+			<directory>/this/is/a/directory/to/search</directory>
+			<directory>/this/is/a/directory/to/search</directory>
+			<list>/this/is/a/list/of/paths</list>
+			<list>/this/is/a/list/of/paths</list>
+			<list>/this/is/a/list/of/paths</list>
+			<list>/this/is/a/list/of/paths</list>
+			<list>/this/is/a/list/of/paths</list>
+			<list>/this/is/a/list/of/paths</list>
+			<list>/this/is/a/list/of/paths</list>
+			<list>/this/is/a/list/of/paths</list>
+			<list>/this/is/a/list/of/paths</list>
 
 			<!-- One or more post-processor scripts that will be applied, in turn, to each found path -->
 			<!-- (the first non-null, non-empty value *after post-processing*, will be returned per record) -->
