@@ -409,6 +409,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 							} catch (InvalidPathException e) {
 								// If this path is invalid, should we abort? Or keep going?
 								if (!LocalQueryService.this.failOnInvalid) {
+									LocalQueryService.this.log.warn(
+										"Invalid path fetched during search from column {}: [{}]", column, str, e);
 									continue candidate;
 								}
 								// We're failing on invalid paths ... so ... fail
