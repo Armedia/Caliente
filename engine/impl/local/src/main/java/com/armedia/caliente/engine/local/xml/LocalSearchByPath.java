@@ -57,4 +57,44 @@ public class LocalSearchByPath extends LocalSearchBase {
 	public LocalSearchByPath() {
 		super(LocalSearchType.PATH);
 	}
+
+	public String getPath() {
+		return this.path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+
+	public Boolean getFollowLinks() {
+		return this.followLinks;
+	}
+
+	public void setFollowLinks(Boolean followLinks) {
+		this.followLinks = followLinks;
+	}
+
+	public String getMatching() {
+		return this.matching;
+	}
+
+	public void setMatching(String matching) {
+		this.matching = matching;
+	}
+
+	public Integer getMinDepth() {
+		return this.minDepth;
+	}
+
+	public void setMinDepth(Integer minDepth) {
+		this.minDepth = minDepth;
+	}
+
+	public Integer getMaxDepth() {
+		return this.maxDepth;
+	}
+
+	public void setMaxDepth(Integer maxDepth) {
+		this.maxDepth = maxDepth;
+	}
 }
