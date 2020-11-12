@@ -6,8 +6,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -78,6 +80,14 @@ import com.armedia.commons.utilities.script.JSR223Script;
 public class LocalQueryService extends BaseShareableLockable implements AutoCloseable {
 
 	private static final XmlInstances<LocalQueries> LOCAL_QUERIES = new XmlInstances<>(LocalQueries.class);
+	private static final LinkOption[] LINK_OPTION_FOLLOW = {};
+	private static final LinkOption[] LINK_OPTION_NO_FOLLOW = {
+		LinkOption.NOFOLLOW_LINKS
+	};
+	private static final FileVisitOption[] FILE_VISIT_OPTION_FOLLOW = {
+		FileVisitOption.FOLLOW_LINKS
+	};
+	private static final FileVisitOption[] FILE_VISIT_OPTION_NO_FOLLOW = {};
 
 	private static final String DEFAULT_LANGUAGE = "jexl3";
 
@@ -267,6 +277,10 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			this.id = search.getId();
 			this.processor = buildProcessor(search.getPostProcessors());
 		}
+
+		public String getId() {
+			return this.id;
+		}
 	}
 
 	protected class SearchByPath extends PathSearchBase {
@@ -275,13 +289,16 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		private Predicate<Path> matcher;
 		private final int minDepth;
 		private final int maxDepth;
+		private final LinkOption[] linkOptions;
+		private final FileVisitOption[] visitOptions;
 
 		private SearchByPath(LocalSearchByPath search) throws Exception {
 			super(search);
 			this.path = Paths.get(search.getPath());
 			this.followLinks = Tools.coalesce(search.getFollowLinks(), Boolean.TRUE);
-
-			if (!Files.exists(this.path, null)) {
+			this.linkOptions = (this.followLinks ? LocalQueryService.LINK_OPTION_FOLLOW : LocalQueryService.LINK_OPTION_NO_FOLLOW);
+			this.visitOptions = (this.followLinks ? LocalQueryService.FILE_VISIT_OPTION_FOLLOW : FILE_VISIT_OPTION_NO_FOLLOW);
+			if (!Files.exists(this.path, this.linkOptions)) {
 			}
 
 			final Pattern pattern = (StringUtils.isNotBlank(search.getMatching())
@@ -300,6 +317,9 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 
 		@Override
 		public Stream<Path> build() {
+			// Stream<Path> s = Files.walk(path, maxDepth, visitOptions);
+
+
 			return Stream.empty();
 		}
 	}
@@ -311,12 +331,14 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		private Predicate<String> matcher;
 		private final int skip;
 		private final int count;
+		private final LinkOption[] linkOptions;
 
 		private SearchByList(LocalSearchByList search) throws Exception {
 			super(search);
 			// TODO: This path should be relative to the root!!
 			this.file = Paths.get(search.getFile());
 			this.followLinks = Tools.coalesce(search.getFollowLinks(), Boolean.TRUE);
+			this.linkOptions = (this.followLinks ? LocalQueryService.LINK_OPTION_FOLLOW : LocalQueryService.LINK_OPTION_NO_FOLLOW);
 			final Pattern pattern = (StringUtils.isNotBlank(search.getMatching())
 				? Pattern.compile(search.getMatching())
 				: null);
@@ -970,6 +992,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 					}
 					if ((ret == null) || ret.isEmpty()) {
 						continue;
+
 					}
 					return Tools.freezeList(ret);
 				}
