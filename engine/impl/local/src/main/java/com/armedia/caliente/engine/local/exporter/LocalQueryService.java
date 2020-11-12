@@ -5,6 +5,7 @@ import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -28,6 +29,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -254,14 +256,46 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	}
 
 	public static interface PathSearch {
-
 		public Stream<Path> build();
-
 	}
 
-	protected class SearchByPath implements PathSearch {
+	public abstract class PathSearchBase implements PathSearch {
+		private final String id;
+		protected final Processor processor;
 
-		private SearchByPath(LocalSearchByPath lsbp) {
+		private PathSearchBase(LocalSearchBase search) throws Exception {
+			this.id = search.getId();
+			this.processor = buildProcessor(search.getPostProcessors());
+		}
+	}
+
+	protected class SearchByPath extends PathSearchBase {
+		private Path path;
+		private boolean followLinks;
+		private Predicate<Path> matcher;
+		private final int minDepth;
+		private final int maxDepth;
+
+		private SearchByPath(LocalSearchByPath search) throws Exception {
+			super(search);
+			this.path = Paths.get(search.getPath());
+			this.followLinks = Tools.coalesce(search.getFollowLinks(), Boolean.TRUE);
+
+			if (!Files.exists(this.path, null)) {
+			}
+
+			final Pattern pattern = (StringUtils.isNotBlank(search.getMatching())
+				? Pattern.compile(search.getMatching())
+				: null);
+			if (pattern != null) {
+				this.matcher = (p) -> pattern.matcher(p.toString()).matches();
+			} else {
+				this.matcher = null;
+			}
+			int minDepth = Tools.coalesce(search.getMinDepth(), -1);
+			this.minDepth = Math.max(-1, minDepth);
+			int maxDepth = Tools.coalesce(search.getMinDepth(), -1);
+			this.maxDepth = Math.max(-1, maxDepth);
 		}
 
 		@Override
@@ -270,9 +304,31 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
-	protected class SearchByList implements PathSearch {
+	protected class SearchByList extends PathSearchBase {
+		private Path file;
+		private Charset encoding;
+		private boolean followLinks;
+		private Predicate<String> matcher;
+		private final int skip;
+		private final int count;
 
-		private SearchByList(LocalSearchByList lsbl) {
+		private SearchByList(LocalSearchByList search) throws Exception {
+			super(search);
+			// TODO: This path should be relative to the root!!
+			this.file = Paths.get(search.getFile());
+			this.followLinks = Tools.coalesce(search.getFollowLinks(), Boolean.TRUE);
+			final Pattern pattern = (StringUtils.isNotBlank(search.getMatching())
+				? Pattern.compile(search.getMatching())
+				: null);
+			if (pattern != null) {
+				this.matcher = (p) -> pattern.matcher(p.toString()).matches();
+			} else {
+				this.matcher = null;
+			}
+			int skip = Tools.coalesce(search.getSkip(), -1);
+			this.skip = Math.max(-1, skip);
+			int count = Tools.coalesce(search.getCount(), -1);
+			this.count = Math.max(-1, count);
 		}
 
 		@Override
@@ -281,41 +337,38 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
-	protected class SearchBySql implements PathSearch {
+	protected class SearchBySql extends PathSearchBase {
 		private final DataSource dataSource;
 		private final String id;
 		private final List<String> pathColumns;
 		private final String sql;
 		private final int skip;
 		private final int count;
-		private final Processor processor;
 
-		private SearchBySql(LocalSearchBySql definition, Function<String, DataSource> dataSourceFinder)
-			throws Exception {
-			this.dataSource = dataSourceFinder.apply(definition.getDataSource());
+		private SearchBySql(LocalSearchBySql search, Function<String, DataSource> dataSourceFinder) throws Exception {
+			super(search);
+			this.dataSource = dataSourceFinder.apply(search.getDataSource());
 			Objects.requireNonNull(this.dataSource, "Must provide a non-null DataSource");
 
-			this.id = definition.getId();
+			this.id = search.getId();
 
-			Integer skip = definition.getSkip();
+			Integer skip = search.getSkip();
 			if ((skip != null) && (skip < 0)) {
 				skip = null;
 			}
 			this.skip = (skip != null ? skip.intValue() : -1);
 
-			Integer count = definition.getCount();
+			Integer count = search.getCount();
 			if ((count != null) && (count < 0)) {
 				count = null;
 			}
 			this.count = (count != null ? count.intValue() : -1);
 
-			this.sql = definition.getSql();
+			this.sql = search.getSql();
 			// TODO: Perform a deeper sanity check?
 			if (StringUtils.isBlank(this.sql)) { throw new SQLException("Must provide a SQL query to execute"); }
 
-			this.processor = buildProcessor(definition.getPostProcessors());
-
-			this.pathColumns = Tools.freezeCopy(definition.getPathColumns(), true);
+			this.pathColumns = Tools.freezeCopy(search.getPathColumns(), true);
 			if (this.pathColumns.isEmpty()) { throw new Exception("No candidate columns given"); }
 		}
 
