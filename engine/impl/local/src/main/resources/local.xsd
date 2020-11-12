@@ -99,7 +99,6 @@
 					<xsd:element name="path" type="tns:noSpaces.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="followLinks" type="xsd:boolean" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="matching" type="tns:nonEmpty.t" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="minDepth" type="xsd:int" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="maxDepth" type="xsd:int" minOccurs="0" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:choice>

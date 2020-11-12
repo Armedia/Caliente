@@ -35,7 +35,7 @@ import com.armedia.caliente.engine.local.exporter.LocalSearchType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "localSearchByPath.t", propOrder = {
-	"path", "followLinks", "matching", "minDepth", "maxDepth", "postProcessors"
+	"path", "followLinks", "matching", "maxDepth", "postProcessors"
 })
 public class LocalSearchByPath extends LocalSearchBase {
 
@@ -47,9 +47,6 @@ public class LocalSearchByPath extends LocalSearchBase {
 
 	@XmlElement(name = "matching", required = false)
 	protected String matching;
-
-	@XmlElement(name = "minDepth", required = false)
-	protected Integer minDepth;
 
 	@XmlElement(name = "maxDepth", required = false)
 	protected Integer maxDepth;
@@ -80,14 +77,6 @@ public class LocalSearchByPath extends LocalSearchBase {
 
 	public void setMatching(String matching) {
 		this.matching = matching;
-	}
-
-	public Integer getMinDepth() {
-		return this.minDepth;
-	}
-
-	public void setMinDepth(Integer minDepth) {
-		this.minDepth = minDepth;
 	}
 
 	public Integer getMaxDepth() {

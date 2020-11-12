@@ -266,7 +266,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	}
 
 	public static interface PathSearch {
-		public Stream<Path> build();
+		public Stream<Path> build() throws Exception;
 	}
 
 	public abstract class PathSearchBase implements PathSearch {
@@ -287,7 +287,6 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		private Path path;
 		private boolean followLinks;
 		private Predicate<Path> matcher;
-		private final int minDepth;
 		private final int maxDepth;
 		private final LinkOption[] linkOptions;
 		private final FileVisitOption[] visitOptions;
@@ -296,8 +295,10 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			super(search);
 			this.path = Paths.get(search.getPath());
 			this.followLinks = Tools.coalesce(search.getFollowLinks(), Boolean.TRUE);
-			this.linkOptions = (this.followLinks ? LocalQueryService.LINK_OPTION_FOLLOW : LocalQueryService.LINK_OPTION_NO_FOLLOW);
-			this.visitOptions = (this.followLinks ? LocalQueryService.FILE_VISIT_OPTION_FOLLOW : FILE_VISIT_OPTION_NO_FOLLOW);
+			this.linkOptions = (this.followLinks ? LocalQueryService.LINK_OPTION_FOLLOW
+				: LocalQueryService.LINK_OPTION_NO_FOLLOW);
+			this.visitOptions = (this.followLinks ? LocalQueryService.FILE_VISIT_OPTION_FOLLOW
+				: LocalQueryService.FILE_VISIT_OPTION_NO_FOLLOW);
 			if (!Files.exists(this.path, this.linkOptions)) {
 			}
 
@@ -309,18 +310,18 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			} else {
 				this.matcher = null;
 			}
-			int minDepth = Tools.coalesce(search.getMinDepth(), -1);
-			this.minDepth = Math.max(-1, minDepth);
-			int maxDepth = Tools.coalesce(search.getMinDepth(), -1);
-			this.maxDepth = Math.max(-1, maxDepth);
+			int maxDepth = Tools.coalesce(search.getMaxDepth(), -1);
+			if (maxDepth < 0) maxDepth = Integer.MAX_VALUE;
+			this.maxDepth = maxDepth;
 		}
 
 		@Override
-		public Stream<Path> build() {
-			// Stream<Path> s = Files.walk(path, maxDepth, visitOptions);
-
-
-			return Stream.empty();
+		public Stream<Path> build() throws Exception {
+			// TODO: Add the ability to INCLUDE (default), EXCLUDE, or ONLY folders
+			return Files.walk(this.path, this.maxDepth, this.visitOptions) //
+				// .filter(this.folderMatcher) //
+				.filter(this.matcher) //
+			;
 		}
 	}
 
@@ -338,7 +339,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			// TODO: This path should be relative to the root!!
 			this.file = Paths.get(search.getFile());
 			this.followLinks = Tools.coalesce(search.getFollowLinks(), Boolean.TRUE);
-			this.linkOptions = (this.followLinks ? LocalQueryService.LINK_OPTION_FOLLOW : LocalQueryService.LINK_OPTION_NO_FOLLOW);
+			this.linkOptions = (this.followLinks ? LocalQueryService.LINK_OPTION_FOLLOW
+				: LocalQueryService.LINK_OPTION_NO_FOLLOW);
 			final Pattern pattern = (StringUtils.isNotBlank(search.getMatching())
 				? Pattern.compile(search.getMatching())
 				: null);
@@ -946,8 +948,17 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		final SharedAutoLock lock = autoSharedLock();
 		List<Stream<Path>> streams = new ArrayList<>(this.searches.size());
 		for (String id : this.searches.keySet()) {
-			streams.add(this.searches.get(id).build());
+			PathSearch search = this.searches.get(id);
+			try {
+				streams.add(search.build());
+			} catch (Exception e) {
+				// Couldn't build it... log the error!
+				this.log.error("Failed to build the search stream for {} with ID [{}]",
+					search.getClass().getSimpleName(), id, e);
+			}
 		}
+		// Just in case ... gives flexibility
+		streams.removeIf(Objects::isNull);
 		if (streams.isEmpty()) { return Stream.empty(); }
 
 		return StreamConcatenation //
