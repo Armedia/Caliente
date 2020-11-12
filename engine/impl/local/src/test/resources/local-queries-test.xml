@@ -29,7 +29,7 @@
 	<searches>
 
 		<!-- Returned paths are expected to be relative to a single base location -->
-		<search id="primary">
+		<sql id="primary">
 			<dataSource>xmlds</dataSource>
 			<!-- The un-parameterized query to execute -->
 			<sql><![CDATA[ select path from fsobject ]]></sql>
@@ -47,10 +47,10 @@
 				<post-processor ref="testId" />
 				<post-processor type="class">com.armedia.caliente.engine.local.exporter.LocalQueryServiceTest::processorMethod</post-processor>
 			</post-processors>
-		</search>
+		</sql>
 
 		<!-- More searches, they'll be executed in order, and the results concatenated -->
-		<search id="secondary">
+		<sql id="secondary">
 			<dataSource>xmlds</dataSource>
 			<!-- The un-parameterized query to execute -->
 			<sql><![CDATA[ select path from fsobject ]]></sql>
@@ -69,9 +69,9 @@
 				<post-processor ref="testId" />
 				<post-processor type="class">com.armedia.caliente.engine.local.exporter.LocalQueryServiceTest::processorMethod</post-processor>
 			</post-processors>
-		</search>
+		</sql>
 
-		<search id="rest">
+		<sql id="rest">
 			<dataSource>xmlds</dataSource>
 			<!-- The un-parameterized query to execute -->
 			<sql><![CDATA[ select path from fsobject ]]></sql>
@@ -91,7 +91,7 @@
 				]]></post-processor>
 				<post-processor type="class">com.armedia.caliente.engine.local.exporter.LocalQueryServiceTest::processorMethod</post-processor>
 			</post-processors>
-		</search>
+		</sql>
 
 	</searches>
 

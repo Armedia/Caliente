@@ -41,7 +41,7 @@ import com.armedia.caliente.engine.local.exporter.LocalQueryService.Query;
 import com.armedia.caliente.engine.local.xml.LocalQueries;
 import com.armedia.caliente.engine.local.xml.LocalQueryDataSource;
 import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessor;
-import com.armedia.caliente.engine.local.xml.LocalQuerySearch;
+import com.armedia.caliente.engine.local.xml.LocalSearchBySql;
 import com.armedia.caliente.engine.local.xml.LocalQuerySql;
 import com.armedia.caliente.engine.local.xml.LocalQueryVersionList;
 import com.armedia.commons.utilities.function.CheckedBiConsumer;
@@ -73,7 +73,7 @@ public class LocalQueryServiceTest {
 
 	private LocalQueryService buildEmptyService() throws Exception {
 		final LocalQueryDataSource lqds = new LocalQueryDataSource();
-		final LocalQuerySearch lqs = new LocalQuerySearch();
+		final LocalSearchBySql lqs = new LocalSearchBySql();
 		final LocalQueryPostProcessor lqpp = new LocalQueryPostProcessor();
 		final LocalQueries lq = new LocalQueries();
 
@@ -235,7 +235,7 @@ public class LocalQueryServiceTest {
 	public void testBuildSearch() throws Exception {
 		final LocalQueryService lqs = buildEmptyService();
 		final DataSource mockDs = EasyMock.createStrictMock(DataSource.class);
-		final LocalQuerySearch lq = new LocalQuerySearch();
+		final LocalSearchBySql lq = new LocalSearchBySql();
 		final Function<String, DataSource> nullFinder = (str) -> null;
 		final Function<String, DataSource> mockFinder = (str) -> mockDs;
 
@@ -296,7 +296,7 @@ public class LocalQueryServiceTest {
 
 		try (BasicDataSource dataSource = buildDataSource(this::renderFirstPaths)) {
 			try (final LocalQueryService srv = buildEmptyService()) {
-				final LocalQuerySearch lqs = new LocalQuerySearch();
+				final LocalSearchBySql lqs = new LocalSearchBySql();
 
 				lqs.setSkip(0);
 				lqs.setCount(-1);
@@ -332,7 +332,7 @@ public class LocalQueryServiceTest {
 
 		try (BasicDataSource dataSource = buildDataSource(this::renderSecondPaths)) {
 			try (final LocalQueryService srv = buildEmptyService()) {
-				final LocalQuerySearch lqs = new LocalQuerySearch();
+				final LocalSearchBySql lqs = new LocalSearchBySql();
 
 				lqs.setSkip(0);
 				lqs.setCount(-1);
@@ -366,7 +366,7 @@ public class LocalQueryServiceTest {
 
 		try (BasicDataSource dataSource = buildDataSource(this::renderThirdPaths)) {
 			try (final LocalQueryService srv = buildEmptyService()) {
-				final LocalQuerySearch lqs = new LocalQuerySearch();
+				final LocalSearchBySql lqs = new LocalSearchBySql();
 
 				lqs.setSkip(0);
 				lqs.setCount(-1);
@@ -400,7 +400,7 @@ public class LocalQueryServiceTest {
 
 		try (BasicDataSource dataSource = buildDataSource(this::renderFirstPaths)) {
 			try (final LocalQueryService srv = buildEmptyService()) {
-				final LocalQuerySearch lqs = new LocalQuerySearch();
+				final LocalSearchBySql lqs = new LocalSearchBySql();
 
 				LocalQueryPostProcessor lqpp = new LocalQueryPostProcessor();
 				lqpp.setType("jexl3");

@@ -26,11 +26,36 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
-import javax.xml.bind.annotation.XmlRegistry;
+import java.util.ArrayList;
+import java.util.List;
 
-@XmlRegistry
-public class ObjectFactory {
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlTransient;
 
-	public static final String NS = "http://www.armedia.com/ns/caliente/engine/local";
+@XmlTransient
+public abstract class LocalSearchBase {
 
+	@XmlAttribute(name = "id", required = true)
+	protected String id;
+
+	@XmlElementWrapper(name = "post-processors", required = false)
+	@XmlElement(name = "post-processor", required = false)
+	protected List<LocalQueryPostProcessor> postProcessors;
+
+	public String getId() {
+		return this.id;
+	}
+
+	public void setId(String value) {
+		this.id = value;
+	}
+
+	public List<LocalQueryPostProcessor> getPostProcessors() {
+		if (this.postProcessors == null) {
+			this.postProcessors = new ArrayList<>();
+		}
+		return this.postProcessors;
+	}
 }

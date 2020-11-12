@@ -26,11 +26,30 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
-import javax.xml.bind.annotation.XmlRegistry;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-@XmlRegistry
-public class ObjectFactory {
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "localSearchByPath.t", propOrder = {
+	"path", "followLinks", "matching", "minDepth", "maxDepth", "postProcessors"
+})
+public class LocalSearchByPath extends LocalSearchBase {
 
-	public static final String NS = "http://www.armedia.com/ns/caliente/engine/local";
+	@XmlElement(name = "path", required = true)
+	protected String path;
+
+	@XmlElement(name = "followLinks", required = false)
+	protected Boolean followLinks;
+
+	@XmlElement(name = "matching", required = false)
+	protected String matching;
+
+	@XmlElement(name = "minDepth", required = false)
+	protected Integer minDepth;
+
+	@XmlElement(name = "maxDepth", required = false)
+	protected Integer maxDepth;
 
 }

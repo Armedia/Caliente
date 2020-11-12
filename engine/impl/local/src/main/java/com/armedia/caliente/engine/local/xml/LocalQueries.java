@@ -33,6 +33,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
@@ -70,8 +71,12 @@ public class LocalQueries {
 	protected List<LocalQueryDataSource> dataSourceDefinitions;
 
 	@XmlElementWrapper(name = "searches", required = false)
-	@XmlElement(name = "search", required = false)
-	protected List<LocalQuerySearch> searches;
+	@XmlElements({
+		@XmlElement(name = "sql", type = LocalSearchBySql.class, required = false), //
+		@XmlElement(name = "dir", type = LocalSearchByPath.class, required = false), //
+		@XmlElement(name = "list", type = LocalSearchByList.class, required = false), //
+	})
+	protected List<LocalSearchBase> searches;
 
 	@XmlElementWrapper(name = "history-ids", required = false)
 	@XmlElement(name = "history-id", required = false)
@@ -116,7 +121,7 @@ public class LocalQueries {
 		return this.postProcessors;
 	}
 
-	public List<LocalQuerySearch> getSearches() {
+	public List<LocalSearchBase> getSearches() {
 		if (this.searches == null) {
 			this.searches = new ArrayList<>();
 		}
