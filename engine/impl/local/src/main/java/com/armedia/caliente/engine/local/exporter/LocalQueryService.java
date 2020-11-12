@@ -287,6 +287,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		private Path path;
 		private boolean followLinks;
 		private Predicate<Path> matcher;
+		private Predicate<Path> folderMatcher;
 		private final int maxDepth;
 		private final LinkOption[] linkOptions;
 		private final FileVisitOption[] visitOptions;
@@ -299,7 +300,20 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				: LocalQueryService.LINK_OPTION_NO_FOLLOW);
 			this.visitOptions = (this.followLinks ? LocalQueryService.FILE_VISIT_OPTION_FOLLOW
 				: LocalQueryService.FILE_VISIT_OPTION_NO_FOLLOW);
-			if (!Files.exists(this.path, this.linkOptions)) {
+
+			Predicate<Path> folderMatcher = Objects::nonNull;
+			if (search.getInclude() != null) {
+				folderMatcher = (p) -> Files.isDirectory(p, this.linkOptions);
+				switch (search.getInclude()) {
+					case FILES:
+						folderMatcher = folderMatcher.negate();
+					case FOLDERS:
+						break;
+					case ALL:
+						folderMatcher = Objects::nonNull;
+					default:
+						break;
+				}
 			}
 
 			final Pattern pattern = (StringUtils.isNotBlank(search.getMatching())
@@ -311,15 +325,17 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				this.matcher = null;
 			}
 			int maxDepth = Tools.coalesce(search.getMaxDepth(), -1);
-			if (maxDepth < 0) maxDepth = Integer.MAX_VALUE;
+			if (maxDepth < 0) {
+				maxDepth = Integer.MAX_VALUE;
+			}
 			this.maxDepth = maxDepth;
 		}
 
 		@Override
 		public Stream<Path> build() throws Exception {
-			// TODO: Add the ability to INCLUDE (default), EXCLUDE, or ONLY folders
 			return Files.walk(this.path, this.maxDepth, this.visitOptions) //
-				// .filter(this.folderMatcher) //
+				.filter((p) -> Files.exists(p, this.linkOptions)) //
+				.filter(this.folderMatcher) //
 				.filter(this.matcher) //
 			;
 		}
