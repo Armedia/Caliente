@@ -53,6 +53,8 @@ import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessorDef;
 import com.armedia.caliente.engine.local.xml.LocalQuerySql;
 import com.armedia.caliente.engine.local.xml.LocalQueryVersionList;
 import com.armedia.caliente.engine.local.xml.LocalSearchBase;
+import com.armedia.caliente.engine.local.xml.LocalSearchByList;
+import com.armedia.caliente.engine.local.xml.LocalSearchByPath;
 import com.armedia.caliente.engine.local.xml.LocalSearchBySql;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
@@ -257,37 +259,25 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 
 	}
 
-	protected class FileSystemSearch implements PathSearch {
+	protected class SearchByPath implements PathSearch {
 
-		private final List<Pair<LocalSearchType, Path>> sources;
-
-		private FileSystemSearch(List<Pair<LocalSearchType, Path>> searches) {
-			this.sources = Tools.freezeList(new ArrayList<>(searches));
+		private SearchByPath(LocalSearchByPath lsbp) {
 		}
 
 		@Override
 		public Stream<Path> build() {
-			List<Stream<Path>> l = new ArrayList<>(this.sources.size());
-			for (Pair<LocalSearchType, Path> s : this.sources) {
-				switch (s.getKey()) {
-					case DIRECTORY:
-						try {
-							l.add(Files.walk(s.getRight()));
-						} catch (IOException e) {
-							LocalQueryService.this.log.error("Failed to walk directory [{}]", s.getRight(), e);
-						}
-						continue;
+			return Stream.empty();
+		}
+	}
 
-					case LIST_FILE:
-						// Do nothing ... not supported yet
-						continue;
+	protected class SearchByList implements PathSearch {
 
-					case SQL:
-						// Do nothing ... this is handled differently
-						continue;
-				}
-			}
-			return StreamConcatenation.concat(l);
+		private SearchByList(LocalSearchByList lsbl) {
+		}
+
+		@Override
+		public Stream<Path> build() {
+			return Stream.empty();
 		}
 	}
 
@@ -785,15 +775,21 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 
 	protected PathSearch buildSearch(LocalSearchBase search, Function<String, DataSource> dataSourceFinder)
 		throws Exception {
-		Objects.requireNonNull(search, "Must provide a LocalQuerySearch instance");
+		Objects.requireNonNull(search, "Must provide a LocalSearchBase instance");
 
-		if (LocalSearchBySql.class.isInstance(search)) {
-			return new SearchBySql(LocalSearchBySql.class.cast(search), dataSourceFinder);
+		switch (search.getType()) {
+			case SQL:
+				return new SearchBySql(LocalSearchBySql.class.cast(search), dataSourceFinder);
+			case PATH:
+				return new SearchByPath(LocalSearchByPath.class.cast(search));
+			case LIST:
+				return new SearchByList(LocalSearchByList.class.cast(search));
+
+			default:
+				this.log.warn("Unimplemented search type: {}", search.getType());
+				// Unsupported type!!
+				return () -> Stream.empty();
 		}
-
-		// Must be either a directory or list-file
-		// TODO: We must be able to join multiple of these together as a single search
-		return () -> Stream.empty();
 	}
 
 	protected DataSource buildDataSource(LocalQueryDataSource dataSourceDef) throws SQLException {

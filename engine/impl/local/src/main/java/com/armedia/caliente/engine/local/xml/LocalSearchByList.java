@@ -31,6 +31,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.local.exporter.LocalSearchType;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "localSearchByList.t", propOrder = {
 	"file", "encoding", "followLinks", "matching", "comment", "skip", "count", "postProcessors"
@@ -57,6 +59,10 @@ public class LocalSearchByList extends LocalSearchBase {
 
 	@XmlElement(name = "count", required = false)
 	protected Integer count;
+
+	public LocalSearchByList() {
+		super(LocalSearchType.LIST);
+	}
 
 	public String getFile() {
 		return this.file;

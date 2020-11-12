@@ -26,7 +26,6 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,10 +33,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.armedia.caliente.engine.local.exporter.LocalSearchType;
 
@@ -63,8 +59,9 @@ public class LocalSearchBySql extends LocalSearchBase {
 	@XmlElement(name = "path-column", required = true)
 	protected List<String> pathColumns;
 
-	@XmlTransient
-	protected List<Pair<LocalSearchType, Path>> fileSystemSearches;
+	public LocalSearchBySql() {
+		super(LocalSearchType.SQL);
+	}
 
 	public String getDataSource() {
 		return this.dataSource;

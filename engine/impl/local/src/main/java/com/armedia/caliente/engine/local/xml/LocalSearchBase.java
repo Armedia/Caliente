@@ -28,11 +28,14 @@ package com.armedia.caliente.engine.local.xml;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlTransient;
+
+import com.armedia.caliente.engine.local.exporter.LocalSearchType;
 
 @XmlTransient
 public abstract class LocalSearchBase {
@@ -43,6 +46,18 @@ public abstract class LocalSearchBase {
 	@XmlElementWrapper(name = "post-processors", required = false)
 	@XmlElement(name = "post-processor", required = false)
 	protected List<LocalQueryPostProcessor> postProcessors;
+
+	@XmlTransient
+	private final LocalSearchType type;
+
+	public LocalSearchBase() {
+		throw new RuntimeException(
+			"This class shouldn't be instantiated this way - invoke the other constructor instead");
+	}
+
+	protected LocalSearchBase(LocalSearchType type) {
+		this.type = Objects.requireNonNull(type, "Must provide a search type");
+	}
 
 	public String getId() {
 		return this.id;
@@ -57,5 +72,9 @@ public abstract class LocalSearchBase {
 			this.postProcessors = new ArrayList<>();
 		}
 		return this.postProcessors;
+	}
+
+	public final LocalSearchType getType() {
+		return this.type;
 	}
 }

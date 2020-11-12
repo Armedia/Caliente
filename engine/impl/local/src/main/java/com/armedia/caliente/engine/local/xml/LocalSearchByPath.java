@@ -31,6 +31,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.local.exporter.LocalSearchType;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "localSearchByPath.t", propOrder = {
 	"path", "followLinks", "matching", "minDepth", "maxDepth", "postProcessors"
@@ -52,4 +54,7 @@ public class LocalSearchByPath extends LocalSearchBase {
 	@XmlElement(name = "maxDepth", required = false)
 	protected Integer maxDepth;
 
+	public LocalSearchByPath() {
+		super(LocalSearchType.PATH);
+	}
 }
