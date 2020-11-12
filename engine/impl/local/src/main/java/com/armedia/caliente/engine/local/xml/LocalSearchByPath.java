@@ -30,28 +30,20 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.local.exporter.LocalSearchType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "localSearchByPath.t", propOrder = {
-	"path", "followLinks", "matching", "include", "maxDepth", "postProcessors"
+	"path", "matching", "maxDepth", "postProcessors"
 })
 public class LocalSearchByPath extends LocalSearchBase {
 
 	@XmlElement(name = "path", required = true)
 	protected String path;
 
-	@XmlElement(name = "followLinks", required = false)
-	protected Boolean followLinks;
-
 	@XmlElement(name = "matching", required = false)
 	protected String matching;
-
-	@XmlJavaTypeAdapter(LocalIncludeModeAdapter.class)
-	@XmlElement(name = "include", required = false)
-	protected LocalIncludeMode include;
 
 	@XmlElement(name = "maxDepth", required = false)
 	protected Integer maxDepth;
@@ -68,28 +60,12 @@ public class LocalSearchByPath extends LocalSearchBase {
 		this.path = path;
 	}
 
-	public Boolean getFollowLinks() {
-		return this.followLinks;
-	}
-
-	public void setFollowLinks(Boolean followLinks) {
-		this.followLinks = followLinks;
-	}
-
 	public String getMatching() {
 		return this.matching;
 	}
 
 	public void setMatching(String matching) {
 		this.matching = matching;
-	}
-
-	public LocalIncludeMode getInclude() {
-		return this.include;
-	}
-
-	public void setInclude(LocalIncludeMode include) {
-		this.include = include;
 	}
 
 	public Integer getMaxDepth() {

@@ -39,14 +39,6 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:simpleType name="localIncludeMode.t" final="restriction">
-		<xsd:restriction base="xsd:string">
-			<xsd:enumeration value="ALL" />
-			<xsd:enumeration value="FILES" />
-			<xsd:enumeration value="FOLDERS" />
-		</xsd:restriction>
-	</xsd:simpleType>
-
 	<xsd:complexType name="localQueryPostProcessor.t">
 		<xsd:simpleContent>
 			<xsd:extension base="xsd:string">
@@ -77,10 +69,7 @@
 				<xsd:sequence>
 					<xsd:element name="file" type="tns:nonEmpty.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="encoding" type="xsd:string" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="followLinks" type="xsd:boolean" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="matching" type="tns:nonEmpty.t" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="include" type="tns:localIncludeMode.t" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="comment" type="xsd:string" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="skip" type="xsd:int" minOccurs="0" maxOccurs="1" default="0" />
 					<xsd:element name="count" type="xsd:int" minOccurs="0" maxOccurs="1" default="0" />
 				</xsd:sequence>
@@ -106,9 +95,7 @@
 			<xsd:choice>
 				<xsd:sequence>
 					<xsd:element name="path" type="tns:noSpaces.t" minOccurs="1" maxOccurs="1" />
-					<xsd:element name="followLinks" type="xsd:boolean" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="matching" type="tns:nonEmpty.t" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="include" type="tns:localIncludeMode.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="maxDepth" type="xsd:int" minOccurs="0" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:choice>

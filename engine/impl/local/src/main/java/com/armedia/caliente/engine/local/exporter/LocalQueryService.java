@@ -1,17 +1,20 @@
 package com.armedia.caliente.engine.local.exporter;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.nio.file.FileVisitOption;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -80,14 +83,6 @@ import com.armedia.commons.utilities.script.JSR223Script;
 public class LocalQueryService extends BaseShareableLockable implements AutoCloseable {
 
 	private static final XmlInstances<LocalQueries> LOCAL_QUERIES = new XmlInstances<>(LocalQueries.class);
-	private static final LinkOption[] LINK_OPTION_FOLLOW = {};
-	private static final LinkOption[] LINK_OPTION_NO_FOLLOW = {
-		LinkOption.NOFOLLOW_LINKS
-	};
-	private static final FileVisitOption[] FILE_VISIT_OPTION_FOLLOW = {
-		FileVisitOption.FOLLOW_LINKS
-	};
-	private static final FileVisitOption[] FILE_VISIT_OPTION_NO_FOLLOW = {};
 
 	private static final String DEFAULT_LANGUAGE = "jexl3";
 
@@ -285,35 +280,16 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 
 	protected class SearchByPath extends PathSearchBase {
 		private Path path;
-		private boolean followLinks;
 		private Predicate<Path> matcher;
-		private Predicate<Path> folderMatcher;
 		private final int maxDepth;
-		private final LinkOption[] linkOptions;
-		private final FileVisitOption[] visitOptions;
 
 		private SearchByPath(LocalSearchByPath search) throws Exception {
 			super(search);
 			this.path = Paths.get(search.getPath());
-			this.followLinks = Tools.coalesce(search.getFollowLinks(), Boolean.TRUE);
-			this.linkOptions = (this.followLinks ? LocalQueryService.LINK_OPTION_FOLLOW
-				: LocalQueryService.LINK_OPTION_NO_FOLLOW);
-			this.visitOptions = (this.followLinks ? LocalQueryService.FILE_VISIT_OPTION_FOLLOW
-				: LocalQueryService.FILE_VISIT_OPTION_NO_FOLLOW);
 
-			Predicate<Path> folderMatcher = Objects::nonNull;
-			if (search.getInclude() != null) {
-				folderMatcher = (p) -> Files.isDirectory(p, this.linkOptions);
-				switch (search.getInclude()) {
-					case FILES:
-						folderMatcher = folderMatcher.negate();
-					case FOLDERS:
-						break;
-					case ALL:
-						folderMatcher = Objects::nonNull;
-					default:
-						break;
-				}
+			if (!Files.exists(this.path)) {
+				throw new Exception(
+					"The configured path [" + this.path + "] does not exist for path search with ID " + getId());
 			}
 
 			final Pattern pattern = (StringUtils.isNotBlank(search.getMatching())
@@ -333,30 +309,35 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 
 		@Override
 		public Stream<Path> build() throws Exception {
-			return Files.walk(this.path, this.maxDepth, this.visitOptions) //
-				.filter((p) -> Files.exists(p, this.linkOptions)) //
-				.filter(this.folderMatcher) //
+			return Files.walk(this.path, this.maxDepth) //
 				.filter(this.matcher) //
 			;
 		}
 	}
 
 	protected class SearchByList extends PathSearchBase {
-		private Path file;
-		private Charset encoding;
-		private boolean followLinks;
-		private Predicate<String> matcher;
+		private final Path file;
+		private final Charset encoding;
+		private final Predicate<String> matcher;
 		private final int skip;
 		private final int count;
-		private final LinkOption[] linkOptions;
 
 		private SearchByList(LocalSearchByList search) throws Exception {
 			super(search);
-			// TODO: This path should be relative to the root!!
 			this.file = Paths.get(search.getFile());
-			this.followLinks = Tools.coalesce(search.getFollowLinks(), Boolean.TRUE);
-			this.linkOptions = (this.followLinks ? LocalQueryService.LINK_OPTION_FOLLOW
-				: LocalQueryService.LINK_OPTION_NO_FOLLOW);
+
+			if (!Files.exists(this.file)) {
+				throw new Exception(
+					"The configured file [" + this.file + "] does not exist for list search with ID " + getId());
+			}
+			if (!Files.isRegularFile(this.file)) {
+				throw new Exception(
+					"The configured file [" + this.file + "] is not a regular file for list search with ID " + getId());
+			}
+
+			this.encoding = (StringUtils.isNotBlank(search.getEncoding()) ? Charset.forName(search.getEncoding())
+				: StandardCharsets.UTF_8);
+
 			final Pattern pattern = (StringUtils.isNotBlank(search.getMatching())
 				? Pattern.compile(search.getMatching())
 				: null);
@@ -365,6 +346,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			} else {
 				this.matcher = null;
 			}
+
 			int skip = Tools.coalesce(search.getSkip(), -1);
 			this.skip = Math.max(-1, skip);
 			int count = Tools.coalesce(search.getCount(), -1);
@@ -372,8 +354,17 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 
 		@Override
-		public Stream<Path> build() {
-			return Stream.empty();
+		public Stream<Path> build() throws Exception {
+			final InputStream in = Files.newInputStream(this.file, StandardOpenOption.READ);
+			final LineNumberReader r = new LineNumberReader(new InputStreamReader(in, this.encoding));
+			return r.lines() //
+				.filter(StringUtils::isNotEmpty) //
+				.filter(this.matcher) //
+				.skip(this.skip) //
+				.limit(this.count) //
+				.map(Paths::get) //
+				.onClose(() -> CloseUtils.closeQuietly(r)) //
+			;
 		}
 	}
 

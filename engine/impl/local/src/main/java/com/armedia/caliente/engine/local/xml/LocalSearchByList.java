@@ -30,13 +30,12 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.local.exporter.LocalSearchType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "localSearchByList.t", propOrder = {
-	"file", "encoding", "followLinks", "matching", "include", "comment", "skip", "count", "postProcessors"
+	"file", "encoding", "matching", "skip", "count", "postProcessors"
 })
 public class LocalSearchByList extends LocalSearchBase {
 
@@ -46,18 +45,8 @@ public class LocalSearchByList extends LocalSearchBase {
 	@XmlElement(name = "encoding", required = false)
 	protected String encoding;
 
-	@XmlElement(name = "followLinks", required = false)
-	protected Boolean followLinks;
-
 	@XmlElement(name = "matching", required = false)
 	protected String matching;
-
-	@XmlJavaTypeAdapter(LocalIncludeModeAdapter.class)
-	@XmlElement(name = "include", required = false)
-	protected LocalIncludeMode include;
-
-	@XmlElement(name = "comment", required = false)
-	protected String comment;
 
 	@XmlElement(name = "skip", required = false)
 	protected Integer skip;
@@ -85,36 +74,12 @@ public class LocalSearchByList extends LocalSearchBase {
 		this.encoding = encoding;
 	}
 
-	public Boolean getFollowLinks() {
-		return this.followLinks;
-	}
-
-	public void setFollowLinks(Boolean followLinks) {
-		this.followLinks = followLinks;
-	}
-
 	public String getMatching() {
 		return this.matching;
 	}
 
 	public void setMatching(String matching) {
 		this.matching = matching;
-	}
-
-	public LocalIncludeMode getInclude() {
-		return this.include;
-	}
-
-	public void setInclude(LocalIncludeMode include) {
-		this.include = include;
-	}
-
-	public String getComment() {
-		return this.comment;
-	}
-
-	public void setComment(String comment) {
-		this.comment = comment;
 	}
 
 	public Integer getSkip() {
