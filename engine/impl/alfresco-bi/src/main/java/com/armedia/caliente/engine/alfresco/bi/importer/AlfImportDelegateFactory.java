@@ -168,6 +168,7 @@ public class AlfImportDelegateFactory
 	private final Path contentRoot;
 	private final Path metadataRoot;
 	private final BulkImportManager biManager;
+	private final boolean renderManifest;
 
 	private final Properties userLoginMap = new Properties();
 
@@ -191,6 +192,7 @@ public class AlfImportDelegateFactory
 		this.biManager = engine.getBulkImportManager();
 		this.schema = engine.getSchema();
 		this.defaultTypes = engine.getDefaultTypes();
+		this.renderManifest = configuration.getBoolean(AlfSetting.GENERATE_INGESTION_INDEX);
 
 		FileUtils.forceMkdir(this.biManager.getContentPath().toFile());
 		this.contentRoot = this.biManager.getContentPath();
@@ -332,7 +334,7 @@ public class AlfImportDelegateFactory
 	}
 
 	private final void storeManifestToScanIndex() throws ImportException {
-		if (!this.manifestSerialized.compareAndSet(false, true)) {
+		if (!this.renderManifest || !this.manifestSerialized.compareAndSet(false, true)) {
 			// This will only happen once
 			return;
 		}

@@ -60,9 +60,16 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		.setDescription("The XML files that make up the Alfresco content model to use on import") //
 	;
 
+	private static final Option WITH_INGESTION_INDEX = new OptionImpl() //
+		.setLongOpt("with-ingestion-index") //
+		.setArgumentLimits(0, 0) //
+		.setDescription("Indicate whether an ingestion index containing all ingested object IDs should be rendered") //
+	;
+
 	private static final OptionGroup OPTIONS = new OptionGroupImpl("Alfresco BI Generator") //
 		.add(Importer.ATTRIBUTE_MAP) //
 		.add(Importer.CONTENT_MODEL) //
+		.add(Importer.WITH_INGESTION_INDEX) //
 	;
 
 	Importer(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
@@ -102,6 +109,8 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 
 		settings.put(AlfSetting.ROOT.getLabel(), state.getBaseDataLocation().getAbsolutePath());
 		settings.put(AlfSetting.CONTENT.getLabel(), state.getContentStoreLocation().toString());
+		settings.put(AlfSetting.GENERATE_INGESTION_INDEX.getLabel(),
+			commandValues.isPresent(Importer.WITH_INGESTION_INDEX));
 
 		if (!commandValues.isPresent(Importer.CONTENT_MODEL)) {
 			throw new CalienteException(
