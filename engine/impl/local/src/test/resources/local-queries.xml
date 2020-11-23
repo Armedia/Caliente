@@ -93,7 +93,7 @@
 		<!-- A query that accepts the documentId as a parameter for lookups, and returns the string -->
 		<!-- that can be used as a historyId for the given object -->
 		<history-id id="kaka" dataSource="dsName">
-			<![CDATA[... query to obtain the history ID, using only a single "?" marker]]>
+			<![CDATA[... query to obtain the history ID, using only a single "?" marker which will be expanded to the object ID]]>
 		</history-id>
 
 		<!-- more <history-id> -->
