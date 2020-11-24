@@ -127,7 +127,7 @@ class LocalFile {
 		this.name = p.getFileName().toString();
 
 		p = this.absoluteFile.toPath();
-		this.symbolicLink = Files.isSymbolicLink(p);
+		this.symbolicLink = false; // Files.isSymbolicLink(p);
 		this.regularFile = Files.isRegularFile(p);
 		this.folder = Files.isDirectory(p);
 
