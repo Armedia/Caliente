@@ -127,7 +127,9 @@ class LocalFile {
 		this.name = p.getFileName().toString();
 
 		p = this.absoluteFile.toPath();
-		this.symbolicLink = false; // Files.isSymbolicLink(p);
+		// Removed as this can cause the tier system to go haywire when versions are in play
+		// this.symbolicLink = Files.isSymbolicLink(p);
+		this.symbolicLink = false;
 		this.regularFile = Files.isRegularFile(p);
 		this.folder = Files.isDirectory(p);
 
