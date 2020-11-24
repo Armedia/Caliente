@@ -500,7 +500,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			return outcomes;
 		} finally {
 			if (!ok) {
-				this.factory.resetHistory();
+				this.factory.resetHistory(this.cmfObject);
 			}
 		}
 	}

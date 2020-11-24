@@ -58,6 +58,7 @@ import javax.xml.validation.Schema;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
@@ -156,12 +157,11 @@ public class AlfImportDelegateFactory
 
 		private HistoryTracker(CmfObject<?> object) {
 			this.object = object;
-			AlfImportDelegateFactory.this.history.set(this);
 		}
 
 		private void reset() {
 			this.versions.clear();
-			AlfImportDelegateFactory.this.history.remove();
+			AlfImportDelegateFactory.this.history.remove(this.object.getHistoryId());
 		}
 	}
 
@@ -191,7 +191,7 @@ public class AlfImportDelegateFactory
 	private final Map<String, AlfrescoType> defaultTypes;
 
 	private final ConcurrentMap<String, VirtualDocument> vdocs = new ConcurrentHashMap<>();
-	private final ThreadLocal<HistoryTracker> history = new ThreadLocal<>();
+	private final ConcurrentMap<String, HistoryTracker> history = new ConcurrentHashMap<>();
 
 	private final AlfXmlIndex fileIndex;
 	private final AlfXmlIndex folderIndex;
@@ -730,8 +730,13 @@ public class AlfImportDelegateFactory
 		return thisMarker;
 	}
 
-	protected final void resetHistory() {
-		HistoryTracker history = this.history.get();
+	protected final HistoryTracker getHistoryTracker(CmfObject<?> object) {
+		return ConcurrentUtils.createIfAbsentUnchecked(this.history, object.getHistoryId(),
+			() -> new HistoryTracker(object));
+	}
+
+	protected final void resetHistory(CmfObject<?> object) {
+		HistoryTracker history = this.history.remove(object.getHistoryId());
 		if (history != null) {
 			history.reset();
 		}
@@ -754,22 +759,18 @@ public class AlfImportDelegateFactory
 				break;
 
 			case NORMAL:
-				history = this.history.get();
-				if (history == null) {
-					history = new HistoryTracker(cmfObject);
+				history = getHistoryTracker(cmfObject);
+				if (!StringUtils.equals(history.object.getHistoryId(), cmfObject.getHistoryId())) {
+					throw new ImportException(String.format(
+						"History mixup!! Attempted to add %s [%s](%s) with history ID [%s] to history for %s [%s](%s) with history ID [%s]",
+						cmfObject.getType(), cmfObject.getLabel(), cmfObject.getId(), cmfObject.getHistoryId(),
+						history.object.getType(), history.object.getLabel(), history.object.getId(),
+						history.object.getHistoryId()));
 				}
 				break;
 
 			default:
 				break;
-		}
-
-		if (!StringUtils.equals(history.object.getHistoryId(), cmfObject.getHistoryId())) {
-			throw new ImportException(String.format(
-				"History mixup!! Attempted to add %s [%s](%s) with history ID [%s] to history for %s [%s](%s) with history ID [%s]",
-				cmfObject.getType(), cmfObject.getLabel(), cmfObject.getId(), cmfObject.getHistoryId(),
-				history.object.getType(), history.object.getLabel(), history.object.getId(),
-				history.object.getHistoryId()));
 		}
 
 		history.versions.add(thisMarker);
@@ -825,6 +826,12 @@ public class AlfImportDelegateFactory
 				// This should never happen, but we still look out for it
 				this.log.warn("Failed to marshal the VDoc XML for [{}]", vdoc, e);
 			}
+		}
+
+		for (String historyId : this.history.keySet()) {
+			HistoryTracker tracker = this.history.get(historyId);
+			this.log.error("Unclosed history {} from {} [{}]({}) with {} entries", historyId, tracker.object.getType(),
+				tracker.object.getLabel(), tracker.object.getId(), tracker.versions.size());
 		}
 
 		this.fileIndex.close();
