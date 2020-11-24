@@ -150,6 +150,21 @@ public class AlfImportDelegateFactory
 		}
 	}
 
+	private final class HistoryTracker {
+		private final List<ScanIndexItemMarker> versions = new ArrayList<>();
+		private final CmfObject<?> object;
+
+		private HistoryTracker(CmfObject<?> object) {
+			this.object = object;
+			AlfImportDelegateFactory.this.history.set(this);
+		}
+
+		private void reset() {
+			this.versions.clear();
+			AlfImportDelegateFactory.this.history.remove();
+		}
+	}
+
 	private static final BigDecimal LAST_INDEX = new BigDecimal(Long.MAX_VALUE);
 
 	private static final String SCHEMA_NAME = "alfresco-model.xsd";
@@ -176,7 +191,7 @@ public class AlfImportDelegateFactory
 	private final Map<String, AlfrescoType> defaultTypes;
 
 	private final ConcurrentMap<String, VirtualDocument> vdocs = new ConcurrentHashMap<>();
-	private final ThreadLocal<List<ScanIndexItemMarker>> currentVersions = ThreadLocal.withInitial(ArrayList::new);
+	private final ThreadLocal<HistoryTracker> history = new ThreadLocal<>();
 
 	private final AlfXmlIndex fileIndex;
 	private final AlfXmlIndex folderIndex;
@@ -350,10 +365,7 @@ public class AlfImportDelegateFactory
 		thisMarker.setTargetName(contentPath.getFileName().toString());
 		thisMarker.setNumber(BigDecimal.ONE);
 
-		List<ScanIndexItemMarker> markerList = new ArrayList<>(1);
-		markerList.add(thisMarker);
-
-		final ScanIndexItem item = thisMarker.getItem(markerList);
+		final ScanIndexItem item = thisMarker.getItem();
 		try {
 			this.fileIndex.marshal(item);
 		} catch (Exception e) {
@@ -684,12 +696,7 @@ public class AlfImportDelegateFactory
 			}
 
 			final ScanIndexItemMarker thisMarker = generateMissingFolderMarker(parent, name, baseFile);
-			List<ScanIndexItemMarker> markerList = new ArrayList<>();
-			markerList.add(thisMarker);
-
-			ScanIndexItem item = thisMarker.getItem(markerList);
-			markerList.clear();
-
+			ScanIndexItem item = thisMarker.getItem();
 			try {
 				FileUtils.forceMkdir(baseFile);
 				this.folderIndex.marshal(item);
@@ -723,12 +730,11 @@ public class AlfImportDelegateFactory
 		return thisMarker;
 	}
 
-	protected final void resetIndex() {
-		List<ScanIndexItemMarker> markerList = this.currentVersions.get();
-		if (markerList != null) {
-			markerList.clear();
+	protected final void resetHistory() {
+		HistoryTracker history = this.history.get();
+		if (history != null) {
+			history.reset();
 		}
-		this.currentVersions.remove();
 	}
 
 	protected final void storeToIndex(final AlfImportContext ctx, final boolean folder,
@@ -739,23 +745,34 @@ public class AlfImportDelegateFactory
 
 		final ScanIndexItemMarker thisMarker = generateItemMarker(ctx, folder, cmfObject, content, contentFile,
 			metadataFile, type);
-		List<ScanIndexItemMarker> markerList = null;
+		HistoryTracker history = null;
 		switch (type) {
 			case RENDITION_ROOT:
 			case RENDITION_TYPE:
 			case RENDITION_ENTRY:
-				markerList = new ArrayList<>(1);
+				history = new HistoryTracker(cmfObject);
 				break;
 
 			case NORMAL:
-				markerList = this.currentVersions.get();
+				history = this.history.get();
+				if (history == null) {
+					history = new HistoryTracker(cmfObject);
+				}
 				break;
 
 			default:
 				break;
 		}
 
-		markerList.add(thisMarker);
+		if (!StringUtils.equals(history.object.getHistoryId(), cmfObject.getHistoryId())) {
+			throw new ImportException(String.format(
+				"History mixup!! Attempted to add %s [%s](%s) with history ID [%s] to history for %s [%s](%s) with history ID [%s]",
+				cmfObject.getType(), cmfObject.getLabel(), cmfObject.getId(), cmfObject.getHistoryId(),
+				history.object.getType(), history.object.getLabel(), history.object.getId(),
+				history.object.getHistoryId()));
+		}
+
+		history.versions.add(thisMarker);
 
 		if (!thisMarker.isLastVersion()) {
 			// more versions to come, so we simply keep going...
@@ -769,7 +786,7 @@ public class AlfImportDelegateFactory
 			// thus a copy must be made and the version number adjusted so it's the last
 			// version number (i.e. version count + 1) since we're appending a version
 			// at the end of the version history
-			headMarker = markerList.get(thisMarker.getHeadIndex() - 1);
+			headMarker = history.versions.get(thisMarker.getHeadIndex() - 1);
 			headMarker = headMarker.clone();
 			CmfProperty<CmfValue> versionCount = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
 			BigDecimal number = headMarker.getNumber();
@@ -779,18 +796,18 @@ public class AlfImportDelegateFactory
 			headMarker.setNumber(number);
 			headMarker.setContent(headMarker.getContent());
 			headMarker.setMetadata(headMarker.getMetadata());
-			markerList.add(headMarker);
+			history.versions.add(headMarker);
 		}
 
-		ScanIndexItem item = headMarker.getItem(markerList);
-		markerList.clear();
-
+		ScanIndexItem item = headMarker.getItem(history.versions);
 		try {
 			(item.isDirectory() ? this.folderIndex : this.fileIndex).marshal(item);
 		} catch (Exception e) {
 			throw new ImportException(
 				String.format("Failed to serialize the %s to XML: %s", item.isDirectory() ? "folder" : "file", item),
 				e);
+		} finally {
+			history.reset();
 		}
 	}
 
