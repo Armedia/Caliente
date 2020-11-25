@@ -30,15 +30,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.activation.MimeType;
 import javax.activation.MimeTypeParseException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
+import com.armedia.commons.utilities.concurrent.ConcurrentTools;
 
 import eu.medsea.mimeutil.MimeUtil;
 
@@ -51,9 +52,7 @@ import eu.medsea.mimeutil.MimeUtil;
  */
 public class MimeTools {
 	private static final String DEFAULT_MIME_STRING = "application/octet-stream";
-	private static final Object MIME_LOCK = new Object();
-	private static final Map<String, Boolean> MIME_VALID = new ConcurrentHashMap<>();
-	private static final Map<String, Reference<MimeType>> MIME_CACHE = new ConcurrentHashMap<>();
+	private static final ConcurrentMap<String, Pair<Boolean, MimeType>> MIME_CACHE = new ConcurrentHashMap<>();
 
 	public static final MimeType DEFAULT_MIME_TYPE;
 	public static final MimeType UNKNOWN;
@@ -69,29 +68,23 @@ public class MimeTools {
 		MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.ExtensionMimeDetector");
 	}
 
+	private static MimeType canonicalize(String type) {
+		try {
+			return new MimeType(type);
+		} catch (MimeTypeParseException e) {
+			return null;
+		}
+	}
+
 	public static MimeType resolveMimeType(String type) {
 		if (type == null) { return null; }
-		Boolean valid = MimeTools.MIME_VALID.get(type);
-		Reference<MimeType> ret = MimeTools.MIME_CACHE.get(type);
-		if ((valid == null) || (ret == null) || (ret.get() == null)) {
-			synchronized (MimeTools.MIME_LOCK) {
-				valid = MimeTools.MIME_VALID.get(type);
-				ret = MimeTools.MIME_CACHE.get(type);
-				if ((valid == null) || (ret == null) || (ret.get() == null)) {
-					try {
-						ret = new WeakReference<>(new MimeType(type));
-						MimeTools.MIME_CACHE.put(type, ret);
-						valid = true;
-					} catch (MimeTypeParseException e) {
-						ret = null;
-						valid = false;
-					}
-					MimeTools.MIME_VALID.put(type, valid);
-					MimeTools.MIME_LOCK.notify();
-				}
-			}
+		final MimeType key = MimeTools.canonicalize(type);
+		if (key != null) {
+			type = key.toString();
 		}
-		return (ret != null ? ret.get() : null);
+		Pair<Boolean, MimeType> data = ConcurrentTools.createIfAbsent(MimeTools.MIME_CACHE, type,
+			(t) -> Pair.of(key != null, key));
+		return ((data != null) && data.getKey() ? data.getValue() : null);
 	}
 
 	/**

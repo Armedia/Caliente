@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<stores xmlns="http://www.armedia.com/ns/caliente/stores"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/stores http://www.armedia.com/ns/caliente/stores.xsd">
+	<settings>
+		<setting name="target">${user.dir}/caliente</setting>
+		<setting name="dir.metadata">${dir.root}/db</setting>
+		<setting name="dir.content">${dir.root}/streams</setting>
+		<setting name="dir.content.organizer">hierarchical</setting>
+
+		<!-- H2 Support -->
+		<setting name="db.driver">org.h2.Driver</setting>
+		<setting name="db.type">h2</setting>
+		<!-- TODO: Add ;IFEXISTS=TRUE here but only for import mode? -->
+		<setting name="db.flags">AUTO_SERVER=TRUE;MODE=PostgreSQL;TRACE_LEVEL_FILE=4;CACHE_SIZE=262144</setting>
+	</settings>
+
+	<objectstore id="default">
+		<type>jdbc</type>
+		<settings>
+			<setting name="location.type">pooled</setting>
+			<setting name="jdbc.url">jdbc:${db.type}:${dir.metadata}/${db.name};${db.flags}</setting>
+			<setting name="jdbc.driver">${db.driver}</setting>
+		</settings>
+	</objectstore>
+
+	<contentstore id="default">
+		<type>local</type>
+		<settings>
+			<setting name="base.dir">${dir.content}</setting>
+			<setting name="uri.organizer">${dir.content.organizer}</setting>
+			<setting name="force.safe.filenames">false</setting>
+			<setting name="safe.filename.encoding">UTF-8</setting>
+			<setting name="fix.filenames">true</setting>
+			<setting name="fail.on.collisions">false</setting>
+			<setting name="ignore.extra.filename.info">false</setting>
+			<setting name="use.windows.fix">true</setting>
+		</settings>
+	</contentstore>
+
+	<contentstore id="direct">
+		<type>local</type>
+		<settings>
+			<setting name="base.dir">${dir.content}</setting>
+			<setting name="uri.organizer">localfs</setting>
+			<setting name="force.safe.filenames">false</setting>
+			<setting name="safe.filename.encoding">UTF-8</setting>
+			<setting name="fix.filenames">true</setting>
+			<setting name="use.windows.fix">true</setting>
+			<setting name="fail.on.collisions">false</setting>
+			<setting name="ignore.descriptor">true</setting>
+		</settings>
+	</contentstore>
+</stores>

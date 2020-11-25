@@ -280,7 +280,7 @@ public final class BulkImportManager {
 			Stream<ScanIndexItem> s = BulkImportManager.scanItems(p, filter);
 			if (s != null) { return s; }
 		}
-		return Stream.empty();
+		return null;
 	}
 
 	/**

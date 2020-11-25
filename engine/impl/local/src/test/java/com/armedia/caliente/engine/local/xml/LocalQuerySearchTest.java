@@ -70,7 +70,7 @@ public class LocalQuerySearchTest {
 
 	@Test
 	public void testSql() {
-		final LocalQuerySearch lq = new LocalQuerySearch();
+		final LocalSearchBySql lq = new LocalSearchBySql();
 		List<Triple<String, Class<? extends Throwable>, Object>> data = new LinkedList<>();
 
 		data.add(Triple.of(null, null, null));
@@ -84,7 +84,7 @@ public class LocalQuerySearchTest {
 
 	@Test
 	public void testSkip() {
-		final LocalQuerySearch lq = new LocalQuerySearch();
+		final LocalSearchBySql lq = new LocalSearchBySql();
 		List<Triple<Integer, Class<? extends Throwable>, Object>> data = new LinkedList<>();
 
 		data.add(Triple.of(null, null, null));
@@ -97,7 +97,7 @@ public class LocalQuerySearchTest {
 
 	@Test
 	public void testCount() {
-		final LocalQuerySearch lq = new LocalQuerySearch();
+		final LocalSearchBySql lq = new LocalSearchBySql();
 		List<Triple<Integer, Class<? extends Throwable>, Object>> data = new LinkedList<>();
 
 		data.add(Triple.of(null, null, null));
@@ -110,7 +110,7 @@ public class LocalQuerySearchTest {
 
 	@Test
 	public void testId() {
-		final LocalQuerySearch lq = new LocalQuerySearch();
+		final LocalSearchBySql lq = new LocalSearchBySql();
 		List<Triple<String, Class<? extends Throwable>, Object>> data = new LinkedList<>();
 
 		data.add(Triple.of(null, null, null));
@@ -124,7 +124,7 @@ public class LocalQuerySearchTest {
 
 	@Test
 	public void testDataSource() {
-		final LocalQuerySearch lq = new LocalQuerySearch();
+		final LocalSearchBySql lq = new LocalSearchBySql();
 		List<Triple<String, Class<? extends Throwable>, Object>> data = new LinkedList<>();
 
 		data.add(Triple.of(null, null, null));
@@ -138,7 +138,7 @@ public class LocalQuerySearchTest {
 
 	@Test
 	public void testPathColumns() {
-		final LocalQuerySearch lq = new LocalQuerySearch();
+		final LocalSearchBySql lq = new LocalSearchBySql();
 		List<String> pc = lq.getPathColumns();
 		for (int i = 0; i < 100; i++) {
 			Assertions.assertSame(pc, lq.getPathColumns());
@@ -147,7 +147,7 @@ public class LocalQuerySearchTest {
 
 	@Test
 	public void testPostProcessors() {
-		final LocalQuerySearch lq = new LocalQuerySearch();
+		final LocalSearchBySql lq = new LocalSearchBySql();
 		List<LocalQueryPostProcessor> pp = lq.getPostProcessors();
 		for (int i = 0; i < 100; i++) {
 			Assertions.assertSame(pp, lq.getPostProcessors());
