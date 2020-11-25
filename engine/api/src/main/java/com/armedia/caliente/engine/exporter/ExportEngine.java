@@ -866,6 +866,7 @@ public abstract class ExportEngine<//
 		} else {
 			ret = Stream.empty();
 		}
+		ret = ret.filter(Objects::nonNull);
 		return ret;
 	}
 

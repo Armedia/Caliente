@@ -28,9 +28,9 @@ package com.armedia.caliente.tools;
 
 import java.util.function.Supplier;
 
-import com.armedia.caliente.cli.Option;
-import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.filter.IntegerValueFilter;
+import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionImpl;
+import com.armedia.commons.utilities.cli.filter.IntegerValueFilter;
 
 public enum CLIParam implements Supplier<Option> {
 	//

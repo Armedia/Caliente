@@ -31,6 +31,6 @@ import javax.xml.bind.annotation.XmlRegistry;
 @XmlRegistry
 public class ObjectFactory {
 
-	public static final String NAMESPACE = "http://www.armedia.com/ns/caliente/engine/local";
+	public static final String NS = "http://www.armedia.com/ns/caliente/engine/local";
 
 }

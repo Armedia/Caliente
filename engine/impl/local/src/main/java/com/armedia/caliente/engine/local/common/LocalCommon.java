@@ -67,7 +67,8 @@ public final class LocalCommon {
 	public static LocalRoot getLocalRoot(CfgTools cfg) throws IOException {
 		Path root = LocalCommon.getRootDirectory(cfg);
 		if (root == null) { throw new IllegalArgumentException("Must provide a root directory to work from"); }
-		return new LocalRoot(root);
+		LocalCaseFolding blindCaseFolding = cfg.getEnum(LocalSetting.BLIND_MODE, LocalCaseFolding.class);
+		return new LocalRoot(root, blindCaseFolding);
 	}
 
 	public static String calculateId(Path path) {

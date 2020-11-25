@@ -55,25 +55,32 @@
 		<xsd:attribute name="id" type="tns:noSpaces.t" use="required" />
 	</xsd:complexType>
 
-	<xsd:complexType name="localQuerySearch.t">
+	<xsd:complexType name="localQueryListFile.t">
+		<xsd:simpleContent>
+			<xsd:extension base="tns:nonEmpty.t">
+				<xsd:attribute name="encoding" type="tns:noSpaces.t" use="optional" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="localSearchByList.t">
 		<xsd:sequence>
-			<xsd:element name="sql" type="tns:nonEmpty.t" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="skip" type="xsd:int" minOccurs="0" maxOccurs="1" default="0" />
-			<xsd:element name="count" type="xsd:int" minOccurs="0" maxOccurs="1" default="0" />
-			<xsd:element name="path-columns" minOccurs="1" maxOccurs="1">
-				<xsd:complexType>
-					<xsd:sequence>
-						<xsd:element name="path-column" type="tns:nonEmpty.t" minOccurs="1" maxOccurs="unbounded" />
-					</xsd:sequence>
-				</xsd:complexType>
-			</xsd:element>
+			<xsd:choice>
+				<xsd:sequence>
+					<xsd:element name="file" type="tns:nonEmpty.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="encoding" type="xsd:string" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="matching" type="tns:nonEmpty.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="skip" type="xsd:int" minOccurs="0" maxOccurs="1" default="0" />
+					<xsd:element name="count" type="xsd:int" minOccurs="0" maxOccurs="1" default="0" />
+				</xsd:sequence>
+			</xsd:choice>
 			<xsd:element name="post-processors" minOccurs="0" maxOccurs="1">
 				<xsd:complexType>
 					<xsd:sequence minOccurs="0" maxOccurs="unbounded">
 						<xsd:element name="post-processor" type="tns:localQueryPostProcessor.t" />
 					</xsd:sequence>
 				</xsd:complexType>
-			    <xsd:key name="singlePostProcessorAttribute1">
+			    <xsd:key name="listSearchProcessorId">
 			        <xsd:selector xpath="tns:post-processor" />
 			        <xsd:field xpath="@ref|@type" />
 			    </xsd:key>
@@ -81,7 +88,72 @@
 		</xsd:sequence>
 
 		<xsd:attribute name="id" type="tns:noSpaces.t" use="required" />
-		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
+	</xsd:complexType>
+
+	<xsd:complexType name="localSearchByPath.t">
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:sequence>
+					<xsd:element name="path" type="tns:noSpaces.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="matching" type="tns:nonEmpty.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="maxDepth" type="xsd:int" minOccurs="0" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:choice>
+			<xsd:element name="post-processors" minOccurs="0" maxOccurs="1">
+				<xsd:complexType>
+					<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+						<xsd:element name="post-processor" type="tns:localQueryPostProcessor.t" />
+					</xsd:sequence>
+				</xsd:complexType>
+			    <xsd:key name="pathSearchProcessorId">
+			        <xsd:selector xpath="tns:post-processor" />
+			        <xsd:field xpath="@ref|@type" />
+			    </xsd:key>
+			</xsd:element>
+		</xsd:sequence>
+
+		<xsd:attribute name="id" type="tns:noSpaces.t" use="required" />
+	</xsd:complexType>
+
+	<xsd:complexType name="localSearchBySql.t">
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:sequence>
+					<xsd:element name="dataSource" type="tns:noSpaces.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="sql" type="tns:nonEmpty.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="skip" type="xsd:int" minOccurs="0" maxOccurs="1" default="0" />
+					<xsd:element name="count" type="xsd:int" minOccurs="0" maxOccurs="1" default="0" />
+					<xsd:element name="path-columns" minOccurs="1" maxOccurs="1">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="path-column" type="tns:nonEmpty.t" minOccurs="1" maxOccurs="unbounded" />
+							</xsd:sequence>
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:sequence>
+				<xsd:sequence>
+					<xsd:choice minOccurs="0" maxOccurs="unbounded">
+						<xsd:element name="directory" type="tns:nonEmpty.t" />
+						<!--
+						<xsd:element name="list" type="tns:localQueryListFile.t" />
+						-->
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:choice>
+			<xsd:element name="post-processors" minOccurs="0" maxOccurs="1">
+				<xsd:complexType>
+					<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+						<xsd:element name="post-processor" type="tns:localQueryPostProcessor.t" />
+					</xsd:sequence>
+				</xsd:complexType>
+			    <xsd:key name="sqlSearchProcessorId">
+			        <xsd:selector xpath="tns:post-processor" />
+			        <xsd:field xpath="@ref|@type" />
+			    </xsd:key>
+			</xsd:element>
+		</xsd:sequence>
+
+		<xsd:attribute name="id" type="tns:noSpaces.t" use="required" />
 		<xsd:attribute name="failOnError" type="xsd:boolean" use="optional" default="false" />
 		<xsd:attribute name="failOnMissing" type="xsd:boolean" use="optional" default="false" />
 	</xsd:complexType>
@@ -129,6 +201,7 @@
 		<xsd:complexType>
 			<xsd:sequence>
 				<xsd:element name="root-path" type="tns:nonEmpty.t" minOccurs="1" maxOccurs="1" />
+				<xsd:element name="fail-on-invalid-path" type="xsd:boolean" minOccurs="0" maxOccurs="1" />
 				<xsd:element name="data-sources" minOccurs="0" maxOccurs="1">
 					<xsd:complexType>
 						<xsd:sequence>
@@ -162,9 +235,11 @@
 				</xsd:element>
 				<xsd:element name="searches" minOccurs="0" maxOccurs="1">
 					<xsd:complexType>
-						<xsd:sequence>
-							<xsd:element name="search" type="tns:localQuerySearch.t" minOccurs="0" maxOccurs="unbounded" />
-						</xsd:sequence>
+						<xsd:choice minOccurs="0" maxOccurs="unbounded">
+							<xsd:element name="sql" type="tns:localSearchBySql.t" />
+							<xsd:element name="dir" type="tns:localSearchByPath.t" />
+							<xsd:element name="list" type="tns:localSearchByList.t" />
+						</xsd:choice>
 					</xsd:complexType>
 					<xsd:key name="PK.Search">
 						<xsd:selector xpath="tns:search" />
@@ -204,7 +279,7 @@
 		</xsd:complexType>
 		<xsd:keyref name="FK.DataSource.Search" refer="tns:PK.DataSource">
 			<xsd:selector xpath="tns:searches/tns:search" />
-			<xsd:field xpath="@dataSource" />
+			<xsd:field xpath="tns:dataSource" />
 		</xsd:keyref>
 		<xsd:keyref name="FK.DataSource.HistoryId" refer="tns:PK.DataSource">
 			<xsd:selector xpath="tns:history-ids/tns:history-id" />

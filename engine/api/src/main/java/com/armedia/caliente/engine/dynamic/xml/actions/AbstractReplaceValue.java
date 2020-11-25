@@ -94,13 +94,15 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 			flags = Pattern.CASE_INSENSITIVE;
 		}
 
+		final Pattern pattern = Pattern.compile(regex, flags);
+
 		if (!candidate.isMultivalued()) {
 			// Cardinality is irrelevant...
 			Object oldValue = candidate.getValue();
 			String oldString = ((oldValue != null) ? Tools.toString(oldValue) : null);
 			Object newValue = null;
 			if (oldString != null) {
-				newValue = Pattern.compile(regex, flags).matcher(oldString).replaceAll(replacement);
+				newValue = pattern.matcher(oldString).replaceAll(replacement);
 			}
 			candidate.setValue(newValue);
 			return null;
@@ -116,7 +118,7 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 						String oldString = Tools.toString(oldValue);
 						String newString = null;
 						if (oldString != null) {
-							newString = Pattern.compile(regex, flags).matcher(oldString).replaceAll(replacement);
+							newString = pattern.matcher(oldString).replaceAll(replacement);
 						}
 						newValues.add(newString);
 					}

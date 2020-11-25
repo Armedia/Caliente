@@ -503,6 +503,128 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 	}
 
 	@Override
+	protected CmfObject<CmfValue> loadLatestObject(JdbcOperation operation, CmfObject.Archetype type, String historyId)
+		throws CmfStorageException {
+		final Connection connection = operation.getConnection();
+		try {
+			PreparedStatement objectPS = null;
+			PreparedStatement secondariesPS = null;
+			PreparedStatement parentsPS = null;
+			PreparedStatement attributePS = null;
+			PreparedStatement attributeValuePS = null;
+			PreparedStatement propertyPS = null;
+			PreparedStatement propertyValuePS = null;
+			try {
+				objectPS = connection
+					.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECT_HISTORY_LATEST_BY_HISTORY_ID));
+				secondariesPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_SECONDARIES));
+				parentsPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PARENT_IDS));
+				attributePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTES));
+				attributeValuePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTE_VALUES));
+				propertyPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PROPERTIES));
+				propertyValuePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PROPERTY_VALUES));
+
+				ResultSet objectRS = null;
+				ResultSet secondariesRS = null;
+				ResultSet parentsRS = null;
+				ResultSet attributeRS = null;
+				ResultSet propertyRS = null;
+				ResultSet valueRS = null;
+
+				objectPS.setString(1, type.name());
+				objectPS.setString(2, historyId);
+				objectRS = objectPS.executeQuery();
+				try {
+					while (objectRS.next()) {
+						final CmfObject<CmfValue> obj;
+						try {
+							final int objNum = objectRS.getInt("object_number");
+							final String objId = objectRS.getString("object_id");
+							final String objLabel = objectRS.getString("object_label");
+
+							this.log.info("De-serializing {} object #{} [{}]({})", type, objNum, objLabel, objId);
+
+							secondariesPS.setString(1, objId);
+							secondariesRS = secondariesPS.executeQuery();
+
+							parentsPS.setString(1, objId);
+							parentsRS = parentsPS.executeQuery();
+
+							obj = loadObject(objectRS, parentsRS, secondariesRS);
+							if (this.log.isTraceEnabled()) {
+								this.log.trace("De-serialized {} object #{}: {}", type, objNum, obj);
+							} else {
+								this.log.debug("De-serialized {} object #{} [{}]({})", type, objNum, objLabel, objId);
+							}
+
+							attributePS.clearParameters();
+							attributePS.setString(1, objId);
+							attributeRS = attributePS.executeQuery();
+							try {
+								loadAttributes(attributeRS, obj);
+							} finally {
+								JdbcTools.closeQuietly(attributeRS);
+							}
+
+							attributeValuePS.clearParameters();
+							attributeValuePS.setString(1, objId);
+							for (CmfAttribute<CmfValue> att : obj.getAttributes()) {
+								attributeValuePS.setString(2, att.getName());
+								valueRS = attributeValuePS.executeQuery();
+								try {
+									loadValues(CmfValueSerializer.get(att.getType()), valueRS, att);
+								} finally {
+									JdbcTools.closeQuietly(valueRS);
+								}
+							}
+
+							propertyPS.clearParameters();
+							propertyPS.setString(1, objId);
+							propertyRS = propertyPS.executeQuery();
+							try {
+								loadProperties(propertyRS, obj);
+							} finally {
+								JdbcTools.closeQuietly(propertyRS);
+							}
+
+							propertyValuePS.clearParameters();
+							propertyValuePS.setString(1, objId);
+							for (CmfProperty<CmfValue> prop : obj.getProperties()) {
+								propertyValuePS.setString(2, prop.getName());
+								valueRS = propertyValuePS.executeQuery();
+								try {
+									loadValues(CmfValueSerializer.get(prop.getType()), valueRS, prop);
+								} finally {
+									JdbcTools.closeQuietly(valueRS);
+								}
+							}
+						} catch (SQLException e) {
+							throw handlerExceptionUnhandled(e);
+						}
+						return obj;
+					}
+					return null;
+				} finally {
+					JdbcTools.closeQuietly(parentsRS);
+					JdbcTools.closeQuietly(secondariesRS);
+					JdbcTools.closeQuietly(objectRS);
+				}
+			} finally {
+				JdbcTools.closeQuietly(propertyValuePS);
+				JdbcTools.closeQuietly(propertyPS);
+				JdbcTools.closeQuietly(attributeValuePS);
+				JdbcTools.closeQuietly(attributePS);
+				JdbcTools.closeQuietly(parentsPS);
+				JdbcTools.closeQuietly(secondariesPS);
+				JdbcTools.closeQuietly(objectPS);
+			}
+		} catch (SQLException e) {
+			throw new CmfStorageException(
+				String.format("Exception raised trying to deserialize objects of type [%s]", type), e);
+		}
+	}
+
+	@Override
 	protected int loadObjects(JdbcOperation operation, final CmfObject.Archetype type, Collection<String> ids,
 		CmfObjectHandler<CmfValue> handler) throws CmfStorageException {
 		return loadObjects(operation, type, handler, ids, false);

@@ -45,11 +45,13 @@ public class LocalExportDelegateFactory
 
 	private final boolean copyContent;
 	private final UserPrincipalLookupService userDb;
+	private final boolean minimalDiskAccess;
 
 	protected LocalExportDelegateFactory(LocalExportEngine engine, CfgTools configuration) throws Exception {
 		super(engine, configuration);
 		this.copyContent = configuration.getBoolean(LocalSetting.COPY_CONTENT);
 		this.userDb = FileSystems.getDefault().getUserPrincipalLookupService();
+		this.minimalDiskAccess = configuration.getBoolean(LocalSetting.MINIMAL_DISK_ACCESS);
 	}
 
 	public final LocalRoot getRoot() {
@@ -62,6 +64,10 @@ public class LocalExportDelegateFactory
 
 	public final boolean isCopyContent() {
 		return this.copyContent;
+	}
+
+	public final boolean isMinimalDiskAccess() {
+		return this.minimalDiskAccess;
 	}
 
 	public final void loadAttributes(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
