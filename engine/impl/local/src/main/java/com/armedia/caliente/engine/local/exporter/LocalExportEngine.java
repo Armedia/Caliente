@@ -37,7 +37,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -48,6 +48,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
@@ -55,6 +56,7 @@ import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.caliente.engine.local.common.LocalCaseFolding;
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionFactory;
@@ -192,6 +194,7 @@ public class LocalExportEngine extends
 		// First, identify the source...
 		Source src = new Source(settings);
 		Path root = null;
+		LocalCaseFolding blindCaseFolding = null;
 		if (src.searchType == SearchType.QUERY) {
 			Path path = LocalExportEngine.sanitizePath(src.data, Files::isRegularFile);
 			try {
@@ -202,6 +205,10 @@ public class LocalExportEngine extends
 			}
 			root = this.localQueryService.getRoot();
 			this.versionFinder = new LocalJdbcVersionFinder(this.localQueryService);
+
+			// If we're avoiding disk access because we want to blindly trust what JDBC
+			// tells us... we do that by configuring a folding mode
+			blindCaseFolding = settings.getEnum(LocalSetting.BLIND_MODE, LocalCaseFolding.class);
 		} else {
 			this.localQueryService = null;
 			root = LocalExportEngine.sanitizePath(src.data, Files::isDirectory);
@@ -247,10 +254,25 @@ public class LocalExportEngine extends
 					throw new ExportException(
 						String.format("Support for version scheme [%s] is not yet implemented", layoutName));
 			}
+
+			// If we want to minimize the disk access hits during scanning, we set a blind mode but
+			// in reality we avoid folding completely since we'll always be getting the exact
+			// filename from path scans, so no need to fold...right?
+			blindCaseFolding = settings.getEnum(LocalSetting.BLIND_MODE, LocalCaseFolding.class);
+			if (blindCaseFolding != null) {
+				if (blindCaseFolding != LocalCaseFolding.SAME) {
+					output.info("" //
+						+ "Case folding mode {} was specified, but will be ignored for local " //
+						+ "filesystem scanning mode, the raw filenames will be used but disk " //
+						+ "access will be minimized" //
+					);
+				}
+				blindCaseFolding = LocalCaseFolding.SAME;
+			}
 		}
 
 		try {
-			this.root = new LocalRoot(root);
+			this.root = new LocalRoot(root, blindCaseFolding);
 		} catch (IOException e) {
 			throw new ExportException(String.format("Failed to validate the root path at [%s]", root), e);
 		}
@@ -263,8 +285,8 @@ public class LocalExportEngine extends
 		return this.localQueryService.getHistoryId(objectId);
 	}
 
-	protected final Map<String, Path> getHistoryMembers(String historyId) throws Exception {
-		if (this.localQueryService == null) { return Collections.emptyMap(); }
+	protected final List<Pair<String, Path>> getHistoryMembers(String historyId) throws Exception {
+		if (this.localQueryService == null) { return Collections.emptyList(); }
 		return this.localQueryService.getVersionList(historyId);
 	}
 

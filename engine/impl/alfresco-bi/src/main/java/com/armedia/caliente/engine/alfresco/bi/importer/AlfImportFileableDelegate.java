@@ -375,23 +375,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		// Now, get the head object
 		currentProperty = "cm:name";
 		if (includeProperty(currentProperty, targetType)) {
-			CmfObject<CmfValue> head = this.cmfObject;
-			try {
-				head = ctx.getHeadObject(this.cmfObject);
-			} catch (CmfStorageException e) {
-				this.log.warn("Failed to load the HEAD object for {} batch [{}]", this.cmfObject.getType().name(),
-					this.cmfObject.getHistoryId(), e);
-			}
-			String name = ctx.getObjectName(head);
-
-			CmfProperty<CmfValue> unfiledProp = this.cmfObject.getProperty(IntermediateProperty.IS_UNFILED);
-			final boolean unfiled = (unfiledProp != null) && unfiledProp.hasValues()
-				&& unfiledProp.getValue().asBoolean();
-			if (unfiled) {
-				// This helps protect against duplicate object names
-				name = this.factory.getUnfiledName(ctx, this.cmfObject);
-			}
-			p.setProperty(currentProperty, name);
+			p.setProperty(currentProperty, this.factory.getFinalName(ctx, this.cmfObject));
 		}
 	}
 
@@ -516,7 +500,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			return outcomes;
 		} finally {
 			if (!ok) {
-				this.factory.resetIndex();
+				this.factory.resetHistory(this.cmfObject);
 			}
 		}
 	}

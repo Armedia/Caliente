@@ -58,6 +58,7 @@ import javax.xml.validation.Schema;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
@@ -79,6 +80,7 @@ import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.alfresco.bi.BulkImportManager;
 import com.armedia.caliente.tools.alfresco.bi.xml.ScanIndex;
@@ -149,6 +151,20 @@ public class AlfImportDelegateFactory
 		}
 	}
 
+	private final class HistoryTracker {
+		private final List<ScanIndexItemMarker> versions = new ArrayList<>();
+		private final CmfObject<?> object;
+
+		private HistoryTracker(CmfObject<?> object) {
+			this.object = object;
+		}
+
+		private void reset() {
+			this.versions.clear();
+			AlfImportDelegateFactory.this.history.remove(this.object.getHistoryId());
+		}
+	}
+
 	private static final BigDecimal LAST_INDEX = new BigDecimal(Long.MAX_VALUE);
 
 	private static final String SCHEMA_NAME = "alfresco-model.xsd";
@@ -167,6 +183,7 @@ public class AlfImportDelegateFactory
 	private final Path contentRoot;
 	private final Path metadataRoot;
 	private final BulkImportManager biManager;
+	private final boolean renderManifest;
 
 	private final Properties userLoginMap = new Properties();
 
@@ -174,7 +191,7 @@ public class AlfImportDelegateFactory
 	private final Map<String, AlfrescoType> defaultTypes;
 
 	private final ConcurrentMap<String, VirtualDocument> vdocs = new ConcurrentHashMap<>();
-	private final ThreadLocal<List<ScanIndexItemMarker>> currentVersions = ThreadLocal.withInitial(ArrayList::new);
+	private final ConcurrentMap<String, HistoryTracker> history = new ConcurrentHashMap<>();
 
 	private final AlfXmlIndex fileIndex;
 	private final AlfXmlIndex folderIndex;
@@ -190,6 +207,7 @@ public class AlfImportDelegateFactory
 		this.biManager = engine.getBulkImportManager();
 		this.schema = engine.getSchema();
 		this.defaultTypes = engine.getDefaultTypes();
+		this.renderManifest = configuration.getBoolean(AlfSetting.GENERATE_INGESTION_INDEX);
 
 		FileUtils.forceMkdir(this.biManager.getContentPath().toFile());
 		this.contentRoot = this.biManager.getContentPath();
@@ -331,7 +349,7 @@ public class AlfImportDelegateFactory
 	}
 
 	private final void storeManifestToScanIndex() throws ImportException {
-		if (!this.manifestSerialized.compareAndSet(false, true)) {
+		if (!this.renderManifest || !this.manifestSerialized.compareAndSet(false, true)) {
 			// This will only happen once
 			return;
 		}
@@ -347,10 +365,7 @@ public class AlfImportDelegateFactory
 		thisMarker.setTargetName(contentPath.getFileName().toString());
 		thisMarker.setNumber(BigDecimal.ONE);
 
-		List<ScanIndexItemMarker> markerList = new ArrayList<>(1);
-		markerList.add(thisMarker);
-
-		final ScanIndexItem item = thisMarker.getItem(markerList);
+		final ScanIndexItem item = thisMarker.getItem();
 		try {
 			this.fileIndex.marshal(item);
 		} catch (Exception e) {
@@ -386,6 +401,42 @@ public class AlfImportDelegateFactory
 
 	protected Path getContentRelativePath(File contentFile) {
 		return this.contentRoot.relativize(contentFile.toPath());
+	}
+
+	protected String getFinalName(final AlfImportContext ctx, CmfObject<CmfValue> cmfObject) {
+		String finalName = null;
+
+		if (StringUtils.isEmpty(finalName)) {
+			CmfValue unfiled = getPropertyValue(cmfObject, IntermediateProperty.IS_UNFILED);
+			if ((unfiled != null) && unfiled.isNotNull() && unfiled.asBoolean()) {
+				// This helps protect against duplicate object names
+				finalName = getUnfiledName(ctx, cmfObject);
+			}
+		}
+
+		if (StringUtils.isEmpty(finalName)) {
+			CmfValue fixedName = getPropertyValue(cmfObject, IntermediateProperty.FIXED_NAME);
+			if ((fixedName != null) && fixedName.isNotNull()) {
+				finalName = fixedName.asString();
+			}
+		}
+
+		if (StringUtils.isEmpty(finalName)) {
+			CmfObject<CmfValue> head = cmfObject;
+			try {
+				head = ctx.getHeadObject(cmfObject);
+			} catch (CmfStorageException e) {
+				this.log.warn("Failed to load the HEAD object for {} batch [{}]", cmfObject.getType().name(),
+					cmfObject.getHistoryId(), e);
+			}
+			finalName = ctx.getObjectName(head);
+		}
+
+		if (StringUtils.isEmpty(finalName)) {
+			finalName = cmfObject.getName();
+		}
+
+		return finalName;
 	}
 
 	protected final ScanIndexItemMarker generateItemMarker(final AlfImportContext ctx, final boolean folder,
@@ -478,7 +529,22 @@ public class AlfImportDelegateFactory
 				IntermediateProperty.PARENT_TREE_IDS.encode(), cmfObject.getDescription()));
 		}
 
-		String targetPath = resolveTreeIds(ctx, sourcePath.asString());
+		String targetPath = null;
+
+		CmfValue fixedPath = getPropertyValue(cmfObject, IntermediateProperty.FIXED_PATH);
+		if (fixedPath != null) {
+			targetPath = fixedPath.asString();
+
+			if (!StringUtils.isEmpty(targetPath)) {
+				// The FIXED_PATH property is always absolute, but we need to generate
+				// a relative path here, so we do just that: remove any leading slashes
+				targetPath = targetPath.replaceAll("^/+", "");
+			}
+		}
+
+		if (targetPath == null) {
+			targetPath = resolveTreeIds(ctx, sourcePath.asString());
+		}
 
 		final boolean unfiled;
 		{
@@ -513,10 +579,9 @@ public class AlfImportDelegateFactory
 		}
 
 		// This is the base name, others may change it...
-		thisMarker.setTargetName(contentFile.getName());
+		thisMarker.setTargetName(getFinalName(ctx, cmfObject));
 		switch (type) {
 			case NORMAL:
-				thisMarker.setTargetName(ctx.getObjectName(cmfObject));
 				break;
 
 			case RENDITION_ROOT:
@@ -631,12 +696,7 @@ public class AlfImportDelegateFactory
 			}
 
 			final ScanIndexItemMarker thisMarker = generateMissingFolderMarker(parent, name, baseFile);
-			List<ScanIndexItemMarker> markerList = new ArrayList<>();
-			markerList.add(thisMarker);
-
-			ScanIndexItem item = thisMarker.getItem(markerList);
-			markerList.clear();
-
+			ScanIndexItem item = thisMarker.getItem();
 			try {
 				FileUtils.forceMkdir(baseFile);
 				this.folderIndex.marshal(item);
@@ -670,12 +730,16 @@ public class AlfImportDelegateFactory
 		return thisMarker;
 	}
 
-	protected final void resetIndex() {
-		List<ScanIndexItemMarker> markerList = this.currentVersions.get();
-		if (markerList != null) {
-			markerList.clear();
+	protected final HistoryTracker getHistoryTracker(CmfObject<?> object) {
+		return ConcurrentUtils.createIfAbsentUnchecked(this.history, object.getHistoryId(),
+			() -> new HistoryTracker(object));
+	}
+
+	protected final void resetHistory(CmfObject<?> object) {
+		HistoryTracker history = this.history.remove(object.getHistoryId());
+		if (history != null) {
+			history.reset();
 		}
-		this.currentVersions.remove();
 	}
 
 	protected final void storeToIndex(final AlfImportContext ctx, final boolean folder,
@@ -686,23 +750,30 @@ public class AlfImportDelegateFactory
 
 		final ScanIndexItemMarker thisMarker = generateItemMarker(ctx, folder, cmfObject, content, contentFile,
 			metadataFile, type);
-		List<ScanIndexItemMarker> markerList = null;
+		HistoryTracker history = null;
 		switch (type) {
 			case RENDITION_ROOT:
 			case RENDITION_TYPE:
 			case RENDITION_ENTRY:
-				markerList = new ArrayList<>(1);
+				history = new HistoryTracker(cmfObject);
 				break;
 
 			case NORMAL:
-				markerList = this.currentVersions.get();
+				history = getHistoryTracker(cmfObject);
+				if (!StringUtils.equals(history.object.getHistoryId(), cmfObject.getHistoryId())) {
+					throw new ImportException(String.format(
+						"History mixup!! Attempted to add %s [%s](%s) with history ID [%s] to history for %s [%s](%s) with history ID [%s]",
+						cmfObject.getType(), cmfObject.getLabel(), cmfObject.getId(), cmfObject.getHistoryId(),
+						history.object.getType(), history.object.getLabel(), history.object.getId(),
+						history.object.getHistoryId()));
+				}
 				break;
 
 			default:
 				break;
 		}
 
-		markerList.add(thisMarker);
+		history.versions.add(thisMarker);
 
 		if (!thisMarker.isLastVersion()) {
 			// more versions to come, so we simply keep going...
@@ -716,7 +787,7 @@ public class AlfImportDelegateFactory
 			// thus a copy must be made and the version number adjusted so it's the last
 			// version number (i.e. version count + 1) since we're appending a version
 			// at the end of the version history
-			headMarker = markerList.get(thisMarker.getHeadIndex() - 1);
+			headMarker = history.versions.get(thisMarker.getHeadIndex() - 1);
 			headMarker = headMarker.clone();
 			CmfProperty<CmfValue> versionCount = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
 			BigDecimal number = headMarker.getNumber();
@@ -726,18 +797,18 @@ public class AlfImportDelegateFactory
 			headMarker.setNumber(number);
 			headMarker.setContent(headMarker.getContent());
 			headMarker.setMetadata(headMarker.getMetadata());
-			markerList.add(headMarker);
+			history.versions.add(headMarker);
 		}
 
-		ScanIndexItem item = headMarker.getItem(markerList);
-		markerList.clear();
-
+		ScanIndexItem item = headMarker.getItem(history.versions);
 		try {
 			(item.isDirectory() ? this.folderIndex : this.fileIndex).marshal(item);
 		} catch (Exception e) {
 			throw new ImportException(
 				String.format("Failed to serialize the %s to XML: %s", item.isDirectory() ? "folder" : "file", item),
 				e);
+		} finally {
+			history.reset();
 		}
 	}
 
@@ -755,6 +826,12 @@ public class AlfImportDelegateFactory
 				// This should never happen, but we still look out for it
 				this.log.warn("Failed to marshal the VDoc XML for [{}]", vdoc, e);
 			}
+		}
+
+		for (String historyId : this.history.keySet()) {
+			HistoryTracker tracker = this.history.get(historyId);
+			this.log.error("Unclosed history {} from {} [{}]({}) with {} entries", historyId, tracker.object.getType(),
+				tracker.object.getLabel(), tracker.object.getId(), tracker.versions.size());
 		}
 
 		this.fileIndex.close();
