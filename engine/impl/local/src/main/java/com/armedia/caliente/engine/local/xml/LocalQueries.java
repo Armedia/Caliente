@@ -33,6 +33,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
@@ -44,16 +45,22 @@ import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSet;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-	"rootPath", "dataSourceDefinitions", "postProcessors", "searches", "historyIds", "versionLists", "metadata"
+	"rootPath", "failOnInvalidPath", "dataSourceDefinitions", "postProcessors", "searches", "historyIds",
+	"versionLists", "metadata"
 })
 @XmlRootElement(name = "local-queries")
 public class LocalQueries {
+
+	public static final boolean DEFAULT_FAIL_ON_INVALID_PATH = true;
 
 	@XmlTransient
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	@XmlElement(name = "root-path", required = false)
 	protected String rootPath;
+
+	@XmlElement(name = "fail-on-invalid-path", required = false)
+	protected Boolean failOnInvalidPath;
 
 	@XmlElementWrapper(name = "common-post-processors")
 	@XmlElement(name = "post-processors")
@@ -64,8 +71,12 @@ public class LocalQueries {
 	protected List<LocalQueryDataSource> dataSourceDefinitions;
 
 	@XmlElementWrapper(name = "searches", required = false)
-	@XmlElement(name = "search", required = false)
-	protected List<LocalQuerySearch> searches;
+	@XmlElements({
+		@XmlElement(name = "sql", type = LocalSearchBySql.class, required = false), //
+		@XmlElement(name = "dir", type = LocalSearchByPath.class, required = false), //
+		@XmlElement(name = "list", type = LocalSearchByList.class, required = false), //
+	})
+	protected List<LocalSearchBase> searches;
 
 	@XmlElementWrapper(name = "history-ids", required = false)
 	@XmlElement(name = "history-id", required = false)
@@ -87,6 +98,15 @@ public class LocalQueries {
 		this.rootPath = rootPath;
 	}
 
+	public boolean isFailOnInvalidPath() {
+		return (this.failOnInvalidPath != null ? this.failOnInvalidPath.booleanValue()
+			: LocalQueries.DEFAULT_FAIL_ON_INVALID_PATH);
+	}
+
+	public void setFailOnInvalidPath(Boolean failOnInvalidPath) {
+		this.failOnInvalidPath = failOnInvalidPath;
+	}
+
 	public List<LocalQueryDataSource> getDataSourceDefinitions() {
 		if (this.dataSourceDefinitions == null) {
 			this.dataSourceDefinitions = new ArrayList<>();
@@ -101,7 +121,7 @@ public class LocalQueries {
 		return this.postProcessors;
 	}
 
-	public List<LocalQuerySearch> getSearches() {
+	public List<LocalSearchBase> getSearches() {
 		if (this.searches == null) {
 			this.searches = new ArrayList<>();
 		}

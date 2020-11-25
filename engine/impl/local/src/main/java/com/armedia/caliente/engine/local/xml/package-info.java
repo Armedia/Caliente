@@ -17,5 +17,5 @@
  * You should have received a copy of the GNU Lesser General Public License along with Caliente. If
  * not, see <http://www.gnu.org/licenses/>. #L%
  *******************************************************************************/
-@javax.xml.bind.annotation.XmlSchema(namespace = ObjectFactory.NAMESPACE, elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
+@javax.xml.bind.annotation.XmlSchema(namespace = ObjectFactory.NS, elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
 package com.armedia.caliente.engine.local.xml;

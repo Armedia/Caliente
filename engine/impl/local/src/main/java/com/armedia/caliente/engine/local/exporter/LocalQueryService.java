@@ -1,13 +1,20 @@
 package com.armedia.caliente.engine.local.exporter;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -27,6 +34,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -49,9 +57,12 @@ import com.armedia.caliente.engine.local.xml.LocalQueries;
 import com.armedia.caliente.engine.local.xml.LocalQueryDataSource;
 import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessor;
 import com.armedia.caliente.engine.local.xml.LocalQueryPostProcessorDef;
-import com.armedia.caliente.engine.local.xml.LocalQuerySearch;
 import com.armedia.caliente.engine.local.xml.LocalQuerySql;
 import com.armedia.caliente.engine.local.xml.LocalQueryVersionList;
+import com.armedia.caliente.engine.local.xml.LocalSearchBase;
+import com.armedia.caliente.engine.local.xml.LocalSearchByList;
+import com.armedia.caliente.engine.local.xml.LocalSearchByPath;
+import com.armedia.caliente.engine.local.xml.LocalSearchBySql;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
@@ -249,40 +260,146 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		}
 	}
 
-	protected class Search {
+	public static interface PathSearch {
+		public Stream<Path> build() throws Exception;
+	}
+
+	public abstract class PathSearchBase implements PathSearch {
+		private final String id;
+		protected final Processor processor;
+
+		private PathSearchBase(LocalSearchBase search) throws Exception {
+			this.id = search.getId();
+			this.processor = buildProcessor(search.getPostProcessors());
+		}
+
+		public String getId() {
+			return this.id;
+		}
+	}
+
+	protected class SearchByPath extends PathSearchBase {
+		private Path path;
+		private Predicate<Path> matcher;
+		private final int maxDepth;
+
+		private SearchByPath(LocalSearchByPath search) throws Exception {
+			super(search);
+			this.path = Paths.get(search.getPath());
+
+			if (!Files.exists(this.path)) {
+				throw new Exception(
+					"The configured path [" + this.path + "] does not exist for path search with ID " + getId());
+			}
+
+			final Pattern pattern = (StringUtils.isNotBlank(search.getMatching())
+				? Pattern.compile(search.getMatching())
+				: null);
+			if (pattern != null) {
+				this.matcher = (p) -> pattern.matcher(p.toString()).matches();
+			} else {
+				this.matcher = null;
+			}
+			int maxDepth = Tools.coalesce(search.getMaxDepth(), -1);
+			if (maxDepth < 0) {
+				maxDepth = Integer.MAX_VALUE;
+			}
+			this.maxDepth = maxDepth;
+		}
+
+		@Override
+		public Stream<Path> build() throws Exception {
+			return Files.walk(this.path, this.maxDepth) //
+				.filter(this.matcher) //
+			;
+		}
+	}
+
+	protected class SearchByList extends PathSearchBase {
+		private final Path file;
+		private final Charset encoding;
+		private final Predicate<String> matcher;
+		private final int skip;
+		private final int count;
+
+		private SearchByList(LocalSearchByList search) throws Exception {
+			super(search);
+			this.file = Paths.get(search.getFile());
+
+			if (!Files.exists(this.file)) {
+				throw new Exception(
+					"The configured file [" + this.file + "] does not exist for list search with ID " + getId());
+			}
+			if (!Files.isRegularFile(this.file)) {
+				throw new Exception(
+					"The configured file [" + this.file + "] is not a regular file for list search with ID " + getId());
+			}
+
+			this.encoding = (StringUtils.isNotBlank(search.getEncoding()) ? Charset.forName(search.getEncoding())
+				: StandardCharsets.UTF_8);
+
+			final Pattern pattern = (StringUtils.isNotBlank(search.getMatching())
+				? Pattern.compile(search.getMatching())
+				: null);
+			if (pattern != null) {
+				this.matcher = (p) -> pattern.matcher(p.toString()).matches();
+			} else {
+				this.matcher = null;
+			}
+
+			int skip = Tools.coalesce(search.getSkip(), -1);
+			this.skip = Math.max(-1, skip);
+			int count = Tools.coalesce(search.getCount(), -1);
+			this.count = Math.max(-1, count);
+		}
+
+		@Override
+		public Stream<Path> build() throws Exception {
+			final InputStream in = Files.newInputStream(this.file, StandardOpenOption.READ);
+			final LineNumberReader r = new LineNumberReader(new InputStreamReader(in, this.encoding));
+			return r.lines() //
+				.filter(StringUtils::isNotEmpty) //
+				.filter(this.matcher) //
+				.skip(this.skip) //
+				.limit(this.count) //
+				.map(Paths::get) //
+				.onClose(() -> CloseUtils.closeQuietly(r)) //
+			;
+		}
+	}
+
+	protected class SearchBySql extends PathSearchBase {
 		private final DataSource dataSource;
 		private final String id;
 		private final List<String> pathColumns;
 		private final String sql;
 		private final int skip;
 		private final int count;
-		private final Processor processor;
 
-		private Search(LocalQuerySearch definition, Function<String, DataSource> dataSourceFinder) throws Exception {
-			this.dataSource = dataSourceFinder.apply(definition.getDataSource());
+		private SearchBySql(LocalSearchBySql search, Function<String, DataSource> dataSourceFinder) throws Exception {
+			super(search);
+			this.dataSource = dataSourceFinder.apply(search.getDataSource());
 			Objects.requireNonNull(this.dataSource, "Must provide a non-null DataSource");
 
-			this.id = definition.getId();
+			this.id = search.getId();
 
-			Integer skip = definition.getSkip();
+			Integer skip = search.getSkip();
 			if ((skip != null) && (skip < 0)) {
 				skip = null;
 			}
 			this.skip = (skip != null ? skip.intValue() : -1);
 
-			Integer count = definition.getCount();
+			Integer count = search.getCount();
 			if ((count != null) && (count < 0)) {
 				count = null;
 			}
 			this.count = (count != null ? count.intValue() : -1);
 
-			this.sql = definition.getSql();
+			this.sql = search.getSql();
 			// TODO: Perform a deeper sanity check?
 			if (StringUtils.isBlank(this.sql)) { throw new SQLException("Must provide a SQL query to execute"); }
 
-			this.processor = buildProcessor(definition.getPostProcessors());
-
-			this.pathColumns = Tools.freezeCopy(definition.getPathColumns(), true);
+			this.pathColumns = Tools.freezeCopy(search.getPathColumns(), true);
 			if (this.pathColumns.isEmpty()) { throw new Exception("No candidate columns given"); }
 		}
 
@@ -297,23 +414,23 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				@Override
 				protected boolean initialize() throws SQLException {
 					try {
-						this.c = Search.this.dataSource.getConnection();
+						this.c = SearchBySql.this.dataSource.getConnection();
 						this.c.setAutoCommit(false);
 						// Execute the query, stow the result set
 						this.s = this.c.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-						this.rs = this.s.executeQuery(Search.this.sql);
+						this.rs = this.s.executeQuery(SearchBySql.this.sql);
 
 						Set<Integer> candidates = new LinkedHashSet<>();
 						ResultSetMetaData md = this.rs.getMetaData();
 
-						for (String p : Search.this.pathColumns) {
+						for (String p : SearchBySql.this.pathColumns) {
 							int index = -1;
 							try {
 								index = Integer.valueOf(p);
 								if ((index < 1) || (index > md.getColumnCount())) {
 									LocalQueryService.this.log.warn(
 										"The column index [{}] is not valid for search query [{}], ignoring it", p,
-										Search.this.id);
+										SearchBySql.this.id);
 									continue;
 								}
 							} catch (NumberFormatException e) {
@@ -322,7 +439,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 									index = this.rs.findColumn(p);
 								} catch (SQLException ex) {
 									LocalQueryService.this.log.warn(
-										"No column named [{}] for search query [{}], ignoring it", p, Search.this.id);
+										"No column named [{}] for search query [{}], ignoring it", p,
+										SearchBySql.this.id);
 									continue;
 								}
 							}
@@ -333,22 +451,22 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 						if (candidates.isEmpty()) {
 							LocalQueryService.this.log.error(
 								"No valid candidate columns found - can't continue with search query [{}]",
-								Search.this.id);
+								SearchBySql.this.id);
 							doClose();
 							throw new SQLException(String.format(
 								"No valid candidate columns found - can't continue with search query [%s]",
-								Search.this.id));
+								SearchBySql.this.id));
 						}
 
-						if (Search.this.skip > 0) {
+						if (SearchBySql.this.skip > 0) {
 							boolean foundRow = false;
 							try {
-								foundRow = this.rs.relative(Search.this.skip);
+								foundRow = this.rs.relative(SearchBySql.this.skip);
 							} catch (SQLFeatureNotSupportedException e) {
 								// Can't skip in bulk, must do it manually...
 								// Assume we'll be OK...
 								foundRow = true;
-								for (int i = 0; i < Search.this.skip; i++) {
+								for (int i = 0; i < SearchBySql.this.skip; i++) {
 									// If we run past the edge, we short-circuit
 									if (!this.rs.next()) {
 										// This means that we didn't find any rows
@@ -368,7 +486,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 						this.candidates = Tools.freezeSet(candidates);
 						return true;
 					} catch (SQLException e) {
-						LocalQueryService.this.log.error("Failed to execute the search query [{}]", Search.this.id, e);
+						LocalQueryService.this.log.error("Failed to execute the search query [{}]", SearchBySql.this.id,
+							e);
 						doClose();
 						throw e;
 					}
@@ -377,7 +496,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				@Override
 				protected Result findNext() throws SQLException {
 					while (this.rs.next()) {
-						for (Integer column : this.candidates) {
+						candidate: for (Integer column : this.candidates) {
 							String str = this.rs.getString(column);
 							if (this.rs.wasNull() || StringUtils.isEmpty(str)) {
 								continue;
@@ -385,7 +504,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 
 							// Apply postProcessor
 							try {
-								str = Search.this.processor.process(str);
+								str = SearchBySql.this.processor.process(str);
 							} catch (Exception e) {
 								if (LocalQueryService.this.log.isDebugEnabled()) {
 									LocalQueryService.this.log
@@ -403,7 +522,18 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 							str = LocalCommon.toLocalizedPath(str);
 
 							// If we ended up with a non-empty string, we return it!
-							return found(Paths.get(str).normalize());
+							try {
+								return found(Paths.get(str).normalize());
+							} catch (InvalidPathException e) {
+								// If this path is invalid, should we abort? Or keep going?
+								if (!LocalQueryService.this.failOnInvalid) {
+									LocalQueryService.this.log.warn(
+										"Invalid path fetched during search from column {}: [{}]", column, str, e);
+									continue candidate;
+								}
+								// We're failing on invalid paths ... so ... fail
+								throw e;
+							}
 						}
 
 						// If we get here, we found nothing, so we try the next record
@@ -421,7 +551,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 							} catch (SQLException e) {
 								if (LocalQueryService.this.log.isDebugEnabled()) {
 									LocalQueryService.this.log.debug(
-										"Rollback failed on connection for search query [{}]", Search.this.id, e);
+										"Rollback failed on connection for search query [{}]", SearchBySql.this.id, e);
 								}
 							}
 							CloseUtils.closeQuietly(this.rs, this.s, this.c);
@@ -435,6 +565,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			};
 		}
 
+		@Override
 		public Stream<Path> build() {
 			CloseableIterator<Path> it = buildIterator();
 
@@ -545,9 +676,10 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private volatile boolean closed = false;
 	private final Path root;
+	private final boolean failOnInvalid;
 	private final Map<String, DataSource> dataSources;
 	private final Map<String, Processor> processors;
-	private final Map<String, Search> searches;
+	private final Map<String, PathSearch> searches;
 	private final Map<String, Query<String>> history;
 	private final Map<String, Query<List<Pair<String, Path>>>> members;
 	private final Map<String, MetadataSet> metadataSets;
@@ -637,8 +769,8 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			p.validateRecursion(null);
 		}
 
-		Map<String, Search> searchMap = new LinkedHashMap<>();
-		for (LocalQuerySearch search : queries.getSearches()) {
+		Map<String, PathSearch> searchMap = new LinkedHashMap<>();
+		for (LocalSearchBase search : queries.getSearches()) {
 			String id = search.getId();
 			if (StringUtils.isEmpty(id)) {
 				this.log.warn("Empty ID found for a search - can't use it!");
@@ -695,6 +827,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 			metadataSets.put(id, mds);
 		}
 		this.metadataSets = Tools.freezeMap(metadataSets);
+		this.failOnInvalid = queries.isFailOnInvalidPath();
 	}
 
 	private void setValue(String name, String value, Map<String, String> map) {
@@ -724,11 +857,23 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		return ret;
 	}
 
-	protected Search buildSearch(LocalQuerySearch search, Function<String, DataSource> dataSourceFinder)
+	protected PathSearch buildSearch(LocalSearchBase search, Function<String, DataSource> dataSourceFinder)
 		throws Exception {
-		Objects.requireNonNull(search, "Must provide a LocalQuerySearch instance");
-		return new Search(search, dataSourceFinder);
+		Objects.requireNonNull(search, "Must provide a LocalSearchBase instance");
 
+		switch (search.getType()) {
+			case SQL:
+				return new SearchBySql(LocalSearchBySql.class.cast(search), dataSourceFinder);
+			case PATH:
+				return new SearchByPath(LocalSearchByPath.class.cast(search));
+			case LIST:
+				return new SearchByList(LocalSearchByList.class.cast(search));
+
+			default:
+				this.log.warn("Unimplemented search type: {}", search.getType());
+				// Unsupported type!!
+				return () -> Stream.empty();
+		}
 	}
 
 	protected DataSource buildDataSource(LocalQueryDataSource dataSourceDef) throws SQLException {
@@ -810,9 +955,17 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		final SharedAutoLock lock = autoSharedLock();
 		List<Stream<Path>> streams = new ArrayList<>(this.searches.size());
 		for (String id : this.searches.keySet()) {
-			Search search = this.searches.get(id);
-			streams.add(search.build());
+			PathSearch search = this.searches.get(id);
+			try {
+				streams.add(search.build());
+			} catch (Exception e) {
+				// Couldn't build it... log the error!
+				this.log.error("Failed to build the search stream for {} with ID [{}]",
+					search.getClass().getSimpleName(), id, e);
+			}
 		}
+		// Just in case ... gives flexibility
+		streams.removeIf(Objects::isNull);
 		if (streams.isEmpty()) { return Stream.empty(); }
 
 		return StreamConcatenation //
@@ -857,6 +1010,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 					}
 					if ((ret == null) || ret.isEmpty()) {
 						continue;
+
 					}
 					return Tools.freezeList(ret);
 				}

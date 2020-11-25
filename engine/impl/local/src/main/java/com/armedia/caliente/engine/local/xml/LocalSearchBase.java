@@ -28,65 +28,35 @@ package com.armedia.caliente.engine.local.xml;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlTransient;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "localQuerySearch.t", propOrder = {
-	"sql", "skip", "count", "pathColumns", "postProcessors"
-})
-public class LocalQuerySearch {
+import com.armedia.caliente.engine.local.exporter.LocalSearchType;
 
-	@XmlElement(name = "sql", required = true)
-	protected String sql;
+@XmlTransient
+public abstract class LocalSearchBase {
 
-	@XmlElement(name = "skip", required = false)
-	protected Integer skip;
-
-	@XmlElement(name = "count", required = false)
-	protected Integer count;
-
-	@XmlElementWrapper(name = "path-columns", required = true)
-	@XmlElement(name = "path-column", required = true)
-	protected List<String> pathColumns;
+	@XmlAttribute(name = "id", required = true)
+	protected String id;
 
 	@XmlElementWrapper(name = "post-processors", required = false)
 	@XmlElement(name = "post-processor", required = false)
 	protected List<LocalQueryPostProcessor> postProcessors;
 
-	@XmlAttribute(name = "id", required = true)
-	protected String id;
+	@XmlTransient
+	private final LocalSearchType type;
 
-	@XmlAttribute(name = "dataSource", required = true)
-	protected String dataSource;
-
-	public String getSql() {
-		return this.sql;
+	public LocalSearchBase() {
+		throw new RuntimeException(
+			"This class shouldn't be instantiated this way - invoke the other constructor instead");
 	}
 
-	public void setSql(String value) {
-		this.sql = value;
-	}
-
-	public Integer getSkip() {
-		return this.skip;
-	}
-
-	public void setSkip(Integer value) {
-		this.skip = value;
-	}
-
-	public Integer getCount() {
-		return this.count;
-	}
-
-	public void setCount(Integer value) {
-		this.count = value;
+	protected LocalSearchBase(LocalSearchType type) {
+		this.type = Objects.requireNonNull(type, "Must provide a search type");
 	}
 
 	public String getId() {
@@ -97,21 +67,6 @@ public class LocalQuerySearch {
 		this.id = value;
 	}
 
-	public String getDataSource() {
-		return this.dataSource;
-	}
-
-	public void setDataSource(String value) {
-		this.dataSource = value;
-	}
-
-	public List<String> getPathColumns() {
-		if (this.pathColumns == null) {
-			this.pathColumns = new ArrayList<>();
-		}
-		return this.pathColumns;
-	}
-
 	public List<LocalQueryPostProcessor> getPostProcessors() {
 		if (this.postProcessors == null) {
 			this.postProcessors = new ArrayList<>();
@@ -119,4 +74,7 @@ public class LocalQuerySearch {
 		return this.postProcessors;
 	}
 
+	public final LocalSearchType getType() {
+		return this.type;
+	}
 }

@@ -26,11 +26,53 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.local.xml;
 
-import javax.xml.bind.annotation.XmlRegistry;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-@XmlRegistry
-public class ObjectFactory {
+import com.armedia.caliente.engine.local.exporter.LocalSearchType;
 
-	public static final String NS = "http://www.armedia.com/ns/caliente/engine/local";
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "localSearchByPath.t", propOrder = {
+	"path", "matching", "maxDepth", "postProcessors"
+})
+public class LocalSearchByPath extends LocalSearchBase {
 
+	@XmlElement(name = "path", required = true)
+	protected String path;
+
+	@XmlElement(name = "matching", required = false)
+	protected String matching;
+
+	@XmlElement(name = "maxDepth", required = false)
+	protected Integer maxDepth;
+
+	public LocalSearchByPath() {
+		super(LocalSearchType.PATH);
+	}
+
+	public String getPath() {
+		return this.path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+
+	public String getMatching() {
+		return this.matching;
+	}
+
+	public void setMatching(String matching) {
+		this.matching = matching;
+	}
+
+	public Integer getMaxDepth() {
+		return this.maxDepth;
+	}
+
+	public void setMaxDepth(Integer maxDepth) {
+		this.maxDepth = maxDepth;
+	}
 }

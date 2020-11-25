@@ -261,7 +261,10 @@ public class AlfImportEngine extends
 		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
 		throws ImportException, IOException, JAXBException {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
-		addListener(this.listener);
+
+		if (settings.getBoolean(AlfSetting.GENERATE_INGESTION_INDEX)) {
+			addListener(this.listener);
+		}
 
 		String content = settings.getString(AlfSetting.CONTENT);
 		if (content == null) {
