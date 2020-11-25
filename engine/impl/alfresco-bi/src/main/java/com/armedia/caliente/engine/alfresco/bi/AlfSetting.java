@@ -37,6 +37,7 @@ public enum AlfSetting implements ConfigurationSetting {
 	ATTRIBUTE_MAPPING, //
 	RESIDUALS_PREFIX, //
 	UNFILED_PATH("(unfiled)"), //
+	GENERATE_INGESTION_INDEX(false), //
 	//
 	;
 

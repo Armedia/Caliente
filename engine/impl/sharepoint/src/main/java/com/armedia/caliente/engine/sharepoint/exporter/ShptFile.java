@@ -457,8 +457,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			type = MimeTools.DEFAULT_MIME_TYPE;
 		}
 
-		marshaled.setAttribute(new CmfAttribute<>(ShptAttributes.CONTENT_TYPE.name, CmfValue.Type.STRING, false,
-			Collections.singleton(CmfValue.of(type.getBaseType()))));
+		marshaled.setAttribute(new CmfAttribute<>(ShptAttributes.CONTENT_TYPE.name, CmfValue.Type.STRING,
+			CmfValue.of(type.getBaseType())));
 		info.setMimeType(MimeTools.resolveMimeType(type.getBaseType()));
 		info.setLength(buf.getCurrentSize());
 		List<CmfContentStream> ret = new ArrayList<>();
