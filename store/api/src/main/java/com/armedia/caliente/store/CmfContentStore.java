@@ -46,7 +46,6 @@ import java.util.concurrent.locks.Lock;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 import com.armedia.commons.utilities.function.CheckedRunnable;
 import com.armedia.commons.utilities.function.CheckedSupplier;
@@ -295,7 +294,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			if (p == null) {
 				throw new IllegalStateException("getPath() returned null - did you forget to override the method?");
 			}
-			return Tools.canonicalize(p);
+			return p;
 		} catch (IOException e) {
 			throw new CmfStorageException(String.format("Failed to locate the file for %s", handle), e);
 		}

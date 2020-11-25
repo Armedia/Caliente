@@ -81,9 +81,10 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 
 	@Override
 	protected CmfObject.Archetype calculateType(LocalRoot root, Principal p) throws Exception {
+		if (p == null) { throw new ExportException("The given principal object does not exist"); }
 		if (GroupPrincipal.class.isInstance(p)) { return CmfObject.Archetype.GROUP; }
 		if (UserPrincipal.class.isInstance(p)) { return CmfObject.Archetype.USER; }
-		throw new ExportException(String.format("Principal object [%s] is of an unknown type or doesn't exist", p));
+		throw new ExportException(String.format("Principal object [%s] is of an unknown type", p));
 	}
 
 	@Override
