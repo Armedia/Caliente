@@ -108,5 +108,22 @@ public class AttributeReplaceTest {
 		action.apply(ctx);
 		Assertions.assertTrue(object.getAtt().containsKey(attribute));
 		Assertions.assertEquals(finalValueRemoved, object.getAtt().get(attribute).getValue());
+
+		String newAttribute = "newAttribute";
+		String initialRegEx = "APP-Something-or-Other";
+		String finalRegEx = "APP";
+		final DynamicValue v2 = new DynamicValue(newAttribute, Type.STRING, true);
+		v2.setValue(initialRegEx);
+
+		action.setName(new Expression(newAttribute));
+		action.setRegex(new RegularExpression("^([\\w]{3})-.*$"));
+		action.setReplacement(new Expression("$1"));
+		object.getAtt().put(newAttribute, v2);
+
+		Assertions.assertTrue(object.getAtt().containsKey(newAttribute));
+		Assertions.assertEquals(initialRegEx, object.getAtt().get(newAttribute).getValue());
+		action.apply(ctx);
+		Assertions.assertTrue(object.getAtt().containsKey(newAttribute));
+		Assertions.assertEquals(finalRegEx, object.getAtt().get(newAttribute).getValue());
 	}
 }

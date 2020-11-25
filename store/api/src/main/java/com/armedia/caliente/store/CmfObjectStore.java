@@ -468,7 +468,11 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			try {
-				return loadHeadObject(operation, type, historyId);
+				CmfObject<CmfValue> head = loadHeadObject(operation, type, historyId);
+				if (head == null) {
+					head = loadLatestObject(operation, type, historyId);
+				}
+				return head;
 			} finally {
 				if (tx) {
 					try {
@@ -483,6 +487,9 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	}
 
 	protected abstract CmfObject<CmfValue> loadHeadObject(OPERATION operation, CmfObject.Archetype type,
+		String historyId) throws CmfStorageException;
+
+	protected abstract CmfObject<CmfValue> loadLatestObject(OPERATION operation, CmfObject.Archetype type,
 		String historyId) throws CmfStorageException;
 
 	public final Collection<CmfObject<CmfValue>> loadObjects(CmfObject.Archetype type, String... ids)

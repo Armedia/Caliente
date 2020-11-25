@@ -1,0 +1,7 @@
+com.armedia.caliente.cli.caliente.launcher.alfresco.EngineInterface
+com.armedia.caliente.cli.caliente.launcher.cmis.EngineInterface
+com.armedia.caliente.cli.caliente.launcher.dctm.EngineInterface
+com.armedia.caliente.cli.caliente.launcher.local.EngineInterface
+com.armedia.caliente.cli.caliente.launcher.shpt.EngineInterface
+com.armedia.caliente.cli.caliente.launcher.ucm.EngineInterface
+com.armedia.caliente.cli.caliente.launcher.xml.EngineInterface
