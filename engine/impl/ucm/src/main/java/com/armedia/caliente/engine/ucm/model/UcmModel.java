@@ -887,9 +887,6 @@ public class UcmModel {
 		}
 		*/
 
-		// TODO: Need to find the correct way to identify "automagically" if we should use database
-		// or databasetext engines when running the search...if only there were documentation...
-		final boolean dbMode = true;
 		final AtomicLong startRow = new AtomicLong(1);
 		final long maxRows;
 		String rowSpec = m.group(3);
@@ -920,13 +917,10 @@ public class UcmModel {
 			try {
 				ServiceResponse response = s.callService("GET_SEARCH_RESULTS", (binder) -> {
 					UcmModel.this.log.debug(
-						"Calling GET_SEARCH_RESULTS (dbMode = {}, start row = {}, page size = {}, sortField = {} {}, query = [{}])",
-						dbMode, startRow.get(), actualPageSize, sortField, desc ? "Desc" : "Asc", actualQuery);
+						"Calling GET_SEARCH_RESULTS (start row = {}, page size = {}, sortField = {} {}, query = [{}])",
+						startRow.get(), actualPageSize, sortField, desc ? "Desc" : "Asc", actualQuery);
 
 					binder.putLocal("QueryText", actualQuery);
-					if (dbMode) {
-						binder.putLocal("SearchEngineName", "database");
-					}
 					binder.putLocal("StartRow", String.valueOf(startRow.get()));
 					/*
 					if (sortSpec.length() > 0) {
@@ -965,8 +959,8 @@ public class UcmModel {
 					break outer;
 				}
 			} catch (final IdcClientException e) {
-				throw new UcmServiceException(String.format("Exception raised while performing the %s query [%s]",
-					dbMode ? "database" : "fulltext", actualQuery), e);
+				throw new UcmServiceException(
+					String.format("Exception raised while performing the fulltext query [%s]", actualQuery), e);
 			}
 		}
 		return rowNumber;
