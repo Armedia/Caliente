@@ -2,7 +2,7 @@
 <documents
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns="http://www.armedia.com/ns/caliente/engine/xml"
-	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine/xml platform:/resource/caliente-engine-xml/src/main/resources/caliente-engine-xml.xsd ">
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine/xml ../../../src/main/resources/caliente-engine-xml.xsd ">
 	<document>
 		<version>
 			<id>id</id>
