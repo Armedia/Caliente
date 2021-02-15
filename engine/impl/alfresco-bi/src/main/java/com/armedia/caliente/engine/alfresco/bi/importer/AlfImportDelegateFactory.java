@@ -36,7 +36,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -76,7 +75,6 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfContentStream;
-import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
@@ -244,48 +242,6 @@ public class AlfImportDelegateFactory
 	protected AlfrescoType getType(String name, Collection<String> aspects) {
 		if ((aspects == null) || aspects.isEmpty()) { return this.defaultTypes.get(name); }
 		return this.schema.buildType(name, aspects);
-	}
-
-	protected final CmfValue getAttributeValue(CmfObject<CmfValue> cmfObject, CmfEncodeableName attribute) {
-		return getAttributeValue(cmfObject, attribute.encode());
-	}
-
-	protected final CmfValue getAttributeValue(CmfObject<CmfValue> cmfObject, String attribute) {
-		CmfAttribute<CmfValue> att = cmfObject.getAttribute(attribute);
-		if (att == null) { return CmfValue.Type.OTHER.getNull(); }
-		if (att.hasValues()) { return att.getValue(); }
-		return att.getType().getNull();
-	}
-
-	protected final List<CmfValue> getAttributeValues(CmfObject<CmfValue> cmfObject, CmfEncodeableName attribute) {
-		return getAttributeValues(cmfObject, attribute.encode());
-	}
-
-	protected final List<CmfValue> getAttributeValues(CmfObject<CmfValue> cmfObject, String attribute) {
-		CmfAttribute<CmfValue> att = cmfObject.getAttribute(attribute);
-		if (att == null) { return Collections.emptyList(); }
-		return att.getValues();
-	}
-
-	protected final CmfValue getPropertyValue(CmfObject<CmfValue> cmfObject, CmfEncodeableName attribute) {
-		return getPropertyValue(cmfObject, attribute.encode());
-	}
-
-	protected final CmfValue getPropertyValue(CmfObject<CmfValue> cmfObject, String attribute) {
-		CmfProperty<CmfValue> att = cmfObject.getProperty(attribute);
-		if (att == null) { return CmfValue.Type.OTHER.getNull(); }
-		if (att.hasValues()) { return att.getValue(); }
-		return att.getType().getNull();
-	}
-
-	protected final List<CmfValue> getPropertyValues(CmfObject<CmfValue> cmfObject, CmfEncodeableName attribute) {
-		return getPropertyValues(cmfObject, attribute.encode());
-	}
-
-	protected final List<CmfValue> getPropertyValues(CmfObject<CmfValue> cmfObject, String attribute) {
-		CmfProperty<CmfValue> att = cmfObject.getProperty(attribute);
-		if (att == null) { return Collections.emptyList(); }
-		return att.getValues();
 	}
 
 	boolean initializeVdocSupport() {
