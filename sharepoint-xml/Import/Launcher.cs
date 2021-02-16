@@ -201,6 +201,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             public string ldapSyncDomain { get; private set; }
             public string library { get; private set; }
             public string content { get; private set; }
+            public string metadata { get; private set; }
             public string ldapUrl { get; private set; }
             public string ldapBindDn { get; private set; }
             public string ldapBindPw { get; private set; }
@@ -278,6 +279,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                 if (errors.Count > 0) return errors;
 
                 if (this.content == null) this.content = string.Format("{0}\\contents", Directory.GetCurrentDirectory()).Replace('\\', '/');
+                if (this.metadata == null) this.metadata = string.Format("{0}\\xml-metadata", Directory.GetCurrentDirectory()).Replace('\\', '/');
                 if (string.IsNullOrEmpty(this.ldapBindDn)) this.ldapBindDn = "";
                 if (string.IsNullOrEmpty(this.ldapBindPw)) this.ldapBindPw = "";
 
@@ -373,7 +375,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
             if (options.indexOnly)
             {
-                ImportContext importContext = new ImportContext(null, options.content);
+                ImportContext importContext = new ImportContext(null, options.content, options.metadata);
                 FormatResolver formatResolver = new FormatResolver(importContext);
                 new DocumentImporter(new FolderImporter(importContext), formatResolver, options.locationMode, options.fixExtensions).StoreLocationIndex();
                 return 0;
@@ -408,7 +410,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
                 using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, password, domain, options.library, options.reuseCount)))
                 {
-                    ImportContext importContext = new ImportContext(sessionFactory, options.content);
+                    ImportContext importContext = new ImportContext(sessionFactory, options.content, options.metadata);
                     using (ObjectPool<SharePointSession>.Ref sessionRef = sessionFactory.GetSession())
                     {
                         SharePointSession session = sessionRef.Target;

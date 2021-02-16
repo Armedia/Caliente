@@ -113,7 +113,7 @@ namespace Armedia.CMSMF.SharePoint.Import
         private FolderImporter(ImportContext importContext, ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter) : base("folders", importContext, contentTypeImporter, permissionsImporter)
         {
             Dictionary<string, FolderInfo> folderDictionary = new Dictionary<string, FolderInfo>();
-            using (XmlReader folders = this.ImportContext.LoadIndex("folders.xml"))
+            using (XmlReader folders = this.ImportContext.LoadIndex("folders"))
             {
                 int currentDepth = 0;
                 Dictionary<string, List<FolderInfo>> accumulated = new Dictionary<string, List<FolderInfo>>();

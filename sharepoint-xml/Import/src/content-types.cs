@@ -167,7 +167,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
                 // Now we go over the XML declarations
                 HashSet<string> newTypes = new HashSet<string>();
-                XElement types = XElement.Load(this.ImportContext.LoadIndex("types.xml"));
+                XElement types = XElement.Load(this.ImportContext.LoadIndex("types"));
                 XNamespace ns = types.GetDefaultNamespace();
                 foreach (XElement type in types.Elements(ns + "type"))
                 {

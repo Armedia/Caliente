@@ -349,7 +349,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             if ((internalName != null) && !usersByLogin.ContainsKey(internalName)) internalName = null;
 
             // Step 3: Scan through the XML file generating the mappings for the users being referenced
-            using (XmlReader usersXml = this.ImportContext.LoadIndex("users.xml"))
+            using (XmlReader usersXml = this.ImportContext.LoadIndex("users"))
             {
                 Log.Info(string.Format("Loaded {0} LDAP users, resolving the users in XML...", usersByGUID.Count));
                 while (usersXml.ReadToFollowing("user"))
@@ -545,7 +545,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             if ((internalName != null) && !groupsByLogin.ContainsKey(internalName)) internalName = null;
 
             // Step 3: Scan through the XML file generating the mappings for the groups being referenced
-            using (XmlReader groupsXml = this.ImportContext.LoadIndex("groups.xml"))
+            using (XmlReader groupsXml = this.ImportContext.LoadIndex("groups"))
             {
                 Log.Info(string.Format("Loaded {0} LDAP groups, resolving the groups in XML...", groupsByGUID.Count));
                 while (groupsXml.ReadToFollowing("group"))

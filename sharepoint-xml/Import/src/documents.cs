@@ -292,7 +292,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             // First pass: identify the incoming stuff, and remove them from their current parent folders
             if (finalNames.Count > 0)
             {
-                using (XmlReader documentsXml = this.ImportContext.LoadIndex("documents.xml"))
+                using (XmlReader documentsXml = this.ImportContext.LoadIndex("documents"))
                 {
                     while (documentsXml.ReadToFollowing("document"))
                     {
@@ -351,7 +351,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             // Second pass: at this stage, the parent folders have been cleansed of files that are about
             // to be re-ingested with differing names, so any new filename collisions will be calculated correctly,
             // and files that are being re-ingested but didn't change location will be preserved in the same place
-            using (XmlReader documentsXml = this.ImportContext.LoadIndex("documents.xml"))
+            using (XmlReader documentsXml = this.ImportContext.LoadIndex("documents"))
             {
                 while (documentsXml.ReadToFollowing("document"))
                 {
@@ -880,7 +880,7 @@ namespace Armedia.CMSMF.SharePoint.Import
         protected ICollection<DocumentInfo> IdentifyPending(ICollection<DocumentInfo> failed)
         {
             ICollection<DocumentInfo> pending = new List<DocumentInfo>();
-            using (XmlReader documents = this.ImportContext.LoadIndex("documents.xml"))
+            using (XmlReader documents = this.ImportContext.LoadIndex("documents"))
             {
                 HashSet<string> histories = new HashSet<string>();
                 while (documents.ReadToFollowing("document") && !this.Abort)
