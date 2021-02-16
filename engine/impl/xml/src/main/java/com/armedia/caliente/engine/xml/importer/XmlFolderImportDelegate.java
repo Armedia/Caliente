@@ -1,5 +1,5 @@
 /*******************************************************************************
- * #%L
+r * #%L
  * Armedia Caliente
  * %%
  * Copyright (C) 2013 - 2019 Armedia, LLC
@@ -26,11 +26,12 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.xml.importer;
 
-import java.io.File;
+import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Path;
 
 import javax.xml.bind.JAXBException;
 
@@ -41,8 +42,6 @@ import com.armedia.caliente.engine.xml.importer.jaxb.FolderIndexEntryT;
 import com.armedia.caliente.engine.xml.importer.jaxb.FolderIndexT;
 import com.armedia.caliente.engine.xml.importer.jaxb.FolderT;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
@@ -61,31 +60,26 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 	protected FolderIndexEntryT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException {
 
+		if (!ctx.getContentStore().isSupportsFileAccess()) { return null; }
+
 		FolderT f = this.delegate.createItem(translator, ctx);
-		CmfContentStore<?, ?>.Handle h = ctx.getContentStore().findHandle(new CmfContentStream(this.cmfObject, 0));
-		if (!h.getSourceStore().isSupportsFileAccess()) { return null; }
-		File tgt = null;
-		try {
-			tgt = h.getFile();
-		} catch (CmfStorageException e) {
-			// Failed to get the file, so we can't handle this
-			throw new CmfStorageException(
-				String.format("Failed to locate the location for the %s", this.cmfObject.getDescription()), e);
-		}
-		File dir = tgt.getParentFile();
+		String fixedPath = getFixedPath(ctx);
+		Path tgt = ctx.getSession().getMetadataRoot().resolve(fixedPath);
+		Path dir = ctx.getSession().makeAbsolute(tgt);
+		dir = tgt.getParent();
 		if (dir != null) {
 			try {
-				FileUtils.forceMkdir(dir);
+				FileUtils.forceMkdir(dir.toFile());
 			} catch (IOException e) {
-				throw new ImportException(String.format("Failed to create the folder at [%s]", dir.getAbsolutePath()),
+				throw new ImportException(String.format("Failed to create the folder at [%s]", dir.toAbsolutePath()),
 					e);
 			}
 		}
 
-		tgt = new File(dir, String.format("%s-folder.xml", tgt.getName()));
+		tgt = dir.resolve(String.format("%s.metadata.xml", tgt.getFileName()));
 
 		boolean ok = false;
-		try (OutputStream out = new FileOutputStream(tgt)) {
+		try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tgt.toFile()))) {
 			XmlImportDelegateFactory.marshalXml(f, out);
 			ok = true;
 		} catch (FileNotFoundException e) {
@@ -98,13 +92,13 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 				String.format("Failed to marshal the XML for %s to [%s]", this.cmfObject.getDescription(), tgt), e);
 		} finally {
 			if (!ok) {
-				FileUtils.deleteQuietly(tgt);
+				FileUtils.deleteQuietly(tgt.toFile());
 			}
 		}
 
 		FolderIndexEntryT idx = new FolderIndexEntryT();
 		idx.setId(f.getId());
-		idx.setLocation(this.factory.relativizeXmlLocation(tgt.getAbsolutePath()));
+		idx.setLocation(this.factory.relativizeXmlLocation(tgt.toAbsolutePath()));
 		idx.setName(f.getName());
 		idx.setPath(f.getSourcePath());
 		idx.setType(f.getType());

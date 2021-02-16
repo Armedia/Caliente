@@ -74,6 +74,11 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		v.setId(this.cmfObject.getId());
 		v.setAcl(getPropertyValue(IntermediateProperty.ACL_ID).asString());
 
+		String objectPath = getFixedPath(ctx);
+		if (objectPath == null) {
+			objectPath = StringUtils.EMPTY;
+		}
+
 		try {
 			gcal.setTime(getAttributeValue(IntermediateAttribute.CREATION_DATE).asTime());
 			gcal.setTimeZone(XmlImportDelegate.TZUTC);
@@ -95,13 +100,9 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			throw new ImportException("Failed to parse a date value", e);
 		}
 
-		v.setName(getAttributeValue(IntermediateAttribute.NAME).asString());
+		v.setName(this.cmfObject.getName());
 		v.setParentId(getAttributeValue(IntermediateAttribute.PARENT_ID).asString());
-		String path = getPropertyValue(IntermediateProperty.PATH).asString();
-		if (StringUtils.isEmpty(path)) {
-			path = "/";
-		}
-		v.setSourcePath(path);
+		v.setSourcePath(objectPath);
 		v.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());
 		v.setFormat(getAttributeValue(IntermediateAttribute.CONTENT_STREAM_MIME_TYPE).asString());
 		v.setHistoryId(getAttributeValue(IntermediateAttribute.VERSION_SERIES_ID).asString());
@@ -130,7 +131,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			ContentStreamT xml = new ContentStreamT();
 			xml.setFileName(info.getFileName());
 			// xml.setHash(null);
-			xml.setLocation(this.factory.relativizeXmlLocation(f.getAbsolutePath()));
+			xml.setLocation(this.factory.relativizeContentLocation(f.getAbsoluteFile().toPath()));
 			xml.setMimeType(info.getMimeType().getBaseType());
 			xml.setRenditionId(info.getRenditionIdentifier());
 			xml.setRenditionPage(info.getRenditionPage());
@@ -164,7 +165,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			ContentStreamT xml = new ContentStreamT();
 			xml.setFileName(v.getName());
 			// xml.setHash(null);
-			xml.setLocation(this.factory.relativizeXmlLocation(f.getAbsolutePath()));
+			xml.setLocation(this.factory.relativizeContentLocation(f.getAbsoluteFile().toPath()));
 			xml.setMimeType(MimeTools.DEFAULT_MIME_TYPE.toString());
 			xml.setRenditionId(info.getRenditionIdentifier());
 			xml.setRenditionPage(info.getRenditionPage());

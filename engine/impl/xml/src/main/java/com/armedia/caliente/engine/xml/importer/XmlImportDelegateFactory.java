@@ -26,18 +26,21 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.xml.importer;
 
-import java.io.File;
+import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -53,12 +56,12 @@ import com.armedia.caliente.engine.importer.ImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
+import com.armedia.caliente.engine.xml.common.XmlCommon;
 import com.armedia.caliente.engine.xml.common.XmlRoot;
 import com.armedia.caliente.engine.xml.common.XmlSessionWrapper;
 import com.armedia.caliente.engine.xml.common.XmlSetting;
 import com.armedia.caliente.engine.xml.importer.jaxb.AclsT;
 import com.armedia.caliente.engine.xml.importer.jaxb.AggregatorBase;
-import com.armedia.caliente.engine.xml.importer.jaxb.ContentStreamT;
 import com.armedia.caliente.engine.xml.importer.jaxb.DocumentIndexEntryT;
 import com.armedia.caliente.engine.xml.importer.jaxb.DocumentIndexT;
 import com.armedia.caliente.engine.xml.importer.jaxb.DocumentIndexVersionT;
@@ -110,14 +113,14 @@ public class XmlImportDelegateFactory
 	private final Map<CmfObject.Archetype, AggregatorBase<?>> xml;
 	private final boolean aggregateFolders;
 	private final boolean aggregateDocuments;
-	private final File db;
-	private final File content;
+	private final Path db;
+	private final Path content;
+	private final Path metadataRoot;
+	private final AtomicBoolean schemaMissing = new AtomicBoolean(true);
 
 	private final ThreadLocal<List<DocumentVersionT>> threadedVersionList = ThreadLocal.withInitial(ArrayList::new);
 
 	private final ImportEngineListener documentListener = new DefaultImportEngineListener() {
-
-		private int filesWritten = 0;
 
 		@Override
 		public void objectHistoryImportStarted(UUID jobId, CmfObject.Archetype objectType, String batchId, int count) {
@@ -140,25 +143,21 @@ public class XmlImportDelegateFactory
 				if (XmlImportDelegateFactory.this.aggregateDocuments) {
 					DocumentsT.class.cast(XmlImportDelegateFactory.this.xml.get(CmfObject.Archetype.DOCUMENT)).add(doc);
 				} else {
-					// The content's location is in the first version
-					DocumentVersionT first = l.get(0);
-					ContentStreamT content = first.getContents().get(0);
-					File tgt = new File(XmlImportDelegateFactory.this.content, content.getLocation());
-					File dir = tgt.getParentFile();
+					// The content's location is in the last version
+					DocumentVersionT last = l.get(l.size() - 1);
+					Path dir = XmlImportDelegateFactory.this.metadataRoot.resolve(last.getSourcePath());
 					if (dir != null) {
 						try {
-							FileUtils.forceMkdir(dir);
+							FileUtils.forceMkdir(dir.toFile());
 						} catch (IOException e) {
 							this.log.error("Failed to create the parent directory at [{}]", dir, e);
 							return;
 						}
 					}
-					tgt = new File(dir, String.format("%s-document.xml", tgt.getName()));
-
+					Path tgt = dir.resolve(String.format("%s.metadata.xml", last.getName()));
 					boolean ok = false;
-					try (OutputStream out = new FileOutputStream(tgt)) {
+					try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tgt.toFile()))) {
 						XmlImportDelegateFactory.marshalXml(doc, out);
-						this.filesWritten++;
 						ok = true;
 					} catch (FileNotFoundException e) {
 						this.log.error("Failed to open an output stream to [{}]", tgt, e);
@@ -167,12 +166,12 @@ public class XmlImportDelegateFactory
 						this.log.error("IOException raised while writing to [{}]", tgt, e);
 						return;
 					} catch (JAXBException e) {
-						this.log.error("Failed to marshal the XML for document [{}]({}) to [{}]", first.getSourcePath(),
-							first.getId(), tgt, e);
+						this.log.error("Failed to marshal the XML for document [{}]({}) to [{}]", last.getSourcePath(),
+							last.getId(), tgt, e);
 						return;
 					} finally {
 						if (!ok) {
-							FileUtils.deleteQuietly(tgt);
+							FileUtils.deleteQuietly(tgt.toFile());
 						}
 					}
 
@@ -182,7 +181,7 @@ public class XmlImportDelegateFactory
 					for (DocumentVersionT v : l) {
 						DocumentIndexVersionT idx = new DocumentIndexVersionT();
 						idx.setId(v.getId());
-						idx.setLocation(relativizeXmlLocation(tgt.getAbsolutePath()));
+						idx.setLocation(relativizeXmlLocation(tgt));
 						idx.setName(v.getName());
 						idx.setPath(v.getSourcePath());
 						idx.setType(v.getType());
@@ -199,7 +198,7 @@ public class XmlImportDelegateFactory
 					}
 					// Make sure all entries go in one group, to ensure they're always together
 					DocumentIndexEntryT entry = new DocumentIndexEntryT();
-					entry.setHistoryId(first.getHistoryId());
+					entry.setHistoryId(last.getHistoryId());
 					entry.add(entries);
 					index.add(entry);
 				}
@@ -220,29 +219,26 @@ public class XmlImportDelegateFactory
 				return;
 			}
 			try {
-				if (this.filesWritten == 0) {
-					// Write the schema out with the first non-empty XML file
-					writeSchema();
-				}
+				// Write the schema out with the first non-empty XML file
+				writeSchema();
 
 				// There is an aggregator, so write out its file
-				final File f = calculateConsolidatedFile(archetype);
+				final Path p = calculateConsolidatedFile(archetype);
 				boolean ok = false;
-				try (OutputStream out = new FileOutputStream(f)) {
+				try (OutputStream out = new BufferedOutputStream(new FileOutputStream(p.toFile()))) {
 					XmlImportDelegateFactory.marshalXml(root, out);
-					this.filesWritten++;
 					ok = true;
 				} catch (FileNotFoundException e) {
 					this.log.error("Failed to open the output file for the aggregate XML for type {} at [{}]",
-						archetype, f, e);
+						archetype, p, e);
 				} catch (IOException e) {
 					this.log.error("IOException raised while writing the aggregate XML for type {} at [{}]", archetype,
-						f, e);
+						p, e);
 				} catch (JAXBException e) {
 					this.log.error("Failed to generate the XML for {}", archetype, e);
 				} finally {
 					if (!ok) {
-						FileUtils.deleteQuietly(f);
+						FileUtils.deleteQuietly(p.toFile());
 					}
 				}
 			} finally {
@@ -252,35 +248,38 @@ public class XmlImportDelegateFactory
 		}
 
 		private void writeSchema() {
-			try (InputStream in = Thread.currentThread().getContextClassLoader()
-				.getResourceAsStream(XmlImportDelegateFactory.SCHEMA_NAME)) {
-				if (in == null) {
-					this.log.warn("Failed to load the schema from the resource [{}]",
-						XmlImportDelegateFactory.SCHEMA_NAME);
-					return;
-				}
-				final File schemaFile = new File(XmlImportDelegateFactory.this.db,
-					XmlImportDelegateFactory.SCHEMA_NAME);
+			shareLockedUpgradable(XmlImportDelegateFactory.this.schemaMissing::get, () -> {
+				try (InputStream in = Thread.currentThread().getContextClassLoader()
+					.getResourceAsStream(XmlImportDelegateFactory.SCHEMA_NAME)) {
+					if (in == null) {
+						this.log.warn("Failed to load the schema from the resource [{}]",
+							XmlImportDelegateFactory.SCHEMA_NAME);
+						return;
+					}
+					final Path schemaFile = XmlImportDelegateFactory.this.metadataRoot
+						.resolve(XmlImportDelegateFactory.SCHEMA_NAME);
 
-				try (FileOutputStream out = new FileOutputStream(schemaFile)) {
-					IOUtils.copy(in, out);
-				} catch (FileNotFoundException e) {
-					if (this.log.isTraceEnabled()) {
-						this.log.warn("Failed to create the schema file at [{}]", schemaFile, e);
-					} else {
-						this.log.warn("Failed to create the schema file at [{}]: {}", schemaFile, e.getMessage());
+					try (OutputStream out = new BufferedOutputStream(new FileOutputStream(schemaFile.toFile()))) {
+						IOUtils.copy(in, out);
+						XmlImportDelegateFactory.this.schemaMissing.set(false);
+					} catch (FileNotFoundException e) {
+						if (this.log.isTraceEnabled()) {
+							this.log.warn("Failed to create the schema file at [{}]", schemaFile, e);
+						} else {
+							this.log.warn("Failed to create the schema file at [{}]: {}", schemaFile, e.getMessage());
+						}
+					} catch (IOException e) {
+						if (this.log.isTraceEnabled()) {
+							this.log.warn("Failed to copy the schema into the file at [{}]", schemaFile, e);
+						} else {
+							this.log.warn("Failed to copy the schema into the file at [{}]: {}", schemaFile,
+								e.getMessage());
+						}
 					}
 				} catch (IOException e) {
-					if (this.log.isTraceEnabled()) {
-						this.log.warn("Failed to copy the schema into the file at [{}]", schemaFile, e);
-					} else {
-						this.log.warn("Failed to copy the schema into the file at [{}]: {}", schemaFile,
-							e.getMessage());
-					}
+					this.log.warn(XmlImportDelegateFactory.SCHEMA_NAME);
 				}
-			} catch (IOException e) {
-				this.log.warn(XmlImportDelegateFactory.SCHEMA_NAME);
-			}
+			});
 		}
 	};
 
@@ -289,18 +288,21 @@ public class XmlImportDelegateFactory
 		engine.addListener(this.documentListener);
 		String db = configuration.getString(XmlSetting.DB);
 		if (db != null) {
-			this.db = Tools.canonicalize(new File(db));
+			this.db = Tools.canonicalize(Paths.get(db));
 		} else {
-			this.db = Tools.canonicalize(new File("caliente-data"));
+			this.db = Tools.canonicalize(Paths.get("caliente-data"));
 		}
-		FileUtils.forceMkdir(this.db);
+		FileUtils.forceMkdir(this.db.toFile());
 		String content = configuration.getString(XmlSetting.CONTENT);
 		if (content != null) {
-			this.content = Tools.canonicalize(new File(content));
+			this.content = Tools.canonicalize(Paths.get(content));
 		} else {
-			this.content = Tools.canonicalize(new File(db, "content"));
+			this.content = Tools.canonicalize(this.db.resolve("content"));
 		}
-		FileUtils.forceMkdir(this.content);
+		FileUtils.forceMkdir(this.content.toFile());
+		this.metadataRoot = XmlCommon.getMetadataRoot(this.content);
+		FileUtils.forceMkdir(this.metadataRoot.toFile());
+
 		this.aggregateFolders = configuration.getBoolean(XmlSetting.AGGREGATE_FOLDERS);
 		this.aggregateDocuments = configuration.getBoolean(XmlSetting.AGGREGATE_DOCUMENTS);
 
@@ -315,25 +317,23 @@ public class XmlImportDelegateFactory
 		this.xml = xml;
 
 		for (CmfObject.Archetype t : xml.keySet()) {
-			File f = calculateConsolidatedFile(t);
+			Path p = calculateConsolidatedFile(t);
 			try {
-				FileUtils.forceDelete(f);
+				FileUtils.forceDelete(p.toFile());
 			} catch (FileNotFoundException e) {
 				// Wasn't there...no problem!
 			} catch (IOException e) {
-				this.log.warn("Failed to delete the aggregate XML file at [{}]", f.getAbsolutePath(), e);
+				this.log.warn("Failed to delete the aggregate XML file at [{}]", p, e);
 			}
 		}
 	}
 
-	String relativizeXmlLocation(String absolutePath) {
-		String base = this.content.getAbsolutePath();
-		if (File.separatorChar != '/') {
-			base = base.replace(File.separatorChar, '/');
-			absolutePath = absolutePath.replace(File.separatorChar, '/');
-		}
-		base = String.format("%s/", base);
-		return absolutePath.substring(base.length());
+	String relativizeXmlLocation(Path absolutePath) {
+		return this.metadataRoot.relativize(absolutePath).toString();
+	}
+
+	String relativizeContentLocation(Path absolutePath) {
+		return this.content.relativize(absolutePath).toString();
 	}
 
 	protected void storeDocumentVersion(DocumentVersionT v) throws ImportException {
@@ -381,7 +381,7 @@ public class XmlImportDelegateFactory
 		}
 	}
 
-	protected File calculateConsolidatedFile(CmfObject.Archetype t) {
-		return new File(this.db, String.format("%ss.xml", t.name().toLowerCase()));
+	protected Path calculateConsolidatedFile(CmfObject.Archetype t) {
+		return this.metadataRoot.resolve(String.format("index.%ss.xml", t.name().toLowerCase()));
 	}
 }
