@@ -40,6 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 
@@ -174,6 +175,15 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	protected abstract boolean isSupported(LOCATOR locator);
 
 	public abstract boolean isSupportsFileAccess();
+
+	public final <VALUE> List<String> renderContentPath(CmfObject<VALUE> object, CmfContentStream stream) {
+		if (!isSupportsFileAccess()) {
+			throw new UnsupportedOperationException("This CmfContentStore instance does not support content paths");
+		}
+		return doRenderContentPath(object, stream);
+	}
+
+	protected abstract <VALUE> List<String> doRenderContentPath(CmfObject<VALUE> object, CmfContentStream stream);
 
 	// Return null if this doesn't support file access
 	public final File getRootLocation() {

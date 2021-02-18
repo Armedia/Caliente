@@ -62,6 +62,7 @@ import javax.xml.bind.JAXBException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentOrganizer;
@@ -335,41 +336,46 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		return String.format("%s%s%s%s", baseName, descriptor, ext, appendix);
 	}
 
-	@Override
-	protected <VALUE> URI doCalculateLocator(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
-		CmfContentStream info) {
-		final Location location = this.organizer.getLocation(translator, object, info);
+	private <VALUE> Pair<String, List<String>> renderURIParts(CmfObject<VALUE> object, CmfContentStream info) {
+		final Location location = this.organizer.getLocation(object.getTranslator(), object, info);
 		final List<String> rawPath = new ArrayList<>(location.containerSpec);
 		rawPath.add(constructFileName(location));
 
-		final String scheme;
-		final String ssp;
-		if (this.forceSafeFilenames || this.fixFilenames) {
-			boolean fixed = false;
-			List<String> sspParts = new ArrayList<>();
-			for (String s : rawPath) {
-				String S = safeEncode(s);
-				fixed |= !Objects.equals(s, S);
-				sspParts.add(S);
-			}
-			ssp = FileNameTools.reconstitute(sspParts, false, false, '/');
+		if (!this.forceSafeFilenames && !this.fixFilenames) { return Pair.of(LocalContentStore.SCHEME_RAW, rawPath); }
 
-			if (fixed) {
-				if (this.forceSafeFilenames) {
-					scheme = LocalContentStore.SCHEME_SAFE;
-				} else {
-					scheme = LocalContentStore.SCHEME_FIXED;
-				}
+		final String scheme;
+		boolean fixed = false;
+		List<String> sspParts = new ArrayList<>();
+		for (String s : rawPath) {
+			String S = safeEncode(s);
+			fixed |= !Objects.equals(s, S);
+			sspParts.add(S);
+		}
+
+		if (fixed) {
+			if (this.forceSafeFilenames) {
+				scheme = LocalContentStore.SCHEME_SAFE;
 			} else {
-				scheme = LocalContentStore.SCHEME_RAW;
+				scheme = LocalContentStore.SCHEME_FIXED;
 			}
 		} else {
 			scheme = LocalContentStore.SCHEME_RAW;
-			ssp = FileNameTools.reconstitute(rawPath, false, false, '/');
 		}
 
+		return Pair.of(scheme, sspParts);
+	}
+
+	@Override
+	protected <VALUE> List<String> doRenderContentPath(CmfObject<VALUE> object, CmfContentStream info) {
+		return renderURIParts(object, info).getValue();
+	}
+
+	@Override
+	protected <VALUE> URI doCalculateLocator(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
+		CmfContentStream info) {
+		final Pair<String, List<String>> p = renderURIParts(object, info);
 		try {
-			URI uri = new URI(scheme, ssp, null);
+			URI uri = new URI(p.getLeft(), FileNameTools.reconstitute(p.getRight(), false, false, '/'), null);
 			this.log.info("Generated URI {}", uri);
 			return uri;
 		} catch (URISyntaxException e) {
