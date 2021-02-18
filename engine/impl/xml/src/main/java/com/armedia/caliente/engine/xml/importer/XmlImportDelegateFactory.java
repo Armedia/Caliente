@@ -144,41 +144,42 @@ public class XmlImportDelegateFactory
 					DocumentsT.class.cast(XmlImportDelegateFactory.this.xml.get(CmfObject.Archetype.DOCUMENT)).add(doc);
 				} else {
 					// The content's location is in the last version
-					DocumentVersionT last = l.get(l.size() - 1);
-					Path dir = XmlImportDelegateFactory.this.metadataRoot.resolve(last.getSourcePath());
-					if (dir != null) {
-						try {
-							FileUtils.forceMkdir(dir.toFile());
-						} catch (IOException e) {
-							this.log.error("Failed to create the parent directory at [{}]", dir, e);
-							return;
-						}
-					}
-					Path tgt = dir.resolve(String.format("%s.metadata.xml", last.getName()));
-					boolean ok = false;
-					try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tgt.toFile()))) {
-						XmlImportDelegateFactory.marshalXml(doc, out);
-						ok = true;
-					} catch (FileNotFoundException e) {
-						this.log.error("Failed to open an output stream to [{}]", tgt, e);
-						return;
-					} catch (IOException e) {
-						this.log.error("IOException raised while writing to [{}]", tgt, e);
-						return;
-					} catch (JAXBException e) {
-						this.log.error("Failed to marshal the XML for document [{}]({}) to [{}]", last.getSourcePath(),
-							last.getId(), tgt, e);
-						return;
-					} finally {
-						if (!ok) {
-							FileUtils.deleteQuietly(tgt.toFile());
-						}
-					}
-
 					DocumentIndexT index = DocumentIndexT.class
 						.cast(XmlImportDelegateFactory.this.xml.get(CmfObject.Archetype.DOCUMENT));
 					List<DocumentIndexVersionT> entries = new ArrayList<>(l.size());
+					final DocumentVersionT last = l.get(l.size() - 1);
 					for (DocumentVersionT v : l) {
+						String contentPath = v.getContentPath();
+						Path tgt = XmlImportDelegateFactory.this.metadataRoot.resolve(contentPath);
+						Path dir = tgt.getParent();
+						if (dir != null) {
+							try {
+								FileUtils.forceMkdir(dir.toFile());
+							} catch (IOException e) {
+								this.log.error("Failed to create the parent directory at [{}]", dir, e);
+								return;
+							}
+						}
+						boolean ok = false;
+						try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tgt.toFile()))) {
+							XmlImportDelegateFactory.marshalXml(doc, out);
+							ok = true;
+						} catch (FileNotFoundException e) {
+							this.log.error("Failed to open an output stream to [{}]", tgt, e);
+							return;
+						} catch (IOException e) {
+							this.log.error("IOException raised while writing to [{}]", tgt, e);
+							return;
+						} catch (JAXBException e) {
+							this.log.error("Failed to marshal the XML for version [{}] for history [{}]({}) to [{}]",
+								v.getVersion(), v.getHistoryId(), v.getId(), tgt, e);
+							return;
+						} finally {
+							if (!ok) {
+								FileUtils.deleteQuietly(tgt.toFile());
+							}
+						}
+
 						DocumentIndexVersionT idx = new DocumentIndexVersionT();
 						idx.setId(v.getId());
 						idx.setLocation(relativizeXmlLocation(tgt));
@@ -196,6 +197,7 @@ public class XmlImportDelegateFactory
 						idx.setSize(size);
 						entries.add(idx);
 					}
+
 					// Make sure all entries go in one group, to ensure they're always together
 					DocumentIndexEntryT entry = new DocumentIndexEntryT();
 					entry.setHistoryId(last.getHistoryId());

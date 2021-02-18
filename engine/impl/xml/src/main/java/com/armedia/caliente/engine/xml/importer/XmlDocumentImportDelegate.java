@@ -42,7 +42,6 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
-import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.engine.xml.importer.jaxb.ContentStreamT;
 import com.armedia.caliente.engine.xml.importer.jaxb.DocumentVersionT;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -76,7 +75,6 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		v.setId(this.cmfObject.getId());
 		v.setAcl(getPropertyValue(IntermediateProperty.ACL_ID).asString());
 
-		String objectPath = getFixedPath(ctx, PathTools::makeSafe);
 		try {
 			gcal.setTime(getAttributeValue(IntermediateAttribute.CREATION_DATE).asTime());
 			gcal.setTimeZone(XmlImportDelegate.TZUTC);
@@ -100,13 +98,18 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
 		v.setName(this.cmfObject.getName());
 		v.setParentId(getAttributeValue(IntermediateAttribute.PARENT_ID).asString());
-		v.setSourcePath(objectPath);
+		v.setSourcePath(getFixedPath(ctx));
 		v.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());
 		v.setFormat(getAttributeValue(IntermediateAttribute.CONTENT_STREAM_MIME_TYPE).asString());
 		v.setHistoryId(getAttributeValue(IntermediateAttribute.VERSION_SERIES_ID).asString());
 		v.setAntecedentId(getAttributeValue(IntermediateAttribute.VERSION_ANTECEDENT_ID).asString());
 		v.setCurrent(getAttributeValue(IntermediateAttribute.IS_LATEST_VERSION).asBoolean());
 		v.setVersion(getAttributeValue(IntermediateAttribute.VERSION_LABEL).asString());
+
+		String contentPath = ctx.getContentStore().renderContentPath(this.cmfObject,
+			new CmfContentStream(this.cmfObject, 0));
+		contentPath = String.format("%s.document.xml", contentPath);
+		v.setContentPath(contentPath);
 
 		int contents = 0;
 		final boolean skipRenditions = this.factory.isSkipRenditions();

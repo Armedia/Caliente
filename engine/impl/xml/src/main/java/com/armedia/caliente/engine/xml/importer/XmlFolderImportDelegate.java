@@ -36,14 +36,13 @@ import java.nio.file.Path;
 import javax.xml.bind.JAXBException;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.groovy.parser.antlr4.util.StringUtils;
 
 import com.armedia.caliente.engine.importer.ImportException;
-import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.engine.xml.importer.jaxb.FolderIndexEntryT;
 import com.armedia.caliente.engine.xml.importer.jaxb.FolderIndexT;
 import com.armedia.caliente.engine.xml.importer.jaxb.FolderT;
 import com.armedia.caliente.store.CmfAttributeTranslator;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
@@ -65,13 +64,10 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 		if (!ctx.getContentStore().isSupportsFileAccess()) { return null; }
 
 		FolderT f = this.delegate.createItem(translator, ctx);
-		String fixedPath = getFixedPath(ctx, PathTools::makeSafe);
-		if (!StringUtils.isEmpty(fixedPath)) {
-			fixedPath += "/";
-		}
-		fixedPath += this.cmfObject.getName();
-
-		Path tgt = ctx.getSession().getMetadataRoot().resolve(fixedPath);
+		String location = ctx.getContentStore().renderContentPath(this.cmfObject,
+			new CmfContentStream(this.cmfObject, 0));
+		location = String.format("%s.folder.xml", location);
+		Path tgt = ctx.getSession().getMetadataRoot().resolve(location);
 		Path dir = ctx.getSession().makeAbsolute(tgt);
 		dir = tgt.getParent();
 		if (dir != null) {
@@ -82,8 +78,6 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 					e);
 			}
 		}
-
-		tgt = dir.resolve(String.format("%s.metadata.xml", PathTools.makeSafe(tgt.getFileName().toString())));
 
 		boolean ok = false;
 		try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tgt.toFile()))) {
@@ -105,7 +99,7 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 
 		FolderIndexEntryT idx = new FolderIndexEntryT();
 		idx.setId(f.getId());
-		idx.setLocation(this.factory.relativizeXmlLocation(tgt.toAbsolutePath()));
+		idx.setLocation(location);
 		idx.setName(f.getName());
 		idx.setPath(f.getSourcePath());
 		idx.setType(f.getType());
