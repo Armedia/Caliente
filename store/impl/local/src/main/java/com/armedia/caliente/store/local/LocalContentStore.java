@@ -366,8 +366,8 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	@Override
-	protected <VALUE> List<String> doRenderContentPath(CmfObject<VALUE> object, CmfContentStream info) {
-		return renderURIParts(object, info).getValue();
+	protected <VALUE> String doRenderContentPath(CmfObject<VALUE> object, CmfContentStream info) {
+		return FileNameTools.reconstitute(renderURIParts(object, info).getValue(), false, false, '/');
 	}
 
 	@Override
