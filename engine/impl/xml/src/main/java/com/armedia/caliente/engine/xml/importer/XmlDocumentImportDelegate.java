@@ -27,7 +27,6 @@
 package com.armedia.caliente.engine.xml.importer;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,6 +42,7 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
+import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.engine.xml.importer.jaxb.ContentStreamT;
 import com.armedia.caliente.engine.xml.importer.jaxb.DocumentVersionT;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -54,6 +54,8 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.tools.MimeTools;
 
 public class XmlDocumentImportDelegate extends XmlImportDelegate {
+
+	public static final String NO_CONTENT_FLAG = ":NO_CONTENT:";
 
 	protected XmlDocumentImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
@@ -74,11 +76,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		v.setId(this.cmfObject.getId());
 		v.setAcl(getPropertyValue(IntermediateProperty.ACL_ID).asString());
 
-		String objectPath = getFixedPath(ctx);
-		if (objectPath == null) {
-			objectPath = StringUtils.EMPTY;
-		}
-
+		String objectPath = getFixedPath(ctx, PathTools::makeSafe);
 		try {
 			gcal.setTime(getAttributeValue(IntermediateAttribute.CREATION_DATE).asTime());
 			gcal.setTimeZone(XmlImportDelegate.TZUTC);
@@ -146,30 +144,14 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
 		if (contents == 0) {
 			// Generate a placeholder, empty file
-			CmfContentStream info = new CmfContentStream(this.cmfObject, 0);
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().findHandle(info);
-			File f = null;
-			try {
-				f = h.getFile(true);
-				if (f == null) {
-					throw new CmfStorageException("The given content store doesn't support file-level access");
-				}
-				f.createNewFile();
-			} catch (IOException e) {
-				// Failed to get the file, so we can't handle this
-				throw new CmfStorageException(
-					String.format("Failed to generate the placeholder content file for %s at [%s]",
-						this.cmfObject.getDescription(), f.getAbsolutePath()),
-					e);
-			}
 			ContentStreamT xml = new ContentStreamT();
 			xml.setFileName(v.getName());
 			// xml.setHash(null);
-			xml.setLocation(this.factory.relativizeContentLocation(f.getAbsoluteFile().toPath()));
+			xml.setLocation(StringUtils.EMPTY);
 			xml.setMimeType(MimeTools.DEFAULT_MIME_TYPE.toString());
-			xml.setRenditionId(info.getRenditionIdentifier());
-			xml.setRenditionPage(info.getRenditionPage());
-			xml.setModifier(info.getModifier());
+			xml.setRenditionId(StringUtils.EMPTY);
+			xml.setRenditionPage(0);
+			xml.setModifier(StringUtils.EMPTY);
 			xml.setSize(0);
 			v.getContents().add(xml);
 		}

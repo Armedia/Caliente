@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -56,6 +57,8 @@ public abstract class ImportDelegateFactory< //
 	CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
 	ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?, ?>//
 > extends TransferDelegateFactory<SESSION, VALUE, CONTEXT, ENGINE> {
+
+	private static final UnaryOperator<String> IDENTITY = UnaryOperator.identity();
 
 	private final Map<CmfValue.Type, VALUE> nullValues;
 
@@ -114,7 +117,8 @@ public abstract class ImportDelegateFactory< //
 		return att.getValues();
 	}
 
-	private final String resolveTreeIds(CONTEXT ctx, String cmsIdPath) throws ImportException {
+	private final String resolveTreeIds(CONTEXT ctx, String cmsIdPath, UnaryOperator<String> pathFix)
+		throws ImportException {
 		List<CmfObjectRef> refs = new ArrayList<>();
 
 		// Convert to a CMFValue to get the string
@@ -124,6 +128,9 @@ public abstract class ImportDelegateFactory< //
 		}
 		Map<CmfObjectRef, String> names = ctx.getObjectNames(refs, true);
 		StringBuilder path = new StringBuilder();
+		if (pathFix == null) {
+			pathFix = ImportDelegateFactory.IDENTITY;
+		}
 		for (CmfObjectRef ref : refs) {
 			final String name = names.get(ref);
 			if (name == null) {
@@ -134,27 +141,28 @@ public abstract class ImportDelegateFactory< //
 			if (StringUtils.isEmpty(name)) {
 				continue;
 			}
+
 			if (path.length() > 0) {
 				path.append('/');
 			}
-			path.append(name);
+
+			path.append(pathFix.apply(name));
 		}
 		return path.toString();
 	}
 
 	public final String getFixedPath(CmfObject<VALUE> cmfObject, CONTEXT ctx) throws ImportException {
+		return getFixedPath(cmfObject, ctx, null);
+	}
+
+	public final String getFixedPath(CmfObject<VALUE> cmfObject, CONTEXT ctx, UnaryOperator<String> pathFix)
+		throws ImportException {
 		CmfProperty<VALUE> prop = cmfObject.getProperty(IntermediateProperty.LATEST_PARENT_TREE_IDS);
 		if ((prop == null) || !prop.hasValues()) {
 			prop = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
 		}
 
-		if ((prop == null) || !prop.hasValues()) {
-			return StringUtils.EMPTY;
-			/*
-			throw new ImportException(String.format("Failed to find the required property [%s] in %s",
-				IntermediateProperty.PARENT_TREE_IDS.encode(), this.cmfObject.getDescription()));
-			*/
-		}
+		if ((prop == null) || !prop.hasValues()) { return StringUtils.EMPTY; }
 		CmfAttributeTranslator<VALUE> translator = cmfObject.getTranslator();
 		CmfValue sourcePath = translator.encodeProperty(prop).getValue();
 
@@ -171,7 +179,12 @@ public abstract class ImportDelegateFactory< //
 		}
 
 		if (targetPath == null) {
-			targetPath = resolveTreeIds(ctx, sourcePath.asString());
+			targetPath = resolveTreeIds(ctx, sourcePath.asString(), pathFix);
+		} else if (pathFix != null) {
+			// Split, and fix each path
+			List<String> l = Tools.splitEscaped('/', targetPath);
+			l.replaceAll(pathFix);
+			targetPath = Tools.joinEscaped('/', l);
 		}
 
 		return targetPath;

@@ -36,8 +36,10 @@ import java.nio.file.Path;
 import javax.xml.bind.JAXBException;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.groovy.parser.antlr4.util.StringUtils;
 
 import com.armedia.caliente.engine.importer.ImportException;
+import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.engine.xml.importer.jaxb.FolderIndexEntryT;
 import com.armedia.caliente.engine.xml.importer.jaxb.FolderIndexT;
 import com.armedia.caliente.engine.xml.importer.jaxb.FolderT;
@@ -63,7 +65,12 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 		if (!ctx.getContentStore().isSupportsFileAccess()) { return null; }
 
 		FolderT f = this.delegate.createItem(translator, ctx);
-		String fixedPath = getFixedPath(ctx);
+		String fixedPath = getFixedPath(ctx, PathTools::makeSafe);
+		if (!StringUtils.isEmpty(fixedPath)) {
+			fixedPath += "/";
+		}
+		fixedPath += this.cmfObject.getName();
+
 		Path tgt = ctx.getSession().getMetadataRoot().resolve(fixedPath);
 		Path dir = ctx.getSession().makeAbsolute(tgt);
 		dir = tgt.getParent();
@@ -76,7 +83,7 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 			}
 		}
 
-		tgt = dir.resolve(String.format("%s.metadata.xml", tgt.getFileName()));
+		tgt = dir.resolve(String.format("%s.metadata.xml", PathTools.makeSafe(tgt.getFileName().toString())));
 
 		boolean ok = false;
 		try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tgt.toFile()))) {
