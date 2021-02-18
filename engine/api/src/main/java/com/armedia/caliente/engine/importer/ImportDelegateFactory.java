@@ -26,17 +26,23 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.importer;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.engine.TransferDelegateFactory;
 import com.armedia.caliente.engine.common.SessionWrapper;
+import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.converter.PathIdHelper;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
@@ -106,6 +112,69 @@ public abstract class ImportDelegateFactory< //
 		CmfProperty<VALUE> att = cmfObject.getProperty(attribute);
 		if (att == null) { return Collections.emptyList(); }
 		return att.getValues();
+	}
+
+	private final String resolveTreeIds(CONTEXT ctx, String cmsIdPath) throws ImportException {
+		List<CmfObjectRef> refs = new ArrayList<>();
+
+		// Convert to a CMFValue to get the string
+		for (String id : PathIdHelper.decodePaths(cmsIdPath)) {
+			// They're all known to be folders, so...
+			refs.add(new CmfObjectRef(CmfObject.Archetype.FOLDER, id));
+		}
+		Map<CmfObjectRef, String> names = ctx.getObjectNames(refs, true);
+		StringBuilder path = new StringBuilder();
+		for (CmfObjectRef ref : refs) {
+			final String name = names.get(ref);
+			if (name == null) {
+				// WTF?!?!?
+				throw new ImportException(String.format("Failed to resolve the name for %s", ref));
+			}
+
+			if (StringUtils.isEmpty(name)) {
+				continue;
+			}
+			if (path.length() > 0) {
+				path.append('/');
+			}
+			path.append(name);
+		}
+		return path.toString();
+	}
+
+	public final String getFixedPath(CmfObject<VALUE> cmfObject, CONTEXT ctx) throws ImportException {
+		CmfProperty<VALUE> prop = cmfObject.getProperty(IntermediateProperty.LATEST_PARENT_TREE_IDS);
+		if ((prop == null) || !prop.hasValues()) {
+			prop = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
+		}
+
+		if ((prop == null) || !prop.hasValues()) {
+			return StringUtils.EMPTY;
+			/*
+			throw new ImportException(String.format("Failed to find the required property [%s] in %s",
+				IntermediateProperty.PARENT_TREE_IDS.encode(), this.cmfObject.getDescription()));
+			*/
+		}
+		CmfAttributeTranslator<VALUE> translator = cmfObject.getTranslator();
+		CmfValue sourcePath = translator.encodeProperty(prop).getValue();
+
+		String targetPath = null;
+
+		prop = cmfObject.getProperty(IntermediateProperty.FIXED_PATH);
+		if ((prop != null) && prop.hasValues()) {
+			targetPath = translator.encodeProperty(prop).getValue().asString();
+			if (!StringUtils.isEmpty(targetPath)) {
+				// The FIXED_PATH property is always absolute, but we need to generate
+				// a relative path here, so we do just that: remove any leading slashes
+				targetPath = targetPath.replaceAll("^/+", "");
+			}
+		}
+
+		if (targetPath == null) {
+			targetPath = resolveTreeIds(ctx, sourcePath.asString());
+		}
+
+		return targetPath;
 	}
 
 	protected abstract ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ENGINE> newImportDelegate(
