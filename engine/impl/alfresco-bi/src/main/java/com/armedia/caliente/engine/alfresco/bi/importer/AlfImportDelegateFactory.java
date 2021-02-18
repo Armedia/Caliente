@@ -68,7 +68,6 @@ import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
-import com.armedia.caliente.engine.converter.PathIdHelper;
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
@@ -76,7 +75,6 @@ import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
@@ -329,32 +327,6 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	final String resolveTreeIds(final AlfImportContext ctx, String cmsPath) throws ImportException {
-		List<CmfObjectRef> refs = new ArrayList<>();
-		for (String id : PathIdHelper.decodePaths(cmsPath)) {
-			// They're all known to be folders, so...
-			refs.add(new CmfObjectRef(CmfObject.Archetype.FOLDER, id));
-		}
-		Map<CmfObjectRef, String> names = ctx.getObjectNames(refs, true);
-		StringBuilder path = new StringBuilder();
-		for (CmfObjectRef ref : refs) {
-			final String name = names.get(ref);
-			if (name == null) {
-				// WTF?!?!?
-				throw new ImportException(String.format("Failed to resolve the name for %s", ref));
-			}
-
-			if (StringUtils.isEmpty(name)) {
-				continue;
-			}
-			if (path.length() > 0) {
-				path.append('/');
-			}
-			path.append(name);
-		}
-		return path.toString();
-	}
-
 	protected Path getContentRelativePath(File contentFile) {
 		return this.contentRoot.relativize(contentFile.toPath());
 	}
@@ -476,32 +448,7 @@ public class AlfImportDelegateFactory
 		}
 		thisMarker.setNumber(number);
 
-		CmfValue sourcePath = getPropertyValue(cmfObject, IntermediateProperty.LATEST_PARENT_TREE_IDS);
-		if ((sourcePath == null) || sourcePath.isNull()) {
-			sourcePath = getPropertyValue(cmfObject, IntermediateProperty.PARENT_TREE_IDS);
-		}
-		if (sourcePath == null) {
-			throw new ImportException(String.format("Failed to find the required property [%s] in %s",
-				IntermediateProperty.PARENT_TREE_IDS.encode(), cmfObject.getDescription()));
-		}
-
-		String targetPath = null;
-
-		CmfValue fixedPath = getPropertyValue(cmfObject, IntermediateProperty.FIXED_PATH);
-		if (fixedPath != null) {
-			targetPath = fixedPath.asString();
-
-			if (!StringUtils.isEmpty(targetPath)) {
-				// The FIXED_PATH property is always absolute, but we need to generate
-				// a relative path here, so we do just that: remove any leading slashes
-				targetPath = targetPath.replaceAll("^/+", "");
-			}
-		}
-
-		if (targetPath == null) {
-			targetPath = resolveTreeIds(ctx, sourcePath.asString());
-		}
-
+		String targetPath = getFixedPath(cmfObject, ctx);
 		final boolean unfiled;
 		{
 			CmfProperty<CmfValue> unfiledProp = cmfObject.getProperty(IntermediateProperty.IS_UNFILED);

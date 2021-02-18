@@ -512,20 +512,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			throw new ImportException("This engine requires filesystem access");
 		}
 
-		String path = null;
-		CmfValue pathProp = getPropertyValue(IntermediateProperty.LATEST_PARENT_TREE_IDS);
-		if ((pathProp == null) || pathProp.isNull()) {
-			pathProp = getPropertyValue(IntermediateProperty.PARENT_TREE_IDS);
-		}
-		if (pathProp == null) {
-			throw new ImportException(String.format("Failed to find the required property [%s] in %s",
-				IntermediateProperty.PARENT_TREE_IDS.encode(), this.cmfObject.getDescription()));
-		}
-
-		String prefix = (!pathProp.isNull() ? pathProp.asString() : "");
-		// TODO: Don't like calculating this twice... once here, once in generateItemMarker()
-		prefix = this.factory.resolveTreeIds(ctx, prefix);
-		path = String.format("%s%s%s", prefix, StringUtils.isEmpty(prefix) ? "" : "/",
+		String prefix = getFixedPath(ctx);
+		String path = String.format("%s%s%s", prefix, StringUtils.isEmpty(prefix) ? "" : "/",
 			ctx.getHeadObject(this.cmfObject).getName());
 
 		// Step 1: copy over all the attributes that need copying over, un-mapping them as needed
