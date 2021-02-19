@@ -89,7 +89,7 @@
 		<dfc.jar>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</dfc.jar>
 
 		<!-- JShare is for SharePoint exp support -->
-		<jshare.version>1.0.409</jshare.version>
+		<jshare.version>1.0.410</jshare.version>
 
 		<!-- RIDC is for WebCenter exp support -->
 		<ridc.version>11.1.1.0</ridc.version>
