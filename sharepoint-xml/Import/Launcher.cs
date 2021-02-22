@@ -35,6 +35,9 @@ namespace Armedia.CMSMF.SharePoint.Import
                 [OptionAttribute("user", Required = false, HelpText = "The user with which to log into SharePoint")]
                 public string user { get; set; }
 
+                [OptionAttribute("domain", Required = false, HelpText = "The user's authentication domain for SharePoint")]
+                public string domain { get; set; }
+
                 [OptionAttribute("password", Required = false, HelpText = "The password with which to log into SharePoint")]
                 public string password { get; set; }
 
@@ -187,7 +190,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
             private const string DEFAULT_LIBRARY = "Documents";
             private const string DEFAULT_FALLBACK_USER = "dm_fb_user";
-            private const string DEFAULT_INTERNAL_USER = "dm_int_group";
+            private const string DEFAULT_INTERNAL_USER = "dm_int_user";
             private const string DEFAULT_FALLBACK_GROUP = "dm_fb_group";
             private const string DEFAULT_INTERNAL_GROUP = "dm_int_group";
 
@@ -197,6 +200,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             public string cfg { get; private set; }
             public string siteUrl { get; private set; }
             public string user { get; private set; }
+            public string domain { get; private set; }
             public string password { get; private set; }
             public string ldapSyncDomain { get; private set; }
             public string library { get; private set; }
@@ -366,8 +370,11 @@ namespace Armedia.CMSMF.SharePoint.Import
                 return 2;
             }
 
+            string logDir = string.Format("{0}\\logs", baseDir);
+            System.IO.Directory.CreateDirectory(logDir);
+
             Environment.SetEnvironmentVariable("CMF_LOGDATE", string.Format("{0:yyyyMMdd-HHmmss}", DateTime.Now));
-            Environment.SetEnvironmentVariable("CMF_LOGDIR", options.content);
+            Environment.SetEnvironmentVariable("CMF_LOGDIR", logDir);
 
             XmlConfigurator.Configure(new FileInfo(string.Format("{0}\\log4net.xml", baseDir)));
             LOG = log = LogManager.GetLogger(typeof(Launcher));
@@ -389,8 +396,13 @@ namespace Armedia.CMSMF.SharePoint.Import
             {
                 log.Info(string.Format("Using SharePoint at [{0}]", options.siteUrl));
 
-                // TODO: This should be netbiosname
-                string domain = ((string)ldapDirectory.Properties["name"][0]).ToUpper();
+                string domain = options.domain;
+                if (string.IsNullOrEmpty(domain))
+                {
+                    // TODO: This should be netbiosname
+                    domain = ((string)ldapDirectory.Properties["name"][0]).ToUpper();
+                }
+
                 SecureString password = null;
                 if (options.password == null)
                 {
