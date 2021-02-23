@@ -73,28 +73,27 @@ namespace Armedia.CMSMF.SharePoint.Common
 
         public SharePointSession(SharePointSessionInfo info)
         {
-            /*
+
             if (!string.IsNullOrWhiteSpace(info.ApplicationId))
             {
                 this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetAzureADAppOnlyAuthenticatedContext(info.Url, info.ApplicationId, info.Domain, info.CertificateKey, info.CertificatePass);
+                // this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetAppOnlyAuthenticatedContext(info.Url, info.ApplicationId, info.CertificatePass);
+
+                // this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetSharePointOnlineAuthenticatedContextTenant(info.Url, info.UserName + "@" + info.Domain, info.Password);
+
+                // this.ClientContext.Credentials = new SharePointOnlineCredentials(info.UserName + "@" + info.Domain, info.Password);
             }
             else
-            */
             {
                 // this.ClientContext = new ClientContext(info.Url);
+                // this.ClientContext.Credentials = new NetworkCredential(info.UserName, info.Password, info.Domain);
+
+                // This one pops up the authentication window where one can log in with MFA
                 this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetWebLoginClientContext(info.Url);
+
+                // Will this support app passwords?
+                // this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetSharePointOnlineAuthenticatedContextTenant(info.Url, info.UserName, info.Password);
             }
-            /*
-            this.ClientContext.AuthenticationMode = ClientAuthenticationMode.Default;
-            if (string.IsNullOrEmpty(info.Domain))
-            {
-                this.ClientContext.Credentials = new SharePointOnlineCredentials(info.UserName, info.Password);
-            }
-            else
-            {
-                this.ClientContext.Credentials = new NetworkCredential(info.UserName, info.Password, info.Domain);
-            }
-            */
             this.DocumentLibrary = this.ClientContext.Web.Lists.GetByTitle(info.Library);
             this.ClientContext.Load(this.DocumentLibrary, r => r.ForceCheckout, r => r.EnableVersioning, r => r.EnableMinorVersions, r => r.Title, r => r.ContentTypesEnabled, r => r.ContentTypes);
             this.ClientContext.Load(this.DocumentLibrary.RootFolder, f => f.ServerRelativeUrl, f => f.Name);
