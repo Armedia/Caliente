@@ -37,7 +37,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             this.Location = location;
             this.Id = (string)xml.Element(ns + "id");
             this.Acl = (string)xml.Element(ns + "acl");
-            this.Path = (string)xml.Element(ns + "sourcePath");
+            this.Path = "/" + (string)xml.Element(ns + "sourcePath");
             this.SafePath = Tools.MakeSafePath(this.Path);
             this.Name = Tools.SanitizeSingleLineString((string)xml.Element(ns + "name"));
             this.SafeName = Tools.MakeSafeFolderName(this.Name, null);
@@ -213,12 +213,17 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         public XmlReader LoadDescriptor(string location)
         {
-            return XmlReader.Create(FormatContentLocation(location), this.XmlSettings);
+            return XmlReader.Create(FormatMetadataLocation(location), this.XmlSettings);
         }
 
-        public string FormatContentLocation(string location)
+        public string FormatMetadataLocation(string location)
         {
-            return string.Format("{0}/content/{1}", this.ContentLocation, location);
+            return string.Format("{0}/{1}", this.MetadataLocation, location);
+        }
+
+        public string FormatContentStreamLocation(string location)
+        {
+            return string.Format("{0}/{1}", this.ContentLocation, location);
         }
     }
 

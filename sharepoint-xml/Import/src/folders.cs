@@ -134,7 +134,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                             {
                                 goto outer;
                             }
-                            path = folder.ReadElementContentAsString();
+                            path = "/" + folder.ReadElementContentAsString();
                             if (!folder.ReadToFollowing("location"))
                             {
                                 goto outer;
@@ -166,7 +166,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         }
 
                         // A new folder to handle...
-                        FolderInfo f = new FolderInfo(this.ImportContext.FormatContentLocation(location));
+                        FolderInfo f = new FolderInfo(this.ImportContext.FormatMetadataLocation(location));
 
                         List<FolderInfo> l = null;
                         if (!accumulated.ContainsKey(f.SafePath))

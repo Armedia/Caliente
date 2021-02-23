@@ -241,7 +241,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                     {
                         continue;
                     }
-                    path = versionXml.ReadElementContentAsString();
+                    path = "/" + versionXml.ReadElementContentAsString();
 
                     if (!versionXml.ReadToFollowing("name"))
                     {
@@ -391,6 +391,11 @@ namespace Armedia.CMSMF.SharePoint.Import
                             }
                         }
 
+                        if (string.IsNullOrWhiteSpace(name))
+                        {
+                            "".GetHashCode();
+                        }
+
                         FolderInfo parent = folderImporter.ResolveFolder(path);
                         string safeName = null;
                         if (current == null || current.Removed)
@@ -398,7 +403,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                             // If there's no current location (a new file), or the location has changed (marked as such previously), then
                             // we create a new location object
                             safeName = Tools.MakeSafeFileName(name, null);
-                            if (!parent.Files.Add(safeName))
+                            if (string.IsNullOrWhiteSpace(safeName) || !parent.Files.Add(safeName))
                             {
                                 // Duplicate filename, so we modify the name and make sure it's used later
                                 safeName = Tools.MakeSafeFileName(name, historyId); // new safe name
@@ -502,7 +507,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                                     stream = new System.IO.MemoryStream(CONTENT_FILLER);
                                     break;
                                 }
-                                string contentStreamLocation = this.ImportContext.FormatContentLocation((string)firstContent.Element(ns + "location"));
+                                string contentStreamLocation = this.ImportContext.FormatContentStreamLocation((string)firstContent.Element(ns + "location"));
                                 contentStreamSize = XmlConvert.ToInt64((string)firstContent.Element(ns + "size"));
                                 if (contentStreamSize == 0)
                                 {
@@ -922,7 +927,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         continue;
                     }
 
-                    DocumentInfo docInfo = new DocumentInfo(this.Log, historyId, path, name, this.ImportContext.FormatContentLocation(location));
+                    DocumentInfo docInfo = new DocumentInfo(this.Log, historyId, path, name, this.ImportContext.FormatMetadataLocation(location));
                     if (docInfo.Tracker.Completed)
                     {
                         Log.Debug(string.Format("Skipping file [{0}] - already completed", docInfo.SourcePath));

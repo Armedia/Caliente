@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Security;
 using System.Threading;
+using System.Drawing;
 using System.Xml.Linq;
 using OfficeDevPnP.Core;
 
@@ -72,23 +73,28 @@ namespace Armedia.CMSMF.SharePoint.Common
 
         public SharePointSession(SharePointSessionInfo info)
         {
+            /*
             if (!string.IsNullOrWhiteSpace(info.ApplicationId))
             {
-                // "armediacaliente.onmicrosoft.com", @"C:\BertOnlineAzureADAppOnly.pfx", "123");
                 this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetAzureADAppOnlyAuthenticatedContext(info.Url, info.ApplicationId, info.Domain, info.CertificateKey, info.CertificatePass);
             }
             else
+            */
             {
-                this.ClientContext = new ClientContext(info.Url);
-                if (string.IsNullOrEmpty(info.Domain))
-                {
-                    this.ClientContext.Credentials = new NetworkCredential(info.UserName, info.Password);
-                }
-                else
-                {
-                    this.ClientContext.Credentials = new NetworkCredential(info.UserName, info.Password, info.Domain);
-                }
+                // this.ClientContext = new ClientContext(info.Url);
+                this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetWebLoginClientContext(info.Url);
             }
+            /*
+            this.ClientContext.AuthenticationMode = ClientAuthenticationMode.Default;
+            if (string.IsNullOrEmpty(info.Domain))
+            {
+                this.ClientContext.Credentials = new SharePointOnlineCredentials(info.UserName, info.Password);
+            }
+            else
+            {
+                this.ClientContext.Credentials = new NetworkCredential(info.UserName, info.Password, info.Domain);
+            }
+            */
             this.DocumentLibrary = this.ClientContext.Web.Lists.GetByTitle(info.Library);
             this.ClientContext.Load(this.DocumentLibrary, r => r.ForceCheckout, r => r.EnableVersioning, r => r.EnableMinorVersions, r => r.Title, r => r.ContentTypesEnabled, r => r.ContentTypes);
             this.ClientContext.Load(this.DocumentLibrary.RootFolder, f => f.ServerRelativeUrl, f => f.Name);
