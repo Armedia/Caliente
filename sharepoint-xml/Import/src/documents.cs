@@ -391,11 +391,6 @@ namespace Armedia.CMSMF.SharePoint.Import
                             }
                         }
 
-                        if (string.IsNullOrWhiteSpace(name))
-                        {
-                            "".GetHashCode();
-                        }
-
                         FolderInfo parent = folderImporter.ResolveFolder(path);
                         string safeName = null;
                         if (current == null || current.Removed)
@@ -407,6 +402,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                             {
                                 // Duplicate filename, so we modify the name and make sure it's used later
                                 safeName = Tools.MakeSafeFileName(name, historyId); // new safe name
+                                name = safeName;
                                 parent.Files.Add(safeName);
                             }
                         }
