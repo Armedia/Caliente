@@ -5,6 +5,7 @@ using System.Net;
 using System.Security;
 using System.Threading;
 using System.Xml.Linq;
+using OfficeDevPnP.Core;
 
 namespace Armedia.CMSMF.SharePoint.Common
 {
@@ -19,14 +20,20 @@ namespace Armedia.CMSMF.SharePoint.Common
         public readonly string Domain;
         public readonly string Library;
         public readonly int MaxBorrowCount;
+        public readonly string ApplicationId;
+        public readonly string CertificateKey;
+        public readonly string CertificatePass;
 
-        public SharePointSessionInfo(string url, string userName, SecureString password, string domain, string library, int maxBorrowCount)
+        public SharePointSessionInfo(string url, string userName, SecureString password, string domain, string applicationId, string certificateKey, string certificatePass, string library, int maxBorrowCount)
         {
             this.Url = url.TrimEnd('/');
             this.UserName = userName;
             this.Password = password;
             this.Domain = domain;
-            this.Library = (library != null && library != string.Empty ? library : DEFAULT_LIBRARY_NAME);
+            this.ApplicationId = applicationId;
+            this.CertificateKey = certificateKey;
+            this.CertificatePass = certificatePass;
+            this.Library = (!string.IsNullOrWhiteSpace(library) ? library : DEFAULT_LIBRARY_NAME);
             if (maxBorrowCount == 0) maxBorrowCount = 1;
             this.MaxBorrowCount = maxBorrowCount;
         }
@@ -65,8 +72,23 @@ namespace Armedia.CMSMF.SharePoint.Common
 
         public SharePointSession(SharePointSessionInfo info)
         {
-            this.ClientContext = new ClientContext(info.Url);
-            this.ClientContext.Credentials = new NetworkCredential(info.UserName, info.Password, info.Domain);
+            if (!string.IsNullOrWhiteSpace(info.ApplicationId))
+            {
+                // "armediacaliente.onmicrosoft.com", @"C:\BertOnlineAzureADAppOnly.pfx", "123");
+                this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetAzureADAppOnlyAuthenticatedContext(info.Url, info.ApplicationId, info.Domain, info.CertificateKey, info.CertificatePass);
+            }
+            else
+            {
+                this.ClientContext = new ClientContext(info.Url);
+                if (string.IsNullOrEmpty(info.Domain))
+                {
+                    this.ClientContext.Credentials = new NetworkCredential(info.UserName, info.Password);
+                }
+                else
+                {
+                    this.ClientContext.Credentials = new NetworkCredential(info.UserName, info.Password, info.Domain);
+                }
+            }
             this.DocumentLibrary = this.ClientContext.Web.Lists.GetByTitle(info.Library);
             this.ClientContext.Load(this.DocumentLibrary, r => r.ForceCheckout, r => r.EnableVersioning, r => r.EnableMinorVersions, r => r.Title, r => r.ContentTypesEnabled, r => r.ContentTypes);
             this.ClientContext.Load(this.DocumentLibrary.RootFolder, f => f.ServerRelativeUrl, f => f.Name);
@@ -88,6 +110,7 @@ namespace Armedia.CMSMF.SharePoint.Common
 
         public void ExecuteQuery()
         {
+            // Read into: https://docs.microsoft.com/en-us/sharepoint/dev/solution-guidance/security-apponly-azuread
             this.ClientContext.RequestTimeout = (int)TIME_OUT.TotalMilliseconds;
             this.ClientContext.PendingRequest.RequestExecutor.RequestKeepAlive = true;
             this.ClientContext.PendingRequest.RequestExecutor.WebRequest.KeepAlive = true;

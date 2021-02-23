@@ -41,6 +41,15 @@ namespace Armedia.CMSMF.SharePoint.Import
                 [OptionAttribute("password", Required = false, HelpText = "The password with which to log into SharePoint")]
                 public string password { get; set; }
 
+                [OptionAttribute("applicationId", Required = false, HelpText = "The application ID to use for SharePoint Online")]
+                public string applicationId { get; set; }
+
+                [OptionAttribute("certificateKey", Required = false, HelpText = "The certificate key to use for SharePoint Online")]
+                public string certificateKey { get; set; }
+
+                [OptionAttribute("certificatePass", Required = false, HelpText = "The certificate key's password to use for SharePoint Online")]
+                public string certificatePass { get; set; }
+
                 [OptionAttribute("ldapSyncDomain", Required = false, HelpText = "The name of the Documentum LDAP Sync configuration that matches the target AD instance")]
                 public string ldapSyncDomain { get; set; }
 
@@ -202,6 +211,9 @@ namespace Armedia.CMSMF.SharePoint.Import
             public string user { get; private set; }
             public string domain { get; private set; }
             public string password { get; private set; }
+            public string applicationId { get; private set; }
+            public string certificateKey { get; private set; }
+            public string certificatePass { get; private set; }
             public string ldapSyncDomain { get; private set; }
             public string library { get; private set; }
             public string content { get; private set; }
@@ -223,9 +235,11 @@ namespace Armedia.CMSMF.SharePoint.Import
             public bool fixExtensions { get; private set; }
             public bool indexOnly { get; set; }
             public bool help { get; private set; }
+            public string baseDir { get; private set; }
 
-            public Configuration(params string[] args)
+            public Configuration(string baseDir, params string[] args)
             {
+                this.baseDir = baseDir;
                 this.CommandLine = new Settings(args);
                 string cfgFile = (this.CommandLine.cfg != null ? this.CommandLine.cfg : string.Format("{0}\\config.xml", Directory.GetCurrentDirectory()));
                 this.ConfigurationFile = new Settings(cfgFile);
@@ -265,6 +279,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                     // Only set the value if it's non-null, just in case
                     if (value != null) tgt.SetValue(this, value);
                 }
+
                 this.cfg = cfgFile;
             }
 
@@ -276,22 +291,28 @@ namespace Armedia.CMSMF.SharePoint.Import
             public List<string> ValidateConfiguration()
             {
                 List<string> errors = new List<string>();
-                if (string.IsNullOrEmpty(this.siteUrl)) errors.Add("Must provide a URL with which to connect to Sharepoint (siteUrl)");
-                if (string.IsNullOrEmpty(this.user)) errors.Add("Must provide a user name with which to connect to Sharepoint (user)");
-                if (string.IsNullOrEmpty(this.ldapSyncDomain)) errors.Add("Must provide the name of the LDAP Sync configuration which maps to the primary user domain (ldapSyncDomain)");
-                if (string.IsNullOrEmpty(this.ldapUrl)) errors.Add("Must provide the LDAP URL to connect to (ldapUrl)");
+                if (string.IsNullOrWhiteSpace(this.siteUrl)) errors.Add("Must provide a URL with which to connect to Sharepoint (siteUrl)");
+                if (string.IsNullOrWhiteSpace(this.user)) errors.Add("Must provide a user name with which to connect to Sharepoint (user)");
+                if (string.IsNullOrWhiteSpace(this.ldapSyncDomain)) errors.Add("Must provide the name of the LDAP Sync configuration which maps to the primary user domain (ldapSyncDomain)");
+                if (string.IsNullOrWhiteSpace(this.ldapUrl)) errors.Add("Must provide the LDAP URL to connect to (ldapUrl)");
                 if (errors.Count > 0) return errors;
 
-                if (this.content == null) this.content = string.Format("{0}\\contents", Directory.GetCurrentDirectory()).Replace('\\', '/');
-                if (this.metadata == null) this.metadata = string.Format("{0}\\xml-metadata", Directory.GetCurrentDirectory()).Replace('\\', '/');
-                if (string.IsNullOrEmpty(this.ldapBindDn)) this.ldapBindDn = "";
+
+                if (!string.IsNullOrWhiteSpace(this.applicationId) && string.IsNullOrWhiteSpace(this.certificateKey))
+                {
+                    this.certificateKey = string.Format("{0}\\Caliente.pfx", this.baseDir);
+                }
+
+                if (string.IsNullOrEmpty(this.content)) this.content = string.Format("{0}\\contents", Directory.GetCurrentDirectory()).Replace('\\', '/');
+                if (string.IsNullOrEmpty(this.metadata)) this.metadata = string.Format("{0}\\xml-metadata", Directory.GetCurrentDirectory()).Replace('\\', '/');
+                if (string.IsNullOrWhiteSpace(this.ldapBindDn)) this.ldapBindDn = "";
                 if (string.IsNullOrEmpty(this.ldapBindPw)) this.ldapBindPw = "";
 
-                if (string.IsNullOrEmpty(this.library)) this.library = DEFAULT_LIBRARY;
-                if (string.IsNullOrEmpty(this.fallbackUser)) this.fallbackUser = DEFAULT_FALLBACK_USER;
-                if (string.IsNullOrEmpty(this.internalUser)) this.internalUser = DEFAULT_INTERNAL_USER;
-                if (string.IsNullOrEmpty(this.fallbackGroup)) this.fallbackGroup = DEFAULT_FALLBACK_GROUP;
-                if (string.IsNullOrEmpty(this.internalGroup)) this.internalGroup = DEFAULT_INTERNAL_GROUP;
+                if (string.IsNullOrWhiteSpace(this.library)) this.library = DEFAULT_LIBRARY;
+                if (string.IsNullOrWhiteSpace(this.fallbackUser)) this.fallbackUser = DEFAULT_FALLBACK_USER;
+                if (string.IsNullOrWhiteSpace(this.internalUser)) this.internalUser = DEFAULT_INTERNAL_USER;
+                if (string.IsNullOrWhiteSpace(this.fallbackGroup)) this.fallbackGroup = DEFAULT_FALLBACK_GROUP;
+                if (string.IsNullOrWhiteSpace(this.internalGroup)) this.internalGroup = DEFAULT_INTERNAL_GROUP;
 
                 if (this.threads < MIN_THREADS) this.threads = MIN_THREADS;
                 if (this.threads > MAX_THREADS) this.threads = MAX_THREADS;
@@ -305,7 +326,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         private static DirectoryEntry BindToLDAP(Configuration options)
         {
-            if (string.IsNullOrEmpty(options.ldapBindDn))
+            if (string.IsNullOrWhiteSpace(options.ldapBindDn))
             {
                 return new DirectoryEntry(options.ldapUrl);
             }
@@ -356,7 +377,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             ILog log = null;
             string baseDir = Directory.GetCurrentDirectory();
             // Initialize log4j
-            Configuration options = new Configuration(args);
+            Configuration options = new Configuration(baseDir, args);
             if (options.help)
             {
                 Console.Error.WriteLine(options.GetUsage());
@@ -396,23 +417,23 @@ namespace Armedia.CMSMF.SharePoint.Import
             {
                 log.Info(string.Format("Using SharePoint at [{0}]", options.siteUrl));
 
-                string domain = options.domain;
-                if (string.IsNullOrEmpty(domain))
+                string userString = options.user;
+                if (!string.IsNullOrWhiteSpace(options.domain))
                 {
-                    // TODO: This should be netbiosname
-                    domain = ((string)ldapDirectory.Properties["name"][0]).ToUpper();
+                    userString = string.Format("{0}@{1}", userString, options.domain);
                 }
 
                 SecureString password = null;
                 if (options.password == null)
                 {
-                    Console.Write(string.Format("Enter The Sharepoint Password for [{0}\\{1}]: ", domain, options.user));
+                    Console.Write(string.Format("Enter The Sharepoint Password for [{0}]: ", userString));
                     password = Tools.ReadPassword();
                 }
                 else
                 {
-                    String pass = CRYPT.Encrypt(CRYPT.Decrypt(options.password));
-                    log.Info(string.Format("Using stored credentials for [{0}\\{1}] = [{2}]", domain, options.user, pass));
+                    String pass = CRYPT.Decrypt(options.password);
+                    pass = CRYPT.Encrypt(pass);
+                    log.Info(string.Format("Using stored credentials for [{0}] = [{1}]", userString, pass));
                     password = new SecureString();
                     foreach (char c in CRYPT.Decrypt(pass))
                     {
@@ -420,7 +441,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                     }
                 }
 
-                using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, password, domain, options.library, options.reuseCount)))
+                using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, password, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.library, options.reuseCount)))
                 {
                     ImportContext importContext = new ImportContext(sessionFactory, options.content, options.metadata);
                     using (ObjectPool<SharePointSession>.Ref sessionRef = sessionFactory.GetSession())

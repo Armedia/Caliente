@@ -1,30 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE import>
 <import>
+	<!-- LDAP Settings -->
 	<ldapSyncDomain>ARMEDIA</ldapSyncDomain>
 	<ldapUrl>LDAP://DC=ARMEDIA,DC=com</ldapUrl>
 	<!--
-	<ldapBindDn></ldapBindDn>
-	<ldapBindPw></ldapBindPw>
+	<ldapUrl>ldap://ldap.armedia.com</ldapUrl>
+	<ldapBindDn>CN=JIRA Admin PR,CN=Users,DC=armedia,DC=com</ldapBindDn>
+	<ldapBindPw>j1RAaDm!N2010</ldapBindPw>
 	-->
-	<siteUrl>http://daltew8aapp03/sites/dctm</siteUrl>
-	<!-- <siteUrl>http://arm-rd-w8x-sp02/sites/cmf</siteUrl> -->
-	<!-- <siteUrl>http://arm-rd-w8x-ap1/sites/dctmtest</siteUrl> -->
-	<library>Documents</library>
 
-	<user>drivera</user>
-	<password>K4Rz0T8KLlX5WxL6fHrLOA==</password>
+	<!-- Sharepoint Target Settings -->
+	<siteUrl>https://armediacaliente.sharepoint.com/sites/CMF</siteUrl>
+	<library>CMFTest</library>
+	<user>diego.rivera@armediacaliente.onmicrosoft.com</user>
+	<password>cauLgj9ZwriLGilIdXvTvEi1LyzKp4BJYGru9lc7tMA=</password>
 
-	<content>E:/workspace/Armedia/CMSMF/cmsmf/dctm</content>
+	<!-- Source Content Settings -->
+	<content>C:/Users/drivera/Desktop/Caliente/streams</content>
 	<!-- <content>E:/workspace/Armedia/SharePoint.CMSMF/Import/sample</content> -->
 
-	<fallbackUser>jshinnick</fallbackUser>
-	<internalUser>cstephenson</internalUser>
+	<!-- user mapping settings -->
+	<fallbackUser>diego.rivera@armediacaliente.onmicrosoft.com</fallbackUser>
+	<internalUser>diego.rivera@armediacaliente.onmicrosoft.com</internalUser>
 	<fallbackGroup>linuxadmins</fallbackGroup>
 	<internalGroup>armediaemployees</internalGroup>
+
+	<!-- other settings -->
 	<threads>10</threads>
 	<reuseCount>10</reuseCount>
-	<cleanTypes>false</cleanTypes>
+	<cleanTypes>true</cleanTypes>
 	<simulationMode>none</simulationMode>
 	<locationMode>current</locationMode>
 	<fixExtensions>true</fixExtensions>
