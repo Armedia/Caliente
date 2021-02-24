@@ -202,7 +202,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         public XmlWriter CreateIndex(string name, string rootElement)
         {
-            XmlTextWriter w = new XmlFile(string.Format("{0}/{1}", this.ContentLocation, name), UTF8Encoding.UTF8);
+            XmlTextWriter w = new XmlFile(string.Format("{0}/{1}", this.MetadataLocation, name), UTF8Encoding.UTF8);
             w.WriteStartDocument();
             w.WriteDocType(rootElement, null, null, null);
             w.WriteStartElement(rootElement);
