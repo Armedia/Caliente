@@ -162,7 +162,11 @@ namespace Armedia.CMSMF.SharePoint.Common
                     new XElement("Where",
                         new XElement("Eq",
                             new XElement("FieldRef", new XAttribute("Name", fieldName)),
-                            new XElement("Value", new XAttribute("Type", "Guid"), value)))));
+                            new XElement("Value", new XAttribute("Type", "Guid"), value)
+                        )
+                    )
+                )
+            );
             itemById.ViewXml = view.ToString();
             ListItemCollection item = this.DocumentLibrary.GetItems(itemById);
             this.ClientContext.Load(item);
