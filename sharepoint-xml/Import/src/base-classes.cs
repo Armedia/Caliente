@@ -623,12 +623,12 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         protected ContentType ResolveContentType(string contentType)
         {
-            return this.ContentTypeImporter.ResolveLibraryContentType(contentType).Type;
+            return this.ContentTypeImporter.ResolveLibraryContentType(contentType)?.Type;
         }
 
         protected ContentType ResolveContentType(ContentTypeId id)
         {
-            return this.ContentTypeImporter.ResolveContentType(id).Type;
+            return this.ContentTypeImporter.ResolveContentType(id)?.Type;
         }
     }
     public class Crypt

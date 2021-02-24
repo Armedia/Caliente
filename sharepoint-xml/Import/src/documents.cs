@@ -683,6 +683,10 @@ namespace Armedia.CMSMF.SharePoint.Import
                             if (contentType == null)
                             {
                                 contentType = ResolveContentType(objectType);
+                                if (contentType == null)
+                                {
+                                    throw new Exception(string.Format("Could not find the content type [{0}] for document [{0}]", objectType, safeFullPath));
+                                }
                                 tracker.TrackProgress("Assigning content type [{0}] (id={1}) to [{2}] (GUID=[{3}] UniqueId=[{4}])...", contentType.Name, contentType.Id, safeFullPath, newVersion.ListItemAllFields["UniqueId"], newVersion.ListItemAllFields["GUID"]);
                             }
                             newVersion.ListItemAllFields["ContentTypeId"] = contentType.Id;
