@@ -41,7 +41,7 @@ namespace Armedia.CMSMF.SharePoint.Common
 
         public void Dispose()
         {
-            this.Password.Dispose();
+            this.Password?.Dispose();
         }
 
         ~SharePointSessionInfo()
