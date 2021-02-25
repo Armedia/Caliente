@@ -724,6 +724,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                             newVersion.ListItemAllFields["dctm_history_id"] = location.HistoryId;
                             newVersion.ListItemAllFields["dctm_version"] = versionNumber;
                             newVersion.ListItemAllFields["dctm_current"] = XmlConvert.ToBoolean((string)version.Element(ns + "current"));
+
                             newVersion.ListItemAllFields.Update();
                             newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
                             session.ExecuteQuery();
