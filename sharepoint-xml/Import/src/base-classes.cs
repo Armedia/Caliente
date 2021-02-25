@@ -169,13 +169,15 @@ namespace Armedia.CMSMF.SharePoint.Import
         public readonly SharePointSessionFactory SessionFactory;
         private readonly string ContentLocation;
         private readonly string MetadataLocation;
+        private readonly string CacheLocation;
         private readonly XmlReaderSettings XmlSettings;
 
-        public ImportContext(SharePointSessionFactory sessionFactory, string contentLocation, string metadataLocation)
+        public ImportContext(SharePointSessionFactory sessionFactory, string contentLocation, string metadataLocation, string cacheLocation)
         {
             this.SessionFactory = sessionFactory;
             this.ContentLocation = contentLocation;
             this.MetadataLocation = metadataLocation;
+            this.CacheLocation = cacheLocation;
             this.XmlSettings = new XmlReaderSettings();
             this.XmlSettings.DtdProcessing = DtdProcessing.Parse;
             this.XmlSettings.MaxCharactersFromEntities = 1024;
@@ -216,14 +218,24 @@ namespace Armedia.CMSMF.SharePoint.Import
             return XmlReader.Create(FormatMetadataLocation(location), this.XmlSettings);
         }
 
+        private String FormatLocation(String basePath, String location)
+        {
+            return string.Format("{0}/{1}", basePath, location);
+        }
+
         public string FormatMetadataLocation(string location)
         {
-            return string.Format("{0}/{1}", this.MetadataLocation, location);
+            return FormatLocation(this.MetadataLocation, location);
+        }
+
+        public string FormatCacheLocation(string location)
+        {
+            return FormatLocation(this.CacheLocation, location);
         }
 
         public string FormatContentStreamLocation(string location)
         {
-            return string.Format("{0}/{1}", this.ContentLocation, location);
+            return FormatLocation(this.ContentLocation, location);
         }
     }
 

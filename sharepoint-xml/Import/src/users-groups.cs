@@ -175,6 +175,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             string domain = ((string)ldapDirectory.Properties["name"][0]).ToUpper();
             string fileName = string.Format("cache.{0}.{1}@{2}.xml", type, domain, path);
             fileName = Tools.MakeSafeFileName(fileName);
+            fileName = this.ImportContext.FormatCacheLocation(fileName);
             return new System.IO.FileInfo(fileName);
         }
 
