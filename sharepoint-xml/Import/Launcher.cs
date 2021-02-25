@@ -59,6 +59,12 @@ namespace Armedia.CMSMF.SharePoint.Import
                 [OptionAttribute("content", Required = false, HelpText = "The location on the filesystem for the import content")]
                 public string content { get; set; }
 
+                [OptionAttribute("metadata", Required = false, HelpText = "The location on the filesystem for the import content's metadata")]
+                public string metadata { get; set; }
+
+                [OptionAttribute("caches", Required = false, HelpText = "The location on the filesystem for the work-in-progress data caches")]
+                public string caches { get; set; }
+
                 [OptionAttribute("ldapUrl", Required = false, HelpText = "The LDAP directory to synchronize with")]
                 public string ldapUrl { get; set; }
 
@@ -218,6 +224,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             public string library { get; private set; }
             public string content { get; private set; }
             public string metadata { get; private set; }
+            public string caches { get; private set; }
             public string ldapUrl { get; private set; }
             public string ldapBindDn { get; private set; }
             public string ldapBindPw { get; private set; }
@@ -305,6 +312,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
                 if (string.IsNullOrEmpty(this.content)) this.content = string.Format("{0}\\contents", Directory.GetCurrentDirectory()).Replace('\\', '/');
                 if (string.IsNullOrEmpty(this.metadata)) this.metadata = string.Format("{0}\\xml-metadata", Directory.GetCurrentDirectory()).Replace('\\', '/');
+                if (string.IsNullOrEmpty(this.caches)) this.caches = string.Format("{0}\\caches", Directory.GetCurrentDirectory()).Replace('\\', '/');
                 if (string.IsNullOrWhiteSpace(this.ldapBindDn)) this.ldapBindDn = "";
                 if (string.IsNullOrEmpty(this.ldapBindPw)) this.ldapBindPw = "";
 
@@ -402,8 +410,8 @@ namespace Armedia.CMSMF.SharePoint.Import
             log.Info("Initializing Application");
 
             if (options.indexOnly)
-            {
-                ImportContext importContext = new ImportContext(null, options.content, options.metadata);
+            { 
+                ImportContext importContext = new ImportContext(null, options.content, options.metadata, options.caches);
                 FormatResolver formatResolver = new FormatResolver(importContext);
                 new DocumentImporter(new FolderImporter(importContext), formatResolver, options.locationMode, options.fixExtensions).StoreLocationIndex();
                 return 0;
@@ -443,7 +451,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
                 using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, password, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.library, options.reuseCount)))
                 {
-                    ImportContext importContext = new ImportContext(sessionFactory, options.content, options.metadata);
+                    ImportContext importContext = new ImportContext(sessionFactory, options.content, options.metadata, options.caches);
                     using (ObjectPool<SharePointSession>.Ref sessionRef = sessionFactory.GetSession())
                     {
                         SharePointSession session = sessionRef.Target;
