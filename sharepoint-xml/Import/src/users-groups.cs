@@ -258,7 +258,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             }
         }
 
-        private Dictionary<string, ImportedPrincipalInfo> generateUserMappings(ClientContext clientContext, DirectoryEntry ldapDirectory, string ldapSyncAlias, string fallbackName, string internalName)
+        private Dictionary<string, ImportedPrincipalInfo> generateUserMappings(DirectoryEntry ldapDirectory, string ldapSyncAlias, string fallbackName, string internalName)
         {
             Dictionary<string, ImportedPrincipalInfo> users = new Dictionary<string, ImportedPrincipalInfo>();
             // Step 1: Get all the AD users in one pass - this is quicker
@@ -465,7 +465,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             return users;
         }
 
-        private Dictionary<string, ImportedPrincipalInfo> generateGroupMappings(ClientContext clientContext, DirectoryEntry ldapDirectory, string ldapSyncAlias, string fallbackName, string internalName)
+        private Dictionary<string, ImportedPrincipalInfo> generateGroupMappings(DirectoryEntry ldapDirectory, string ldapSyncAlias, string fallbackName, string internalName)
         {
             Dictionary<string, ImportedPrincipalInfo> groups = new Dictionary<string, ImportedPrincipalInfo>();
             string domain = ((string)ldapDirectory.Properties["name"][0]).ToUpper();
@@ -612,18 +612,20 @@ namespace Armedia.CMSMF.SharePoint.Import
         private readonly Dictionary<string, ImportedPrincipalInfo> Users;
         private readonly Dictionary<string, ImportedPrincipalInfo> Groups;
 
-        public UserGroupImporter(ImportContext importContext, DirectoryEntry ldapDirectory, string ldapSyncName, string fallbackUser, string internalUser, string fallbackGroup, string internalGroup) : base("users & groupos", importContext)
+        public UserGroupImporter(ImportContext importContext, DirectoryEntry ldapDirectory, string ldapSyncName, string fallbackUser, string internalUser, string fallbackGroup, string internalGroup) : base("users & groups", importContext)
         {
-            ldapSyncName = ldapSyncName.ToLower();
-            if (fallbackUser != null) fallbackUser = fallbackUser.ToLower();
-            if (fallbackGroup != null) fallbackGroup = fallbackGroup.ToLower();
-            if (internalUser != null) internalUser = internalUser.ToLower();
-            if (internalGroup != null) internalGroup = internalGroup.ToLower();
-            using (ObjectPool<SharePointSession>.Ref sessionRef = this.ImportContext.SessionFactory.GetSession())
+            if (ldapDirectory == null)
             {
-                ClientContext clientContext = sessionRef.Target.ClientContext;
-                this.Users = generateUserMappings(clientContext, ldapDirectory, ldapSyncName, fallbackUser, internalUser);
-                this.Groups = generateGroupMappings(clientContext, ldapDirectory, ldapSyncName, fallbackGroup, internalGroup);
+                this.Users = new Dictionary<string, ImportedPrincipalInfo>();
+                this.Groups = new Dictionary<string, ImportedPrincipalInfo>();
+            } else {
+                ldapSyncName = ldapSyncName.ToLower();
+                if (fallbackUser != null) fallbackUser = fallbackUser.ToLower();
+                if (fallbackGroup != null) fallbackGroup = fallbackGroup.ToLower();
+                if (internalUser != null) internalUser = internalUser.ToLower();
+                if (internalGroup != null) internalGroup = internalGroup.ToLower();
+                this.Users = generateUserMappings(ldapDirectory, ldapSyncName, fallbackUser, internalUser);
+                this.Groups = generateGroupMappings(ldapDirectory, ldapSyncName, fallbackGroup, internalGroup);
             }
         }
         private ImportedPrincipalInfo ResolveInfo(string name, Dictionary<string, ImportedPrincipalInfo> map)
