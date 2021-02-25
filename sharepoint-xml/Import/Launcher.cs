@@ -399,6 +399,8 @@ namespace Armedia.CMSMF.SharePoint.Import
                 return 2;
             }
 
+            System.IO.Directory.CreateDirectory(options.caches);
+
             string logDir = string.Format("{0}\\logs", baseDir);
             System.IO.Directory.CreateDirectory(logDir);
 
