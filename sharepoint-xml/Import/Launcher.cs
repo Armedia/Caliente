@@ -218,6 +218,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             public string domain { get; private set; }
             public string password { get; private set; }
             public string applicationId { get; private set; }
+            public string applicationSecret { get; private set; }
             public string certificateKey { get; private set; }
             public string certificatePass { get; private set; }
             public string ldapSyncDomain { get; private set; }
@@ -299,16 +300,24 @@ namespace Armedia.CMSMF.SharePoint.Import
             {
                 List<string> errors = new List<string>();
                 if (string.IsNullOrWhiteSpace(this.siteUrl)) errors.Add("Must provide a URL with which to connect to Sharepoint (siteUrl)");
-                if (string.IsNullOrWhiteSpace(this.user)) errors.Add("Must provide a user name with which to connect to Sharepoint (user)");
-                if (string.IsNullOrWhiteSpace(this.ldapSyncDomain)) errors.Add("Must provide the name of the LDAP Sync configuration which maps to the primary user domain (ldapSyncDomain)");
-                if (string.IsNullOrWhiteSpace(this.ldapUrl)) errors.Add("Must provide the LDAP URL to connect to (ldapUrl)");
-                if (errors.Count > 0) return errors;
 
-
-                if (!string.IsNullOrWhiteSpace(this.applicationId) && string.IsNullOrWhiteSpace(this.certificateKey))
+                // TODO: This may not need to be provided if we're using app authentication
+                if (string.IsNullOrWhiteSpace(this.user) && string.IsNullOrWhiteSpace(this.applicationId))
                 {
-                    this.certificateKey = string.Format("{0}\\Caliente.pfx", this.baseDir);
+                    errors.Add("Must provide either a user name or an application ID with which to connect to Sharepoint (user)");
                 }
+
+                if (!string.IsNullOrWhiteSpace(this.ldapUrl))
+                {
+                    if (string.IsNullOrWhiteSpace(this.ldapSyncDomain)) errors.Add("Must provide the name of the LDAP Sync configuration which maps to the primary user domain (ldapSyncDomain)");
+                }
+
+                if (!string.IsNullOrWhiteSpace(this.applicationId))
+                {
+                    if (string.IsNullOrWhiteSpace(this.certificateKey)) this.certificateKey = string.Format("{0}\\Caliente.pfx", this.baseDir);
+                    if (string.IsNullOrWhiteSpace(this.domain)) errors.Add("Must provide the domain the application ID is valid for (domain)");
+                }
+                if (errors.Count > 0) return errors;
 
                 if (string.IsNullOrEmpty(this.content)) this.content = string.Format("{0}\\contents", Directory.GetCurrentDirectory()).Replace('\\', '/');
                 if (string.IsNullOrEmpty(this.metadata)) this.metadata = string.Format("{0}\\xml-metadata", Directory.GetCurrentDirectory()).Replace('\\', '/');
@@ -334,10 +343,8 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         private static DirectoryEntry BindToLDAP(Configuration options)
         {
-            if (string.IsNullOrWhiteSpace(options.ldapBindDn))
-            {
-                return new DirectoryEntry(options.ldapUrl);
-            }
+            if (string.IsNullOrWhiteSpace(options.ldapUrl)) return null;
+            if (string.IsNullOrWhiteSpace(options.ldapBindDn)) return new DirectoryEntry(options.ldapUrl);
 
             string ldapBindPw = options.ldapBindPw;
             if (string.IsNullOrEmpty(ldapBindPw))
@@ -433,25 +440,27 @@ namespace Armedia.CMSMF.SharePoint.Import
                     userString = string.Format("{0}@{1}", userString, options.domain);
                 }
 
-                SecureString password = null;
-                if (options.password == null)
-                {
-                    Console.Write(string.Format("Enter The Sharepoint Password for [{0}]: ", userString));
-                    password = Tools.ReadPassword();
-                }
-                else
-                {
-                    String pass = CRYPT.Decrypt(options.password);
-                    pass = CRYPT.Encrypt(pass);
-                    log.Info(string.Format("Using stored credentials for [{0}] = [{1}]", userString, pass));
-                    password = new SecureString();
-                    foreach (char c in CRYPT.Decrypt(pass))
+                SecureString userPassword = null;
+                if (!string.IsNullOrWhiteSpace(options.user)) {
+                    if (options.password == null)
                     {
-                        password.AppendChar(c);
+                        Console.Write(string.Format("Enter The Sharepoint Password for [{0}]: ", userString));
+                        userPassword = Tools.ReadPassword();
+                    }
+                    else
+                    {
+                        String pass = CRYPT.Decrypt(options.password);
+                        pass = CRYPT.Encrypt(pass);
+                        log.Info(string.Format("Using stored credentials for [{0}] = [{1}]", userString, pass));
+                        userPassword = new SecureString();
+                        foreach (char c in CRYPT.Decrypt(pass))
+                        {
+                            userPassword.AppendChar(c);
+                        }
                     }
                 }
 
-                using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, password, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.library, options.reuseCount)))
+                using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, userPassword, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.library, options.reuseCount)))
                 {
                     ImportContext importContext = new ImportContext(sessionFactory, options.content, options.metadata, options.caches);
                     using (ObjectPool<SharePointSession>.Ref sessionRef = sessionFactory.GetSession())
