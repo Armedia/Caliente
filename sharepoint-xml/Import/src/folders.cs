@@ -156,7 +156,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 }
                                 catch (Exception e)
                                 {
-                                    Log.Error("Failed to process the current accumulated folder batch", e);
+                                    Log.Error("Failed to process the current accumulated folder batch");
                                     throw e;
                                 }
                             }
@@ -203,7 +203,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         }
                         catch (Exception e)
                         {
-                            Log.Error("Failed to process the last accumulated folder batch", e);
+                            Log.Error("Failed to process the last accumulated folder batch");
                             throw e;
                         }
                     }
