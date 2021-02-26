@@ -233,7 +233,6 @@ namespace Armedia.CMSMF.SharePoint.Import
                         ImportedContentType superType = null;
                         XElement superTypeElement = type.Element(ns + "superType");
                         if ((superTypeElement != null) && (typeName != "dm_folder"))
-                        // if (superTypeElement != null)
                         {
                             string stName = (string)superTypeElement;
                             if (siteContentTypes.ContainsKey(stName))
@@ -433,7 +432,6 @@ namespace Armedia.CMSMF.SharePoint.Import
                         string finalName = string.Format("dctm_{0}", attSourceName);
                         // Special case for folder attributes inherited from dm_sysobject
                         bool inherited = XmlConvert.ToBoolean(att.Attribute("inherited").Value) && (typeName != "dm_folder");
-                        // bool inherited = XmlConvert.ToBoolean(att.Attribute("inherited").Value);
                         bool repeating = XmlConvert.ToBoolean(att.Attribute("repeating").Value);
 
                         // If this is an inherited attribute, we won't add it because we're not interested in it
