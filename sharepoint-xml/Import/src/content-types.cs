@@ -66,8 +66,18 @@ namespace Armedia.CMSMF.SharePoint.Import
 
     public class ImportedContentTypeField
     {
+        public ImportedContentTypeField(Field field, string name, string finalName, string sourceName, bool repeating)
+        {
+            this.Field = field;
+            this.Name = name;
+            this.FinalName = finalName;
+            this.SourceName = sourceName;
+            this.Repeating = repeating;
+        }
+
         public ImportedContentTypeField(Guid guid, string name, string finalName, string sourceName, FieldType type, bool repeating)
         {
+            this.Field = null;
             this.Guid = guid;
             this.Name = name;
             this.FinalName = finalName;
@@ -75,11 +85,36 @@ namespace Armedia.CMSMF.SharePoint.Import
             this.Type = type;
             this.Repeating = repeating;
         }
-        public readonly Guid Guid;
+        public readonly Field Field;
+
+        private Guid guid;
+        public Guid Guid {
+            get
+            {
+                return (this.Field != null ? this.Field.Id : this.guid);
+            }
+
+            private set
+            {
+                this.guid = value;
+            }
+        }
         public readonly string Name;
         public readonly string FinalName;
         public readonly string SourceName;
-        public readonly FieldType Type;
+
+        private FieldType type;
+        public FieldType Type
+        {
+            get
+            {
+                return (this.Field != null ? this.Field.FieldTypeKind : this.type);
+            }
+            private set
+            {
+                this.type = value;
+            }
+        }
         public readonly bool Repeating;
     }
 
@@ -185,10 +220,10 @@ namespace Armedia.CMSMF.SharePoint.Import
                         {
                             linkNames.Add(link.Name);
                         }
-                        if (typeName == "dm_document" || typeName == "dm_folder")
+                        if (typeName == "dm_sysobject" || typeName == "dm_folder")
                         {
                             patchFields = true;
-                            versionableType = (typeName == "dm_document");
+                            versionableType = (typeName == "dm_sysobject");
                             containerType = (typeName == "dm_folder");
                         }
                     }
@@ -197,7 +232,8 @@ namespace Armedia.CMSMF.SharePoint.Import
                         // New type...create it
                         ImportedContentType superType = null;
                         XElement superTypeElement = type.Element(ns + "superType");
-                        if (superTypeElement != null)
+                        if ((superTypeElement != null) && (typeName != "dm_folder"))
+                        // if (superTypeElement != null)
                         {
                             string stName = (string)superTypeElement;
                             if (siteContentTypes.ContainsKey(stName))
@@ -210,7 +246,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         {
                             switch (typeName)
                             {
-                                case "dm_document":
+                                case "dm_sysobject":
                                     superType = siteContentTypes["Document"];
                                     // skipInherited = false;
                                     patchFields = true;
@@ -395,7 +431,9 @@ namespace Armedia.CMSMF.SharePoint.Import
                         string attName = att.Attribute("name").Value;
                         string attSourceName = att.Attribute("sourceName").Value;
                         string finalName = string.Format("dctm_{0}", attSourceName);
-                        bool inherited = XmlConvert.ToBoolean(att.Attribute("inherited").Value);
+                        // Special case for folder attributes inherited from dm_sysobject
+                        bool inherited = XmlConvert.ToBoolean(att.Attribute("inherited").Value) && (typeName != "dm_folder");
+                        // bool inherited = XmlConvert.ToBoolean(att.Attribute("inherited").Value);
                         bool repeating = XmlConvert.ToBoolean(att.Attribute("repeating").Value);
 
                         // If this is an inherited attribute, we won't add it because we're not interested in it
@@ -405,17 +443,15 @@ namespace Armedia.CMSMF.SharePoint.Import
                         if (linkNames.Contains(finalName) || (inherited && skipInherited))
                         {
                             // Existing or inherited link...
-                            Field f = existingFields[finalName];
-                            finalField = new ImportedContentTypeField(f.Id, attName, finalName, attSourceName, f.FieldTypeKind, repeating);
+                            finalField = new ImportedContentTypeField(existingFields[finalName], attName, finalName, attSourceName, repeating);
                         }
                         else
                         {
                             FieldLinkCreationInformation fieldLink = new FieldLinkCreationInformation();
                             if (existingFields.ContainsKey(finalName))
                             {
-                                Field f = existingFields[finalName];
-                                fieldLink.Field = f;
-                                finalField = new ImportedContentTypeField(f.Id, attName, finalName, attSourceName, f.FieldTypeKind, repeating);
+                                finalField = new ImportedContentTypeField(existingFields[finalName], attName, finalName, attSourceName, repeating);
+                                fieldLink.Field = finalField.Field;
                             }
                             else
                             {
@@ -433,12 +469,12 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 }
                                 Guid guid = Guid.NewGuid();
 
-                                finalField = new ImportedContentTypeField(guid, attName, finalName, attSourceName, attType, repeating);
 
                                 string fieldXml = string.Format("<Field DisplayName='{0}' Name='{1}' ID='{2}' Group='{3}' Type='{4}' />", finalName, finalName, guid.ToString(), this.FieldGroup, attType);
                                 fieldLink.Field = clientContext.Web.Fields.AddFieldAsXml(fieldXml, false, AddFieldOptions.AddFieldInternalNameHint);
-                                existingFields[finalName] = fieldLink.Field;
                                 clientContext.Load(fieldLink.Field, f => f.Id, f => f.FieldTypeKind, f => f.StaticName, f => f.Group);
+                                existingFields[finalName] = fieldLink.Field;
+                                finalField = new ImportedContentTypeField(existingFields[finalName], attName, finalName, attSourceName, repeating);
                             }
                             finalType.Type.FieldLinks.Add(fieldLink);
                             linkNames.Add(finalName);
