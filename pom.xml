@@ -622,6 +622,7 @@
 		<module>store/api</module>
 		<module>store/impl/jdbc</module>
 		<module>store/impl/local</module>
+		<module>store/impl/s3</module>
 
 		<!-- The Engine modules -->
 		<module>engine/api</module>
