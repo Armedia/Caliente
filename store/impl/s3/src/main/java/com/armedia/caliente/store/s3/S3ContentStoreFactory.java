@@ -26,40 +26,112 @@
  *******************************************************************************/
 package com.armedia.caliente.store.s3;
 
-import java.io.File;
+import java.nio.file.Paths;
 import java.util.function.Supplier;
 
-import com.armedia.caliente.store.CmfContentOrganizer;
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.store.CmfContentStoreFactory;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfStore;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
+
+import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.SystemPropertyCredentialsProvider;
+import software.amazon.awssdk.profiles.ProfileFile;
+import software.amazon.awssdk.regions.Region;
 
 public class S3ContentStoreFactory extends CmfContentStoreFactory<S3ContentStore> {
 
+	protected static final String DEFAULT_REGION = Region.US_EAST_1.id();
+
+	static enum CredentialType {
+		//
+		ANONYMOUS {
+			@Override
+			public AwsCredentialsProvider build(CfgTools cfg) {
+				return AnonymousCredentialsProvider.create();
+			}
+		}, //
+		STATIC {
+
+			@Override
+			public AwsCredentialsProvider build(CfgTools cfg) {
+				String accessKey = cfg.getString(S3ContentStoreSetting.ACCESS_KEY);
+				String secretKey = cfg.getString(S3ContentStoreSetting.SECRET_KEY);
+				String sessionToken = cfg.getString(S3ContentStoreSetting.SESSION_TOKEN);
+				if (StringUtils.isNotBlank(sessionToken)) {
+					return StaticCredentialsProvider
+						.create(AwsSessionCredentials.create(accessKey, secretKey, sessionToken));
+				}
+				return StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey));
+			}
+
+		}, //
+		PROFILE {
+			@Override
+			public AwsCredentialsProvider build(CfgTools cfg) {
+				ProfileCredentialsProvider.Builder builder = ProfileCredentialsProvider.builder();
+				final String location = cfg.getString(S3ContentStoreSetting.PROFILE_LOCATION);
+				final String profile = cfg.getString(S3ContentStoreSetting.PROFILE_NAME);
+
+				final ProfileFile profileFile;
+				if (StringUtils.isBlank(location)) {
+					profileFile = ProfileFile //
+						.defaultProfileFile() //
+					;
+				} else {
+					profileFile = ProfileFile //
+						.builder() //
+						.content(Tools.canonicalize(Paths.get(location))) //
+						.build() //
+					;
+				}
+
+				builder.profileFile(profileFile);
+
+				if (StringUtils.isNotBlank(profile)) {
+					builder.profileName(profile);
+				}
+
+				return builder.build();
+			}
+		}, //
+		SYSTEM {
+			@Override
+			public AwsCredentialsProvider build(CfgTools cfg) {
+				return EnvironmentVariableCredentialsProvider.create();
+			}
+		}, //
+		ENVIRONMENT {
+			@Override
+			public AwsCredentialsProvider build(CfgTools cfg) {
+				return SystemPropertyCredentialsProvider.create();
+			}
+		}, //
+			//
+		;
+
+		public abstract AwsCredentialsProvider build(CfgTools cfg);
+
+	}
+
 	public S3ContentStoreFactory() {
-		super("local", "fs");
+		super("s3");
 	}
 
 	@Override
 	protected S3ContentStore newInstance(CmfStore<?> parent, StoreConfiguration configuration, boolean cleanData,
 		Supplier<CfgTools> prepInfo) throws CmfStorageException {
 		// It's either direct, or taken from Spring or JNDI
-		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
-		String basePath = cfg.getString(S3ContentStoreSetting.BASE_DIR);
-		if (basePath == null) {
-			throw new CmfStorageException(
-				String.format("No setting [%s] specified", S3ContentStoreSetting.BASE_DIR.getLabel()));
-		}
-		// Resolve system properties
-
-		CmfContentOrganizer organizer = CmfContentOrganizer
-			.getOrganizer(cfg.getString(S3ContentStoreSetting.URI_ORGANIZER));
-		if (this.log.isDebugEnabled()) {
-			this.log.debug("Creating a new local file store with base path [{}], and organizer [{}]", basePath,
-				organizer.getName());
-		}
-		return new S3ContentStore(parent, cfg, new File(basePath), organizer, cleanData);
+		return new S3ContentStore(parent, new CfgTools(configuration.getEffectiveSettings()), cleanData);
 	}
 }

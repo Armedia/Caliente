@@ -26,14 +26,14 @@
  *******************************************************************************/
 package com.armedia.caliente.store.s3;
 
-import java.io.File;
-
 import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfStoreOperation;
 
-public class S3StoreOperation extends CmfStoreOperation<File> {
+import software.amazon.awssdk.services.s3.S3Client;
 
-	public S3StoreOperation(File wrapped, boolean exclusive) {
+public class S3StoreOperation extends CmfStoreOperation<S3Client> {
+
+	public S3StoreOperation(S3Client wrapped, boolean exclusive) {
 		super(wrapped, exclusive);
 	}
 

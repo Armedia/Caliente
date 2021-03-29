@@ -34,20 +34,23 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +77,7 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
+import com.armedia.caliente.store.s3.S3ContentStoreFactory.CredentialType;
 import com.armedia.caliente.store.s3.xml.PropertiesLoader;
 import com.armedia.caliente.store.s3.xml.PropertyT;
 import com.armedia.caliente.store.s3.xml.StorePropertiesT;
@@ -84,27 +88,24 @@ import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.xml.XmlTools;
 
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+
 /**
  *
  *
  */
 public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
-	private static final String SCHEME_RAW = "raw";
-	private static final String SCHEME_FIXED = "fixed";
-	private static final String SCHEME_SAFE = "safe";
+	private static final String SCHEME = "s3";
 
-	private static final Set<String> SUPPORTED_SCHEMES;
+	private static final Set<String> SUPPORTED_SCHEMES = Tools.freezeSet(Collections.singleton(S3ContentStore.SCHEME));
 
-	static {
-		Set<String> s = new HashSet<>();
-		s.add(S3ContentStore.SCHEME_RAW);
-		s.add(S3ContentStore.SCHEME_FIXED);
-		s.add(S3ContentStore.SCHEME_SAFE);
-		SUPPORTED_SCHEMES = Tools.freezeSet(s);
-	}
-
-	private final File baseDir;
+	private final S3Client client;
+	private final String basePath;
 	private final boolean storeProperties;
 	private final CmfContentOrganizer organizer;
 	private final File propertiesFile;
@@ -123,34 +124,42 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		return f.exists() && f.isFile() && f.canRead();
 	}
 
-	public S3ContentStore(CmfStore<?> parent, CfgTools settings, File baseDir, CmfContentOrganizer organizer,
-		boolean cleanData) throws CmfStorageException {
+	public S3ContentStore(CmfStore<?> parent, CfgTools settings, boolean cleanData) throws CmfStorageException {
 		super(parent);
 		if (settings == null) { throw new IllegalArgumentException("Must provide configuration settings"); }
-		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
-		if (baseDir.exists() && !baseDir.isDirectory()) {
-			throw new IllegalArgumentException(
-				String.format("The file at [%s] is not a directory", baseDir.getAbsolutePath()));
-		}
-		if (!baseDir.exists() && !baseDir.mkdirs()) {
-			throw new IllegalArgumentException(
-				String.format("Failed to create the full path at [%s] ", baseDir.getAbsolutePath()));
-		}
 		this.settings = settings;
-		File f = Tools.canonicalize(baseDir);
-		this.baseDir = f;
+
+		final Region region = Region.of(StringUtils.lowerCase(settings.getString(S3ContentStoreSetting.REGION)));
+		final String endpoint = settings.getString(S3ContentStoreSetting.ENDPOINT);
+		final CredentialType credentialType = settings.getEnum(S3ContentStoreSetting.CREDENTIAL_TYPE,
+			CredentialType.class);
+		final boolean createMissingBuckets = settings.getBoolean(S3ContentStoreSetting.CREATE_MISSING_BUCKET);
+
+		S3ClientBuilder clientBuilder = S3Client.builder();
+		clientBuilder.region(region);
+		if (StringUtils.isNotBlank(endpoint)) {
+			try {
+				clientBuilder.endpointOverride(new URI(endpoint));
+			} catch (URISyntaxException e) {
+				throw new CmfStorageException("Bad endpoint URI [" + endpoint + "]", e);
+			}
+		}
+		clientBuilder.credentialsProvider(credentialType.build(settings));
+		this.client = clientBuilder.build();
+
+		String basePath = settings.getString(S3ContentStoreSetting.BASE_PATH);
+		// TODO: Normalize this path, make sure it has a leading slash
+
+		CmfContentOrganizer organizer = CmfContentOrganizer
+			.getOrganizer(settings.getString(S3ContentStoreSetting.URI_ORGANIZER));
+		if (this.log.isDebugEnabled()) {
+			this.log.debug("Creating a new local file store with base path [{}], and organizer [{}]", basePath,
+				organizer.getName());
+		}
+
 		this.storeProperties = (parent == null) && settings.getBoolean(S3ContentStoreSetting.STORE_PROPERTIES);
 
-		final File newPropertiesFile = new File(baseDir, "caliente-store-properties.xml");
-		final File oldPropertiesFile = new File(baseDir, "store-properties.xml");
-		if (S3ContentStore.fileIsAccessible(newPropertiesFile) || !S3ContentStore.fileIsAccessible(oldPropertiesFile)) {
-			// If the new format existsneither exists, or neither exists,
-			// then we go with the new filename format
-			this.propertiesFile = newPropertiesFile;
-		} else {
-			// If the old format exists, then we use it as-is
-			this.propertiesFile = oldPropertiesFile;
-		}
+		this.propertiesFile = new File(this.baseDir, "caliente-store-properties.xml");
 
 		boolean storeOrganizerName = true;
 		if (cleanData) {
@@ -195,6 +204,7 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		}
 		this.organizer = organizer;
 		if (this.organizer == null) { throw new IllegalArgumentException("Must provide a content organizer"); }
+
 		this.organizer.configure(settings);
 		if (storeOrganizerName) {
 			setProperty("organizer", CmfValue.of(organizer.getName()));
@@ -271,7 +281,7 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 	@Override
 	public File getStoreLocation() {
-		return this.baseDir;
+		return null;
 	}
 
 	@Override
@@ -389,28 +399,45 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	}
 
 	@Override
-	protected FileChannel openChannel(S3StoreOperation op, URI locator) throws CmfStorageException {
-		final Path p = getPath(locator);
-		try {
-			return FileChannel.open(p, StandardOpenOption.READ);
-		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to open the file at [%s] for input", p), e);
-		}
+	protected ReadableByteChannel openChannel(S3StoreOperation op, URI locator) throws CmfStorageException {
+		return Channels.newChannel(this.client.getObject((R) -> {
+			R.bucket(locator.getHost());
+			R.key(locator.getPath());
+			R.versionId(locator.getFragment());
+		}));
 	}
 
 	@Override
 	protected Pair<URI, Long> store(S3StoreOperation op, URI locator, ReadableByteChannel in, long size)
 		throws CmfStorageException {
-		try (FileChannel channel = createChannel(op, locator)) {
-			return Pair.of(null, channel.transferFrom(channel, 0, Long.MAX_VALUE));
-		} catch (IOException e) {
+		InputStream localCachedCopy = Channels.newInputStream(in);
+		if (size < 0) {
+			// TODO: We must first pull the content to a local temp area, to get its size,
+			// and then upload from there
+
+		}
+
+		// TODO: Do we want to do multipart uploads for large files? If the size exceeds a
+		// threshold, we probably should...?
+
+		// Do the upload ...
+		PutObjectResponse rsp = this.client.putObject((R) -> {
+			R.bucket(locator.getHost());
+			R.key(locator.getPath());
+		}, (size < 1 ? RequestBody.empty() : RequestBody.fromInputStream(localCachedCopy, size)));
+
+		// TODO: get the new locator from the version id
+		try {
+			return Pair.of(new URI(locator.getScheme(), locator.getHost(), locator.getPath(), rsp.versionId()), size);
+		} catch (URISyntaxException e) {
 			throw new CmfStorageException(
-				String.format("Failed to transfer the contents to the stream at locator [%s]", locator), e);
+				"Failed to re-render a URI for [" + locator + "] using versionId [" + rsp.versionId() + "]", e);
 		}
 	}
 
 	@Override
-	protected FileChannel createChannel(S3StoreOperation op, URI locator) throws CmfStorageException {
+	protected WritableByteChannel createChannel(S3StoreOperation op, URI locator) throws CmfStorageException {
+
 		final Path p = getPath(locator);
 
 		Path parent = p.getParent();
@@ -466,7 +493,7 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 	@Override
 	public boolean isSupportsFileAccess() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -519,7 +546,7 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 	@Override
 	protected S3StoreOperation newOperation(boolean exclusive) throws CmfStorageException {
-		return new S3StoreOperation(this.baseDir, exclusive);
+		return new S3StoreOperation(this.client, exclusive);
 	}
 
 	@Override
@@ -564,6 +591,11 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 				this.log.error("Failed to write the store properties to [{}]", this.propertiesFile.getAbsolutePath(),
 					e);
 			}
+		}
+		try {
+			this.client.close();
+		} catch (Exception e) {
+			this.log.error("Failed to close the S3 Client instance", e);
 		}
 		return super.doClose(cleanupIfEmpty);
 	}
