@@ -143,8 +143,7 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 		final File newPropertiesFile = new File(baseDir, "caliente-store-properties.xml");
 		final File oldPropertiesFile = new File(baseDir, "store-properties.xml");
-		if (S3ContentStore.fileIsAccessible(newPropertiesFile)
-			|| !S3ContentStore.fileIsAccessible(oldPropertiesFile)) {
+		if (S3ContentStore.fileIsAccessible(newPropertiesFile) || !S3ContentStore.fileIsAccessible(oldPropertiesFile)) {
 			// If the new format existsneither exists, or neither exists,
 			// then we go with the new filename format
 			this.propertiesFile = newPropertiesFile;
@@ -400,9 +399,10 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	}
 
 	@Override
-	protected long store(S3StoreOperation op, URI locator, ReadableByteChannel in) throws CmfStorageException {
+	protected Pair<URI, Long> store(S3StoreOperation op, URI locator, ReadableByteChannel in, long size)
+		throws CmfStorageException {
 		try (FileChannel channel = createChannel(op, locator)) {
-			return channel.transferFrom(channel, 0, Long.MAX_VALUE);
+			return Pair.of(null, channel.transferFrom(channel, 0, Long.MAX_VALUE));
 		} catch (IOException e) {
 			throw new CmfStorageException(
 				String.format("Failed to transfer the contents to the stream at locator [%s]", locator), e);
