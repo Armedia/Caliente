@@ -45,6 +45,7 @@ import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 import com.armedia.commons.utilities.function.CheckedRunnable;
@@ -61,7 +62,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	public static final String DEFAULT_QUALIFIER = "content";
 
 	public final class Handle {
-		private final String locator;
+		private String locator;
 		private final CmfContentStream info;
 
 		protected Handle(CmfContentStream info, String locator) {
@@ -71,12 +72,15 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 					"Must provide a valid, non-blank locator string to identify the content within the store");
 			}
 			this.info = info;
-			this.locator = locator;
-			info.setLocator(this.locator);
+			info.setLocator(this.locator = locator);
 		}
 
 		public String getLocator() {
 			return this.locator;
+		}
+
+		private void updateLocator(String locator) {
+			this.info.setLocator(this.locator = locator);
 		}
 
 		public CmfContentStream getInfo() {
@@ -100,11 +104,19 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 
 		public long store(ReadableByteChannel in) throws CmfStorageException {
-			return CmfContentStore.this.store(this, in);
+			return store(in, -1);
+		}
+
+		public long store(ReadableByteChannel in, long size) throws CmfStorageException {
+			return CmfContentStore.this.store(this, in, size);
 		}
 
 		public long store(InputStream in) throws CmfStorageException {
-			return CmfContentStore.this.store(this, in);
+			return store(in, -1);
+		}
+
+		public long store(InputStream in, long size) throws CmfStorageException {
+			return CmfContentStore.this.store(this, in, size);
 		}
 
 		public long store(File f) throws CmfStorageException {
@@ -422,11 +434,11 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	protected abstract ReadableByteChannel openChannel(OPERATION operation, LOCATOR locator) throws CmfStorageException;
 
-	protected final long store(Handle handle, InputStream in) throws CmfStorageException {
-		return store(handle, Channels.newChannel(in));
+	protected final long store(Handle handle, InputStream in, long size) throws CmfStorageException {
+		return store(handle, Channels.newChannel(in), size);
 	}
 
-	protected final long store(Handle handle, ReadableByteChannel in) throws CmfStorageException {
+	protected final long store(Handle handle, ReadableByteChannel in, long size) throws CmfStorageException {
 		return runConcurrently((operation) -> {
 			assertOpen();
 			LOCATOR locator = getLocator(handle);
@@ -444,7 +456,12 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 				try (FileChannel out = FileChannel.open(p, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
 					StandardOpenOption.TRUNCATE_EXISTING)) {
-					return out.transferFrom(in, 0, Long.MAX_VALUE);
+					long written = out.transferFrom(in, 0, Long.MAX_VALUE);
+					if ((size >= 0) && (written != size)) {
+						throw new CmfStorageException(
+							String.format("Incorrect size written out - expected to write %d bytes, but wrote out %d",
+								size, written));
+					}
 				} catch (FileNotFoundException e) {
 					throw new CmfStorageException(String.format("Failed to open an output stream to the file [%s]", p),
 						e);
@@ -457,12 +474,24 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				long ret = store(operation, locator, in);
+				Pair<LOCATOR, Long> p = store(operation, locator, in, size);
+				long written = p.getValue();
+				if ((size >= 0) && (written != size)) {
+					throw new CmfStorageException(String.format(
+						"Incorrect size written out - expected to write %d bytes, but wrote out %d", size, written));
+				}
+
+				// TODO: Update the handle's locator
+				LOCATOR newLocator = p.getKey();
+				if (newLocator != null) {
+					handle.updateLocator(encodeLocator(newLocator));
+				}
+
 				if (tx) {
 					operation.commit();
 				}
 				ok = true;
-				return ret;
+				return p.getValue();
 			} finally {
 				if (tx && !ok) {
 					try {
@@ -476,8 +505,8 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		});
 	}
 
-	protected abstract long store(OPERATION operation, LOCATOR locator, ReadableByteChannel in)
-		throws CmfStorageException;
+	protected abstract Pair<LOCATOR, Long> store(OPERATION operation, LOCATOR locator, ReadableByteChannel in,
+		long size) throws CmfStorageException;
 
 	protected final long store(Handle handle, File source) throws CmfStorageException {
 		return store(handle, Objects.requireNonNull(source, "Must provide a File instance").toPath());
@@ -499,7 +528,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			}
 
 			try (FileChannel in = FileChannel.open(source, StandardOpenOption.READ)) {
-				return store(handle, in);
+				return store(handle, in, Files.size(source));
 			} catch (IOException e) {
 				throw new CmfStorageException(String.format("Failed to store the content into the Path [%s]", source),
 					e);

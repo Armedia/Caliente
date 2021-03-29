@@ -436,15 +436,15 @@ public class SqlFileExportDelegate extends SqlExportDelegate<SqlFile> {
 		if (this.factory.isCopyContent() && !skipContent) {
 			try {
 				CmfContentStore<?, ?>.Handle h = streamStore.addContentStream(translator, marshalled, info);
-				File tgt = h.getFile(true);
-				if (tgt != null) {
+				if (streamStore.isSupportsFileAccess()) {
+					File tgt = h.getFile(true);
 					if (this.log.isDebugEnabled()) {
 						this.log.debug("Copying {} bytes from [{}] into [{}]", src.length(), src, tgt);
 					}
 					Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				} else {
 					try (ReadableByteChannel in = FileChannel.open(src.toPath(), StandardOpenOption.READ)) {
-						h.store(in);
+						h.store(in, src.length());
 					}
 				}
 			} catch (Exception e) {

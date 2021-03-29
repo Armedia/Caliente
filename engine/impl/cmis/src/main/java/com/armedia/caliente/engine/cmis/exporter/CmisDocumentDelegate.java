@@ -229,7 +229,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		CmfContentStore<?, ?>.Handle h = streamStore.addContentStream(translator, marshalled, info);
 		InputStream src = cs.getStream();
 		try {
-			return h.store(src);
+			return h.store(src, cs.getLength());
 		} finally {
 			IOUtils.closeQuietly(src);
 		}

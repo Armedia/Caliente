@@ -443,7 +443,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		}
 
 		try {
-			h.store(buf.getInputStream());
+			h.store(buf.getInputStream(), buf.getCurrentSize());
 		} catch (CmfStorageException e) {
 			this.log.error("Failed to store the content stream for {} into the content store",
 				marshaled.getDescription(), e);

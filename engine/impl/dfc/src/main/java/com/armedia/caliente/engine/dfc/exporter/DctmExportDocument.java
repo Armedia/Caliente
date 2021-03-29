@@ -414,7 +414,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 				try (InputStream in = document.getContentEx3(format, info.getRenditionPage(), info.getModifier(),
 					false)) {
 					// Don't pull the content until we're sure we can put it somewhere...
-					contentHandle.store(in);
+					contentHandle.store(in, content.getContentSize());
 				}
 			}
 		} catch (Exception e) {

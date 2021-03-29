@@ -400,9 +400,10 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	@Override
-	protected long store(LocalStoreOperation op, URI locator, ReadableByteChannel in) throws CmfStorageException {
+	protected Pair<URI, Long> store(LocalStoreOperation op, URI locator, ReadableByteChannel in, long size)
+		throws CmfStorageException {
 		try (FileChannel channel = createChannel(op, locator)) {
-			return channel.transferFrom(channel, 0, Long.MAX_VALUE);
+			return Pair.of(null, channel.transferFrom(channel, 0, Long.MAX_VALUE));
 		} catch (IOException e) {
 			throw new CmfStorageException(
 				String.format("Failed to transfer the contents to the stream at locator [%s]", locator), e);
