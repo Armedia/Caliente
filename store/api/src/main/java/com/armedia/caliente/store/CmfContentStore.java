@@ -47,9 +47,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 import com.armedia.commons.utilities.function.CheckedRunnable;
 import com.armedia.commons.utilities.function.CheckedSupplier;
+import com.armedia.commons.utilities.io.CloseUtils;
+import com.armedia.commons.utilities.io.ContentTools;
 import com.armedia.commons.utilities.io.ReadableByteChannelWrapper;
 import com.armedia.commons.utilities.io.WritableByteChannelWrapper;
 
@@ -176,6 +179,212 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		@Override
 		public String toString() {
 			return String.format("Handle [id=%s, info=%s]", this.locator, this.info.getObject());
+		}
+	}
+
+	public static final class ContentAccessor {
+		private final String description;
+		private final CheckedSupplier<Boolean, IOException> deleter;
+		private final CheckedSupplier<ReadableByteChannel, IOException> reader;
+		private final CheckedSupplier<WritableByteChannel, IOException> writer;
+		private final Path path;
+
+		public ContentAccessor(Path path) {
+			this.path = Tools.canonicalize(path);
+			this.description = "[" + this.path.toString() + "]";
+			this.deleter = () -> {
+				boolean exists = Files.exists(path);
+				if (exists) {
+					Files.delete(this.path);
+				}
+				return exists;
+			};
+			this.reader = () -> Files.newByteChannel(this.path, StandardOpenOption.READ);
+			this.writer = () -> Files.newByteChannel(this.path, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+				StandardOpenOption.TRUNCATE_EXISTING);
+		}
+
+		public ContentAccessor(String description, CheckedSupplier<Boolean, IOException> deleter,
+			CheckedSupplier<ReadableByteChannel, IOException> reader,
+			CheckedSupplier<WritableByteChannel, IOException> writer) {
+			this.description = Objects.requireNonNull(description, "Must provide a description");
+			this.deleter = Objects.requireNonNull(deleter, "Must provide a deleter");
+			this.reader = Objects.requireNonNull(reader, "Must provide a reader supplier");
+			this.writer = Objects.requireNonNull(writer, "Must provide a writer supplier");
+			this.path = null;
+		}
+
+		public boolean delete() throws IOException {
+			return this.deleter.getChecked();
+		}
+
+		private boolean deleteQuietly() {
+			try {
+				return delete();
+			} catch (IOException e) {
+				// Swallow this ... maybe log it?
+				return false;
+			}
+		}
+
+		public ReadableByteChannel openReader() throws IOException {
+			return this.reader.getChecked();
+		}
+
+		public WritableByteChannel openWriter() throws IOException {
+			return this.writer.getChecked();
+		}
+
+		public long copyFrom(ReadableByteChannel in) throws IOException {
+			Objects.requireNonNull(in, "Must provide a ReadableByteChannel to copy from");
+			if (this.path != null) {
+				try (FileChannel w = FileChannel.open(this.path, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+					StandardOpenOption.TRUNCATE_EXISTING)) {
+					return w.transferFrom(w, 0, Long.MAX_VALUE);
+				}
+			}
+
+			try (WritableByteChannel out = openWriter()) {
+				return ContentTools.copy(in, out);
+			}
+		}
+
+		public long copyFrom(Path in) throws IOException {
+			Objects.requireNonNull(in, "Must provide a Path to copy from");
+			if (this.path != null) {
+				Files.copy(in, this.path);
+				return Files.size(this.path);
+			}
+
+			try (FileChannel r = FileChannel.open(in, StandardOpenOption.READ)) {
+				try (WritableByteChannel w = openWriter()) {
+					return r.transferTo(0, Long.MAX_VALUE, w);
+				}
+			}
+		}
+
+		public long copyFrom(ContentAccessor in) throws IOException {
+			Objects.requireNonNull(in, "Must provide a ContentAccessor to copy from");
+			if ((this.path != null) && (in.path != null)) {
+				Files.copy(in.path, this.path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+				return Files.size(this.path);
+			}
+
+			try (WritableByteChannel w = this.writer.getChecked()) {
+				try (ReadableByteChannel r = in.openReader()) {
+					return ContentTools.copy(r, w);
+				}
+			}
+		}
+
+		public long copyTo(WritableByteChannel out) throws IOException {
+			Objects.requireNonNull(out, "Must provide a WritableByteChannel to copy to");
+			if (this.path != null) {
+				try (FileChannel w = FileChannel.open(this.path, StandardOpenOption.READ)) {
+					return w.transferTo(0, Long.MAX_VALUE, out);
+				}
+			}
+
+			try (ReadableByteChannel in = openReader()) {
+				return ContentTools.copy(in, out);
+			}
+		}
+
+		public long copyTo(Path out) throws IOException {
+			Objects.requireNonNull(out, "Must provide a Path to copy to");
+			if (this.path != null) {
+				Files.copy(this.path, out);
+				return Files.size(out);
+			}
+
+			try (FileChannel w = FileChannel.open(out, StandardOpenOption.READ)) {
+				try (ReadableByteChannel r = openReader()) {
+					return w.transferFrom(r, 0, Long.MAX_VALUE);
+				}
+			}
+		}
+
+		public long copyTo(ContentAccessor out) throws IOException {
+			Objects.requireNonNull(out, "Must provide a ContentAccessor to copy to");
+			if ((this.path != null) && (out.path != null)) {
+				Files.copy(this.path, out.path, StandardCopyOption.REPLACE_EXISTING,
+					StandardCopyOption.COPY_ATTRIBUTES);
+				return Files.size(out.path);
+			}
+
+			try (WritableByteChannel w = out.openWriter()) {
+				try (ReadableByteChannel r = this.reader.getChecked()) {
+					return ContentTools.copy(r, w);
+				}
+			}
+		}
+
+		public long moveTo(WritableByteChannel out) throws IOException {
+			Objects.requireNonNull(out, "Must provide a WritableByteChannel to move to");
+			boolean ok = false;
+			try {
+				if (this.path != null) {
+					try (FileChannel w = FileChannel.open(this.path, StandardOpenOption.READ)) {
+						long size = w.transferTo(0, Long.MAX_VALUE, out);
+						ok = true;
+						return size;
+					}
+				}
+
+				try (ReadableByteChannel in = openReader()) {
+					long size = ContentTools.copy(in, out);
+					ok = true;
+					return size;
+				}
+			} finally {
+				if (ok) {
+					deleteQuietly();
+				}
+			}
+		}
+
+		public long moveTo(Path out) throws IOException {
+			Objects.requireNonNull(out, "Must provide a Path to move to");
+			if (this.path != null) {
+				Files.move(this.path, out);
+				return Files.size(out);
+			}
+
+			try (FileChannel w = FileChannel.open(out, StandardOpenOption.READ)) {
+				try (ReadableByteChannel r = openReader()) {
+					long size = w.transferFrom(r, 0, Long.MAX_VALUE);
+					deleteQuietly();
+					return size;
+				}
+			}
+		}
+
+		public long moveTo(ContentAccessor out) throws IOException {
+			Objects.requireNonNull(out, "Must provide a ContentAccessor to move to");
+			boolean ok = false;
+			try {
+				if ((this.path != null) && (out.path != null)) {
+					Files.move(this.path, out.path, StandardCopyOption.REPLACE_EXISTING,
+						StandardCopyOption.COPY_ATTRIBUTES);
+					ok = true;
+					return Files.size(out.path);
+				}
+
+				try (WritableByteChannel w = out.openWriter()) {
+					try (ReadableByteChannel r = this.reader.getChecked()) {
+						long size = ContentTools.copy(r, w);
+						ok = true;
+						return size;
+					}
+				}
+			} finally {
+				(ok ? this : out).deleteQuietly();
+			}
+		}
+
+		@Override
+		public String toString() {
+			return this.description;
 		}
 	}
 
@@ -434,14 +643,30 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	protected abstract ReadableByteChannel openChannel(OPERATION operation, LOCATOR locator) throws CmfStorageException;
 
+	protected abstract ContentAccessor createTemp(LOCATOR locator) throws CmfStorageException;
+
 	protected final long store(Handle handle, InputStream in, long size) throws CmfStorageException {
 		return store(handle, Channels.newChannel(in), size);
 	}
 
-	protected final long store(Handle handle, ReadableByteChannel in, long size) throws CmfStorageException {
+	protected final long store(Handle handle, ReadableByteChannel data, long length) throws CmfStorageException {
 		return runConcurrently((operation) -> {
 			assertOpen();
 			LOCATOR locator = getLocator(handle);
+
+			ReadableByteChannel in = data;
+			long size = length;
+
+			ContentAccessor temp = null;
+			if (length < 0) {
+				// We don't know the size, we need to copy it to a temporary space first
+				temp = createTemp(locator);
+				try {
+					size = temp.copyFrom(in);
+				} catch (IOException e) {
+					throw new CmfStorageException("Failed to copy the content into " + temp, e);
+				}
+			}
 
 			// First, let's try a shortcut
 			if (isSupportsFileAccess()) {
@@ -454,19 +679,38 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 				}
 				CmfContentStore.ensureParentExists(p);
 
-				try (FileChannel out = FileChannel.open(p, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
-					StandardOpenOption.TRUNCATE_EXISTING)) {
-					long written = out.transferFrom(in, 0, Long.MAX_VALUE);
-					if ((size >= 0) && (written != size)) {
+				if (temp != null) {
+					try {
+						return temp.moveTo(p);
+					} catch (IOException e) {
 						throw new CmfStorageException(
-							String.format("Incorrect size written out - expected to write %d bytes, but wrote out %d",
-								size, written));
+							"Failed to move the temporary file from " + temp + " to [" + p + "]", e);
 					}
-				} catch (FileNotFoundException e) {
-					throw new CmfStorageException(String.format("Failed to open an output stream to the file [%s]", p),
-						e);
+				} else {
+					try (FileChannel out = FileChannel.open(p, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+						StandardOpenOption.TRUNCATE_EXISTING)) {
+						long written = out.transferFrom(in, 0, Long.MAX_VALUE);
+						if ((size >= 0) && (written != size)) {
+							throw new CmfStorageException(String.format(
+								"Incorrect size written out - expected to write %d bytes, but wrote out %d", size,
+								written));
+						}
+						return written;
+					} catch (FileNotFoundException e) {
+						throw new CmfStorageException(
+							String.format("Failed to open an output stream to the file [%s]", p), e);
+					} catch (IOException e) {
+						throw new CmfStorageException(String.format("Failed to copy the content from the file [%s]", p),
+							e);
+					}
+				}
+			}
+
+			if (temp != null) {
+				try {
+					in = temp.openReader();
 				} catch (IOException e) {
-					throw new CmfStorageException(String.format("Failed to copy the content from the file [%s]", p), e);
+					throw new CmfStorageException("Failed to open a channel to the temporary data at " + temp, e);
 				}
 			}
 
@@ -493,6 +737,9 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 				ok = true;
 				return p.getValue();
 			} finally {
+				if (temp != null) {
+					CloseUtils.closeQuietly(in);
+				}
 				if (tx && !ok) {
 					try {
 						operation.rollback();
