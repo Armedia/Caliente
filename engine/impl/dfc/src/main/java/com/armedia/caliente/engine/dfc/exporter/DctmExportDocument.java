@@ -406,17 +406,18 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		// CmfStore the content in the filesystem
 		CmfContentStore<?, ?>.Handle contentHandle = streamStore.addContentStream(translator, marshaled, info);
 		try {
+			/*
 			if (contentHandle.getSourceStore().isSupportsFileAccess()) {
 				document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, info.getRenditionPage(),
 					info.getModifier(), false);
 			} else {
-				// Doesn't support file-level, so we (sadly) use stream-level transfers
-				try (InputStream in = document.getContentEx3(format, info.getRenditionPage(), info.getModifier(),
-					false)) {
-					// Don't pull the content until we're sure we can put it somewhere...
-					contentHandle.store(in, content.getContentSize());
-				}
+			*/
+			// Doesn't support file-level, so we (sadly) use stream-level transfers
+			try (InputStream in = document.getContentEx3(format, info.getRenditionPage(), info.getModifier(), false)) {
+				// Don't pull the content until we're sure we can put it somewhere...
+				contentHandle.store(in, -1);
 			}
+			// }
 		} catch (Exception e) {
 			info.setProperty("error_message", Tools.dumpStackTrace(e));
 			this.log.error("Failed to store the content stream {} for {}", info, marshaled.getDescription(), e);

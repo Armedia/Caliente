@@ -105,6 +105,7 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	private final File baseDir;
+	private final File tempDir;
 	private final boolean storeProperties;
 	private final CmfContentOrganizer organizer;
 	private final File propertiesFile;
@@ -139,6 +140,11 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		this.settings = settings;
 		File f = Tools.canonicalize(baseDir);
 		this.baseDir = f;
+		try {
+			this.tempDir = Files.createTempDirectory(baseDir.toPath(), ".temp").toFile();
+		} catch (IOException e) {
+			throw new CmfStorageException("Failed to create the temporary data directory at [" + baseDir + "]", e);
+		}
 		this.storeProperties = (parent == null) && settings.getBoolean(LocalContentStoreSetting.STORE_PROPERTIES);
 
 		final File newPropertiesFile = new File(baseDir, "caliente-store-properties.xml");
@@ -400,6 +406,17 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	@Override
+	protected ContentAccessor createTemp(URI locator) throws CmfStorageException {
+		try {
+			FileUtils.forceMkdir(this.tempDir);
+			return new ContentAccessor(
+				Files.createTempFile(this.tempDir.toPath(), String.format("%08x", locator.hashCode()), ".tmp"));
+		} catch (IOException e) {
+			throw new CmfStorageException("Failed to create a temporary file for [" + locator + "]", e);
+		}
+	}
+
+	@Override
 	protected Pair<URI, Long> store(LocalStoreOperation op, URI locator, ReadableByteChannel in, long size)
 		throws CmfStorageException {
 		try (FileChannel channel = createChannel(op, locator)) {
@@ -565,6 +582,9 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 				this.log.error("Failed to write the store properties to [{}]", this.propertiesFile.getAbsolutePath(),
 					e);
 			}
+		}
+		if (this.tempDir.exists()) {
+			FileUtils.deleteQuietly(this.tempDir);
 		}
 		return super.doClose(cleanupIfEmpty);
 	}

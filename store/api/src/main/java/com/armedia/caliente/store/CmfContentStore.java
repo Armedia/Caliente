@@ -238,9 +238,9 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		public long copyFrom(ReadableByteChannel in) throws IOException {
 			Objects.requireNonNull(in, "Must provide a ReadableByteChannel to copy from");
 			if (this.path != null) {
-				try (FileChannel w = FileChannel.open(this.path, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+				try (FileChannel out = FileChannel.open(this.path, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
 					StandardOpenOption.TRUNCATE_EXISTING)) {
-					return w.transferFrom(w, 0, Long.MAX_VALUE);
+					return out.transferFrom(in, 0, Long.MAX_VALUE);
 				}
 			}
 
@@ -249,30 +249,30 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			}
 		}
 
-		public long copyFrom(Path in) throws IOException {
-			Objects.requireNonNull(in, "Must provide a Path to copy from");
+		public long copyFrom(Path p) throws IOException {
+			Objects.requireNonNull(p, "Must provide a Path to copy from");
 			if (this.path != null) {
-				Files.copy(in, this.path);
+				Files.copy(p, this.path);
 				return Files.size(this.path);
 			}
 
-			try (FileChannel r = FileChannel.open(in, StandardOpenOption.READ)) {
-				try (WritableByteChannel w = openWriter()) {
-					return r.transferTo(0, Long.MAX_VALUE, w);
+			try (FileChannel in = FileChannel.open(p, StandardOpenOption.READ)) {
+				try (WritableByteChannel out = openWriter()) {
+					return in.transferTo(0, Long.MAX_VALUE, out);
 				}
 			}
 		}
 
-		public long copyFrom(ContentAccessor in) throws IOException {
-			Objects.requireNonNull(in, "Must provide a ContentAccessor to copy from");
-			if ((this.path != null) && (in.path != null)) {
-				Files.copy(in.path, this.path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+		public long copyFrom(ContentAccessor other) throws IOException {
+			Objects.requireNonNull(other, "Must provide a ContentAccessor to copy from");
+			if ((this.path != null) && (other.path != null)) {
+				Files.copy(other.path, this.path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
 				return Files.size(this.path);
 			}
 
-			try (WritableByteChannel w = this.writer.getChecked()) {
-				try (ReadableByteChannel r = in.openReader()) {
-					return ContentTools.copy(r, w);
+			try (WritableByteChannel out = this.writer.getChecked()) {
+				try (ReadableByteChannel in = other.openReader()) {
+					return ContentTools.copy(in, out);
 				}
 			}
 		}
@@ -280,8 +280,8 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		public long copyTo(WritableByteChannel out) throws IOException {
 			Objects.requireNonNull(out, "Must provide a WritableByteChannel to copy to");
 			if (this.path != null) {
-				try (FileChannel w = FileChannel.open(this.path, StandardOpenOption.READ)) {
-					return w.transferTo(0, Long.MAX_VALUE, out);
+				try (FileChannel in = FileChannel.open(this.path, StandardOpenOption.READ)) {
+					return in.transferTo(0, Long.MAX_VALUE, out);
 				}
 			}
 
@@ -290,31 +290,31 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			}
 		}
 
-		public long copyTo(Path out) throws IOException {
-			Objects.requireNonNull(out, "Must provide a Path to copy to");
+		public long copyTo(Path p) throws IOException {
+			Objects.requireNonNull(p, "Must provide a Path to copy to");
 			if (this.path != null) {
-				Files.copy(this.path, out);
-				return Files.size(out);
+				Files.copy(this.path, p);
+				return Files.size(p);
 			}
 
-			try (FileChannel w = FileChannel.open(out, StandardOpenOption.READ)) {
-				try (ReadableByteChannel r = openReader()) {
-					return w.transferFrom(r, 0, Long.MAX_VALUE);
+			try (FileChannel out = FileChannel.open(p, StandardOpenOption.READ)) {
+				try (ReadableByteChannel in = openReader()) {
+					return out.transferFrom(in, 0, Long.MAX_VALUE);
 				}
 			}
 		}
 
-		public long copyTo(ContentAccessor out) throws IOException {
-			Objects.requireNonNull(out, "Must provide a ContentAccessor to copy to");
-			if ((this.path != null) && (out.path != null)) {
-				Files.copy(this.path, out.path, StandardCopyOption.REPLACE_EXISTING,
+		public long copyTo(ContentAccessor other) throws IOException {
+			Objects.requireNonNull(other, "Must provide a ContentAccessor to copy to");
+			if ((this.path != null) && (other.path != null)) {
+				Files.copy(this.path, other.path, StandardCopyOption.REPLACE_EXISTING,
 					StandardCopyOption.COPY_ATTRIBUTES);
-				return Files.size(out.path);
+				return Files.size(other.path);
 			}
 
-			try (WritableByteChannel w = out.openWriter()) {
-				try (ReadableByteChannel r = this.reader.getChecked()) {
-					return ContentTools.copy(r, w);
+			try (WritableByteChannel out = other.openWriter()) {
+				try (ReadableByteChannel in = this.reader.getChecked()) {
+					return ContentTools.copy(in, out);
 				}
 			}
 		}
@@ -343,42 +343,42 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			}
 		}
 
-		public long moveTo(Path out) throws IOException {
-			Objects.requireNonNull(out, "Must provide a Path to move to");
+		public long moveTo(Path p) throws IOException {
+			Objects.requireNonNull(p, "Must provide a Path to move to");
 			if (this.path != null) {
-				Files.move(this.path, out);
-				return Files.size(out);
+				Files.move(this.path, p);
+				return Files.size(p);
 			}
 
-			try (FileChannel w = FileChannel.open(out, StandardOpenOption.READ)) {
-				try (ReadableByteChannel r = openReader()) {
-					long size = w.transferFrom(r, 0, Long.MAX_VALUE);
+			try (FileChannel out = FileChannel.open(p, StandardOpenOption.READ)) {
+				try (ReadableByteChannel in = openReader()) {
+					long size = out.transferFrom(in, 0, Long.MAX_VALUE);
 					deleteQuietly();
 					return size;
 				}
 			}
 		}
 
-		public long moveTo(ContentAccessor out) throws IOException {
-			Objects.requireNonNull(out, "Must provide a ContentAccessor to move to");
+		public long moveTo(ContentAccessor other) throws IOException {
+			Objects.requireNonNull(other, "Must provide a ContentAccessor to move to");
 			boolean ok = false;
 			try {
-				if ((this.path != null) && (out.path != null)) {
-					Files.move(this.path, out.path, StandardCopyOption.REPLACE_EXISTING,
+				if ((this.path != null) && (other.path != null)) {
+					Files.move(this.path, other.path, StandardCopyOption.REPLACE_EXISTING,
 						StandardCopyOption.COPY_ATTRIBUTES);
 					ok = true;
-					return Files.size(out.path);
+					return Files.size(other.path);
 				}
 
-				try (WritableByteChannel w = out.openWriter()) {
-					try (ReadableByteChannel r = this.reader.getChecked()) {
-						long size = ContentTools.copy(r, w);
+				try (WritableByteChannel out = other.openWriter()) {
+					try (ReadableByteChannel in = this.reader.getChecked()) {
+						long size = ContentTools.copy(in, out);
 						ok = true;
 						return size;
 					}
 				}
 			} finally {
-				(ok ? this : out).deleteQuietly();
+				(ok ? this : other).deleteQuietly();
 			}
 		}
 
