@@ -106,6 +106,8 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 	private final S3Client client;
 	private final String basePath;
+
+	private final File tempDir;
 	private final boolean storeProperties;
 	private final CmfContentOrganizer organizer;
 	private final File propertiesFile;
@@ -128,6 +130,13 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		super(parent);
 		if (settings == null) { throw new IllegalArgumentException("Must provide configuration settings"); }
 		this.settings = settings;
+
+		// TODO: Identify the temp location
+		try {
+			this.tempDir = Files.createTempDirectory(baseDir.toPath(), ".temp").toFile();
+		} catch (IOException e) {
+			throw new CmfStorageException("Failed to create the temporary data directory at [" + baseDir + "]", e);
+		}
 
 		final Region region = Region.of(StringUtils.lowerCase(settings.getString(S3ContentStoreSetting.REGION)));
 		final String endpoint = settings.getString(S3ContentStoreSetting.ENDPOINT);
@@ -408,6 +417,16 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	}
 
 	@Override
+	protected ContentAccessor createTemp(URI locator) throws CmfStorageException {
+		try {
+			return new ContentAccessor(
+				Files.createTempFile(this.tempDir.toPath(), String.format("%08x", locator.hashCode()), ".tmp"));
+		} catch (IOException e) {
+			throw new CmfStorageException("Failed to create a temporary file for [" + locator + "]", e);
+		}
+	}
+
+	@Override
 	protected Pair<URI, Long> store(S3StoreOperation op, URI locator, ReadableByteChannel in, long size)
 		throws CmfStorageException {
 		InputStream localCachedCopy = Channels.newInputStream(in);
@@ -591,6 +610,9 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 				this.log.error("Failed to write the store properties to [{}]", this.propertiesFile.getAbsolutePath(),
 					e);
 			}
+		}
+		if (this.tempDir.exists()) {
+			FileUtils.deleteQuietly(this.tempDir);
 		}
 		try {
 			this.client.close();
