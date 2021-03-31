@@ -77,7 +77,6 @@ import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.local.xml.PropertiesLoader;
 import com.armedia.caliente.store.local.xml.PropertyT;
 import com.armedia.caliente.store.local.xml.StorePropertiesT;
-import com.armedia.caliente.store.local.xml.legacy.LegacyPropertiesLoader;
 import com.armedia.caliente.store.tools.FilenameEncoder;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
@@ -167,22 +166,11 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		} else {
 			if (parent == null) {
 				// First, try the legacy mode...
-				boolean propertiesLoaded = false;
 				try {
-					propertiesLoaded = new PropertiesLoader().loadProperties(this.propertiesFile, this.properties);
+					this.propertiesLoaded = new PropertiesLoader().loadProperties(this.propertiesFile, this.properties);
 				} catch (CmfStorageException e) {
-					// Legacy didn't work....log a warning?
-					this.log.warn("Failed to load the store properties, will try the legacy model");
-					try {
-						propertiesLoaded = new LegacyPropertiesLoader().loadProperties(this.propertiesFile,
-							this.properties);
-					} catch (CmfStorageException e2) {
-						this.log.error("Failed to load the store properties using the legacy model", e2);
-						throw new CmfStorageException("Failed to load both the modern and legacy properties models", e);
-					}
+					throw new CmfStorageException("Failed to load both the properties models", e);
 				}
-
-				this.propertiesLoaded = propertiesLoaded;
 			} else {
 				this.propertiesLoaded = true;
 			}
