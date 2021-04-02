@@ -95,15 +95,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 
 		public OutputStream createStream() throws CmfStorageException {
-			return CmfContentStore.this.createStream(this);
-		}
-
-		public ReadableByteChannel openChannel() throws CmfStorageException {
-			return CmfContentStore.this.openChannel(this);
-		}
-
-		public InputStream openStream() throws CmfStorageException {
-			return CmfContentStore.this.openStream(this);
+			return Channels.newOutputStream(createChannel());
 		}
 
 		public long store(ReadableByteChannel in) throws CmfStorageException {
@@ -128,6 +120,14 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 		public long store(Path p) throws CmfStorageException {
 			return CmfContentStore.this.store(this, p);
+		}
+
+		public ReadableByteChannel openChannel() throws CmfStorageException {
+			return CmfContentStore.this.openChannel(this);
+		}
+
+		public InputStream openStream() throws CmfStorageException {
+			return CmfContentStore.this.openStream(this);
 		}
 
 		public long read(WritableByteChannel out) throws CmfStorageException {
@@ -266,7 +266,8 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		public long copyFrom(ContentAccessor other) throws IOException {
 			Objects.requireNonNull(other, "Must provide a ContentAccessor to copy from");
 			if ((this.path != null) && (other.path != null)) {
-				Files.copy(other.path, this.path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+				Files.copy(other.path, this.path, StandardCopyOption.REPLACE_EXISTING,
+					StandardCopyOption.COPY_ATTRIBUTES);
 				return Files.size(this.path);
 			}
 
@@ -871,10 +872,6 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			}
 		}
 		return total;
-	}
-
-	protected final OutputStream createStream(Handle handle) throws CmfStorageException {
-		return Channels.newOutputStream(createChannel(handle));
 	}
 
 	protected final WritableByteChannel createChannel(Handle handle) throws CmfStorageException {
