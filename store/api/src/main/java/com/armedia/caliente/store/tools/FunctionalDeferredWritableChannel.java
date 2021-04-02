@@ -1,4 +1,4 @@
-package com.armedia.caliente.tools;
+package com.armedia.caliente.store.tools;
 
 import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
