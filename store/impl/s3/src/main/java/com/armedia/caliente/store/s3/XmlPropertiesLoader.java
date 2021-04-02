@@ -26,7 +26,6 @@
  *******************************************************************************/
 package com.armedia.caliente.store.s3;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -43,6 +42,9 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.commons.utilities.xml.XmlTools;
 
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+
 public abstract class XmlPropertiesLoader<P extends XmlProperty, S extends XmlStoreProperties<P>> {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
@@ -55,9 +57,19 @@ public abstract class XmlPropertiesLoader<P extends XmlProperty, S extends XmlSt
 		this.rootClass = rootClass;
 	}
 
-	public final boolean loadProperties(File propertiesFile, Map<String, CmfValue> properties)
-		throws CmfStorageException {
-		if (!propertiesFile.exists()) { return false; }
+	public final boolean loadProperties(S3Client client, String bucket, String propertiesFile,
+		Map<String, CmfValue> properties) throws CmfStorageException {
+
+		try {
+			HeadObjectResponse rsp = client.headObject((R) -> {
+				R.bucket(bucket);
+				R.key(propertiesFile);
+			});
+			if (rsp.deleteMarker() == Boolean.TRUE) { return false; }
+		} catch (Exception e) {
+			return false;
+		}
+
 		// Allow an empty file...
 		if (propertiesFile.length() == 0) { return true; }
 		try (InputStream in = new FileInputStream(propertiesFile)) {

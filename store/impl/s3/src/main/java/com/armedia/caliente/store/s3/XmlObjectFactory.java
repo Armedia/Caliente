@@ -29,7 +29,7 @@ package com.armedia.caliente.store.s3;
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
-import com.armedia.caliente.store.s3.xml.legacy.StorePropertiesT;
+import com.armedia.caliente.store.s3.xml.StorePropertiesT;
 
 public class XmlObjectFactory<P extends XmlProperty, S extends XmlStoreProperties<P>> {
 

@@ -30,6 +30,7 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum S3ContentStoreSetting implements ConfigurationSetting {
 	//
+	TEMP(),
 	REGION(S3ContentStoreFactory.DEFAULT_REGION),
 	ENDPOINT,
 	CREDENTIAL_TYPE(S3ContentStoreFactory.CredentialType.STATIC),
@@ -39,6 +40,7 @@ public enum S3ContentStoreSetting implements ConfigurationSetting {
 	PROFILE_LOCATION,
 	PROFILE_NAME,
 	CREATE_MISSING_BUCKET(false),
+	BUCKET(),
 	BASE_PATH,
 	URI_ORGANIZER,
 	FORCE_SAFE_FILENAMES(true),
