@@ -8,26 +8,21 @@ import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
 
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
-import com.armedia.commons.utilities.function.CheckedConsumer;
 
-public class DeferredWritableChannel extends BaseShareableLockable implements WritableByteChannel {
+public abstract class DeferredWritableChannel extends BaseShareableLockable implements WritableByteChannel {
 
 	private final Path tempFile;
-	private final CheckedConsumer<ReadableByteChannel, IOException> reader;
 	private final WritableByteChannel out;
 
-	public DeferredWritableChannel(CheckedConsumer<ReadableByteChannel, IOException> reader) throws IOException {
-		this(reader, null);
+	public DeferredWritableChannel() throws IOException {
+		this(null);
 	}
 
-	public DeferredWritableChannel(CheckedConsumer<ReadableByteChannel, IOException> reader, Path tempFile)
-		throws IOException {
-		this.reader = Objects.requireNonNull(reader, "Must provide a consumer for the data once writing is done");
+	public DeferredWritableChannel(Path tempFile) throws IOException {
 		if (tempFile != null) {
 			this.tempFile = tempFile;
 		} else {
@@ -38,17 +33,19 @@ public class DeferredWritableChannel extends BaseShareableLockable implements Wr
 	}
 
 	@Override
-	public boolean isOpen() {
+	public final boolean isOpen() {
 		return shareLocked(this.out::isOpen);
 	}
 
 	@Override
-	public int write(ByteBuffer src) throws IOException {
+	public final int write(ByteBuffer src) throws IOException {
 		return mutexLocked(() -> this.out.write(src));
 	}
 
+	protected abstract void process(ReadableByteChannel in, long length) throws IOException;
+
 	@Override
-	public void close() throws IOException {
+	public final void close() throws IOException {
 		shareLockedUpgradable(this.out::isOpen, () -> {
 			try {
 				// Close the output channel
@@ -56,7 +53,7 @@ public class DeferredWritableChannel extends BaseShareableLockable implements Wr
 
 				// Transfer the data over ...
 				try (ReadableByteChannel in = Files.newByteChannel(this.tempFile, StandardOpenOption.READ)) {
-					this.reader.acceptChecked(in);
+					process(in, Files.size(this.tempFile));
 				}
 			} finally {
 				// Cleanup
