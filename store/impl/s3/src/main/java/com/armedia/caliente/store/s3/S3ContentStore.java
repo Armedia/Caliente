@@ -51,7 +51,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
@@ -88,6 +87,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
@@ -105,7 +105,6 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 	private static final Set<String> SUPPORTED_SCHEMES = Tools.freezeSet(Collections.singleton(S3ContentStore.SCHEME));
 
-	private static final Pattern UNSAFE_CHARS = Pattern.compile("^.*[^0-9a-z/!_.*'()-].*$", Pattern.CASE_INSENSITIVE);
 	private static final String CHARS_URLENCODE_STR = "&$@=;:+ ,?";
 	private static final Set<Character> CHARS_URLENCODE;
 	private static final String CHARS_BAD_STR = "\\{}^%[]`\"~#|<>";
@@ -134,6 +133,7 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	}
 
 	private final S3Client client;
+	private final Path localDir;
 	private final String bucket;
 	private final String basePath;
 	private final Path tempDir;
@@ -163,21 +163,19 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 			throw new CmfStorageException("Invalid bucket name: [" + this.bucket + "]");
 		}
 
-		// TODO: Identify the temp location
-		this.tempDir = Paths.get(".");
-		/*
+		String localDir = settings.getString("dir.content");
+		if (StringUtils.isBlank(localDir)) { throw new CmfStorageException("No setting [dir.content] specified"); }
+		this.localDir = Tools.canonicalize(Paths.get(localDir));
 		try {
-			this.tempDir = Files.createTempDirectory(baseDir.toPath(), ".temp").toFile();
+			this.tempDir = Files.createTempDirectory(this.localDir, ".s3-temp-");
 		} catch (IOException e) {
-			throw new CmfStorageException("Failed to create the temporary data directory at [" + baseDir + "]", e);
+			throw new CmfStorageException("Failed to create a temporary directory at [" + this.localDir + "]", e);
 		}
-		*/
 
 		final Region region = Region.of(StringUtils.lowerCase(settings.getString(S3ContentStoreSetting.REGION)));
 		final String endpoint = settings.getString(S3ContentStoreSetting.ENDPOINT);
 		final CredentialType credentialType = settings.getEnum(S3ContentStoreSetting.CREDENTIAL_TYPE,
 			CredentialType.class);
-		final boolean createMissingBuckets = settings.getBoolean(S3ContentStoreSetting.CREATE_MISSING_BUCKET);
 
 		S3ClientBuilder clientBuilder = S3Client.builder();
 		clientBuilder.region(region);
@@ -190,6 +188,27 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		}
 		clientBuilder.credentialsProvider(credentialType.build(settings));
 		this.client = clientBuilder.build();
+
+		final boolean createMissingBucket = settings.getBoolean(S3ContentStoreSetting.CREATE_MISSING_BUCKET);
+		if (createMissingBucket) {
+			try {
+				this.client.headBucket((R) -> {
+					R.bucket(this.bucket);
+				});
+			} catch (NoSuchBucketException e) {
+				if (!createMissingBucket) {
+					throw new CmfStorageException("No bucket named [" + this.bucket + "] was found", e);
+				}
+				try {
+					this.client.createBucket((R) -> {
+						R.bucket(this.bucket);
+					});
+				} catch (Exception e2) {
+					throw new CmfStorageException("Failed to create the missing bucket [" + this.bucket + "]", e2);
+				}
+			}
+			// If the bucket is missing, create it
+		}
 
 		String basePath = settings.getString(S3ContentStoreSetting.BASE_PATH);
 		// TODO: Normalize this path, make sure it has a leading slash
