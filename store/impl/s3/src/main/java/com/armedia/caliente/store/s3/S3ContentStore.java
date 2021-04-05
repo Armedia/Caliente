@@ -148,6 +148,27 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	protected final boolean propertiesLoaded;
 	private final boolean useWindowsFix;
 
+	public class S3Handle<VALUE> extends Handle {
+
+		private final CmfAttributeTranslator<VALUE> translator;
+		private final CmfObject<VALUE> cmfObject;
+
+		protected S3Handle(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> cmfObject, CmfContentStream info,
+			String locator) {
+			super(info, locator);
+			this.translator = translator;
+			this.cmfObject = cmfObject;
+		}
+
+		public CmfAttributeTranslator<VALUE> getTranslator() {
+			return this.translator;
+		}
+
+		public CmfObject<VALUE> getCmfObject() {
+			return this.cmfObject;
+		}
+	}
+
 	public S3ContentStore(CmfStore<?> parent, CfgTools settings, boolean cleanData) throws CmfStorageException {
 		super(parent);
 		if (settings == null) { throw new IllegalArgumentException("Must provide configuration settings"); }
@@ -287,6 +308,12 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		this.useWindowsFix = ((v != null) && v.asBoolean());
 		// This helps make sure the actual used value is stored
 		setProperty(S3ContentStoreSetting.USE_WINDOWS_FIX.getLabel(), CmfValue.of(this.useWindowsFix));
+	}
+
+	@Override
+	protected <VALUE> CmfContentStore<URI, S3StoreOperation>.Handle newHandle(CmfAttributeTranslator<VALUE> translator,
+		CmfObject<VALUE> object, CmfContentStream info, URI locator) {
+		return new S3Handle<>(translator, object, info, encodeLocator(locator));
 	}
 
 	protected void initProperties() throws CmfStorageException {
