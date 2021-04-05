@@ -405,8 +405,10 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	@Override
-	protected Pair<URI, Long> store(LocalStoreOperation op, URI locator, ReadableByteChannel in, long size)
+	protected <VALUE> Pair<URI, Long> store(LocalStoreOperation op,
+		CmfContentStore<URI, LocalStoreOperation>.Handle<VALUE> handle, ReadableByteChannel in, long size)
 		throws CmfStorageException {
+		URI locator = getLocator(handle);
 		try (FileChannel channel = createChannel(op, locator)) {
 			return Pair.of(null, channel.transferFrom(channel, 0, Long.MAX_VALUE));
 		} catch (IOException e) {

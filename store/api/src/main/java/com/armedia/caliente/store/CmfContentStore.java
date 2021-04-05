@@ -64,18 +64,30 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	public static final String DEFAULT_QUALIFIER = "content";
 
-	public class Handle {
-		private String encodedLocator;
+	public class Handle<VALUE> {
+		private final CmfAttributeTranslator<VALUE> translator;
+		private final CmfObject<VALUE> cmfObject;
 		private final CmfContentStream info;
+		private String encodedLocator;
 
-		protected Handle(CmfContentStream info, String locator) {
-			if (info == null) { throw new IllegalArgumentException("Must provide a content info"); }
+		protected Handle(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> cmfObject, CmfContentStream info,
+			String locator) {
+			this.translator = Objects.requireNonNull(translator, "Must provide a CmfAttributeTranslator instance");
+			this.cmfObject = Objects.requireNonNull(cmfObject, "Must provide a CmfObject instance");
+			this.info = Objects.requireNonNull(info, "Must provide a CmfContentStream instance");
 			if (StringUtils.isBlank(locator)) {
 				throw new IllegalArgumentException(
 					"Must provide a valid, non-blank locator string to identify the content within the store");
 			}
-			this.info = info;
 			info.setLocator(this.encodedLocator = locator);
+		}
+
+		public CmfAttributeTranslator<VALUE> getTranslator() {
+			return this.translator;
+		}
+
+		public CmfObject<VALUE> getCmfObject() {
+			return this.cmfObject;
 		}
 
 		public String getLocator() {
@@ -451,7 +463,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 	}
 
-	protected final LOCATOR getLocator(Handle handle) {
+	protected final <VALUE> LOCATOR getLocator(Handle<VALUE> handle) {
 		Objects.requireNonNull(handle, "Must provide a non-null Handle instance");
 		try (SharedAutoLock lock = autoSharedLock()) {
 			assertOpen();
@@ -471,20 +483,15 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 	}
 
-	public final <VALUE> Handle addContentStream(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
-		CmfContentStream info) {
+	public final <VALUE> Handle<VALUE> addContentStream(CmfAttributeTranslator<VALUE> translator,
+		CmfObject<VALUE> object, CmfContentStream info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }
 		try (SharedAutoLock lock = autoSharedLock()) {
 			assertOpen();
 			LOCATOR locator = calculateLocator(translator, object, info);
-			return newHandle(translator, object, info, locator);
+			return new Handle<>(translator, object, info, encodeLocator(locator));
 		}
-	}
-
-	protected <VALUE> Handle newHandle(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
-		CmfContentStream info, LOCATOR locator) {
-		return new Handle(info, encodeLocator(locator));
 	}
 
 	protected abstract String encodeLocator(LOCATOR locator);
@@ -502,7 +509,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	 * @return the {@link Handle} for the given {@link CmfContentStream} instance, or {@code null}
 	 *         if none exists in this content store
 	 */
-	public final <VALUE> Handle findHandle(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
+	public final <VALUE> Handle<VALUE> findHandle(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
 		try (SharedAutoLock lock = autoSharedLock()) {
 			assertOpen();
@@ -515,11 +522,11 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 				throw new IllegalArgumentException(
 					String.format("Failed to decode the given locator string [%s]", encodedLocator));
 			}
-			return newHandle(translator, object, info, locator);
+			return new Handle<>(translator, object, info, encodedLocator);
 		}
 	}
 
-	protected final Path getPath(Handle handle) throws CmfStorageException {
+	protected final Path getPath(Handle<?> handle) throws CmfStorageException {
 		try (SharedAutoLock lock = autoSharedLock()) {
 			assertOpen();
 
@@ -551,11 +558,11 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	protected abstract <VALUE> LOCATOR doCalculateLocator(CmfAttributeTranslator<VALUE> translator,
 		CmfObject<VALUE> object, CmfContentStream info);
 
-	protected final InputStream openStream(Handle handle) throws CmfStorageException {
+	protected final InputStream openStream(Handle<?> handle) throws CmfStorageException {
 		return Channels.newInputStream(openChannel(handle));
 	}
 
-	protected final ReadableByteChannel openChannel(Handle handle) throws CmfStorageException {
+	protected final ReadableByteChannel openChannel(Handle<?> handle) throws CmfStorageException {
 		final Lock lock = acquireSharedLock();
 
 		assertOpen();
@@ -652,11 +659,11 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	protected abstract ContentAccessor createTemp(LOCATOR locator) throws CmfStorageException;
 
-	protected final long store(Handle handle, InputStream in, long size) throws CmfStorageException {
+	protected final long store(Handle<?> handle, InputStream in, long size) throws CmfStorageException {
 		return store(handle, Channels.newChannel(in), size);
 	}
 
-	protected final long store(Handle handle, ReadableByteChannel data, long length) throws CmfStorageException {
+	protected final long store(Handle<?> handle, ReadableByteChannel data, long length) throws CmfStorageException {
 		return runConcurrently((operation) -> {
 			assertOpen();
 			LOCATOR locator = getLocator(handle);
@@ -725,7 +732,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				Pair<LOCATOR, Long> p = store(operation, locator, in, size);
+				Pair<LOCATOR, Long> p = store(operation, handle, in, size);
 				long written = p.getValue();
 				if ((size >= 0) && (written != size)) {
 					throw new CmfStorageException(String.format(
@@ -759,14 +766,14 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		});
 	}
 
-	protected abstract Pair<LOCATOR, Long> store(OPERATION operation, LOCATOR locator, ReadableByteChannel in,
-		long size) throws CmfStorageException;
+	protected abstract <VALUE> Pair<LOCATOR, Long> store(OPERATION operation, Handle<VALUE> handle,
+		ReadableByteChannel in, long size) throws CmfStorageException;
 
-	protected final long store(Handle handle, File source) throws CmfStorageException {
+	protected final long store(Handle<?> handle, File source) throws CmfStorageException {
 		return store(handle, Objects.requireNonNull(source, "Must provide a File instance").toPath());
 	}
 
-	protected final long store(Handle handle, Path source) throws CmfStorageException {
+	protected final long store(Handle<?> handle, Path source) throws CmfStorageException {
 		return runConcurrently((operation) -> {
 			// Shortcut!
 			if (isSupportsFileAccess()) {
@@ -790,11 +797,11 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		});
 	}
 
-	protected final long read(Handle handle, OutputStream out) throws CmfStorageException {
+	protected final long read(Handle<?> handle, OutputStream out) throws CmfStorageException {
 		return read(handle, Channels.newChannel(out));
 	}
 
-	protected final long read(Handle handle, WritableByteChannel out) throws CmfStorageException {
+	protected final long read(Handle<?> handle, WritableByteChannel out) throws CmfStorageException {
 		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -826,11 +833,11 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		});
 	}
 
-	protected final long read(Handle handle, File target) throws CmfStorageException {
+	protected final long read(Handle<?> handle, File target) throws CmfStorageException {
 		return read(handle, Objects.requireNonNull(target, "Must provide a File instance").toPath());
 	}
 
-	protected final long read(Handle handle, Path target) throws CmfStorageException {
+	protected final long read(Handle<?> handle, Path target) throws CmfStorageException {
 		return runConcurrently((operation) -> {
 			// Shortcut!
 			if (isSupportsFileAccess()) {
@@ -880,7 +887,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		return total;
 	}
 
-	protected final WritableByteChannel createChannel(Handle handle) throws CmfStorageException {
+	protected final WritableByteChannel createChannel(Handle<?> handle) throws CmfStorageException {
 		final Lock lock = acquireSharedLock();
 
 		assertOpen();
@@ -985,7 +992,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	protected abstract WritableByteChannel createChannel(OPERATION operation, LOCATOR locator)
 		throws CmfStorageException;
 
-	public final boolean exists(Handle handle) throws CmfStorageException {
+	public final boolean exists(Handle<?> handle) throws CmfStorageException {
 		return runConcurrently((operation) -> {
 			assertOpen();
 			LOCATOR locator = getLocator(handle);
@@ -1019,7 +1026,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	protected abstract boolean exists(OPERATION operation, LOCATOR locator) throws CmfStorageException;
 
-	protected final long getSize(Handle handle) throws CmfStorageException {
+	protected final long getSize(Handle<?> handle) throws CmfStorageException {
 		return runConcurrently((operation) -> {
 			assertOpen();
 			LOCATOR locator = getLocator(handle);

@@ -488,7 +488,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		info.setLength(src.length());
 		info.setFileName(src.getName());
 		info.setProperty(IntermediateProperty.FULL_PATH, this.object.getPortableFullPath());
-		final CmfContentStore<?, ?>.Handle h = streamStore.addContentStream(translator, marshalled, info);
+		final CmfContentStore<?, ?>.Handle<CmfValue> h = streamStore.addContentStream(translator, marshalled, info);
 		ret.add(info);
 		boolean skipContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		if (this.factory.isCopyContent() && !skipContent) {

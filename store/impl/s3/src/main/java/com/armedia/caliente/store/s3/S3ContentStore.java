@@ -44,6 +44,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpStatus;
 
+import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentOrganizer;
 import com.armedia.caliente.store.CmfContentOrganizer.Location;
@@ -147,27 +149,6 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	private final boolean ignoreDescriptor;
 	protected final boolean propertiesLoaded;
 	private final boolean useWindowsFix;
-
-	public class S3Handle<VALUE> extends Handle {
-
-		private final CmfAttributeTranslator<VALUE> translator;
-		private final CmfObject<VALUE> cmfObject;
-
-		protected S3Handle(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> cmfObject, CmfContentStream info,
-			String locator) {
-			super(info, locator);
-			this.translator = translator;
-			this.cmfObject = cmfObject;
-		}
-
-		public CmfAttributeTranslator<VALUE> getTranslator() {
-			return this.translator;
-		}
-
-		public CmfObject<VALUE> getCmfObject() {
-			return this.cmfObject;
-		}
-	}
 
 	public S3ContentStore(CmfStore<?> parent, CfgTools settings, boolean cleanData) throws CmfStorageException {
 		super(parent);
@@ -308,12 +289,6 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		this.useWindowsFix = ((v != null) && v.asBoolean());
 		// This helps make sure the actual used value is stored
 		setProperty(S3ContentStoreSetting.USE_WINDOWS_FIX.getLabel(), CmfValue.of(this.useWindowsFix));
-	}
-
-	@Override
-	protected <VALUE> CmfContentStore<URI, S3StoreOperation>.Handle newHandle(CmfAttributeTranslator<VALUE> translator,
-		CmfObject<VALUE> object, CmfContentStream info, URI locator) {
-		return new S3Handle<>(translator, object, info, encodeLocator(locator));
 	}
 
 	protected void initProperties() throws CmfStorageException {
@@ -471,15 +446,38 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	}
 
 	@Override
-	protected Pair<URI, Long> store(S3StoreOperation op, URI locator, ReadableByteChannel in, long size)
-		throws CmfStorageException {
+	protected <VALUE> Pair<URI, Long> store(S3StoreOperation op, Handle<VALUE> handle, ReadableByteChannel in,
+		long size) throws CmfStorageException {
 		// TODO: Do we want to do multipart uploads for large files? If the size exceeds a
 		// threshold, we probably should...?
+
+		// TODO: How to handle the generic wildcard?
+
+		URI locator = getLocator(handle);
+
+		// TODO: How do we handle multivalued attributes?
+		// TODO: What should we do with empty/blank attributes?
+		final Map<String, String> metadata = new LinkedHashMap<>();
+		final CmfObject<VALUE> cmfObject = handle.getCmfObject();
+		final CmfObject.Archetype type = cmfObject.getType();
+		final CmfAttributeTranslator<VALUE> translator = handle.getTranslator();
+		for (String attributeName : cmfObject.getAttributeNames()) {
+			CmfAttribute<VALUE> rawAttribute = cmfObject.getAttribute(attributeName);
+			if (!rawAttribute.isMultivalued() || rawAttribute.hasValues()) {
+				CmfAttribute<CmfValue> encodedAttribute = translator.encodeAttribute(type, rawAttribute);
+				CmfValue v = encodedAttribute.getValue();
+				String s = v.asString();
+				if (!StringUtils.isBlank(s)) {
+					metadata.put(rawAttribute.getName(), s);
+				}
+			}
+		}
 
 		// Do the upload ...
 		PutObjectResponse rsp = this.client.putObject((R) -> {
 			R.bucket(locator.getHost());
 			R.key(locator.getPath());
+			R.metadata(metadata);
 		}, (size < 1 ? RequestBody.empty() : RequestBody.fromInputStream(Channels.newInputStream(in), size)));
 
 		try {

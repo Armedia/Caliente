@@ -118,7 +118,8 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 				// Skip the non-default rendition
 				continue;
 			}
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().findHandle(translator, this.cmfObject, info);
+			CmfContentStore<?, ?>.Handle<CmfValue> h = ctx.getContentStore().findHandle(translator, this.cmfObject,
+				info);
 			final File f;
 			try {
 				f = h.getFile();
