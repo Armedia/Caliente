@@ -89,7 +89,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		}
 		if ((info == null) || info.isEmpty()) { return null; }
 		CmfContentStream content = info.get(0);
-		CmfContentStore<?, ?>.Handle h = store.findHandle(content);
+		CmfContentStore<?, ?>.Handle h = store.findHandle(this.factory.getTranslator(), this.cmfObject, content);
 
 		String fileName = content.getFileName();
 		// String size = content.getProperty(ContentProperty.SIZE);

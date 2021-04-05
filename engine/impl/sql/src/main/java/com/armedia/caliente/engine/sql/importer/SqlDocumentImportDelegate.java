@@ -74,7 +74,7 @@ public class SqlDocumentImportDelegate extends SqlImportDelegate {
 
 		boolean created = true;
 		for (CmfContentStream info : contents) {
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().findHandle(info);
+			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().findHandle(translator, this.cmfObject, info);
 			final File src;
 			try {
 				src = h.getFile();

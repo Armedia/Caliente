@@ -478,8 +478,13 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		try (SharedAutoLock lock = autoSharedLock()) {
 			assertOpen();
 			LOCATOR locator = calculateLocator(translator, object, info);
-			return new Handle(info, encodeLocator(locator));
+			return newHandle(translator, object, info, locator);
 		}
+	}
+
+	protected <VALUE> Handle newHandle(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
+		CmfContentStream info, LOCATOR locator) {
+		return new Handle(info, encodeLocator(locator));
 	}
 
 	protected abstract String encodeLocator(LOCATOR locator);
@@ -497,7 +502,8 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	 * @return the {@link Handle} for the given {@link CmfContentStream} instance, or {@code null}
 	 *         if none exists in this content store
 	 */
-	public final Handle findHandle(CmfContentStream info) {
+	public final <VALUE> Handle findHandle(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
+		CmfContentStream info) {
 		try (SharedAutoLock lock = autoSharedLock()) {
 			assertOpen();
 			String encodedLocator = info.getLocator();
@@ -509,7 +515,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 				throw new IllegalArgumentException(
 					String.format("Failed to decode the given locator string [%s]", encodedLocator));
 			}
-			return new Handle(info, encodeLocator(locator));
+			return newHandle(translator, object, info, locator);
 		}
 	}
 

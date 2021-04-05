@@ -725,7 +725,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				// Skip the non-default rendition
 				continue;
 			}
-			CmfContentStore<?, ?>.Handle h = contentStore.findHandle(info);
+			CmfContentStore<?, ?>.Handle h = contentStore.findHandle(this.factory.getTranslator(), this.cmfObject,
+				info);
 			CfgTools cfg = info.getCfgTools();
 
 			if (fromDctm == null) {
