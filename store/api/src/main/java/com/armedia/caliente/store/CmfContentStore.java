@@ -64,8 +64,8 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	public static final String DEFAULT_QUALIFIER = "content";
 
-	public final class Handle {
-		private String locator;
+	public class Handle {
+		private String encodedLocator;
 		private final CmfContentStream info;
 
 		protected Handle(CmfContentStream info, String locator) {
@@ -75,15 +75,15 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 					"Must provide a valid, non-blank locator string to identify the content within the store");
 			}
 			this.info = info;
-			info.setLocator(this.locator = locator);
+			info.setLocator(this.encodedLocator = locator);
 		}
 
 		public String getLocator() {
-			return this.locator;
+			return this.encodedLocator;
 		}
 
 		private void updateLocator(String locator) {
-			this.info.setLocator(this.locator = locator);
+			this.info.setLocator(this.encodedLocator = locator);
 		}
 
 		public CmfContentStream getInfo() {
@@ -178,7 +178,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 		@Override
 		public String toString() {
-			return String.format("Handle [id=%s, info=%s]", this.locator, this.info.getObject());
+			return String.format("Handle [id=%s, info=%s]", this.encodedLocator, this.info.getObject());
 		}
 	}
 
@@ -458,7 +458,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			if (this != handle.getSourceStore()) {
 				throw new IllegalArgumentException("The given Handle instance does not refer to content in this store");
 			}
-			LOCATOR locator = decodeLocator(handle.locator);
+			LOCATOR locator = decodeLocator(handle.encodedLocator);
 			if (locator == null) {
 				throw new IllegalArgumentException("The given handle did not match an existing locator");
 			}
