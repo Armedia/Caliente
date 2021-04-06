@@ -53,6 +53,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.armedia.caliente.store</groupId>
+			<artifactId>caliente-store-s3</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.armedia.caliente.engine</groupId>
 			<artifactId>caliente-engine-dfc</artifactId>
 			<version>${project.version}</version>

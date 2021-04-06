@@ -37,7 +37,6 @@ import java.net.URISyntaxException;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -59,8 +58,8 @@ import javax.xml.bind.JAXBException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.http.HttpStatus;
 
 import com.armedia.caliente.store.CmfAttribute;
@@ -87,6 +86,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.BucketVersioningStatus;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
@@ -104,6 +104,8 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 	private static final String SCHEME = "s3";
 	private static final String PROPERTIES_FILE = "caliente-store-properties.xml";
+	private static final String MD_ID = "caliente:id";
+	private static final String MD_HISTORY_ID = "caliente:historyId";
 
 	private static final Set<String> SUPPORTED_SCHEMES = Tools.freezeSet(Collections.singleton(S3ContentStore.SCHEME));
 
@@ -145,20 +147,15 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	private final AtomicBoolean modified = new AtomicBoolean(false);
 	private final CfgTools settings;
 	private final Map<String, CmfValue> properties = new TreeMap<>();
+	private final boolean attachMetadata;
+	private final boolean supportsVersions;
 	private final boolean failOnCollisions;
-	private final boolean ignoreDescriptor;
 	protected final boolean propertiesLoaded;
-	private final boolean useWindowsFix;
 
 	public S3ContentStore(CmfStore<?> parent, CfgTools settings, boolean cleanData) throws CmfStorageException {
 		super(parent);
 		if (settings == null) { throw new IllegalArgumentException("Must provide configuration settings"); }
 		this.settings = settings;
-
-		String temp = settings.getString(S3ContentStoreSetting.TEMP);
-		if (StringUtils.isEmpty(temp)) {
-			// Set the default ...
-		}
 
 		this.bucket = settings.getString(S3ContentStoreSetting.BUCKET);
 		if (StringUtils.isBlank(this.bucket)) {
@@ -168,11 +165,21 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		String localDir = settings.getString("dir.content");
 		if (StringUtils.isBlank(localDir)) { throw new CmfStorageException("No setting [dir.content] specified"); }
 		this.localDir = Tools.canonicalize(Paths.get(localDir));
-		try {
-			this.tempDir = Files.createTempDirectory(this.localDir, ".s3-temp-");
-		} catch (IOException e) {
-			throw new CmfStorageException("Failed to create a temporary directory at [" + this.localDir + "]", e);
+
+		String temp = settings.getString(S3ContentStoreSetting.TEMP);
+		if (StringUtils.isNotEmpty(temp)) {
+			// Set the default ...
+			this.tempDir = Tools.canonicalize(Paths.get(temp));
+		} else {
+			try {
+				FileUtils.forceMkdir(this.localDir.toFile());
+				this.tempDir = Files.createTempDirectory(this.localDir, ".s3-temp-");
+			} catch (IOException e) {
+				throw new CmfStorageException("Failed to create a temporary directory at [" + this.localDir + "]", e);
+			}
 		}
+
+		this.attachMetadata = settings.getBoolean(S3ContentStoreSetting.ATTACH_METADATA);
 
 		final Region region = Region.of(StringUtils.lowerCase(settings.getString(S3ContentStoreSetting.REGION)));
 		final String endpoint = settings.getString(S3ContentStoreSetting.ENDPOINT);
@@ -192,31 +199,47 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		this.client = clientBuilder.build();
 
 		final boolean createMissingBucket = settings.getBoolean(S3ContentStoreSetting.CREATE_MISSING_BUCKET);
-		if (createMissingBucket) {
-			try {
-				this.client.headBucket((R) -> {
-					R.bucket(this.bucket);
-				});
-			} catch (NoSuchBucketException e) {
-				if (!createMissingBucket) {
-					throw new CmfStorageException("No bucket named [" + this.bucket + "] was found", e);
-				}
-				try {
-					this.client.createBucket((R) -> {
-						R.bucket(this.bucket);
-					});
-				} catch (Exception e2) {
-					throw new CmfStorageException("Failed to create the missing bucket [" + this.bucket + "]", e2);
-				}
+		boolean supportsVersions = false;
+		boolean exists = false;
+		try {
+			this.client.headBucket((R) -> R.bucket(this.bucket));
+			exists = true;
+			supportsVersions = (this.client.getBucketVersioning((R) -> R.bucket(this.bucket))
+				.status() == BucketVersioningStatus.ENABLED);
+		} catch (NoSuchBucketException e) {
+			if (!createMissingBucket) {
+				throw new CmfStorageException("No bucket named [" + this.bucket + "] was found", e);
 			}
-			// If the bucket is missing, create it
 		}
+
+		if (!exists) {
+			// If the bucket is missing, and we're supposed to create it, then do so
+			try {
+				this.client.createBucket((R) -> R.bucket(this.bucket));
+			} catch (Exception e) {
+				throw new CmfStorageException("Failed to create the missing bucket [" + this.bucket + "]", e);
+			}
+
+			try {
+				this.client.putBucketVersioning((R) -> {
+					R.bucket(this.bucket);
+					R.versioningConfiguration((C) -> C.status(BucketVersioningStatus.ENABLED));
+				});
+				supportsVersions = true;
+			} catch (Exception e) {
+				supportsVersions = false;
+				this.log.error("Failed to enable versioning on bucket [{}]", this.bucket, e);
+			}
+		}
+		this.supportsVersions = supportsVersions;
 
 		String basePath = settings.getString(S3ContentStoreSetting.BASE_PATH);
 		// TODO: Normalize this path, make sure it has a leading slash
 		basePath = FilenameUtils.normalize(basePath, true);
 		if (StringUtils.isBlank(basePath)) {
 			basePath = StringUtils.EMPTY;
+		} else if (!basePath.startsWith("/")) {
+			basePath = "/" + basePath;
 		}
 		this.basePath = basePath;
 
@@ -281,46 +304,11 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 		v = getProperty(S3ContentStoreSetting.FAIL_ON_COLLISIONS.getLabel());
 		this.failOnCollisions = ((v != null) && v.asBoolean());
-
-		v = getProperty(S3ContentStoreSetting.IGNORE_DESCRIPTOR.getLabel());
-		this.ignoreDescriptor = ((v != null) && v.asBoolean());
-
-		v = getProperty(S3ContentStoreSetting.USE_WINDOWS_FIX.getLabel());
-		this.useWindowsFix = ((v != null) && v.asBoolean());
-		// This helps make sure the actual used value is stored
-		setProperty(S3ContentStoreSetting.USE_WINDOWS_FIX.getLabel(), CmfValue.of(this.useWindowsFix));
 	}
 
 	protected void initProperties() throws CmfStorageException {
-		final boolean forceSafeFilenames = this.settings.getBoolean(S3ContentStoreSetting.FORCE_SAFE_FILENAMES);
-		final Charset safeFilenameEncoding;
-		final boolean fixFilenames;
-		if (forceSafeFilenames) {
-			String encoding = this.settings.getString(S3ContentStoreSetting.SAFE_FILENAME_ENCODING);
-			try {
-				safeFilenameEncoding = Charset.forName(encoding);
-			} catch (Exception e) {
-				throw new CmfStorageException(String.format("Encoding [%s] is not supported", encoding), e);
-			}
-			fixFilenames = false;
-		} else {
-			safeFilenameEncoding = null;
-			fixFilenames = this.settings.getBoolean(S3ContentStoreSetting.FIX_FILENAMES);
-		}
 		final boolean failOnCollisions = this.settings.getBoolean(S3ContentStoreSetting.FAIL_ON_COLLISIONS);
-		final boolean ignoreFragment = this.settings.getBoolean(S3ContentStoreSetting.IGNORE_DESCRIPTOR);
-		final boolean useWindowsFix = this.settings.getBoolean(S3ContentStoreSetting.USE_WINDOWS_FIX);
-
-		setProperty(S3ContentStoreSetting.FORCE_SAFE_FILENAMES.getLabel(), CmfValue.of(forceSafeFilenames));
-		if (safeFilenameEncoding != null) {
-			setProperty(S3ContentStoreSetting.SAFE_FILENAME_ENCODING.getLabel(),
-				CmfValue.of(safeFilenameEncoding.name()));
-		}
-		setProperty(S3ContentStoreSetting.FIX_FILENAMES.getLabel(), CmfValue.of(fixFilenames));
 		setProperty(S3ContentStoreSetting.FAIL_ON_COLLISIONS.getLabel(), CmfValue.of(failOnCollisions));
-		setProperty(S3ContentStoreSetting.IGNORE_DESCRIPTOR.getLabel(), CmfValue.of(ignoreFragment));
-		setProperty(S3ContentStoreSetting.USE_WINDOWS_FIX.getLabel(),
-			CmfValue.of(useWindowsFix || SystemUtils.IS_OS_WINDOWS));
 	}
 
 	@Override
@@ -354,7 +342,7 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 	private String constructFileName(Location loc) {
 		String baseName = loc.baseName;
-		String descriptor = (this.ignoreDescriptor ? "" : loc.descriptor);
+		String descriptor = loc.descriptor;
 		String ext = loc.extension;
 		String appendix = loc.appendix;
 
@@ -371,7 +359,7 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		if (!StringUtils.isEmpty(ext) && baseName.endsWith(ext)) {
 			// Remove the extension so it's the last thing on the filename
 			baseName = baseName.substring(0, baseName.length() - ext.length());
-			if (StringUtils.isEmpty(baseName) && !this.ignoreDescriptor) {
+			if (StringUtils.isEmpty(baseName)) {
 				baseName = "_CMF_";
 			}
 		}
@@ -391,28 +379,30 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		return String.format("%s%s%s%s", baseName, descriptor, ext, appendix);
 	}
 
-	private <VALUE> Pair<String, List<String>> renderURIParts(CmfObject<VALUE> object, CmfContentStream info) {
+	private <VALUE> Triple<String, List<String>, String> renderURIParts(CmfObject<VALUE> object,
+		CmfContentStream info) {
 		final Location location = this.organizer.getLocation(object.getTranslator(), object, info);
 		final List<String> rawPath = new ArrayList<>(location.containerSpec);
+		final String versionId = location.appendix;
 		rawPath.add(constructFileName(location));
 		List<String> sspParts = new ArrayList<>(rawPath.size());
 		for (String s : rawPath) {
 			sspParts.add(safeEncode(s));
 		}
-		return Pair.of(S3ContentStore.SCHEME, sspParts);
+		return Triple.of(S3ContentStore.SCHEME, sspParts, versionId);
 	}
 
 	@Override
 	protected <VALUE> String doRenderContentPath(CmfObject<VALUE> object, CmfContentStream info) {
-		return FileNameTools.reconstitute(renderURIParts(object, info).getValue(), false, false, '/');
+		return FileNameTools.reconstitute(renderURIParts(object, info).getMiddle(), false, false, '/');
 	}
 
 	@Override
 	protected <VALUE> URI doCalculateLocator(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
-		final Pair<String, List<String>> p = renderURIParts(object, info);
+		final Triple<String, List<String>, String> p = renderURIParts(object, info);
 		try {
-			URI uri = new URI(p.getLeft(), FileNameTools.reconstitute(p.getRight(), false, false, '/'), null);
+			URI uri = new URI(p.getLeft(), FileNameTools.reconstitute(p.getMiddle(), false, false, '/'), p.getRight());
 			this.log.info("Generated URI {}", uri);
 			return uri;
 		} catch (URISyntaxException e) {
@@ -453,25 +443,57 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 		// TODO: How to handle the generic wildcard?
 
-		URI locator = getLocator(handle);
+		final URI locator = getLocator(handle);
+
+		if (this.failOnCollisions) {
+			// Check to see if we have a collision - i.e. this object is NOT a different version
+			// of the same object
+			try {
+				HeadObjectResponse rsp = this.client.headObject((R) -> {
+					R.bucket(locator.getHost());
+					R.key(locator.getPath());
+					String version = locator.getFragment();
+					if (StringUtils.isNotBlank(version)) {
+						R.versionId(version);
+					}
+				});
+				if (rsp.hasMetadata()) {
+					Map<String, String> metadata = rsp.metadata();
+					String expectedHistoryId = metadata.get(S3ContentStore.MD_HISTORY_ID);
+					String finalHistoryId = handle.getCmfObject().getHistoryId();
+					// If there's no history ID, or it's different than the incoming one,
+					// by definition we have a collision
+					if (!StringUtils.equals(expectedHistoryId, finalHistoryId)) {
+						throw new CmfStorageException("A collision was detected using locator [" + locator + "]");
+					}
+				}
+			} catch (NoSuchKeyException e) {
+				// Nothing to do here, no collision!
+			}
+		}
 
 		// TODO: How do we handle multivalued attributes?
-		// TODO: What should we do with empty/blank attributes?
 		final Map<String, String> metadata = new LinkedHashMap<>();
-		final CmfObject<VALUE> cmfObject = handle.getCmfObject();
-		final CmfObject.Archetype type = cmfObject.getType();
-		final CmfAttributeTranslator<VALUE> translator = handle.getTranslator();
-		for (String attributeName : cmfObject.getAttributeNames()) {
-			CmfAttribute<VALUE> rawAttribute = cmfObject.getAttribute(attributeName);
-			if (!rawAttribute.isMultivalued() || rawAttribute.hasValues()) {
-				CmfAttribute<CmfValue> encodedAttribute = translator.encodeAttribute(type, rawAttribute);
-				CmfValue v = encodedAttribute.getValue();
-				String s = v.asString();
-				if (!StringUtils.isBlank(s)) {
-					metadata.put(rawAttribute.getName(), s);
+		if (this.attachMetadata) {
+			final CmfObject<VALUE> cmfObject = handle.getCmfObject();
+			final CmfObject.Archetype type = cmfObject.getType();
+			final CmfAttributeTranslator<VALUE> translator = handle.getTranslator();
+			for (String attributeName : cmfObject.getAttributeNames()) {
+				CmfAttribute<VALUE> rawAttribute = cmfObject.getAttribute(attributeName);
+				if (!rawAttribute.isMultivalued() || rawAttribute.hasValues()) {
+					CmfAttribute<CmfValue> encodedAttribute = translator.encodeAttribute(type, rawAttribute);
+					CmfValue v = encodedAttribute.getValue();
+					String s = v.asString();
+
+					// Currently, we ignore blank-valued attributes
+					if (StringUtils.isNotBlank(s)) {
+						metadata.put(rawAttribute.getName(), s);
+					}
 				}
 			}
 		}
+		metadata.put(S3ContentStore.MD_HISTORY_ID, handle.getCmfObject().getHistoryId());
+		metadata.put(S3ContentStore.MD_ID, handle.getCmfObject().getId());
 
 		// Do the upload ...
 		PutObjectResponse rsp = this.client.putObject((R) -> {
