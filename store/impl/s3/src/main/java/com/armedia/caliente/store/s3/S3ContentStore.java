@@ -140,6 +140,7 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	private final Path localDir;
 	private final String bucket;
 	private final String basePath;
+	private final List<String> basePathComponents;
 	private final Path tempDir;
 	private final boolean storeProperties;
 	private final CmfContentOrganizer organizer;
@@ -241,7 +242,8 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		} else if (!basePath.startsWith("/")) {
 			basePath = "/" + basePath;
 		}
-		this.basePath = basePath;
+		this.basePathComponents = FileNameTools.tokenize(basePath.replace('\\', '/'), '/');
+		this.basePath = FileNameTools.reconstitute(this.basePathComponents, true, false);
 
 		CmfContentOrganizer organizer = CmfContentOrganizer
 			.getOrganizer(settings.getString(S3ContentStoreSetting.URI_ORGANIZER));
@@ -401,8 +403,10 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	protected <VALUE> URI doCalculateLocator(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
 		final Triple<String, List<String>, String> p = renderURIParts(object, info);
+		List<String> path = p.getMiddle();
+		this.basePathComponents.forEach((c) -> path.add(0, c));
 		try {
-			URI uri = new URI(p.getLeft(), FileNameTools.reconstitute(p.getMiddle(), false, false, '/'), p.getRight());
+			URI uri = new URI(p.getLeft(), FileNameTools.reconstitute(path, false, false, '/'), p.getRight());
 			this.log.info("Generated URI {}", uri);
 			return uri;
 		} catch (URISyntaxException e) {
@@ -573,12 +577,9 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	@Override
 	protected void clearAllStreams(S3StoreOperation op) {
 		// TODO: Identify these...
-		final String bucket = "";
-		final String prefix = "";
-
 		for (ListObjectsV2Response list : this.client.listObjectsV2Paginator((R) -> {
-			R.bucket(bucket);
-			R.prefix(prefix);
+			R.bucket(this.bucket);
+			R.prefix(this.basePath + "/");
 		})) {
 			List<S3Object> s3objects = list.contents();
 			if (s3objects.isEmpty()) { return; }
@@ -586,7 +587,7 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 				.map((o) -> ObjectIdentifier.builder().key(o.key()).build()) //
 				.collect(Collectors.toList());
 			this.client.deleteObjects((R) -> {
-				R.bucket(bucket);
+				R.bucket(this.bucket);
 				R.delete((D) -> D.objects(objects));
 			});
 		}
