@@ -496,7 +496,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	protected abstract String encodeLocator(LOCATOR locator);
 
-	protected abstract LOCATOR decodeLocator(String handleId);
+	protected abstract LOCATOR decodeLocator(String encodedLocator);
 
 	/**
 	 * <p>
