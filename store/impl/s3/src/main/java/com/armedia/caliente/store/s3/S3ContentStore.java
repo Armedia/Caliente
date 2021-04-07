@@ -45,6 +45,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -381,9 +382,9 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		return String.format("%s%s%s%s", baseName, descriptor, ext, appendix);
 	}
 
-	private <VALUE> Triple<String, List<String>, String> renderURIParts(CmfObject<VALUE> object,
-		CmfContentStream info) {
-		final Location location = this.organizer.getLocation(object.getTranslator(), object, info);
+	private <VALUE> Triple<String, List<String>, String> renderURIParts(CmfAttributeTranslator<VALUE> translator,
+		CmfObject<VALUE> object, CmfContentStream info) {
+		final Location location = this.organizer.getLocation(translator, object, info);
 		final List<String> rawPath = new ArrayList<>(location.containerSpec);
 		final String versionId = location.appendix;
 		rawPath.add(constructFileName(location));
@@ -396,18 +397,32 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 	@Override
 	protected <VALUE> String doRenderContentPath(CmfObject<VALUE> object, CmfContentStream info) {
-		return FileNameTools.reconstitute(renderURIParts(object, info).getMiddle(), false, false, '/');
+		return FileNameTools.reconstitute(renderURIParts(object.getTranslator(), object, info).getMiddle(), false,
+			false, '/');
 	}
 
 	@Override
 	protected <VALUE> URI doCalculateLocator(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
-		final Triple<String, List<String>, String> p = renderURIParts(object, info);
-		List<String> path = p.getMiddle();
-		this.basePathComponents.forEach((c) -> path.add(0, c));
+		final Triple<String, List<String>, String> p = renderURIParts(translator, object, info);
+		List<String> path = new LinkedList<>(this.basePathComponents);
+		path.addAll(p.getMiddle());
+
+		String fragment = null;
+		if (!this.supportsVersions) {
+			String fileName = path.remove(path.size() - 1);
+			String attName = translator.getAttributeNameMapper().decodeAttributeName(object.getType(),
+				"cmis:versionLabel");
+			CmfAttribute<VALUE> att = object.getAttribute(attName);
+			CmfValue v = translator.encodeAttribute(object.getType(), att).getValue();
+			fileName += "." + v.toString();
+			path.add(fileName);
+			fragment = null;
+		}
+
 		try {
-			URI uri = new URI(p.getLeft(), FileNameTools.reconstitute(path, false, false, '/'), p.getRight());
-			this.log.info("Generated URI {}", uri);
+			URI uri = new URI(p.getLeft(), FileNameTools.reconstitute(path, false, false, '/'), fragment);
+			this.log.debug("Generated URI {}", uri);
 			return uri;
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(
@@ -507,7 +522,8 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		}, (size < 1 ? RequestBody.empty() : RequestBody.fromInputStream(Channels.newInputStream(in), size)));
 
 		try {
-			return Pair.of(new URI(locator.getScheme(), locator.getHost(), locator.getPath(), rsp.versionId()), size);
+			String versionId = (this.supportsVersions ? rsp.versionId() : null);
+			return Pair.of(new URI(locator.getScheme(), locator.getHost(), locator.getPath(), versionId), size);
 		} catch (URISyntaxException e) {
 			throw new CmfStorageException(
 				"Failed to re-render a URI for [" + locator + "] using versionId [" + rsp.versionId() + "]", e);
