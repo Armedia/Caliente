@@ -323,10 +323,12 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		if (S3ContentStore.CHARS_BAD.contains(c)) {
 			return "_"; // TODO: Make this configurable?
 		}
+		/*
 		if (S3ContentStore.CHARS_URLENCODE.contains(c)) {
 			// URLEncode it
 			return String.format("%%%02X", (0xFF & c));
 		}
+		*/
 		return String.valueOf(c);
 	}
 
@@ -341,6 +343,10 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 	private String constructFileName(Location loc) {
 		String baseName = loc.baseName;
 		String ext = loc.extension;
+
+		if (StringUtils.contains("file4.txt", loc.baseName)) {
+			"".hashCode();
+		}
 
 		if (StringUtils.isEmpty(baseName)) {
 			baseName = "";
