@@ -32,11 +32,14 @@ package com.armedia.caliente.store.s3;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -62,6 +65,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpStatus;
 
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentOrganizer;
 import com.armedia.caliente.store.CmfContentOrganizer.Location;
@@ -102,25 +106,13 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation> {
 
 	private static final String PROPERTIES_FILE = "caliente-store-properties.xml";
-	private static final String MD_ID = "caliente:id";
-	private static final String MD_HISTORY_ID = "caliente:historyId";
+	private static final String MD_ID = "caliente-id";
+	private static final String MD_HISTORY_ID = "caliente-historyId";
 
-	private static final String CHARS_URLENCODE_STR = "&$@=;:+ ,?";
-	private static final Set<Character> CHARS_URLENCODE;
 	private static final String CHARS_BAD_STR = "\\{}^%[]`\"~#|<>";
 	private static final Set<Character> CHARS_BAD;
 	static {
 		Set<Character> s = null;
-
-		s = new HashSet<>();
-		for (int i = 0; i < S3ContentStore.CHARS_URLENCODE_STR.length(); i++) {
-			s.add(S3ContentStore.CHARS_URLENCODE_STR.charAt(i));
-		}
-		s.add(Character.valueOf((char) 0x7F));
-		for (int i = 0x00; i < 0x20; i++) {
-			s.add(Character.valueOf((char) i));
-		}
-		CHARS_URLENCODE = Tools.freezeSet(s);
 
 		s = new HashSet<>();
 		for (int i = 0; i < S3ContentStore.CHARS_BAD_STR.length(); i++) {
@@ -145,6 +137,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 	private final CfgTools settings;
 	private final Map<String, CmfValue> properties = new TreeMap<>();
 	private final boolean attachMetadata;
+	private final boolean translateAttributeNames;
 	private final boolean supportsVersions;
 	private final boolean failOnCollisions;
 	protected final boolean propertiesLoaded;
@@ -177,6 +170,8 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		}
 
 		this.attachMetadata = settings.getBoolean(S3ContentStoreSetting.ATTACH_METADATA);
+		this.translateAttributeNames = (this.attachMetadata
+			&& settings.getBoolean(S3ContentStoreSetting.TRANSLATE_ATTRIBUTE_NAMES));
 
 		final Region region = Region.of(StringUtils.lowerCase(settings.getString(S3ContentStoreSetting.REGION)));
 		final String endpoint = settings.getString(S3ContentStoreSetting.ENDPOINT);
@@ -323,13 +318,19 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		if (S3ContentStore.CHARS_BAD.contains(c)) {
 			return "_"; // TODO: Make this configurable?
 		}
-		/*
-		if (S3ContentStore.CHARS_URLENCODE.contains(c)) {
-			// URLEncode it
-			return String.format("%%%02X", (0xFF & c));
-		}
-		*/
 		return String.valueOf(c);
+	}
+
+	protected String fixMetadataAttributeName(String name) {
+		if (StringUtils.isBlank(name)) { return name; }
+		// URL-Encode?
+
+		try {
+			return URLEncoder.encode(name, StandardCharsets.UTF_8.name());
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException("The standard encoding UTF-8 is not supported... how?!?!?", e);
+		}
+		// return name.replace(':', '_');
 	}
 
 	protected String safeEncode(String str) {
@@ -342,31 +343,34 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 
 	private String constructFileName(Location loc) {
 		String baseName = loc.baseName;
-		String ext = loc.extension;
+		String desiredExtension = loc.extension;
+		String actualExtension = FilenameUtils.getExtension(baseName);
 
-		if (StringUtils.contains("file4.txt", loc.baseName)) {
-			"".hashCode();
+		// TODO: What to do when the current extension doesn't match the
+		// desired one? For now, collapse into the current one...
+		if (!StringUtils.equalsIgnoreCase(desiredExtension, actualExtension)) {
+			desiredExtension = actualExtension;
 		}
 
 		if (StringUtils.isEmpty(baseName)) {
 			baseName = "";
 		}
 
-		if (!StringUtils.isEmpty(ext)) {
-			ext = String.format(".%s", ext);
+		if (!StringUtils.isEmpty(desiredExtension)) {
+			desiredExtension = String.format(".%s", desiredExtension);
 		} else {
-			ext = "";
+			desiredExtension = "";
 		}
 
-		if (!StringUtils.isEmpty(ext) && baseName.endsWith(ext)) {
+		if (!StringUtils.isEmpty(desiredExtension) && baseName.endsWith(desiredExtension)) {
 			// Remove the extension so it's the last thing on the filename
-			baseName = baseName.substring(0, baseName.length() - ext.length());
+			baseName = baseName.substring(0, baseName.length() - desiredExtension.length());
 			if (StringUtils.isEmpty(baseName)) {
 				baseName = "_CMF_";
 			}
 		}
 
-		return baseName + ext;
+		return baseName + desiredExtension;
 	}
 
 	private <VALUE> Pair<List<String>, String> renderURIParts(CmfAttributeTranslator<VALUE> translator,
@@ -476,6 +480,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 			final CmfObject<VALUE> cmfObject = handle.getCmfObject();
 			final CmfObject.Archetype type = cmfObject.getType();
 			final CmfAttributeTranslator<VALUE> translator = handle.getTranslator();
+			final CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 			for (String attributeName : cmfObject.getAttributeNames()) {
 				CmfAttribute<VALUE> rawAttribute = cmfObject.getAttribute(attributeName);
 				if (!rawAttribute.isMultivalued() || rawAttribute.hasValues()) {
@@ -485,7 +490,11 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 
 					// Currently, we ignore blank-valued attributes
 					if (StringUtils.isNotBlank(s)) {
-						metadata.put(rawAttribute.getName(), s);
+						attributeName = rawAttribute.getName();
+						if (this.translateAttributeNames) {
+							attributeName = nameMapper.encodeAttributeName(type, attributeName);
+						}
+						metadata.put(fixMetadataAttributeName(attributeName), s);
 					}
 				}
 			}
@@ -497,10 +506,8 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		PutObjectResponse rsp = this.client.putObject((R) -> {
 			locator.bucket(R::bucket);
 			locator.key(R::key);
-			// TODO: Enable this
-			// R.metadata(metadata);
+			R.metadata(metadata);
 		}, (size < 1 ? RequestBody.empty() : RequestBody.fromInputStream(Channels.newInputStream(in), size)));
-
 		return Pair.of(new S3Locator(locator.bucket(), locator.key(), (this.supportsVersions ? rsp.versionId() : null)),
 			size);
 	}
