@@ -95,7 +95,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 
 		private void updateLocator(String locator) {
-			this.info.setLocator(this.encodedLocator = locator);
+			this.info.updateLocator(this.encodedLocator = locator);
 		}
 
 		public CmfContentStream getInfo() {

@@ -52,6 +52,7 @@ import software.amazon.awssdk.regions.Region;
 public class S3ContentStoreFactory extends CmfContentStoreFactory<S3ContentStore> {
 
 	protected static final String DEFAULT_REGION = Region.US_EAST_1.id();
+	protected static final String URI_SCHEME = "s3";
 
 	static enum CredentialType {
 		//

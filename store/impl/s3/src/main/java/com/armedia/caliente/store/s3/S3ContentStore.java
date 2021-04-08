@@ -41,7 +41,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -60,7 +59,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.http.HttpStatus;
 
 import com.armedia.caliente.store.CmfAttribute;
@@ -101,14 +99,11 @@ import software.amazon.awssdk.services.s3.model.S3Object;
  *
  *
  */
-public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
+public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation> {
 
-	private static final String SCHEME = "s3";
 	private static final String PROPERTIES_FILE = "caliente-store-properties.xml";
 	private static final String MD_ID = "caliente:id";
 	private static final String MD_HISTORY_ID = "caliente:historyId";
-
-	private static final Set<String> SUPPORTED_SCHEMES = Tools.freezeSet(Collections.singleton(S3ContentStore.SCHEME));
 
 	private static final String CHARS_URLENCODE_STR = "&$@=;:+ ,?";
 	private static final Set<Character> CHARS_URLENCODE;
@@ -244,7 +239,7 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 			basePath = "/" + basePath;
 		}
 		this.basePathComponents = FileNameTools.tokenize(basePath.replace('\\', '/'), '/');
-		this.basePath = FileNameTools.reconstitute(this.basePathComponents, true, false);
+		this.basePath = FileNameTools.reconstitute(this.basePathComponents, false, false);
 
 		CmfContentOrganizer organizer = CmfContentOrganizer
 			.getOrganizer(settings.getString(S3ContentStoreSetting.URI_ORGANIZER));
@@ -320,19 +315,19 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	}
 
 	@Override
-	protected boolean isSupported(URI locator) {
-		return S3ContentStore.SUPPORTED_SCHEMES.contains(locator.getScheme());
+	protected boolean isSupported(S3Locator locator) {
+		return (locator != null);
 	}
 
-	protected char encodeChar(char c) {
+	protected CharSequence encodeChar(char c) {
 		if (S3ContentStore.CHARS_BAD.contains(c)) {
-			return '_'; // TODO: Make this configurable?
+			return "_"; // TODO: Make this configurable?
 		}
 		if (S3ContentStore.CHARS_URLENCODE.contains(c)) {
 			// URLEncode it
-			return 'x';
+			return String.format("%%%02X", (0xFF & c));
 		}
-		return c;
+		return String.valueOf(c);
 	}
 
 	protected String safeEncode(String str) {
@@ -345,9 +340,7 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 	private String constructFileName(Location loc) {
 		String baseName = loc.baseName;
-		String descriptor = loc.descriptor;
 		String ext = loc.extension;
-		String appendix = loc.appendix;
 
 		if (StringUtils.isEmpty(baseName)) {
 			baseName = "";
@@ -367,22 +360,10 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 			}
 		}
 
-		if (!StringUtils.isEmpty(descriptor)) {
-			descriptor = String.format("[%s]", descriptor);
-		} else {
-			descriptor = "";
-		}
-
-		if (!StringUtils.isEmpty(appendix)) {
-			appendix = String.format(".%s", appendix);
-		} else {
-			appendix = "";
-		}
-
-		return String.format("%s%s%s%s", baseName, descriptor, ext, appendix);
+		return baseName + ext;
 	}
 
-	private <VALUE> Triple<String, List<String>, String> renderURIParts(CmfAttributeTranslator<VALUE> translator,
+	private <VALUE> Pair<List<String>, String> renderURIParts(CmfAttributeTranslator<VALUE> translator,
 		CmfObject<VALUE> object, CmfContentStream info) {
 		final Location location = this.organizer.getLocation(translator, object, info);
 		final List<String> rawPath = new ArrayList<>(location.containerSpec);
@@ -392,21 +373,21 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		for (String s : rawPath) {
 			sspParts.add(safeEncode(s));
 		}
-		return Triple.of(S3ContentStore.SCHEME, sspParts, versionId);
+		return Pair.of(sspParts, versionId);
 	}
 
 	@Override
 	protected <VALUE> String doRenderContentPath(CmfObject<VALUE> object, CmfContentStream info) {
-		return FileNameTools.reconstitute(renderURIParts(object.getTranslator(), object, info).getMiddle(), false,
-			false, '/');
+		return FileNameTools.reconstitute(renderURIParts(object.getTranslator(), object, info).getKey(), false, false,
+			'/');
 	}
 
 	@Override
-	protected <VALUE> URI doCalculateLocator(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
+	protected <VALUE> S3Locator doCalculateLocator(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
-		final Triple<String, List<String>, String> p = renderURIParts(translator, object, info);
+		final Pair<List<String>, String> p = renderURIParts(translator, object, info);
 		List<String> path = new LinkedList<>(this.basePathComponents);
-		path.addAll(p.getMiddle());
+		path.addAll(p.getKey());
 
 		String fragment = null;
 		if (!this.supportsVersions) {
@@ -420,32 +401,27 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 			fragment = null;
 		}
 
-		try {
-			URI uri = new URI(p.getLeft(), FileNameTools.reconstitute(path, false, false, '/'), fragment);
-			this.log.debug("Generated URI {}", uri);
-			return uri;
-		} catch (URISyntaxException e) {
-			throw new RuntimeException(
-				String.format("Failed to allocate a handle ID for %s[%s]", object.getType(), object.getId()), e);
-		}
+		S3Locator locator = new S3Locator(this.bucket, FileNameTools.reconstitute(path, false, false, '/'), fragment);
+		this.log.debug("Generated the locator {}", locator);
+		return locator;
 	}
 
 	@Override
-	protected final Path getPath(URI locator) {
+	protected final Path getPath(S3Locator locator) {
 		return null;
 	}
 
 	@Override
-	protected ReadableByteChannel openChannel(S3StoreOperation op, URI locator) throws CmfStorageException {
+	protected ReadableByteChannel openChannel(S3StoreOperation op, S3Locator locator) throws CmfStorageException {
 		return Channels.newChannel(this.client.getObject((R) -> {
-			R.bucket(locator.getHost());
-			R.key(locator.getPath());
-			R.versionId(locator.getFragment());
+			locator.bucket(R::bucket);
+			locator.key(R::key);
+			locator.versionId(R::versionId);
 		}));
 	}
 
 	@Override
-	protected ContentAccessor createTemp(URI locator) throws CmfStorageException {
+	protected ContentAccessor createTemp(S3Locator locator) throws CmfStorageException {
 		try {
 			return new ContentAccessor(
 				Files.createTempFile(this.tempDir, String.format("%08x", locator.hashCode()), ".tmp"));
@@ -455,26 +431,23 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	}
 
 	@Override
-	protected <VALUE> Pair<URI, Long> store(S3StoreOperation op, Handle<VALUE> handle, ReadableByteChannel in,
+	protected <VALUE> Pair<S3Locator, Long> store(S3StoreOperation op, Handle<VALUE> handle, ReadableByteChannel in,
 		long size) throws CmfStorageException {
 		// TODO: Do we want to do multipart uploads for large files? If the size exceeds a
 		// threshold, we probably should...?
 
 		// TODO: How to handle the generic wildcard?
 
-		final URI locator = getLocator(handle);
+		final S3Locator locator = getLocator(handle);
 
 		if (this.failOnCollisions) {
 			// Check to see if we have a collision - i.e. this object is NOT a different version
 			// of the same object
 			try {
 				HeadObjectResponse rsp = this.client.headObject((R) -> {
-					R.bucket(locator.getHost());
-					R.key(locator.getPath());
-					String version = locator.getFragment();
-					if (StringUtils.isNotBlank(version)) {
-						R.versionId(version);
-					}
+					locator.bucket(R::bucket);
+					locator.key(R::key);
+					locator.versionId(R::versionId);
 				});
 				if (rsp.hasMetadata()) {
 					Map<String, String> metadata = rsp.metadata();
@@ -516,22 +489,18 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 		// Do the upload ...
 		PutObjectResponse rsp = this.client.putObject((R) -> {
-			R.bucket(locator.getHost());
-			R.key(locator.getPath());
-			R.metadata(metadata);
+			locator.bucket(R::bucket);
+			locator.key(R::key);
+			// TODO: Enable this
+			// R.metadata(metadata);
 		}, (size < 1 ? RequestBody.empty() : RequestBody.fromInputStream(Channels.newInputStream(in), size)));
 
-		try {
-			String versionId = (this.supportsVersions ? rsp.versionId() : null);
-			return Pair.of(new URI(locator.getScheme(), locator.getHost(), locator.getPath(), versionId), size);
-		} catch (URISyntaxException e) {
-			throw new CmfStorageException(
-				"Failed to re-render a URI for [" + locator + "] using versionId [" + rsp.versionId() + "]", e);
-		}
+		return Pair.of(new S3Locator(locator.bucket(), locator.key(), (this.supportsVersions ? rsp.versionId() : null)),
+			size);
 	}
 
 	@Override
-	protected WritableByteChannel createChannel(final S3StoreOperation op, final URI locator)
+	protected WritableByteChannel createChannel(final S3StoreOperation op, final S3Locator locator)
 		throws CmfStorageException {
 		try {
 			return new DeferredS3WritableChannel(this.tempDir, this.client, locator);
@@ -540,15 +509,12 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 		}
 	}
 
-	private HeadObjectResponse headObject(URI locator) throws CmfStorageException {
+	private HeadObjectResponse headObject(S3Locator locator) throws CmfStorageException {
 		try {
 			return this.client.headObject((R) -> {
-				R.bucket(locator.getHost());
-				R.key(locator.getPath());
-				String version = locator.getFragment();
-				if (StringUtils.isNotBlank(version)) {
-					R.versionId(version);
-				}
+				locator.bucket(R::bucket);
+				locator.key(R::key);
+				locator.versionId(R::versionId);
 			});
 		} catch (NoSuchKeyException e) {
 			return null;
@@ -562,13 +528,13 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	}
 
 	@Override
-	protected boolean exists(S3StoreOperation op, URI locator) throws CmfStorageException {
+	protected boolean exists(S3StoreOperation op, S3Locator locator) throws CmfStorageException {
 		HeadObjectResponse rsp = headObject(locator);
 		return (rsp != null) ? (rsp.deleteMarker() != Boolean.TRUE) : false;
 	}
 
 	@Override
-	protected long getSize(S3StoreOperation op, URI locator) throws CmfStorageException {
+	protected long getSize(S3StoreOperation op, S3Locator locator) throws CmfStorageException {
 		HeadObjectResponse rsp = headObject(locator);
 		if ((rsp == null) || (rsp.deleteMarker() == Boolean.TRUE)) {
 			throw new CmfStorageException("The object at [" + locator + "] could not be found or is marked as deleted");
@@ -611,15 +577,8 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 
 	protected synchronized void storeProperties() throws CmfStorageException {
 		if (!this.storeProperties) { return; }
-		final URI uri;
-		try {
-			uri = new URI(S3ContentStore.SCHEME, this.bucket, this.propertiesFile, null);
-		} catch (URISyntaxException e) {
-			throw new CmfStorageException("Failed to construct the URI for the properties file at [" + this.bucket
-				+ "::" + this.propertiesFile + "]", e);
-		}
-
-		try (WritableByteChannel c = createChannel(newOperation(true), uri)) {
+		final S3Locator locator = new S3Locator(this.bucket, this.propertiesFile, null);
+		try (WritableByteChannel c = createChannel(newOperation(true), locator)) {
 			StorePropertiesT p = new StorePropertiesT();
 			for (Map.Entry<String, CmfValue> e : this.properties.entrySet()) {
 				final String n = e.getKey();
@@ -734,18 +693,18 @@ public class S3ContentStore extends CmfContentStore<URI, S3StoreOperation> {
 	}
 
 	@Override
-	protected String encodeLocator(URI locator) {
+	protected String encodeLocator(S3Locator locator) {
 		if (locator == null) { return null; }
 		return locator.toString();
 	}
 
 	@Override
-	protected URI decodeLocator(String locator) {
-		if (locator == null) { return null; }
+	protected S3Locator decodeLocator(String locator) {
+		if (StringUtils.isBlank(locator)) { return null; }
 		try {
-			return new URI(locator);
+			return new S3Locator(locator);
 		} catch (URISyntaxException e) {
-			throw new IllegalArgumentException(String.format("Failed to construct a URI from [%s]", locator), e);
+			throw new RuntimeException("Failed to decode the locator [" + locator + "] as a valid S3Locator", e);
 		}
 	}
 }

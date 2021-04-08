@@ -1,7 +1,6 @@
 package com.armedia.caliente.store.s3;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
@@ -18,12 +17,12 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 public class DeferredS3WritableChannel extends DeferredWritableChannel {
 
-	private static Path createTempFile(Path tempDir, URI uri) throws IOException {
+	private static Path createTempFile(Path tempDir, S3Locator uri) throws IOException {
 		if (tempDir == null) {
 			// Get the system's default temp directory...
 			tempDir = Paths.get(System.getProperty("java.io.tmpdir")).normalize().toRealPath();
 		}
-		String bucket = Objects.requireNonNull(uri, "Must provide a content URI").getHost();
+		String bucket = Objects.requireNonNull(uri, "Must provide an S3Locator instance").bucket();
 		Path bucketDir = Objects.requireNonNull(tempDir, "Must provide a temporary directory").resolve(bucket);
 		return Files.createTempFile(bucketDir, null, null);
 	}
@@ -33,16 +32,16 @@ public class DeferredS3WritableChannel extends DeferredWritableChannel {
 	private final String key;
 	private final Map<String, String> metadata;
 
-	public DeferredS3WritableChannel(Path tempDir, S3Client client, URI uri) throws IOException {
-		this(tempDir, client, uri, null);
+	public DeferredS3WritableChannel(Path tempDir, S3Client client, S3Locator locator) throws IOException {
+		this(tempDir, client, locator, null);
 	}
 
-	public DeferredS3WritableChannel(Path tempDir, S3Client client, URI uri, Map<String, String> metadata)
+	public DeferredS3WritableChannel(Path tempDir, S3Client client, S3Locator locator, Map<String, String> metadata)
 		throws IOException {
-		super(DeferredS3WritableChannel.createTempFile(tempDir, uri));
+		super(DeferredS3WritableChannel.createTempFile(tempDir, locator));
 		this.client = Objects.requireNonNull(client, "Must provide an S3Client instance");
-		this.bucket = Objects.requireNonNull(uri, "Must provide a URI to upload to").getHost();
-		this.key = uri.getPath();
+		this.bucket = Objects.requireNonNull(locator, "Must provide an S3Locator to upload to").bucket();
+		this.key = locator.key();
 		this.metadata = Tools.freezeCopy(metadata);
 	}
 

@@ -61,6 +61,10 @@
 		<level value="DEBUG" />
 	</logger>
 
+	<logger name="org.apache.http">
+		<level value="INFO" />
+	</logger>
+
 	<!-- DO NOT MODIFY ANYTHING BELOW THIS LINE -->
 	<logger name="console" additivity="false">
 		<level value="INFO" />
