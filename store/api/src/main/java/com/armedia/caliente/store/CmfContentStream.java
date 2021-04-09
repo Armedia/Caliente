@@ -200,14 +200,18 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 		return new HashSet<>(this.properties.keySet());
 	}
 
+	CmfContentStream updateLocator(String locator) {
+		this.locator = Objects.requireNonNull(locator, "Must provide a non-null locator");
+		return this;
+	}
+
 	public CmfContentStream setLocator(String locator) {
 		if ((this.locator != null) && !Objects.equals(this.locator, locator)) {
 			throw new IllegalStateException(
 				String.format("A locator has already been assigned to this stream, can't reassign it ([%s] vs. [%s])",
 					this.locator, locator));
 		}
-		this.locator = Objects.requireNonNull(locator, "Must provide a non-null locator");
-		return this;
+		return updateLocator(locator);
 	}
 
 	public String getLocator() {

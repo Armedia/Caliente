@@ -62,6 +62,7 @@ import javax.xml.bind.JAXBException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentOrganizer;
@@ -76,7 +77,6 @@ import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.local.xml.PropertiesLoader;
 import com.armedia.caliente.store.local.xml.PropertyT;
 import com.armedia.caliente.store.local.xml.StorePropertiesT;
-import com.armedia.caliente.store.local.xml.legacy.LegacyPropertiesLoader;
 import com.armedia.caliente.store.tools.FilenameEncoder;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
@@ -104,6 +104,7 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	private final File baseDir;
+	private final File tempDir;
 	private final boolean storeProperties;
 	private final CmfContentOrganizer organizer;
 	private final File propertiesFile;
@@ -138,6 +139,11 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		this.settings = settings;
 		File f = Tools.canonicalize(baseDir);
 		this.baseDir = f;
+		try {
+			this.tempDir = Files.createTempDirectory(baseDir.toPath(), ".temp").toFile();
+		} catch (IOException e) {
+			throw new CmfStorageException("Failed to create the temporary data directory at [" + baseDir + "]", e);
+		}
 		this.storeProperties = (parent == null) && settings.getBoolean(LocalContentStoreSetting.STORE_PROPERTIES);
 
 		final File newPropertiesFile = new File(baseDir, "caliente-store-properties.xml");
@@ -160,22 +166,11 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		} else {
 			if (parent == null) {
 				// First, try the legacy mode...
-				boolean propertiesLoaded = false;
 				try {
-					propertiesLoaded = new PropertiesLoader().loadProperties(this.propertiesFile, this.properties);
+					this.propertiesLoaded = new PropertiesLoader().loadProperties(this.propertiesFile, this.properties);
 				} catch (CmfStorageException e) {
-					// Legacy didn't work....log a warning?
-					this.log.warn("Failed to load the store properties, will try the legacy model");
-					try {
-						propertiesLoaded = new LegacyPropertiesLoader().loadProperties(this.propertiesFile,
-							this.properties);
-					} catch (CmfStorageException e2) {
-						this.log.error("Failed to load the store properties using the legacy model", e2);
-						throw new CmfStorageException("Failed to load both the modern and legacy properties models", e);
-					}
+					throw new CmfStorageException("Failed to load both the properties models", e);
 				}
-
-				this.propertiesLoaded = propertiesLoaded;
 			} else {
 				this.propertiesLoaded = true;
 			}
@@ -335,41 +330,46 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		return String.format("%s%s%s%s", baseName, descriptor, ext, appendix);
 	}
 
-	@Override
-	protected <VALUE> URI doCalculateLocator(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
-		CmfContentStream info) {
-		final Location location = this.organizer.getLocation(translator, object, info);
+	private <VALUE> Pair<String, List<String>> renderURIParts(CmfObject<VALUE> object, CmfContentStream info) {
+		final Location location = this.organizer.getLocation(object.getTranslator(), object, info);
 		final List<String> rawPath = new ArrayList<>(location.containerSpec);
 		rawPath.add(constructFileName(location));
 
-		final String scheme;
-		final String ssp;
-		if (this.forceSafeFilenames || this.fixFilenames) {
-			boolean fixed = false;
-			List<String> sspParts = new ArrayList<>();
-			for (String s : rawPath) {
-				String S = safeEncode(s);
-				fixed |= !Objects.equals(s, S);
-				sspParts.add(S);
-			}
-			ssp = FileNameTools.reconstitute(sspParts, false, false, '/');
+		if (!this.forceSafeFilenames && !this.fixFilenames) { return Pair.of(LocalContentStore.SCHEME_RAW, rawPath); }
 
-			if (fixed) {
-				if (this.forceSafeFilenames) {
-					scheme = LocalContentStore.SCHEME_SAFE;
-				} else {
-					scheme = LocalContentStore.SCHEME_FIXED;
-				}
+		final String scheme;
+		boolean fixed = false;
+		List<String> sspParts = new ArrayList<>();
+		for (String s : rawPath) {
+			String S = safeEncode(s);
+			fixed |= !Objects.equals(s, S);
+			sspParts.add(S);
+		}
+
+		if (fixed) {
+			if (this.forceSafeFilenames) {
+				scheme = LocalContentStore.SCHEME_SAFE;
 			} else {
-				scheme = LocalContentStore.SCHEME_RAW;
+				scheme = LocalContentStore.SCHEME_FIXED;
 			}
 		} else {
 			scheme = LocalContentStore.SCHEME_RAW;
-			ssp = FileNameTools.reconstitute(rawPath, false, false, '/');
 		}
 
+		return Pair.of(scheme, sspParts);
+	}
+
+	@Override
+	protected <VALUE> String doRenderContentPath(CmfObject<VALUE> object, CmfContentStream info) {
+		return FileNameTools.reconstitute(renderURIParts(object, info).getValue(), false, false, '/');
+	}
+
+	@Override
+	protected <VALUE> URI doCalculateLocator(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
+		CmfContentStream info) {
+		final Pair<String, List<String>> p = renderURIParts(object, info);
 		try {
-			URI uri = new URI(scheme, ssp, null);
+			URI uri = new URI(p.getLeft(), FileNameTools.reconstitute(p.getRight(), false, false, '/'), null);
 			this.log.info("Generated URI {}", uri);
 			return uri;
 		} catch (URISyntaxException e) {
@@ -394,9 +394,23 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 	}
 
 	@Override
-	protected long store(LocalStoreOperation op, URI locator, ReadableByteChannel in) throws CmfStorageException {
+	protected ContentAccessor createTemp(URI locator) throws CmfStorageException {
+		try {
+			FileUtils.forceMkdir(this.tempDir);
+			return new ContentAccessor(
+				Files.createTempFile(this.tempDir.toPath(), String.format("%08x", locator.hashCode()), ".tmp"));
+		} catch (IOException e) {
+			throw new CmfStorageException("Failed to create a temporary file for [" + locator + "]", e);
+		}
+	}
+
+	@Override
+	protected <VALUE> Pair<URI, Long> store(LocalStoreOperation op,
+		CmfContentStore<URI, LocalStoreOperation>.Handle<VALUE> handle, ReadableByteChannel in, long size)
+		throws CmfStorageException {
+		URI locator = getLocator(handle);
 		try (FileChannel channel = createChannel(op, locator)) {
-			return channel.transferFrom(channel, 0, Long.MAX_VALUE);
+			return Pair.of(null, channel.transferFrom(channel, 0, Long.MAX_VALUE));
 		} catch (IOException e) {
 			throw new CmfStorageException(
 				String.format("Failed to transfer the contents to the stream at locator [%s]", locator), e);
@@ -558,6 +572,9 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 				this.log.error("Failed to write the store properties to [{}]", this.propertiesFile.getAbsolutePath(),
 					e);
 			}
+		}
+		if (this.tempDir.exists()) {
+			FileUtils.deleteQuietly(this.tempDir);
 		}
 		return super.doClose(cleanupIfEmpty);
 	}

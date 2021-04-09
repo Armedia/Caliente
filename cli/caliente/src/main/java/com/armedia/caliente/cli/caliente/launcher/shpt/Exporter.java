@@ -100,8 +100,14 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 
-		// TODO: Read this
-		final String server = null;
+		final String server = commandValues.getString(CLIParam.server);
+		final String user = commandValues.getString(CLIParam.user);
+		final String domain = commandValues.getString(CLIParam.domain);
+		final String password = commandValues.getString(CLIParam.password);
+
+		settings.put(ShptSetting.USER.getLabel(), user);
+		settings.put(ShptSetting.DOMAIN.getLabel(), domain);
+		settings.put(ShptSetting.PASSWORD.getLabel(), password);
 
 		URI baseUri;
 		// Ensure it has a trailing slash...this will be useful later

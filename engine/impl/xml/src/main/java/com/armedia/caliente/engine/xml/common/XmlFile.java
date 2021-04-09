@@ -26,10 +26,11 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.xml.common;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -62,8 +63,8 @@ public class XmlFile {
 	}
 
 	private final XmlRoot root;
-	private final File absoluteFile;
-	private final File relativeFile;
+	private final Path absolutePath;
+	private final Path relativePath;
 	private final String safePath;
 	private final String path;
 	private final String name;
@@ -71,23 +72,23 @@ public class XmlFile {
 
 	public XmlFile(XmlRoot root, String path) throws IOException {
 		this.root = root;
-		File f = root.relativize(new File(path));
-		this.relativeFile = f;
-		this.absoluteFile = root.makeAbsolute(f);
+		Path p = Paths.get(root.relativize(path));
+		this.relativePath = p;
+		this.absolutePath = root.makeAbsolute(p);
 
 		List<String> r = new ArrayList<>();
-		for (String s : FileNameTools.tokenize(this.relativeFile.getPath())) {
+		for (String s : FileNameTools.tokenize(this.relativePath.toString())) {
 			r.add(XmlFile.makeSafe(s));
 		}
 		this.safePath = FileNameTools.reconstitute(r, false, false, '/');
 		this.pathCount = r.size();
-		this.path = f.getParent();
-		this.name = f.getName();
+		this.path = p.getParent().toString();
+		this.name = p.getFileName().toString();
 
 	}
 
 	public String getPathHash() {
-		return String.format("%08x", this.relativeFile.hashCode());
+		return String.format("%08x", this.relativePath.hashCode());
 	}
 
 	public String getPath() {
@@ -123,12 +124,12 @@ public class XmlFile {
 		return this.safePath;
 	}
 
-	public File getRelative() {
-		return this.relativeFile;
+	public Path getRelative() {
+		return this.relativePath;
 	}
 
-	public File getAbsolute() {
-		return this.absoluteFile;
+	public Path getAbsolute() {
+		return this.absolutePath;
 	}
 
 	public XmlRoot getRootPath() {
@@ -137,7 +138,7 @@ public class XmlFile {
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.root, this.absoluteFile);
+		return Tools.hashTool(this, null, this.root, this.absolutePath);
 	}
 
 	@Override
@@ -145,7 +146,7 @@ public class XmlFile {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		XmlFile other = XmlFile.class.cast(obj);
 		if (!Objects.equals(this.root, other.root)) { return false; }
-		if (!Objects.equals(this.absoluteFile, other.absoluteFile)) { return false; }
+		if (!Objects.equals(this.absolutePath, other.absolutePath)) { return false; }
 		return true;
 	}
 
@@ -153,6 +154,6 @@ public class XmlFile {
 	public String toString() {
 		return String.format(
 			"XmlFile [root=%s, absoluteFile=%s, relativeFile=%s, safePath=%s, path=%s, name=%s, pathCount=%s]",
-			this.root, this.absoluteFile, this.relativeFile, this.safePath, this.path, this.name, this.pathCount);
+			this.root, this.absolutePath, this.relativePath, this.safePath, this.path, this.name, this.pathCount);
 	}
 }

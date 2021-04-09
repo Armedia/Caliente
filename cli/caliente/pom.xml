@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
 		<artifactId>caliente</artifactId>
-		<version>3.10.0</version>
+		<version>3.10.1</version>
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
@@ -48,6 +48,13 @@
 		<dependency>
 			<groupId>com.armedia.caliente.store</groupId>
 			<artifactId>caliente-store-jdbc</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.caliente.store</groupId>
+			<artifactId>caliente-store-s3</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
