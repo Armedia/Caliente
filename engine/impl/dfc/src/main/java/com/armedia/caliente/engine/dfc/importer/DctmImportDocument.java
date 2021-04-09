@@ -482,7 +482,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 	}
 
 	protected void saveContentStream(DctmImportContext context, IDfSysObject document, CmfContentStream info,
-		CmfContentStore<?, ?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
+		CmfContentStore<?, ?>.Handle<IDfValue> contentHandle, String contentType, String fullFormat, int pageNumber,
 		int renditionNumber, String pageModifier, int currentContent, int totalContentCount)
 		throws DfException, ImportException {
 		// Step one: what's the content's path in the filesystem?
@@ -725,7 +725,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				// Skip the non-default rendition
 				continue;
 			}
-			CmfContentStore<?, ?>.Handle h = contentStore.findHandle(info);
+			CmfContentStore<?, ?>.Handle<IDfValue> h = contentStore.findHandle(this.factory.getTranslator(),
+				this.cmfObject, info);
 			CfgTools cfg = info.getCfgTools();
 
 			if (fromDctm == null) {

@@ -431,7 +431,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		final String name = this.object.getName();
 		info.setFileName(name);
 		info.setExtension(FilenameUtils.getExtension(name));
-		CmfContentStore<?, ?>.Handle h = streamStore.addContentStream(translator, marshaled, info);
+		CmfContentStore<?, ?>.Handle<CmfValue> h = streamStore.addContentStream(translator, marshaled, info);
 		// TODO: sadly, this is not memory efficient for larger files...
 		BinaryMemoryBuffer buf = new BinaryMemoryBuffer(10240);
 		try (InputStream in = (this.version == null) ? session.getFileStream(this.object.getServerRelativeUrl())
@@ -443,7 +443,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		}
 
 		try {
-			h.store(buf.getInputStream());
+			h.store(buf.getInputStream(), buf.getCurrentSize());
 		} catch (CmfStorageException e) {
 			this.log.error("Failed to store the content stream for {} into the content store",
 				marshaled.getDescription(), e);

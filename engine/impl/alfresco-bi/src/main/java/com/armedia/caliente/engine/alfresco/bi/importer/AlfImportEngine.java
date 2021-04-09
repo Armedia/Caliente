@@ -46,7 +46,6 @@ import javax.xml.validation.Schema;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.output.NullOutputStream;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
@@ -383,14 +382,6 @@ public class AlfImportEngine extends
 	@Override
 	protected AlfImportDelegateFactory newDelegateFactory(AlfRoot session, CfgTools cfg) throws Exception {
 		return new AlfImportDelegateFactory(this, cfg);
-	}
-
-	protected String getObjectName(CmfObject<CmfValue> object) {
-		String finalName = object.getName();
-		if (StringUtils.isBlank(finalName)) {
-			finalName = object.getHistoryId();
-		}
-		return finalName;
 	}
 
 	@Override
