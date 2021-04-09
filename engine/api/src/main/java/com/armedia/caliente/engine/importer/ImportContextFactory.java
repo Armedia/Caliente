@@ -27,6 +27,7 @@
 package com.armedia.caliente.engine.importer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,7 @@ import com.armedia.caliente.engine.common.SessionWrapper;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.commons.utilities.CfgTools;
@@ -137,6 +139,15 @@ public abstract class ImportContextFactory< //
 			}
 		} else {
 			excludes = EnumSet.allOf(CmfObject.Archetype.class);
+		}
+	}
+
+	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean current)
+		throws ImportException {
+		try {
+			return getObjectStore().getObjectNames(refs, current);
+		} catch (CmfStorageException e) {
+			throw new ImportException(String.format("Failed to resolve the object names for IDs %s", refs), e);
 		}
 	}
 

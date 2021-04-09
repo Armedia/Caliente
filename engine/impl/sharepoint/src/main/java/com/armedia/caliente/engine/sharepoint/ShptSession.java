@@ -860,10 +860,18 @@ public class ShptSession {
 		}
 	}
 
-	public java.util.List<ContentType> getContentTypes(java.util.List<IQueryOption> queryOptions)
+	public java.util.List<ContentType> getContentTypes(String listId) throws ShptSessionException {
+		try {
+			return this.service.getContentTypes(listId);
+		} catch (ServiceException e) {
+			throw processException(e);
+		}
+	}
+
+	public java.util.List<ContentType> getContentTypes(String listId, java.util.List<IQueryOption> queryOptions)
 		throws ShptSessionException {
 		try {
-			return this.service.getContentTypes(queryOptions);
+			return this.service.getContentTypes(listId, queryOptions);
 		} catch (ServiceException e) {
 			throw processException(e);
 		}
@@ -2364,7 +2372,7 @@ public class ShptSession {
 	}
 
 	public void setsiteUrl(String siteUrl) {
-		this.service.setsiteUrl(siteUrl);
+		this.service.setSiteUrl(siteUrl);
 	}
 
 	public SuggestResult suggest(SearchQuerySuggestion suggestion) throws ShptSessionException {
