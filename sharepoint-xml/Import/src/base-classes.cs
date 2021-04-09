@@ -37,7 +37,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             this.Location = location;
             this.Id = (string)xml.Element(ns + "id");
             this.Acl = (string)xml.Element(ns + "acl");
-            this.Path = (string)xml.Element(ns + "sourcePath");
+            this.Path = "/" + (string)xml.Element(ns + "sourcePath");
             this.SafePath = Tools.MakeSafePath(this.Path);
             this.Name = Tools.SanitizeSingleLineString((string)xml.Element(ns + "name"));
             this.SafeName = Tools.MakeSafeFolderName(this.Name, null);
@@ -168,12 +168,16 @@ namespace Armedia.CMSMF.SharePoint.Import
     {
         public readonly SharePointSessionFactory SessionFactory;
         private readonly string ContentLocation;
+        private readonly string MetadataLocation;
+        private readonly string CacheLocation;
         private readonly XmlReaderSettings XmlSettings;
 
-        public ImportContext(SharePointSessionFactory sessionFactory, string contentLocation)
+        public ImportContext(SharePointSessionFactory sessionFactory, string contentLocation, string metadataLocation, string cacheLocation)
         {
             this.SessionFactory = sessionFactory;
             this.ContentLocation = contentLocation;
+            this.MetadataLocation = metadataLocation;
+            this.CacheLocation = cacheLocation;
             this.XmlSettings = new XmlReaderSettings();
             this.XmlSettings.DtdProcessing = DtdProcessing.Parse;
             this.XmlSettings.MaxCharactersFromEntities = 1024;
@@ -181,7 +185,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         public XmlReader LoadIndex(string name)
         {
-            return XmlReader.Create(string.Format("{0}/{1}", this.ContentLocation, name), this.XmlSettings);
+            return XmlReader.Create(string.Format("{0}/index.{1}.xml", this.MetadataLocation, name), this.XmlSettings);
         }
 
         public XmlReader LoadOptionalIndex(string name)
@@ -200,7 +204,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         public XmlWriter CreateIndex(string name, string rootElement)
         {
-            XmlTextWriter w = new XmlFile(string.Format("{0}/{1}", this.ContentLocation, name), UTF8Encoding.UTF8);
+            XmlTextWriter w = new XmlFile(string.Format("{0}/{1}", this.MetadataLocation, name), UTF8Encoding.UTF8);
             w.WriteStartDocument();
             w.WriteDocType(rootElement, null, null, null);
             w.WriteStartElement(rootElement);
@@ -211,12 +215,27 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         public XmlReader LoadDescriptor(string location)
         {
-            return XmlReader.Create(FormatContentLocation(location), this.XmlSettings);
+            return XmlReader.Create(FormatMetadataLocation(location), this.XmlSettings);
         }
 
-        public string FormatContentLocation(string location)
+        private String FormatLocation(String basePath, String location)
         {
-            return string.Format("{0}/content/{1}", this.ContentLocation, location);
+            return string.Format("{0}/{1}", basePath, location);
+        }
+
+        public string FormatMetadataLocation(string location)
+        {
+            return FormatLocation(this.MetadataLocation, location);
+        }
+
+        public string FormatCacheLocation(string location)
+        {
+            return FormatLocation(this.CacheLocation, location);
+        }
+
+        public string FormatContentStreamLocation(string location)
+        {
+            return FormatLocation(this.ContentLocation, location);
         }
     }
 
@@ -616,12 +635,12 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         protected ContentType ResolveContentType(string contentType)
         {
-            return this.ContentTypeImporter.ResolveLibraryContentType(contentType).Type;
+            return this.ContentTypeImporter.ResolveLibraryContentType(contentType)?.Type;
         }
 
         protected ContentType ResolveContentType(ContentTypeId id)
         {
-            return this.ContentTypeImporter.ResolveContentType(id).Type;
+            return this.ContentTypeImporter.ResolveContentType(id)?.Type;
         }
     }
     public class Crypt

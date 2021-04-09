@@ -27,13 +27,11 @@
 package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
-import java.util.List;
 import java.util.TimeZone;
 
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.importer.ImportDelegate;
-import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
@@ -41,38 +39,6 @@ public abstract class AlfImportDelegate extends
 	ImportDelegate<File, AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportDelegateFactory, AlfImportEngine> {
 
 	protected static final TimeZone TZUTC = TimeZone.getTimeZone("UTC");
-
-	protected final CmfValue getAttributeValue(CmfEncodeableName attribute) {
-		return this.factory.getAttributeValue(this.cmfObject, attribute);
-	}
-
-	protected final CmfValue getAttributeValue(String attribute) {
-		return this.factory.getAttributeValue(this.cmfObject, attribute);
-	}
-
-	protected final List<CmfValue> getAttributeValues(CmfEncodeableName attribute) {
-		return this.factory.getAttributeValues(this.cmfObject, attribute);
-	}
-
-	protected final List<CmfValue> getAttributeValues(String attribute) {
-		return this.factory.getAttributeValues(this.cmfObject, attribute);
-	}
-
-	protected final CmfValue getPropertyValue(CmfEncodeableName property) {
-		return this.factory.getPropertyValue(this.cmfObject, property);
-	}
-
-	protected final CmfValue getPropertyValue(String property) {
-		return this.factory.getPropertyValue(this.cmfObject, property);
-	}
-
-	protected final List<CmfValue> getPropertyValues(CmfEncodeableName property) {
-		return this.factory.getPropertyValues(this.cmfObject, property);
-	}
-
-	protected final List<CmfValue> getPropertyValues(String property) {
-		return this.factory.getPropertyValues(this.cmfObject, property);
-	}
 
 	protected AlfImportDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject) throws Exception {
 		super(factory, File.class, storedObject);

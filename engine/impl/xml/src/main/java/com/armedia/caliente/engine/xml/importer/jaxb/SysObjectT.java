@@ -80,7 +80,7 @@ public class SysObjectT {
 	@XmlElement(name = "modifier", required = true)
 	protected String modifier;
 
-	@XmlElement(name = "acl", required = true)
+	@XmlElement(name = "acl", required = false)
 	protected String acl;
 
 	@XmlElementWrapper(name = "attributes", required = false)

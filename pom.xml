@@ -7,7 +7,7 @@
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
 	<artifactId>caliente</artifactId>
-	<version>3.10.0</version>
+	<version>3.10.1</version>
 	<packaging>pom</packaging>
 	<inceptionYear>2013</inceptionYear>
 
@@ -88,8 +88,7 @@
 		<dfc.jar>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</dfc.jar>
 
 		<!-- JShare is for SharePoint exp support -->
-		<jshare.version>1.0.409</jshare.version>
-		<jshare.jar>${settings.localRepository}/com/independentsoft/jshare/${jshare.version}/jshare-${jshare.version}.jar</jshare.jar>
+		<jshare.version>1.0.410</jshare.version>
 
 		<!-- RIDC is for WebCenter exp support -->
 		<ridc.version>11.1.1.0</ridc.version>
@@ -555,6 +554,7 @@
 		<module>store/api</module>
 		<module>store/impl/jdbc</module>
 		<module>store/impl/local</module>
+		<module>store/impl/s3</module>
 
 		<!-- The Engine modules -->
 		<module>engine/api</module>
@@ -570,7 +570,6 @@
 
 		<!-- The command-line tools -->
 		<module>cli/api</module>
-		<!-- <module>cli/caliente</module> -->
 		<module>cli/flat2db</module>
 		<module>cli/validator</module>
 		<!-- These tools require non-public libraries -->

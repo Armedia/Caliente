@@ -226,10 +226,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	protected long storeContentStream(CmfObject<CmfValue> marshalled, CmfAttributeTranslator<CmfValue> translator,
 		Rendition r, ContentStream cs, CmfContentStore<?, ?> streamStore, CmfContentStream info)
 		throws CmfStorageException {
-		CmfContentStore<?, ?>.Handle h = streamStore.addContentStream(translator, marshalled, info);
+		CmfContentStore<?, ?>.Handle<CmfValue> h = streamStore.addContentStream(translator, marshalled, info);
 		InputStream src = cs.getStream();
 		try {
-			return h.store(src);
+			return h.store(src, cs.getLength());
 		} finally {
 			IOUtils.closeQuietly(src);
 		}

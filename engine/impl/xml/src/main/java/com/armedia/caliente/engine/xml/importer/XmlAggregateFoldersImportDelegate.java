@@ -82,9 +82,9 @@ public class XmlAggregateFoldersImportDelegate extends XmlAggregatedImportDelega
 
 		f.setName(getAttributeValue(IntermediateAttribute.NAME).asString());
 		f.setParentId(getAttributeValue(IntermediateAttribute.PARENT_ID).asString());
-		String path = getPropertyValue(IntermediateProperty.PATH).asString();
+		String path = getFixedPath(ctx);
 		if (StringUtils.isEmpty(path)) {
-			path = "/";
+			path = StringUtils.EMPTY;
 		}
 		f.setSourcePath(path);
 		f.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());

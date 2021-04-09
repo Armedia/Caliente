@@ -30,6 +30,8 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.ObjectUtils;
+
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.xml.importer.jaxb.AclPermitT;
 import com.armedia.caliente.engine.xml.importer.jaxb.AclT;
@@ -65,16 +67,21 @@ public class XmlAclImportDelegate extends XmlAggregatedImportDelegate<AclT, Acls
 	@Override
 	protected AclT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException {
-		AclT acl = new AclT();
-
-		acl.setId(this.cmfObject.getId());
-		acl.setDescription(getAttributeValue("dctm:description").asString());
-
 		CmfAttribute<CmfValue> accessorName = this.cmfObject.getAttribute("dctm:r_accessor_name");
 		CmfAttribute<CmfValue> accessorPermit = this.cmfObject.getAttribute("dctm:r_accessor_permit");
 		CmfAttribute<CmfValue> accessorXpermit = this.cmfObject.getAttribute("dctm:r_accessor_xpermit");
 		CmfAttribute<CmfValue> permitType = this.cmfObject.getAttribute("dctm:r_permit_type");
 		CmfAttribute<CmfValue> isGroup = this.cmfObject.getAttribute("dctm:r_is_group");
+
+		if (ObjectUtils.anyNull(accessorName, accessorPermit, accessorXpermit, permitType, isGroup)) {
+			// Insufficient information...
+			return null;
+		}
+
+		AclT acl = new AclT();
+
+		acl.setId(this.cmfObject.getId());
+		acl.setDescription(getAttributeValue("dctm:description").asString());
 
 		final int entries = accessorName.getValueCount();
 		StringBuilder str = new StringBuilder();

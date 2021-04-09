@@ -26,8 +26,9 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.xml.common;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.pool2.PooledObject;
@@ -36,21 +37,20 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 import com.armedia.caliente.engine.common.SessionFactory;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.Tools;
 
 public class XmlSessionFactory extends SessionFactory<XmlRoot> {
 	private final XmlRoot root;
 
 	public XmlSessionFactory(CfgTools settings, CmfCrypt crypto) throws IOException {
 		super(settings, crypto);
-		File root = XmlCommon.getRootDirectory(settings);
+		Path root = XmlCommon.getRootDirectory(settings);
 		if (root == null) {
 			throw new IllegalArgumentException("Must provide a root directory to base the local engine off of");
 		}
-		root = Tools.canonicalize(root);
+		root = root.toAbsolutePath().normalize();
 
-		FileUtils.forceMkdir(root);
-		if (!root.isDirectory()) {
+		FileUtils.forceMkdir(root.toFile());
+		if (!Files.isDirectory(root)) {
 			throw new IllegalArgumentException(
 				String.format("Root directory [%s] could not be found, nor could it be created", root));
 		}

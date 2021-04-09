@@ -28,12 +28,14 @@ package com.armedia.caliente.engine.importer;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.TransferContext;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaService;
@@ -45,6 +47,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
@@ -193,7 +196,7 @@ public abstract class ImportContext< //
 		}
 	}
 
-	public Collection<CmfObjectRef> getContainers(CmfObject<VALUE> object) throws ImportException {
+	public final Collection<CmfObjectRef> getContainers(CmfObject<VALUE> object) throws ImportException {
 		try {
 			return this.cmfObjectStore.getContainers(object);
 		} catch (CmfStorageException e) {
@@ -202,12 +205,41 @@ public abstract class ImportContext< //
 		}
 	}
 
-	public Collection<CmfObjectRef> getContainedObjects(CmfObject<VALUE> object) throws ImportException {
+	public final Collection<CmfObjectRef> getContainedObjects(CmfObject<VALUE> object) throws ImportException {
 		try {
 			return this.cmfObjectStore.getContainedObjects(object);
 		} catch (CmfStorageException e) {
 			throw new ImportException(
 				String.format("Failed to load the contained objects for %s", object.getDescription()), e);
 		}
+	}
+
+	public final String getObjectName(CmfObject<VALUE> object) {
+		return getObjectName(object, true);
+	}
+
+	public final String getObjectName(CmfObject<VALUE> object, boolean current) {
+		CmfProperty<VALUE> prop = object.getProperty(IntermediateProperty.HEAD_NAME);
+		if ((prop != null) && prop.hasValues()) { return prop.getValue().toString(); }
+
+		// No explicitly-set HEAD name, find the name for the HEAD revision
+		CmfObject<VALUE> head = object;
+		if (current) {
+			try {
+				head = getHeadObject(object);
+			} catch (CmfStorageException e) {
+				this.log.warn("Failed to load the HEAD object for {} history [{}]", object.getType().name(),
+					object.getHistoryId(), e);
+			}
+			if (head == null) {
+				head = object;
+			}
+		}
+		return getFactory().getEngine().getObjectName(head);
+	}
+
+	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean current)
+		throws ImportException {
+		return getFactory().getObjectNames(refs, current);
 	}
 }
