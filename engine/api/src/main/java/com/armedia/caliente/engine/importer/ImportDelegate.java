@@ -27,10 +27,13 @@
 package com.armedia.caliente.engine.importer;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.function.UnaryOperator;
 
 import com.armedia.caliente.engine.TransferDelegate;
 import com.armedia.caliente.engine.common.SessionWrapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
+import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
 
@@ -57,4 +60,43 @@ public abstract class ImportDelegate< //
 	protected abstract Collection<ImportOutcome> importObject(CmfAttributeTranslator<VALUE> translator, CONTEXT ctx)
 		throws ImportException, CmfStorageException;
 
+	protected final VALUE getAttributeValue(CmfEncodeableName attribute) {
+		return this.factory.getAttributeValue(this.cmfObject, attribute);
+	}
+
+	protected final VALUE getAttributeValue(String attribute) {
+		return this.factory.getAttributeValue(this.cmfObject, attribute);
+	}
+
+	protected final List<VALUE> getAttributeValues(CmfEncodeableName attribute) {
+		return this.factory.getAttributeValues(this.cmfObject, attribute);
+	}
+
+	protected final List<VALUE> getAttributeValues(String attribute) {
+		return this.factory.getAttributeValues(this.cmfObject, attribute);
+	}
+
+	protected final VALUE getPropertyValue(CmfEncodeableName property) {
+		return this.factory.getPropertyValue(this.cmfObject, property);
+	}
+
+	protected final VALUE getPropertyValue(String property) {
+		return this.factory.getPropertyValue(this.cmfObject, property);
+	}
+
+	protected final List<VALUE> getPropertyValues(CmfEncodeableName property) {
+		return this.factory.getPropertyValues(this.cmfObject, property);
+	}
+
+	protected final List<VALUE> getPropertyValues(String property) {
+		return this.factory.getPropertyValues(this.cmfObject, property);
+	}
+
+	public final String getFixedPath(CONTEXT ctx) throws ImportException {
+		return getFixedPath(ctx, null);
+	}
+
+	public final String getFixedPath(CONTEXT ctx, UnaryOperator<String> pathFix) throws ImportException {
+		return this.factory.getFixedPath(this.cmfObject, ctx, pathFix);
+	}
 }

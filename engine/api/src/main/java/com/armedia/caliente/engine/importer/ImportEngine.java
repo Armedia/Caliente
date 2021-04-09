@@ -888,6 +888,14 @@ public abstract class ImportEngine<//
 	protected void initContext(CONTEXT ctx) {
 	}
 
+	protected String getObjectName(CmfObject<VALUE> object) {
+		String finalName = object.getName();
+		if (StringUtils.isBlank(finalName)) {
+			finalName = object.getHistoryId();
+		}
+		return finalName;
+	}
+
 	@Override
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {
 		for (ImportSetting s : ImportSetting.values()) {

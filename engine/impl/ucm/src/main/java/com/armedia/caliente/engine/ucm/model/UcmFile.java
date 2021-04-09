@@ -62,8 +62,8 @@ public class UcmFile extends UcmFSObject {
 		return getString(UcmAtt.dDocTitle);
 	}
 
-	public int getSize() {
-		return getInteger(UcmAtt.dFileSize, 0);
+	public long getSize() {
+		return getLong(UcmAtt.dFileSize, 0);
 	}
 
 	public String getFormat() {
