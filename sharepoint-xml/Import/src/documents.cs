@@ -241,7 +241,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                     {
                         continue;
                     }
-                    path = versionXml.ReadElementContentAsString();
+                    path = "/" + versionXml.ReadElementContentAsString();
 
                     if (!versionXml.ReadToFollowing("name"))
                     {
@@ -292,7 +292,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             // First pass: identify the incoming stuff, and remove them from their current parent folders
             if (finalNames.Count > 0)
             {
-                using (XmlReader documentsXml = this.ImportContext.LoadIndex("documents.xml"))
+                using (XmlReader documentsXml = this.ImportContext.LoadIndex("documents"))
                 {
                     while (documentsXml.ReadToFollowing("document"))
                     {
@@ -351,7 +351,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             // Second pass: at this stage, the parent folders have been cleansed of files that are about
             // to be re-ingested with differing names, so any new filename collisions will be calculated correctly,
             // and files that are being re-ingested but didn't change location will be preserved in the same place
-            using (XmlReader documentsXml = this.ImportContext.LoadIndex("documents.xml"))
+            using (XmlReader documentsXml = this.ImportContext.LoadIndex("documents"))
             {
                 while (documentsXml.ReadToFollowing("document"))
                 {
@@ -398,10 +398,11 @@ namespace Armedia.CMSMF.SharePoint.Import
                             // If there's no current location (a new file), or the location has changed (marked as such previously), then
                             // we create a new location object
                             safeName = Tools.MakeSafeFileName(name, null);
-                            if (!parent.Files.Add(safeName))
+                            if (string.IsNullOrWhiteSpace(safeName) || !parent.Files.Add(safeName))
                             {
                                 // Duplicate filename, so we modify the name and make sure it's used later
                                 safeName = Tools.MakeSafeFileName(name, historyId); // new safe name
+                                name = safeName;
                                 parent.Files.Add(safeName);
                             }
                         }
@@ -453,352 +454,382 @@ namespace Armedia.CMSMF.SharePoint.Import
                     string restoreVersionNumber = null;
                     string versionNumber = null;
                     string safeFullPath = null;
-                    while (document.ReadToFollowing("version") && !this.Abort)
+                    try
                     {
-                        // Ok...so now we have the document version.
-                        XElement version = XElement.Load(document.ReadSubtree());
-                        XNamespace ns = version.GetDefaultNamespace();
-
-                        string id = (string)version.Element(ns + "id");
-                        string objectType = (string)version.Element(ns + "type");
-                        string aclId = (string)version.Element(ns + "acl");
-
-                        if (location == null)
+                        while (document.ReadToFollowing("version") && !this.Abort)
                         {
-                            string historyId = (string)version.Element(ns + "historyId");
-                            location = this.Filenames[historyId];
-                            previousAcl = location.Parent.Acl;
-                            location.Parent.Modified = true;
-                        }
+                            // Ok...so now we have the document version.
+                            XElement version = XElement.Load(document.ReadSubtree());
+                            XNamespace ns = version.GetDefaultNamespace();
 
-                        string safeName = location.Name;
-                        versionNumber = (string)version.Element(ns + "version");
-                        string path = (string)version.Element(ns + "sourcePath");
-                        string name = Tools.SanitizeSingleLineString((string)version.Element(ns + "name"));
-                        string fullName = string.Format("{0}/{1}", path, name);
+                            string id = (string)version.Element(ns + "id");
+                            string objectType = (string)version.Element(ns + "type");
+                            string aclId = (string)version.Element(ns + "acl");
 
-                        tracker.TrackProgress("Processing version [{0}] for document [{1}] (#{2:N0} of {3:N0})", versionNumber, location.FullPath, ++versionCount, location.VersionCount);
+                            if (location == null)
+                            {
+                                string historyId = (string)version.Element(ns + "historyId");
+                                location = this.Filenames[historyId];
+                                previousAcl = location.Parent.Acl;
+                                location.Parent.Modified = true;
+                            }
 
-                        // Step 1: if this is a branch - skip it!!
-                        if (Tools.CountChars(versionNumber, '.') > 1)
-                        {
-                            // BRANCH!! Must be skipped
-                            tracker.TrackProgress("Skipping branch version [{0}] for document [{1}]", versionNumber, fullName);
-                            continue;
-                        }
+                            string safeName = location.Name;
+                            versionNumber = (string)version.Element(ns + "version");
+                            string path = (string)version.Element(ns + "sourcePath");
+                            string name = Tools.SanitizeSingleLineString((string)version.Element(ns + "name"));
+                            string fullName = string.Format("{0}/{1}", path, name);
 
-                        // Prepare the content stream
-                        XElement allContents = version.Element(ns + "contents");
-                        XElement firstContent = (allContents != null ? allContents.Element(ns + "content") : null);
-                        System.IO.Stream stream = null;
-                        long contentStreamSize = 0;
-                        switch (simulationMode)
-                        {
-                            case SimulationMode.NONE:
-                            case SimulationMode.MISSING:
-                                if (firstContent == null)
-                                {
-                                    // Allow objects with no content streams to be uploaded as such
-                                    stream = new System.IO.MemoryStream(CONTENT_FILLER);
-                                    break;
-                                }
-                                string contentStreamLocation = this.ImportContext.FormatContentLocation((string)firstContent.Element(ns + "location"));
-                                contentStreamSize = XmlConvert.ToInt64((string)firstContent.Element(ns + "size"));
-                                if (contentStreamSize == 0)
-                                {
-                                    // Short-circuit the case of the empty stream
-                                    stream = new System.IO.MemoryStream(CONTENT_FILLER);
-                                    break;
-                                }
-                                System.IO.FileInfo streamInfo = new System.IO.FileInfo(contentStreamLocation);
-                                if (streamInfo.Exists)
-                                {
-                                    if (streamInfo.Length != contentStreamSize)
+                            tracker.TrackProgress("Processing version [{0}] for document [{1}] (#{2:N0} of {3:N0})", versionNumber, location.FullPath, ++versionCount, location.VersionCount);
+
+                            // Step 1: if this is a branch - skip it!!
+                            if (Tools.CountChars(versionNumber, '.') > 1)
+                            {
+                                // BRANCH!! Must be skipped
+                                tracker.TrackProgress("Skipping branch version [{0}] for document [{1}]", versionNumber, fullName);
+                                continue;
+                            }
+
+                            // Prepare the content stream
+                            XElement allContents = version.Element(ns + "contents");
+                            XElement firstContent = (allContents != null ? allContents.Element(ns + "content") : null);
+                            System.IO.Stream stream = null;
+                            long contentStreamSize = 0;
+                            switch (simulationMode)
+                            {
+                                case SimulationMode.NONE:
+                                case SimulationMode.MISSING:
+                                    if (firstContent == null)
                                     {
-                                        Log.Warn(string.Format("Stream size mismatch for [{0}] v{1} - expected {2:N0} bytes, but the actual stream is {3:N0} bytes", fullName, versionNumber, contentStreamSize, streamInfo.Length));
-                                        contentStreamSize = streamInfo.Length;
+                                        // Allow objects with no content streams to be uploaded as such
+                                        stream = new System.IO.MemoryStream(CONTENT_FILLER);
+                                        break;
                                     }
+                                    string contentStreamLocation = this.ImportContext.FormatContentStreamLocation((string)firstContent.Element(ns + "location"));
+                                    contentStreamSize = XmlConvert.ToInt64((string)firstContent.Element(ns + "size"));
+                                    if (contentStreamSize == 0)
+                                    {
+                                        // Short-circuit the case of the empty stream
+                                        stream = new System.IO.MemoryStream(CONTENT_FILLER);
+                                        break;
+                                    }
+                                    System.IO.FileInfo streamInfo = new System.IO.FileInfo(contentStreamLocation);
+                                    if (streamInfo.Exists)
+                                    {
+                                        if (streamInfo.Length != contentStreamSize)
+                                        {
+                                            Log.Warn(string.Format("Stream size mismatch for [{0}] v{1} - expected {2:N0} bytes, but the actual stream is {3:N0} bytes", fullName, versionNumber, contentStreamSize, streamInfo.Length));
+                                            contentStreamSize = streamInfo.Length;
+                                        }
 
+                                        if (contentStreamSize > MAX_UPLOAD_SIZE)
+                                        {
+                                            throw new UnsupportedDocumentException(string.Format("Maximum upload size for SharePoint is {0:N0} bytes, but the stream for [{1}] v{2} is {3:N0} bytes long ({4:N0} bytes too big) (described by [{5}])", MAX_UPLOAD_SIZE, fullName, versionNumber, contentStreamSize, contentStreamSize - MAX_UPLOAD_SIZE, documentLocation));
+                                        }
+
+                                        stream = streamInfo.OpenRead();
+                                        if (stream != null) break;
+                                    }
+                                    if (simulationMode == SimulationMode.MISSING)
+                                    {
+                                        // We're in "MISSING" mode, so we HAVE to switch over to FULL mode because we found no stream, but we need to simulate the content anyhow
+                                        simulationMode = SimulationMode.FULL;
+                                        break;
+                                    }
+                                    throw new Exception(string.Format("Could not locate the content stream at [{0}] for document [{1}] version [{2}] (described by [{3}])", contentStreamLocation, fullName, versionNumber, documentLocation));
+                            }
+
+                            // We split the switch into two, instead of just a single big one, because the simulation mode may change
+                            // depending on the circumstances...
+                            switch (simulationMode)
+                            {
+                                case SimulationMode.FULL:
+                                case SimulationMode.SHORT:
                                     if (contentStreamSize > MAX_UPLOAD_SIZE)
                                     {
+                                        // If the stream is too big, and we're simulating, we simply bow out gracefully, and treat it as completed
                                         throw new UnsupportedDocumentException(string.Format("Maximum upload size for SharePoint is {0:N0} bytes, but the stream for [{1}] v{2} is {3:N0} bytes long ({4:N0} bytes too big) (described by [{5}])", MAX_UPLOAD_SIZE, fullName, versionNumber, contentStreamSize, contentStreamSize - MAX_UPLOAD_SIZE, documentLocation));
                                     }
-
-                                    stream = streamInfo.OpenRead();
-                                    if (stream != null) break;
-                                }
-                                if (simulationMode == SimulationMode.MISSING)
-                                {
-                                    // We're in "MISSING" mode, so we HAVE to switch over to FULL mode because we found no stream, but we need to simulate the content anyhow
-                                    simulationMode = SimulationMode.FULL;
-                                    break;
-                                }
-                                throw new Exception(string.Format("Could not locate the content stream at [{0}] for document [{1}] version [{2}] (described by [{3}])", contentStreamLocation, fullName, versionNumber, documentLocation));
-                        }
-
-                        // We split the switch into two, instead of just a single big one, because the simulation mode may change
-                        // depending on the circumstances...
-                        switch (simulationMode)
-                        {
-                            case SimulationMode.FULL:
-                            case SimulationMode.SHORT:
-                                if (contentStreamSize > MAX_UPLOAD_SIZE)
-                                {
-                                    // If the stream is too big, and we're simulating, we simply bow out gracefully, and treat it as completed
-                                    throw new UnsupportedDocumentException(string.Format("Maximum upload size for SharePoint is {0:N0} bytes, but the stream for [{1}] v{2} is {3:N0} bytes long ({4:N0} bytes too big) (described by [{5}])", MAX_UPLOAD_SIZE, fullName, versionNumber, contentStreamSize, contentStreamSize - MAX_UPLOAD_SIZE, documentLocation));
-                                }
-                                if (contentStreamSize == 0)
-                                {
-                                    // Short-circuit the case of the empty stream
-                                    stream = new System.IO.MemoryStream(CONTENT_FILLER);
-                                    break;
-                                }
-                                using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
-                                {
-                                    System.IO.StreamWriter sw = new System.IO.StreamWriter(ms);
-                                    // Ok...start dumping out keywords, titles, attributes, etc.
-                                    sw.WriteLine(name);
-                                    sw.WriteLine(path);
-                                    sw.WriteLine(versionNumber);
-                                    foreach (string kw in XmlTools.GetAttributeValues(version, "dctm:keywords"))
+                                    if (contentStreamSize == 0)
                                     {
-                                        sw.WriteLine(kw);
+                                        // Short-circuit the case of the empty stream
+                                        stream = new System.IO.MemoryStream(CONTENT_FILLER);
+                                        break;
                                     }
-                                    sw.WriteLine();
-                                    sw.Write(version.ToString());
-                                    sw.WriteLine();
-                                    byte[] randomData = new byte[100 * 1024];
-                                    new Random(Environment.TickCount).NextBytes(randomData);
-                                    // We do it like this because we need it to continue to be textual data, else it won't be parsed
-                                    sw.WriteLine(Convert.ToBase64String(randomData));
-                                    sw.WriteLine();
-                                    sw.WriteLine();
-                                    sw.Flush();
-                                    ms.Flush();
+                                    using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
+                                    {
+                                        System.IO.StreamWriter sw = new System.IO.StreamWriter(ms);
+                                        // Ok...start dumping out keywords, titles, attributes, etc.
+                                        sw.WriteLine(name);
+                                        sw.WriteLine(path);
+                                        sw.WriteLine(versionNumber);
+                                        foreach (string kw in XmlTools.GetAttributeValues(version, "dctm:keywords"))
+                                        {
+                                            sw.WriteLine(kw);
+                                        }
+                                        sw.WriteLine();
+                                        sw.Write(version.ToString());
+                                        sw.WriteLine();
+                                        byte[] randomData = new byte[100 * 1024];
+                                        new Random(Environment.TickCount).NextBytes(randomData);
+                                        // We do it like this because we need it to continue to be textual data, else it won't be parsed
+                                        sw.WriteLine(Convert.ToBase64String(randomData));
+                                        sw.WriteLine();
+                                        sw.WriteLine();
+                                        sw.Flush();
+                                        ms.Flush();
 
-                                    // We do this instead of using the memory stream directly because we don't want to necessarily
-                                    // have to generate the entire size in bytes-worth of simulated content.  This way we just
-                                    // generate a "seed" that then gets repeated and rehashed and whatnot (as well as mixed with random
-                                    // data) in order to complete the requisite size in bytes.
-                                    if (simulationMode == SimulationMode.SHORT) contentStreamSize = Math.Min(contentStreamSize, ms.Length);
-                                    stream = ContentSimulator.SimulateStream(contentStreamSize, ms.ToArray());
-                                }
-                                break;
-                        }
-
-                        if (newVersion != null)
-                        {
-                            if ((++minorCount % maxMinor) == 0)
-                            {
-                                tracker.TrackProgress("Publishing a new major version ({0} minor versions checked in) for document [{1}] (from [{2}])", minorCount, fullName, documentLocation);
-                                newVersion.Publish("");
-                                session.ExecuteQuery();
+                                        // We do this instead of using the memory stream directly because we don't want to necessarily
+                                        // have to generate the entire size in bytes-worth of simulated content.  This way we just
+                                        // generate a "seed" that then gets repeated and rehashed and whatnot (as well as mixed with random
+                                        // data) in order to complete the requisite size in bytes.
+                                        if (simulationMode == SimulationMode.SHORT) contentStreamSize = Math.Min(contentStreamSize, ms.Length);
+                                        stream = ContentSimulator.SimulateStream(contentStreamSize, ms.ToArray());
+                                    }
+                                    break;
                             }
 
-                            // ALWAYS execute this load
-                            clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields);
-                            session.ExecuteQuery();
-                            ShowProgress();
-                        }
-
-                        // Step 2: Obtain the parent folder
-
-                        // Step 3: Identify if this is the root version
-                        bool checkedOut = false;
-                        FileCreationInformation fileCreationInfo = null;
-                        FileSaveBinaryInformation fileSaveBinaryInfo = null;
-                        if (newVersion == null)
-                        {
-                            // TODO: Handle the case when the root object doesn't start at version 0.1, which is
-                            // where Sharepoint MUST start.  Thus, if there's a difference, we need to account for it
-                            // by deducing how many major/minor versions we must pad with until we can commit the first
-                            // version
-
-                            // This is the root!
-                            fileCreationInfo = new FileCreationInformation();
-                        }
-                        else
-                        {
-                            // This isn't the root, so we must check out the previous version
-                            fileSaveBinaryInfo = new FileSaveBinaryInformation();
-                            newVersion.CheckOut();
-                            checkedOut = true;
-                        }
-
-                        // Finally, if this is a checked out version, do the checkin
-                        comment = XmlTools.GetAttributeValue(version, "cmis:checkinComment") ?? "";
-                        safeFullPath = location.FullPath;
-                        string sourcePath = string.Format("{0}/{1}", path, name);
-                        string targetUrl = session.GetServerRelativeUrl(location.FullPath);
-
-                        string acl = (string)version.Element(ns + "acl");
-                        bool restoreAcl = (acl != previousAcl && acl == location.Parent.Acl);
-                        bool uniqueAcl = (acl != previousAcl && acl != location.Parent.Acl);
-                        bool breakRoleInheritance = (uniqueAcl && previousAcl == location.Parent.Acl);
-
-                        using (stream)
-                        {
-                            if (checkedOut)
+                            if (newVersion != null)
                             {
-                                fileSaveBinaryInfo.ContentStream = stream;
-                                newVersion.SaveBinary(fileSaveBinaryInfo);
-                                newVersion.CheckIn(comment, CheckinType.MinorCheckIn);
-                                tracker.TrackProgress("Checking in new version [{0}] for document [{1}] (at [{2}]) - {3:N0} bytes", versionNumber, sourcePath, safeFullPath, contentStreamSize);
+                                if ((++minorCount % maxMinor) == 0)
+                                {
+                                    tracker.TrackProgress("Publishing a new major version ({0} minor versions checked in) for document [{1}] (from [{2}])", minorCount, fullName, documentLocation);
+                                    newVersion.Publish("");
+                                    session.ExecuteQuery();
+                                }
+
+                                // ALWAYS execute this load
+                                clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields);
                                 session.ExecuteQuery();
                                 ShowProgress();
+                            }
 
-                                // This load operation is required in order for the metadata creation to work
-                                clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields, r => r.ListItemAllFields.RoleAssignments);
+                            // Step 2: Obtain the parent folder
+
+                            // Step 3: Identify if this is the root version
+                            bool checkedOut = false;
+                            FileCreationInformation fileCreationInfo = null;
+                            FileSaveBinaryInformation fileSaveBinaryInfo = null;
+                            if (newVersion == null)
+                            {
+                                // TODO: Handle the case when the root object doesn't start at version 0.1, which is
+                                // where Sharepoint MUST start.  Thus, if there's a difference, we need to account for it
+                                // by deducing how many major/minor versions we must pad with until we can commit the first
+                                // version
+
+                                // This is the root!
+                                fileCreationInfo = new FileCreationInformation();
                             }
                             else
                             {
-                                fileCreationInfo.Url = safeName;
-                                fileCreationInfo.Overwrite = true;
-                                fileCreationInfo.ContentStream = stream;
-
-                                string currentUrl = targetUrl;
-                                if (location.CurrentFullPath != null)
-                                {
-                                    currentUrl = session.GetServerRelativeUrl(location.CurrentFullPath);
-                                    if (currentUrl != targetUrl) clientContext.Web.GetFileByServerRelativeUrl(currentUrl).DeleteObject();
-                                }
-                                clientContext.Web.GetFileByServerRelativeUrl(targetUrl).DeleteObject();
-                                tracker.TrackProgress("Clearing out the existing document at [{0}] to make way for [{1}]", currentUrl, targetUrl);
-                                session.ExecuteQuery();
-
-                                Folder f = clientContext.Web.GetFolderByServerRelativeUrl(location.Parent.Url);
-                                newVersion = f.Files.Add(fileCreationInfo);
-                                clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields, r => r.ListItemAllFields.RoleAssignments);
-                                tracker.TrackProgress("Creating document [{0}] as [{1}] - {2:N0} bytes", sourcePath, safeFullPath, contentStreamSize);
-                            }
-
-                            session.ExecuteQuery();
-                            ShowProgress();
-
-                            if (newVersion.CheckOutType == CheckOutType.None)
-                            {
+                                // This isn't the root, so we must check out the previous version
+                                fileSaveBinaryInfo = new FileSaveBinaryInformation();
                                 newVersion.CheckOut();
+                                checkedOut = true;
                             }
-                            if (contentType == null)
-                            {
-                                contentType = ResolveContentType(objectType);
-                                tracker.TrackProgress("Assigning content type [{0}] (id={1}) to [{2}] (GUID=[{3}] UniqueId=[{4}])...", contentType.Name, contentType.Id, safeFullPath, newVersion.ListItemAllFields["UniqueId"], newVersion.ListItemAllFields["GUID"]);
-                            }
-                            newVersion.ListItemAllFields["ContentTypeId"] = contentType.Id;
-                            ApplyMetadata(newVersion.ListItemAllFields, version);
 
-                            string aclResult = "inherited from its parent's";
-                            if (restoreAcl)
+                            // Finally, if this is a checked out version, do the checkin
+                            comment = XmlTools.GetAttributeValue(version, "cmis:checkinComment") ?? "";
+                            safeFullPath = location.FullPath;
+                            string sourcePath = string.Format("{0}/{1}", path, name);
+                            string targetUrl = session.GetServerRelativeUrl(location.FullPath);
+
+                            string acl = (string)version.Element(ns + "acl");
+                            bool restoreAcl = (acl != previousAcl && acl == location.Parent.Acl);
+                            bool uniqueAcl = (acl != previousAcl && acl != location.Parent.Acl);
+                            bool breakRoleInheritance = (uniqueAcl && previousAcl == location.Parent.Acl);
+
+                            using (stream)
                             {
-                                newVersion.ListItemAllFields.ResetRoleInheritance();
-                                aclResult = "re-inherited from its parent's";
-                            }
-                            else
-                            if (uniqueAcl)
-                            {
-                                if (breakRoleInheritance)
+                                if (checkedOut)
                                 {
-                                    newVersion.ListItemAllFields.BreakRoleInheritance(false, false);
-                                    aclResult = "independent from its parent's";
+                                    fileSaveBinaryInfo.ContentStream = stream;
+                                    newVersion.SaveBinary(fileSaveBinaryInfo);
+                                    newVersion.CheckIn(comment, CheckinType.MinorCheckIn);
+                                    tracker.TrackProgress("Checking in new version [{0}] for document [{1}] (at [{2}]) - {3:N0} bytes", versionNumber, sourcePath, safeFullPath, contentStreamSize);
+                                    session.ExecuteQuery();
+                                    ShowProgress();
+
+                                    // This load operation is required in order for the metadata creation to work
+                                    clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields, r => r.ListItemAllFields.RoleAssignments);
                                 }
                                 else
                                 {
-                                    aclResult = "independent from its previous version's and from its parent's";
-                                    ClearPermissions(newVersion.ListItemAllFields);
+                                    fileCreationInfo.Url = safeName;
+                                    fileCreationInfo.Overwrite = true;
+                                    fileCreationInfo.ContentStream = stream;
+
+                                    string currentUrl = targetUrl;
+                                    if (location.CurrentFullPath != null)
+                                    {
+                                        currentUrl = session.GetServerRelativeUrl(location.CurrentFullPath);
+                                        if (currentUrl != targetUrl) clientContext.Web.GetFileByServerRelativeUrl(currentUrl).DeleteObject();
+                                    }
+                                    clientContext.Web.GetFileByServerRelativeUrl(targetUrl).DeleteObject();
+                                    tracker.TrackProgress("Clearing out the existing document at [{0}] to make way for [{1}]", currentUrl, targetUrl);
+                                    session.ExecuteQuery();
+
+                                    Folder f = clientContext.Web.GetFolderByServerRelativeUrl(location.Parent.Url);
+                                    newVersion = f.Files.Add(fileCreationInfo);
+                                    clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields, r => r.ListItemAllFields.RoleAssignments);
+                                    tracker.TrackProgress("Creating document [{0}] as [{1}] - {2:N0} bytes", sourcePath, safeFullPath, contentStreamSize);
                                 }
-                                ApplyPermissions(newVersion.ListItemAllFields, version);
+
+                                session.ExecuteQuery();
+                                ShowProgress();
+
+                                if (newVersion.CheckOutType == CheckOutType.None)
+                                {
+                                    newVersion.CheckOut();
+                                }
+                                if (contentType == null)
+                                {
+                                    contentType = ResolveContentType(objectType);
+                                    if (contentType == null)
+                                    {
+                                        throw new Exception(string.Format("Could not find the content type [{0}] for document [{0}]", objectType, safeFullPath));
+                                    }
+                                    tracker.TrackProgress("Assigning content type [{0}] (id={1}) to [{2}] (GUID=[{3}] UniqueId=[{4}])...", contentType.Name, contentType.Id, safeFullPath, newVersion.ListItemAllFields["UniqueId"], newVersion.ListItemAllFields["GUID"]);
+                                }
+                                newVersion.ListItemAllFields["ContentTypeId"] = contentType.Id;
+                                ApplyMetadata(newVersion.ListItemAllFields, version);
+
+                                string aclResult = "inherited from its parent's";
+                                if (restoreAcl)
+                                {
+                                    newVersion.ListItemAllFields.ResetRoleInheritance();
+                                    aclResult = "re-inherited from its parent's";
+                                }
+                                else
+                                if (uniqueAcl)
+                                {
+                                    if (breakRoleInheritance)
+                                    {
+                                        newVersion.ListItemAllFields.BreakRoleInheritance(false, false);
+                                        aclResult = "independent from its parent's";
+                                    }
+                                    else
+                                    {
+                                        aclResult = "independent from its previous version's and from its parent's";
+                                        ClearPermissions(newVersion.ListItemAllFields);
+                                    }
+                                    ApplyPermissions(newVersion.ListItemAllFields, version);
+                                }
+                                else
+                                if (previousAcl != location.Parent.Acl)
+                                {
+                                    aclResult = "preserved from the previous version";
+                                }
+                                tracker.TrackProgress("The ACL for [{0}] v{1} will be {2}", safeFullPath, versionNumber, aclResult);
+
+                                newVersion.ListItemAllFields["dctm_antecedent_id"] = (string)version.Element(ns + "antecedentId");
+                                newVersion.ListItemAllFields["dctm_history_id"] = location.HistoryId;
+                                newVersion.ListItemAllFields["dctm_version"] = versionNumber;
+                                newVersion.ListItemAllFields["dctm_current"] = XmlConvert.ToBoolean((string)version.Element(ns + "current"));
+
+                                newVersion.ListItemAllFields.Update();
+                                newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
+                                session.ExecuteQuery();
+                                ShowProgress();
+
+                                clientContext.Load(newVersion);
+                                clientContext.Load(newVersion.ListItemAllFields);
+                                session.ExecuteQuery();
+                                ShowProgress();
+
+                                newVersion.CheckOut();
+                                SetAuthorAndEditor(newVersion.ListItemAllFields, version);
+                                if (uniqueAcl) ApplyOwnerPermission(newVersion.ListItemAllFields, version);
+
+                                newVersion.ListItemAllFields.Update();
+                                newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
+                                newVersion.RefreshLoad();
+                                clientContext.Load(newVersion.Versions);
+                                session.ExecuteQuery();
+                                ShowProgress();
+                                previousAcl = acl;
+
+                                if (XmlConvert.ToBoolean((string)version.Element(ns + "current")))
+                                {
+                                    // This is the current version, so mark it
+                                    restoreVersionNumber = versionNumber;
+                                    restoreSpVersionLabel = newVersion.UIVersionLabel;
+                                }
                             }
-                            else
-                            if (previousAcl != location.Parent.Acl)
+                        }
+
+                        if (!this.Abort && newVersion != null)
+                        {
+                            // If we have a version number to restore that isn't the last version checked in, then we restore it to that
+                            // version
+                            if (locationMode == LocationMode.CURRENT && (restoreVersionNumber != null) && (restoreVersionNumber != versionNumber))
                             {
-                                aclResult = "preserved from the previous version";
+                                newVersion.CheckOut();
+                                newVersion.Versions.RestoreByLabel(restoreSpVersionLabel);
+                                newVersion.CheckIn(string.Format("Restored to version {0}", restoreVersionNumber), CheckinType.MinorCheckIn);
+                                session.ExecuteQuery();
+                                tracker.TrackProgress("Restored document [{0}] to older version [{1}] (sp version {2})", safeFullPath, restoreVersionNumber, restoreSpVersionLabel);
                             }
-                            tracker.TrackProgress("The ACL for [{0}] v{1} will be {2}", safeFullPath, versionNumber, aclResult);
 
-                            newVersion.ListItemAllFields["dctm_antecedent_id"] = (string)version.Element(ns + "antecedentId");
-                            newVersion.ListItemAllFields["dctm_history_id"] = location.HistoryId;
-                            newVersion.ListItemAllFields["dctm_version"] = versionNumber;
-                            newVersion.ListItemAllFields["dctm_current"] = XmlConvert.ToBoolean((string)version.Element(ns + "current"));
-                            newVersion.ListItemAllFields.Update();
-                            newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
-                            session.ExecuteQuery();
-                            ShowProgress();
-
-                            clientContext.Load(newVersion);
-                            clientContext.Load(newVersion.ListItemAllFields);
-                            session.ExecuteQuery();
-                            ShowProgress();
-
-                            newVersion.CheckOut();
-                            SetAuthorAndEditor(newVersion.ListItemAllFields, version);
-                            if (uniqueAcl) ApplyOwnerPermission(newVersion.ListItemAllFields, version);
-
-                            newVersion.ListItemAllFields.Update();
-                            newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
-                            newVersion.RefreshLoad();
-                            clientContext.Load(newVersion.Versions);
-                            session.ExecuteQuery();
-                            ShowProgress();
-                            previousAcl = acl;
-
-                            if (XmlConvert.ToBoolean((string)version.Element(ns + "current")))
+                            // We only do two attempts
+                            for (int i = 0 ; i < 2 ; i++)
                             {
-                                // This is the current version, so mark it
-                                restoreVersionNumber = versionNumber;
-                                restoreSpVersionLabel = newVersion.UIVersionLabel;
+                                clientContext.Load(newVersion);
+                                clientContext.Load(newVersion.ListItemAllFields);
+                                session.ExecuteQuery();
+
+                                ContentTypeId finalId = newVersion.ListItemAllFields["ContentTypeId"] as ContentTypeId;
+                                if (finalId.StringValue == contentType.Id.StringValue)
+                                {
+                                    tracker.TrackProgress("Confirmed content type [{0}] is set for [{1}] upon import completion", contentType.Name, safeFullPath);
+                                    break;
+                                }
+                                else if (i > 0)
+                                {
+                                    // If on the second check we failed, we don't try to set it again, and we simply explode accordingly
+                                    ContentType actual = this.ContentTypeImporter.ResolveContentType(finalId)?.Type;
+                                    throw new Exception(string.Format("Failed to re-set the content type for [{0}] - expected to set [{1}] with ID={2} but was actually set as [{3}] with ID={4} (GUID=[{5}] UniqueId=[{6}])", safeFullPath, contentType.Name, contentType.Id, actual?.Name, finalId));
+                                }
+
+                                // One last attempt...try to set the type...
+                                if (newVersion.CheckOutType == CheckOutType.None) newVersion.CheckOut();
+                                newVersion.ListItemAllFields["ContentTypeId"] = contentType.Id;
+                                newVersion.ListItemAllFields.Update();
+                                newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
+                                session.ExecuteQuery();
+                                ShowProgress();
+                            }
+
+                            if (autoPublish)
+                            {
+                                newVersion.Publish(comment);
+                                session.ExecuteQuery();
+                                ShowProgress();
+                                tracker.TrackProgress("Automatically published document [{0}]", safeFullPath);
                             }
                         }
                     }
-
-                    if (!this.Abort && newVersion != null)
+                    catch (Exception e)
                     {
-                        // If we have a version number to restore that isn't the last version checked in, then we restore it to that
-                        // version
-                        if (locationMode == LocationMode.CURRENT && (restoreVersionNumber != null) && (restoreVersionNumber != versionNumber))
+                        try
                         {
-                            newVersion.CheckOut();
-                            newVersion.Versions.RestoreByLabel(restoreSpVersionLabel);
-                            newVersion.CheckIn(string.Format("Restored to version {0}", restoreVersionNumber), CheckinType.MinorCheckIn);
-                            session.ExecuteQuery();
-                            tracker.TrackProgress("Restored document [{0}] to older version [{1}] (sp version {2})", safeFullPath, restoreVersionNumber, restoreSpVersionLabel);
-                        }
-
-                        // We only do two attempts
-                        for (int i = 0 ; i < 2 ; i++)
-                        {
-                            clientContext.Load(newVersion);
-                            clientContext.Load(newVersion.ListItemAllFields);
-                            session.ExecuteQuery();
-
-                            ContentTypeId finalId = newVersion.ListItemAllFields["ContentTypeId"] as ContentTypeId;
-                            if (finalId.StringValue == contentType.Id.StringValue)
+                            // Something went wrong, and we're still checked out ... undo the checkout
+                            if (newVersion != null)
                             {
-                                tracker.TrackProgress("Confirmed content type [{0}] is set for [{1}] upon import completion", contentType.Name, safeFullPath);
-                                break;
+                                newVersion.RefreshLoad();
+                                session.ExecuteQuery();
+                                if (newVersion.CheckOutType != CheckOutType.None)
+                                {
+                                    newVersion.UndoCheckOut();
+                                    session.ExecuteQuery();
+                                }
                             }
-                            else if (i > 0)
-                            {
-                                // If on the second check we failed, we don't try to set it again, and we simply explode accordingly
-                                ContentType actual = this.ContentTypeImporter.ResolveContentType(finalId).Type;
-                                throw new Exception(string.Format("Failed to re-set the content type for [{0}] - expected to set [{1}] with ID={2} but was actually set as [{3}] with ID={4} (GUID=[{5}] UniqueId=[{6}])", safeFullPath, contentType.Name, contentType.Id, actual.Name, finalId));
-                            }
-
-                            // One last attempt...try to set the type...
-                            if (newVersion.CheckOutType == CheckOutType.None) newVersion.CheckOut();
-                            newVersion.ListItemAllFields["ContentTypeId"] = contentType.Id;
-                            newVersion.ListItemAllFields.Update();
-                            newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
-                            session.ExecuteQuery();
-                            ShowProgress();
                         }
-
-                        if (autoPublish)
+                        catch (Exception e2)
                         {
-                            newVersion.Publish(comment);
-                            session.ExecuteQuery();
-                            ShowProgress();
-                            tracker.TrackProgress("Automatically published document [{0}]", safeFullPath);
+                            Log.Error(string.Format("Failed to undo the checkout for document [{0}]", safeFullPath), e2);
                         }
+                        throw e;
                     }
                 }
             }
@@ -880,7 +911,7 @@ namespace Armedia.CMSMF.SharePoint.Import
         protected ICollection<DocumentInfo> IdentifyPending(ICollection<DocumentInfo> failed)
         {
             ICollection<DocumentInfo> pending = new List<DocumentInfo>();
-            using (XmlReader documents = this.ImportContext.LoadIndex("documents.xml"))
+            using (XmlReader documents = this.ImportContext.LoadIndex("documents"))
             {
                 HashSet<string> histories = new HashSet<string>();
                 while (documents.ReadToFollowing("document") && !this.Abort)
@@ -922,7 +953,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         continue;
                     }
 
-                    DocumentInfo docInfo = new DocumentInfo(this.Log, historyId, path, name, this.ImportContext.FormatContentLocation(location));
+                    DocumentInfo docInfo = new DocumentInfo(this.Log, historyId, path, name, this.ImportContext.FormatMetadataLocation(location));
                     if (docInfo.Tracker.Completed)
                     {
                         Log.Debug(string.Format("Skipping file [{0}] - already completed", docInfo.SourcePath));

@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -68,6 +69,9 @@ public class DocumentVersionT extends SysObjectT {
 	@XmlElementWrapper(name = "contents", required = false)
 	@XmlElement(name = "content", required = false)
 	protected List<ContentStreamT> contents;
+
+	@XmlTransient
+	protected String contentPath;
 
 	public String getFormat() {
 		return this.format;
@@ -130,6 +134,14 @@ public class DocumentVersionT extends SysObjectT {
 			this.contents = new ArrayList<>();
 		}
 		return this.contents;
+	}
+
+	public String getContentPath() {
+		return this.contentPath;
+	}
+
+	public void setContentPath(String contentPath) {
+		this.contentPath = contentPath;
 	}
 
 	@Override

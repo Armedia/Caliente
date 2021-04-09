@@ -39,7 +39,7 @@ namespace Armedia.CMSMF.SharePoint.Import
         {
             this.Log.Info("Loading the format information");
             this.Formats = new Dictionary<string, Format>();
-            using (XmlReader xml = this.ImportContext.LoadIndex("formats.xml"))
+            using (XmlReader xml = this.ImportContext.LoadIndex("formats"))
             {
                 while (xml.ReadToFollowing("format"))
                 {

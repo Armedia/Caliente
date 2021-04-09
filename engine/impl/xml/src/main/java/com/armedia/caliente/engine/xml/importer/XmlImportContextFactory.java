@@ -53,7 +53,7 @@ public class XmlImportContextFactory
 
 	@Override
 	protected File locateFolder(XmlRoot session, String path) throws Exception {
-		File f = Tools.canonicalize(new File(session.getFile(), path));
+		File f = Tools.canonicalize(session.getPath().resolve(path).toFile());
 		if (f.exists() && f.isDirectory()) { return f; }
 		return null;
 	}

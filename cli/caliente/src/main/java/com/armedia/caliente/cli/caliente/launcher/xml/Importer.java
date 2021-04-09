@@ -77,7 +77,7 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 
-		String target = commandValues.getString(CLIParam.from);
+		String target = commandValues.getString(CLIParam.data);
 		if (target == null) {
 			target = ".";
 		}

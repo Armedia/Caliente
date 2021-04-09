@@ -255,6 +255,25 @@ public final class UcmAttributes {
 		return getDate(getKey(att), null);
 	}
 
+	public long getLong(String name, long def) {
+		Long v = getLong(name);
+		return (v != null ? v.longValue() : def);
+	}
+
+	public Long getLong(String name) {
+		CmfValue v = getValue(name);
+		if ((v == null) || v.isNull()) { return null; }
+		return v.asLong();
+	}
+
+	public long getLong(UcmAtt att, long def) {
+		return getLong(getKey(att), def);
+	}
+
+	public Long getLong(UcmAtt att) {
+		return getLong(getKey(att));
+	}
+
 	public int getInteger(String name, int def) {
 		Integer v = getInteger(name);
 		return (v != null ? v.intValue() : def);
