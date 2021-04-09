@@ -26,25 +26,30 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.xml.common;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Set;
 
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.Tools;
 
 public final class XmlCommon {
 	public static final String TARGET_NAME = "xml";
+	public static final String METADATA_ROOT = "xml-metadata";
 	public static final Set<String> TARGETS = Collections.singleton(XmlCommon.TARGET_NAME);
 
 	private XmlCommon() {
 
 	}
 
-	public static File getRootDirectory(CfgTools cfg) throws IOException {
+	public static Path getRootDirectory(CfgTools cfg) throws IOException {
 		String root = cfg.getString(XmlSetting.ROOT);
 		if (root == null) { return null; }
-		return Tools.canonicalize(new File(root));
+		return Paths.get(root).normalize().toAbsolutePath();
+	}
+
+	public static Path getMetadataRoot(Path content) {
+		return content.resolveSibling(XmlCommon.METADATA_ROOT);
 	}
 }

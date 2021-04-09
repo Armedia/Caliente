@@ -28,6 +28,8 @@ package com.armedia.caliente.engine.xml.common;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 
 import org.apache.commons.io.FilenameUtils;
@@ -36,75 +38,75 @@ import com.armedia.commons.utilities.Tools;
 
 public final class XmlRoot implements Comparable<XmlRoot> {
 
-	private final String path;
-	private final File file;
+	private final Path path;
+	private final Path metadataRoot;
 
-	static String normalize(String path) throws IOException {
+	static String normalize(String path) {
 		String p2 = FilenameUtils.normalize(path);
-		if (p2 == null) { throw new IOException(String.format("The path [%s] contains too many '..' elements", path)); }
+		if (p2 == null) {
+			throw new RuntimeException(String.format("The path [%s] contains too many '..' elements", path));
+		}
 		return p2;
 	}
 
-	public XmlRoot(File path) throws IOException {
-		this(path.getCanonicalPath());
+	public XmlRoot(Path path) throws IOException {
+		this.path = path.toAbsolutePath();
+		this.metadataRoot = this.path.resolve(XmlCommon.METADATA_ROOT);
 	}
 
-	public XmlRoot(String path) throws IOException {
-		this.file = Tools.canonicalize(new File(XmlRoot.normalize(path)));
-		this.path = this.file.getPath();
-	}
-
-	public String getPath() {
+	public Path getPath() {
 		return this.path;
 	}
 
-	public File getFile() {
-		return this.file;
+	public Path getMetadataRoot() {
+		return this.metadataRoot;
 	}
 
 	public String relativize(String path) throws IOException {
-		File f = new File(XmlRoot.normalize(path));
-		if (!f.isAbsolute()) {
-			f = new File(this.file, path);
-		}
-		String str = f.getPath().substring(this.path.length());
+		Path p = relativize(Paths.get(XmlRoot.normalize(path)));
+		String str = p.toString();
 		if (str.startsWith(File.separator)) { return str.substring(1); }
-		throw new IOException(String.format("The path [%s] is not a child of [%s]", path, this.path));
+		throw new IOException(String.format("The path [%s] is not a child of [%s]", path, this.metadataRoot));
 	}
 
-	public File relativize(File file) throws IOException {
-		return new File(relativize(file.getPath()));
+	public Path relativize(Path p) {
+		p = p.normalize();
+		if (!p.isAbsolute()) {
+			p = this.metadataRoot.resolve(p);
+		}
+		return this.metadataRoot.relativize(p);
 	}
 
-	public File makeAbsolute(File file) throws IOException {
-		return makeAbsolute(file.getPath());
+	public Path makeAbsolute(Path path) {
+		if (path.isAbsolute()) { return path; }
+		return this.metadataRoot.resolve(path);
 	}
 
-	public File makeAbsolute(String path) throws IOException {
-		return new File(this.file, XmlRoot.normalize(path)).getAbsoluteFile();
+	public Path makeAbsolute(String path) {
+		return makeAbsolute(XmlRoot.normalize(path));
 	}
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.file);
+		return Tools.hashTool(this, null, this.path);
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		XmlRoot other = XmlRoot.class.cast(obj);
-		if (!Objects.equals(this.file, other.file)) { return false; }
+		if (!Objects.equals(this.path, other.path)) { return false; }
 		return true;
 	}
 
 	@Override
 	public int compareTo(XmlRoot o) {
 		if (o == null) { return 1; }
-		return this.file.compareTo(o.file);
+		return this.path.compareTo(o.path);
 	}
 
 	@Override
 	public String toString() {
-		return String.format("XmlRoot [%s]", this.file);
+		return String.format("XmlRoot [%s]", this.path);
 	}
 }

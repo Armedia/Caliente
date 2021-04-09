@@ -167,7 +167,7 @@ namespace Armedia.CMSMF.SharePoint.Import
         {
             this.UserGroupImporter = userGroupImporter;
             Dictionary<string, AccessControlList> acls = new Dictionary<string, AccessControlList>();
-            using (XmlReader aclsXml = this.ImportContext.LoadIndex("acls.xml"))
+            using (XmlReader aclsXml = this.ImportContext.LoadIndex("acls"))
             {
                 while (aclsXml.ReadToFollowing("acl"))
                 {

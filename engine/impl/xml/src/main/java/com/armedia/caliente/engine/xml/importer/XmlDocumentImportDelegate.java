@@ -27,7 +27,6 @@
 package com.armedia.caliente.engine.xml.importer;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
@@ -54,6 +53,8 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.tools.MimeTools;
 
 public class XmlDocumentImportDelegate extends XmlImportDelegate {
+
+	public static final String NO_CONTENT_FLAG = ":NO_CONTENT:";
 
 	protected XmlDocumentImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
@@ -95,19 +96,20 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			throw new ImportException("Failed to parse a date value", e);
 		}
 
-		v.setName(getAttributeValue(IntermediateAttribute.NAME).asString());
+		v.setName(this.cmfObject.getName());
 		v.setParentId(getAttributeValue(IntermediateAttribute.PARENT_ID).asString());
-		String path = getPropertyValue(IntermediateProperty.PATH).asString();
-		if (StringUtils.isEmpty(path)) {
-			path = "/";
-		}
-		v.setSourcePath(path);
+		v.setSourcePath(getFixedPath(ctx));
 		v.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());
 		v.setFormat(getAttributeValue(IntermediateAttribute.CONTENT_STREAM_MIME_TYPE).asString());
 		v.setHistoryId(getAttributeValue(IntermediateAttribute.VERSION_SERIES_ID).asString());
 		v.setAntecedentId(getAttributeValue(IntermediateAttribute.VERSION_ANTECEDENT_ID).asString());
 		v.setCurrent(getAttributeValue(IntermediateAttribute.IS_LATEST_VERSION).asBoolean());
 		v.setVersion(getAttributeValue(IntermediateAttribute.VERSION_LABEL).asString());
+
+		String contentPath = ctx.getContentStore().renderContentPath(this.cmfObject,
+			new CmfContentStream(this.cmfObject, 0));
+		contentPath = String.format("%s.document.xml", contentPath);
+		v.setContentPath(contentPath);
 
 		int contents = 0;
 		final boolean skipRenditions = this.factory.isSkipRenditions();
@@ -116,7 +118,8 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 				// Skip the non-default rendition
 				continue;
 			}
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().findHandle(info);
+			CmfContentStore<?, ?>.Handle<CmfValue> h = ctx.getContentStore().findHandle(translator, this.cmfObject,
+				info);
 			final File f;
 			try {
 				f = h.getFile();
@@ -130,7 +133,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			ContentStreamT xml = new ContentStreamT();
 			xml.setFileName(info.getFileName());
 			// xml.setHash(null);
-			xml.setLocation(this.factory.relativizeXmlLocation(f.getAbsolutePath()));
+			xml.setLocation(this.factory.relativizeContentLocation(f.getAbsoluteFile().toPath()));
 			xml.setMimeType(info.getMimeType().getBaseType());
 			xml.setRenditionId(info.getRenditionIdentifier());
 			xml.setRenditionPage(info.getRenditionPage());
@@ -145,30 +148,14 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
 		if (contents == 0) {
 			// Generate a placeholder, empty file
-			CmfContentStream info = new CmfContentStream(this.cmfObject, 0);
-			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().findHandle(info);
-			File f = null;
-			try {
-				f = h.getFile(true);
-				if (f == null) {
-					throw new CmfStorageException("The given content store doesn't support file-level access");
-				}
-				f.createNewFile();
-			} catch (IOException e) {
-				// Failed to get the file, so we can't handle this
-				throw new CmfStorageException(
-					String.format("Failed to generate the placeholder content file for %s at [%s]",
-						this.cmfObject.getDescription(), f.getAbsolutePath()),
-					e);
-			}
 			ContentStreamT xml = new ContentStreamT();
 			xml.setFileName(v.getName());
 			// xml.setHash(null);
-			xml.setLocation(this.factory.relativizeXmlLocation(f.getAbsolutePath()));
+			xml.setLocation(StringUtils.EMPTY);
 			xml.setMimeType(MimeTools.DEFAULT_MIME_TYPE.toString());
-			xml.setRenditionId(info.getRenditionIdentifier());
-			xml.setRenditionPage(info.getRenditionPage());
-			xml.setModifier(info.getModifier());
+			xml.setRenditionId(StringUtils.EMPTY);
+			xml.setRenditionPage(0);
+			xml.setModifier(StringUtils.EMPTY);
 			xml.setSize(0);
 			v.getContents().add(xml);
 		}

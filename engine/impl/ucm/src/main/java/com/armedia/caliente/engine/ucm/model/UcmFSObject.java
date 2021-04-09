@@ -137,6 +137,14 @@ public abstract class UcmFSObject extends UcmModelObject {
 		return this.attributes.getDate(att, def);
 	}
 
+	public final Long getLong(UcmAtt att) {
+		return this.attributes.getLong(att);
+	}
+
+	public final long getLong(UcmAtt att, long def) {
+		return this.attributes.getLong(att, def);
+	}
+
 	public final Integer getInteger(UcmAtt att) {
 		return this.attributes.getInteger(att);
 	}

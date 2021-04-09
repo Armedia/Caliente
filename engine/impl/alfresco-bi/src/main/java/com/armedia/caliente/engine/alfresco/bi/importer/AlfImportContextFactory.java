@@ -27,8 +27,6 @@
 package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.Map;
 
 import org.slf4j.Logger;
 
@@ -37,12 +35,9 @@ import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportContextFactory;
-import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
@@ -88,14 +83,5 @@ public class AlfImportContextFactory
 	@Override
 	protected String calculateProductVersion(AlfRoot session) throws Exception {
 		return "1.0";
-	}
-
-	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean current)
-		throws ImportException {
-		try {
-			return getObjectStore().getObjectNames(refs, current);
-		} catch (CmfStorageException e) {
-			throw new ImportException(String.format("Failed to resolve the object names for IDs %s", refs), e);
-		}
 	}
 }
