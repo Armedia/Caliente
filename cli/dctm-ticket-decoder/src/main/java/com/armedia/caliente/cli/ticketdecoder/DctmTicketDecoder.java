@@ -167,8 +167,6 @@ public class DctmTicketDecoder {
 
 		int ret = 1;
 		try (Stream<String> sourceStream = sourceIterator.stream()) {
-			final PooledWorkers<IDfSession, IDfId> extractors = new PooledWorkers<>();
-
 			final AtomicLong submittedCounter = new AtomicLong(0);
 			final AtomicLong outputCounter = new AtomicLong(0);
 			final Collection<Pair<IDfId, Exception>> failedSubmissions = new ShareableCollection<>(new LinkedList<>());
@@ -176,19 +174,28 @@ public class DctmTicketDecoder {
 			try (ContentPersistor persistor = new AsyncContentPersistorWrapper(this.threadGroup,
 				buildPersistor(outputInfo))) {
 				persistor.initialize();
+				final PooledWorkers<IDfSession, IDfId> extractors = //
+					new PooledWorkers.Builder<IDfSession, IDfId, Exception>() //
+						.logic( //
+							new ExtractorLogic(pool //
+								, (c) -> {
+									this.console.info("Persisting {}", c);
+									persistor.persist(c);
+									outputCounter.incrementAndGet();
+								} //
+								, cli.getString(CLIParam.content_filter) //
+								, cli.getString(CLIParam.rendition_filter) //
+								, cli.getStrings(CLIParam.prefer_rendition) //
+							) //
+						) //
+						.threads(threads) //
+						.name("Extractor") //
+						.waitForWork(true) //
+						.start() //
+				;
 				try {
 					final Set<String> submittedSources = new HashSet<>();
 					this.console.info("Starting the background searches...");
-					extractors.start(new ExtractorLogic(pool //
-						, (c) -> {
-							this.console.info("Persisting {}", c);
-							persistor.persist(c);
-							outputCounter.incrementAndGet();
-						} //
-						, cli.getString(CLIParam.content_filter) //
-						, cli.getString(CLIParam.rendition_filter) //
-						, cli.getStrings(CLIParam.prefer_rendition) //
-					), Math.max(1, threads), "Extractor", true);
 					sourceStream //
 						.filter((source) -> submittedSources.add(source)) //
 						.forEach((source) -> {
