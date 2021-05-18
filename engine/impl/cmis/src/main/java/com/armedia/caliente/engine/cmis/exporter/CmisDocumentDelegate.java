@@ -145,7 +145,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			IntermediateAttribute.IS_LATEST_VERSION.type, CmfValue.of(this.object.isLatestVersion())));
 
 		Document headVersion = null;
-		if (this.object.isLatestVersion()) {
+		if (this.object.isLatestVersion() || this.successors.isEmpty()) {
 			headVersion = this.object;
 		} else {
 			headVersion = this.successors.stream().filter(Document::isLatestVersion).findFirst().orElse(null);

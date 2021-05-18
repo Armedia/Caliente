@@ -140,7 +140,6 @@ public class DctmTypeDumper {
 
 		int ret = 1;
 		try {
-			final PooledWorkers<IDfSession, String> extractors = new PooledWorkers<>();
 			final ConcurrentMap<String, IDfType> types = new ConcurrentHashMap<>();
 			final ConcurrentMap<String, String> typeNames = new ConcurrentHashMap<>();
 			final CheckedConsumer<IDfType, DfException> typeConsumer = (t) -> {
@@ -173,7 +172,14 @@ public class DctmTypeDumper {
 			);
 
 			this.console.info("Starting the type search...");
-			extractors.start(extractorLogic, Math.max(1, threads), "Extractor", true);
+			final PooledWorkers<IDfSession, String> extractors = //
+				new PooledWorkers.Builder<IDfSession, String, Exception>() //
+					.logic(extractorLogic) //
+					.threads(threads) //
+					.name("Extractor") //
+					.waitForWork(true) //
+					.start() //
+			;
 			final IDfSession session = pool.acquireSession();
 			try {
 				final String dql = "select super_name, name from dm_type order by 1, 2";
