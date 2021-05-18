@@ -1006,13 +1006,17 @@ public abstract class ExportEngine<//
 			}
 		};
 
-		final PooledWorkers<SessionWrapper<SESSION>, ExportTarget> worker = new PooledWorkers<>();
-
 		this.log.debug("Locating export results...");
 		try {
 			// Fire off the workers
 			listener.exportStarted(exportState);
-			worker.start(logic, threadCount, "Exporter", true);
+			final PooledWorkers<SessionWrapper<SESSION>, ExportTarget> worker = //
+				new PooledWorkers.Builder<SessionWrapper<SESSION>, ExportTarget, Exception>().logic(logic) //
+					.threads(threadCount) //
+					.name("Exporter") //
+					.waitForWork(true) //
+					.start() //
+			;
 			try {
 				final int reportCount = 1000;
 				final AtomicReference<String> currentSource = new AtomicReference<>(null);
