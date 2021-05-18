@@ -115,8 +115,13 @@ public class Entrypoint extends AbstractEntrypoint {
 			cli.getStrings(CLIParam.model), reportMarker);
 		final long start = System.currentTimeMillis();
 		try {
-			final PooledWorkers<Object, Path> workers = new PooledWorkers<>();
-			workers.start((o, p) -> validator.validate(p), threads, "Validator", true);
+			final PooledWorkers<Object, Path> workers = new PooledWorkers.Builder<Object, Path, RuntimeException>()
+				.logic((o, p) -> validator.validate(p)) //
+				.threads(threads) //
+				.name("Validator") //
+				.waitForWork(true) //
+				.start() //
+			;
 
 			try {
 				Files.walkFileTree(validator.getSourceRoot(), validator.new FileVisitor() {

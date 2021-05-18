@@ -124,9 +124,13 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 			}, //
 			(p, i, e) -> this.console.error("******** EXCEPTION CAUGHT PROCESSING ITEM # {} ********", i, e), //
 			(p) -> p.getLeft().logout());
-		final PooledWorkers<Pair<Session, ContentStoreClient>, Integer> writers = new PooledWorkers<>();
+		final PooledWorkers<Pair<Session, ContentStoreClient>, Integer> writers = //
+			new PooledWorkers.Builder<Pair<Session, ContentStoreClient>, Integer, Exception>() //
+				.logic(logic) //
+				.threads(this.threads) //
+				.start() //
+		;
 		try {
-			writers.start(logic, this.threads);
 			for (int i = 0; i < this.testCount; i++) {
 				writers.addWorkItemNonblock(i);
 			}
@@ -176,10 +180,15 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 			(session, target, e) -> this.console.error("******** EXCEPTION CAUGHT PROCESSING [{}] (#{})",
 				target.getLeft(), target.getRight(), e),
 			(session) -> session.logout());
-		final PooledWorkers<Session, Pair<String, Long>> readers = new PooledWorkers<>();
+
+		final PooledWorkers<Session, Pair<String, Long>> readers = //
+			new PooledWorkers.Builder<Session, Pair<String, Long>, Exception>() //
+				.logic(logic) //
+				.threads(this.threads) //
+				.start() //
+		;
 
 		try {
-			readers.start(logic, this.threads);
 			this.elements.forEach(readers::addWorkItemNonblock);
 		} finally {
 			List<Pair<String, Long>> remaining = readers.waitForCompletion();
