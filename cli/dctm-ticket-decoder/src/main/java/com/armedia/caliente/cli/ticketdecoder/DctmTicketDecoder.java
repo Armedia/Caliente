@@ -221,8 +221,8 @@ public class DctmTicketDecoder {
 						"Submitted a total of {} work items for extraction from ({} failed), waiting for generation to conclude...",
 						submittedCounter.get(), failedSubmissions.size());
 				} finally {
-					extractors.waitForCompletion();
 					this.console.info("Object retrieval is complete, will wait for the generators to finish");
+					extractors.waitForCompletion();
 				}
 			} finally {
 				this.console.info("Generated a total of {} content elements of the {} submitted", outputCounter.get(),

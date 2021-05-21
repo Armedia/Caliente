@@ -29,6 +29,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.armedia.caliente</groupId>
+			<artifactId>caliente-tools</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.codehaus.woodstox</groupId>
 			<artifactId>stax2-api</artifactId>
 			<version>4.2.1</version>
