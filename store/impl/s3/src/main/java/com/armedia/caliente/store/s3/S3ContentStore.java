@@ -131,14 +131,16 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		CHARS_BAD = Tools.freezeSet(s);
 	}
 
-	private static final CsvFormatter FORMAT = new CsvFormatter("NUMBER", //
+	private static final CsvFormatter FORMAT = new CsvFormatter( //
 		"TYPE", //
 		"ID", //
 		"IDX", //
 		"RENDITION_ID", //
 		"RENDITION_PAGE", //
 		"LENGTH", //
-		"LOCATOR" //
+		"S3_BUCKET", //
+		"S3_KEY", //
+		"S3_VERSION_ID" //
 	);
 
 	private final CheckedConsumer<Handle<?>, Exception> nullConsumer = (h) -> {
@@ -175,6 +177,8 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 			CmfObject<?> object = item.getCmfObject();
 			CmfContentStream stream = item.getInfo();
 
+			S3Locator locator = getLocator(item);
+
 			Object[] columns = {
 				object.getType().name(), //
 				object.getId(), //
@@ -182,7 +186,9 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 				stream.getRenditionIdentifier(), //
 				stream.getRenditionPage(), //
 				stream.getLength(), //
-				item.getLocator(), //
+				locator.bucket(), //
+				locator.key(), //
+				locator.versionId(), //
 			};
 
 			S3ContentStore.this.csvWriter.println(S3ContentStore.FORMAT.render(columns));
