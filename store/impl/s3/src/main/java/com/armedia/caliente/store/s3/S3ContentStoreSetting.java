@@ -46,6 +46,7 @@ public enum S3ContentStoreSetting implements ConfigurationSetting {
 	BASE_PATH,
 	URI_ORGANIZER,
 	FAIL_ON_COLLISIONS(false),
+	CSV_MAPPINGS(),
 	STORE_PROPERTIES(true),
 	//
 	;
