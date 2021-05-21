@@ -88,6 +88,7 @@ import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.CheckedConsumer;
 import com.armedia.commons.utilities.io.CloseUtils;
 import com.armedia.commons.utilities.xml.XmlTools;
 
@@ -140,6 +141,8 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		"LOCATOR" //
 	);
 
+	private final CheckedConsumer<Handle<?>, Exception> nullConsumer = (h) -> {
+	};
 	private final S3Client client;
 	private final Path localDir;
 	private final String bucket;
@@ -159,6 +162,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 	private final PooledWorkers<?, Handle<?>> contentWorkers;
 	private final PrintWriter csvWriter;
 	protected final boolean propertiesLoaded;
+	private final CheckedConsumer<Handle<?>, Exception> contentStoredConsumer;
 
 	private final PooledWorkersLogic<Object, Handle<?>, IOException> contentLogLogic = new PooledWorkersLogic<Object, Handle<?>, IOException>() {
 
@@ -348,14 +352,13 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		v = getProperty(S3ContentStoreSetting.FAIL_ON_COLLISIONS.getLabel());
 		this.failOnCollisions = ((v != null) && v.asBoolean());
 
-		Path csvWriterPath = null;
-		v = getProperty(S3ContentStoreSetting.CSV_MAPPINGS.getLabel());
-		csvWriterPath = ((v != null) ? this.localDir.resolve(v.asString()) : null);
-
-		if (csvWriterPath != null) {
+		String csvWriter = settings.getString(S3ContentStoreSetting.CSV_MAPPINGS);
+		if (StringUtils.isNotBlank(csvWriter)) {
+			final Path csvWriterPath = this.localDir.resolve(csvWriter);
+			this.log.debug("Writing CSV mappings to [{}]", csvWriterPath);
 			try {
 				this.csvWriter = new PrintWriter(Files.newBufferedWriter(csvWriterPath, StandardOpenOption.CREATE,
-					StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.APPEND));
+					StandardOpenOption.TRUNCATE_EXISTING));
 				// Render the headers...
 				this.csvWriter.println(S3ContentStore.FORMAT.renderHeaders());
 				this.csvWriter.flush();
@@ -369,9 +372,11 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 				.waitForWork(true) //
 				.start() //
 			;
+			this.contentStoredConsumer = this.contentWorkers::addWorkItem;
 		} else {
 			this.csvWriter = null;
 			this.contentWorkers = null;
+			this.contentStoredConsumer = this.nullConsumer;
 		}
 	}
 
@@ -382,8 +387,12 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 
 	@Override
 	protected <VALUE> void contentStored(CmfContentStore<S3Locator, S3StoreOperation>.Handle<VALUE> handle) {
-		// TODO Auto-generated method stub
-		super.contentStored(handle);
+		try {
+			this.contentStoredConsumer.accept(handle);
+		} catch (Exception e) {
+			this.log.warn("Failed to add the mapping for [{}] -> [{}]", handle.getCmfObject().getId(),
+				handle.getLocator());
+		}
 	}
 
 	@Override
@@ -746,15 +755,17 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 	@Override
 	protected boolean doClose(boolean cleanupIfEmpty) {
 		if (this.contentWorkers != null) {
-			this.log.info("Closing the S3 object store, waiting for the content log to complete");
-			List<Handle<?>> l = this.contentWorkers.waitForCompletion();
-			if (!l.isEmpty()) {
-				this.log.warn("{} content mappings still waiting to be written out", l.size());
-				l.forEach((h) -> this.log.warn("[{}] -> [{}]", h.getCmfObject().getId(), h.getLocator()));
+			try {
+				this.log.info("Closing the S3 object store, waiting for the content log to complete");
+				List<Handle<?>> l = this.contentWorkers.waitForCompletion();
+				if (!l.isEmpty()) {
+					this.log.warn("{} content mappings still waiting to be written out", l.size());
+					l.forEach((h) -> this.log.warn("[{}] -> [{}]", h.getCmfObject().getId(), h.getLocator()));
+				}
+			} finally {
+				// Close out the CSV report...
+				CloseUtils.closeQuietly(this.csvWriter);
 			}
-
-			// Close out the CSV report...
-			CloseUtils.closeQuietly(this.csvWriter);
 		}
 
 		if (this.modified.get() && this.storeProperties) {
