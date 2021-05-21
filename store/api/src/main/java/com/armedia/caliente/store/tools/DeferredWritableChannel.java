@@ -28,8 +28,7 @@ public abstract class DeferredWritableChannel extends BaseShareableLockable impl
 		} else {
 			this.tempFile = Files.createTempFile(null, null);
 		}
-		this.out = FileChannel.open(this.tempFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
-			StandardOpenOption.APPEND);
+		this.out = FileChannel.open(this.tempFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 	}
 
 	@Override
