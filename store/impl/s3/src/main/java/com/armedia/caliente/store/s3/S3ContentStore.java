@@ -32,6 +32,7 @@ package com.armedia.caliente.store.s3;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -43,6 +44,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -80,9 +82,13 @@ import com.armedia.caliente.store.s3.S3ContentStoreFactory.CredentialType;
 import com.armedia.caliente.store.s3.xml.PropertiesLoader;
 import com.armedia.caliente.store.s3.xml.PropertyT;
 import com.armedia.caliente.store.s3.xml.StorePropertiesT;
+import com.armedia.caliente.tools.CsvFormatter;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
+import com.armedia.commons.utilities.PooledWorkers;
+import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.io.CloseUtils;
 import com.armedia.commons.utilities.xml.XmlTools;
 
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -124,6 +130,16 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		CHARS_BAD = Tools.freezeSet(s);
 	}
 
+	private static final CsvFormatter FORMAT = new CsvFormatter("NUMBER", //
+		"TYPE", //
+		"ID", //
+		"IDX", //
+		"RENDITION_ID", //
+		"RENDITION_PAGE", //
+		"LENGTH", //
+		"LOCATOR" //
+	);
+
 	private final S3Client client;
 	private final Path localDir;
 	private final String bucket;
@@ -140,7 +156,41 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 	private final boolean translateAttributeNames;
 	private final boolean supportsVersions;
 	private final boolean failOnCollisions;
+	private final PooledWorkers<?, Handle<?>> contentWorkers;
+	private final PrintWriter csvWriter;
 	protected final boolean propertiesLoaded;
+
+	private final PooledWorkersLogic<Object, Handle<?>, IOException> contentLogLogic = new PooledWorkersLogic<Object, Handle<?>, IOException>() {
+
+		@Override
+		public void process(Object state, CmfContentStore<S3Locator, S3StoreOperation>.Handle<?> item)
+			throws IOException {
+			// Shouldn't be necessary, but still...
+			if (item == null) { return; }
+
+			CmfObject<?> object = item.getCmfObject();
+			CmfContentStream stream = item.getInfo();
+
+			Object[] columns = {
+				object.getType().name(), //
+				object.getId(), //
+				stream.getIndex(), //
+				stream.getRenditionIdentifier(), //
+				stream.getRenditionPage(), //
+				stream.getLength(), //
+				item.getLocator(), //
+			};
+
+			S3ContentStore.this.csvWriter.println(S3ContentStore.FORMAT.render(columns));
+			S3ContentStore.this.csvWriter.flush();
+		}
+
+		@Override
+		public void handleFailure(Object state, Handle<?> item, IOException raised) {
+			S3ContentStore.this.log.warn("Failed to render the mapping record for [{}] -> [{}]",
+				item.getCmfObject().getId(), getLocator(item), raised);
+		}
+	};
 
 	public S3ContentStore(CmfStore<?> parent, CfgTools settings, boolean cleanData) throws CmfStorageException {
 		super(parent);
@@ -297,11 +347,43 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 
 		v = getProperty(S3ContentStoreSetting.FAIL_ON_COLLISIONS.getLabel());
 		this.failOnCollisions = ((v != null) && v.asBoolean());
+
+		Path csvWriterPath = null;
+		v = getProperty(S3ContentStoreSetting.CSV_MAPPINGS.getLabel());
+		csvWriterPath = ((v != null) ? this.localDir.resolve(v.asString()) : null);
+
+		if (csvWriterPath != null) {
+			try {
+				this.csvWriter = new PrintWriter(Files.newBufferedWriter(csvWriterPath, StandardOpenOption.CREATE,
+					StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.APPEND));
+				// Render the headers...
+				this.csvWriter.println(S3ContentStore.FORMAT.renderHeaders());
+				this.csvWriter.flush();
+			} catch (IOException e) {
+				throw new CmfStorageException("Failed to open the CSV mapper at [" + csvWriterPath + "]", e);
+			}
+			this.contentWorkers = new PooledWorkers.Builder<Object, Handle<?>, IOException>() //
+				.logic(this.contentLogLogic) //
+				.threads(1) //
+				.name("S3-CSV-Mapper") //
+				.waitForWork(true) //
+				.start() //
+			;
+		} else {
+			this.csvWriter = null;
+			this.contentWorkers = null;
+		}
 	}
 
 	protected void initProperties() throws CmfStorageException {
 		final boolean failOnCollisions = this.settings.getBoolean(S3ContentStoreSetting.FAIL_ON_COLLISIONS);
 		setProperty(S3ContentStoreSetting.FAIL_ON_COLLISIONS.getLabel(), CmfValue.of(failOnCollisions));
+	}
+
+	@Override
+	protected <VALUE> void contentStored(CmfContentStore<S3Locator, S3StoreOperation>.Handle<VALUE> handle) {
+		// TODO Auto-generated method stub
+		super.contentStored(handle);
 	}
 
 	@Override
@@ -663,6 +745,18 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 
 	@Override
 	protected boolean doClose(boolean cleanupIfEmpty) {
+		if (this.contentWorkers != null) {
+			this.log.info("Closing the S3 object store, waiting for the content log to complete");
+			List<Handle<?>> l = this.contentWorkers.waitForCompletion();
+			if (!l.isEmpty()) {
+				this.log.warn("{} content mappings still waiting to be written out", l.size());
+				l.forEach((h) -> this.log.warn("[{}] -> [{}]", h.getCmfObject().getId(), h.getLocator()));
+			}
+
+			// Close out the CSV report...
+			CloseUtils.closeQuietly(this.csvWriter);
+		}
+
 		if (this.modified.get() && this.storeProperties) {
 			try {
 				storeProperties();
