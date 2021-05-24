@@ -574,6 +574,8 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		// TODO: How do we handle multivalued attributes?
 		final Map<String, String> metadata = new LinkedHashMap<>();
 		if (this.attachMetadata) {
+			// TODO: We need to be careful here to gauge the size of the metadata since it may
+			// exceed the maximum allowed size ... can it perhaps be attached afterwards?
 			final CmfObject<VALUE> cmfObject = handle.getCmfObject();
 			final CmfObject.Archetype type = cmfObject.getType();
 			final CmfAttributeTranslator<VALUE> translator = handle.getTranslator();

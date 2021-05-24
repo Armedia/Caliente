@@ -705,7 +705,7 @@ public abstract class ExportEngine<//
 				if ((contentStreams != null) && !contentStreams.isEmpty()) {
 					objectStore.setContentStreams(marshaled, contentStreams);
 				}
-			} catch (CmfStorageException e) {
+			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to execute the content storage for %s", logLabel), e);
 			}
 
