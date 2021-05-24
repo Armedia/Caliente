@@ -760,6 +760,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 				} finally {
 					if (temp != null) {
 						CloseUtils.closeQuietly(in);
+						temp.deleteQuietly();
 					}
 					if (tx && !ok) {
 						try {
