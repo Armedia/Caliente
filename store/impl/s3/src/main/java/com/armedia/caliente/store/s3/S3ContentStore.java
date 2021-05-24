@@ -32,6 +32,7 @@ package com.armedia.caliente.store.s3;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -97,14 +98,16 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.BucketVersioningStatus;
+import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
-import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.model.UploadPartResponse;
 
 /**
  *
@@ -115,6 +118,8 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 	private static final String PROPERTIES_FILE = "caliente-store-properties.xml";
 	private static final String MD_ID = "caliente-id";
 	private static final String MD_HISTORY_ID = "caliente-historyId";
+
+	private static final long MIN_MULTIPART_SIZE = (5 * (int) FileUtils.ONE_MB);
 
 	private static final String CHARS_BAD_STR = "\\{}^%[]`\"~#|<>";
 	private static final Set<Character> CHARS_BAD;
@@ -537,14 +542,42 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		}
 	}
 
+	private <VALUE> Map<String, String> prepareMetadata(Handle<VALUE> handle, boolean multipart) {
+		// TODO: How do we handle multivalued attributes?
+		final Map<String, String> metadata = new LinkedHashMap<>();
+		final CmfObject<VALUE> cmfObject = handle.getCmfObject();
+		if (this.attachMetadata && !multipart) {
+			// TODO: We need to be careful here to gauge the size of the metadata since it may
+			// exceed the maximum allowed size ... can it perhaps be attached afterwards?
+			final CmfObject.Archetype type = cmfObject.getType();
+			final CmfAttributeTranslator<VALUE> translator = handle.getTranslator();
+			final CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
+			for (String attributeName : cmfObject.getAttributeNames()) {
+				CmfAttribute<VALUE> rawAttribute = cmfObject.getAttribute(attributeName);
+				if (!rawAttribute.isMultivalued() || rawAttribute.hasValues()) {
+					CmfAttribute<CmfValue> encodedAttribute = translator.encodeAttribute(type, rawAttribute);
+					CmfValue v = encodedAttribute.getValue();
+					String s = v.asString();
+
+					// Currently, we ignore blank-valued attributes
+					if (StringUtils.isNotBlank(s)) {
+						attributeName = rawAttribute.getName();
+						if (this.translateAttributeNames) {
+							attributeName = nameMapper.encodeAttributeName(type, attributeName);
+						}
+						metadata.put(fixMetadataAttributeName(attributeName), s);
+					}
+				}
+			}
+		}
+		metadata.put(S3ContentStore.MD_HISTORY_ID, cmfObject.getHistoryId());
+		metadata.put(S3ContentStore.MD_ID, cmfObject.getId());
+		return metadata;
+	}
+
 	@Override
 	protected <VALUE> Pair<S3Locator, Long> store(S3StoreOperation op, Handle<VALUE> handle, ReadableByteChannel in,
 		long size) throws CmfStorageException {
-		// TODO: Do we want to do multipart uploads for large files? If the size exceeds a
-		// threshold, we probably should...?
-
-		// TODO: How to handle the generic wildcard?
-
 		final S3Locator locator = getLocator(handle);
 
 		if (this.failOnCollisions) {
@@ -571,43 +604,94 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 			}
 		}
 
-		// TODO: How do we handle multivalued attributes?
-		final Map<String, String> metadata = new LinkedHashMap<>();
-		if (this.attachMetadata) {
-			// TODO: We need to be careful here to gauge the size of the metadata since it may
-			// exceed the maximum allowed size ... can it perhaps be attached afterwards?
-			final CmfObject<VALUE> cmfObject = handle.getCmfObject();
-			final CmfObject.Archetype type = cmfObject.getType();
-			final CmfAttributeTranslator<VALUE> translator = handle.getTranslator();
-			final CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
-			for (String attributeName : cmfObject.getAttributeNames()) {
-				CmfAttribute<VALUE> rawAttribute = cmfObject.getAttribute(attributeName);
-				if (!rawAttribute.isMultivalued() || rawAttribute.hasValues()) {
-					CmfAttribute<CmfValue> encodedAttribute = translator.encodeAttribute(type, rawAttribute);
-					CmfValue v = encodedAttribute.getValue();
-					String s = v.asString();
+		boolean singlePart = (size < S3ContentStore.MIN_MULTIPART_SIZE);
 
-					// Currently, we ignore blank-valued attributes
-					if (StringUtils.isNotBlank(s)) {
-						attributeName = rawAttribute.getName();
-						if (this.translateAttributeNames) {
-							attributeName = nameMapper.encodeAttributeName(type, attributeName);
-						}
-						metadata.put(fixMetadataAttributeName(attributeName), s);
+		final Map<String, String> metadata = prepareMetadata(handle, singlePart);
+
+		final String versionId;
+		if (singlePart) {
+
+			// Do the simple upload ...
+			versionId = this.client.putObject((R) -> {
+				locator //
+					.bucket(R::bucket) //
+					.key(R::key) //
+				;
+				R.metadata(metadata);
+			}, (size < 1 ? RequestBody.empty() : RequestBody.fromInputStream(Channels.newInputStream(in), size))) //
+				.versionId() //
+			;
+		} else {
+			final String uploadId = this.client.createMultipartUpload((R) -> {
+				locator //
+					.bucket(R::bucket) //
+					.key(R::key) //
+				;
+				R.metadata(metadata);
+			}).uploadId();
+
+			boolean ok = false;
+			try {
+				long partSize = S3ContentStore.MIN_MULTIPART_SIZE;
+				final long partCount = (size / partSize) + ((size % partSize) > 0 ? 1 : 0);
+				InputStream chunk = Channels.newInputStream(in);
+				List<CompletedPart> parts = new LinkedList<>();
+				for (int p = 1; p <= partCount; p++) {
+					final int partNumber = p;
+					if (size < partSize) {
+						partSize = size;
+					}
+					RequestBody body = RequestBody.fromInputStream(chunk, partSize);
+					UploadPartResponse rsp = this.client.uploadPart((R) -> {
+						locator //
+							.bucket(R::bucket) //
+							.key(R::key) //
+						;
+						R.uploadId(uploadId);
+						R.partNumber(partNumber);
+					}, body);
+
+					parts.add( //
+						CompletedPart.builder() //
+							.partNumber(partNumber) //
+							.eTag(rsp.eTag()) //
+							.build() //
+					);
+
+					size -= partSize;
+				}
+
+				versionId = this.client.completeMultipartUpload((R) -> {
+					locator //
+						.bucket(R::bucket) //
+						.key(R::key) //
+					;
+					R.uploadId(uploadId);
+					R.multipartUpload( //
+						CompletedMultipartUpload.builder() //
+							.parts(parts) //
+							.build() //
+					);
+				}).versionId();
+
+				ok = true;
+			} finally {
+				if (!ok) {
+					try {
+						this.client.abortMultipartUpload((R) -> {
+							locator //
+								.bucket(R::bucket) //
+								.key(R::key) //
+							;
+							R.uploadId(uploadId);
+						});
+					} catch (Exception e) {
+						this.log.warn("Failed to abort the multipart upload with ID [{}]", uploadId, e);
 					}
 				}
 			}
 		}
-		metadata.put(S3ContentStore.MD_HISTORY_ID, handle.getCmfObject().getHistoryId());
-		metadata.put(S3ContentStore.MD_ID, handle.getCmfObject().getId());
-
-		// Do the upload ...
-		PutObjectResponse rsp = this.client.putObject((R) -> {
-			locator.bucket(R::bucket);
-			locator.key(R::key);
-			R.metadata(metadata);
-		}, (size < 1 ? RequestBody.empty() : RequestBody.fromInputStream(Channels.newInputStream(in), size)));
-		return Pair.of(new S3Locator(locator.bucket(), locator.key(), (this.supportsVersions ? rsp.versionId() : null)),
+		return Pair.of(new S3Locator(locator.bucket(), locator.key(), (this.supportsVersions ? versionId : null)),
 			size);
 	}
 
