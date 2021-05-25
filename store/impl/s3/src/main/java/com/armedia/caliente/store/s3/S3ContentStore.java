@@ -308,7 +308,8 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 				organizer.getName());
 		}
 
-		this.propertiesFile = this.basePath + "/" + S3ContentStore.PROPERTIES_FILE;
+		this.propertiesFile = this.basePath + (StringUtils.isBlank(this.basePath) ? "" : "/")
+			+ S3ContentStore.PROPERTIES_FILE;
 		this.storeProperties = (parent == null) && settings.getBoolean(S3ContentStoreSetting.STORE_PROPERTIES);
 
 		boolean storeOrganizerName = true;
