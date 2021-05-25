@@ -130,9 +130,9 @@ public class LocalOrganizer extends CmfContentOrganizer {
 	}
 
 	@Override
-	public void configure(CfgTools settings) {
+	protected void doConfigure(CfgTools settings) {
 		this.removeLeading = Math.max(0, settings.getInteger(LocalOrganizer.REMOVE_LEADING, 0));
-		super.configure(settings);
+		super.doConfigure(settings);
 	}
 
 	@Override
