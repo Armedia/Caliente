@@ -51,6 +51,7 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.caliente.tools.FilenameFixer;
 import com.armedia.caliente.tools.xml.XmlProperties;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.ResourceLoader;
 import com.armedia.commons.utilities.ResourceLoaderException;
@@ -68,6 +69,8 @@ public class LocalOrganizer extends CmfContentOrganizer {
 		KEY_GENERATORS = Tools.freezeList(keyGenerators);
 	}
 
+	private static final String REMOVE_LEADING = "remove.leading";
+
 	private static URL getMimeMappings(String name) throws ResourceLoaderException {
 		return ResourceLoader.getResourceOrFile(name + LocalOrganizer.MAPPINGS_FILE);
 	}
@@ -77,6 +80,8 @@ public class LocalOrganizer extends CmfContentOrganizer {
 	private final FilenameFixer fixer = new FilenameFixer(true);
 
 	private final Map<String, String> mimeMap;
+
+	private int removeLeading = 0;
 
 	public LocalOrganizer() {
 		this(LocalOrganizer.NAME);
@@ -125,9 +130,24 @@ public class LocalOrganizer extends CmfContentOrganizer {
 	}
 
 	@Override
+	public void configure(CfgTools settings) {
+		this.removeLeading = Math.max(0, settings.getInteger(LocalOrganizer.REMOVE_LEADING, 0));
+		super.configure(settings);
+	}
+
+	@Override
 	protected <VALUE> Location calculateLocation(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
 		final List<String> containerSpec = calculateContainerSpec(translator, object, info);
+
+		if (this.removeLeading >= containerSpec.size()) {
+			containerSpec.clear();
+		} else {
+			for (int i = 0; i < this.removeLeading; i++) {
+				containerSpec.remove(0);
+			}
+		}
+
 		final String baseName = calculateBaseName(translator, object, info);
 		final String descriptor = calculateDescriptor(translator, object, info);
 		final String extension = calculateExtension(translator, object, info);
