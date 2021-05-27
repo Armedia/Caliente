@@ -190,6 +190,7 @@ public class LocalContentStore extends CmfContentStore<URI, LocalStoreOperation>
 		}
 		this.organizer = organizer;
 		if (this.organizer == null) { throw new IllegalArgumentException("Must provide a content organizer"); }
+
 		this.organizer.configure(settings);
 		if (storeOrganizerName) {
 			setProperty("organizer", CmfValue.of(organizer.getName()));
