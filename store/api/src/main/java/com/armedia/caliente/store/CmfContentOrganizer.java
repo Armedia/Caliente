@@ -29,9 +29,12 @@ package com.armedia.caliente.store;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +49,22 @@ import com.armedia.commons.utilities.function.LazySupplier;
 public abstract class CmfContentOrganizer {
 
 	private static final Logger LOG = LoggerFactory.getLogger(CmfContentOrganizer.class);
+
+	private static final String ORGANIZER_PREFIX = "organizer.";
+
+	private static CfgTools getOrganizerSettings(CfgTools settings) {
+		Set<String> names = new LinkedHashSet<>(settings.getSettings());
+		names.removeIf((n) -> !StringUtils.startsWith(n, CmfContentOrganizer.ORGANIZER_PREFIX));
+		Map<String, Object> values = new LinkedHashMap<>(names.size());
+		for (String n : names) {
+			List<Object> v = settings.getObjects(n);
+			n = n.substring(CmfContentOrganizer.ORGANIZER_PREFIX.length());
+			if (!StringUtils.isEmpty(n) && (v != null) && !v.isEmpty()) {
+				values.put(n, v);
+			}
+		}
+		return new CfgTools(values);
+	}
 
 	public static final class Location implements Comparable<Location>, Serializable {
 		private static final long serialVersionUID = 1L;
@@ -220,7 +239,11 @@ public abstract class CmfContentOrganizer {
 		return calculateLocation(translator, object, info);
 	}
 
-	public void configure(CfgTools settings) {
+	public final void configure(CfgTools settings) {
+		doConfigure(CmfContentOrganizer.getOrganizerSettings(settings));
+	}
+
+	protected void doConfigure(CfgTools settings) {
 		// By default, do nothing
 	}
 
