@@ -37,6 +37,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -756,7 +757,12 @@ public abstract class ExportEngine<//
 		return SearchType.QUERY;
 	}
 
-	private Stream<ExportTarget> getExportTargets(SESSION session, String source) throws Exception {
+	private Stream<ExportTarget> sanitizeExportTargets(Stream<ExportTarget> s) {
+		if (s == null) { return Stream.empty(); }
+		return (s.isParallel() ? s.sequential() : s);
+	}
+
+	private List<Stream<ExportTarget>> getExportTargets(SESSION session, String source) throws Exception {
 		final SearchType searchType = detectSearchType(source);
 		if (searchType == null) {
 			throw new ExportException(
@@ -768,37 +774,33 @@ public abstract class ExportEngine<//
 				searchType.name().toLowerCase(), source));
 		}
 
-		Stream<ExportTarget> ret = null;
+		List<Stream<ExportTarget>> ret = new LinkedList<>();
 		switch (searchType) {
 			case KEY:
 				// SearchKey!
 				final String searchKey = StringUtils.strip(source.substring(1));
-				if (StringUtils.isEmpty(searchKey)) {
-					throw new ExportException(
-						String.format("Invalid search key [%s] - no object can be found with an empty key"));
+				if (searchKey.charAt(0) == '@') {
+					// TODO: If the first character is an @-sign, then take it as a sign that the
+					// keys are in a text file (supporting #-comments), and read one key per line
+				} else {
+					if (StringUtils.isEmpty(searchKey)) {
+						throw new ExportException(
+							String.format("Invalid search key [%s] - no object can be found with an empty key"));
+					}
+					ret.add(sanitizeExportTargets(findExportTargetsBySearchKey(session, this.settings, searchKey)));
+					break;
 				}
-				ret = findExportTargetsBySearchKey(session, this.settings, searchKey);
-				break;
 			case PATH:
 				// CMS Path!
-				ret = findExportTargetsByPath(session, this.settings, source);
+				ret.add(sanitizeExportTargets(findExportTargetsByPath(session, this.settings, source)));
 				break;
 			case QUERY:
 				// Query string!
-				ret = findExportTargetsByQuery(session, this.settings, source);
+				ret.add(sanitizeExportTargets(findExportTargetsByQuery(session, this.settings, source)));
 			default:
 				break;
 		}
 
-		if (ret != null) {
-			if (ret.isParallel()) {
-				// Switch to sequential mode - we're doing our own parallelism here
-				ret = ret.sequential();
-			}
-		} else {
-			ret = Stream.empty();
-		}
-		ret = ret.filter(Objects::nonNull);
 		return ret;
 	}
 
@@ -990,8 +992,12 @@ public abstract class ExportEngine<//
 						sourceCounter.set(0);
 						currentSource.set(line);
 						listener.sourceSearchStarted(line);
-						try (Stream<ExportTarget> s = getExportTargets(session, line)) {
-							s.forEach(submitter);
+						try {
+							for (Stream<ExportTarget> S : getExportTargets(session, line)) {
+								try (Stream<ExportTarget> s = S) {
+									s.forEach(submitter);
+								}
+							}
 						} catch (Exception e) {
 							thrown.set(e);
 						} finally {
