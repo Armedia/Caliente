@@ -75,6 +75,7 @@ import com.armedia.caliente.store.CmfContentOrganizer.Location;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfStore;
 import com.armedia.caliente.store.CmfValue;
@@ -148,6 +149,16 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		"S3_VERSION_ID" //
 	);
 
+	private static enum ContentLogResult {
+		//
+		SUBMITTED, //
+		FAILED_TO_SUBMIT, //
+		LOGGED, //
+		FAILED_TO_LOG, //
+		//
+		;
+	}
+
 	private final CheckedConsumer<Handle<?>, Exception> nullConsumer = (h) -> {
 	};
 	private final S3Client client;
@@ -170,6 +181,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 	private final PrintWriter csvWriter;
 	protected final boolean propertiesLoaded;
 	private final CheckedConsumer<Handle<?>, Exception> contentStoredConsumer;
+	private final CmfObjectCounter<ContentLogResult> contentLogCounter = new CmfObjectCounter<>(ContentLogResult.class);
 
 	private final PooledWorkersLogic<Object, Handle<?>, IOException> contentLogLogic = new PooledWorkersLogic<Object, Handle<?>, IOException>() {
 
@@ -179,25 +191,30 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 			// Shouldn't be necessary, but still...
 			if (item == null) { return; }
 
+			ContentLogResult result = ContentLogResult.FAILED_TO_LOG;
 			CmfObject<?> object = item.getCmfObject();
-			CmfContentStream stream = item.getInfo();
+			try {
+				CmfContentStream stream = item.getInfo();
+				S3Locator locator = getLocator(item);
 
-			S3Locator locator = getLocator(item);
+				Object[] columns = {
+					object.getType().name(), //
+					object.getId(), //
+					stream.getIndex(), //
+					stream.getRenditionIdentifier(), //
+					stream.getRenditionPage(), //
+					stream.getLength(), //
+					locator.bucket(), //
+					locator.key(), //
+					locator.versionId(), //
+				};
 
-			Object[] columns = {
-				object.getType().name(), //
-				object.getId(), //
-				stream.getIndex(), //
-				stream.getRenditionIdentifier(), //
-				stream.getRenditionPage(), //
-				stream.getLength(), //
-				locator.bucket(), //
-				locator.key(), //
-				locator.versionId(), //
-			};
-
-			S3ContentStore.this.csvWriter.println(S3ContentStore.FORMAT.render(columns));
-			S3ContentStore.this.csvWriter.flush();
+				S3ContentStore.this.csvWriter.println(S3ContentStore.FORMAT.render(columns));
+				S3ContentStore.this.csvWriter.flush();
+				result = ContentLogResult.LOGGED;
+			} finally {
+				S3ContentStore.this.contentLogCounter.increment(object.getType(), result);
+			}
 		}
 
 		@Override
@@ -365,6 +382,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		this.failOnCollisions = ((v != null) && v.asBoolean());
 
 		String csvWriter = settings.getString(S3ContentStoreSetting.CSV_MAPPINGS);
+		final CheckedConsumer<Handle<?>, Exception> contentStoredConsumer;
 		if (StringUtils.isNotBlank(csvWriter)) {
 			final Path csvWriterPath = this.localDir.resolve(csvWriter);
 			this.log.debug("Writing CSV mappings to [{}]", csvWriterPath);
@@ -384,12 +402,21 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 				.waitForWork(true) //
 				.start() //
 			;
-			this.contentStoredConsumer = this.contentWorkers::addWorkItem;
+			contentStoredConsumer = this.contentWorkers::addWorkItem;
 		} else {
 			this.csvWriter = null;
 			this.contentWorkers = null;
-			this.contentStoredConsumer = this.nullConsumer;
+			contentStoredConsumer = this.nullConsumer;
 		}
+		this.contentStoredConsumer = (item) -> {
+			ContentLogResult result = ContentLogResult.FAILED_TO_SUBMIT;
+			try {
+				contentStoredConsumer.accept(item);
+				result = ContentLogResult.SUBMITTED;
+			} finally {
+				this.contentLogCounter.increment(item.getCmfObject().getType(), result);
+			}
+		};
 	}
 
 	protected void initProperties() throws CmfStorageException {
@@ -847,6 +874,9 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 
 	@Override
 	protected boolean doClose(boolean cleanupIfEmpty) {
+		this.log.info("{}{}{}S3 CSV Log Statistics:{}{}{}", Tools.NL, Tools.NL, Tools.NL, Tools.NL,
+			StringUtils.repeat("=", 30), this.contentLogCounter.generateFullReport(0));
+
 		if (this.contentWorkers != null) {
 			try {
 				this.log.info("Closing the S3 object store, waiting for the content log to complete");
