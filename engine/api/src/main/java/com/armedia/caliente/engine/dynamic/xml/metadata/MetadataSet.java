@@ -160,7 +160,7 @@ public class MetadataSet extends BaseShareableLockable implements AutoCloseable 
 	}
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws Exception {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			// If there are no loades initialized, this is a problem...
 			if (this.initializedLoaders == null) { throw new Exception("This metadata source is not yet initialized"); }
 

@@ -86,7 +86,7 @@ public class TestDataGenerator extends BaseShareableLockable {
 	}
 
 	public void reset() {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			this.streams.clear();
 			for (long index = 0; index < this.count; index++) {
 				getTestData(index);
@@ -95,7 +95,7 @@ public class TestDataGenerator extends BaseShareableLockable {
 	}
 
 	public Pair<BinaryMemoryBuffer, String> getTestData(long count) {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			final int index = (int) (count % this.count);
 			final int streamSize = this.sizeCalculator.apply(index);
 			return ConcurrentUtils.createIfAbsentUnchecked(this.streams, index, () -> {

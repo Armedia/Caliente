@@ -465,7 +465,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	protected final <VALUE> LOCATOR getLocator(Handle<VALUE> handle) {
 		Objects.requireNonNull(handle, "Must provide a non-null Handle instance");
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			assertOpen();
 			if (this != handle.getSourceStore()) {
 				throw new IllegalArgumentException("The given Handle instance does not refer to content in this store");
@@ -487,7 +487,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		CmfObject<VALUE> object, CmfContentStream info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			assertOpen();
 			LOCATOR locator = calculateLocator(translator, object, info);
 			return new Handle<>(translator, object, info, encodeLocator(locator));
@@ -511,7 +511,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	 */
 	public final <VALUE> Handle<VALUE> findHandle(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			assertOpen();
 			String encodedLocator = info.getLocator();
 			if (StringUtils.isBlank(encodedLocator)) {
@@ -527,7 +527,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	}
 
 	protected final Path getPath(Handle<?> handle) throws CmfStorageException {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			assertOpen();
 
 			// Short-cut, no need to look if we won't do anything
