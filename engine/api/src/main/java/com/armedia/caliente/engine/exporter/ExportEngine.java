@@ -72,6 +72,7 @@ import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
+import com.armedia.caliente.engine.importer.ImportRestriction;
 import com.armedia.caliente.engine.tools.xml.MetadataT;
 import com.armedia.caliente.engine.tools.xml.XmlBase;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -94,6 +95,9 @@ import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.ConcurrentTools;
+import com.armedia.commons.utilities.line.LineIterator;
+import com.armedia.commons.utilities.line.LineIteratorConfig;
+import com.armedia.commons.utilities.line.LineIteratorConfig.Trim;
 import com.armedia.commons.utilities.line.LineScanner;
 
 public abstract class ExportEngine<//
@@ -762,7 +766,7 @@ public abstract class ExportEngine<//
 		return (s.isParallel() ? s.sequential() : s);
 	}
 
-	private List<Stream<ExportTarget>> getExportTargets(SESSION session, String source) throws Exception {
+	private List<Stream<ExportTarget>> findExportTargets(SESSION session, String source) throws Exception {
 		final SearchType searchType = detectSearchType(source);
 		if (searchType == null) {
 			throw new ExportException(
@@ -780,14 +784,37 @@ public abstract class ExportEngine<//
 				// SearchKey!
 				final String searchKey = StringUtils.strip(source.substring(1));
 				if (searchKey.charAt(0) == '@') {
-					// TODO: If the first character is an @-sign, then take it as a sign that the
-					// keys are in a text file (supporting #-comments), and read one key per line
-				} else {
-					if (StringUtils.isEmpty(searchKey)) {
-						throw new ExportException(
-							String.format("Invalid search key [%s] - no object can be found with an empty key"));
+					LineIteratorConfig cfg = new LineIteratorConfig() //
+						.setTrim(Trim.BOTH) //
+					;
+					try (LineIterator it = new LineScanner().iterator(cfg, searchKey)) {
+						while (it.hasNext()) {
+							String currentKey = it.next();
+							if (StringUtils.isEmpty(currentKey)) {
+								// This should not happen, but mark it anyway
+								this.log.warn("Invalid empty search key from [{}]", searchKey);
+								continue;
+							}
+
+							CmfObjectRef tgt = ImportRestriction.parseQuiet(currentKey);
+							if (tgt != null) {
+								// No need to search if it's a retry
+								ret.add(Stream.of(new ExportTarget(tgt.getType(), tgt.getId(), null)));
+							} else {
+								ret.add(sanitizeExportTargets(
+									findExportTargetsBySearchKey(session, this.settings, currentKey)));
+							}
+						}
 					}
-					ret.add(sanitizeExportTargets(findExportTargetsBySearchKey(session, this.settings, searchKey)));
+				} else {
+					if (StringUtils.isEmpty(searchKey)) { throw new ExportException("Invalid empty search key"); }
+					CmfObjectRef tgt = ImportRestriction.parseQuiet(searchKey);
+					if (tgt != null) {
+						// No need to search if it's a retry
+						ret.add(Stream.of(new ExportTarget(tgt.getType(), tgt.getId(), null)));
+					} else {
+						ret.add(sanitizeExportTargets(findExportTargetsBySearchKey(session, this.settings, searchKey)));
+					}
 					break;
 				}
 			case PATH:
@@ -893,6 +920,11 @@ public abstract class ExportEngine<//
 							// so we safely absorb them here. We leave all other Throwables intact
 							// so they can be caught in the worker's handler
 							result = null;
+
+							// TODO: Should we re-queue this object for a retry? How to tell if this
+							// is a retryable error? (i.e. temporary vs. final failure)
+							// TODO: If retrying, then we also need to take care of clearing out the
+							// lock marker(s) ...
 						}
 						if (result != null) {
 							if (ExportEngine.this.log.isDebugEnabled()) {
@@ -993,7 +1025,7 @@ public abstract class ExportEngine<//
 						currentSource.set(line);
 						listener.sourceSearchStarted(line);
 						try {
-							for (Stream<ExportTarget> S : getExportTargets(session, line)) {
+							for (Stream<ExportTarget> S : findExportTargets(session, line)) {
 								try (Stream<ExportTarget> s = S) {
 									s.forEach(submitter);
 								}
