@@ -676,7 +676,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 							.build() //
 					);
 				}).versionId();
-
+				size -= remaining;
 				ok = true;
 			} finally {
 				if (!ok) {
