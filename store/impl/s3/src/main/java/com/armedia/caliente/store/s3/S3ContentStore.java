@@ -660,14 +660,15 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 
 			boolean ok = false;
 			try {
+				long remaining = size;
 				long partSize = S3ContentStore.MIN_MULTIPART_SIZE;
-				final long partCount = (size / partSize) + ((size % partSize) > 0 ? 1 : 0);
+				final long partCount = (remaining / partSize) + ((remaining % partSize) > 0 ? 1 : 0);
 				InputStream chunk = Channels.newInputStream(in);
 				List<CompletedPart> parts = new LinkedList<>();
 				for (int p = 1; p <= partCount; p++) {
 					final int partNumber = p;
-					if (size < partSize) {
-						partSize = size;
+					if (remaining < partSize) {
+						partSize = remaining;
 					}
 					RequestBody body = RequestBody.fromInputStream(chunk, partSize);
 					UploadPartResponse rsp = this.client.uploadPart((R) -> {
@@ -686,7 +687,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 							.build() //
 					);
 
-					size -= partSize;
+					remaining -= partSize;
 				}
 
 				versionId = this.client.completeMultipartUpload((R) -> {
