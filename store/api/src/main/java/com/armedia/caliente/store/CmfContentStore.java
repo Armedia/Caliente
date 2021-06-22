@@ -783,6 +783,10 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 						}
 					}
 				}
+			} catch (RuntimeException | Error e) {
+				// Unchecked problem...
+				this.log.error("INCOMPLETE DETECTED", e);
+				throw e;
 			} finally {
 				if (completed) {
 					ContentStoreResult result = ContentStoreResult.UNREPORTED;
