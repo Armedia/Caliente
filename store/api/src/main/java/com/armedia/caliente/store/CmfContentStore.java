@@ -64,6 +64,15 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	public static final String DEFAULT_QUALIFIER = "content";
 
+	private static enum ContentStoreResult {
+		//
+		COMPLETED, //
+		INCOMPLETE, //
+		UNREPORTED,
+		//
+		;
+	}
+
 	public class Handle<VALUE> {
 		private final CmfAttributeTranslator<VALUE> translator;
 		private final CmfObject<VALUE> cmfObject;
@@ -400,6 +409,9 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			return this.description;
 		}
 	}
+
+	private final CmfObjectCounter<ContentStoreResult> contentStoreCounter = new CmfObjectCounter<>(
+		ContentStoreResult.class);
 
 	public CmfContentStore(CmfStore<?> parent) {
 		super(parent, "content");
@@ -773,14 +785,19 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 				}
 			} finally {
 				if (completed) {
-					// TODO: Write out the CSV mapping record...
+					ContentStoreResult result = ContentStoreResult.UNREPORTED;
 					try {
 						contentStored(handle);
+						result = ContentStoreResult.COMPLETED;
 					} catch (Throwable t) {
 						// WARNING, not an error ... can't stop processing b/c of this
 						this.log.warn("Unexpected exception while notifying of successful content storage for [{}]",
 							getLocator(handle), t);
+					} finally {
+						this.contentStoreCounter.increment(handle.getCmfObject().getType(), result);
 					}
+				} else {
+					this.contentStoreCounter.increment(handle.getCmfObject().getType(), ContentStoreResult.INCOMPLETE);
 				}
 			}
 		});
@@ -1107,4 +1124,11 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	}
 
 	protected abstract void clearAllStreams(OPERATION operation) throws CmfStorageException;
+
+	@Override
+	protected boolean doClose(boolean cleanupIfEmpty) {
+		this.log.info("{}{}{}Content Store Statistics:{}{}{}", Tools.NL, Tools.NL, Tools.NL, Tools.NL,
+			StringUtils.repeat("=", 30), this.contentStoreCounter.generateReport(CmfObject.Archetype.DOCUMENT));
+		return true;
+	}
 }
