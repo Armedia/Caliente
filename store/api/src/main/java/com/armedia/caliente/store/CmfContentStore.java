@@ -1127,8 +1127,9 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	@Override
 	protected boolean doClose(boolean cleanupIfEmpty) {
-		this.log.info("{}{}{}Content Store Statistics:{}{}{}", Tools.NL, Tools.NL, Tools.NL, Tools.NL,
-			StringUtils.repeat("=", 30), this.contentStoreCounter.generateReport(CmfObject.Archetype.DOCUMENT));
+		this.log.info("{}{}{}Content Store Statistics:{}{}{}{}", Tools.NL, Tools.NL, Tools.NL, Tools.NL,
+			StringUtils.repeat("=", 30), Tools.NL,
+			this.contentStoreCounter.generateReport(CmfObject.Archetype.DOCUMENT));
 		return true;
 	}
 }

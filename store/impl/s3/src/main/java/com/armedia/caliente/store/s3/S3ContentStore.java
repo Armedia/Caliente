@@ -874,8 +874,8 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 
 	@Override
 	protected boolean doClose(boolean cleanupIfEmpty) {
-		this.log.info("{}{}{}S3 CSV Log Statistics:{}{}{}", Tools.NL, Tools.NL, Tools.NL, Tools.NL,
-			StringUtils.repeat("=", 30), this.contentLogCounter.generateReport(CmfObject.Archetype.DOCUMENT));
+		this.log.info("{}{}{}S3 CSV Log Statistics:{}{}{}{}", Tools.NL, Tools.NL, Tools.NL, Tools.NL,
+			StringUtils.repeat("=", 30), Tools.NL, this.contentLogCounter.generateReport(CmfObject.Archetype.DOCUMENT));
 
 		if (this.contentWorkers != null) {
 			try {
