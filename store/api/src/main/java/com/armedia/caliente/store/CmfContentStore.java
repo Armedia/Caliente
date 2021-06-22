@@ -64,15 +64,6 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	public static final String DEFAULT_QUALIFIER = "content";
 
-	private static enum ContentStoreResult {
-		//
-		COMPLETED, //
-		INCOMPLETE, //
-		UNREPORTED,
-		//
-		;
-	}
-
 	public class Handle<VALUE> {
 		private final CmfAttributeTranslator<VALUE> translator;
 		private final CmfObject<VALUE> cmfObject;
@@ -409,9 +400,6 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			return this.description;
 		}
 	}
-
-	private final CmfObjectCounter<ContentStoreResult> contentStoreCounter = new CmfObjectCounter<>(
-		ContentStoreResult.class);
 
 	public CmfContentStore(CmfStore<?> parent) {
 		super(parent, "content");
@@ -778,34 +766,14 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	protected final long store(Handle<?> handle, ReadableByteChannel data, long length) throws CmfStorageException {
 		return runConcurrently((operation) -> {
-			boolean completed = false;
+			long ret = storeImpl(operation, handle, data, length);
 			try {
-				long ret = storeImpl(operation, handle, data, length);
-				completed = true;
-				return ret;
-			} catch (RuntimeException | Error e) {
-				CmfObject<?> o = handle.getCmfObject();
-				this.log.error("INCOMPLETE DETECTED for {} [{}]({})", o.getType(), o.getLabel(), o.getId(), e);
-				throw e;
-			} finally {
-				ContentStoreResult result = ContentStoreResult.UNREPORTED;
-				try {
-					if (completed) {
-						try {
-							contentStored(handle);
-							result = ContentStoreResult.COMPLETED;
-						} catch (Throwable t2) {
-							// WARNING, not an error ... can't stop processing b/c of this
-							this.log.warn("Unexpected exception while notifying of successful content storage for [{}]",
-								getLocator(handle), t2);
-						}
-					} else {
-						result = ContentStoreResult.INCOMPLETE;
-					}
-				} finally {
-					this.contentStoreCounter.increment(handle.getCmfObject().getType(), result);
-				}
+				contentStored(handle);
+			} catch (Throwable t) {
+				this.log.warn("Unexpected exception while notifying of successful content storage for [{}]",
+					getLocator(handle), t);
 			}
+			return ret;
 		});
 	}
 
@@ -1130,12 +1098,4 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	}
 
 	protected abstract void clearAllStreams(OPERATION operation) throws CmfStorageException;
-
-	@Override
-	protected boolean doClose(boolean cleanupIfEmpty) {
-		this.log.info("{}{}{}Content Store Statistics:{}{}{}{}", Tools.NL, Tools.NL, Tools.NL, Tools.NL,
-			StringUtils.repeat("=", 30), Tools.NL,
-			this.contentStoreCounter.generateReport(CmfObject.Archetype.DOCUMENT));
-		return true;
-	}
 }
