@@ -430,7 +430,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 			this.contentStoredConsumer.accept(handle);
 		} catch (Exception e) {
 			this.log.warn("Failed to add the mapping for [{}] -> [{}]", handle.getCmfObject().getId(),
-				handle.getLocator());
+				handle.getLocator(), e);
 		}
 	}
 
@@ -875,7 +875,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 	@Override
 	protected boolean doClose(boolean cleanupIfEmpty) {
 		this.log.info("{}{}{}S3 CSV Log Statistics:{}{}{}", Tools.NL, Tools.NL, Tools.NL, Tools.NL,
-			StringUtils.repeat("=", 30), this.contentLogCounter.generateFullReport(0));
+			StringUtils.repeat("=", 30), this.contentLogCounter.generateReport(CmfObject.Archetype.DOCUMENT));
 
 		if (this.contentWorkers != null) {
 			try {
