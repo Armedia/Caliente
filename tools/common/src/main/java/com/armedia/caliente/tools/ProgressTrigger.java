@@ -239,7 +239,7 @@ public class ProgressTrigger extends BaseShareableLockable {
 	}
 
 	public final void trigger(boolean forced) {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			// If it's paused, then there's nothing to be done...
 			if (this.paused.get()) { return; }
 
@@ -279,7 +279,7 @@ public class ProgressTrigger extends BaseShareableLockable {
 	}
 
 	public final ProgressReport getReport() {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			final long totalCount = this.currentTriggerCount.get();
 			final long thisTriggerNanoTime = System.nanoTime();
 			final long lastTriggerNanoTime = this.lastTrigger.get();

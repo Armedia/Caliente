@@ -131,7 +131,7 @@ public class CalienteWarningTracker extends BaseShareableLockable implements War
 
 	private boolean persistWarning(Warning w) {
 		if (this.warnings == null) { return false; }
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			this.warnings.add(w);
 			return true;
 		}
@@ -154,7 +154,7 @@ public class CalienteWarningTracker extends BaseShareableLockable implements War
 	public String generateReport() {
 		if (!hasWarnings()) { return null; }
 
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			Map<WarningType, Long> m = this.objectCounter.getCummulative();
 			final Long zero = Long.valueOf(0);
 			StringBuilder report = new StringBuilder();
@@ -181,7 +181,7 @@ public class CalienteWarningTracker extends BaseShareableLockable implements War
 	public void generateReport(Logger output) {
 		if (!hasWarnings()) { return; }
 
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			Map<WarningType, Long> m = this.objectCounter.getCummulative();
 			final Long zero = Long.valueOf(0);
 			output.warn("Tracked Warnings Summary:");

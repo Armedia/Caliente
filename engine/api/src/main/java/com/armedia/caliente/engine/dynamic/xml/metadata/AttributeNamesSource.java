@@ -101,28 +101,28 @@ public abstract class AttributeNamesSource extends BaseShareableLockable impleme
 	}
 
 	public final int size() {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			if (this.values == null) { return 0; }
 			return this.values.size();
 		}
 	}
 
 	public final Set<String> getValues() {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			if (this.values == null) { return Collections.emptySet(); }
 			return Tools.freezeSet(new LinkedHashSet<>(this.values.values()));
 		}
 	}
 
 	public final Set<String> getCanonicalizedValues() {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			if (this.values == null) { return Collections.emptySet(); }
 			return Tools.freezeSet(new LinkedHashSet<>(this.values.keySet()));
 		}
 	}
 
 	public final boolean contains(String str) {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			if (this.values == null) { return false; }
 			return this.values.containsKey(canonicalize(str));
 		}

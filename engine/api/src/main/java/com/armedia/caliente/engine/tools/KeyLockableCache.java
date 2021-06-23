@@ -250,8 +250,8 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 	public final V get(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		// This construct helps avoid deadlocks while preserving concurrency where possible
-		try (SharedAutoLock keyShared = getLock(key).autoSharedLock()) {
-			try (SharedAutoLock cacheShared = autoSharedLock()) {
+		try (SharedAutoLock keyShared = getLock(key).sharedAutoLock()) {
+			try (SharedAutoLock cacheShared = sharedAutoLock()) {
 				CacheItem item = this.cache.get(key);
 				return (item != null ? item.get() : null);
 			}
@@ -273,13 +273,13 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 		throws EX {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		Objects.requireNonNull(f, "Must provide a non-null initializer");
-		try (SharedAutoLock keyShared = getLock(key).autoSharedLock()) {
+		try (SharedAutoLock keyShared = getLock(key).sharedAutoLock()) {
 			V existing = get(key);
 			if (predicate.test(existing)) {
 				try (MutexAutoLock keyMutex = keyShared.upgrade()) {
 					existing = get(key);
 					if (predicate.test(existing)) {
-						try (SharedAutoLock cacheShared = autoSharedLock()) {
+						try (SharedAutoLock cacheShared = sharedAutoLock()) {
 							CacheItem item = this.cache.get(key);
 							existing = (item != null ? item.get() : null);
 							if (!predicate.test(existing)) { return existing; }
@@ -302,8 +302,8 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 	public final V put(K key, V value) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		if (value == null) { return remove(key); }
-		try (MutexAutoLock keyMutex = getLock(key).autoMutexLock()) {
-			try (MutexAutoLock cacheMutex = autoMutexLock()) {
+		try (MutexAutoLock keyMutex = getLock(key).mutexAutoLock()) {
+			try (MutexAutoLock cacheMutex = mutexAutoLock()) {
 				CacheItem item = this.cache.put(key, newCacheItem(key, value));
 				return (item != null ? item.get() : null);
 			}
@@ -312,8 +312,8 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 
 	public final V remove(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
-		try (MutexAutoLock keyMutex = getLock(key).autoMutexLock()) {
-			try (SharedAutoLock cacheShared = autoSharedLock()) {
+		try (MutexAutoLock keyMutex = getLock(key).mutexAutoLock()) {
+			try (SharedAutoLock cacheShared = sharedAutoLock()) {
 				CacheItem item = null;
 				if (this.cache.containsKey(key)) {
 					try (MutexAutoLock cacheMutex = cacheShared.upgrade()) {
@@ -337,9 +337,9 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 
 	public final boolean containsValueForKey(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
-		try (SharedAutoLock keyShared = getLock(key).autoSharedLock()) {
+		try (SharedAutoLock keyShared = getLock(key).sharedAutoLock()) {
 			CacheItem item = null;
-			try (SharedAutoLock cacheShared = autoSharedLock()) {
+			try (SharedAutoLock cacheShared = sharedAutoLock()) {
 				item = this.cache.get(key);
 			}
 			if (item == null) { return false; }

@@ -70,7 +70,7 @@ public abstract class SessionFactory<SESSION> extends BaseShareableLockable
 	}
 
 	public final SessionWrapper<SESSION> acquireSession() throws SessionFactoryException {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			if (!this.open) { throw new IllegalStateException("This session factory is not open"); }
 			try {
 				return newWrapper(this.pool.borrowObject());

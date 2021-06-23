@@ -58,7 +58,8 @@ public class ExportManifest extends DefaultExportEngineListener {
 
 	private static final Long NULL = Long.valueOf(-1);
 
-	private static final CsvFormatter FORMAT = new CsvFormatter("NUMBER", //
+	private static final CsvFormatter FORMAT = new CsvFormatter( //
+		"NUMBER", //
 		"DATE", //
 		"TYPE", //
 		"TIER", //
