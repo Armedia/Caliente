@@ -243,7 +243,7 @@ public class AlfImportDelegateFactory
 	}
 
 	boolean initializeVdocSupport() {
-		try (SharedAutoLock shared = autoSharedLock()) {
+		try (SharedAutoLock shared = sharedAutoLock()) {
 			Boolean result = this.initializedVdocs.get();
 			if (result == null) {
 				try (MutexAutoLock mutex = shared.upgrade()) {

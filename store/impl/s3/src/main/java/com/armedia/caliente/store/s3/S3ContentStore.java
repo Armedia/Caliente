@@ -47,7 +47,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -121,21 +120,6 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 
 	private static final long MIN_MULTIPART_SIZE = (5 * (int) FileUtils.ONE_MB);
 
-	private static final String CHARS_BAD_STR = "\\{}^%[]`\"~#|<>";
-	private static final Set<Character> CHARS_BAD;
-	static {
-		Set<Character> s = null;
-
-		s = new HashSet<>();
-		for (int i = 0; i < S3ContentStore.CHARS_BAD_STR.length(); i++) {
-			s.add(S3ContentStore.CHARS_BAD_STR.charAt(i));
-		}
-		for (int i = 0x80; i <= 0xFF; i++) {
-			s.add(Character.valueOf((char) i));
-		}
-		CHARS_BAD = Tools.freezeSet(s);
-	}
-
 	private static final CsvFormatter FORMAT = new CsvFormatter( //
 		"TYPE", //
 		"ID", //
@@ -168,6 +152,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 	private final boolean failOnCollisions;
 	private final PooledWorkers<?, Handle<?>> contentWorkers;
 	private final PrintWriter csvWriter;
+	private final S3CharFixer charFixer;
 	protected final boolean propertiesLoaded;
 	private final CheckedConsumer<Handle<?>, Exception> contentStoredConsumer;
 
@@ -181,7 +166,6 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 
 			CmfObject<?> object = item.getCmfObject();
 			CmfContentStream stream = item.getInfo();
-
 			S3Locator locator = getLocator(item);
 
 			Object[] columns = {
@@ -365,6 +349,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		this.failOnCollisions = ((v != null) && v.asBoolean());
 
 		String csvWriter = settings.getString(S3ContentStoreSetting.CSV_MAPPINGS);
+		final CheckedConsumer<Handle<?>, Exception> contentStoredConsumer;
 		if (StringUtils.isNotBlank(csvWriter)) {
 			final Path csvWriterPath = this.localDir.resolve(csvWriter);
 			this.log.debug("Writing CSV mappings to [{}]", csvWriterPath);
@@ -384,12 +369,14 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 				.waitForWork(true) //
 				.start() //
 			;
-			this.contentStoredConsumer = this.contentWorkers::addWorkItem;
+			contentStoredConsumer = this.contentWorkers::addWorkItem;
 		} else {
 			this.csvWriter = null;
 			this.contentWorkers = null;
-			this.contentStoredConsumer = this.nullConsumer;
+			contentStoredConsumer = this.nullConsumer;
 		}
+		this.contentStoredConsumer = contentStoredConsumer;
+		this.charFixer = settings.getEnum(S3ContentStoreSetting.CHAR_FIX, S3CharFixer.class);
 	}
 
 	protected void initProperties() throws CmfStorageException {
@@ -403,7 +390,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 			this.contentStoredConsumer.accept(handle);
 		} catch (Exception e) {
 			this.log.warn("Failed to add the mapping for [{}] -> [{}]", handle.getCmfObject().getId(),
-				handle.getLocator());
+				handle.getLocator(), e);
 		}
 	}
 
@@ -417,13 +404,6 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		return (locator != null);
 	}
 
-	protected CharSequence encodeChar(char c) {
-		if (S3ContentStore.CHARS_BAD.contains(c)) {
-			return "_"; // TODO: Make this configurable?
-		}
-		return String.valueOf(c);
-	}
-
 	protected String fixMetadataAttributeName(String name) {
 		if (StringUtils.isBlank(name)) { return name; }
 		// URL-Encode?
@@ -434,14 +414,6 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 			throw new RuntimeException("The standard encoding UTF-8 is not supported... how?!?!?", e);
 		}
 		// return name.replace(':', '_');
-	}
-
-	protected String safeEncode(String str) {
-		StringBuilder b = new StringBuilder(str.length());
-		for (int i = 0; i < str.length(); i++) {
-			b.append(encodeChar(str.charAt(i)));
-		}
-		return b.toString();
 	}
 
 	private String constructFileName(Location loc) {
@@ -484,7 +456,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		rawPath.add(constructFileName(location));
 		List<String> sspParts = new ArrayList<>(rawPath.size());
 		for (String s : rawPath) {
-			sspParts.add(safeEncode(s));
+			sspParts.add(this.charFixer.fixCharacters(s));
 		}
 		return Pair.of(sspParts, versionId);
 	}
@@ -633,14 +605,15 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 
 			boolean ok = false;
 			try {
+				long remaining = size;
 				long partSize = S3ContentStore.MIN_MULTIPART_SIZE;
-				final long partCount = (size / partSize) + ((size % partSize) > 0 ? 1 : 0);
+				final long partCount = (remaining / partSize) + ((remaining % partSize) > 0 ? 1 : 0);
 				InputStream chunk = Channels.newInputStream(in);
 				List<CompletedPart> parts = new LinkedList<>();
 				for (int p = 1; p <= partCount; p++) {
 					final int partNumber = p;
-					if (size < partSize) {
-						partSize = size;
+					if (remaining < partSize) {
+						partSize = remaining;
 					}
 					RequestBody body = RequestBody.fromInputStream(chunk, partSize);
 					UploadPartResponse rsp = this.client.uploadPart((R) -> {
@@ -659,7 +632,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 							.build() //
 					);
 
-					size -= partSize;
+					remaining -= partSize;
 				}
 
 				versionId = this.client.completeMultipartUpload((R) -> {
@@ -674,7 +647,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 							.build() //
 					);
 				}).versionId();
-
+				size -= remaining;
 				ok = true;
 			} finally {
 				if (!ok) {

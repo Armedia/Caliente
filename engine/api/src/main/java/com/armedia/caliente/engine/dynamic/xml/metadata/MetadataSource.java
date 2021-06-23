@@ -219,7 +219,7 @@ public class MetadataSource extends BaseShareableLockable {
 	}
 
 	public Connection getConnection() throws SQLException {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			if (this.dataSource == null) {
 				throw new IllegalStateException(String.format("The datasource [%s] is not yet initialized", this.name));
 			}

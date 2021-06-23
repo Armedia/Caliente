@@ -175,7 +175,7 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 		throws ExternalMetadataException {
 		Objects.requireNonNull(object, "Must provide a CmfObject instance to retrieve extra metadata for");
 		initialize();
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			if (sourceNames == null) {
 				sourceNames = this.metadataSets.keySet();
 			}
@@ -246,7 +246,7 @@ public class ExternalMetadataLoader extends BaseShareableLockable {
 	}
 
 	public void close() {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			if (!this.initialized) { return; }
 			try {
 				closeSources();
