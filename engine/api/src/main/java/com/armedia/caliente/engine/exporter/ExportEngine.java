@@ -783,36 +783,43 @@ public abstract class ExportEngine<//
 			case KEY:
 				// SearchKey!
 				final String searchKey = StringUtils.strip(source.substring(1));
-				if (searchKey.charAt(0) == '@') {
+				if (searchKey.charAt(1) == '@') {
 					LineIteratorConfig cfg = new LineIteratorConfig() //
 						.setTrim(Trim.BOTH) //
+						.setMaxDepth(1) //
 					;
 					try (LineIterator it = new LineScanner().iterator(cfg, searchKey)) {
 						while (it.hasNext()) {
-							String currentKey = it.next();
-							if (StringUtils.isEmpty(currentKey)) {
+							String line = it.next();
+							if (StringUtils.isEmpty(line)) {
 								// This should not happen, but mark it anyway
-								this.log.warn("Invalid empty search key from [{}]", searchKey);
+								this.log.debug("Invalid empty search key from [{}]", searchKey);
 								continue;
 							}
 
-							CmfObjectRef tgt = ImportRestriction.parseQuiet(currentKey);
+							CmfObjectRef tgt = ImportRestriction.parseQuiet(line);
 							if (tgt != null) {
 								// No need to search if it's a retry
 								ret.add(Stream.of(new ExportTarget(tgt.getType(), tgt.getId(), null)));
 							} else {
+								String directKey = line.substring(1);
+								if (StringUtils.isEmpty(directKey)) {
+									this.log.debug("Invalid empty search key from [{}]", searchKey);
+									continue;
+								}
 								ret.add(sanitizeExportTargets(
-									findExportTargetsBySearchKey(session, this.settings, currentKey)));
+									findExportTargetsBySearchKey(session, this.settings, directKey)));
 							}
 						}
 					}
 				} else {
 					if (StringUtils.isEmpty(searchKey)) { throw new ExportException("Invalid empty search key"); }
-					CmfObjectRef tgt = ImportRestriction.parseQuiet(searchKey);
+					CmfObjectRef tgt = ImportRestriction.parseQuiet(source);
 					if (tgt != null) {
 						// No need to search if it's a retry
 						ret.add(Stream.of(new ExportTarget(tgt.getType(), tgt.getId(), null)));
 					} else {
+						if (StringUtils.isEmpty(searchKey)) { throw new ExportException("Invalid empty search key"); }
 						ret.add(sanitizeExportTargets(findExportTargetsBySearchKey(session, this.settings, searchKey)));
 					}
 					break;
