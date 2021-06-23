@@ -24,3 +24,6 @@
 /off.*
 /config.off/
 /caliente.lib/
+/*.xml
+/*.params
+/*.list

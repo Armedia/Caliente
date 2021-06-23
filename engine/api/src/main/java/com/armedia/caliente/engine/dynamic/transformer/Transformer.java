@@ -95,7 +95,7 @@ public class Transformer extends BaseShareableLockable {
 
 	public <VALUE> CmfObject<VALUE> transform(CmfValueMapper mapper, final CmfAttributeNameMapper nameMapper,
 		SchemaService schemaService, CmfObject<VALUE> object) throws TransformerException {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			if (this.closed) { throw new TransformerException("This transformer instance is already closed"); }
 			if ((this.transformations == null) && (this.attributeMapper == null)) { return object; }
 			DynamicElementContext<VALUE> ctx = createContext(mapper, object);
@@ -138,7 +138,7 @@ public class Transformer extends BaseShareableLockable {
 	}
 
 	public void close() {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			try {
 				if (this.closed) { return; }
 				if (this.metadataLoader != null) {
