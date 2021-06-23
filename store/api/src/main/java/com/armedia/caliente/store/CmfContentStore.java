@@ -465,7 +465,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	protected final <VALUE> LOCATOR getLocator(Handle<VALUE> handle) {
 		Objects.requireNonNull(handle, "Must provide a non-null Handle instance");
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			assertOpen();
 			if (this != handle.getSourceStore()) {
 				throw new IllegalArgumentException("The given Handle instance does not refer to content in this store");
@@ -487,7 +487,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		CmfObject<VALUE> object, CmfContentStream info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			assertOpen();
 			LOCATOR locator = calculateLocator(translator, object, info);
 			return new Handle<>(translator, object, info, encodeLocator(locator));
@@ -511,7 +511,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	 */
 	public final <VALUE> Handle<VALUE> findHandle(CmfAttributeTranslator<VALUE> translator, CmfObject<VALUE> object,
 		CmfContentStream info) {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			assertOpen();
 			String encodedLocator = info.getLocator();
 			if (StringUtils.isBlank(encodedLocator)) {
@@ -527,7 +527,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 	}
 
 	protected final Path getPath(Handle<?> handle) throws CmfStorageException {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			assertOpen();
 
 			// Short-cut, no need to look if we won't do anything
@@ -663,126 +663,117 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		return store(handle, Channels.newChannel(in), size);
 	}
 
-	protected final long store(Handle<?> handle, ReadableByteChannel data, long length) throws CmfStorageException {
-		return runConcurrently((operation) -> {
-			boolean completed = false;
+	private final long storeImpl(OPERATION operation, Handle<?> handle, ReadableByteChannel data, long length)
+		throws CmfStorageException {
+		assertOpen();
+		LOCATOR locator = getLocator(handle);
+
+		ReadableByteChannel in = data;
+		long size = length;
+
+		ContentAccessor temp = null;
+		if (length < 0) {
+			// We don't know the size, we need to copy it to a temporary space first
+			temp = createTemp(locator);
 			try {
-				assertOpen();
-				LOCATOR locator = getLocator(handle);
+				size = temp.copyFrom(in);
+			} catch (IOException e) {
+				throw new CmfStorageException("Failed to copy the content into " + temp, e);
+			}
+		}
 
-				ReadableByteChannel in = data;
-				long size = length;
+		// First, let's try a shortcut
+		if (isSupportsFileAccess()) {
+			final Path p;
+			try {
+				p = getPath(locator);
+			} catch (IOException e) {
+				throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator), e);
+			}
+			CmfContentStore.ensureParentExists(p);
 
-				ContentAccessor temp = null;
-				if (length < 0) {
-					// We don't know the size, we need to copy it to a temporary space first
-					temp = createTemp(locator);
-					try {
-						size = temp.copyFrom(in);
-					} catch (IOException e) {
-						throw new CmfStorageException("Failed to copy the content into " + temp, e);
-					}
-				}
-
-				// First, let's try a shortcut
-				if (isSupportsFileAccess()) {
-					final Path p;
-					try {
-						p = getPath(locator);
-					} catch (IOException e) {
-						throw new CmfStorageException(
-							String.format("Failed to locate the file for locator [%s]", locator), e);
-					}
-					CmfContentStore.ensureParentExists(p);
-
-					if (temp != null) {
-						try {
-							size = temp.moveTo(p);
-							completed = true;
-							return size;
-						} catch (IOException e) {
-							throw new CmfStorageException(
-								"Failed to move the temporary file from " + temp + " to [" + p + "]", e);
-						}
-					} else {
-						try (FileChannel out = FileChannel.open(p, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
-							StandardOpenOption.TRUNCATE_EXISTING)) {
-							long written = out.transferFrom(in, 0, Long.MAX_VALUE);
-							if ((size >= 0) && (written != size)) {
-								throw new CmfStorageException(String.format(
-									"Incorrect size written out - expected to write %d bytes, but wrote out %d", size,
-									written));
-							}
-							completed = true;
-							return written;
-						} catch (FileNotFoundException e) {
-							throw new CmfStorageException(
-								String.format("Failed to open an output stream to the file [%s]", p), e);
-						} catch (IOException e) {
-							throw new CmfStorageException(
-								String.format("Failed to copy the content from the file [%s]", p), e);
-						}
-					}
-				}
-
-				if (temp != null) {
-					try {
-						in = temp.openReader();
-					} catch (IOException e) {
-						throw new CmfStorageException("Failed to open a channel to the temporary data at " + temp, e);
-					}
-				}
-
-				// If it doesn't support file access...
-				final boolean tx = operation.begin();
-				boolean ok = false;
+			if (temp != null) {
 				try {
-					Pair<LOCATOR, Long> p = store(operation, handle, in, size);
-					long written = p.getValue();
+					return temp.moveTo(p);
+				} catch (IOException e) {
+					throw new CmfStorageException("Failed to move the temporary file from " + temp + " to [" + p + "]",
+						e);
+				}
+			} else {
+				try (FileChannel out = FileChannel.open(p, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+					StandardOpenOption.TRUNCATE_EXISTING)) {
+					long written = out.transferFrom(in, 0, Long.MAX_VALUE);
 					if ((size >= 0) && (written != size)) {
 						throw new CmfStorageException(
 							String.format("Incorrect size written out - expected to write %d bytes, but wrote out %d",
 								size, written));
 					}
-
-					// TODO: Update the handle's locator
-					LOCATOR newLocator = p.getKey();
-					if (newLocator != null) {
-						handle.updateLocator(encodeLocator(newLocator));
-					}
-
-					if (tx) {
-						operation.commit();
-					}
-					ok = true;
-					completed = true;
-					return p.getValue();
-				} finally {
-					if (temp != null) {
-						CloseUtils.closeQuietly(in);
-						temp.deleteQuietly();
-					}
-					if (tx && !ok) {
-						try {
-							operation.rollback();
-						} catch (CmfStorageException e) {
-							this.log.warn("Failed to rollback the transaction for setting the content for locator [{}]",
-								locator, e);
-						}
-					}
-				}
-			} finally {
-				if (completed) {
-					// TODO: Write out the CSV mapping record...
-					try {
-						contentStored(handle);
-					} catch (Throwable t) {
-						// WARNING, not an error ... can't stop processing b/c of this
-						this.log.warn("Unexpected exception while notifying of successful content storage for [{}]",
-							getLocator(handle), t);
-					}
+					return written;
+				} catch (FileNotFoundException e) {
+					throw new CmfStorageException(String.format("Failed to open an output stream to the file [%s]", p),
+						e);
+				} catch (IOException e) {
+					throw new CmfStorageException(String.format("Failed to copy the content from the file [%s]", p), e);
 				}
 			}
+		}
+
+		if (temp != null) {
+			try {
+				in = temp.openReader();
+			} catch (IOException e) {
+				throw new CmfStorageException("Failed to open a channel to the temporary data at " + temp, e);
+			}
+		}
+
+		// If it doesn't support file access...
+		final boolean tx = operation.begin();
+		boolean ok = false;
+		try {
+			Pair<LOCATOR, Long> p = store(operation, handle, in, size);
+			long written = p.getValue();
+			if ((size >= 0) && (written != size)) {
+				throw new CmfStorageException(String.format(
+					"Incorrect size written out - expected to write %d bytes, but wrote out %d", size, written));
+			}
+
+			// TODO: Update the handle's locator
+			LOCATOR newLocator = p.getKey();
+			if (newLocator != null) {
+				handle.updateLocator(encodeLocator(newLocator));
+			}
+
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
+			return p.getValue();
+		} finally {
+			if (temp != null) {
+				CloseUtils.closeQuietly(in);
+				temp.deleteQuietly();
+			}
+			if (tx && !ok) {
+				try {
+					operation.rollback();
+				} catch (CmfStorageException e) {
+					this.log.warn("Failed to rollback the transaction for setting the content for locator [{}]",
+						locator, e);
+				}
+			}
+		}
+	}
+
+	protected final long store(Handle<?> handle, ReadableByteChannel data, long length) throws CmfStorageException {
+		return runConcurrently((operation) -> {
+			long ret = storeImpl(operation, handle, data, length);
+			try {
+				contentStored(handle);
+			} catch (Throwable t) {
+				this.log.warn("Unexpected exception while notifying of successful content storage for [{}]",
+					getLocator(handle), t);
+			}
+			return ret;
 		});
 	}
 
