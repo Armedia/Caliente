@@ -934,7 +934,7 @@ public class Validator extends BaseShareableLockable {
 	}
 
 	public void validate(final Path sourcePath) {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			if (this.closed.get()) { throw new IllegalStateException("This validator has been closed, but not reset"); }
 			// Validate the source file against the target...
 			final Path relativePath = this.sourceRoot.relativize(sourcePath);
@@ -1002,7 +1002,7 @@ public class Validator extends BaseShareableLockable {
 	}
 
 	public void writeAndClear() throws IOException {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			try {
 				for (ValidationErrorType t : this.errors.keySet()) {
 					closeQuietly(this.errors.get(t));

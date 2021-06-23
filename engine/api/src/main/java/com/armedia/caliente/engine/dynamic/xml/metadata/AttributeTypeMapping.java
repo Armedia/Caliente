@@ -112,7 +112,7 @@ public class AttributeTypeMapping extends BaseShareableLockable {
 	}
 
 	public void setDefaultType(CmfValue.Type value) {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			this.defaultType = value;
 			close();
 			initialize(this.caseSensitive);
@@ -120,7 +120,7 @@ public class AttributeTypeMapping extends BaseShareableLockable {
 	}
 
 	public CmfValue.Type getMappedType(final String sqlName) {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			for (TypeMatcher tm : this.matchers) {
 				if (tm.pattern.matcher(sqlName).matches()) { return tm.type; }
 			}

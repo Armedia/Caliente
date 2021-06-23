@@ -63,7 +63,7 @@ public abstract class ContentPersistor extends BaseShareableLockable implements 
 	}
 
 	public final void initialize() throws Exception {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			if (this.initialized) {
 				throw new IllegalStateException("This persistor is already initialized!! Close it first!");
 			}
@@ -97,7 +97,7 @@ public abstract class ContentPersistor extends BaseShareableLockable implements 
 
 	@Override
 	public final void close() {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			if (!this.initialized) { return; }
 			try {
 				cleanup();

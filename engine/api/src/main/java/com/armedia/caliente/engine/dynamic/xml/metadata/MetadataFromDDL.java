@@ -134,7 +134,7 @@ public class MetadataFromDDL extends MetadataReaderBase {
 
 	@Override
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(Connection c, CmfObject<V> object) throws Exception {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			final CmfAttributeTranslator<V> translator = object.getTranslator();
 			try (final PreparedStatement ps = c.prepareStatement(this.finalSql)) {
 				try (final ResultSet rs = getResultSet(ps, object, null)) {

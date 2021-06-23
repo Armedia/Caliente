@@ -94,7 +94,7 @@ public class ObjectFilter extends BaseShareableLockable {
 
 	public Boolean accept(CmfObject<CmfValue> cmfObject, CmfValueMapper mapper) throws ObjectFilterException {
 		Objects.requireNonNull(cmfObject, "Must provide an object to filter");
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			if (this.closed) { throw new ObjectFilterException("This object filter is already closed"); }
 			DynamicElementContext<?> ctx = new DynamicElementContext<>(cmfObject, new DefaultDynamicObject(cmfObject),
 				mapper, null);
@@ -135,7 +135,7 @@ public class ObjectFilter extends BaseShareableLockable {
 	}
 
 	public void close() {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			try {
 				if (this.closed) { return; }
 				this.activeFilters.clear();

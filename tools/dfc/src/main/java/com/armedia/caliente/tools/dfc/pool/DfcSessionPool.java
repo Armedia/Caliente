@@ -132,7 +132,7 @@ public class DfcSessionPool extends BaseShareableLockable {
 	}
 
 	public final IDfSession acquireSession() throws DfException {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			if (!this.open) { throw new IllegalStateException("This session factory is not open"); }
 			try {
 				return this.pool.borrowObject();
