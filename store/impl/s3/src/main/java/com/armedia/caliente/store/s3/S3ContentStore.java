@@ -136,6 +136,67 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		CHARS_BAD = Tools.freezeSet(s);
 	}
 
+	static enum CharFixer {
+		//
+		NONE() {
+			@Override
+			protected void applyFix(StringBuilder b, char c) {
+				// DO nothing...
+			}
+
+			// Optimize for speed...
+			@Override
+			public String fix(String str) {
+				return str;
+			}
+		}, //
+
+		ENCODE() {
+			private final String encoding = StandardCharsets.UTF_8.name();
+
+			@Override
+			protected void applyFix(StringBuilder b, char c) {
+				try {
+					b.append(URLEncoder.encode(String.valueOf(c), this.encoding).toUpperCase());
+				} catch (UnsupportedEncodingException e) {
+					throw new RuntimeException(this.encoding + " encoding is not supported?!?!");
+				}
+			}
+		}, //
+
+		REMOVE() {
+			@Override
+			protected void applyFix(StringBuilder b, char c) {
+				// Do nothing... we're skipping the character
+			}
+		}, //
+
+		REPLACE() {
+			@Override
+			protected void applyFix(StringBuilder b, char c) {
+				b.append("");
+			}
+		}, //
+			//
+		;
+
+		protected abstract void applyFix(StringBuilder b, char c);
+
+		public String fix(String str) {
+			if (StringUtils.isEmpty(str)) { return str; }
+			StringBuilder b = new StringBuilder(str.length());
+			for (int i = 0; i < str.length(); i++) {
+				char c = str.charAt(i);
+				if (S3ContentStore.CHARS_BAD.contains(c)) {
+					applyFix(b, c);
+				} else {
+					b.append(c);
+				}
+			}
+			return b.toString();
+		}
+	}
+
 	private static final CsvFormatter FORMAT = new CsvFormatter( //
 		"TYPE", //
 		"ID", //
@@ -168,6 +229,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 	private final boolean failOnCollisions;
 	private final PooledWorkers<?, Handle<?>> contentWorkers;
 	private final PrintWriter csvWriter;
+	private final CharFixer charFixer;
 	protected final boolean propertiesLoaded;
 	private final CheckedConsumer<Handle<?>, Exception> contentStoredConsumer;
 
@@ -391,6 +453,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 			contentStoredConsumer = this.nullConsumer;
 		}
 		this.contentStoredConsumer = contentStoredConsumer;
+		this.charFixer = settings.getEnum(S3ContentStoreSetting.CHAR_FIX, CharFixer.class);
 	}
 
 	protected void initProperties() throws CmfStorageException {
@@ -418,13 +481,6 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		return (locator != null);
 	}
 
-	protected CharSequence encodeChar(char c) {
-		if (S3ContentStore.CHARS_BAD.contains(c)) {
-			return "_"; // TODO: Make this configurable?
-		}
-		return String.valueOf(c);
-	}
-
 	protected String fixMetadataAttributeName(String name) {
 		if (StringUtils.isBlank(name)) { return name; }
 		// URL-Encode?
@@ -435,14 +491,6 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 			throw new RuntimeException("The standard encoding UTF-8 is not supported... how?!?!?", e);
 		}
 		// return name.replace(':', '_');
-	}
-
-	protected String safeEncode(String str) {
-		StringBuilder b = new StringBuilder(str.length());
-		for (int i = 0; i < str.length(); i++) {
-			b.append(encodeChar(str.charAt(i)));
-		}
-		return b.toString();
 	}
 
 	private String constructFileName(Location loc) {
@@ -485,7 +533,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		rawPath.add(constructFileName(location));
 		List<String> sspParts = new ArrayList<>(rawPath.size());
 		for (String s : rawPath) {
-			sspParts.add(safeEncode(s));
+			sspParts.add(this.charFixer.fix(s));
 		}
 		return Pair.of(sspParts, versionId);
 	}

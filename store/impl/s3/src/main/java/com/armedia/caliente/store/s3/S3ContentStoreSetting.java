@@ -30,7 +30,7 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum S3ContentStoreSetting implements ConfigurationSetting {
 	//
-	TEMP(),
+	TEMP,
 	REGION(S3ContentStoreFactory.DEFAULT_REGION),
 	ENDPOINT,
 	CREDENTIAL_TYPE(S3ContentStoreFactory.CredentialType.STATIC),
@@ -42,12 +42,13 @@ public enum S3ContentStoreSetting implements ConfigurationSetting {
 	CREATE_MISSING_BUCKET(false),
 	ATTACH_METADATA(false),
 	TRANSLATE_ATTRIBUTE_NAMES(true),
-	BUCKET(),
+	BUCKET,
 	BASE_PATH,
 	URI_ORGANIZER,
 	FAIL_ON_COLLISIONS(false),
-	CSV_MAPPINGS(),
+	CSV_MAPPINGS,
 	STORE_PROPERTIES(true),
+	CHAR_FIX(S3ContentStore.CharFixer.REPLACE),
 	//
 	;
 
