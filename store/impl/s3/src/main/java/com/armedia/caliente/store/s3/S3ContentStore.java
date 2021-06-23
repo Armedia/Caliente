@@ -47,7 +47,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -121,82 +120,6 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 
 	private static final long MIN_MULTIPART_SIZE = (5 * (int) FileUtils.ONE_MB);
 
-	private static final String CHARS_BAD_STR = "\\{}^%[]`\"~#|<>";
-	private static final Set<Character> CHARS_BAD;
-	static {
-		Set<Character> s = null;
-
-		s = new HashSet<>();
-		for (int i = 0; i < S3ContentStore.CHARS_BAD_STR.length(); i++) {
-			s.add(S3ContentStore.CHARS_BAD_STR.charAt(i));
-		}
-		for (int i = 0x80; i <= 0xFF; i++) {
-			s.add(Character.valueOf((char) i));
-		}
-		CHARS_BAD = Tools.freezeSet(s);
-	}
-
-	static enum CharFixer {
-		//
-		NONE() {
-			@Override
-			protected void applyFix(StringBuilder b, char c) {
-				// DO nothing...
-			}
-
-			// Optimize for speed...
-			@Override
-			public String fix(String str) {
-				return str;
-			}
-		}, //
-
-		ENCODE() {
-			private final String encoding = StandardCharsets.UTF_8.name();
-
-			@Override
-			protected void applyFix(StringBuilder b, char c) {
-				try {
-					b.append(URLEncoder.encode(String.valueOf(c), this.encoding).toUpperCase());
-				} catch (UnsupportedEncodingException e) {
-					throw new RuntimeException(this.encoding + " encoding is not supported?!?!");
-				}
-			}
-		}, //
-
-		REMOVE() {
-			@Override
-			protected void applyFix(StringBuilder b, char c) {
-				// Do nothing... we're skipping the character
-			}
-		}, //
-
-		REPLACE() {
-			@Override
-			protected void applyFix(StringBuilder b, char c) {
-				b.append("");
-			}
-		}, //
-			//
-		;
-
-		protected abstract void applyFix(StringBuilder b, char c);
-
-		public String fix(String str) {
-			if (StringUtils.isEmpty(str)) { return str; }
-			StringBuilder b = new StringBuilder(str.length());
-			for (int i = 0; i < str.length(); i++) {
-				char c = str.charAt(i);
-				if (S3ContentStore.CHARS_BAD.contains(c)) {
-					applyFix(b, c);
-				} else {
-					b.append(c);
-				}
-			}
-			return b.toString();
-		}
-	}
-
 	private static final CsvFormatter FORMAT = new CsvFormatter( //
 		"TYPE", //
 		"ID", //
@@ -229,7 +152,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 	private final boolean failOnCollisions;
 	private final PooledWorkers<?, Handle<?>> contentWorkers;
 	private final PrintWriter csvWriter;
-	private final CharFixer charFixer;
+	private final S3CharFixer charFixer;
 	protected final boolean propertiesLoaded;
 	private final CheckedConsumer<Handle<?>, Exception> contentStoredConsumer;
 
@@ -453,7 +376,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 			contentStoredConsumer = this.nullConsumer;
 		}
 		this.contentStoredConsumer = contentStoredConsumer;
-		this.charFixer = settings.getEnum(S3ContentStoreSetting.CHAR_FIX, CharFixer.class);
+		this.charFixer = settings.getEnum(S3ContentStoreSetting.CHAR_FIX, S3CharFixer.class);
 	}
 
 	protected void initProperties() throws CmfStorageException {
@@ -533,7 +456,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		rawPath.add(constructFileName(location));
 		List<String> sspParts = new ArrayList<>(rawPath.size());
 		for (String s : rawPath) {
-			sspParts.add(this.charFixer.fix(s));
+			sspParts.add(this.charFixer.fixCharacters(s));
 		}
 		return Pair.of(sspParts, versionId);
 	}

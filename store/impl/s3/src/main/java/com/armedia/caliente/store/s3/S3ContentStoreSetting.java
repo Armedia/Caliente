@@ -48,7 +48,7 @@ public enum S3ContentStoreSetting implements ConfigurationSetting {
 	FAIL_ON_COLLISIONS(false),
 	CSV_MAPPINGS,
 	STORE_PROPERTIES(true),
-	CHAR_FIX(S3ContentStore.CharFixer.REPLACE),
+	CHAR_FIX(S3CharFixer.REPLACE),
 	//
 	;
 
