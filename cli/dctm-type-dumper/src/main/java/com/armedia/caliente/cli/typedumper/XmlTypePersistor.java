@@ -89,7 +89,7 @@ public class XmlTypePersistor extends BaseShareableLockable implements TypePersi
 	@Override
 	public void initialize(final File target) throws Exception {
 		final File finalTarget = Tools.canonicalize(target);
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			this.out = new BufferedWriter(new FileWriter(finalTarget));
 
 			XMLOutputFactory factory = XmlTypePersistor.OUTPUT_FACTORY.get();
@@ -142,7 +142,7 @@ public class XmlTypePersistor extends BaseShareableLockable implements TypePersi
 
 	@Override
 	public void close() throws Exception {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			this.xml.flush();
 			this.xml.writeEndDocument();
 			this.xml.close();

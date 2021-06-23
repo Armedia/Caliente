@@ -952,7 +952,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	}
 
 	public Stream<Path> searchPaths() {
-		final SharedAutoLock lock = autoSharedLock();
+		final SharedAutoLock lock = sharedAutoLock();
 		List<Stream<Path>> streams = new ArrayList<>(this.searches.size());
 		for (String id : this.searches.keySet()) {
 			PathSearch search = this.searches.get(id);
@@ -975,7 +975,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	}
 
 	public String getHistoryId(String objectId) throws Exception {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			return ConcurrentTools.createIfAbsent(this.historyIds, objectId, (oid) -> {
 				for (String id : this.history.keySet()) {
 					Query<String> q = this.history.get(id);
@@ -994,7 +994,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	}
 
 	public List<Pair<String, Path>> getVersionList(String historyId) throws Exception {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			return ConcurrentTools.createIfAbsent(this.versionLists, historyId, (hid) -> {
 				LinkedList<Pair<String, Exception>> errors = new LinkedList<>();
 				for (String id : this.members.keySet()) {
@@ -1028,7 +1028,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 	}
 
 	public void loadAttributes(CmfObject<CmfValue> object) throws Exception {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			for (final String id : this.metadataSets.keySet()) {
 				final MetadataSet metadataSet = this.metadataSets.get(id);
 				Map<String, CmfAttribute<CmfValue>> attributes = metadataSet.getAttributeValues(object);
