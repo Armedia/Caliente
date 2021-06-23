@@ -83,7 +83,7 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 	}
 
 	protected final void assertOpen() {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			if (!this.open) { throw new IllegalStateException("This stream store is not open, call init() first"); }
 		}
 	}

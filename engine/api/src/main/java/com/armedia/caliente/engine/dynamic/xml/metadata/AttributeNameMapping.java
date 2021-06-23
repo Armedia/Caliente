@@ -110,7 +110,7 @@ public class AttributeNameMapping extends BaseShareableLockable {
 	}
 
 	public void setDefaultTransform(Expression value) {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			this.defaultTransform = value;
 			close();
 			initialize(this.caseSensitive);
@@ -118,7 +118,7 @@ public class AttributeNameMapping extends BaseShareableLockable {
 	}
 
 	public String transformName(final String sqlName) throws ScriptException {
-		try (SharedAutoLock lock = autoSharedLock()) {
+		try (SharedAutoLock lock = sharedAutoLock()) {
 			boolean hasGroups = false;
 			String regex = null;
 			Expression repl = null;
@@ -155,7 +155,7 @@ public class AttributeNameMapping extends BaseShareableLockable {
 	}
 
 	public void close() {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			if (this.matchers == null) { return; }
 			this.activeDefault = null;
 			this.caseSensitive = null;

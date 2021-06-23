@@ -76,7 +76,7 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 	@Override
 	public void initialize(final File target) throws Exception {
 		final File finalTarget = Tools.canonicalize(target);
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			this.out = new PrintWriter(new BufferedWriter(new FileWriter(finalTarget)));
 			this.out.printf("" + //
 				DqlTypePersistor.BIG_DIVIDER + "%n" + //
@@ -90,7 +90,7 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 	@Override
 	public void persist(String hierarchy, IDfType type) throws Exception {
 		if (type == null) { return; }
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			String extendsClause = "";
 			final IDfType superType = type.getSuperType();
 
@@ -188,7 +188,7 @@ public class DqlTypePersistor extends BaseShareableLockable implements TypePersi
 
 	@Override
 	public void close() throws Exception {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			this.out.printf("" + //
 				DqlTypePersistor.BIG_DIVIDER + "%n" + //
 				"-- " + DqlTypePersistor.pad(DqlTypePersistor.FOOTER, DqlTypePersistor.BIG_DIVIDER, 6) + " --%n" + //

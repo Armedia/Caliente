@@ -135,7 +135,7 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 	@Override
 	public void initialize(final File target, String dql, Collection<IDfAttr> attributes) throws Exception {
 		final File finalTarget = Tools.canonicalize(target);
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			this.out = new BufferedWriter(new FileWriter(finalTarget));
 			this.attributes = new LinkedHashMap<>();
 			this.sanitized = new HashMap<>();
@@ -254,7 +254,7 @@ public class XmlResultsPersistor extends BaseShareableLockable implements Result
 
 	@Override
 	public void close() throws Exception {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			if (!this.first) {
 				this.xml.writeEndElement();
 			}

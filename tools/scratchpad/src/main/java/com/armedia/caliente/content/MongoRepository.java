@@ -66,7 +66,7 @@ public class MongoRepository extends BaseShareableLockable implements CheckedSup
 	private MongoCredential credential = MongoRepository.DEFAULT_CREDENTIAL;
 
 	public MongoRepository setServerAddress(ServerAddress serverAddress) {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			this.serverAddress = Tools.coalesce(serverAddress, MongoRepository.DEFAULT_SERVER_ADDRESS);
 			return this;
 		}
@@ -87,7 +87,7 @@ public class MongoRepository extends BaseShareableLockable implements CheckedSup
 	}
 
 	public MongoRepository setHost(String host, int port) {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			host = Tools.coalesce(host, MongoRepository.DEFAULT_SERVER_ADDRESS.getHost());
 			this.serverAddress = new ServerAddress(host, getDesiredPort(port));
 			return this;
@@ -111,7 +111,7 @@ public class MongoRepository extends BaseShareableLockable implements CheckedSup
 	}
 
 	public MongoRepository setSocketAddress(InetAddress address, int port) {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			port = getDesiredPort(port);
 			address = Tools.coalesce(address, MongoRepository.DEFAULT_SOCKET_ADDRESS.getAddress());
 			this.serverAddress = new ServerAddress(address, port);
@@ -120,7 +120,7 @@ public class MongoRepository extends BaseShareableLockable implements CheckedSup
 	}
 
 	public MongoRepository setSocketAddress(InetSocketAddress address) {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			address = Tools.coalesce(address, MongoRepository.DEFAULT_SOCKET_ADDRESS);
 			this.serverAddress = new ServerAddress(address);
 			return this;
@@ -136,7 +136,7 @@ public class MongoRepository extends BaseShareableLockable implements CheckedSup
 	}
 
 	public MongoRepository setCredential(MongoCredential credential) {
-		try (MutexAutoLock lock = autoMutexLock()) {
+		try (MutexAutoLock lock = mutexAutoLock()) {
 			this.credential = Tools.coalesce(credential, MongoRepository.DEFAULT_CREDENTIAL);
 			return this;
 		}
