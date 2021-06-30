@@ -93,8 +93,6 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		}
 
 		settings.put(XmlSetting.ROOT.getLabel(), targetDir.getAbsolutePath());
-		settings.put(XmlSetting.DB.getLabel(), state.getObjectStoreLocation().toString());
-		settings.put(XmlSetting.CONTENT.getLabel(), state.getContentStoreLocation().toString());
 
 		return true;
 	}

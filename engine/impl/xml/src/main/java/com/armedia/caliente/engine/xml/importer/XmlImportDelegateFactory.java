@@ -74,6 +74,7 @@ import com.armedia.caliente.engine.xml.importer.jaxb.FormatsT;
 import com.armedia.caliente.engine.xml.importer.jaxb.GroupsT;
 import com.armedia.caliente.engine.xml.importer.jaxb.TypesT;
 import com.armedia.caliente.engine.xml.importer.jaxb.UsersT;
+import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
@@ -113,7 +114,6 @@ public class XmlImportDelegateFactory
 	private final Map<CmfObject.Archetype, AggregatorBase<?>> xml;
 	private final boolean aggregateFolders;
 	private final boolean aggregateDocuments;
-	private final Path db;
 	private final Path content;
 	private final Path metadataRoot;
 	private final AtomicBoolean schemaMissing = new AtomicBoolean(true);
@@ -288,19 +288,17 @@ public class XmlImportDelegateFactory
 	public XmlImportDelegateFactory(XmlImportEngine engine, CfgTools configuration) throws IOException {
 		super(engine, configuration);
 		engine.addListener(this.documentListener);
-		String db = configuration.getString(XmlSetting.DB);
-		if (db != null) {
-			this.db = Tools.canonicalize(Paths.get(db));
+
+		CmfContentStore<?, ?> contentStore = engine.getContentStore();
+		if (contentStore.isSupportsFileAccess()) {
+			// This is where the content is stored...
+			this.content = contentStore.getRootLocation().toPath();
 		} else {
-			this.db = Tools.canonicalize(Paths.get("caliente-data"));
+			// It has no local storage, so we "make up" our own root...
+			String root = configuration.getString(XmlSetting.ROOT);
+			this.content = Tools.canonicalize(Paths.get(root, "streams"));
 		}
-		FileUtils.forceMkdir(this.db.toFile());
-		String content = configuration.getString(XmlSetting.CONTENT);
-		if (content != null) {
-			this.content = Tools.canonicalize(Paths.get(content));
-		} else {
-			this.content = Tools.canonicalize(this.db.resolve("content"));
-		}
+
 		FileUtils.forceMkdir(this.content.toFile());
 		this.metadataRoot = XmlCommon.getMetadataRoot(this.content);
 		FileUtils.forceMkdir(this.metadataRoot.toFile());
