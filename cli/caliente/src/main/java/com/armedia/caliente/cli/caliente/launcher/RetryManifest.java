@@ -26,22 +26,16 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.caliente.launcher;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.exporter.DefaultExportEngineListener;
-import com.armedia.caliente.engine.exporter.ExportSkipReason;
-import com.armedia.caliente.engine.exporter.ExportState;
 import com.armedia.caliente.engine.importer.ImportRestriction;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectSearchSpec;
-import com.armedia.caliente.tools.CsvFormatter;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -52,26 +46,6 @@ public class RetryManifest extends DefaultExportEngineListener {
 
 	private final Logger retriesLog = LoggerFactory.getLogger("retries");
 
-	private static final CsvFormatter FORMAT = new CsvFormatter( //
-		"RETRY_ID" //
-	);
-
-	private static final class Record {
-		private final String retryId;
-
-		private Record(CmfObjectSearchSpec spec) {
-			this.retryId = ImportRestriction.render(spec);
-		}
-
-		public void log(Logger log) {
-			final String msg = RetryManifest.FORMAT.render( //
-				this.retryId //
-			);
-			log.info(msg);
-		}
-	}
-
-	private final Map<String, List<Record>> openBatches = new ConcurrentHashMap<>();
 	private final Set<CmfObject.Archetype> types;
 
 	public RetryManifest(Set<CmfObject.Archetype> types) {
@@ -79,21 +53,10 @@ public class RetryManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	protected void exportStartedImpl(ExportState exportState) {
-		this.openBatches.clear();
-	}
-
-	@Override
-	public void objectExportCompleted(UUID jobId, CmfObject<?> object, Long objectNumber) {
-	}
-
-	@Override
-	public void objectSkipped(UUID jobId, CmfObjectSearchSpec object, ExportSkipReason reason, String extraInfo) {
-	}
-
-	@Override
 	public void objectExportFailed(UUID jobId, CmfObjectSearchSpec object, Throwable thrown) {
 		if (!this.types.contains(object.getType())) { return; }
-		new Record(object).log(this.retriesLog);
+		// We do NOT use CSV formatter b/c we want the *raw* retry ID to be rendered
+		// on each line
+		this.retriesLog.info(ImportRestriction.render(object));
 	}
 }
