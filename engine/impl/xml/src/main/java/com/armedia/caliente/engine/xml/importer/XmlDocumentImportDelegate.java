@@ -120,20 +120,24 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			}
 			CmfContentStore<?, ?>.Handle<CmfValue> h = ctx.getContentStore().findHandle(translator, this.cmfObject,
 				info);
-			final File f;
-			try {
-				f = h.getFile();
-			} catch (CmfStorageException e) {
-				// Failed to get the file, so we can't handle this
-				throw new CmfStorageException(
-					String.format("Failed to locate the content file for %s, content qualifier [%s]",
-						this.cmfObject.getDescription(), info),
-					e);
-			}
 			ContentStreamT xml = new ContentStreamT();
+			if (h.getSourceStore().isSupportsFileAccess()) {
+				final File f;
+				try {
+					f = h.getFile();
+				} catch (CmfStorageException e) {
+					// Failed to get the file, so we can't handle this
+					throw new CmfStorageException(
+						String.format("Failed to locate the content file for %s, content qualifier [%s]",
+							this.cmfObject.getDescription(), info),
+						e);
+				}
+				xml.setLocation(this.factory.relativizeContentLocation(f.getAbsoluteFile().toPath()));
+			} else {
+				xml.setLocation(contentPath);
+			}
 			xml.setFileName(info.getFileName());
 			// xml.setHash(null);
-			xml.setLocation(this.factory.relativizeContentLocation(f.getAbsoluteFile().toPath()));
 			xml.setMimeType(info.getMimeType().getBaseType());
 			xml.setRenditionId(info.getRenditionIdentifier());
 			xml.setRenditionPage(info.getRenditionPage());

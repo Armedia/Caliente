@@ -462,7 +462,7 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 	}
 
 	@Override
-	protected <VALUE> String doRenderContentPath(CmfObject<VALUE> object, CmfContentStream info) {
+	public <VALUE> String renderContentPath(CmfObject<VALUE> object, CmfContentStream info) {
 		return FileNameTools.reconstitute(renderURIParts(object.getTranslator(), object, info).getKey(), false, false,
 			'/');
 	}
