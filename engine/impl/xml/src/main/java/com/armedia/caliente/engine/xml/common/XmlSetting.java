@@ -32,10 +32,9 @@ import com.armedia.caliente.store.CmfValue;
 public enum XmlSetting implements TransferEngineSetting {
 	//
 	ROOT(CmfValue.Type.STRING),
-	DB(CmfValue.Type.STRING),
-	CONTENT(CmfValue.Type.STRING),
 	AGGREGATE_FOLDERS(CmfValue.Type.BOOLEAN, false),
 	AGGREGATE_DOCUMENTS(CmfValue.Type.BOOLEAN, false),
+	ORGANIZER(CmfValue.Type.STRING),
 	//
 	;
 

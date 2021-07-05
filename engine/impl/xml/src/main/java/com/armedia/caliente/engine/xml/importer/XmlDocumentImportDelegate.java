@@ -106,8 +106,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		v.setCurrent(getAttributeValue(IntermediateAttribute.IS_LATEST_VERSION).asBoolean());
 		v.setVersion(getAttributeValue(IntermediateAttribute.VERSION_LABEL).asString());
 
-		final String contentPath = ctx.getContentStore().renderContentPath(this.cmfObject,
-			new CmfContentStream(this.cmfObject, 0));
+		final String contentPath = this.factory.renderXmlPath(ctx, this.cmfObject);
 		v.setContentPath(String.format("%s.document.xml", contentPath));
 
 		int contents = 0;
