@@ -37,6 +37,7 @@ import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.caliente.engine.xml.common.XmlSetting;
+import com.armedia.caliente.store.CmfContentOrganizer;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.cli.Option;
 import com.armedia.commons.utilities.cli.OptionGroup;
@@ -44,12 +45,14 @@ import com.armedia.commons.utilities.cli.OptionGroupImpl;
 import com.armedia.commons.utilities.cli.OptionImpl;
 import com.armedia.commons.utilities.cli.OptionScheme;
 import com.armedia.commons.utilities.cli.OptionValues;
+import com.armedia.commons.utilities.cli.filter.StringValueFilter;
 
 class Importer extends ImportCommandModule implements DynamicCommandOptions {
 	private static final Option ORGANIZER = new OptionImpl() //
-		.setLongOpt("organizer") //
+		.setLongOpt("xml-organizer") //
 		.setArgumentLimits(1) //
 		.setArgumentName("organizer-name") //
+		.setValueFilter(new StringValueFilter(CmfContentOrganizer.getNames())) //
 		.setDescription(
 			"The name for the content organizer to use for the XML file structure (default: same as used by the configured content store)") //
 	;
