@@ -108,8 +108,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
 		String contentPath = ctx.getContentStore().renderContentPath(this.cmfObject,
 			new CmfContentStream(this.cmfObject, 0));
-		contentPath = String.format("%s.document.xml", contentPath);
-		v.setContentPath(contentPath);
+		v.setContentPath(String.format("%s.document.xml", contentPath));
 
 		int contents = 0;
 		final boolean skipRenditions = this.factory.isSkipRenditions();
@@ -121,6 +120,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			CmfContentStore<?, ?>.Handle<CmfValue> h = ctx.getContentStore().findHandle(translator, this.cmfObject,
 				info);
 			ContentStreamT xml = new ContentStreamT();
+			final String location;
 			if (h.getSourceStore().isSupportsFileAccess()) {
 				final File f;
 				try {
@@ -132,10 +132,14 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 							this.cmfObject.getDescription(), info),
 						e);
 				}
-				xml.setLocation(this.factory.relativizeContentLocation(f.getAbsoluteFile().toPath()));
+				location = this.factory.relativizeContentLocation(f.getAbsoluteFile().toPath());
 			} else {
-				xml.setLocation(contentPath);
+				location = h.getLocator();
 			}
+
+			// Location contains this content stream's actual location (generally a relative path,
+			// can be an S3 URI or somesuch)
+			xml.setLocation(location);
 			xml.setFileName(info.getFileName());
 			// xml.setHash(null);
 			xml.setMimeType(info.getMimeType().getBaseType());
