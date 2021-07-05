@@ -336,6 +336,7 @@ public class XmlImportDelegateFactory
 		String organizerName = configuration.getString(XmlSetting.ORGANIZER);
 		if (StringUtils.isNotBlank(organizerName)) {
 			this.organizer = CmfContentOrganizer.getOrganizer(organizerName);
+			this.organizer.configure(configuration);
 		} else {
 			this.organizer = null;
 		}
