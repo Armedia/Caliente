@@ -37,6 +37,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -49,6 +50,7 @@ import javax.xml.validation.Schema;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.importer.DefaultImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
@@ -74,9 +76,13 @@ import com.armedia.caliente.engine.xml.importer.jaxb.FormatsT;
 import com.armedia.caliente.engine.xml.importer.jaxb.GroupsT;
 import com.armedia.caliente.engine.xml.importer.jaxb.TypesT;
 import com.armedia.caliente.engine.xml.importer.jaxb.UsersT;
+import com.armedia.caliente.store.CmfContentOrganizer;
+import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.xml.XmlTools;
 
@@ -113,10 +119,10 @@ public class XmlImportDelegateFactory
 	private final Map<CmfObject.Archetype, AggregatorBase<?>> xml;
 	private final boolean aggregateFolders;
 	private final boolean aggregateDocuments;
-	private final Path db;
 	private final Path content;
 	private final Path metadataRoot;
 	private final AtomicBoolean schemaMissing = new AtomicBoolean(true);
+	private final CmfContentOrganizer organizer;
 
 	private final ThreadLocal<List<DocumentVersionT>> threadedVersionList = ThreadLocal.withInitial(ArrayList::new);
 
@@ -288,19 +294,17 @@ public class XmlImportDelegateFactory
 	public XmlImportDelegateFactory(XmlImportEngine engine, CfgTools configuration) throws IOException {
 		super(engine, configuration);
 		engine.addListener(this.documentListener);
-		String db = configuration.getString(XmlSetting.DB);
-		if (db != null) {
-			this.db = Tools.canonicalize(Paths.get(db));
+
+		CmfContentStore<?, ?> contentStore = engine.getContentStore();
+		if (contentStore.isSupportsFileAccess()) {
+			// This is where the content is stored...
+			this.content = contentStore.getRootLocation().toPath();
 		} else {
-			this.db = Tools.canonicalize(Paths.get("caliente-data"));
+			// It has no local storage, so we "make up" our own root...
+			String root = configuration.getString(XmlSetting.ROOT);
+			this.content = Tools.canonicalize(Paths.get(root, "streams"));
 		}
-		FileUtils.forceMkdir(this.db.toFile());
-		String content = configuration.getString(XmlSetting.CONTENT);
-		if (content != null) {
-			this.content = Tools.canonicalize(Paths.get(content));
-		} else {
-			this.content = Tools.canonicalize(this.db.resolve("content"));
-		}
+
 		FileUtils.forceMkdir(this.content.toFile());
 		this.metadataRoot = XmlCommon.getMetadataRoot(this.content);
 		FileUtils.forceMkdir(this.metadataRoot.toFile());
@@ -327,6 +331,14 @@ public class XmlImportDelegateFactory
 			} catch (IOException e) {
 				this.log.warn("Failed to delete the aggregate XML file at [{}]", p, e);
 			}
+		}
+
+		String organizerName = configuration.getString(XmlSetting.ORGANIZER);
+		if (StringUtils.isNotBlank(organizerName)) {
+			this.organizer = CmfContentOrganizer.getOrganizer(organizerName);
+			this.organizer.configure(configuration);
+		} else {
+			this.organizer = null;
 		}
 	}
 
@@ -385,5 +397,17 @@ public class XmlImportDelegateFactory
 
 	protected Path calculateConsolidatedFile(CmfObject.Archetype t) {
 		return this.metadataRoot.resolve(String.format("index.%ss.xml", t.name().toLowerCase()));
+	}
+
+	protected String renderXmlPath(XmlImportContext ctx, CmfObject<CmfValue> object) {
+		final CmfContentStream stream = new CmfContentStream(object, 0);
+		// If we have no organizer, we organize identically to the content store's approach
+		if (this.organizer == null) { return ctx.getContentStore().renderContentPath(object, stream); }
+
+		// If we do have an organizer, we use that instead
+		CmfContentOrganizer.Location location = this.organizer.getLocation(object.getTranslator(), object, stream);
+		List<String> path = new LinkedList<>(location.containerSpec);
+		path.add(location.baseName);
+		return FileNameTools.reconstitute(path, false, false, '/');
 	}
 }
