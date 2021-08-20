@@ -42,7 +42,6 @@ import com.armedia.caliente.engine.xml.importer.jaxb.FolderIndexEntryT;
 import com.armedia.caliente.engine.xml.importer.jaxb.FolderIndexT;
 import com.armedia.caliente.engine.xml.importer.jaxb.FolderT;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
@@ -64,8 +63,8 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 		if (!ctx.getContentStore().isSupportsFileAccess()) { return null; }
 
 		FolderT f = this.delegate.createItem(translator, ctx);
-		String location = ctx.getContentStore().renderContentPath(this.cmfObject,
-			new CmfContentStream(this.cmfObject, 0));
+
+		String location = this.factory.renderXmlPath(ctx, this.cmfObject);
 		location = String.format("%s.folder.xml", location);
 		Path tgt = ctx.getSession().getMetadataRoot().resolve(location);
 		Path dir = ctx.getSession().makeAbsolute(tgt);
