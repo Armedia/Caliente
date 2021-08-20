@@ -106,10 +106,8 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		v.setCurrent(getAttributeValue(IntermediateAttribute.IS_LATEST_VERSION).asBoolean());
 		v.setVersion(getAttributeValue(IntermediateAttribute.VERSION_LABEL).asString());
 
-		String contentPath = ctx.getContentStore().renderContentPath(this.cmfObject,
-			new CmfContentStream(this.cmfObject, 0));
-		contentPath = String.format("%s.document.xml", contentPath);
-		v.setContentPath(contentPath);
+		final String contentPath = this.factory.renderXmlPath(ctx, this.cmfObject);
+		v.setContentPath(String.format("%s.document.xml", contentPath));
 
 		int contents = 0;
 		final boolean skipRenditions = this.factory.isSkipRenditions();
@@ -120,20 +118,29 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			}
 			CmfContentStore<?, ?>.Handle<CmfValue> h = ctx.getContentStore().findHandle(translator, this.cmfObject,
 				info);
-			final File f;
-			try {
-				f = h.getFile();
-			} catch (CmfStorageException e) {
-				// Failed to get the file, so we can't handle this
-				throw new CmfStorageException(
-					String.format("Failed to locate the content file for %s, content qualifier [%s]",
-						this.cmfObject.getDescription(), info),
-					e);
-			}
 			ContentStreamT xml = new ContentStreamT();
+			final String location;
+			if (h.getSourceStore().isSupportsFileAccess()) {
+				final File f;
+				try {
+					f = h.getFile();
+				} catch (CmfStorageException e) {
+					// Failed to get the file, so we can't handle this
+					throw new CmfStorageException(
+						String.format("Failed to locate the content file for %s, content qualifier [%s]",
+							this.cmfObject.getDescription(), info),
+						e);
+				}
+				location = this.factory.relativizeContentLocation(f.getAbsoluteFile().toPath());
+			} else {
+				location = h.getLocator();
+			}
+
+			// Location contains this content stream's actual location (generally a relative path,
+			// can be an S3 URI or somesuch)
+			xml.setLocation(location);
 			xml.setFileName(info.getFileName());
 			// xml.setHash(null);
-			xml.setLocation(this.factory.relativizeContentLocation(f.getAbsoluteFile().toPath()));
 			xml.setMimeType(info.getMimeType().getBaseType());
 			xml.setRenditionId(info.getRenditionIdentifier());
 			xml.setRenditionPage(info.getRenditionPage());

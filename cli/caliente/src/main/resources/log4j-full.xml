@@ -52,6 +52,20 @@
 		<appender-ref ref="manifest" />
 	</appender>
 
+	<appender name="retries" class="org.apache.log4j.FileAppender">
+		<param name="File" value="${logDir}/${logName}.retries.list" />
+		<param name="ImmediateFlush" value="true" />
+		<param name="Append" value="false" />
+		<param name="Threshold" value="trace" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%m%n" />
+		</layout>
+	</appender>
+	<appender name="retries.async" class="org.apache.log4j.AsyncAppender">
+		<param name="BufferSize" value="10240" />
+		<appender-ref ref="retries" />
+	</appender>
+
 	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
 	<logger name="h2database">
 		<level value="WARN" />
@@ -75,6 +89,11 @@
 	<logger name="manifest" additivity="false">
 		<level value="INFO" />
 		<appender-ref ref="manifest.async" />
+	</logger>
+
+	<logger name="retries" additivity="false">
+		<level value="INFO" />
+		<appender-ref ref="retries.async" />
 	</logger>
 
 	<root>
