@@ -63,7 +63,7 @@
 	</appender>
 	<appender name="retries.async" class="org.apache.log4j.AsyncAppender">
 		<param name="BufferSize" value="10240" />
-		<appender-ref ref="manifest" />
+		<appender-ref ref="retries" />
 	</appender>
 
 	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
