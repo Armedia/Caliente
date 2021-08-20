@@ -37,11 +37,30 @@ import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.caliente.engine.xml.common.XmlSetting;
+import com.armedia.caliente.store.CmfContentOrganizer;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionGroup;
+import com.armedia.commons.utilities.cli.OptionGroupImpl;
+import com.armedia.commons.utilities.cli.OptionImpl;
 import com.armedia.commons.utilities.cli.OptionScheme;
 import com.armedia.commons.utilities.cli.OptionValues;
+import com.armedia.commons.utilities.cli.filter.StringValueFilter;
 
 class Importer extends ImportCommandModule implements DynamicCommandOptions {
+	private static final Option ORGANIZER = new OptionImpl() //
+		.setLongOpt("xml-organizer") //
+		.setArgumentLimits(1) //
+		.setArgumentName("organizer-name") //
+		.setValueFilter(new StringValueFilter(CmfContentOrganizer.getNames())) //
+		.setDescription(
+			"The name for the content organizer to use for the XML file structure (default: same as used by the configured content store)") //
+	;
+
+	private static final OptionGroup OPTIONS = new OptionGroupImpl("XML Import") //
+		.add(Importer.ORGANIZER) //
+	;
+
 	Importer(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
@@ -93,9 +112,7 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		}
 
 		settings.put(XmlSetting.ROOT.getLabel(), targetDir.getAbsolutePath());
-		settings.put(XmlSetting.DB.getLabel(), state.getObjectStoreLocation().toString());
-		settings.put(XmlSetting.CONTENT.getLabel(), state.getContentStoreLocation().toString());
-
+		settings.put(XmlSetting.ORGANIZER.getLabel(), commandValues.getString(Importer.ORGANIZER));
 		return true;
 	}
 
@@ -114,6 +131,7 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 	public void getDynamicOptions(String engine, OptionScheme scheme) {
 		scheme //
 			.addGroup(CLIGroup.IMPORT_COMMON) //
+			.addGroup(Importer.OPTIONS) //
 		;
 	}
 }
