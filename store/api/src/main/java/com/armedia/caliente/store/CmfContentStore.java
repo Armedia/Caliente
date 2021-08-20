@@ -409,14 +409,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 
 	public abstract boolean isSupportsFileAccess();
 
-	public final <VALUE> String renderContentPath(CmfObject<VALUE> object, CmfContentStream stream) {
-		if (!isSupportsFileAccess()) {
-			throw new UnsupportedOperationException("This CmfContentStore instance does not support content paths");
-		}
-		return doRenderContentPath(object, stream);
-	}
-
-	protected abstract <VALUE> String doRenderContentPath(CmfObject<VALUE> object, CmfContentStream stream);
+	public abstract <VALUE> String renderContentPath(CmfObject<VALUE> object, CmfContentStream stream);
 
 	// Return null if this doesn't support file access
 	public final File getRootLocation() {
