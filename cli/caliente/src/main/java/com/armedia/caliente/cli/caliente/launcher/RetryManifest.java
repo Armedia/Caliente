@@ -24,57 +24,39 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
-package com.armedia.caliente.engine.xml.common;
+package com.armedia.caliente.cli.caliente.launcher;
 
-import com.armedia.caliente.engine.TransferEngineSetting;
-import com.armedia.caliente.store.CmfValue;
+import java.util.Set;
+import java.util.UUID;
 
-public enum XmlSetting implements TransferEngineSetting {
-	//
-	ROOT(CmfValue.Type.STRING),
-	AGGREGATE_FOLDERS(CmfValue.Type.BOOLEAN, false),
-	AGGREGATE_DOCUMENTS(CmfValue.Type.BOOLEAN, false),
-	ORGANIZER(CmfValue.Type.STRING),
-	//
-	;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-	private final String label;
-	private final Object defaultValue;
-	private final CmfValue.Type type;
-	private final boolean required;
+import com.armedia.caliente.engine.exporter.DefaultExportEngineListener;
+import com.armedia.caliente.engine.importer.ImportRestriction;
+import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectSearchSpec;
+import com.armedia.commons.utilities.Tools;
 
-	private XmlSetting(CmfValue.Type type) {
-		this(type, null);
-	}
+/**
+ *
+ *
+ */
+public class RetryManifest extends DefaultExportEngineListener {
 
-	private XmlSetting(CmfValue.Type type, Object defaultValue) {
-		this(type, defaultValue, false);
-	}
+	private final Logger retriesLog = LoggerFactory.getLogger("retries");
 
-	private XmlSetting(CmfValue.Type type, Object defaultValue, boolean required) {
-		this.label = name().toLowerCase();
-		this.defaultValue = defaultValue;
-		this.type = type;
-		this.required = required;
+	private final Set<CmfObject.Archetype> types;
+
+	public RetryManifest(Set<CmfObject.Archetype> types) {
+		this.types = Tools.freezeCopy(types, true);
 	}
 
 	@Override
-	public final String getLabel() {
-		return this.label;
-	}
-
-	@Override
-	public final Object getDefaultValue() {
-		return this.defaultValue;
-	}
-
-	@Override
-	public CmfValue.Type getType() {
-		return this.type;
-	}
-
-	@Override
-	public boolean isRequired() {
-		return this.required;
+	public void objectExportFailed(UUID jobId, CmfObjectSearchSpec object, Throwable thrown) {
+		if (!this.types.contains(object.getType())) { return; }
+		// We do NOT use CSV formatter b/c we want the *raw* retry ID to be rendered
+		// on each line
+		this.retriesLog.info(ImportRestriction.render(object));
 	}
 }
