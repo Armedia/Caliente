@@ -28,13 +28,13 @@ package com.armedia.caliente.store;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -172,7 +172,7 @@ public abstract class CmfContentOrganizer {
 	private static final Map<String, CmfContentOrganizer> ORGANIZERS;
 
 	static {
-		Map<String, CmfContentOrganizer> strategies = new HashMap<>();
+		Map<String, CmfContentOrganizer> organizers = new TreeMap<>();
 		PluggableServiceLocator<CmfContentOrganizer> l = new PluggableServiceLocator<>(CmfContentOrganizer.class);
 		l.setHideErrors(false);
 		l.setErrorListener((serviceClass, t) -> {
@@ -189,7 +189,7 @@ public abstract class CmfContentOrganizer {
 					s.getClass().getCanonicalName());
 				continue;
 			}
-			CmfContentOrganizer old = strategies.get(name);
+			CmfContentOrganizer old = organizers.get(name);
 			if (old != null) {
 				CmfContentOrganizer.LOG.warn(
 					"The content organizer class [{}] provides the name [{}], but this collides with already-registered organizer class [{}]. The newcomer will be ignored.",
@@ -198,14 +198,18 @@ public abstract class CmfContentOrganizer {
 			}
 			CmfContentOrganizer.LOG.debug("Registering the content organizer class [{}] as [{}]",
 				s.getClass().getCanonicalName(), name);
-			strategies.put(name, s);
+			organizers.put(name, s);
 		}
-		ORGANIZERS = Tools.freezeMap(strategies);
+		ORGANIZERS = Tools.freezeMap(new LinkedHashMap<>(organizers));
 	}
 
 	public static CmfContentOrganizer getOrganizer(String name) {
 		if (name == null) { return CmfContentOrganizer.DEFAULT_ORGANIZER; }
 		return Tools.coalesce(CmfContentOrganizer.ORGANIZERS.get(name), CmfContentOrganizer.DEFAULT_ORGANIZER);
+	}
+
+	public static Set<String> getNames() {
+		return CmfContentOrganizer.ORGANIZERS.keySet();
 	}
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
