@@ -197,6 +197,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		}
 
 		if (ret.isEmpty()) {
+			/*
 			if (ctx.isPathAltering()) {
 				// If there are no parents, but the path needs to be altered, then we proceed
 				// to locate the actual target path based on the "new root"
@@ -209,7 +210,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				} catch (CmisObjectNotFoundException e) {
 					// Ignore a missing parent
 				}
-			} else {
+			} else */
+			{
 				// If there are no parents, then the root folder is the parent
 				ret.add(session.getRootFolder());
 			}
@@ -310,7 +312,9 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		if (multifile || bothParentsIds.isEmpty()) {
 			// Link to those needed but not yet linked
 			for (String s : newParents.keySet()) {
-				existing.addToFolder(newParents.get(s), false);
+				// TODO: "allVersions" may not be supported by the target ... how can
+				// we identify this ahead of time?
+				existing.addToFolder(newParents.get(s), true);
 				if (!multifile) {
 					break;
 				}
