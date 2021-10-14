@@ -44,6 +44,7 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.CalienteWarningTracker;
 import com.armedia.caliente.cli.caliente.launcher.ImportCommandListener;
 import com.armedia.caliente.cli.caliente.launcher.ImportManifest;
+import com.armedia.caliente.cli.caliente.launcher.ImportRetryManifest;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
@@ -119,6 +120,7 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 					state.getBaseDataLocation(), objectStore, contentStore, new CfgTools(settings));
 				engine.addListener(mainListener);
 				engine.addListener(new ImportManifest(outcomes, types));
+				engine.addListener(new ImportRetryManifest(types));
 				extraListeners.forEach(engine::addListener);
 				this.log.info("##### Import Process Started #####");
 				engine.run(counter);
