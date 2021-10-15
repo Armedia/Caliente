@@ -280,8 +280,10 @@ public abstract class ExportEngine<//
 						// is being stored by another thread...
 						break;
 
+					case DEPENDENCY_FAILED: // Manufacture a failure...
+						throw new ExportException("A dependency failed to export properly");
+
 					case SKIPPED: // fall-through
-					case DEPENDENCY_FAILED: // fall-through
 					case UNSUPPORTED:
 						if (exportState.objectStore.markStoreStatus(target, StoreStatus.SKIPPED, result.extraInfo)) {
 							listener.objectSkipped(exportState.jobId, target, result.skipReason, result.extraInfo);
@@ -936,7 +938,11 @@ public abstract class ExportEngine<//
 						if (result != null) {
 							if (ExportEngine.this.log.isDebugEnabled()) {
 								if (result.skipReason != null) {
-									ExportEngine.this.log.debug("Skipped {} [{}]({}) : {}", target.getType(),
+									String action = "Skipped";
+									if (result.skipReason == ExportSkipReason.DEPENDENCY_FAILED) {
+										action = "Failed";
+									}
+									ExportEngine.this.log.debug("{} {} [{}]({}) : {}", action, target.getType(),
 										target.getSearchKey(), target.getId(), result.skipReason);
 								} else {
 									ExportEngine.this.log.debug("Exported {} in position {}",

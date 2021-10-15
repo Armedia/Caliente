@@ -123,6 +123,7 @@ public abstract class ImportEngine<//
 		public Map<String, Collection<ImportOutcome>> call() throws Exception {
 			try {
 				boolean failBatch = false;
+				Throwable failBatchCause = null;
 				final Map<String, Collection<ImportOutcome>> outcomes = new LinkedHashMap<>(this.batch.contents.size());
 				try {
 					if (this.batch.contents.isEmpty()) {
@@ -156,10 +157,9 @@ public abstract class ImportEngine<//
 						batch: for (CmfObject<VALUE> next : this.batch.contents) {
 							if (failBatch) {
 								this.log.error("Batch has been failed - will not process {} ({})",
-									next.getDescription(), ImportResult.SKIPPED.name());
+									next.getDescription(), ImportResult.FAILED.name());
 								this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
-								this.listenerDelegator.objectImportCompleted(this.importState.jobId, next,
-									ImportOutcome.SKIPPED);
+								this.listenerDelegator.objectImportFailed(this.importState.jobId, next, failBatchCause);
 								continue batch;
 							}
 
@@ -179,16 +179,20 @@ public abstract class ImportEngine<//
 											ImportResult status = req.getStatus();
 											if (status == null) {
 												failBatch = true;
-												this.log.error("The required {} for {} has not been imported yet",
-													req.getShortLabel(), next.getDescription());
+												if (failBatchCause == null) {
+													failBatchCause = new CmfStorageException(
+														"The required " + req.getShortLabel() + " for "
+															+ next.getDescription() + " has not been imported yet");
+												}
+												this.log.error(failBatchCause.getMessage());
 												this.listenerDelegator.objectImportStarted(this.importState.jobId,
 													next);
-												this.listenerDelegator.objectImportCompleted(this.importState.jobId,
-													next, ImportOutcome.SKIPPED);
+												this.listenerDelegator.objectImportFailed(this.importState.jobId, next,
+													failBatchCause);
 												continue batch;
 											}
 
-											switch (req.getStatus()) {
+											switch (status) {
 												case FAILED:
 												case SKIPPED:
 													// Can't continue... a requirement is missing
@@ -199,8 +203,17 @@ public abstract class ImportEngine<//
 														req.getStatus().name(), req.getData());
 													this.listenerDelegator.objectImportStarted(this.importState.jobId,
 														next);
-													this.listenerDelegator.objectImportCompleted(this.importState.jobId,
-														next, ImportOutcome.SKIPPED);
+													if (req.getStatus() == ImportResult.FAILED) {
+														this.listenerDelegator.objectImportFailed(
+															this.importState.jobId, next,
+															new CmfStorageException("The required "
+																+ req.getShortLabel() + " for " + next.getDescription()
+																+ " was FAILED, can't import the object (extra info = "
+																+ req.getData() + ")"));
+													} else {
+														this.listenerDelegator.objectImportCompleted(
+															this.importState.jobId, next, ImportOutcome.SKIPPED);
+													}
 													continue batch;
 												default:
 													break;

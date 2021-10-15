@@ -185,7 +185,6 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 		switch (reason) {
 			case SKIPPED:
 			case UNSUPPORTED:
-			case DEPENDENCY_FAILED:
 				this.counter.increment(object.getType(), ExportResult.SKIPPED);
 				if (extraInfo != null) {
 					this.console.info("{} was skipped ({}: {})", object.getShortLabel(), reason, extraInfo);
