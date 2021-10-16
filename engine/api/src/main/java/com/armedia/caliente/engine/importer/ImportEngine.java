@@ -122,8 +122,7 @@ public abstract class ImportEngine<//
 		@Override
 		public Map<String, Collection<ImportOutcome>> call() throws Exception {
 			try {
-				boolean failBatch = false;
-				Throwable failBatchCause = null;
+				CmfObject<VALUE> failedObject = null;
 				final Map<String, Collection<ImportOutcome>> outcomes = new LinkedHashMap<>(this.batch.contents.size());
 				try {
 					if (this.batch.contents.isEmpty()) {
@@ -154,12 +153,18 @@ public abstract class ImportEngine<//
 						this.listenerDelegator.objectHistoryImportStarted(this.importState.jobId, this.batch.type,
 							this.batch.id, this.batch.contents.size());
 						int i = 0;
+						Throwable batchFailCause = null;
 						batch: for (CmfObject<VALUE> next : this.batch.contents) {
-							if (failBatch) {
-								this.log.error("Batch has been failed - will not process {} ({})",
+							if (failedObject != null) {
+								this.log.error("The current batch has been failed - will not process {} ({})",
 									next.getDescription(), ImportResult.FAILED.name());
+								if (batchFailCause == null) {
+									batchFailCause = new ImportException(
+										"The current batch has been failed - will not process this object because "
+											+ failedObject.getDescription() + " was FAILED");
+								}
 								this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
-								this.listenerDelegator.objectImportFailed(this.importState.jobId, next, failBatchCause);
+								this.listenerDelegator.objectImportFailed(this.importState.jobId, next, batchFailCause);
 								continue batch;
 							}
 
@@ -178,17 +183,14 @@ public abstract class ImportEngine<//
 										for (CmfRequirementInfo<ImportResult> req : requirements) {
 											ImportResult status = req.getStatus();
 											if (status == null) {
-												failBatch = true;
-												if (failBatchCause == null) {
-													failBatchCause = new ImportException(
-														"The required " + req.getShortLabel() + " for "
-															+ next.getDescription() + " has not been imported yet");
-												}
-												this.log.error(failBatchCause.getMessage());
+												failedObject = next;
+												String message = "The required " + req.getShortLabel() + " for "
+													+ next.getDescription() + " has not been imported yet";
+												this.log.error(message);
 												this.listenerDelegator.objectImportStarted(this.importState.jobId,
 													next);
 												this.listenerDelegator.objectImportFailed(this.importState.jobId, next,
-													failBatchCause);
+													new ImportException(message));
 												continue batch;
 											}
 
@@ -196,7 +198,7 @@ public abstract class ImportEngine<//
 												case FAILED:
 												case SKIPPED:
 													// Can't continue... a requirement is missing
-													failBatch = true;
+													failedObject = next;
 													this.log.error(
 														"The required {} for {} was {}, can't import the object (extra info = {})",
 														req.getShortLabel(), next.getDescription(),
@@ -206,8 +208,8 @@ public abstract class ImportEngine<//
 													if (req.getStatus() == ImportResult.FAILED) {
 														this.listenerDelegator.objectImportFailed(
 															this.importState.jobId, next,
-															new CmfStorageException("The required "
-																+ req.getShortLabel() + " for " + next.getDescription()
+															new ImportException("The required " + req.getShortLabel()
+																+ " for " + next.getDescription()
 																+ " was FAILED, can't import the object (extra info = "
 																+ req.getData() + ")"));
 													} else {
@@ -279,7 +281,7 @@ public abstract class ImportEngine<//
 									if (this.batch.strategy.isFailBatchOnError()) {
 										// If we're supposed to kill the batch, fail all
 										// the other objects
-										failBatch = true;
+										failedObject = next;
 										this.log.debug(
 											"Objects of type [{}] require that the remainder of the batch fail if an object fails",
 											storedType);
@@ -304,7 +306,7 @@ public abstract class ImportEngine<//
 				} finally {
 					this.batch.markCompleted();
 					this.listenerDelegator.objectHistoryImportFinished(this.importState.jobId, this.batch.type,
-						this.batch.id, outcomes, failBatch);
+						this.batch.id, outcomes, failedObject != null);
 				}
 			} finally {
 				this.log.debug("Worker exiting...");
