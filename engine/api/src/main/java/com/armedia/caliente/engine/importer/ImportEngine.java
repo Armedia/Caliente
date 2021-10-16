@@ -180,7 +180,7 @@ public abstract class ImportEngine<//
 											if (status == null) {
 												failBatch = true;
 												if (failBatchCause == null) {
-													failBatchCause = new CmfStorageException(
+													failBatchCause = new ImportException(
 														"The required " + req.getShortLabel() + " for "
 															+ next.getDescription() + " has not been imported yet");
 												}
