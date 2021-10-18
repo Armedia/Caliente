@@ -235,7 +235,10 @@ public abstract class ImportEngine<//
 											session.begin();
 										}
 										try {
-											this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
+											if (currentAttempt == 0) {
+												this.listenerDelegator.objectImportStarted(this.importState.jobId,
+													next);
+											}
 											ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> delegate = this.delegateFactory
 												.newImportDelegate(next);
 											retryEnabled = true;
