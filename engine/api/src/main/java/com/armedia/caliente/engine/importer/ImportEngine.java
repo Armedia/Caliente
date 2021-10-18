@@ -290,10 +290,9 @@ public abstract class ImportEngine<//
 											}
 
 											if (retryEnabled && (currentAttempt <= ImportEngine.this.retryCount)) {
-												this.log.warn(
-													"IMPORT failed for {} on attempt # {} - will retry (maximum attempts = {}) - error: {}",
+												this.log.warn("RETRYING IMPORT for {} - failed on attempt # {}/{}",
 													next.getDescription(), currentAttempt,
-													ImportEngine.this.retryCount + 1, t.toString());
+													ImportEngine.this.retryCount + 1, t);
 												continue retry;
 											}
 
