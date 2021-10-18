@@ -395,6 +395,16 @@ public enum CLIParam implements Supplier<Option> {
 				"Either a comma-separated list of ObjectRefs (TYPE:ID), or the path/url of a text file that contains them (one per line), which will be used to restrict which objects are imported") //
 	), //
 
+	retry_count( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("retries") //
+			.setValueFilter(new IntegerValueFilter(0, Integer.MAX_VALUE)) //
+			.setDefault("0") //
+			.setDescription(
+				"The number of times Caliente should retry the ingestion of an object in the event of an error (i.e. to deal with temporary errors)") //
+	), //
+
 	role_map( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //

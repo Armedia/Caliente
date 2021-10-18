@@ -88,6 +88,7 @@ public class CLIGroup {
 		.add(CLIParam.group_map) //
 		.add(CLIParam.manifest_outcomes_import) //
 		.add(CLIParam.restrict_to) //
+		.add(CLIParam.retry_count) //
 		.add(CLIParam.role_map) //
 		.add(CLIParam.target) //
 		.add(CLIParam.trim_path) //

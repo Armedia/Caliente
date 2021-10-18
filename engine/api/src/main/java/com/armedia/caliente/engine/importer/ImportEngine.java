@@ -145,6 +145,7 @@ public abstract class ImportEngine<//
 						return null;
 					}
 
+					int currentAttempt = 0;
 					try {
 						if (this.log.isDebugEnabled()) {
 							this.log.debug("Got session [{}]", session.getId());
@@ -226,68 +227,85 @@ public abstract class ImportEngine<//
 
 								final CmfObject.Archetype storedType = next.getType();
 								final boolean useTx = getImportStrategy(storedType).isSupportsTransactions();
-								if (useTx) {
-									session.begin();
-								}
+								boolean retryEnabled = false;
 								try {
-									this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
-									ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> delegate = this.delegateFactory
-										.newImportDelegate(next);
-									final Collection<ImportOutcome> outcome = delegate.importObject(getTranslator(),
-										ctx);
-									if (outcome.isEmpty()) {
-										result = ImportResult.SKIPPED;
-									} else {
-										result = null;
-									}
-									outcomes.put(next.getId(), outcome);
-									for (ImportOutcome o : outcome) {
-										this.listenerDelegator.objectImportCompleted(this.importState.jobId, next, o);
-										if (result == null) {
-											result = o.getResult();
+									retry: while (true) {
+										retryEnabled = false;
+										if (useTx) {
+											session.begin();
 										}
-
-										if (this.log.isDebugEnabled()) {
-											String msg = null;
-											switch (o.getResult()) {
-												case CREATED:
-												case UPDATED:
-													msg = String.format("Persisted (%s) %s as [%s](%s)", o.getResult(),
-														next, o.getNewId(), o.getNewLabel());
-													break;
-
-												case DUPLICATE:
-													msg = String.format("Found a duplicate of %s as [%s](%s)", next,
-														o.getNewId(), o.getNewLabel());
-													break;
-
-												default:
-													msg = String.format("Outcome was (%s) for %s", o.getResult(), next);
-													break;
+										try {
+											this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
+											ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> delegate = this.delegateFactory
+												.newImportDelegate(next);
+											retryEnabled = true;
+											currentAttempt++;
+											final Collection<ImportOutcome> outcome = delegate
+												.importObject(getTranslator(), ctx);
+											if (outcome.isEmpty()) {
+												result = ImportResult.SKIPPED;
+											} else {
+												result = null;
 											}
-											this.log.debug(msg);
+											outcomes.put(next.getId(), outcome);
+											for (ImportOutcome o : outcome) {
+												this.listenerDelegator.objectImportCompleted(this.importState.jobId,
+													next, o);
+												if (result == null) {
+													result = o.getResult();
+												}
+
+												if (this.log.isDebugEnabled()) {
+													String msg = null;
+													switch (o.getResult()) {
+														case CREATED:
+														case UPDATED:
+															msg = String.format("Persisted (%s) %s as [%s](%s)",
+																o.getResult(), next, o.getNewId(), o.getNewLabel());
+															break;
+
+														case DUPLICATE:
+															msg = String.format("Found a duplicate of %s as [%s](%s)",
+																next, o.getNewId(), o.getNewLabel());
+															break;
+
+														default:
+															msg = String.format("Outcome was (%s) for %s",
+																o.getResult(), next);
+															break;
+													}
+													this.log.debug(msg);
+												}
+											}
+											if (useTx) {
+												session.commit();
+											}
+											i++;
+										} catch (Throwable t) {
+											if (useTx) {
+												session.rollback();
+											}
+
+											if (retryEnabled && (currentAttempt <= ImportEngine.this.retryCount)) {
+												continue retry;
+											}
+
+											info = Tools.dumpStackTrace(t);
+											this.listenerDelegator.objectImportFailed(this.importState.jobId, next, t);
+											if (this.batch.strategy.isFailBatchOnError()) {
+												// If we're supposed to kill the batch, fail all
+												// the other objects
+												failedObject = next;
+												this.log.debug(
+													"Objects of type [{}] require that the remainder of the batch fail if an object fails",
+													storedType);
+												this.batch.markAborted(t);
+												continue batch;
+											}
 										}
+										break;
 									}
-									if (useTx) {
-										session.commit();
-									}
-									i++;
-								} catch (Throwable t) {
-									info = Tools.dumpStackTrace(t);
-									if (useTx) {
-										session.rollback();
-									}
-									this.listenerDelegator.objectImportFailed(this.importState.jobId, next, t);
-									if (this.batch.strategy.isFailBatchOnError()) {
-										// If we're supposed to kill the batch, fail all
-										// the other objects
-										failedObject = next;
-										this.log.debug(
-											"Objects of type [{}] require that the remainder of the batch fail if an object fails",
-											storedType);
-										this.batch.markAborted(t);
-										continue;
-									}
+
 								} finally {
 									ctx.getObjectStore().setImportStatus(next, result, info);
 								}
@@ -406,10 +424,13 @@ public abstract class ImportEngine<//
 		}
 	}
 
+	private final int retryCount;
+
 	protected ImportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, ImportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
 			"import");
+		this.retryCount = settings.getInteger(ImportSetting.RETRY_COUNT);
 	}
 
 	protected abstract ImportStrategy getImportStrategy(CmfObject.Archetype type);
