@@ -56,7 +56,7 @@ public class ShptSessionException extends Exception {
 
 	public ServiceException getServiceException() {
 		Throwable cause = getCause();
-		if ((cause != null) && (cause instanceof ServiceException)) { return ServiceException.class.cast(cause); }
+		if (ServiceException.class.isInstance(cause)) { return ServiceException.class.cast(cause); }
 		return null;
 	}
 }

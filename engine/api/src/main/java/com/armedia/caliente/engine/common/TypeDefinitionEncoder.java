@@ -86,7 +86,7 @@ public class TypeDefinitionEncoder {
 	private static TypeDefinition readFromJSON(Reader r) throws JSONParseException, IOException {
 		JSONParser parser = new JSONParser();
 		Object json = parser.parse(r);
-		if (!(json instanceof Map)) { throw new CmisRuntimeException("Invalid stream! Not a type definition!"); }
+		if (!Map.class.isInstance(json)) { throw new CmisRuntimeException("Invalid stream! Not a type definition!"); }
 		@SuppressWarnings("unchecked")
 		Map<String, Object> map = (Map<String, Object>) json;
 		return JSONConverter.convertTypeDefinition(map);

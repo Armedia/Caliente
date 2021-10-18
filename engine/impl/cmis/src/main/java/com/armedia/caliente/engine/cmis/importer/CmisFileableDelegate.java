@@ -187,7 +187,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				String path = ctx.getTargetPath(v.asString());
 				try {
 					CmisObject obj = session.getObjectByPath(path);
-					if ((obj != null) && (obj instanceof Folder)) {
+					if (Folder.class.isInstance(obj)) {
 						ret.add(Folder.class.cast(obj));
 					}
 				} catch (CmisObjectNotFoundException e) {
@@ -204,7 +204,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				String path = ctx.getTargetPath("/");
 				try {
 					CmisObject obj = session.getObjectByPath(path);
-					if ((obj != null) && (obj instanceof Folder)) {
+					if (Folder.class.isInstance(obj)) {
 						ret.add(Folder.class.cast(obj));
 					}
 				} catch (CmisObjectNotFoundException e) {

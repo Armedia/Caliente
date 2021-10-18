@@ -68,7 +68,7 @@ public class SettingContainer implements Cloneable {
 			}
 		}
 
-	};
+	}
 
 	@XmlElementWrapper(name = "settings", required = false)
 	@XmlElement(name = "setting", required = false)
@@ -87,7 +87,7 @@ public class SettingContainer implements Cloneable {
 				this.settings.put(s.getName(), s.getValue());
 			}
 		}
-		if ((parent != null) && (parent instanceof SettingContainer)) {
+		if (SettingContainer.class.isInstance(parent)) {
 			this.parent = SettingContainer.class.cast(parent);
 		}
 	}

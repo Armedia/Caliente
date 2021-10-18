@@ -157,7 +157,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 						String seriesId = m.getTargetValue();
 						try {
 							CmisObject obj = ctx.getSession().getObject(seriesId);
-							if (obj instanceof Document) {
+							if (Document.class.isInstance(obj)) {
 								Document doc = Document.class.cast(obj);
 								for (Document d : doc.getAllVersions()) {
 									Boolean pwc = d.isPrivateWorkingCopy();
