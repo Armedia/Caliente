@@ -31,7 +31,8 @@ import com.armedia.caliente.store.CmfValue;
 
 public enum CmisSetting implements TransferEngineSetting {
 	//
-	EXPORT_PAGE_SIZE(CmfValue.Type.INTEGER, 100),
+	DELETE_ON_FAIL(CmfValue.Type.BOOLEAN, false), //
+	EXPORT_PAGE_SIZE(CmfValue.Type.INTEGER, 100), //
 	//
 	;
 

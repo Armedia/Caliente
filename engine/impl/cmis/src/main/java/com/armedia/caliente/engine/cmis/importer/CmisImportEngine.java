@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.cmis.CmisSessionFactory;
+import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.cmis.CmisTranslator;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
@@ -119,9 +120,12 @@ public class CmisImportEngine extends
 		}
 	};
 
+	private boolean deleteOnFail;
+
 	public CmisImportEngine(CmisImportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
+		this.deleteOnFail = settings.hasValue(CmisSessionSetting.DELETE_ON_FAIL);
 	}
 
 	@Override
@@ -158,6 +162,10 @@ public class CmisImportEngine extends
 		throws Exception {
 		return new CmisImportContextFactory(this, session, cfg, objectStore, streamStore, transformer, output,
 			warningTracker);
+	}
+
+	public boolean isDeleteOnFail() {
+		return this.deleteOnFail;
 	}
 
 	@Override
