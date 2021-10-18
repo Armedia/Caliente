@@ -381,7 +381,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				.singleton(new ImportOutcome(ImportResult.UPDATED, existing.getId(), calculateNewLabel(existing)));
 		} finally {
 			// If we're required to delete this object upon failure, do so ...
-			if (!ok && this.factory.isDeleteOnFail() && (existing != null)) {
+			if (!ok && (existing != null) && this.factory.isDeleteOnFail()) {
 				try {
 					ctx.getSession().delete(existing, true);
 				} catch (Exception e) {
