@@ -311,7 +311,6 @@ public abstract class ImportEngine<//
 										}
 										break;
 									}
-
 								} finally {
 									ctx.getObjectStore().setImportStatus(next, result, info);
 								}
