@@ -145,7 +145,6 @@ public abstract class ImportEngine<//
 						return null;
 					}
 
-					int currentAttempt = 0;
 					try {
 						if (this.log.isDebugEnabled()) {
 							this.log.debug("Got session [{}]", session.getId());
@@ -227,8 +226,9 @@ public abstract class ImportEngine<//
 
 								final CmfObject.Archetype storedType = next.getType();
 								final boolean useTx = getImportStrategy(storedType).isSupportsTransactions();
-								boolean retryEnabled = false;
 								try {
+									boolean retryEnabled = false;
+									int currentAttempt = 0;
 									retry: while (true) {
 										retryEnabled = false;
 										if (useTx) {
@@ -287,6 +287,10 @@ public abstract class ImportEngine<//
 											}
 
 											if (retryEnabled && (currentAttempt <= ImportEngine.this.retryCount)) {
+												this.log.warn(
+													"IMPORT failed for {} on attempt # {} - will retry (maximum attempts = {}) - error: {}",
+													next.getDescription(), currentAttempt,
+													ImportEngine.this.retryCount + 1, t.toString());
 												continue retry;
 											}
 
