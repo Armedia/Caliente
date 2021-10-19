@@ -136,14 +136,13 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 				this.log.warn(
 					"Creating a new version of {} failed, but a checkout may have been left lingering, will attempt to cancel it",
 					this.cmfObject.getDescription(), e);
-				for (int i = 1; i <= 3; i++) {
+				for (int i = 1; (newVersion == null) && (i <= 3); i++) {
 					try {
 						existing.refresh();
 						if (existing.isVersionSeriesCheckedOut()) {
 							newVersion = Document.class
 								.cast(ctx.getSession().getObject(existing.getVersionSeriesCheckedOutId()));
 						}
-						break;
 					} catch (RuntimeException e2) {
 						this.log.warn("Refresh of PWC for {} failed (attempt # {})", this.cmfObject.getDescription(), i,
 							e2);
