@@ -72,21 +72,46 @@ public abstract class CmisImportDelegate<T> extends
 	protected Map<String, Object> prepareProperties(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
 		throws ImportException {
 		final Session session = ctx.getSession();
-		final String typeName = this.cmfObject.getSubtype();
+		final String typeName;
+
+		boolean mapped = true;
+		CmfAttribute<CmfValue> cmisObjectTypeAtt = this.cmfObject.getAttribute(PropertyIds.OBJECT_TYPE_ID);
+		if ((cmisObjectTypeAtt != null) && cmisObjectTypeAtt.hasValues()) {
+			CmfValue v = cmisObjectTypeAtt.getValue();
+			if (!v.isNull()) {
+				typeName = v.asString();
+			} else {
+				typeName = this.cmfObject.getSubtype();
+			}
+		} else {
+			typeName = this.cmfObject.getSubtype();
+		}
 
 		Mapping m = ctx.getValueMapper().getTargetMapping(CmfObject.Archetype.TYPE, PropertyIds.NAME, typeName);
 		final String finalTypeName;
 		if (m == null) {
-			BaseTypeId id = CmisTranslator.decodeObjectType(this.cmfObject.getType());
-			if (id == null) {
-				throw new ImportException(String.format("Failed to identify the base type for %s of subtype [%s]",
-					this.cmfObject.getDescription(), this.cmfObject.getSubtype()));
+			mapped = false;
+			// No existing mapping, so do the lookup
+			String resolvedType = null;
+			try {
+				ObjectType finalType = ctx.getSession().getTypeDefinition(typeName);
+				resolvedType = finalType.getId();
+			} catch (CmisObjectNotFoundException e) {
+				// No type... so fall back
+				BaseTypeId id = CmisTranslator.decodeObjectType(this.cmfObject.getType());
+				if (id == null) {
+					throw new ImportException(String.format("Failed to identify the base type for %s of subtype [%s]",
+						this.cmfObject.getDescription(), this.cmfObject.getSubtype()));
+				}
+				resolvedType = id.value();
+			} finally {
+				finalTypeName = resolvedType;
 			}
-			finalTypeName = id.value();
 		} else {
 			finalTypeName = m.getTargetValue();
 		}
 
+		// This is just for redundancy
 		final ObjectType type;
 		try {
 			type = session.getTypeDefinition(finalTypeName);
@@ -95,6 +120,11 @@ public abstract class CmisImportDelegate<T> extends
 				String.format("Failed to locate the type called [%s] (from source type [%s]) for %s", finalTypeName,
 					typeName, this.cmfObject.getDescription()),
 				e);
+		}
+
+		// Store the mapping if needed
+		if (!mapped) {
+			ctx.getValueMapper().setMapping(CmfObject.Archetype.TYPE, PropertyIds.NAME, typeName, type.getId());
 		}
 
 		Map<String, Object> properties = new HashMap<>();
