@@ -190,6 +190,12 @@ public enum CLIParam implements Supplier<Option> {
 			.setDescription("This help message") //
 	), //
 
+	ignore_empty_folders( //
+		new OptionImpl() //
+			.setLongOpt("ignore-empty-folders") //
+			.setDescription("Ignore empty folders during extraction") //
+	), //
+
 	lib( //
 		LibLaunchHelper.LIB //
 	), //

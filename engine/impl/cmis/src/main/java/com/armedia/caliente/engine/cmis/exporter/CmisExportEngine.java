@@ -54,6 +54,7 @@ import com.armedia.caliente.engine.cmis.CmisTranslator;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportException;
+import com.armedia.caliente.engine.exporter.ExportSetting;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
@@ -120,7 +121,8 @@ public class CmisExportEngine extends
 		return new ExportTarget(type, id, id);
 	}
 
-	protected Iterator<ExportTarget> getPathIterator(final Session session, String path) throws Exception {
+	protected Iterator<ExportTarget> getPathIterator(final Session session, String path, boolean excludeEmptyFolders)
+		throws Exception {
 		final CmisObject obj;
 		try {
 			obj = session.getObjectByPath(path);
@@ -130,7 +132,8 @@ public class CmisExportEngine extends
 		}
 		if (Folder.class.isInstance(obj)) {
 			// This is a folder that we need to recurse into
-			return new CmisTransformerIterator<>(new CmisRecursiveIterator(session, Folder.class.cast(obj), true),
+			return new CmisTransformerIterator<>(
+				new CmisRecursiveIterator(session, Folder.class.cast(obj), excludeEmptyFolders),
 				this.cmisObjectTransformer);
 		}
 
@@ -142,7 +145,8 @@ public class CmisExportEngine extends
 	@Override
 	protected Stream<ExportTarget> findExportTargetsByPath(Session session, CfgTools configuration, String path)
 		throws Exception {
-		return StreamTools.of(getPathIterator(session, path));
+		return StreamTools
+			.of(getPathIterator(session, path, configuration.getBoolean(ExportSetting.IGNORE_EMPTY_FOLDERS)));
 	}
 
 	protected Iterator<ExportTarget> getQueryIterator(final Session session, final String query) throws Exception {

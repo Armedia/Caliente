@@ -78,6 +78,8 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 			commandValues.isPresent(CLIParam.no_renditions) || commandValues.isPresent(CLIParam.direct_fs));
 		settings.put(ExportSetting.FROM.getLabel(), commandValues.getStrings(CLIParam.from));
 		settings.put(ExportSetting.METADATA_XML.getLabel(), commandValues.getStrings(CLIParam.metadata_xml));
+		settings.put(ExportSetting.IGNORE_EMPTY_FOLDERS.getLabel(),
+			commandValues.isPresent(CLIParam.ignore_empty_folders));
 		return true;
 	}
 
