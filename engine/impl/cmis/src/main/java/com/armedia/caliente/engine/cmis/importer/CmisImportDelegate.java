@@ -72,21 +72,9 @@ public abstract class CmisImportDelegate<T> extends
 	protected Map<String, Object> prepareProperties(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
 		throws ImportException {
 		final Session session = ctx.getSession();
-		final String typeName;
 
 		boolean mapped = true;
-		CmfAttribute<CmfValue> cmisObjectTypeAtt = this.cmfObject.getAttribute(PropertyIds.OBJECT_TYPE_ID);
-		if ((cmisObjectTypeAtt != null) && cmisObjectTypeAtt.hasValues()) {
-			CmfValue v = cmisObjectTypeAtt.getValue();
-			if (!v.isNull()) {
-				typeName = v.asString();
-			} else {
-				typeName = this.cmfObject.getSubtype();
-			}
-		} else {
-			typeName = this.cmfObject.getSubtype();
-		}
-
+		final String typeName = this.cmfObject.getSubtype();
 		Mapping m = ctx.getValueMapper().getTargetMapping(CmfObject.Archetype.TYPE, PropertyIds.NAME, typeName);
 		final String finalTypeName;
 		if (m == null) {
