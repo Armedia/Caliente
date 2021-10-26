@@ -143,6 +143,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 							newVersion = Document.class
 								.cast(ctx.getSession().getObject(existing.getVersionSeriesCheckedOutId()));
 						}
+					} catch (CmisObjectNotFoundException e2) {
+						// Doesn't exist anymore?? Ok... no retry needed
+						break;
 					} catch (RuntimeException e2) {
 						this.log.warn("Refresh of PWC for {} failed (attempt # {})", this.cmfObject.getDescription(), i,
 							e2);
