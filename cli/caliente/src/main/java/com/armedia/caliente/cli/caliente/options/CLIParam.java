@@ -196,6 +196,13 @@ public enum CLIParam implements Supplier<Option> {
 			.setDescription("Ignore empty folders during extraction") //
 	), //
 
+	ignore_missing_parents( //
+		new OptionImpl() //
+			.setLongOpt("ignore-missing-parents") //
+			.setDescription(
+				"Silently ignore missing parent folders. If not used, a WARN message will be logged to mark the issue.") //
+	), //
+
 	lib( //
 		LibLaunchHelper.LIB //
 	), //
