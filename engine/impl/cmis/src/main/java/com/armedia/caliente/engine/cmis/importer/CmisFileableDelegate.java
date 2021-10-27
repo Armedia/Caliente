@@ -199,7 +199,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		}
 
 		if (ret.isEmpty()) {
-			if (this.factory.isRequireAllParents()) {
+			if (this.factory.isRequireAllParents() && prop.hasValues()) {
 				throw new ImportException("None of the parent folders were located");
 			}
 
