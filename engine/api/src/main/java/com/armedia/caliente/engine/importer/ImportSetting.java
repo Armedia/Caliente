@@ -38,6 +38,7 @@ public enum ImportSetting implements TransferEngineSetting {
 	VALIDATE_REQUIREMENTS(CmfValue.Type.BOOLEAN, false),
 	RESTRICT_TO(CmfValue.Type.STRING),
 	RETRY_COUNT(CmfValue.Type.INTEGER, 3),
+	REQUIRE_ALL_PARENTS(CmfValue.Type.BOOLEAN, false),
 	//
 	;
 

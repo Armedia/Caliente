@@ -76,6 +76,8 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 		settings.put(ImportSetting.RETRY_COUNT.getLabel(), commandValues.getStrings(CLIParam.retry_count));
 		settings.put(ImportSetting.VALIDATE_REQUIREMENTS.getLabel(),
 			commandValues.isPresent(CLIParam.validate_requirements));
+		settings.put(ImportSetting.REQUIRE_ALL_PARENTS.getLabel(),
+			commandValues.isPresent(CLIParam.require_all_parents));
 		return super.preConfigure(state, commandValues, settings);
 	}
 

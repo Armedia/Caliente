@@ -430,12 +430,18 @@ public abstract class ImportEngine<//
 	}
 
 	private final int retryCount;
+	private final boolean requireAllParents;
 
 	protected ImportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, ImportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
 			"import");
 		this.retryCount = settings.getInteger(ImportSetting.RETRY_COUNT);
+		this.requireAllParents = settings.hasValue(ImportSetting.REQUIRE_ALL_PARENTS);
+	}
+
+	public final boolean isRequireAllParents() {
+		return this.requireAllParents;
 	}
 
 	protected abstract ImportStrategy getImportStrategy(CmfObject.Archetype type);

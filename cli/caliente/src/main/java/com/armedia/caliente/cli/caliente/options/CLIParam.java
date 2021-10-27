@@ -411,6 +411,13 @@ public enum CLIParam implements Supplier<Option> {
 				"The number of times Caliente should retry the ingestion of an object in the event of an error (i.e. to deal with temporary errors)") //
 	), //
 
+	require_all_parents( //
+		new OptionImpl() //
+			.setLongOpt("ignore-missing-parents") //
+			.setDescription(
+				"Ignore missing parents during ingestion to avoid failures because of it (warnings will be printed)") //
+	), //
+
 	role_map( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //

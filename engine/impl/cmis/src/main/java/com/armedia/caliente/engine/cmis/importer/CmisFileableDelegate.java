@@ -191,30 +191,20 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 						ret.add(Folder.class.cast(obj));
 					}
 				} catch (CmisObjectNotFoundException e) {
-					// Ignore a missing parent
+					// Only ignore missing parents if configured to do so
+					if (this.factory.isRequireAllParents()) { throw e; }
+					continue;
 				}
 			}
 		}
 
 		if (ret.isEmpty()) {
-			/*
-			if (ctx.isPathAltering()) {
-				// If there are no parents, but the path needs to be altered, then we proceed
-				// to locate the actual target path based on the "new root"
-				String path = ctx.getTargetPath("/");
-				try {
-					CmisObject obj = session.getObjectByPath(path);
-					if (Folder.class.isInstance(obj)) {
-						ret.add(Folder.class.cast(obj));
-					}
-				} catch (CmisObjectNotFoundException e) {
-					// Ignore a missing parent
-				}
-			} else */
-			{
-				// If there are no parents, then the root folder is the parent
-				ret.add(session.getRootFolder());
+			if (this.factory.isRequireAllParents()) {
+				throw new ImportException("None of the parent folders were located");
 			}
+
+			// If there are no parents, then the root folder is the parent
+			ret.add(session.getRootFolder());
 		}
 		return ret;
 	}
