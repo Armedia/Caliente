@@ -193,9 +193,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				} catch (CmisObjectNotFoundException e) {
 					// Only ignore missing parents if configured to do so
 					if (this.factory.isRequireAllParents()) { throw e; }
-					if (!this.factory.isIgnoreMissingParents()) {
-						this.log.warn("Parent folder [{}] was not found for {}", path, this.cmfObject.getDescription());
-					}
+					this.log.warn("Parent folder [{}] was not found for {}", path, this.cmfObject.getDescription());
 					continue;
 				}
 			}

@@ -88,7 +88,6 @@ public class CLIGroup {
 	public static final OptionGroup IMPORT_COMMON = new OptionGroupImpl("Common Import") //
 		.addFrom(CLIGroup.IMPORT_EXPORT_COMMON.getOptions()) //
 		.add(CLIParam.group_map) //
-		.add(CLIParam.ignore_missing_parents) //
 		.add(CLIParam.manifest_outcomes_import) //
 		.add(CLIParam.restrict_to) //
 		.add(CLIParam.retry_count) //

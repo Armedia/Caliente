@@ -79,10 +79,6 @@ public abstract class ImportDelegateFactory< //
 		return this.engine.isRequireAllParents();
 	}
 
-	public final boolean isIgnoreMissingParents() {
-		return this.engine.isIgnoreMissingParents();
-	}
-
 	protected final VALUE getAttributeValue(CmfObject<VALUE> cmfObject, CmfEncodeableName attribute) {
 		return getAttributeValue(cmfObject, attribute.encode());
 	}
