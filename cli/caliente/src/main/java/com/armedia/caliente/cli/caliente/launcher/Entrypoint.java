@@ -48,6 +48,7 @@ import java.util.TreeMap;
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,7 +104,6 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 		VERSION = Tools.coalesce(version, "(unknown)");
 	}
-	public static final String JAVA_VERSION = System.getProperty("java.runtime.version");
 
 	public static final CmfCrypt CRYPTO = new CmfCrypt();
 	public static final String STORE_PROP_CONTENT_LOCATION_REQUIRED = "caliente.content.location.required";
@@ -631,15 +631,14 @@ public class Entrypoint extends AbstractEntrypoint {
 
 	@Override
 	protected void showBanner(Logger log) {
-		log.info("Caliente CLI v{} (Java v{})", Entrypoint.VERSION, Entrypoint.JAVA_VERSION);
+		log.info("Caliente CLI v{} (Java v{})", Entrypoint.VERSION, SystemUtils.JAVA_RUNTIME_VERSION);
 	}
 
 	@Override
 	public int execute(String... args) {
-		if (!StringUtils.startsWith(Entrypoint.JAVA_VERSION, "1.8.0")) {
-			throw new UnsupportedOperationException(
-				String.format("The current JVM is version %s, but Caliente will only work with a 1.8.0 JVM",
-					Entrypoint.JAVA_VERSION));
+		if (SystemUtils.IS_JAVA_1_8) {
+			throw new UnsupportedOperationException("Caliente will only work with a 1.8.0 JVM - the current version is "
+				+ SystemUtils.JAVA_RUNTIME_VERSION);
 		}
 		return super.execute(args);
 	}
