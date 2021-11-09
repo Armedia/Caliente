@@ -103,6 +103,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 		VERSION = Tools.coalesce(version, "(unknown)");
 	}
+	public static final String JAVA_VERSION = System.getProperty("java.runtime.version");
 
 	public static final CmfCrypt CRYPTO = new CmfCrypt();
 	public static final String STORE_PROP_CONTENT_LOCATION_REQUIRED = "caliente.content.location.required";
@@ -630,7 +631,17 @@ public class Entrypoint extends AbstractEntrypoint {
 
 	@Override
 	protected void showBanner(Logger log) {
-		log.info("Caliente CLI v{}", Entrypoint.VERSION);
+		log.info("Caliente CLI v{} (Java v{})", Entrypoint.VERSION, Entrypoint.JAVA_VERSION);
+	}
+
+	@Override
+	public int execute(String... args) {
+		if (!StringUtils.startsWith(Entrypoint.JAVA_VERSION, "1.8.0")) {
+			throw new UnsupportedOperationException(
+				String.format("The current JVM is version %s, but Caliente will only work with a 1.8.0 JVM",
+					Entrypoint.JAVA_VERSION));
+		}
+		return super.execute(args);
 	}
 
 	@Override
