@@ -636,7 +636,7 @@ public class Entrypoint extends AbstractEntrypoint {
 
 	@Override
 	public int execute(String... args) {
-		if (SystemUtils.IS_JAVA_1_8) {
+		if (!SystemUtils.IS_JAVA_1_8) {
 			throw new UnsupportedOperationException("Caliente will only work with a 1.8.0 JVM - the current version is "
 				+ SystemUtils.JAVA_RUNTIME_VERSION);
 		}
