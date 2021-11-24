@@ -917,8 +917,7 @@ public abstract class ExportEngine<//
 
 					// The type mapper parameter is null here because it's only useful
 					// for imports
-					final CONTEXT ctx = contextFactory.newContext(nextId, nextType, s, 0);
-					try {
+					try (final CONTEXT ctx = contextFactory.newContext(nextId, nextType, s, 0)) {
 						initContext(ctx);
 						Result result = null;
 						try {
@@ -951,8 +950,6 @@ public abstract class ExportEngine<//
 							}
 						}
 						ok = true;
-					} finally {
-						ctx.close();
 					}
 					if (tx) {
 						session.commit();

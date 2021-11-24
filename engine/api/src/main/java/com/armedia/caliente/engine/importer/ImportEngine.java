@@ -168,11 +168,10 @@ public abstract class ImportEngine<//
 								continue batch;
 							}
 
-							final CONTEXT ctx = this.contextFactory.newContext(next.getId(), next.getType(),
-								session.get(), i);
 							ImportResult result = ImportResult.FAILED;
 							String info = null;
-							try {
+							try (final CONTEXT ctx = this.contextFactory.newContext(next.getId(), next.getType(),
+								session.get(), i)) {
 								initContext(ctx);
 
 								if (ctx.getSettings().getBoolean(ImportSetting.VALIDATE_REQUIREMENTS)) {
@@ -314,8 +313,6 @@ public abstract class ImportEngine<//
 								} finally {
 									ctx.getObjectStore().setImportStatus(next, result, info);
 								}
-							} finally {
-								ctx.close();
 							}
 						}
 						return outcomes;
