@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
+import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.Session;
@@ -102,7 +103,8 @@ public class CmisExportDelegateFactory
 	}
 
 	final ConcurrentMap<String, Set<String>> pathIdCache = new ConcurrentHashMap<>();
-	final ConcurrentMap<String, CmisHistory> historyCache = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, CmisHistory> historyCache = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, List<String>> pathsCache = new ConcurrentHashMap<>();
 
 	CmisExportDelegateFactory(CmisExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
@@ -164,7 +166,17 @@ public class CmisExportDelegateFactory
 			if ((history != null) && (history.pendingUsers.decrementAndGet() <= 0)) {
 				this.historyCache.remove(historyId);
 			}
+			this.pathsCache.remove(doc.getId());
 		}
+	}
+
+	protected List<String> getPaths(FileableCmisObject f) {
+		List<String> paths = ConcurrentTools.createIfAbsent(this.pathsCache, f.getId(), (objectId) -> {
+			List<String> p = f.getPaths();
+			System.out.printf("Paths for %s[%s] = %s%n", f.getClass().getSimpleName(), f.getId(), p);
+			return Tools.freezeList(p);
+		});
+		return new ArrayList<>(paths);
 	}
 
 	@Override

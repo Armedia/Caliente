@@ -55,7 +55,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	protected String calculatePath(Session session, T f) throws Exception {
-		List<String> paths = f.getPaths();
+		List<String> paths = this.factory.getPaths(f);
 		if (paths.isEmpty()) { return null; }
 		return paths.get(0);
 	}
@@ -107,7 +107,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				throw new ExportException(String.format("Failed to store the parent ID [%s] for %s [%s]", f.getId(),
 					this.object.getType(), this.object.getId()), e);
 			}
-			for (String p : f.getPaths()) {
+			for (String p : this.factory.getPaths(f)) {
 				String path = String.format("/%s%s", rootPath, p);
 				paths.addValue(CmfValue.of(path));
 				fullPaths.addValue(CmfValue.of(String.format("%s/%s", path, object.getName())));
