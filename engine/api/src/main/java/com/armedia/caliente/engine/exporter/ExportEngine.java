@@ -901,58 +901,72 @@ public abstract class ExportEngine<//
 							(nextType != null ? nextType.name() : "globally unique"), nextKey);
 						return;
 					}
-					// This allows for object substitutions to take place
-					target = exportDelegate.getExportTarget();
-					nextType = target.getType();
-					if (nextType == null) {
-						ExportEngine.this.log.error(
-							"Failed to determine the object type for target with ID[{}] and searchKey[{}]", nextId,
-							nextKey);
-						return;
-					}
 
-					if (ExportEngine.this.log.isDebugEnabled()) {
-						ExportEngine.this.log.debug("Exporting the {} object with ID[{}]", nextType, nextId);
-					}
-
-					// The type mapper parameter is null here because it's only useful
-					// for imports
-					try (final CONTEXT ctx = contextFactory.newContext(nextId, nextType, s, 0)) {
-						initContext(ctx);
-						Result result = null;
-						try {
-							result = exportObject(exportState, transformer, filter, null, exportDelegate, ctx, listener,
-								statusMap);
-						} catch (Exception e) {
-							// Any and all Exceptions have already been processed in exportObject,
-							// so we safely absorb them here. We leave all other Throwables intact
-							// so they can be caught in the worker's handler
-							result = null;
-
-							// TODO: Should we re-queue this object for a retry? How to tell if this
-							// is a retryable error? (i.e. temporary vs. final failure)
-							// TODO: If retrying, then we also need to take care of clearing out the
-							// lock marker(s) ...
+					try {
+						// This allows for object substitutions to take place
+						target = exportDelegate.getExportTarget();
+						nextType = target.getType();
+						if (nextType == null) {
+							ExportEngine.this.log.error(
+								"Failed to determine the object type for target with ID[{}] and searchKey[{}]", nextId,
+								nextKey);
+							return;
 						}
-						if (result != null) {
-							if (ExportEngine.this.log.isDebugEnabled()) {
-								if (result.skipReason != null) {
-									String action = "Skipped";
-									if (result.skipReason == ExportSkipReason.DEPENDENCY_FAILED) {
-										action = "Failed";
+
+						if (ExportEngine.this.log.isDebugEnabled()) {
+							ExportEngine.this.log.debug("Exporting the {} object with ID[{}]", nextType, nextId);
+						}
+
+						// The type mapper parameter is null here because it's only useful
+						// for imports
+						try (final CONTEXT ctx = contextFactory.newContext(nextId, nextType, s, 0)) {
+							initContext(ctx);
+							Result result = null;
+							try {
+								result = exportObject(exportState, transformer, filter, null, exportDelegate, ctx,
+									listener, statusMap);
+							} catch (Exception e) {
+								// Any and all Exceptions have already been processed in
+								// exportObject,
+								// so we safely absorb them here. We leave all other Throwables
+								// intact
+								// so they can be caught in the worker's handler
+								result = null;
+
+								// TODO: Should we re-queue this object for a retry? How to tell if
+								// this
+								// is a retryable error? (i.e. temporary vs. final failure)
+								// TODO: If retrying, then we also need to take care of clearing out
+								// the
+								// lock marker(s) ...
+							}
+							if (result != null) {
+								if (ExportEngine.this.log.isDebugEnabled()) {
+									if (result.skipReason != null) {
+										String action = "Skipped";
+										if (result.skipReason == ExportSkipReason.DEPENDENCY_FAILED) {
+											action = "Failed";
+										}
+										ExportEngine.this.log.debug("{} {} [{}]({}) : {}", action, target.getType(),
+											target.getSearchKey(), target.getId(), result.skipReason);
+									} else {
+										ExportEngine.this.log.debug("Exported {} in position {}",
+											result.object.getDescription(), result.objectNumber);
 									}
-									ExportEngine.this.log.debug("{} {} [{}]({}) : {}", action, target.getType(),
-										target.getSearchKey(), target.getId(), result.skipReason);
-								} else {
-									ExportEngine.this.log.debug("Exported {} in position {}",
-										result.object.getDescription(), result.objectNumber);
 								}
 							}
+							ok = true;
 						}
-						ok = true;
-					}
-					if (tx) {
-						session.commit();
+						if (tx) {
+							session.commit();
+						}
+					} finally {
+						try {
+							exportDelegate.close();
+						} catch (Throwable t) {
+							ExportEngine.this.log.warn("Exception caught while closing out the export delegate for {}",
+								target, t);
+						}
 					}
 				} catch (Throwable t) {
 					// Don't let these failures go unnoticed
