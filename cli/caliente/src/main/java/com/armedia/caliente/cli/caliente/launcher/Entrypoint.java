@@ -584,6 +584,8 @@ public class Entrypoint extends AbstractEntrypoint {
 	@Override
 	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) {
+		if (!this.command.getDescriptor().isRequiresLogs()) { return false; }
+
 		final String engine = this.engineInterface.getName();
 		final String logMode = StringUtils.lowerCase(command);
 		final String logEngine = StringUtils.lowerCase(engine);
