@@ -104,6 +104,7 @@ public class EncryptCommandModule extends CommandModule<TransferEngineFactory<?,
 				}
 			} else {
 				// Don't output a prompt
+				this.console.info("Enter the passwords you wish to encrypt (one per line):");
 				BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 				while (true) {
 					try {
