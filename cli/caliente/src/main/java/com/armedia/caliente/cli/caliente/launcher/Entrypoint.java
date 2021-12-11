@@ -245,7 +245,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 
 		File f = newCanonicalFile(path);
-		if (f.exists() && !f.isDirectory()) {
+		if (this.command.getDescriptor().isRequiresStorage() && f.exists() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1,
 				String.format("The path [%s] is not a directory - can't use it to describe the base data location", f));
@@ -263,7 +263,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 
 		File f = newCanonicalFile(path);
-		if (f.exists() && !f.isFile() && !f.isDirectory()) {
+		if (this.command.getDescriptor().isRequiresStorage() && f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
 				"The path [%s] is neither a file nor a directory - can't use it to describe the metadata store", f));
@@ -410,7 +410,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 
 		File f = newCanonicalFile(path);
-		if (f.exists() && !f.isFile() && !f.isDirectory()) {
+		if (this.command.getDescriptor().isRequiresLogs() && f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
 				"The object at path [%s] is neither a file nor a directory - can't use it to describe the log directory",
