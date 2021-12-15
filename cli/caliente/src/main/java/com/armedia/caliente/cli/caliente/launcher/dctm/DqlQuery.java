@@ -74,6 +74,7 @@ class DqlQuery {
 		ENABLE,
 		//
 		;
+
 		private Set<Keyword> chasers;
 
 		private Keyword() {
@@ -351,7 +352,7 @@ class DqlQuery {
 						b.append(" ");
 					}
 					String s = null;
-					if (o instanceof DqlQuery) {
+					if (DqlQuery.class.isInstance(o)) {
 						s = generator.generate(nestLevel, c, DqlQuery.class.cast(o));
 					} else {
 						s = generator.generate(nestLevel, c, o.toString());

@@ -777,7 +777,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	@Override
 	protected String generateSystemAttributesSQL(CmfObject<IDfValue> stored, IDfPersistentObject sysObject,
 		DctmImportContext ctx) throws DfException {
-		if (!(sysObject instanceof IDfSysObject)) {
+		if (!IDfSysObject.class.isInstance(sysObject)) {
 			// how, exactly, did we get here?
 			return null;
 		}
@@ -912,7 +912,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 
 		target = IDfSysObject.class.cast(session.getObject(referenceById.asId()));
-		if (!(target instanceof IDfSysObject)) {
+		if (!IDfSysObject.class.isInstance(target)) {
 			throw new ImportException(String.format("Reference [%s] target object [%s] is not an IDfSysObject instance",
 				this.cmfObject.getLabel(), referenceById.asString()));
 		}

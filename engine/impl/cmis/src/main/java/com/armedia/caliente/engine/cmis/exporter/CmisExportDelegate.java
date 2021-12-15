@@ -77,4 +77,9 @@ public abstract class CmisExportDelegate<T> extends
 		CmfObject<CmfValue> marshalled, CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
 		return new ArrayList<>();
 	}
+
+	@Override
+	public void close() {
+		this.factory.delegateClosed(this);
+	}
 }

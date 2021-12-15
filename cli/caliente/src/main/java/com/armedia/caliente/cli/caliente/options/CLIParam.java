@@ -190,6 +190,12 @@ public enum CLIParam implements Supplier<Option> {
 			.setDescription("This help message") //
 	), //
 
+	ignore_empty_folders( //
+		new OptionImpl() //
+			.setLongOpt("ignore-empty-folders") //
+			.setDescription("Ignore empty folders during extraction") //
+	), //
+
 	lib( //
 		LibLaunchHelper.LIB //
 	), //
@@ -393,6 +399,23 @@ public enum CLIParam implements Supplier<Option> {
 			.setValueSep(',') //
 			.setDescription(
 				"Either a comma-separated list of ObjectRefs (TYPE:ID), or the path/url of a text file that contains them (one per line), which will be used to restrict which objects are imported") //
+	), //
+
+	retry_count( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("retries") //
+			.setValueFilter(new IntegerValueFilter(0, Integer.MAX_VALUE)) //
+			.setDefault("0") //
+			.setDescription(
+				"The number of times Caliente should retry the ingestion of an object in the event of an error (i.e. to deal with temporary errors)") //
+	), //
+
+	require_all_parents( //
+		new OptionImpl() //
+			.setLongOpt("require-all-parents") //
+			.setDescription(
+				"Ignore missing parents during ingestion to avoid failures because of it (warnings will be printed)") //
 	), //
 
 	role_map( //

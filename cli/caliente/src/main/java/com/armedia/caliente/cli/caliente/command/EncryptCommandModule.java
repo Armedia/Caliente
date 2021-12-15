@@ -79,9 +79,10 @@ public class EncryptCommandModule extends CommandModule<TransferEngineFactory<?,
 		throws CalienteException {
 		final Collection<CmfCrypt> crypt = getCryptoOptions();
 		if (!positionals.isEmpty()) {
+			this.console.info("Encrypting the passwords by positional parameter...");
 			for (String password : positionals) {
 				try {
-					System.out.printf("[%s]==[%s]%n", password, encrypt(crypt, password));
+					System.out.printf("[%s]=>[%s]%n", password, encrypt(crypt, password));
 				} catch (Exception e) {
 					System.err.printf("Failed to encrypt the password value [%s]%n%s%n", password,
 						Tools.dumpStackTrace(e));
@@ -103,6 +104,7 @@ public class EncryptCommandModule extends CommandModule<TransferEngineFactory<?,
 				}
 			} else {
 				// Don't output a prompt
+				this.console.info("Enter the passwords you wish to encrypt (one per line):");
 				BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 				while (true) {
 					try {

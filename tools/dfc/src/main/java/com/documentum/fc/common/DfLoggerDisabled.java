@@ -186,10 +186,10 @@ public final class DfLoggerDisabled {
 
 	public static Logger getLogger(Object source) {
 		Object categoryObj;
-		if ((source instanceof String)) {
+		if (source instanceof String) {
 			categoryObj = source;
 		} else {
-			if ((source instanceof Class)) {
+			if (source instanceof Class) {
 				categoryObj = source;
 			} else {
 				if (source != null) {
@@ -203,10 +203,10 @@ public final class DfLoggerDisabled {
 		Logger logger = loggersMap.get(categoryObj);
 		if (logger == null) {
 			String coreCategory;
-			if ((source instanceof String)) {
+			if (source instanceof String) {
 				coreCategory = (String) source;
 			} else {
-				if ((source instanceof Class)) {
+				if (source instanceof Class) {
 					coreCategory = Class.class.cast(source).getName();
 				} else {
 					if (source != null) {
@@ -294,10 +294,10 @@ public final class DfLoggerDisabled {
 
 	private static Logger getLoggerForTrace(Object source) {
 		String coreCategory;
-		if ((source instanceof String)) {
+		if (source instanceof String) {
 			coreCategory = (String) source;
 		} else {
-			if ((source instanceof Class)) {
+			if (source instanceof Class) {
 				coreCategory = Class.class.cast(source).getName();
 			} else {
 				if (source != null) {

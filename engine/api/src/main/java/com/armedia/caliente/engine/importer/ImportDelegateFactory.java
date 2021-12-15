@@ -75,6 +75,10 @@ public abstract class ImportDelegateFactory< //
 		this.nullValues = Tools.freezeMap(nullValues);
 	}
 
+	public final boolean isRequireAllParents() {
+		return this.engine.isRequireAllParents();
+	}
+
 	protected final VALUE getAttributeValue(CmfObject<VALUE> cmfObject, CmfEncodeableName attribute) {
 		return getAttributeValue(cmfObject, attribute.encode());
 	}
