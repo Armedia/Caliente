@@ -90,6 +90,10 @@ public class CmisSchemaService implements SchemaService {
 		}
 
 		ObjectType baseType = type.getBaseType();
+		if (baseType == null) {
+			baseType = type;
+		}
+
 		// Check to see if the root base type is the secondary type
 		if (secondary != Objects.equals(BaseTypeId.CMIS_SECONDARY.value(), baseType.getId())) { return null; }
 		Map<String, PropertyDefinition<?>> properties = type.getPropertyDefinitions();

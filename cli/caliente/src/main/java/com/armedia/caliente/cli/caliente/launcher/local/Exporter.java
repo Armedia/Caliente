@@ -59,11 +59,6 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		.setDescription("Enable the copying of content for the Local engine") //
 	;
 
-	private static final Option IGNORE_EMPTY_FOLDERS = new OptionImpl() //
-		.setLongOpt("ignore-empty-folders") //
-		.setDescription("Ignore empty folders during extraction") //
-	;
-
 	private static final Option VERSION_SCHEME = new OptionImpl() //
 		.setLongOpt("version-scheme") //
 		.setDescription("The version scheme to use (how version tags are presented in a filename)") //
@@ -99,7 +94,6 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 	private static final OptionGroup OPTIONS = new OptionGroupImpl("Local Export") //
 		.add(Exporter.COPY_CONTENT) //
 		.add(Exporter.BLIND_MODE) //
-		.add(Exporter.IGNORE_EMPTY_FOLDERS) //
 		.add(Exporter.VERSION_SCHEME) //
 		.add(Exporter.VERSION_TAG_SEPARATOR) //
 		.add(Exporter.VERSION_LAYOUT) //
@@ -174,8 +168,6 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 
 		settings.put(LocalSetting.SOURCE.getLabel(), source);
 		settings.put(LocalSetting.COPY_CONTENT.getLabel(), isCopyContent(commandValues));
-		settings.put(LocalSetting.IGNORE_EMPTY_FOLDERS.getLabel(),
-			commandValues.isPresent(Exporter.IGNORE_EMPTY_FOLDERS));
 		settings.put(LocalSetting.VERSION_SCHEME.getLabel(), commandValues.getString(Exporter.VERSION_SCHEME));
 		settings.put(LocalSetting.VERSION_TAG_SEPARATOR.getLabel(),
 			commandValues.getString(Exporter.VERSION_TAG_SEPARATOR));

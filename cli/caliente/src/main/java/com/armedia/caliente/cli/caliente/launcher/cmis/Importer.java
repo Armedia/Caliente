@@ -44,10 +44,23 @@ import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionGroup;
+import com.armedia.commons.utilities.cli.OptionGroupImpl;
+import com.armedia.commons.utilities.cli.OptionImpl;
 import com.armedia.commons.utilities.cli.OptionScheme;
 import com.armedia.commons.utilities.cli.OptionValues;
 
 class Importer extends ImportCommandModule implements DynamicCommandOptions {
+	static final Option DELETE_ON_FAIL = new OptionImpl() //
+		.setLongOpt("delete-on-fail") //
+		.setDescription("Delete created documents on fail, to avoid partial ingestions") //
+	;
+
+	private static final OptionGroup CMIS_IMPORT_OPTIONS = new OptionGroupImpl("CMIS Import Configuration") //
+		.add(Importer.DELETE_ON_FAIL) //
+	;
+
 	Importer(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
@@ -121,6 +134,10 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		BindingType bindingType = commandValues.getEnum(BindingType.class, EngineInterface.BINDING_TYPE);
 		settings.put(CmisSessionSetting.BINDING_TYPE.getLabel(), bindingType.value());
 
+		if (commandValues.isDefined(Importer.DELETE_ON_FAIL)) {
+			settings.put(CmisSessionSetting.DELETE_ON_FAIL.getLabel(), true);
+		}
+
 		return true;
 	}
 
@@ -139,6 +156,8 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 	public void getDynamicOptions(String engine, OptionScheme command) {
 		command //
 			.addGroup(CLIGroup.IMPORT_COMMON) //
+			.addGroup(Importer.CMIS_IMPORT_OPTIONS) //
 		;
+
 	}
 }
