@@ -44,7 +44,7 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.CalienteWarningTracker;
 import com.armedia.caliente.cli.caliente.launcher.ExportCommandListener;
 import com.armedia.caliente.cli.caliente.launcher.ExportManifest;
-import com.armedia.caliente.cli.caliente.launcher.RetryManifest;
+import com.armedia.caliente.cli.caliente.launcher.ExportRetryManifest;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.exporter.ExportEngine;
@@ -78,6 +78,8 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 			commandValues.isPresent(CLIParam.no_renditions) || commandValues.isPresent(CLIParam.direct_fs));
 		settings.put(ExportSetting.FROM.getLabel(), commandValues.getStrings(CLIParam.from));
 		settings.put(ExportSetting.METADATA_XML.getLabel(), commandValues.getStrings(CLIParam.metadata_xml));
+		settings.put(ExportSetting.IGNORE_EMPTY_FOLDERS.getLabel(),
+			commandValues.isPresent(CLIParam.ignore_empty_folders));
 		return true;
 	}
 
@@ -137,7 +139,7 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 					state.getBaseDataLocation(), objectStore, contentStore, new CfgTools(settings));
 				engine.addListener(mainListener);
 				engine.addListener(new ExportManifest(outcomes, types));
-				engine.addListener(new RetryManifest(types));
+				engine.addListener(new ExportRetryManifest(types));
 				extraListeners.forEach(engine::addListener);
 				this.log.info("##### Export Process Started #####");
 				engine.run();
