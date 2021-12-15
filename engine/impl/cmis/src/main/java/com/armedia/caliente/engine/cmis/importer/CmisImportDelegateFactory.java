@@ -57,4 +57,8 @@ public class CmisImportDelegateFactory
 		}
 		return null;
 	}
+
+	public boolean isDeleteOnFail() {
+		return this.engine.isDeleteOnFail();
+	}
 }

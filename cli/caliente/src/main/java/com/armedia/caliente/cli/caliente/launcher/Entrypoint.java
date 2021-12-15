@@ -48,6 +48,7 @@ import java.util.TreeMap;
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -244,7 +245,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 
 		File f = newCanonicalFile(path);
-		if (f.exists() && !f.isDirectory()) {
+		if (this.command.getDescriptor().isRequiresStorage() && f.exists() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1,
 				String.format("The path [%s] is not a directory - can't use it to describe the base data location", f));
@@ -262,7 +263,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 
 		File f = newCanonicalFile(path);
-		if (f.exists() && !f.isFile() && !f.isDirectory()) {
+		if (this.command.getDescriptor().isRequiresStorage() && f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
 				"The path [%s] is neither a file nor a directory - can't use it to describe the metadata store", f));
@@ -409,7 +410,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 
 		File f = newCanonicalFile(path);
-		if (f.exists() && !f.isFile() && !f.isDirectory()) {
+		if (this.command.getDescriptor().isRequiresLogs() && f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
 				"The object at path [%s] is neither a file nor a directory - can't use it to describe the log directory",
@@ -583,6 +584,8 @@ public class Entrypoint extends AbstractEntrypoint {
 	@Override
 	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) {
+		if (!this.command.getDescriptor().isRequiresLogs()) { return false; }
+
 		final String engine = this.engineInterface.getName();
 		final String logMode = StringUtils.lowerCase(command);
 		final String logEngine = StringUtils.lowerCase(engine);
@@ -630,7 +633,16 @@ public class Entrypoint extends AbstractEntrypoint {
 
 	@Override
 	protected void showBanner(Logger log) {
-		log.info("Caliente CLI v{}", Entrypoint.VERSION);
+		log.info("Caliente CLI v{} (Java v{})", Entrypoint.VERSION, SystemUtils.JAVA_RUNTIME_VERSION);
+	}
+
+	@Override
+	public int execute(String... args) {
+		if (!SystemUtils.IS_JAVA_1_8) {
+			throw new UnsupportedOperationException("Caliente will only work with a 1.8.0 JVM - the current version is "
+				+ SystemUtils.JAVA_RUNTIME_VERSION);
+		}
+		return super.execute(args);
 	}
 
 	@Override

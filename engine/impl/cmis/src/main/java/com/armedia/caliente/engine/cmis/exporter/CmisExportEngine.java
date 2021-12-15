@@ -54,6 +54,7 @@ import com.armedia.caliente.engine.cmis.CmisTranslator;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportException;
+import com.armedia.caliente.engine.exporter.ExportSetting;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
@@ -67,12 +68,18 @@ import com.armedia.commons.utilities.Tools;
 public class CmisExportEngine extends
 	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory, CmisExportEngineFactory> {
 
-	private final CmisResultTransformer<QueryResult, ExportTarget> queryResultTransformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
+	private final class QueryResultTransformer implements CmisResultTransformer<QueryResult, ExportTarget> {
+		private final Session session;
+
+		private QueryResultTransformer(Session session) {
+			this.session = session;
+		}
+
 		@Override
 		public ExportTarget transform(QueryResult result) throws Exception {
-			return newExportTarget(result);
+			return newExportTarget(this.session, result);
 		}
-	};
+	}
 
 	private final CmisResultTransformer<CmisObject, ExportTarget> cmisObjectTransformer = new CmisResultTransformer<CmisObject, ExportTarget>() {
 		@Override
@@ -86,7 +93,7 @@ public class CmisExportEngine extends
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, true);
 	}
 
-	protected ExportTarget newExportTarget(QueryResult r) throws ExportException {
+	protected ExportTarget newExportTarget(Session s, QueryResult r) throws ExportException {
 		PropertyData<?> objectId = r.getPropertyById(PropertyIds.OBJECT_ID);
 		if (objectId == null) {
 			throw new ExportException("Failed to find the cmis:objectId property as part of the query result");
@@ -101,10 +108,16 @@ public class CmisExportEngine extends
 			if (t == null) {
 				continue;
 			}
+
 			if (this.log.isTraceEnabled()) {
 				this.log.trace("Found property [{}] with value [{}]", t.getId(), t.getFirstValue());
 			}
-			type = decodeType(Tools.toString(t.getFirstValue()));
+			String value = Tools.toString(t.getFirstValue());
+			if (StringUtils.isNotBlank(value)) {
+				type = decodeType(s.getTypeDefinition(value));
+			} else {
+				type = decodeType(value);
+			}
 			if (type != null) {
 				if (this.log.isTraceEnabled()) {
 					this.log.trace("Object type [{}] decoded as [{}]", t.getFirstValue(), type);
@@ -120,7 +133,8 @@ public class CmisExportEngine extends
 		return new ExportTarget(type, id, id);
 	}
 
-	protected Iterator<ExportTarget> getPathIterator(final Session session, String path) throws Exception {
+	protected Iterator<ExportTarget> getPathIterator(final Session session, String path, boolean excludeEmptyFolders)
+		throws Exception {
 		final CmisObject obj;
 		try {
 			obj = session.getObjectByPath(path);
@@ -130,7 +144,8 @@ public class CmisExportEngine extends
 		}
 		if (Folder.class.isInstance(obj)) {
 			// This is a folder that we need to recurse into
-			return new CmisTransformerIterator<>(new CmisRecursiveIterator(session, Folder.class.cast(obj), true),
+			return new CmisTransformerIterator<>(
+				new CmisRecursiveIterator(session, Folder.class.cast(obj), excludeEmptyFolders),
 				this.cmisObjectTransformer);
 		}
 
@@ -142,7 +157,8 @@ public class CmisExportEngine extends
 	@Override
 	protected Stream<ExportTarget> findExportTargetsByPath(Session session, CfgTools configuration, String path)
 		throws Exception {
-		return StreamTools.of(getPathIterator(session, path));
+		return StreamTools
+			.of(getPathIterator(session, path, configuration.getBoolean(ExportSetting.IGNORE_EMPTY_FOLDERS)));
 	}
 
 	protected Iterator<ExportTarget> getQueryIterator(final Session session, final String query) throws Exception {
@@ -150,7 +166,7 @@ public class CmisExportEngine extends
 		final boolean searchAllVersions = session.getRepositoryInfo().getCapabilities()
 			.isAllVersionsSearchableSupported();
 		return new CmisPagingTransformerIterator<>(session.query(query, searchAllVersions),
-			this.queryResultTransformer);
+			new QueryResultTransformer(session));
 	}
 
 	@Override

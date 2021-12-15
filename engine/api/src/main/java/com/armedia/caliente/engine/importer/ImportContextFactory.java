@@ -99,25 +99,27 @@ public abstract class ImportContextFactory< //
 
 	protected abstract FOLDER createFolder(SESSION session, FOLDER parent, String name) throws Exception;
 
-	public final String getTargetPath(String sourcePath) throws ImportException {
+	protected static final String getTargetPath(String sourcePath, int pathTrunc, List<String> rootPath)
+		throws ImportException {
 		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a path to transform"); }
 		if (!sourcePath.startsWith("/")) {
 			throw new IllegalArgumentException(String.format("The path [%s] must be absolute", sourcePath));
 		}
 		List<String> l = FileNameTools.tokenize(sourcePath, '/');
-		final int delta = (this.rootPath.size() > 0 ? 1 : 0);
-		if (l.size() < (this.pathTrunc - delta)) {
+		if (l.size() < pathTrunc) {
 			throw new ImportException(String.format(
 				"The path truncation setting (%d) is higher than the number of path components in [%s] (%d) - can't continue",
-				this.pathTrunc, sourcePath, l.size()));
+				pathTrunc, sourcePath, l.size()));
 		}
-		for (int i = 0; i < this.pathTrunc; i++) {
-			l.remove(0);
-		}
-		List<String> finalPath = new ArrayList<>(this.rootPath.size() + l.size());
-		finalPath.addAll(this.rootPath);
+		l = l.subList(pathTrunc, l.size());
+		List<String> finalPath = new ArrayList<>(rootPath.size() + l.size());
+		finalPath.addAll(rootPath);
 		finalPath.addAll(l);
 		return FileNameTools.reconstitute(finalPath, true, false, '/');
+	}
+
+	public final String getTargetPath(String sourcePath) throws ImportException {
+		return ImportContextFactory.getTargetPath(sourcePath, this.pathTrunc, this.rootPath);
 	}
 
 	public final boolean isPathAltering() {

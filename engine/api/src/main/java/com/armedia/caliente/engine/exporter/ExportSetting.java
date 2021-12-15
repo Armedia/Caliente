@@ -33,6 +33,7 @@ public enum ExportSetting implements TransferEngineSetting {
 	//
 	FROM(CmfValue.Type.STRING), //
 	METADATA_XML(CmfValue.Type.BOOLEAN, Boolean.FALSE), //
+	IGNORE_EMPTY_FOLDERS(CmfValue.Type.BOOLEAN, Boolean.FALSE), //
 	//
 	;
 

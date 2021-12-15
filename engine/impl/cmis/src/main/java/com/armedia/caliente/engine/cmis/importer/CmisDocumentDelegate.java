@@ -116,11 +116,11 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	@Override
 	protected Document createNewVersion(CmisImportContext ctx, Document existing, Map<String, Object> properties)
 		throws ImportException {
-		ObjectId checkOutId = existing.checkOut();
 		Document newVersion = null;
 		ContentStream content = null;
 		properties.remove(PropertyIds.NAME);
 		try {
+			ObjectId checkOutId = existing.checkOut();
 			newVersion = Document.class.cast(ctx.getSession().getObject(checkOutId));
 
 			String checkinComment = Tools.toString(properties.get(PropertyIds.CHECKIN_COMMENT));
@@ -129,6 +129,30 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			Document finalVersion = Document.class.cast(ctx.getSession().getObject(newId));
 			newVersion = null;
 			return finalVersion;
+		} catch (RuntimeException | Error e) {
+			// We exploded during checkout, but didn't get a handle to the potentially
+			// checked-out document ...
+			if (newVersion == null) {
+				this.log.warn(
+					"Creating a new version of {} failed, but a checkout may have been left lingering, will attempt to cancel it",
+					this.cmfObject.getDescription(), e);
+				for (int i = 1; (newVersion == null) && (i <= 3); i++) {
+					try {
+						existing.refresh();
+						if (existing.isVersionSeriesCheckedOut()) {
+							newVersion = Document.class
+								.cast(ctx.getSession().getObject(existing.getVersionSeriesCheckedOutId()));
+						}
+					} catch (CmisObjectNotFoundException e2) {
+						// Doesn't exist anymore?? Ok... no retry needed
+						break;
+					} catch (RuntimeException e2) {
+						this.log.warn("Refresh of PWC for {} failed (attempt # {})", this.cmfObject.getDescription(), i,
+							e2);
+					}
+				}
+			}
+			throw e;
 		} finally {
 			// properties.put(PropertyIds.NAME, name);
 			IOUtils.closeQuietly(content);
@@ -157,7 +181,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 						String seriesId = m.getTargetValue();
 						try {
 							CmisObject obj = ctx.getSession().getObject(seriesId);
-							if (obj instanceof Document) {
+							if (Document.class.isInstance(obj)) {
 								Document doc = Document.class.cast(obj);
 								for (Document d : doc.getAllVersions()) {
 									Boolean pwc = d.isPrivateWorkingCopy();

@@ -74,7 +74,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	protected CmisDocumentDelegate(CmisExportDelegateFactory factory, Session session, Document object)
 		throws Exception {
 		super(factory, session, Document.class, object);
-		List<Document> all = object.getAllVersions();
+		List<Document> all = factory.getHistory(object).getAllVersions();
 		List<Document> prev = new ArrayList<>(all.size());
 		List<Document> succ = new ArrayList<>(all.size());
 
@@ -100,7 +100,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	protected String calculatePath(Session session, Document d) throws Exception {
 		String path = super.calculatePath(session, d);
 		if ((path == null) && !d.isLatestVersion()) {
-			path = calculatePath(session, d.getObjectOfLatestVersion(false));
+			path = calculatePath(session, this.factory.getHistory(d).lastVersion);
 		}
 		return path;
 	}
@@ -173,7 +173,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		throws ExportException {
 		Document doc = object;
 		if (!doc.isLatestVersion()) {
-			doc = object.getObjectOfLatestVersion(false);
+			doc = this.factory.getHistory(object).lastVersion;
 		}
 		super.marshalParentsAndPaths(ctx, marshaled, doc);
 	}
