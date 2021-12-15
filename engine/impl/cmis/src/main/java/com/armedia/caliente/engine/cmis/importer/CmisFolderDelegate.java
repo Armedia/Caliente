@@ -83,7 +83,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 				this.cmfObject.getDescription()));
 		}
 		final String name = nameValue.asString();
-		for (Folder f : getParentFolders(ctx)) {
+		for (Folder f : parents) {
 			String path = String.format("%s/%s", f.getPath(), name);
 			Folder existing = null;
 			try {

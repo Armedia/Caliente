@@ -44,6 +44,7 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.CalienteWarningTracker;
 import com.armedia.caliente.cli.caliente.launcher.ImportCommandListener;
 import com.armedia.caliente.cli.caliente.launcher.ImportManifest;
+import com.armedia.caliente.cli.caliente.launcher.ImportRetryManifest;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
@@ -72,8 +73,11 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 		settings.put(ImportSetting.TARGET_LOCATION.getLabel(), commandValues.getString(CLIParam.target, "/"));
 		settings.put(ImportSetting.TRIM_PREFIX.getLabel(), commandValues.getInteger(CLIParam.trim_path, 0));
 		settings.put(ImportSetting.RESTRICT_TO.getLabel(), commandValues.getStrings(CLIParam.restrict_to));
+		settings.put(ImportSetting.RETRY_COUNT.getLabel(), commandValues.getStrings(CLIParam.retry_count));
 		settings.put(ImportSetting.VALIDATE_REQUIREMENTS.getLabel(),
 			commandValues.isPresent(CLIParam.validate_requirements));
+		settings.put(ImportSetting.REQUIRE_ALL_PARENTS.getLabel(),
+			commandValues.isPresent(CLIParam.require_all_parents));
 		return super.preConfigure(state, commandValues, settings);
 	}
 
@@ -119,6 +123,7 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 					state.getBaseDataLocation(), objectStore, contentStore, new CfgTools(settings));
 				engine.addListener(mainListener);
 				engine.addListener(new ImportManifest(outcomes, types));
+				engine.addListener(new ImportRetryManifest(types));
 				extraListeners.forEach(engine::addListener);
 				this.log.info("##### Import Process Started #####");
 				engine.run(counter);

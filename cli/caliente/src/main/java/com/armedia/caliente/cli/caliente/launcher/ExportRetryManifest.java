@@ -24,39 +24,29 @@
  * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
  * #L%
  *******************************************************************************/
+package com.armedia.caliente.cli.caliente.launcher;
+
+import java.util.Set;
+import java.util.UUID;
+
+import com.armedia.caliente.engine.exporter.DefaultExportEngineListener;
+import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectSearchSpec;
+
 /**
  *
- */
-
-package com.armedia.caliente.engine.sharepoint;
-
-import com.independentsoft.share.ServiceException;
-
-/**
- *
  *
  */
-public class ShptSessionException extends Exception {
-	private static final long serialVersionUID = 1L;
+public class ExportRetryManifest extends DefaultExportEngineListener {
 
-	public ShptSessionException() {
+	private final RetryManifest manifest;
+
+	public ExportRetryManifest(Set<CmfObject.Archetype> types) {
+		this.manifest = new RetryManifest(types);
 	}
 
-	public ShptSessionException(String message) {
-		super(message);
-	}
-
-	public ShptSessionException(Throwable cause) {
-		super(cause);
-	}
-
-	public ShptSessionException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
-	public ServiceException getServiceException() {
-		Throwable cause = getCause();
-		if (ServiceException.class.isInstance(cause)) { return ServiceException.class.cast(cause); }
-		return null;
+	@Override
+	public void objectExportFailed(UUID jobId, CmfObjectSearchSpec object, Throwable thrown) {
+		this.manifest.logRetry(jobId, object, thrown);
 	}
 }

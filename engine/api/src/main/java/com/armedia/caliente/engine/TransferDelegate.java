@@ -36,7 +36,7 @@ public abstract class TransferDelegate< //
 	CONTEXT extends TransferContext<SESSION, VALUE, ?>, //
 	DELEGATE_FACTORY extends TransferDelegateFactory<SESSION, VALUE, CONTEXT, ENGINE>, //
 	ENGINE extends TransferEngine<?, ?, ?, SESSION, VALUE, CONTEXT, ?, DELEGATE_FACTORY, ?> //
-> {
+> implements AutoCloseable {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	protected final DELEGATE_FACTORY factory;
@@ -57,5 +57,10 @@ public abstract class TransferDelegate< //
 
 	public final Class<ECM_OBJECT> getObjectClass() {
 		return this.objectClass;
+	}
+
+	@Override
+	public void close() {
+		// Do nothing ...
 	}
 }

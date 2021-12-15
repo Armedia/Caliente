@@ -218,7 +218,6 @@ public class ExportManifest extends DefaultExportEngineListener {
 		switch (reason) {
 			case SKIPPED:
 			case UNSUPPORTED:
-			case DEPENDENCY_FAILED:
 				new Record(object, ExportResult.SKIPPED, extraInfo).log(this.manifestLog);
 				break;
 			default:

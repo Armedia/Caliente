@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -44,7 +43,6 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataException;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
-import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfValue;
@@ -78,13 +76,7 @@ public class LoadExternalMetadata extends ConditionalAction {
 				continue;
 			}
 
-			String setName;
-			try {
-				setName = Tools.toString(Expression.eval(metadataSource, ctx));
-			} catch (ScriptException e) {
-				throw new ActionException(e);
-			}
-
+			final String setName = Tools.toString(ActionTools.eval(metadataSource, ctx));
 			if (StringUtils.isEmpty(setName)) {
 				continue;
 			}
