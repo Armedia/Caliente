@@ -68,12 +68,18 @@ import com.armedia.commons.utilities.Tools;
 public class CmisExportEngine extends
 	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory, CmisExportEngineFactory> {
 
-	private final CmisResultTransformer<QueryResult, ExportTarget> queryResultTransformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
+	private final class QueryResultTransformer implements CmisResultTransformer<QueryResult, ExportTarget> {
+		private final Session session;
+
+		private QueryResultTransformer(Session session) {
+			this.session = session;
+		}
+
 		@Override
 		public ExportTarget transform(QueryResult result) throws Exception {
-			return newExportTarget(result);
+			return newExportTarget(this.session, result);
 		}
-	};
+	}
 
 	private final CmisResultTransformer<CmisObject, ExportTarget> cmisObjectTransformer = new CmisResultTransformer<CmisObject, ExportTarget>() {
 		@Override
@@ -87,7 +93,7 @@ public class CmisExportEngine extends
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, true);
 	}
 
-	protected ExportTarget newExportTarget(QueryResult r) throws ExportException {
+	protected ExportTarget newExportTarget(Session s, QueryResult r) throws ExportException {
 		PropertyData<?> objectId = r.getPropertyById(PropertyIds.OBJECT_ID);
 		if (objectId == null) {
 			throw new ExportException("Failed to find the cmis:objectId property as part of the query result");
@@ -102,10 +108,16 @@ public class CmisExportEngine extends
 			if (t == null) {
 				continue;
 			}
+
 			if (this.log.isTraceEnabled()) {
 				this.log.trace("Found property [{}] with value [{}]", t.getId(), t.getFirstValue());
 			}
-			type = decodeType(Tools.toString(t.getFirstValue()));
+			String value = Tools.toString(t.getFirstValue());
+			if (StringUtils.isNotBlank(value)) {
+				type = decodeType(s.getTypeDefinition(value));
+			} else {
+				type = decodeType(value);
+			}
 			if (type != null) {
 				if (this.log.isTraceEnabled()) {
 					this.log.trace("Object type [{}] decoded as [{}]", t.getFirstValue(), type);
@@ -154,7 +166,7 @@ public class CmisExportEngine extends
 		final boolean searchAllVersions = session.getRepositoryInfo().getCapabilities()
 			.isAllVersionsSearchableSupported();
 		return new CmisPagingTransformerIterator<>(session.query(query, searchAllVersions),
-			this.queryResultTransformer);
+			new QueryResultTransformer(session));
 	}
 
 	@Override
