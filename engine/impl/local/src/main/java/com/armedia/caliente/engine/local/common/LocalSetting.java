@@ -39,7 +39,6 @@ public enum LocalSetting implements TransferEngineSetting {
 	INCLUDE_ALL_VERSIONS(CmfValue.Type.BOOLEAN, false),
 	INCLUDE_ALL_STREAMS(CmfValue.Type.BOOLEAN, false),
 	INCLUDE_METADATA(CmfValue.Type.BOOLEAN, false),
-	IGNORE_EMPTY_FOLDERS(CmfValue.Type.BOOLEAN, false),
 	FAIL_ON_COLLISIONS(CmfValue.Type.BOOLEAN, true),
 	VERSION_SCHEME(CmfValue.Type.STRING, null, false),
 	VERSION_TAG_SEPARATOR(CmfValue.Type.STRING, null, false),

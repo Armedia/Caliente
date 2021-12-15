@@ -26,14 +26,17 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.cmis.exporter;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
+import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.Session;
@@ -45,11 +48,63 @@ import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ConcurrentTools;
 
 public class CmisExportDelegateFactory
 	extends ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
 
-	final Map<String, Set<String>> pathIdCache = Collections.synchronizedMap(new HashMap<String, Set<String>>());
+	public static class CmisHistory {
+		public final String historyId;
+		private final List<Document> allVersions;
+		public final Document firstVersion;
+		public final Document lastVersion;
+		public final Document lastMajorVersion;
+		private final AtomicInteger pendingUsers;
+
+		private CmisHistory(Document d) throws ExportException {
+			try {
+				this.historyId = d.getVersionSeriesId();
+				List<Document> allVersions = d.getAllVersions();
+
+				// First of all: remove the PWC - we're not working with that
+				Document first = allVersions.get(0);
+				if (first.isPrivateWorkingCopy() == Boolean.TRUE) {
+					if ((first.isPrivateWorkingCopy() == Boolean.TRUE)
+						|| Objects.equals("pwc", first.getVersionLabel())) {
+						allVersions.remove(0);
+					}
+				}
+
+				this.allVersions = Tools.freezeList(allVersions);
+				this.firstVersion = this.allVersions.get(this.allVersions.size() - 1);
+				this.lastVersion = this.allVersions.get(0);
+
+				// Avoid another potentially lengthy API call
+				Document lastMajorVersion = this.lastVersion;
+				for (Document candidate : allVersions) {
+					if (candidate.isLatestMajorVersion() == Boolean.TRUE) {
+						lastMajorVersion = candidate;
+						break;
+					}
+					lastMajorVersion = null;
+				}
+
+				this.lastMajorVersion = lastMajorVersion;
+				this.pendingUsers = new AtomicInteger(this.allVersions.size());
+			} catch (Exception e) {
+				throw new ExportException("Failed to analyze the history for [" + d.getVersionSeriesId() + "]", e);
+			}
+		}
+
+		public List<Document> getAllVersions() {
+			return new ArrayList<>(this.allVersions);
+		}
+	}
+
+	final ConcurrentMap<String, Set<String>> pathIdCache = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, CmisHistory> historyCache = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, List<String>> pathsCache = new ConcurrentHashMap<>();
 
 	CmisExportDelegateFactory(CmisExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
@@ -76,7 +131,7 @@ public class CmisExportDelegateFactory
 				Document doc = checkedCast(obj, Document.class, type, searchKey);
 				if ((doc.isPrivateWorkingCopy() == Boolean.TRUE) || Objects.equals("pwc", doc.getVersionLabel())) {
 					// We will not include the PWC in an export
-					doc = doc.getObjectOfLatestVersion(false);
+					doc = getHistory(doc).lastVersion;
 					if (doc == null) { return null; }
 				}
 				return new CmisDocumentDelegate(this, session, doc);
@@ -92,6 +147,36 @@ public class CmisExportDelegateFactory
 				break;
 		}
 		return null;
+	}
+
+	protected CmisHistory getHistory(final Document d) throws ExportException {
+		return ConcurrentTools.createIfAbsent(this.historyCache, d.getVersionSeriesId(),
+			(historyId) -> new CmisHistory(d));
+	}
+
+	protected void delegateClosed(CmisExportDelegate<?> delegate) {
+		Object object = delegate.getEcmObject();
+
+		// Is this a document delegate? If so, clean out the history cache entry to
+		// conserve memory
+		if (Document.class.isInstance(object)) {
+			final Document doc = Document.class.cast(object);
+			final String historyId = doc.getVersionSeriesId();
+			final CmisHistory history = this.historyCache.get(historyId);
+			if ((history != null) && (history.pendingUsers.decrementAndGet() <= 0)) {
+				this.historyCache.remove(historyId);
+			}
+			this.pathsCache.remove(doc.getId());
+		}
+	}
+
+	protected List<String> getPaths(FileableCmisObject f) {
+		List<String> paths = ConcurrentTools.createIfAbsent(this.pathsCache, f.getId(), (objectId) -> {
+			List<String> p = f.getPaths();
+			System.out.printf("Paths for %s[%s] = %s%n", f.getClass().getSimpleName(), f.getId(), p);
+			return Tools.freezeList(p);
+		});
+		return new ArrayList<>(paths);
 	}
 
 	@Override

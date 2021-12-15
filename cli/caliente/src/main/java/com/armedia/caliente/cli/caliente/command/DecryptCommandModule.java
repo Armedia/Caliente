@@ -79,9 +79,10 @@ public class DecryptCommandModule extends CommandModule<TransferEngineFactory<?,
 		throws CalienteException {
 		final Collection<CmfCrypt> crypt = getCryptoOptions();
 		if (!positionals.isEmpty()) {
+			this.console.info("Decrypting passwords by parameter:");
 			for (String password : positionals) {
 				try {
-					System.out.printf("[%s]==[%s]%n", password, decrypt(crypt, password));
+					System.out.printf("[%s]=>[%s]%n", password, decrypt(crypt, password));
 				} catch (Exception e) {
 					System.err.printf("Failed to decrypt the encrypted password [%s]%n%s%n", password,
 						Tools.dumpStackTrace(e));
@@ -94,6 +95,7 @@ public class DecryptCommandModule extends CommandModule<TransferEngineFactory<?,
 			// No positionals, so read from console
 			String password = null;
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+			this.console.info("Please enter the passwords to be decrypted (one per line):");
 			while (true) {
 				try {
 					password = br.readLine();
@@ -104,7 +106,7 @@ public class DecryptCommandModule extends CommandModule<TransferEngineFactory<?,
 					break;
 				}
 				try {
-					System.out.printf("[%s]==[%s]%n", password, decrypt(crypt, password));
+					System.out.printf("[%s]=>[%s]%n", password, decrypt(crypt, password));
 				} catch (Exception e) {
 					System.err.printf("Failed to decrypt the encrypted password [%s]%n%s%n", password,
 						Tools.dumpStackTrace(e));

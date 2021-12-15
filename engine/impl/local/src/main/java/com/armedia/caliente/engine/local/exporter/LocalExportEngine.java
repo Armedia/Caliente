@@ -55,6 +55,7 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportException;
+import com.armedia.caliente.engine.exporter.ExportSetting;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalCaseFolding;
 import com.armedia.caliente.engine.local.common.LocalCommon;
@@ -410,7 +411,7 @@ public class LocalExportEngine extends
 		final Stream<ExportTarget> stream;
 		if (Files.isDirectory(p)) {
 			stream = StreamTools //
-				.of(new LocalRecursiveIterator(root, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS))) //
+				.of(new LocalRecursiveIterator(root, configuration.getBoolean(ExportSetting.IGNORE_EMPTY_FOLDERS))) //
 				.filter(Files::exists) // Only include files/links that aren't broken
 				.map(this::toExportTarget) // Convert to export targets
 			;

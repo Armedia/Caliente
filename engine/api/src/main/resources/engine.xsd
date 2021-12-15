@@ -533,9 +533,21 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="actionRemoveOriginalSecondarySubtypes.except.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:expression.t">
+				<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eqi" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="actionRemoveOriginalSecondarySubtypes.t">
 		<xsd:complexContent>
-			<xsd:extension base="tns:conditionalAction.t" />
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="except" type="tns:actionRemoveOriginalSecondarySubtypes.except.t" minOccurs="0" maxOccurs="unbounded" />
+				</xsd:sequence>
+			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
 

@@ -84,7 +84,7 @@ public class JndiDataSourceLocator extends DataSourceLocator {
 		if (obj == null) {
 			throw new NullPointerException(String.format("The JNDI name [%s] evaluated to a null reference", jndiName));
 		}
-		if (!(obj instanceof DataSource)) {
+		if (!DataSource.class.isInstance(obj)) {
 			throw new ClassCastException(String.format(
 				"The JNDI name [%s] evaluated to an object of class [%s], which is not a subclass of DataSource",
 				jndiName, obj.getClass().getCanonicalName()));

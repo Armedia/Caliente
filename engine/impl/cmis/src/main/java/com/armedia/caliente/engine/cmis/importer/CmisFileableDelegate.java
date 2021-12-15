@@ -187,32 +187,25 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				String path = ctx.getTargetPath(v.asString());
 				try {
 					CmisObject obj = session.getObjectByPath(path);
-					if ((obj != null) && (obj instanceof Folder)) {
+					if (Folder.class.isInstance(obj)) {
 						ret.add(Folder.class.cast(obj));
 					}
 				} catch (CmisObjectNotFoundException e) {
-					// Ignore a missing parent
+					// Only ignore missing parents if configured to do so
+					if (this.factory.isRequireAllParents()) { throw e; }
+					this.log.warn("Parent folder [{}] was not found for {}", path, this.cmfObject.getDescription());
+					continue;
 				}
 			}
 		}
 
 		if (ret.isEmpty()) {
-			if (ctx.isPathAltering()) {
-				// If there are no parents, but the path needs to be altered, then we proceed
-				// to locate the actual target path based on the "new root"
-				String path = ctx.getTargetPath("/");
-				try {
-					CmisObject obj = session.getObjectByPath(path);
-					if ((obj != null) && (obj instanceof Folder)) {
-						ret.add(Folder.class.cast(obj));
-					}
-				} catch (CmisObjectNotFoundException e) {
-					// Ignore a missing parent
-				}
-			} else {
-				// If there are no parents, then the root folder is the parent
-				ret.add(session.getRootFolder());
+			if (this.factory.isRequireAllParents() && prop.hasValues()) {
+				throw new ImportException("None of the parent folders were located");
 			}
+
+			// If there are no parents, then the root folder is the parent
+			ret.add(session.getRootFolder());
 		}
 		return ret;
 	}
@@ -310,7 +303,9 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		if (multifile || bothParentsIds.isEmpty()) {
 			// Link to those needed but not yet linked
 			for (String s : newParents.keySet()) {
-				existing.addToFolder(newParents.get(s), false);
+				// TODO: "allVersions" may not be supported by the target ... how can
+				// we identify this ahead of time?
+				existing.addToFolder(newParents.get(s), true);
 				if (!multifile) {
 					break;
 				}
@@ -330,46 +325,61 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	@Override
 	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
 		throws ImportException, CmfStorageException {
+		boolean ok = false;
+		boolean created = false;
+		T existing = null;
+		try {
+			Map<String, Object> props = prepareProperties(translator, ctx);
+			props.remove(PropertyIds.PATH);
+			props.remove(PropertyIds.PARENT_ID);
 
-		Map<String, Object> props = prepareProperties(translator, ctx);
-		props.remove(PropertyIds.PATH);
-		props.remove(PropertyIds.PARENT_ID);
+			List<Folder> parents = getParentFolders(ctx);
+			// Find the parent folder...
+			final Folder parent = parents.get(0);
 
-		List<Folder> parents = getParentFolders(ctx);
-		// Find the parent folder...
-		final Folder parent = parents.get(0);
+			// First, try to find the existing object.
+			existing = findExisting(ctx, parents);
+			if (existing == null) {
+				// If it doesn't exist, we'll create the new object...
+				existing = createNew(ctx, parent, props);
+				created = true;
+				applyAcl(ctx, existing);
+				linkToParents(ctx, existing, parents);
+				setMapping(ctx, existing);
+				return Collections
+					.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing)));
+			}
 
-		// First, try to find the existing object.
-		T existing = findExisting(ctx, parents);
-		if (existing == null) {
-			// If it doesn't exist, we'll create the new object...
-			existing = createNew(ctx, parent, props);
+			if (isSameObject(existing)) {
+				return Collections.singleton(
+					new ImportOutcome(ImportResult.DUPLICATE, existing.getId(), calculateNewLabel(existing)));
+			}
+			if (isVersionable(existing)) {
+				existing = createNewVersion(ctx, existing, props);
+				applyAcl(ctx, existing);
+				linkToParents(ctx, existing, parents);
+				setMapping(ctx, existing);
+				return Collections
+					.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing)));
+			}
+
+			// Not the same...we must update the properties and/or content
+			updateExisting(ctx, existing, props);
 			applyAcl(ctx, existing);
 			linkToParents(ctx, existing, parents);
 			setMapping(ctx, existing);
 			return Collections
-				.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing)));
+				.singleton(new ImportOutcome(ImportResult.UPDATED, existing.getId(), calculateNewLabel(existing)));
+		} finally {
+			// If we're required to delete this object upon failure, do so ...
+			if (!ok && (existing != null) && this.factory.isDeleteOnFail()) {
+				try {
+					ctx.getSession().delete(existing, true);
+				} catch (Exception e) {
+					this.log.warn("DeleteOnFail is set, but was unable to delete the {} object for {} at [{}]",
+						created ? "created" : "existing", this.cmfObject.getDescription(), existing, e);
+				}
+			}
 		}
-
-		if (isSameObject(existing)) {
-			return Collections
-				.singleton(new ImportOutcome(ImportResult.DUPLICATE, existing.getId(), calculateNewLabel(existing)));
-		}
-		if (isVersionable(existing)) {
-			existing = createNewVersion(ctx, existing, props);
-			applyAcl(ctx, existing);
-			linkToParents(ctx, existing, parents);
-			setMapping(ctx, existing);
-			return Collections
-				.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing)));
-		}
-
-		// Not the same...we must update the properties and/or content
-		updateExisting(ctx, existing, props);
-		applyAcl(ctx, existing);
-		linkToParents(ctx, existing, parents);
-		setMapping(ctx, existing);
-		return Collections
-			.singleton(new ImportOutcome(ImportResult.UPDATED, existing.getId(), calculateNewLabel(existing)));
 	}
 }

@@ -63,6 +63,7 @@ public enum CmisSessionSetting implements ConfigurationSetting {
 	LOCALE_VARIANT(SessionParameter.LOCALE_VARIANT),
 	DEFAULT_PAGE_SIZE(null, 0),
 	DOMAIN(null, ""),
+	DELETE_ON_FAIL(null, false),
 	//
 	;
 

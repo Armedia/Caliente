@@ -59,7 +59,7 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 	@Override
 	protected String calculateLabel(Session session, FileableCmisObject object) throws Exception {
 		final String p;
-		List<String> paths = object.getPaths();
+		List<String> paths = this.factory.getPaths(object);
 		if ((paths != null) && !paths.isEmpty()) {
 			p = String.format("%s/%s", paths.get(0), object.getName());
 		} else {

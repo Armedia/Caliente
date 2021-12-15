@@ -122,7 +122,7 @@ public abstract class ImportEngine<//
 		@Override
 		public Map<String, Collection<ImportOutcome>> call() throws Exception {
 			try {
-				boolean failBatch = false;
+				CmfObject<VALUE> failedObject = null;
 				final Map<String, Collection<ImportOutcome>> outcomes = new LinkedHashMap<>(this.batch.contents.size());
 				try {
 					if (this.batch.contents.isEmpty()) {
@@ -153,21 +153,25 @@ public abstract class ImportEngine<//
 						this.listenerDelegator.objectHistoryImportStarted(this.importState.jobId, this.batch.type,
 							this.batch.id, this.batch.contents.size());
 						int i = 0;
+						Throwable batchFailCause = null;
 						batch: for (CmfObject<VALUE> next : this.batch.contents) {
-							if (failBatch) {
-								this.log.error("Batch has been failed - will not process {} ({})",
-									next.getDescription(), ImportResult.SKIPPED.name());
+							if (failedObject != null) {
+								this.log.error("The current batch has been failed - will not process {} ({})",
+									next.getDescription(), ImportResult.FAILED.name());
+								if (batchFailCause == null) {
+									batchFailCause = new ImportException(
+										"The current batch has been failed - will not process this object because "
+											+ failedObject.getDescription() + " was FAILED");
+								}
 								this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
-								this.listenerDelegator.objectImportCompleted(this.importState.jobId, next,
-									ImportOutcome.SKIPPED);
+								this.listenerDelegator.objectImportFailed(this.importState.jobId, next, batchFailCause);
 								continue batch;
 							}
 
-							final CONTEXT ctx = this.contextFactory.newContext(next.getId(), next.getType(),
-								session.get(), i);
 							ImportResult result = ImportResult.FAILED;
 							String info = null;
-							try {
+							try (final CONTEXT ctx = this.contextFactory.newContext(next.getId(), next.getType(),
+								session.get(), i)) {
 								initContext(ctx);
 
 								if (ctx.getSettings().getBoolean(ImportSetting.VALIDATE_REQUIREMENTS)) {
@@ -178,29 +182,39 @@ public abstract class ImportEngine<//
 										for (CmfRequirementInfo<ImportResult> req : requirements) {
 											ImportResult status = req.getStatus();
 											if (status == null) {
-												failBatch = true;
-												this.log.error("The required {} for {} has not been imported yet",
-													req.getShortLabel(), next.getDescription());
+												failedObject = next;
+												String message = "The required " + req.getShortLabel() + " for "
+													+ next.getDescription() + " has not been imported yet";
+												this.log.error(message);
 												this.listenerDelegator.objectImportStarted(this.importState.jobId,
 													next);
-												this.listenerDelegator.objectImportCompleted(this.importState.jobId,
-													next, ImportOutcome.SKIPPED);
+												this.listenerDelegator.objectImportFailed(this.importState.jobId, next,
+													new ImportException(message));
 												continue batch;
 											}
 
-											switch (req.getStatus()) {
+											switch (status) {
 												case FAILED:
 												case SKIPPED:
 													// Can't continue... a requirement is missing
-													failBatch = true;
+													failedObject = next;
 													this.log.error(
 														"The required {} for {} was {}, can't import the object (extra info = {})",
 														req.getShortLabel(), next.getDescription(),
 														req.getStatus().name(), req.getData());
 													this.listenerDelegator.objectImportStarted(this.importState.jobId,
 														next);
-													this.listenerDelegator.objectImportCompleted(this.importState.jobId,
-														next, ImportOutcome.SKIPPED);
+													if (req.getStatus() == ImportResult.FAILED) {
+														this.listenerDelegator.objectImportFailed(
+															this.importState.jobId, next,
+															new ImportException("The required " + req.getShortLabel()
+																+ " for " + next.getDescription()
+																+ " was FAILED, can't import the object (extra info = "
+																+ req.getData() + ")"));
+													} else {
+														this.listenerDelegator.objectImportCompleted(
+															this.importState.jobId, next, ImportOutcome.SKIPPED);
+													}
 													continue batch;
 												default:
 													break;
@@ -211,73 +225,94 @@ public abstract class ImportEngine<//
 
 								final CmfObject.Archetype storedType = next.getType();
 								final boolean useTx = getImportStrategy(storedType).isSupportsTransactions();
-								if (useTx) {
-									session.begin();
-								}
 								try {
-									this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
-									ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> delegate = this.delegateFactory
-										.newImportDelegate(next);
-									final Collection<ImportOutcome> outcome = delegate.importObject(getTranslator(),
-										ctx);
-									if (outcome.isEmpty()) {
-										result = ImportResult.SKIPPED;
-									} else {
-										result = null;
-									}
-									outcomes.put(next.getId(), outcome);
-									for (ImportOutcome o : outcome) {
-										this.listenerDelegator.objectImportCompleted(this.importState.jobId, next, o);
-										if (result == null) {
-											result = o.getResult();
+									boolean retryEnabled = false;
+									int currentAttempt = 0;
+									retry: while (true) {
+										retryEnabled = false;
+										if (useTx) {
+											session.begin();
 										}
-
-										if (this.log.isDebugEnabled()) {
-											String msg = null;
-											switch (o.getResult()) {
-												case CREATED:
-												case UPDATED:
-													msg = String.format("Persisted (%s) %s as [%s](%s)", o.getResult(),
-														next, o.getNewId(), o.getNewLabel());
-													break;
-
-												case DUPLICATE:
-													msg = String.format("Found a duplicate of %s as [%s](%s)", next,
-														o.getNewId(), o.getNewLabel());
-													break;
-
-												default:
-													msg = String.format("Outcome was (%s) for %s", o.getResult(), next);
-													break;
+										try {
+											if (currentAttempt == 0) {
+												this.listenerDelegator.objectImportStarted(this.importState.jobId,
+													next);
 											}
-											this.log.debug(msg);
+											ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> delegate = this.delegateFactory
+												.newImportDelegate(next);
+											retryEnabled = true;
+											currentAttempt++;
+											final Collection<ImportOutcome> outcome = delegate
+												.importObject(getTranslator(), ctx);
+											if (outcome.isEmpty()) {
+												result = ImportResult.SKIPPED;
+											} else {
+												result = null;
+											}
+											outcomes.put(next.getId(), outcome);
+											for (ImportOutcome o : outcome) {
+												this.listenerDelegator.objectImportCompleted(this.importState.jobId,
+													next, o);
+												if (result == null) {
+													result = o.getResult();
+												}
+
+												if (this.log.isDebugEnabled()) {
+													String msg = null;
+													switch (o.getResult()) {
+														case CREATED:
+														case UPDATED:
+															msg = String.format("Persisted (%s) %s as [%s](%s)",
+																o.getResult(), next, o.getNewId(), o.getNewLabel());
+															break;
+
+														case DUPLICATE:
+															msg = String.format("Found a duplicate of %s as [%s](%s)",
+																next, o.getNewId(), o.getNewLabel());
+															break;
+
+														default:
+															msg = String.format("Outcome was (%s) for %s",
+																o.getResult(), next);
+															break;
+													}
+													this.log.debug(msg);
+												}
+											}
+											if (useTx) {
+												session.commit();
+											}
+											i++;
+										} catch (Throwable t) {
+											if (useTx) {
+												session.rollback();
+											}
+
+											if (retryEnabled && (currentAttempt <= ImportEngine.this.retryCount)) {
+												this.log.warn("RETRYING IMPORT for {} - failed on attempt # {}/{}",
+													next.getDescription(), currentAttempt,
+													ImportEngine.this.retryCount + 1, t);
+												continue retry;
+											}
+
+											info = Tools.dumpStackTrace(t);
+											this.listenerDelegator.objectImportFailed(this.importState.jobId, next, t);
+											if (this.batch.strategy.isFailBatchOnError()) {
+												// If we're supposed to kill the batch, fail all
+												// the other objects
+												failedObject = next;
+												this.log.debug(
+													"Objects of type [{}] require that the remainder of the batch fail if an object fails",
+													storedType);
+												this.batch.markAborted(t);
+												continue batch;
+											}
 										}
-									}
-									if (useTx) {
-										session.commit();
-									}
-									i++;
-								} catch (Throwable t) {
-									info = Tools.dumpStackTrace(t);
-									if (useTx) {
-										session.rollback();
-									}
-									this.listenerDelegator.objectImportFailed(this.importState.jobId, next, t);
-									if (this.batch.strategy.isFailBatchOnError()) {
-										// If we're supposed to kill the batch, fail all
-										// the other objects
-										failBatch = true;
-										this.log.debug(
-											"Objects of type [{}] require that the remainder of the batch fail if an object fails",
-											storedType);
-										this.batch.markAborted(t);
-										continue;
+										break;
 									}
 								} finally {
 									ctx.getObjectStore().setImportStatus(next, result, info);
 								}
-							} finally {
-								ctx.close();
 							}
 						}
 						return outcomes;
@@ -291,7 +326,7 @@ public abstract class ImportEngine<//
 				} finally {
 					this.batch.markCompleted();
 					this.listenerDelegator.objectHistoryImportFinished(this.importState.jobId, this.batch.type,
-						this.batch.id, outcomes, failBatch);
+						this.batch.id, outcomes, failedObject != null);
 				}
 			} finally {
 				this.log.debug("Worker exiting...");
@@ -391,10 +426,19 @@ public abstract class ImportEngine<//
 		}
 	}
 
+	private final int retryCount;
+	private final boolean requireAllParents;
+
 	protected ImportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, ImportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
 			"import");
+		this.retryCount = settings.getInteger(ImportSetting.RETRY_COUNT);
+		this.requireAllParents = settings.getBoolean(ImportSetting.REQUIRE_ALL_PARENTS);
+	}
+
+	public final boolean isRequireAllParents() {
+		return this.requireAllParents;
 	}
 
 	protected abstract ImportStrategy getImportStrategy(CmfObject.Archetype type);

@@ -12,7 +12,6 @@ cli/api/.settings/org.eclipse.wst.common.project.facet.core.prefs.xml
 cli/api/.settings/org.eclipse.wst.common.project.facet.core.xml
 cli/api/.settings/org.hibernate.eclipse.console.prefs
 cli/api/.settings/org.jboss.ide.eclipse.as.core.prefs
-cli/api/src/main/java/com/armedia/caliente/cli/classpath/ClasspathPatcher.java
 cli/api/src/main/java/com/armedia/caliente/cli/Command.java
 cli/api/src/main/java/com/armedia/caliente/cli/CommandScheme.java
 cli/api/src/main/java/com/armedia/caliente/cli/exception/CommandLineException.java
@@ -2316,7 +2315,6 @@ cli/exe/caliente/src/main/java/com/armedia/caliente/cli/caliente/options/CLICons
 cli/exe/caliente/src/main/java/com/armedia/caliente/cli/caliente/options/CLIFilters.java
 cli/exe/caliente/src/main/java/com/armedia/caliente/cli/caliente/options/CLIGroup.java
 cli/exe/caliente/src/main/java/com/armedia/caliente/cli/caliente/options/CLIParam.java
-cli/exe/caliente/src/main/java/com/armedia/caliente/cli/caliente/utils/ClasspathPatcher.java
 cli/exe/caliente/src/main/java/com/armedia/caliente/cli/caliente/utils/.gitignore
 cli/exe/caliente/src/main/java/com/armedia/caliente/cli/caliente/utils/MultipartSmtpMessage.java
 cli/exe/caliente/src/main/java/com/armedia/caliente/cli/caliente/utils/SimpleSmtpMessage.java
