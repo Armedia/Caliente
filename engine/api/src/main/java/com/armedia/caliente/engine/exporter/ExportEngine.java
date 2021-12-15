@@ -785,7 +785,7 @@ public abstract class ExportEngine<//
 			case KEY:
 				// SearchKey!
 				final String searchKey = StringUtils.strip(source.substring(1));
-				if (searchKey.charAt(1) == '@') {
+				if (searchKey.charAt(0) == '@') {
 					LineIteratorConfig cfg = new LineIteratorConfig() //
 						.setTrim(Trim.BOTH) //
 						.setMaxDepth(1) //
@@ -824,8 +824,8 @@ public abstract class ExportEngine<//
 						if (StringUtils.isEmpty(searchKey)) { throw new ExportException("Invalid empty search key"); }
 						ret.add(sanitizeExportTargets(findExportTargetsBySearchKey(session, this.settings, searchKey)));
 					}
-					break;
 				}
+				break;
 			case PATH:
 				// CMS Path!
 				ret.add(sanitizeExportTargets(findExportTargetsByPath(session, this.settings, source)));
