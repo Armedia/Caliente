@@ -47,6 +47,7 @@ public enum CalienteCommand {
 			"exp", "ex"
 		},
 		true, //
+		true, //
 		true //
 	), //
 	IMPORT(
@@ -55,6 +56,7 @@ public enum CalienteCommand {
 			"imp", "im"
 		},
 		true, //
+		true, //
 		false //
 	), //
 	COUNT(
@@ -62,6 +64,7 @@ public enum CalienteCommand {
 		new String[] {
 			"cnt", "cn"
 		},
+		true, //
 		false, //
 		false //
 	), //
@@ -71,6 +74,7 @@ public enum CalienteCommand {
 			"enc"
 		},
 		false, //
+		false, //
 		false //
 	), //
 	DECRYPT(
@@ -78,6 +82,7 @@ public enum CalienteCommand {
 		new String[] {
 			"dec"
 		},
+		false, //
 		false, //
 		false //
 	), //
@@ -87,15 +92,18 @@ public enum CalienteCommand {
 	private final String title;
 	private final String description;
 	private final Set<String> aliases;
+	private final boolean requiresLogs;
 	private final boolean requiresStorage;
 	private final boolean requiresCleanData;
 
-	private CalienteCommand(String description, String[] aliases, boolean requiresStorage, boolean requiresCleanData) {
+	private CalienteCommand(String description, String[] aliases, boolean requiresLogs, boolean requiresStorage,
+		boolean requiresCleanData) {
 		this.description = description;
 		Set<String> a = new TreeSet<>();
 		Arrays.stream(aliases).map(CalienteCommand::canonicalize).filter(StringUtils::isNotBlank).forEach(a::add);
 		this.title = CalienteCommand.canonicalize(name());
 		this.aliases = Tools.freezeSet(new LinkedHashSet<>(a));
+		this.requiresLogs = requiresLogs || requiresStorage;
 		this.requiresStorage = requiresStorage;
 		this.requiresCleanData = requiresCleanData;
 	}
@@ -110,6 +118,10 @@ public enum CalienteCommand {
 
 	public Set<String> getAliases() {
 		return this.aliases;
+	}
+
+	public boolean isRequiresLogs() {
+		return this.requiresLogs;
 	}
 
 	public boolean isRequiresStorage() {

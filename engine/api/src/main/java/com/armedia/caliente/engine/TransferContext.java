@@ -48,7 +48,7 @@ public abstract class TransferContext< //
 	SESSION, //
 	VALUE, //
 	CONTEXT_FACTORY extends TransferContextFactory<SESSION, VALUE, ?, ?> //
-> implements WarningTracker {
+> implements WarningTracker, AutoCloseable {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -176,6 +176,7 @@ public abstract class TransferContext< //
 		return this.productVersion;
 	}
 
+	@Override
 	public void close() {
 
 	}

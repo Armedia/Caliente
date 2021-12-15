@@ -61,7 +61,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 		List<Folder> parents = folder.getParents();
 		int max = -1;
 		for (Folder parent : parents) {
-			for (String path : parent.getPaths()) {
+			for (String path : this.factory.getPaths(parent)) {
 				List<String> elements = FileNameTools.tokenize(path, '/');
 				max = Math.max(max, elements.size());
 			}
