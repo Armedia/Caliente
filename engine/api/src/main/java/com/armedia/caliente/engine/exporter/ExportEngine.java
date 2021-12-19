@@ -651,15 +651,27 @@ public abstract class ExportEngine<//
 				}
 			}
 
-			try {
-				final boolean includeRenditions = !ctx.getSettings().getBoolean(TransferSetting.NO_RENDITIONS);
-				List<CmfContentStream> contentStreams = sourceObject.storeContent(ctx, getTranslator(), marshaled,
-					streamStore, includeRenditions);
+			// TODO: Make this configurable?
+			final int maxAttempts = 3;
+			for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+				List<CmfContentStream> contentStreams = null;
+				try {
+					final boolean includeRenditions = !ctx.getSettings().getBoolean(TransferSetting.NO_RENDITIONS);
+					contentStreams = sourceObject.storeContent(ctx, getTranslator(), marshaled, streamStore,
+						includeRenditions);
+				} catch (Exception e) {
+					if (attempt < maxAttempts) {
+						this.log.warn("Failed to execute the content storage for {} (attempt #{})", logLabel, attempt,
+							e);
+						continue;
+					}
+					throw new ExportException(String.format(
+						"Failed to execute the content storage for %s after %d attempts", logLabel, maxAttempts), e);
+				}
 				if ((contentStreams != null) && !contentStreams.isEmpty()) {
 					objectStore.setContentStreams(marshaled, contentStreams);
 				}
-			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to execute the content storage for %s", logLabel), e);
+				break;
 			}
 
 			if (this.log.isDebugEnabled()) {
