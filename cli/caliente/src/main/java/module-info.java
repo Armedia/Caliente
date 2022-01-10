@@ -1,13 +1,4 @@
-module com.armedia.caliente.cli {
-	exports com.armedia.caliente.cli;
-	exports com.armedia.caliente.cli.classpath;
-	exports com.armedia.caliente.cli.exception;
-	exports com.armedia.caliente.cli.filter;
-	exports com.armedia.caliente.cli.launcher;
-	exports com.armedia.caliente.cli.launcher.log;
-	exports com.armedia.caliente.cli.token;
-	exports com.armedia.caliente.cli.utils;
-
+module com.armedia.caliente.cli.caliente {
 	requires java.xml;
 
 	requires org.apache.commons.codec;
@@ -15,10 +6,16 @@ module com.armedia.caliente.cli {
 	requires org.apache.commons.lang3;
 	requires org.apache.commons.text;
 
+	requires chemistry.opencmis.client.api;
+	requires com.armedia.caliente.store;
+	requires com.armedia.caliente.engine;
+	requires com.armedia.caliente.engine.alfresco.bi;
+	requires com.armedia.caliente.engine.cmis;
+	requires com.armedia.caliente.engine.dctm;
 	requires com.armedia.commons.utilities;
 
-	requires transitive slf4j.api;
+	requires transitive org.slf4j;
 	requires static log4j;
-	requires static logback.classic;
-	requires static logback.core;
+	requires static ch.qos.logback.classic;
+	requires static ch.qos.logback.core;
 }

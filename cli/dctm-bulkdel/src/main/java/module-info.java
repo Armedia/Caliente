@@ -1,6 +1,5 @@
-module com.armedia.caliente.cli.caliente {
+module com.armedia.caliente.cli.dctm.bulkdel {
 	requires static chemistry.opencmis.client.api;
-	requires com.armedia.caliente.cli;
 	requires com.armedia.caliente.engine;
 	requires static com.armedia.caliente.engine.alfrescobi;
 	requires static com.armedia.caliente.engine.cmis;
@@ -24,5 +23,5 @@ module com.armedia.caliente.cli.caliente {
 	requires org.apache.commons.io;
 	requires org.apache.commons.lang3;
 	requires org.apache.commons.text;
-	requires slf4j.api;
+	requires org.slf4j;
 }

@@ -1,8 +1,9 @@
-module com.armedia.caliente.cli.dctm.bulkdel {
-	requires com.armedia.caliente.cli;
+module com.armedia.caliente.cli.dctm.datagen {
 	requires com.armedia.caliente.tools;
 	requires com.armedia.caliente.tools.dfc;
 	requires com.armedia.commons.utilities;
+	requires org.apache.commons.lang3;
+	requires org.apache.commons.text;
 	requires dfc;
-	requires slf4j.api;
+	requires org.slf4j;
 }
