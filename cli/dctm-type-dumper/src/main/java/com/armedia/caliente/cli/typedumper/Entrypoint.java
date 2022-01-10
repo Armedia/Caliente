@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionParseResult;
 import com.armedia.commons.utilities.cli.OptionScheme;
 import com.armedia.commons.utilities.cli.OptionValues;
 import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
@@ -46,6 +47,7 @@ import com.armedia.commons.utilities.cli.launcher.LaunchClasspathHelper;
 import com.armedia.commons.utilities.cli.utils.DfcLaunchHelper;
 import com.armedia.commons.utilities.cli.utils.LibLaunchHelper;
 import com.armedia.commons.utilities.cli.utils.ThreadsLaunchHelper;
+import com.armedia.commons.utilities.function.CheckedFunction;
 
 public class Entrypoint extends AbstractEntrypoint {
 
@@ -125,8 +127,8 @@ public class Entrypoint extends AbstractEntrypoint {
 	}
 
 	@Override
-	protected int execute(OptionValues baseValues, String command, OptionValues commandValues,
-		Collection<String> positionals) throws Exception {
-		return new DctmTypeDumper(this.dfcLaunchHelper, this.threadsLaunchHelper).run(baseValues, positionals);
+	protected CheckedFunction<OptionParseResult, Integer, Exception> getEntrypoint() {
+		return (results) -> new DctmTypeDumper(this.dfcLaunchHelper, this.threadsLaunchHelper)
+			.run(results.getOptionValues(), results.getPositionals());
 	}
 }
