@@ -73,7 +73,6 @@ import com.armedia.commons.utilities.cli.Command;
 import com.armedia.commons.utilities.cli.CommandScheme;
 import com.armedia.commons.utilities.cli.Option;
 import com.armedia.commons.utilities.cli.OptionImpl;
-import com.armedia.commons.utilities.cli.OptionParseResult;
 import com.armedia.commons.utilities.cli.OptionScheme;
 import com.armedia.commons.utilities.cli.OptionValues;
 import com.armedia.commons.utilities.cli.exception.CommandLineSyntaxException;
@@ -83,7 +82,6 @@ import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
 import com.armedia.commons.utilities.cli.launcher.CommandLineProcessingException;
 import com.armedia.commons.utilities.cli.launcher.LaunchClasspathHelper;
 import com.armedia.commons.utilities.cli.utils.LibLaunchHelper;
-import com.armedia.commons.utilities.function.CheckedFunction;
 
 public class Entrypoint extends AbstractEntrypoint {
 
@@ -648,12 +646,7 @@ public class Entrypoint extends AbstractEntrypoint {
 	}
 
 	@Override
-	protected CheckedFunction<OptionParseResult, Integer, Exception> getEntrypoint() {
-		return (result) -> execute(result.getOptionValues(), result.getCommand(), result.getCommandValues(),
-			result.getPositionals());
-	}
-
-	private int execute(OptionValues baseValues, String command, OptionValues commandValues,
+	protected int execute(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
 
 		try {

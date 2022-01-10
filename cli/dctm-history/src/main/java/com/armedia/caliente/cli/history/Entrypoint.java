@@ -30,7 +30,6 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import com.armedia.commons.utilities.cli.Option;
-import com.armedia.commons.utilities.cli.OptionParseResult;
 import com.armedia.commons.utilities.cli.OptionScheme;
 import com.armedia.commons.utilities.cli.OptionValues;
 import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
@@ -38,7 +37,6 @@ import com.armedia.commons.utilities.cli.launcher.LaunchClasspathHelper;
 import com.armedia.commons.utilities.cli.utils.DfcLaunchHelper;
 import com.armedia.commons.utilities.cli.utils.LibLaunchHelper;
 import com.armedia.commons.utilities.cli.utils.ThreadsLaunchHelper;
-import com.armedia.commons.utilities.function.CheckedFunction;
 
 public class Entrypoint extends AbstractEntrypoint {
 
@@ -77,8 +75,8 @@ public class Entrypoint extends AbstractEntrypoint {
 	}
 
 	@Override
-	protected CheckedFunction<OptionParseResult, Integer, Exception> getEntrypoint() {
-		return (results) -> new History(this.dfcLaunchHelper, this.threadsLaunchHelper).run(results.getOptionValues(),
-			results.getPositionals());
+	protected int execute(OptionValues baseValues, String command, OptionValues commandValues,
+		Collection<String> positionals) throws Exception {
+		return new History(this.dfcLaunchHelper, this.threadsLaunchHelper).run(baseValues, positionals);
 	}
 }
