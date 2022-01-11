@@ -640,9 +640,19 @@ public class Entrypoint extends AbstractEntrypoint {
 
 	@Override
 	public int execute(String... args) {
-		if (!SystemUtils.IS_JAVA_1_8) {
-			throw new UnsupportedOperationException("Caliente will only work with a 1.8.0 JVM - the current version is "
-				+ SystemUtils.JAVA_RUNTIME_VERSION);
+		boolean tooOld = false //
+			|| SystemUtils.IS_JAVA_1_1 //
+			|| SystemUtils.IS_JAVA_1_2 //
+			|| SystemUtils.IS_JAVA_1_3 //
+			|| SystemUtils.IS_JAVA_1_4 //
+			|| SystemUtils.IS_JAVA_1_5 //
+			|| SystemUtils.IS_JAVA_1_6 //
+			|| SystemUtils.IS_JAVA_1_7 //
+		;
+		if (tooOld) {
+			throw new UnsupportedOperationException(
+				"Caliente will only work with a JVM equal to or newer than 1.8.0 - the current version is "
+					+ SystemUtils.JAVA_RUNTIME_VERSION);
 		}
 		return super.execute(args);
 	}
