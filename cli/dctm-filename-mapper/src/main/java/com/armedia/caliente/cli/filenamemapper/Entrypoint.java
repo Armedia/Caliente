@@ -38,7 +38,6 @@ import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
 import com.armedia.commons.utilities.cli.launcher.LaunchClasspathHelper;
 import com.armedia.commons.utilities.cli.utils.DfcLaunchHelper;
 import com.armedia.commons.utilities.cli.utils.LibLaunchHelper;
-import com.armedia.commons.utilities.function.CheckedFunction;
 
 public class Entrypoint extends AbstractEntrypoint {
 
@@ -72,7 +71,7 @@ public class Entrypoint extends AbstractEntrypoint {
 	}
 
 	@Override
-	protected CheckedFunction<OptionParseResult, Integer, Exception> getEntrypoint() {
-		return (results) -> new FilenameMapper(this.dfcLaunchHelper).run(results.getOptionValues());
+	protected int execute(OptionParseResult result) throws Exception {
+		return new FilenameMapper(this.dfcLaunchHelper).run(result.getOptionValues());
 	}
 }

@@ -66,8 +66,8 @@ import com.armedia.caliente.store.CmfStoreFactory;
 import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.StoreConfiguration;
-import com.armedia.caliente.tools.ParameterTools;
 import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.caliente.tools.ParameterTools;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.cli.Command;
@@ -84,7 +84,6 @@ import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
 import com.armedia.commons.utilities.cli.launcher.CommandLineProcessingException;
 import com.armedia.commons.utilities.cli.launcher.LaunchClasspathHelper;
 import com.armedia.commons.utilities.cli.utils.LibLaunchHelper;
-import com.armedia.commons.utilities.function.CheckedFunction;
 
 public class Entrypoint extends AbstractEntrypoint {
 
@@ -649,14 +648,9 @@ public class Entrypoint extends AbstractEntrypoint {
 	}
 
 	@Override
-	protected CheckedFunction<OptionParseResult, Integer, Exception> getEntrypoint() {
-		return (result) -> execute(result.getOptionValues(), result.getCommand(), result.getCommandValues(),
-			result.getPositionals());
-	}
-
-	private int execute(OptionValues baseValues, String command, OptionValues commandValues,
-		Collection<String> positionals) throws Exception {
-
+	protected int execute(OptionParseResult result) throws Exception {
+		final OptionValues commandValues = result.getCommandValues();
+		final Collection<String> positionals = result.getPositionals();
 		try {
 			initializeStores(commandValues);
 
