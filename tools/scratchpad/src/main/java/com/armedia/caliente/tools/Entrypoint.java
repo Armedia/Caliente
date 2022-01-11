@@ -50,7 +50,6 @@ import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
 import com.armedia.commons.utilities.cli.launcher.LaunchClasspathHelper;
 import com.armedia.commons.utilities.cli.utils.LibLaunchHelper;
 import com.armedia.commons.utilities.cli.utils.ThreadsLaunchHelper;
-import com.armedia.commons.utilities.function.CheckedFunction;
 import com.armedia.commons.utilities.function.CheckedSupplier;
 
 /**
@@ -121,13 +120,8 @@ public class Entrypoint extends AbstractEntrypoint {
 	}
 
 	@Override
-	protected CheckedFunction<OptionParseResult, Integer, Exception> getEntrypoint() {
-		return (results) -> execute(results.getOptionValues(), results.getCommand(), results.getCommandValues(),
-			results.getPositionals());
-	}
-
-	private int execute(OptionValues baseValues, String command, OptionValues commandValues,
-		Collection<String> positionals) throws Exception {
+	protected int execute(OptionParseResult result) throws Exception {
+		OptionValues baseValues = result.getOptionValues();
 		final int threads = this.threadsLaunchHelper.getThreads(baseValues, 10);
 		final int tests = baseValues.getInteger(CLIParam.test_count);
 		final CheckedSupplier<Repository, Exception> repository = new MongoRepository();
