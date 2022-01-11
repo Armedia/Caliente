@@ -29,6 +29,7 @@ package com.armedia.caliente.cli.datagen;
 import java.util.Arrays;
 import java.util.Collection;
 
+import com.armedia.caliente.tools.ParameterTools;
 import com.armedia.commons.utilities.cli.Option;
 import com.armedia.commons.utilities.cli.OptionParseResult;
 import com.armedia.commons.utilities.cli.OptionScheme;
@@ -46,7 +47,7 @@ public class Entrypoint extends AbstractEntrypoint {
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() / 2);
 	protected static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors());
 
-	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
+	private final LibLaunchHelper libLaunchHelper = ParameterTools.CALIENTE_LIB;
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper(Entrypoint.MIN_THREADS,
 		Entrypoint.DEFAULT_THREADS, Entrypoint.MAX_THREADS);

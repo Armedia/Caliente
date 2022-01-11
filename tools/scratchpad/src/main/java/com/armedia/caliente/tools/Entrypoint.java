@@ -64,7 +64,7 @@ public class Entrypoint extends AbstractEntrypoint {
 	static final int MIN_TESTS = 1000;
 	static final int DEFAULT_TESTS = 10000;
 
-	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
+	private final LibLaunchHelper libLaunchHelper = ParameterTools.CALIENTE_LIB;
 	// private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper();
 

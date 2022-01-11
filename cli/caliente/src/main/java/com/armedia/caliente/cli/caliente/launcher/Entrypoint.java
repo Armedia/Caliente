@@ -66,6 +66,7 @@ import com.armedia.caliente.store.CmfStoreFactory;
 import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.StoreConfiguration;
+import com.armedia.caliente.tools.ParameterTools;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
@@ -118,7 +119,7 @@ public class Entrypoint extends AbstractEntrypoint {
 
 	private static final String DEFAULT_STREAMS_ORGANIZER = HierarchicalOrganizer.NAME;
 
-	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
+	private final LibLaunchHelper libLaunchHelper = ParameterTools.CALIENTE_LIB;
 
 	// Saves us quite a few keystrokes ;)
 	private AbstractEngineInterface engineInterface = null;
