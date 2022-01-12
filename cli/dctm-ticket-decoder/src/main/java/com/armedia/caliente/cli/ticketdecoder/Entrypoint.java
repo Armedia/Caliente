@@ -37,8 +37,10 @@ import org.apache.log4j.xml.DOMConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.tools.ParameterTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionParseResult;
 import com.armedia.commons.utilities.cli.OptionScheme;
 import com.armedia.commons.utilities.cli.OptionValues;
 import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
@@ -49,7 +51,7 @@ import com.armedia.commons.utilities.cli.utils.ThreadsLaunchHelper;
 
 public class Entrypoint extends AbstractEntrypoint {
 
-	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
+	private final LibLaunchHelper libLaunchHelper = ParameterTools.CALIENTE_LIB;
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper();
 
@@ -123,8 +125,7 @@ public class Entrypoint extends AbstractEntrypoint {
 	}
 
 	@Override
-	protected int execute(OptionValues baseValues, String command, OptionValues commandValues,
-		Collection<String> positionals) throws Exception {
-		return new DctmTicketDecoder(this.dfcLaunchHelper, this.threadsLaunchHelper).run(baseValues);
+	protected int execute(OptionParseResult result) throws Exception {
+		return new DctmTicketDecoder(this.dfcLaunchHelper, this.threadsLaunchHelper).run(result.getOptionValues());
 	}
 }
