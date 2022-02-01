@@ -73,6 +73,9 @@ public class DfcUtils {
 	private static final String ORACLE_DATETIME_PATTERN = DfcUtils
 		.quoteStringForSql(DfcConstant.ORACLE_DATETIME_PATTERN);
 
+	private static final String POSTGRES_DATETIME_PATTERN = DfcUtils
+		.quoteStringForSql(DfcConstant.POSTGRES_DATETIME_PATTERN);
+
 	@FunctionalInterface
 	public static interface DfOperation {
 		public void execute(IDfSession session) throws DfException;
@@ -323,7 +326,9 @@ public class DfcUtils {
 					DfcConstant.MSSQL_DATETIME_PATTERN);
 				break;
 			case POSTGRES:
-				"".hashCode();
+				ret = String.format("TO_TIMESTAMP(%s, %s)", DfcUtils.quoteStringForSql(dateString),
+					DfcUtils.POSTGRES_DATETIME_PATTERN);
+				break;
 			default:
 				throw new UnsupportedOperationException(String.format("Unsupported database type [%s]", dbType));
 		}

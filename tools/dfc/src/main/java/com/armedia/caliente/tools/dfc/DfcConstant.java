@@ -50,6 +50,9 @@ public class DfcConstant {
 	/** The date and time pattern used in oracle sql query. */
 	public static final String ORACLE_DATETIME_PATTERN = "YYYY-MM-DD HH24:MI:SS";
 
+	/** The date and time pattern used in postgres sql query. */
+	public static final String POSTGRES_DATETIME_PATTERN = "YYYY-MM-DD HH24:MI:SS";
+
 	public static final int MSSQL_DATETIME_PATTERN = 120;
 
 	public static final String RUN_NOW = "run_now";
