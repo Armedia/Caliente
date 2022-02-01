@@ -1,0 +1,13 @@
+#!/bin/bash
+
+DEBUG_FLAGS=()
+if [ "${1}" = "--debug" ] ; then
+	DEBUG_FLAGS=("-Xdebug" "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=0.0.0.0:9999")
+	shift
+	set -x
+fi
+
+exec java \
+	-Xms4g -Xmx8g \
+	"${DEBUG_FLAGS[@]}" \
+	-jar target/caliente-*-exe.jar "${@}"
