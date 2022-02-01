@@ -124,11 +124,18 @@ public class DfcUtils {
 		ORACLE, //
 		SQLSERVER, //
 		// DB2, // TODO: Enable this when we support DB2
+		POSTGRES, //
+		UNKNOWN, //
 		//
 		;
 
 		public static DbType decode(String dbmsName) {
-			return DbType.valueOf(StringUtils.upperCase(dbmsName));
+			if (StringUtils.isBlank(dbmsName)) { return UNKNOWN; }
+			try {
+				return DbType.valueOf(StringUtils.upperCase(dbmsName));
+			} catch (IllegalArgumentException e) {
+				return UNKNOWN;
+			}
 		}
 
 		public static DbType decode(IDfSession session) throws DfException {
@@ -315,6 +322,8 @@ public class DfcUtils {
 				ret = String.format("CONVERT(DATETIME, %s, %d)", DfcUtils.quoteStringForSql(dateString),
 					DfcConstant.MSSQL_DATETIME_PATTERN);
 				break;
+			case POSTGRES:
+				"".hashCode();
 			default:
 				throw new UnsupportedOperationException(String.format("Unsupported database type [%s]", dbType));
 		}
