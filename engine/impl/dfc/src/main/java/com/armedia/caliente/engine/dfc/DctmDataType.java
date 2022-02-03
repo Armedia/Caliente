@@ -220,6 +220,10 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		}
 	},
 	DF_UNDEFINED(CmfValue.Type.OTHER, IDfValue.DF_UNDEFINED) {
+
+		private final CmfValue CMF_NULL = CmfValue.newValue(CmfValue.Type.OTHER, null);
+		private final IDfValue DFC_NULL = new DfValue((Object) null, IDfValue.DF_UNDEFINED);
+
 		private <T> T fail() {
 			throw new UnsupportedOperationException("Can't handle DF_UNDEFINED");
 		}
@@ -256,22 +260,27 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 
 		@Override
 		public boolean isNullValue(IDfValue v) {
-			return fail();
+			if (v == null) { return true; }
+			try {
+				return (v.compareTo(this.DFC_NULL) == 0);
+			} catch (DfException e) {
+				throw new RuntimeException("Failed to compare with the DFC_NULL (UNDEFINED) value", e);
+			}
 		}
 
 		@Override
 		public boolean isNullEncoding(CmfValue e) {
-			return fail();
+			return ((e == null) || e.isNull());
 		}
 
 		@Override
 		public CmfValue getNullEncoding() {
-			return fail();
+			return this.CMF_NULL;
 		}
 
 		@Override
 		public IDfValue getNullValue() {
-			return fail();
+			return this.DFC_NULL;
 		}
 	};
 
