@@ -73,6 +73,9 @@ public class DfcUtils {
 	private static final String ORACLE_DATETIME_PATTERN = DfcUtils
 		.quoteStringForSql(DfcConstant.ORACLE_DATETIME_PATTERN);
 
+	private static final String POSTGRES_DATETIME_PATTERN = DfcUtils
+		.quoteStringForSql(DfcConstant.POSTGRES_DATETIME_PATTERN);
+
 	@FunctionalInterface
 	public static interface DfOperation {
 		public void execute(IDfSession session) throws DfException;
@@ -124,11 +127,18 @@ public class DfcUtils {
 		ORACLE, //
 		SQLSERVER, //
 		// DB2, // TODO: Enable this when we support DB2
+		POSTGRES, //
+		UNKNOWN, //
 		//
 		;
 
 		public static DbType decode(String dbmsName) {
-			return DbType.valueOf(StringUtils.upperCase(dbmsName));
+			if (StringUtils.isBlank(dbmsName)) { return UNKNOWN; }
+			try {
+				return DbType.valueOf(StringUtils.upperCase(dbmsName));
+			} catch (IllegalArgumentException e) {
+				return UNKNOWN;
+			}
 		}
 
 		public static DbType decode(IDfSession session) throws DfException {
@@ -314,6 +324,10 @@ public class DfcUtils {
 			case SQLSERVER:
 				ret = String.format("CONVERT(DATETIME, %s, %d)", DfcUtils.quoteStringForSql(dateString),
 					DfcConstant.MSSQL_DATETIME_PATTERN);
+				break;
+			case POSTGRES:
+				ret = String.format("TO_TIMESTAMP(%s, %s)", DfcUtils.quoteStringForSql(dateString),
+					DfcUtils.POSTGRES_DATETIME_PATTERN);
 				break;
 			default:
 				throw new UnsupportedOperationException(String.format("Unsupported database type [%s]", dbType));
