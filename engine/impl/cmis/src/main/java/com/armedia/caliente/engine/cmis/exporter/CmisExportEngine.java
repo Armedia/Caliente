@@ -28,7 +28,9 @@ package com.armedia.caliente.engine.cmis.exporter;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
@@ -70,14 +72,53 @@ public class CmisExportEngine extends
 
 	private final class QueryResultTransformer implements CmisResultTransformer<QueryResult, ExportTarget> {
 		private final Session session;
+		private final Map<String, ObjectType> typeCache = new HashMap<>();
 
 		private QueryResultTransformer(Session session) {
 			this.session = session;
 		}
 
 		@Override
-		public ExportTarget transform(QueryResult result) throws Exception {
-			return newExportTarget(this.session, result);
+		public ExportTarget transform(QueryResult r) throws Exception {
+			PropertyData<?> objectId = r.getPropertyById(PropertyIds.OBJECT_ID);
+			if (objectId == null) {
+				throw new ExportException("Failed to find the cmis:objectId property as part of the query result");
+			}
+
+			CmfObject.Archetype type = null;
+			PropertyData<?>[] objectTypes = {
+				r.getPropertyById(PropertyIds.OBJECT_TYPE_ID), r.getPropertyById(PropertyIds.BASE_TYPE_ID)
+			};
+
+			for (PropertyData<?> t : objectTypes) {
+				if (t == null) {
+					continue;
+				}
+
+				Object firstValue = t.getFirstValue();
+				if (CmisExportEngine.this.log.isTraceEnabled()) {
+					CmisExportEngine.this.log.trace("Found property [{}] with value [{}]", t.getId(), firstValue);
+				}
+				String value = Tools.toString(firstValue);
+				if (StringUtils.isNotBlank(value)) {
+					// Use the cache ...
+					type = decodeType(this.typeCache.computeIfAbsent(value, this.session::getTypeDefinition));
+				} else {
+					type = decodeType(value);
+				}
+				if (type != null) {
+					if (CmisExportEngine.this.log.isTraceEnabled()) {
+						CmisExportEngine.this.log.trace("Object type [{}] decoded as [{}]", firstValue, type);
+					}
+					break;
+				}
+			}
+			if (type == null) {
+				throw new ExportException(
+					"Failed to find the cmis:objectTypeId or the cmis:baseTypeId properties as part of the query result, or the returned value couldn't be decoded");
+			}
+			String id = Tools.toString(objectId.getFirstValue());
+			return new ExportTarget(type, id, id);
 		}
 	}
 
@@ -91,46 +132,6 @@ public class CmisExportEngine extends
 	public CmisExportEngine(CmisExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, true);
-	}
-
-	protected ExportTarget newExportTarget(Session s, QueryResult r) throws ExportException {
-		PropertyData<?> objectId = r.getPropertyById(PropertyIds.OBJECT_ID);
-		if (objectId == null) {
-			throw new ExportException("Failed to find the cmis:objectId property as part of the query result");
-		}
-
-		CmfObject.Archetype type = null;
-		PropertyData<?>[] objectTypes = {
-			r.getPropertyById(PropertyIds.OBJECT_TYPE_ID), r.getPropertyById(PropertyIds.BASE_TYPE_ID)
-		};
-
-		for (PropertyData<?> t : objectTypes) {
-			if (t == null) {
-				continue;
-			}
-
-			if (this.log.isTraceEnabled()) {
-				this.log.trace("Found property [{}] with value [{}]", t.getId(), t.getFirstValue());
-			}
-			String value = Tools.toString(t.getFirstValue());
-			if (StringUtils.isNotBlank(value)) {
-				type = decodeType(s.getTypeDefinition(value));
-			} else {
-				type = decodeType(value);
-			}
-			if (type != null) {
-				if (this.log.isTraceEnabled()) {
-					this.log.trace("Object type [{}] decoded as [{}]", t.getFirstValue(), type);
-				}
-				break;
-			}
-		}
-		if (type == null) {
-			throw new ExportException(
-				"Failed to find the cmis:objectTypeId or the cmis:baseTypeId properties as part of the query result, or the returned value couldn't be decoded");
-		}
-		String id = Tools.toString(objectId.getFirstValue());
-		return new ExportTarget(type, id, id);
 	}
 
 	protected Iterator<ExportTarget> getPathIterator(final Session session, String path, boolean excludeEmptyFolders)

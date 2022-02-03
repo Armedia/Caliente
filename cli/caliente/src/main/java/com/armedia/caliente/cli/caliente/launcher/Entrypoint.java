@@ -67,12 +67,14 @@ import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.caliente.tools.ParameterTools;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.cli.Command;
 import com.armedia.commons.utilities.cli.CommandScheme;
 import com.armedia.commons.utilities.cli.Option;
 import com.armedia.commons.utilities.cli.OptionImpl;
+import com.armedia.commons.utilities.cli.OptionParseResult;
 import com.armedia.commons.utilities.cli.OptionScheme;
 import com.armedia.commons.utilities.cli.OptionValues;
 import com.armedia.commons.utilities.cli.exception.CommandLineSyntaxException;
@@ -116,7 +118,7 @@ public class Entrypoint extends AbstractEntrypoint {
 
 	private static final String DEFAULT_STREAMS_ORGANIZER = HierarchicalOrganizer.NAME;
 
-	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
+	private final LibLaunchHelper libLaunchHelper = ParameterTools.CALIENTE_LIB;
 
 	// Saves us quite a few keystrokes ;)
 	private AbstractEngineInterface engineInterface = null;
@@ -638,17 +640,26 @@ public class Entrypoint extends AbstractEntrypoint {
 
 	@Override
 	public int execute(String... args) {
-		if (!SystemUtils.IS_JAVA_1_8) {
-			throw new UnsupportedOperationException("Caliente will only work with a 1.8.0 JVM - the current version is "
-				+ SystemUtils.JAVA_RUNTIME_VERSION);
+		boolean tooOld = false //
+			|| SystemUtils.IS_JAVA_1_1 //
+			|| SystemUtils.IS_JAVA_1_2 //
+			|| SystemUtils.IS_JAVA_1_3 //
+			|| SystemUtils.IS_JAVA_1_4 //
+			|| SystemUtils.IS_JAVA_1_5 //
+			|| SystemUtils.IS_JAVA_1_6 //
+			|| SystemUtils.IS_JAVA_1_7 //
+		;
+		if (tooOld) {
+			throw new UnsupportedOperationException(
+				"Caliente will only work with a JVM equal to or newer than 1.8.0 - the current version is "
+					+ SystemUtils.JAVA_RUNTIME_VERSION);
 		}
 		return super.execute(args);
 	}
 
-	@Override
-	protected int execute(OptionValues baseValues, String command, OptionValues commandValues,
-		Collection<String> positionals) throws Exception {
-
+	protected int execute(OptionParseResult result) throws Exception {
+		final OptionValues commandValues = result.getCommandValues();
+		final Collection<String> positionals = result.getPositionals();
 		try {
 			initializeStores(commandValues);
 
