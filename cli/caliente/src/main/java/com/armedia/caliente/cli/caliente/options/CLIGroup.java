@@ -70,7 +70,6 @@ public class CLIGroup {
 		.add(CLIParam.no_renditions) //
 		.add(CLIParam.no_versions) //
 		.add(CLIParam.only_types) //
-		.add(CLIParam.require_all_parents) //
 		.add(CLIParam.skip_content) //
 		.add(CLIParam.threads) //
 		.add(CLIParam.transformations) //
@@ -89,6 +88,7 @@ public class CLIGroup {
 		.addFrom(CLIGroup.IMPORT_EXPORT_COMMON.getOptions()) //
 		.add(CLIParam.group_map) //
 		.add(CLIParam.manifest_outcomes_import) //
+		.add(CLIParam.require_all_parents) //
 		.add(CLIParam.restrict_to) //
 		.add(CLIParam.retry_count) //
 		.add(CLIParam.role_map) //

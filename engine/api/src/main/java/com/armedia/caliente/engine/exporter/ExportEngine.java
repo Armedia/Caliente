@@ -677,39 +677,47 @@ public abstract class ExportEngine<//
 
 					final CmfContentStore<?, ?>.Handle handle = streamStore.addContentStream(translator, marshaled,
 						stream.getInfo());
-					try {
-						long size = handler.apply(handle, stream);
-						if (size == stream.getInfo().getLength()) {
-							// TODO: Get the hash?
-							contentStreams.add(stream.getInfo());
-							continue;
-						} else {
-							// TODO: Raise an exception? Log a warning?
+					// TODO: Make this configurable?
+					final int maxAttempts = 3;
+					for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+						try {
+							long size = handler.apply(handle, stream);
+							if (size == stream.getInfo().getLength()) {
+								// TODO: Get the hash?
+								contentStreams.add(stream.getInfo());
+								continue;
+							} else {
+								// TODO: Raise an exception? Log a warning?
+							}
+						} catch (Exception e) {
+							// If this was an error interacting with the content store, it's not
+							// safe
+							// to continue
+							if (CmfStorageException.class.isInstance(e)) { throw CmfStorageException.class.cast(e); }
+
+							CmfContentStream info = stream.getInfo();
+							// If this was an exception related to I/O, it's not safe to continue
+							if (IOException.class.isInstance(e)) {
+								throw new ExportException(
+									String.format("Failed to retrieve content stream # %d for %s (%s)", info.getIndex(),
+										logLabel, info),
+									e);
+							}
+
+							// Otherwise, this may have been an exception related to fetching the
+							// content, which means we retry this stream a couple of times, and keep
+							// trying with other content streams...
+
+							if (attempt < maxAttempts) {
+								this.log.warn("Failed to execute the content storage for {} (attempt #{})", logLabel,
+									attempt, e);
+								continue;
+							}
+
+							this.log.warn("Failed to store content stream # {} for {} ({})", info.getIndex(), logLabel,
+								info, e);
 						}
-					} catch (Exception e) {
-
-						// If this was an error interacting with the content store, it's not safe
-						// to continue
-						if (CmfStorageException.class.isInstance(e)) { throw CmfStorageException.class.cast(e); }
-
-						CmfContentStream info = stream.getInfo();
-						// If this was an exception related to I/O, it's not safe to continue
-						if (IOException.class.isInstance(e)) {
-							throw new ExportException(
-								String.format("Failed to retrieve content stream # %d for %s (%s)", info.getIndex(),
-									logLabel, info),
-								e);
-						}
-
-						// Otherwise, this may have been an exception related to fetching the
-						// content, which means we keep trying with other content streams...
-						this.log.warn("Failed to store content stream # {} for {} ({})", info.getIndex(), logLabel,
-							info, e);
 					}
-				}
-
-				if ((contentStreams != null) && !contentStreams.isEmpty()) {
-					objectStore.setContentStreams(marshaled, contentStreams);
 				}
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to execute the content storage for %s", logLabel), e);
@@ -852,7 +860,7 @@ public abstract class ExportEngine<//
 			case KEY:
 				// SearchKey!
 				final String searchKey = StringUtils.strip(source.substring(1));
-				if (searchKey.charAt(1) == '@') {
+				if (searchKey.charAt(0) == '@') {
 					LineIteratorConfig cfg = new LineIteratorConfig() //
 						.setTrim(Trim.BOTH) //
 						.setMaxDepth(1) //
@@ -891,8 +899,8 @@ public abstract class ExportEngine<//
 						if (StringUtils.isEmpty(searchKey)) { throw new ExportException("Invalid empty search key"); }
 						ret.add(sanitizeExportTargets(findExportTargetsBySearchKey(session, this.settings, searchKey)));
 					}
-					break;
 				}
+				break;
 			case PATH:
 				// CMS Path!
 				ret.add(sanitizeExportTargets(findExportTargetsByPath(session, this.settings, source)));

@@ -112,8 +112,7 @@ public class Transformer extends BaseShareableLockable {
 				final DynamicObject dynamic = ctx.getDynamicObject();
 				if (this.attributeMapper != null) {
 					try {
-						this.attributeMapper.renderMappedAttributes(schemaService, dynamic,
-							object.getTranslator().getAttributeNameMapper());
+						this.attributeMapper.renderMappedAttributes(schemaService, dynamic, nameMapper);
 					} catch (SchemaServiceException e) {
 						throw new TransformerException(
 							String.format("Failed to apply the attribute mappings for %s", object.getDescription()), e);

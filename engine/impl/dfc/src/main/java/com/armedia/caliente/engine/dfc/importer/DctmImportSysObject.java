@@ -742,8 +742,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	protected IDfId persistChanges(T sysObject, DctmImportContext context) throws DfException, ImportException {
 		if (!sysObject.isCheckedOut()) { return super.persistChanges(sysObject, context); }
 		IDfId newId = persistNewVersion(sysObject, null, context);
-		context.getValueMapper().setMapping(this.cmfObject.getType(), DctmAttributes.R_OBJECT_ID,
-			this.cmfObject.getId(), newId.getId());
+		updateIdAndHistoryMappings(context, sysObject, newId);
 		return newId;
 	}
 

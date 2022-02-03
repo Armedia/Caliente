@@ -240,6 +240,35 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		}
 	}
 
+	protected void updateIdAndHistoryMappings(DctmImportContext context, IDfPersistentObject object)
+		throws DfException {
+		updateIdAndHistoryMappings(context, object, null, null);
+	}
+
+	protected void updateIdAndHistoryMappings(DctmImportContext context, IDfPersistentObject object, IDfId newObjectId)
+		throws DfException {
+		updateIdAndHistoryMappings(context, object, newObjectId, null);
+	}
+
+	protected void updateIdAndHistoryMappings(DctmImportContext context, IDfPersistentObject object, IDfId newObjectId,
+		IDfId newHistoryId) throws DfException {
+		if (newObjectId == null) {
+			newObjectId = object.getObjectId();
+		}
+		context.getValueMapper().setMapping(getDctmType().getStoredObjectType(), DctmAttributes.R_OBJECT_ID,
+			this.cmfObject.getId(), newObjectId.getId());
+		final String attName = DctmAttributes.I_CHRONICLE_ID;
+		if (!object.hasAttr(attName)) { return; }
+		final String oldHistoryId = this.cmfObject.getHistoryId();
+		final CmfObject.Archetype type = getDctmType().getStoredObjectType();
+		if (newHistoryId == null) {
+			newHistoryId = object.getId(attName);
+		}
+		if (context.getValueMapper().getTargetMapping(type, attName, oldHistoryId) == null) {
+			context.getValueMapper().setMapping(type, attName, oldHistoryId, newHistoryId.getId());
+		}
+	}
+
 	protected ImportOutcome doImportObject(DctmImportContext context) throws DfException, ImportException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 
@@ -266,8 +295,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				if (!isTransitoryObject(object)) {
 					// DO NOT override mappings...we don't know the new object's ID until checkin is
 					// completed
-					context.getValueMapper().setMapping(getDctmType().getStoredObjectType(), DctmAttributes.R_OBJECT_ID,
-						this.cmfObject.getId(), object.getObjectId().getId());
+					updateIdAndHistoryMappings(context, object);
 				}
 			} else {
 				// Is this correct?
@@ -277,18 +305,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				object.fetch(null);
 				this.log.info("Acquired lock on {}", this.cmfObject.getDescription());
 				// First, store the mapping for the object's exact ID
-				context.getValueMapper().setMapping(getDctmType().getStoredObjectType(), DctmAttributes.R_OBJECT_ID,
-					this.cmfObject.getId(), object.getObjectId().getId());
-				// Now, if necessary, store the mapping for the object's chronicle ID
-				if (object.hasAttr(DctmAttributes.I_CHRONICLE_ID)) {
-					final String attName = DctmAttributes.I_CHRONICLE_ID;
-					final String sourceHistoryId = this.cmfObject.getHistoryId();
-					final CmfObject.Archetype type = getDctmType().getStoredObjectType();
-					if (context.getValueMapper().getTargetMapping(type, attName, sourceHistoryId) == null) {
-						context.getValueMapper().setMapping(type, attName, sourceHistoryId,
-							object.getId(attName).getId());
-					}
-				}
+				updateIdAndHistoryMappings(context, object);
 
 				if (isSameObject(object, context)) {
 					ok = true;
