@@ -415,7 +415,7 @@ public enum CLIParam implements Supplier<Option> {
 		new OptionImpl() //
 			.setLongOpt("require-all-parents") //
 			.setDescription(
-				"Ignore missing parents during ingestion to avoid failures because of it (warnings will be printed)") //
+				"Require missing parents during ingestion to raise failures because of it (otherwise, only warnings will be printed)") //
 	), //
 
 	role_map( //

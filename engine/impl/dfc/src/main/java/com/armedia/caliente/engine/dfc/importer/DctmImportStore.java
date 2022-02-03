@@ -35,6 +35,7 @@ import java.util.Objects;
 import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.importer.ImportException;
+import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -68,14 +69,18 @@ public class DctmImportStore extends DctmImportDelegate<IDfStore> {
 
 	@Override
 	protected IDfStore locateInCms(DctmImportContext ctx) throws DfException {
-		IDfValue name = this.cmfObject.getAttribute(DctmAttributes.NAME).getValue();
-		return DfcUtils.getStore(ctx.getSession(), name.asString());
+		CmfAttribute<IDfValue> nameAtt = this.cmfObject.getAttribute(DctmAttributes.NAME);
+		String name = ((nameAtt != null) && nameAtt.hasValues() ? nameAtt.getValue().asString()
+			: this.cmfObject.getName());
+		return DfcUtils.getStore(ctx.getSession(), name);
 	}
 
 	@Override
 	protected boolean isSameObject(IDfStore store, DctmImportContext ctx) throws DfException {
-		IDfValue name = this.cmfObject.getAttribute(DctmAttributes.NAME).getValue();
-		return Objects.equals(name.asString(), store.getName());
+		CmfAttribute<IDfValue> nameAtt = this.cmfObject.getAttribute(DctmAttributes.NAME);
+		String name = ((nameAtt != null) && nameAtt.hasValues() ? nameAtt.getValue().asString()
+			: this.cmfObject.getName());
+		return Objects.equals(name, store.getName());
 	}
 
 	@Override

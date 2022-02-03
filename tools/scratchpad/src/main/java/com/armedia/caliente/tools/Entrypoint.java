@@ -43,6 +43,7 @@ import com.armedia.caliente.content.JcrOakTest;
 import com.armedia.caliente.content.MongoRepository;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionParseResult;
 import com.armedia.commons.utilities.cli.OptionScheme;
 import com.armedia.commons.utilities.cli.OptionValues;
 import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
@@ -62,7 +63,7 @@ public class Entrypoint extends AbstractEntrypoint {
 	static final int MIN_TESTS = 1000;
 	static final int DEFAULT_TESTS = 10000;
 
-	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
+	private final LibLaunchHelper libLaunchHelper = ParameterTools.CALIENTE_LIB;
 	// private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper();
 
@@ -119,8 +120,8 @@ public class Entrypoint extends AbstractEntrypoint {
 	}
 
 	@Override
-	protected int execute(OptionValues baseValues, String command, OptionValues commandValues,
-		Collection<String> positionals) throws Exception {
+	protected int execute(OptionParseResult result) throws Exception {
+		OptionValues baseValues = result.getOptionValues();
 		final int threads = this.threadsLaunchHelper.getThreads(baseValues, 10);
 		final int tests = baseValues.getInteger(CLIParam.test_count);
 		final CheckedSupplier<Repository, Exception> repository = new MongoRepository();
