@@ -30,7 +30,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -42,6 +41,7 @@ import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionParseResult;
 import com.armedia.commons.utilities.cli.OptionScheme;
 import com.armedia.commons.utilities.cli.OptionValues;
 import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
@@ -79,8 +79,8 @@ public class Entrypoint extends AbstractEntrypoint {
 	}
 
 	@Override
-	protected int execute(OptionValues cli, String command, OptionValues commandValues, Collection<String> positionals)
-		throws Exception {
+	protected int execute(OptionParseResult result) throws Exception {
+		final OptionValues cli = result.getOptionValues();
 		final String reportMarker = DateFormatUtils.format(new Date(), Entrypoint.REPORT_MARKER_FORMAT);
 		System.setProperty("logName", String.format("%s-%s", getName(), reportMarker));
 

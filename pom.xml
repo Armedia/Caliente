@@ -7,7 +7,7 @@
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
 	<artifactId>caliente</artifactId>
-	<version>3.10.2</version>
+	<version>4.0.0</version>
 	<packaging>pom</packaging>
 	<inceptionYear>2013</inceptionYear>
 
@@ -73,9 +73,11 @@
 		<stax-utils.version>20070216</stax-utils.version>
 		<tomcat.version>9.0.27</tomcat.version>
 		<unboundid-ldapsdk.version>5.1.0</unboundid-ldapsdk.version>
-		<utilities.version>1.2.2</utilities.version>
+		<utilities.version>1.3.0</utilities.version>
 		<woodstox.version>6.2.1</woodstox.version>
 		<jackson.version>2.11.1</jackson.version>
+		<jaxb-api.version>2.3.1</jaxb-api.version>
+		<jaxb-impl.version>2.3.0.1</jaxb-impl.version>
 
 		<!-- These are the libraries needed for specific CMS access -->
 
@@ -137,19 +139,25 @@
 			<dependency>
 				<groupId>javax.xml.bind</groupId>
 				<artifactId>jaxb-api</artifactId>
-				<version>2.3.1</version>
+				<version>${jaxb-api.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.sun.xml.bind</groupId>
 				<artifactId>jaxb-core</artifactId>
-				<version>2.3.0.1</version>
+				<version>${jaxb-impl.version}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.sun.xml.bind</groupId>
 				<artifactId>jaxb-impl</artifactId>
-				<version>2.3.1</version>
+				<version>${jaxb-impl.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.sun.xml.bind</groupId>
+				<artifactId>jaxb-xjc</artifactId>
+				<version>${jaxb-impl.version}</version>
 			</dependency>
 
 			<dependency>
