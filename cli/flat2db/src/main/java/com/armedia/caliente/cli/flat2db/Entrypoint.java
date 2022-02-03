@@ -26,14 +26,13 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.flat2db;
 
-import java.util.Collection;
 import java.util.Date;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.armedia.commons.utilities.cli.Option;
+import com.armedia.commons.utilities.cli.OptionParseResult;
 import com.armedia.commons.utilities.cli.OptionScheme;
-import com.armedia.commons.utilities.cli.OptionValues;
 import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
 import com.armedia.commons.utilities.cli.utils.ThreadsLaunchHelper;
 
@@ -53,8 +52,7 @@ public class Entrypoint extends AbstractEntrypoint {
 	}
 
 	@Override
-	protected int execute(OptionValues cli, String command, OptionValues commandValues, Collection<String> positionals)
-		throws Exception {
+	protected int execute(OptionParseResult result) throws Exception {
 		final String reportMarker = DateFormatUtils.format(new Date(), Entrypoint.REPORT_MARKER_FORMAT);
 		System.setProperty("logName", String.format("%s-%s", getName(), reportMarker));
 		return 0;

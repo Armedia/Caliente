@@ -27,6 +27,7 @@
 package com.armedia.caliente.engine.cmis.importer;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -39,6 +40,7 @@ import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.enums.VersioningState;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
+import org.apache.chemistry.opencmis.commons.exceptions.CmisStorageException;
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.ContentStreamImpl;
 import org.apache.commons.text.StringTokenizer;
@@ -223,19 +225,32 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	@Override
 	protected Document createNew(CmisImportContext ctx, Folder parent, Map<String, Object> properties)
 		throws ImportException {
-		ContentStream content = getContentStream(ctx);
-		try {
-			VersioningState state = (this.major ? VersioningState.MAJOR : VersioningState.MINOR);
-			Document document = parent.createDocument(properties, content, state);
-			CmfAttribute<CmfValue> versionSeriesId = this.cmfObject.getAttribute(PropertyIds.VERSION_SERIES_ID);
-			if ((versionSeriesId != null) && versionSeriesId.hasValues()) {
-				ctx.getValueMapper().setMapping(this.cmfObject.getType(), PropertyIds.VERSION_SERIES_ID,
-					versionSeriesId.getValue().asString(), document.getVersionSeriesId());
+		final int maxRetries = 3;
+		int attempt = 0;
+		List<CmisStorageException> caught = new ArrayList<>(maxRetries);
+		while (++attempt <= maxRetries) {
+			ContentStream content = getContentStream(ctx);
+			try {
+				VersioningState state = (this.major ? VersioningState.MAJOR : VersioningState.MINOR);
+				Document document = parent.createDocument(properties, content, state);
+				CmfAttribute<CmfValue> versionSeriesId = this.cmfObject.getAttribute(PropertyIds.VERSION_SERIES_ID);
+				if ((versionSeriesId != null) && versionSeriesId.hasValues()) {
+					ctx.getValueMapper().setMapping(this.cmfObject.getType(), PropertyIds.VERSION_SERIES_ID,
+						versionSeriesId.getValue().asString(), document.getVersionSeriesId());
+				}
+				return document;
+			} catch (CmisStorageException e) {
+				caught.add(e);
+				continue;
+			} finally {
+				IOUtils.closeQuietly(content);
 			}
-			return document;
-		} finally {
-			IOUtils.closeQuietly(content);
 		}
+		// Creation failed even after 3 retries ... so ... kaboom?
+		ImportException e = new ImportException("Import failed for " + this.cmfObject.getDescription(),
+			caught.remove(caught.size() - 1));
+		caught.forEach(e::addSuppressed);
+		throw e;
 	}
 
 	@Override
