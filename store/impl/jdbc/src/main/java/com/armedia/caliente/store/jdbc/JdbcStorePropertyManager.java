@@ -43,9 +43,9 @@ public class JdbcStorePropertyManager {
 
 	private static enum Op {
 		//
-		INSERT("insert into %s (name, data_type, value) values (?, ?, ?)"),
+		INSERT("insert into %s (name, data_type, data) values (?, ?, ?)"),
 		GET("select * from %s where name = ?"),
-		UPDATE("update %s set value = ? where name = ?"),
+		UPDATE("update %s set data = ? where name = ?"),
 		DELETE("delete from %s where name = ?"),
 		GET_NAMES("select name from %s order by name"),
 		GET_NAMES_PREFIX("select name from %s where name like ? order by name"),
@@ -96,7 +96,7 @@ public class JdbcStorePropertyManager {
 				if (deserializer == null) {
 					throw new SQLException(String.format("Unsupported data type name for serialization: [%s]", type));
 				}
-				String value = rs.getString("value");
+				String value = rs.getString("data");
 				try {
 					return Tools.coalesce(deserializer.deserialize(value), t.getNull());
 				} catch (ParseException e) {
