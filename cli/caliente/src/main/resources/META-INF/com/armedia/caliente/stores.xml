@@ -12,7 +12,7 @@
 		<setting name="db.driver">org.h2.Driver</setting>
 		<setting name="db.type">h2</setting>
 		<!-- TODO: Add ;IFEXISTS=TRUE here but only for import mode? -->
-		<setting name="db.flags">AUTO_SERVER=TRUE;MODE=PostgreSQL;TRACE_LEVEL_FILE=4;CACHE_SIZE=262144</setting>
+		<setting name="db.flags">AUTO_SERVER=TRUE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;TRACE_LEVEL_FILE=4;CACHE_SIZE=262144</setting>
 	</settings>
 
 	<objectstore id="default">

@@ -96,14 +96,14 @@ public class JdbcDialectH2 extends JdbcDialect {
 	;
 
 	private static final String RESTART_SEQUENCE = //
-		"     alter sequence %s restart with 1" //
+		"     alter table %s alter column %s restart with 1" //
 	;
 
 	private static final String LIST_SEQUENCES = //
-		"    select sequence_name " + //
+		"    select table_name, column_name " + //
 			"  from information_schema.columns " + //
-			" where table_name like 'CMF_%' " + //
-			"   and sequence_name is not null" //
+			" where table_name like 'cmf_%' " + //
+			"   and is_identity = 'YES'" //
 	;
 
 	private static final String SHUTDOWN_DB = //

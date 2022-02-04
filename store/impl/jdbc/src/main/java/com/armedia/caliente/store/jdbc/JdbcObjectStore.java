@@ -62,6 +62,7 @@ import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -82,6 +83,7 @@ import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.caliente.tools.datasource.DataSourceDescriptor;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.CheckedFunction;
 import com.armedia.commons.utilities.function.TriConsumer;
 
 /**
@@ -1381,14 +1383,22 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 		return truncateTables(operation, tables);
 	}
 
-	private Set<String> listSequences(Connection c) throws SQLException {
+	private Collection<Pair<String, String>> listSequences(Connection c) throws SQLException {
 		String sql = translateOptionalQuery(JdbcDialect.Query.LIST_SEQUENCES);
 		if (sql == null) { return Collections.emptySet(); }
 		QueryRunner qr = JdbcTools.getQueryRunner();
 		return qr.query(c, sql, (rs) -> {
-			Set<String> sequences = new TreeSet<>();
+			CheckedFunction<ResultSet, String, SQLException> readFirst = (r) -> r.getString(1);
+			CheckedFunction<ResultSet, String, SQLException> readSecond = (r) -> null;
+			if (rs.getMetaData().getColumnCount() > 1) {
+				readSecond = (r) -> r.getString(2);
+			}
+
+			List<Pair<String, String>> sequences = new LinkedList<>();
 			while (rs.next()) {
-				sequences.add(rs.getString(1));
+				String first = readFirst.applyChecked(rs);
+				String second = readSecond.applyChecked(rs);
+				sequences.add(Pair.of(first, second));
 			}
 			return sequences;
 		});
@@ -1400,8 +1410,8 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 			String sql = translateOptionalQuery(JdbcDialect.Query.RESTART_SEQUENCE);
 			if (sql == null) { return; }
 			QueryRunner qr = JdbcTools.getQueryRunner();
-			for (String sequence : listSequences(c)) {
-				qr.update(c, String.format(sql, sequence));
+			for (Pair<String, String> sequence : listSequences(c)) {
+				qr.update(c, String.format(sql, sequence.getKey(), sequence.getValue()));
 			}
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to reset the sequences", e);
