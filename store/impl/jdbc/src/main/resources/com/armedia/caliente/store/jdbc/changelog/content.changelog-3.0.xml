@@ -12,7 +12,7 @@
 			<column name="data_type" type="varchar(32)" remarks="The property's data type">
 				<constraints nullable="false" />
 			</column>
-			<column name="value" type="text" remarks="The property's value">
+			<column name="data" type="text" remarks="The property's value">
 				<constraints nullable="false" />
 			</column>
 		</createTable>

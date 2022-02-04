@@ -12,7 +12,7 @@
 			<column name="data_type" type="varchar(32)" remarks="The property's data type">
 				<constraints nullable="false" />
 			</column>
-			<column name="value" type="text" remarks="The property's value">
+			<column name="data" type="text" remarks="The property's value">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
@@ -54,7 +54,7 @@
 
 		<!-- The main objects table -->
 		<createTable tableName="cmf_object" remarks="The CMS objects">
-			<column name="object_number" type="bigint" remarks="The export ordinal number of the object (import will be done in this order as well)">
+			<column name="object_number" type="bigint" remarks="The export ordinal number of the object (import will be done in this order as well)" autoIncrement="true" startWith="1" incrementBy="1">
 				<constraints nullable="false" unique="true"/>
 			</column>
 			<column name="object_id" type="varchar(96)" remarks="The object's ID">
@@ -109,7 +109,6 @@
 			<column name="history_id" />
 			<column name="history_current" />
 		</createIndex>
-		<addAutoIncrement tableName="cmf_object" columnName="object_number" columnDataType="bigint" startWith="1" incrementBy="1"/>
 
 		<!-- The secondary subtypes (aspects) table -->
 		<createTable tableName="cmf_object_secondary_subtype" remarks="The CMS object secondary subtype data">
@@ -385,7 +384,7 @@
 			<column name="name" type="varchar(64)" remarks="The property's name">
 				<constraints nullable="false" />
 			</column>
-			<column name="value" type="text" remarks="The property's value">
+			<column name="data" type="text" remarks="The property's value">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
@@ -402,7 +401,7 @@
 			<column name="requirement_id" type="varchar(96)" remarks="The required object">
 				<constraints nullable="false" />
 			</column>
-			<column name="requirement_number" type="bigint" remarks="The ordinal number of the requirement">
+			<column name="requirement_number" type="bigint" remarks="The ordinal number of the requirement" autoIncrement="true" startWith="1" incrementBy="1">
 				<constraints nullable="false" unique="true"/>
 			</column>
 		</createTable>
@@ -431,6 +430,5 @@
 			<column name="object_id" />
 			<column name="requirement_number" />
 		</createIndex>
-		<addAutoIncrement tableName="cmf_requirement" columnName="requirement_number" columnDataType="bigint" startWith="1" incrementBy="1"/>
 	</changeSet>
 </databaseChangeLog>
