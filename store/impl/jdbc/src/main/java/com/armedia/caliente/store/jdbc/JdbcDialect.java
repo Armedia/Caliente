@@ -185,7 +185,7 @@ public abstract class JdbcDialect {
 		INSERT_CONTENT_PROPERTY( //
 			"       insert into " + //
 				"          cmf_content_property (" + //
-				"              object_id, content_number, name, value" + //
+				"              object_id, content_number, name, data" + //
 				"          ) " + //
 				"   values (?, ?, ?, ?)" //
 		),
