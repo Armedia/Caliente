@@ -87,7 +87,7 @@
 		<alfresco-opencmis-extension.version>1.0</alfresco-opencmis-extension.version>
 
 		<!-- DFC is for Documentum exp/imp support -->
-		<dfc.version>6.7-SP1</dfc.version>
+		<dfc.version>21.4</dfc.version>
 		<dfc.jar>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</dfc.jar>
 
 		<!-- JShare is for SharePoint exp support -->
