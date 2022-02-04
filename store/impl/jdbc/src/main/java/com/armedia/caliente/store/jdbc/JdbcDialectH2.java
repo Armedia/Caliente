@@ -102,7 +102,7 @@ public class JdbcDialectH2 extends JdbcDialect {
 	private static final String LIST_SEQUENCES = //
 		"    select table_name, column_name " + //
 			"  from information_schema.columns " + //
-			" where table_name like 'cmf_%' " + //
+			" where table_name like 'CMF_%' " + //
 			"   and is_identity = 'YES'" //
 	;
 
