@@ -682,8 +682,10 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 				} else {
 					// Process the IDs
 					Object[] arr = ids.toArray();
-					for (int i = 0; i < arr.length; i++) {
-						arr[i] = JdbcTools.composeDatabaseId(type, arr[i].toString());
+					if (!useHistoryIds) {
+						for (int i = 0; i < arr.length; i++) {
+							arr[i] = JdbcTools.composeDatabaseId(type, arr[i].toString());
+						}
 					}
 					if (this.dialect.isSupportsArrays()) {
 						objectPS.setString(1, type.name());
