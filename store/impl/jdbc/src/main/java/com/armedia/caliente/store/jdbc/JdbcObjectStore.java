@@ -1745,7 +1745,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 			final ResultSetHandler<Map<String, String>> pHandler = (rs) -> {
 				final Map<String, String> ret = new TreeMap<>();
 				while (rs.next()) {
-					ret.put(rs.getString("name"), rs.getString("value"));
+					ret.put(rs.getString("name"), rs.getString("data"));
 				}
 				return ret;
 			};
