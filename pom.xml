@@ -83,7 +83,7 @@
 
 		<!-- This is for CMIS exp/imp access (Alfresco) -->
 		<!-- Can't use a newer OpenCMIS because it'll cause JAXB collisions with the DFC -->
-		<opencmis.version>0.13.0</opencmis.version>
+		<opencmis.version>1.1.0</opencmis.version>
 		<alfresco-opencmis-extension.version>1.0</alfresco-opencmis-extension.version>
 
 		<!-- DFC is for Documentum exp/imp support -->
