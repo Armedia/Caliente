@@ -433,7 +433,7 @@ public abstract class ImportEngine<//
 		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, ImportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
 			"import");
-		this.retryCount = settings.getInteger(TransferSetting.RETRY_ATTEMPTS);
+		this.retryCount = Math.max(1, settings.getInteger(TransferSetting.RETRY_ATTEMPTS));
 		this.requireAllParents = settings.getBoolean(ImportSetting.REQUIRE_ALL_PARENTS);
 	}
 
