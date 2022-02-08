@@ -106,7 +106,7 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 		final ProgressTrigger writeProgress = new ProgressTrigger(writeStartTrigger, writeTrigger, this.reportInterval);
 		final ContentStoreClient client = new ContentStoreClient("writeTest", "sharedClient");
 		final PooledWorkersLogic<Pair<Session, ContentStoreClient>, Integer, Exception> logic = new FunctionalPooledWorkersLogic<>(
-			() -> Pair.of(repository.login(this.credentials), client), //
+			(w) -> Pair.of(repository.login(this.credentials), client), //
 			(p, i) -> {
 				final Session session = p.getLeft();
 				Pair<Node, String> target = this.organizer.newContentLocation(session, p.getRight());
@@ -151,7 +151,7 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 			pr.getIntervalStatistics(), pr.getAggregateStatistics());
 		final ProgressTrigger readProgress = new ProgressTrigger(readStartTrigger, readTrigger, this.reportInterval);
 		final PooledWorkersLogic<Session, Pair<String, Long>, Exception> logic = new FunctionalPooledWorkersLogic<>(
-			() -> repository.login(this.credentials), //
+			(w) -> repository.login(this.credentials), //
 			(session, target) -> {
 				// Handle each target
 				try {
@@ -176,8 +176,7 @@ public class JcrOakTest extends BaseShareableLockable implements Callable<Void> 
 				} finally {
 					readProgress.trigger();
 				}
-			},
-			(session, target, e) -> this.console.error("******** EXCEPTION CAUGHT PROCESSING [{}] (#{})",
+			}, (session, target, e) -> this.console.error("******** EXCEPTION CAUGHT PROCESSING [{}] (#{})",
 				target.getLeft(), target.getRight(), e),
 			(session) -> session.logout());
 
