@@ -888,7 +888,8 @@ public abstract class ExportEngine<//
 		final PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget, Exception> logic = new PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget, Exception>() {
 
 			@Override
-			public SessionWrapper<SESSION> initialize() throws Exception {
+			public SessionWrapper<SESSION> initialize(PooledWorkers<SessionWrapper<SESSION>, ExportTarget> workers)
+				throws Exception {
 				try {
 					final SessionWrapper<SESSION> s = sessionFactory.acquireSession();
 					ExportEngine.this.log.info("Worker ready with session [{}]", s.getId());
