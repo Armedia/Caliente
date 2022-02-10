@@ -186,8 +186,7 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 		return this.group.getCopy(name);
 	}
 
-	private String findExistingFile(String path) {
-		File f = CliUtils.newFileObject(path);
+	private String checkExistingFile(File f) {
 		String error = null;
 		if ((error == null) && !f.exists()) { return "does not exist"; }
 		if ((error == null) && !f.isFile()) { return "is not a regular file"; }
@@ -201,38 +200,34 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 		List<URL> ret = new ArrayList<>(3);
 		try {
 
-			// Even if not configured via parameter, if there's a dfc.properties in our current
-			// working directory, we try to use it
-			String[] candidates = {
-				commandValues.getString(this.paramDfcProp, StringUtils.EMPTY), //
-				DfcLaunchHelper.DEFAULT_DFC_PROPERTIES
-			};
+			File dfcProps = null;
 
-			// Will set the dfc.properties.file to point to the first candidate found. If none
-			// is found, it will be left empty and DFC will have to find its own by its own means
-			boolean dfcPropSet = false;
-			for (String var : candidates) {
-				if (StringUtils.isEmpty(var)) {
-					continue;
+			// First try the parameter value ... if it's set, then it MUST exist or
+			// it's an error
+			String var = commandValues.getString(this.paramDfcProp, StringUtils.EMPTY);
+			if (!StringUtils.isEmpty(var)) {
+				dfcProps = CliUtils.newFileObject(var);
+				String error = checkExistingFile(dfcProps);
+				if (error != null) {
+					throw new RuntimeException(String.format("The DFC Properties file at [%s] %s", dfcProps, error));
 				}
-				File f = CliUtils.newFileObject(var);
-				String error = findExistingFile(var);
-				if (error == null) {
-					this.log.info("Will use the DFC Properties file at [{}]", f.getAbsolutePath());
-					System.setProperty(DfcLaunchHelper.DFC_PROPERTIES_PROP, f.getAbsolutePath());
-					dfcPropSet = true;
-					break;
+			} else {
+				// No parameter given, try the one on the current directory ...
+				dfcProps = CliUtils.newFileObject(DfcLaunchHelper.DEFAULT_DFC_PROPERTIES);
+				String error = checkExistingFile(dfcProps);
+				if (error != null) {
+					dfcProps = null;
 				}
-
-				// Warn out the error?
-				this.log.warn("The DFC Properties candidate [{}] {}", error);
 			}
-			if (!dfcPropSet) {
-				this.log.warn("The DFC Properties were not set - will rely on the DFC's default behavior");
+
+			// We found a DFC Properties file ... use it! Otherwise the DFC will use its defaults
+			if (dfcProps != null) {
+				System.setProperty(DfcLaunchHelper.DFC_PROPERTIES_PROP, dfcProps.getAbsolutePath());
+				this.log.info("Will use the DFC Properties file at [{}]", dfcProps.getAbsolutePath());
 			}
 
 			// Next, add ${DOCUMENTUM}/config to the classpath
-			String var = commandValues.getString(this.paramDctm, System.getenv(DfcLaunchHelper.ENV_DOCUMENTUM));
+			var = commandValues.getString(this.paramDctm, System.getenv(DfcLaunchHelper.ENV_DOCUMENTUM));
 			// Go with the environment
 			if (var == null) {
 				String msg = String.format("The environment variable [%s] is not set", DfcLaunchHelper.ENV_DOCUMENTUM);
