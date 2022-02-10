@@ -65,11 +65,11 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.dfc.DfcCrypto;
 import com.armedia.caliente.tools.dfc.DfcUtils;
+import com.armedia.caliente.tools.dfc.cli.DfcLaunchHelper;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.cli.OptionValues;
 import com.armedia.commons.utilities.cli.utils.CliValuePrompt;
-import com.armedia.commons.utilities.cli.utils.DfcLaunchHelper;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfSession;
@@ -336,7 +336,10 @@ public class UserMapper {
 		docbase = getDocbaseSuffix(cli, docbase);
 		source = source.toUpperCase();
 		source = source.replaceAll("\\s", "_");
-		CSVFormat format = CSVFormat.DEFAULT.withRecordSeparator(UserMapper.NEWLINE);
+		CSVFormat format = CSVFormat.DEFAULT.builder() //
+			.setRecordSeparator(UserMapper.NEWLINE) //
+			.build() //
+		;
 		File f = Tools.canonicalize(new File(String.format("new_%s%s.%s.csv", name, docbase, source)));
 		UserMapper.log.info("Creating a new CSV file at [{}]...", f.getAbsolutePath());
 		CSVPrinter ret = new CSVPrinter(new FileWriter(f), format);

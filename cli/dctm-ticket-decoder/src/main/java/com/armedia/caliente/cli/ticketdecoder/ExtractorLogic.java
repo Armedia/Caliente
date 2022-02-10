@@ -63,6 +63,7 @@ import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
 import com.armedia.caliente.tools.dfc.DfcQuery;
 import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
+import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.function.CheckedPredicate;
@@ -348,7 +349,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, IDfId, Exc
 	}
 
 	@Override
-	public IDfSession initialize() throws DfException {
+	public IDfSession initialize(PooledWorkers<IDfSession, IDfId> workers) throws DfException {
 		return this.pool.acquireSession();
 	}
 
