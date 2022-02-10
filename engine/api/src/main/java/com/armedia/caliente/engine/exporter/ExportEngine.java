@@ -146,6 +146,7 @@ public abstract class ExportEngine<//
 	}
 
 	private final Map<LockStatus, Result> staticLockResults;
+	private final int retryCount;
 	private final boolean supportsMultipleSources;
 	private final Set<SearchType> supportedSearches;
 	private final Result unsupportedResult = new Result(ExportSkipReason.UNSUPPORTED);
@@ -209,6 +210,11 @@ public abstract class ExportEngine<//
 
 		this.supportedSearches = Tools.freezeSet(specSet);
 		this.supportsMultipleSources = supportsMultipleSources;
+		this.retryCount = settings.getInteger(TransferSetting.RETRY_ATTEMPTS);
+	}
+
+	public final int getRetryCount() {
+		return this.retryCount;
 	}
 
 	private Result exportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
@@ -652,21 +658,26 @@ public abstract class ExportEngine<//
 			}
 
 			// TODO: Make this configurable?
-			final int maxAttempts = 3;
-			for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+			List<Throwable> suppressed = new ArrayList<>(this.retryCount - 1);
+			for (int attempt = 1; attempt <= this.retryCount; attempt++) {
 				List<CmfContentStream> contentStreams = null;
 				try {
 					final boolean includeRenditions = !ctx.getSettings().getBoolean(TransferSetting.NO_RENDITIONS);
 					contentStreams = sourceObject.storeContent(ctx, getTranslator(), marshaled, streamStore,
 						includeRenditions);
 				} catch (Exception e) {
-					if (attempt < maxAttempts) {
-						this.log.warn("Failed to execute the content storage for {} (attempt #{})", logLabel, attempt,
-							e);
+					if (attempt < this.retryCount) {
+						suppressed.add(e);
+						this.log.warn("Failed to execute the content storage for {} (attempt # {}/{})", logLabel,
+							attempt, this.retryCount, e);
 						continue;
 					}
-					throw new ExportException(String.format(
-						"Failed to execute the content storage for %s after %d attempts", logLabel, maxAttempts), e);
+					ExportException e2 = new ExportException(
+						String.format("Failed to execute the content storage for %s after %d attempts", logLabel,
+							this.retryCount),
+						e);
+					suppressed.forEach(e2::addSuppressed);
+					throw e2;
 				}
 				if ((contentStreams != null) && !contentStreams.isEmpty()) {
 					objectStore.setContentStreams(marshaled, contentStreams);
@@ -877,7 +888,8 @@ public abstract class ExportEngine<//
 		final PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget, Exception> logic = new PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget, Exception>() {
 
 			@Override
-			public SessionWrapper<SESSION> initialize() throws Exception {
+			public SessionWrapper<SESSION> initialize(PooledWorkers<SessionWrapper<SESSION>, ExportTarget> workers)
+				throws Exception {
 				try {
 					final SessionWrapper<SESSION> s = sessionFactory.acquireSession();
 					ExportEngine.this.log.info("Worker ready with session [{}]", s.getId());

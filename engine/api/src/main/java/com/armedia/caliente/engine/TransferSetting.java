@@ -38,7 +38,7 @@ public enum TransferSetting implements TransferEngineSetting {
 	BACKLOG_SIZE(CmfValue.Type.INTEGER),
 	LATEST_ONLY(CmfValue.Type.BOOLEAN, false),
 	NO_RENDITIONS(CmfValue.Type.BOOLEAN, false),
-	RETRY_ATTEMPTS(CmfValue.Type.INTEGER, 2),
+	RETRY_ATTEMPTS(CmfValue.Type.INTEGER, 3),
 	TRANSFORMATION(CmfValue.Type.STRING),
 	FILTER(CmfValue.Type.STRING),
 	EXTERNAL_METADATA(CmfValue.Type.STRING),
