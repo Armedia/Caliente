@@ -35,6 +35,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.cli.Option;
@@ -48,6 +51,7 @@ import com.armedia.commons.utilities.cli.utils.CliUtils;
 import com.armedia.commons.utilities.cli.utils.CliValuePrompt;
 
 public final class DfcLaunchHelper extends Options implements LaunchClasspathHelper {
+
 	private static final String DFC_PROPERTIES_PROP = "dfc.properties.file";
 	private static final String DEFAULT_DFC_PROPERTIES = "dfc.properties";
 	private static final String ENV_DOCUMENTUM_SHARED = "DOCUMENTUM_SHARED";
@@ -97,6 +101,8 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 		.setLongOpt("dctm-unified") //
 		.setDescription("Utilize unified login mode") //
 	;
+
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final Option paramDfc;
 	private final Option paramDctm;
@@ -180,39 +186,53 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 		return this.group.getCopy(name);
 	}
 
+	private String findExistingFile(String path) {
+		File f = CliUtils.newFileObject(path);
+		String error = null;
+		if ((error == null) && !f.exists()) { return "does not exist"; }
+		if ((error == null) && !f.isFile()) { return "is not a regular file"; }
+		if ((error == null) && !f.canRead()) { return "cannot be read"; }
+		return null;
+	}
+
 	@Override
 	public Collection<URL> getClasspathPatches(OptionValues baseValues, OptionValues commandValues) {
 		final boolean dfcFound = checkForDfc();
 		List<URL> ret = new ArrayList<>(3);
 		try {
 
-			// Even if not configured, if there's a dfc.properties in our current working directory,
-			// we try to use it
-			String var = commandValues.getString(this.paramDfcProp, DfcLaunchHelper.DEFAULT_DFC_PROPERTIES);
-			if (var != null) {
+			// Even if not configured via parameter, if there's a dfc.properties in our current
+			// working directory, we try to use it
+			String[] candidates = {
+				commandValues.getString(this.paramDfcProp, StringUtils.EMPTY), //
+				DfcLaunchHelper.DEFAULT_DFC_PROPERTIES
+			};
+
+			// Will set the dfc.properties.file to point to the first candidate found. If none
+			// is found, it will be left empty and DFC will have to find its own by its own means
+			boolean dfcPropSet = false;
+			for (String var : candidates) {
+				if (StringUtils.isEmpty(var)) {
+					continue;
+				}
 				File f = CliUtils.newFileObject(var);
-				String error = null;
-				if ((error == null) && !f.exists()) {
-					error = "does not exist";
-				}
-				if ((error == null) && !f.isFile()) {
-					error = "is not a regular file";
-				}
-				if ((error == null) && !f.canRead()) {
-					error = "cannot be read";
-				}
+				String error = findExistingFile(var);
 				if (error == null) {
+					this.log.info("Will use the DFC Properties file at [{}]", f.getAbsolutePath());
 					System.setProperty(DfcLaunchHelper.DFC_PROPERTIES_PROP, f.getAbsolutePath());
-					/*
-					} else {
-						this.log.warn("The DFC properties file [{}] {} - will continue using DFC defaults",
-							f.getAbsolutePath(), error);
-					*/
+					dfcPropSet = true;
+					break;
 				}
+
+				// Warn out the error?
+				this.log.warn("The DFC Properties candidate [{}] {}", error);
+			}
+			if (!dfcPropSet) {
+				this.log.warn("The DFC Properties were not set - will rely on the DFC's default behavior");
 			}
 
 			// Next, add ${DOCUMENTUM}/config to the classpath
-			var = commandValues.getString(this.paramDctm, System.getenv(DfcLaunchHelper.ENV_DOCUMENTUM));
+			String var = commandValues.getString(this.paramDctm, System.getenv(DfcLaunchHelper.ENV_DOCUMENTUM));
 			// Go with the environment
 			if (var == null) {
 				String msg = String.format("The environment variable [%s] is not set", DfcLaunchHelper.ENV_DOCUMENTUM);
