@@ -126,11 +126,14 @@ public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory
 		settings.put(TransferSetting.EXTERNAL_METADATA.getLabel(), commandValues.getString(CLIParam.external_metadata));
 		settings.put(TransferSetting.FILTER.getLabel(), commandValues.getString(CLIParam.filter));
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), commandValues.isPresent(CLIParam.skip_content));
-		settings.put(TransferSetting.LATEST_ONLY.getLabel(), commandValues.isPresent(CLIParam.no_versions));
-		settings.put(TransferSetting.NO_RENDITIONS.getLabel(), commandValues.isPresent(CLIParam.no_renditions));
+		settings.put(TransferSetting.LATEST_ONLY.getLabel(),
+			commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIParam.direct_fs));
+		settings.put(TransferSetting.NO_RENDITIONS.getLabel(),
+			commandValues.isPresent(CLIParam.no_renditions) || commandValues.isPresent(CLIParam.direct_fs));
 		settings.put(TransferSetting.TRANSFORMATION.getLabel(), commandValues.getString(CLIParam.transformations));
 		settings.put(TransferSetting.NO_FILENAME_MAP.getLabel(), commandValues.isPresent(CLIParam.no_filename_map));
 		settings.put(TransferSetting.FILENAME_MAP.getLabel(), commandValues.getString(CLIParam.filename_map));
+		settings.put(TransferSetting.RETRY_ATTEMPTS.getLabel(), commandValues.getInteger(CLIParam.retry_count));
 
 		int threads = commandValues.getInteger(CLIParam.threads);
 		threads = Tools.ensureBetween(ThreadsLaunchHelper.DEFAULT_MIN_THREADS, threads,

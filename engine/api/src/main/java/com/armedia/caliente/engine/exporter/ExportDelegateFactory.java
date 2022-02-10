@@ -44,4 +44,8 @@ public abstract class ExportDelegateFactory< //
 
 	protected abstract ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ENGINE> newExportDelegate(
 		SESSION session, ExportTarget target) throws Exception;
+
+	public final int getRetryCount() {
+		return this.engine.getRetryCount();
+	}
 }

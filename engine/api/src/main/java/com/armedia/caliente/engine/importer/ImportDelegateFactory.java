@@ -75,6 +75,10 @@ public abstract class ImportDelegateFactory< //
 		this.nullValues = Tools.freezeMap(nullValues);
 	}
 
+	public final int getRetryCount() {
+		return this.engine.getRetryCount();
+	}
+
 	public final boolean isRequireAllParents() {
 		return this.engine.isRequireAllParents();
 	}

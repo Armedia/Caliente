@@ -45,13 +45,13 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.tools.dfc.DfcCrypto;
 import com.armedia.caliente.tools.dfc.DfcQuery;
+import com.armedia.caliente.tools.dfc.cli.DfcLaunchHelper;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Globber;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.cli.OptionValues;
-import com.armedia.commons.utilities.cli.utils.DfcLaunchHelper;
 import com.armedia.commons.utilities.cli.utils.ThreadsLaunchHelper;
 import com.armedia.commons.utilities.function.CheckedConsumer;
 import com.documentum.fc.client.IDfSession;

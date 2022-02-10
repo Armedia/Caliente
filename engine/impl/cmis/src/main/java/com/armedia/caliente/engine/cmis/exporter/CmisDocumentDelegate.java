@@ -183,6 +183,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		CmfObject<CmfValue> marshalled, CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
 		List<CmfContentStream> ret = super.storeContent(ctx, translator, marshalled, streamStore, includeRenditions);
 		ContentStream main = this.object.getContentStream();
+		if (main == null) { return ret; }
 		CmfContentStream mainInfo = new CmfContentStream(marshalled, 0);
 		mainInfo.setMimeType(MimeTools.resolveMimeType(main.getMimeType()));
 		String name = main.getFileName();
@@ -197,27 +198,30 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		ret.add(mainInfo);
 		if (includeRenditions) {
 			int i = 0;
-			for (Rendition r : this.object.getRenditions()) {
-				CmfContentStream info = new CmfContentStream(marshalled, ++i, r.getKind());
-				ContentStream cs = r.getContentStream();
-				info.setMimeType(MimeTools.resolveMimeType(r.getMimeType()));
-				name = cs.getFileName();
-				info.setFileName(name);
-				info.setExtension(FilenameUtils.getExtension(name));
-				info.setProperty("kind", r.getKind());
-				info.setProperty("docId", r.getRenditionDocumentId());
-				info.setProperty("streamId", r.getStreamId());
-				info.setProperty("title", r.getTitle());
-				info.setProperty("height", String.valueOf(r.getHeight()));
-				info.setProperty("width", String.valueOf(r.getWidth()));
-				try {
-					final long length = storeContentStream(marshalled, translator, r, cs, streamStore, info);
-					info.setLength(length);
-				} catch (CmfStorageException e) {
-					this.log.error("Failed to store the {} rendition (# {}) for {}", r.getKind(), info.getIndex(),
-						marshalled.getDescription(), e);
+			Collection<Rendition> renditions = this.object.getRenditions();
+			if ((renditions != null) && !renditions.isEmpty()) {
+				for (Rendition r : renditions) {
+					CmfContentStream info = new CmfContentStream(marshalled, ++i, r.getKind());
+					ContentStream cs = r.getContentStream();
+					info.setMimeType(MimeTools.resolveMimeType(r.getMimeType()));
+					name = cs.getFileName();
+					info.setFileName(name);
+					info.setExtension(FilenameUtils.getExtension(name));
+					info.setProperty("kind", r.getKind());
+					info.setProperty("docId", r.getRenditionDocumentId());
+					info.setProperty("streamId", r.getStreamId());
+					info.setProperty("title", r.getTitle());
+					info.setProperty("height", String.valueOf(r.getHeight()));
+					info.setProperty("width", String.valueOf(r.getWidth()));
+					try {
+						final long length = storeContentStream(marshalled, translator, r, cs, streamStore, info);
+						info.setLength(length);
+					} catch (CmfStorageException e) {
+						this.log.error("Failed to store the {} rendition (# {}) for {}", r.getKind(), info.getIndex(),
+							marshalled.getDescription(), e);
+					}
+					ret.add(info);
 				}
-				ret.add(info);
 			}
 		}
 		return ret;
