@@ -355,7 +355,7 @@ public class XmlImportDelegateFactory
 		DocumentT doc = new DocumentT();
 		doc.getVersion().add(v);
 		try {
-			XmlImportDelegateFactory.marshalXml(doc, new NullOutputStream());
+			XmlImportDelegateFactory.marshalXml(doc, NullOutputStream.NULL_OUTPUT_STREAM);
 		} catch (JAXBException e) {
 			throw new ImportException(
 				String.format("Attempting to store version [%s] of history [%s], a marshalling error ocurred: %s",
