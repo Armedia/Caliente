@@ -44,11 +44,13 @@ class CSVDataRecordSetInitState {
 		if (url == null) { throw new IllegalArgumentException("Must provide a URL to read from"); }
 		this.url = url;
 		this.charset = Tools.coalesce(charset, CSVDataRecordSetInitState.DEFAULT_CHARSET);
-		format = Tools.coalesce(format, CSVFormat.DEFAULT);
 		// Enforce the use of complete header records
-		format = format.withAllowMissingColumnNames(false);
-		format = format.withFirstRecordAsHeader();
-		format = format.withSkipHeaderRecord(false);
+		format = Tools.coalesce(format, CSVFormat.DEFAULT).builder() //
+			.setAllowMissingColumnNames(false) //
+			.setHeader() //
+			.setSkipHeaderRecord(true) //
+			.build() //
+		;
 		this.format = format;
 	}
 }

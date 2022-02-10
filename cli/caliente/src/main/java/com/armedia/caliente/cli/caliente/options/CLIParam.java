@@ -405,10 +405,10 @@ public enum CLIParam implements Supplier<Option> {
 		new OptionImpl() //
 			.setArgumentLimits(1) //
 			.setArgumentName("retries") //
-			.setValueFilter(new IntegerValueFilter(0, Integer.MAX_VALUE)) //
-			.setDefault("0") //
+			.setValueFilter(new IntegerValueFilter(1, Integer.MAX_VALUE)) //
+			.setDefault("3") //
 			.setDescription(
-				"The number of times Caliente should retry the ingestion of an object in the event of an error (i.e. to deal with temporary errors)") //
+				"The number of times Caliente should try the ingestion or extraction of an object in the event of an error (i.e. to deal with temporary errors)") //
 	), //
 
 	require_all_parents( //

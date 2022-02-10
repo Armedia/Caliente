@@ -174,7 +174,7 @@ public class AlfImportEngine extends
 
 	private final ImportEngineListener listener = new DefaultImportEngineListener() {
 
-		private final PrintWriter nullWriter = new PrintWriter(new NullOutputStream());
+		private final PrintWriter nullWriter = new PrintWriter(NullOutputStream.NULL_OUTPUT_STREAM);
 		private final Map<UUID, PrintWriter> writers = new ConcurrentHashMap<>();
 
 		@Override
