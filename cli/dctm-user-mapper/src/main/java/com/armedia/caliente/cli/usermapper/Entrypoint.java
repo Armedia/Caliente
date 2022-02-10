@@ -30,13 +30,13 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import com.armedia.caliente.tools.ParameterTools;
+import com.armedia.caliente.tools.dfc.cli.DfcLaunchHelper;
 import com.armedia.commons.utilities.cli.Option;
 import com.armedia.commons.utilities.cli.OptionParseResult;
 import com.armedia.commons.utilities.cli.OptionScheme;
 import com.armedia.commons.utilities.cli.OptionValues;
 import com.armedia.commons.utilities.cli.launcher.AbstractEntrypoint;
 import com.armedia.commons.utilities.cli.launcher.LaunchClasspathHelper;
-import com.armedia.commons.utilities.cli.utils.DfcLaunchHelper;
 import com.armedia.commons.utilities.cli.utils.LibLaunchHelper;
 
 public class Entrypoint extends AbstractEntrypoint {
