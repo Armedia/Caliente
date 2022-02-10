@@ -187,10 +187,9 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 	}
 
 	private String checkExistingFile(File f) {
-		String error = null;
-		if ((error == null) && !f.exists()) { return "does not exist"; }
-		if ((error == null) && !f.isFile()) { return "is not a regular file"; }
-		if ((error == null) && !f.canRead()) { return "cannot be read"; }
+		if (!f.exists()) { return "does not exist"; }
+		if (!f.isFile()) { return "is not a regular file"; }
+		if (!f.canRead()) { return "cannot be read"; }
 		return null;
 	}
 
