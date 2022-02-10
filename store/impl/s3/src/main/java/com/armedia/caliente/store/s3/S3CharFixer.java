@@ -16,6 +16,7 @@ public enum S3CharFixer {
 		@Override
 		protected void applyFix(StringBuilder b, char c) {
 			// DO nothing...
+			b.append(c);
 		}
 
 		// Optimize for speed...

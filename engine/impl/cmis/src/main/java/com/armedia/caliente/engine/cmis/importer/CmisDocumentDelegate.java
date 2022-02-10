@@ -118,6 +118,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	@Override
 	protected Document createNewVersion(CmisImportContext ctx, Document existing, Map<String, Object> properties)
 		throws ImportException {
+		final int maxAttempts = this.factory.getRetryCount();
 		Document newVersion = null;
 		ContentStream content = null;
 		properties.remove(PropertyIds.NAME);
@@ -126,8 +127,28 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			newVersion = Document.class.cast(ctx.getSession().getObject(checkOutId));
 
 			String checkinComment = Tools.toString(properties.get(PropertyIds.CHECKIN_COMMENT));
-			content = getContentStream(ctx);
-			ObjectId newId = newVersion.checkIn(this.major, properties, content, checkinComment);
+			ObjectId newId = null;
+
+			List<Throwable> suppressed = new ArrayList<>(maxAttempts - 1);
+			int attempt = 0;
+			while (true) {
+				attempt++;
+				try {
+					content = getContentStream(ctx);
+					newId = newVersion.checkIn(this.major, properties, content, checkinComment);
+					break;
+				} catch (CmisStorageException e) {
+					if (attempt >= maxAttempts) {
+						suppressed.forEach(e::addSuppressed);
+						throw e;
+					}
+					suppressed.add(e);
+					this.log.warn("Failed to complete the checkin for {} (attempt # {}/{}), will retry the operation",
+						this.cmfObject.getDescription(), attempt, maxAttempts);
+				} finally {
+					IOUtils.closeQuietly(content);
+				}
+			}
 			Document finalVersion = Document.class.cast(ctx.getSession().getObject(newId));
 			newVersion = null;
 			return finalVersion;
@@ -138,7 +159,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 				this.log.warn(
 					"Creating a new version of {} failed, but a checkout may have been left lingering, will attempt to cancel it",
 					this.cmfObject.getDescription(), e);
-				for (int i = 1; (newVersion == null) && (i <= 3); i++) {
+				for (int attempt = 1; (newVersion == null) && (attempt <= maxAttempts); attempt++) {
 					try {
 						existing.refresh();
 						if (existing.isVersionSeriesCheckedOut()) {
@@ -149,15 +170,14 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 						// Doesn't exist anymore?? Ok... no retry needed
 						break;
 					} catch (RuntimeException e2) {
-						this.log.warn("Refresh of PWC for {} failed (attempt # {})", this.cmfObject.getDescription(), i,
-							e2);
+						this.log.warn("Refresh of PWC for {} failed (attempt # {}/{})", this.cmfObject.getDescription(),
+							attempt, maxAttempts, e2);
 					}
 				}
 			}
 			throw e;
 		} finally {
 			// properties.put(PropertyIds.NAME, name);
-			IOUtils.closeQuietly(content);
 			if (newVersion != null) {
 				try {
 					newVersion.cancelCheckOut();
@@ -225,10 +245,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	@Override
 	protected Document createNew(CmisImportContext ctx, Folder parent, Map<String, Object> properties)
 		throws ImportException {
-		final int maxRetries = 3;
+		final int maxAttempts = this.factory.getRetryCount();
 		int attempt = 0;
-		List<CmisStorageException> caught = new ArrayList<>(maxRetries);
-		while (++attempt <= maxRetries) {
+		List<CmisStorageException> suppressed = new ArrayList<>(maxAttempts - 1);
+		while (++attempt <= maxAttempts) {
 			ContentStream content = getContentStream(ctx);
 			try {
 				VersioningState state = (this.major ? VersioningState.MAJOR : VersioningState.MINOR);
@@ -240,7 +260,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 				}
 				return document;
 			} catch (CmisStorageException e) {
-				caught.add(e);
+				suppressed.add(e);
 				continue;
 			} finally {
 				IOUtils.closeQuietly(content);
@@ -248,8 +268,8 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		}
 		// Creation failed even after 3 retries ... so ... kaboom?
 		ImportException e = new ImportException("Import failed for " + this.cmfObject.getDescription(),
-			caught.remove(caught.size() - 1));
-		caught.forEach(e::addSuppressed);
+			suppressed.remove(suppressed.size() - 1));
+		suppressed.forEach(e::addSuppressed);
 		throw e;
 	}
 

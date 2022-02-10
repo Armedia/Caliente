@@ -33,11 +33,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.tools.dfc.DfcCrypto;
+import com.armedia.caliente.tools.dfc.cli.DfcLaunchHelper;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.cli.OptionValues;
-import com.armedia.commons.utilities.cli.utils.DfcLaunchHelper;
 import com.documentum.com.DfClientX;
 import com.documentum.com.IDfClientX;
 import com.documentum.fc.client.DfIdNotFoundException;
