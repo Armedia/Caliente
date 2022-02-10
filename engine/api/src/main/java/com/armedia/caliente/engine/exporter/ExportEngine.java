@@ -149,6 +149,7 @@ public abstract class ExportEngine<//
 	}
 
 	private final Map<LockStatus, Result> staticLockResults;
+	private final int retryCount;
 	private final boolean supportsMultipleSources;
 	private final Set<SearchType> supportedSearches;
 	private final Result unsupportedResult = new Result(ExportSkipReason.UNSUPPORTED);
@@ -212,6 +213,11 @@ public abstract class ExportEngine<//
 
 		this.supportedSearches = Tools.freezeSet(specSet);
 		this.supportsMultipleSources = supportsMultipleSources;
+		this.retryCount = settings.getInteger(TransferSetting.RETRY_ATTEMPTS);
+	}
+
+	public final int getRetryCount() {
+		return this.retryCount;
 	}
 
 	private Result exportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
@@ -940,7 +946,8 @@ public abstract class ExportEngine<//
 		final PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget, Exception> logic = new PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget, Exception>() {
 
 			@Override
-			public SessionWrapper<SESSION> initialize() throws Exception {
+			public SessionWrapper<SESSION> initialize(PooledWorkers<SessionWrapper<SESSION>, ExportTarget> workers)
+				throws Exception {
 				try {
 					final SessionWrapper<SESSION> s = sessionFactory.acquireSession();
 					ExportEngine.this.log.info("Worker ready with session [{}]", s.getId());

@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionPool;
+import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.function.CheckedConsumer;
 import com.documentum.fc.client.IDfLocalTransaction;
@@ -59,7 +60,7 @@ public class ExtractorLogic implements PooledWorkersLogic<IDfSession, String, Ex
 	}
 
 	@Override
-	public IDfSession initialize() throws DfException {
+	public IDfSession initialize(PooledWorkers<IDfSession, String> workers) throws DfException {
 		return this.pool.acquireSession();
 	}
 

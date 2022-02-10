@@ -46,7 +46,6 @@ import com.armedia.caliente.cli.caliente.launcher.ExportCommandListener;
 import com.armedia.caliente.cli.caliente.launcher.ExportManifest;
 import com.armedia.caliente.cli.caliente.launcher.ExportRetryManifest;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.exporter.ExportEngineListener;
@@ -72,10 +71,6 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 	protected boolean preConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
 		if (!super.preConfigure(state, commandValues, settings)) { return false; }
-		settings.put(TransferSetting.LATEST_ONLY.getLabel(),
-			commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIParam.direct_fs));
-		settings.put(TransferSetting.NO_RENDITIONS.getLabel(),
-			commandValues.isPresent(CLIParam.no_renditions) || commandValues.isPresent(CLIParam.direct_fs));
 		settings.put(ExportSetting.FROM.getLabel(), commandValues.getStrings(CLIParam.from));
 		settings.put(ExportSetting.METADATA_XML.getLabel(), commandValues.getStrings(CLIParam.metadata_xml));
 		settings.put(ExportSetting.IGNORE_EMPTY_FOLDERS.getLabel(),
