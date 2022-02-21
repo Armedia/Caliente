@@ -70,8 +70,6 @@ import com.documentum.fc.common.IDfList;
 
 public class DfcUtils {
 
-	private static final String TX_LOCK_PREFIX = "TRANSACTION ";
-
 	private static final boolean DEFAULT_LOCK_FETCH = true;
 
 	private static final String ORACLE_DATETIME_PATTERN = DfcUtils
@@ -512,15 +510,11 @@ public class DfcUtils {
 			log.trace("FETCHED A FRESH VERSION FOR LOCKING OF [{}]({})", objectId, objectClass);
 		}
 		try {
-			final boolean tx = obj.getSession().isTransactionActive();
-			final String pfx = (tx ? DfcUtils.TX_LOCK_PREFIX : StringUtils.EMPTY);
-			log.trace("{}LOCKING OBJECT [{}]({})", pfx, objectId, objectClass);
-			if (tx) {
+			if (obj.getSession().isTransactionActive()) {
+				log.trace("LOCKING OBJECT [{}]({})", objectId, objectClass);
 				obj.lockEx(true);
-			} else {
-				obj.lock();
+				log.trace("SUCCESSFULLY LOCKED OBJECT [{}]({})", objectId, objectClass);
 			}
-			log.trace("SUCCESSFULLY {}LOCKED OBJECT [{}]({})", pfx, objectId, objectClass);
 			ok = true;
 			return obj;
 		} finally {
