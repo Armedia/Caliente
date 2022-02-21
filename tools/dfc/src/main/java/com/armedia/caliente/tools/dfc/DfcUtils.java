@@ -493,6 +493,7 @@ public class DfcUtils {
 	public static <T extends IDfPersistentObject> T lockObject(Logger log, T obj) throws DfException {
 		if (obj == null) { return null; }
 		log = Tools.coalesce(log, DfcUtils.LOG);
+		boolean ok = false;
 		final String objectId = obj.getObjectId().getId();
 		final String objectClass = obj.getClass().getSimpleName();
 		try {
@@ -501,14 +502,12 @@ public class DfcUtils {
 				obj.lock();
 				log.trace("SUCCESSFULLY LOCKED OBJECT [{}]({})", objectId, objectClass);
 			}
+			ok = true;
 			return obj;
-		} catch (final DfException | RuntimeException e) {
-			if (log.isDebugEnabled()) {
-				log.error("ERROR LOCKING OBJECT WITH ID [{}]({})", objectId, objectClass, e);
-			} else {
+		} finally {
+			if (!ok) {
 				log.error("ERROR LOCKING OBJECT WITH ID [{}]({})", objectId, objectClass);
 			}
-			throw e;
 		}
 	}
 
