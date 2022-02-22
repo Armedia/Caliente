@@ -302,7 +302,6 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				newLabel = calculateLabel(object);
 				this.log.info("Acquiring lock on existing {}", this.cmfObject.getDescription());
 				DfcUtils.lockObject(this.log, object);
-				object.fetch(null);
 				this.log.info("Acquired lock on {}", this.cmfObject.getDescription());
 				// First, store the mapping for the object's exact ID
 				updateIdAndHistoryMappings(context, object);

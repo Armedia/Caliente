@@ -277,7 +277,6 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			}
 			this.log.info("Setting group [{}] as the default group for user [{}]", groupName, user.getUserName());
 			DfcUtils.lockObject(this.log, user);
-			user.fetch(null);
 			user.setUserGroupName(groupName);
 			user.save();
 			// Update the system attributes, if we can

@@ -245,7 +245,6 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 			boolean ok = false;
 			try {
 				Long ret = storeObject(operation, object);
-				markStoreStatus(operation, object, StoreStatus.STORED, null);
 				object.setNumber(ret);
 				if (tx) {
 					operation.commit();

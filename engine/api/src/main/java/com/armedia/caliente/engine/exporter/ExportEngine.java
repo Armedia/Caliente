@@ -275,6 +275,9 @@ public abstract class ExportEngine<//
 			final Result result = doExportObject(exportState, transformer, filter, referrent, target, sourceObject, ctx,
 				listener, statusMap, thisStatus);
 			if ((result.objectNumber != null) && (result.object != null)) {
+				if (!exportState.objectStore.markStoreStatus(result.object, StoreStatus.STORED)) {
+					this.log.warn("FAILED TO SET THE RESULT TO [STORED] for {}", result.object.getDescription());
+				}
 				listener.objectExportCompleted(exportState.jobId, result.object, result.objectNumber);
 			} else {
 				switch (result.skipReason) {
