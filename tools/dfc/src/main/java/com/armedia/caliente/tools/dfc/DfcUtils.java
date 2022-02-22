@@ -70,6 +70,8 @@ import com.documentum.fc.common.IDfList;
 
 public class DfcUtils {
 
+	private static final boolean DEFAULT_LOCK_FETCH = true;
+
 	private static final String ORACLE_DATETIME_PATTERN = DfcUtils
 		.quoteStringForSql(DfcConstant.ORACLE_DATETIME_PATTERN);
 
@@ -487,19 +489,30 @@ public class DfcUtils {
 	}
 
 	public static <T extends IDfPersistentObject> T lockObject(T obj) throws DfException {
-		return DfcUtils.lockObject(null, obj);
+		return DfcUtils.lockObject(null, obj, DfcUtils.DEFAULT_LOCK_FETCH);
+	}
+
+	public static <T extends IDfPersistentObject> T lockObject(T obj, boolean fetch) throws DfException {
+		return DfcUtils.lockObject(null, obj, fetch);
 	}
 
 	public static <T extends IDfPersistentObject> T lockObject(Logger log, T obj) throws DfException {
+		return DfcUtils.lockObject(log, obj, DfcUtils.DEFAULT_LOCK_FETCH);
+	}
+
+	public static <T extends IDfPersistentObject> T lockObject(Logger log, T obj, boolean fetch) throws DfException {
 		if (obj == null) { return null; }
 		log = Tools.coalesce(log, DfcUtils.LOG);
 		boolean ok = false;
 		final String objectId = obj.getObjectId().getId();
 		final String objectClass = obj.getClass().getSimpleName();
+		if (fetch && obj.fetch(null)) {
+			log.trace("FETCHED A FRESH VERSION FOR LOCKING OF [{}]({})", objectId, objectClass);
+		}
 		try {
 			if (obj.getSession().isTransactionActive()) {
 				log.trace("LOCKING OBJECT [{}]({})", objectId, objectClass);
-				obj.lock();
+				obj.lockEx(true);
 				log.trace("SUCCESSFULLY LOCKED OBJECT [{}]({})", objectId, objectClass);
 			}
 			ok = true;

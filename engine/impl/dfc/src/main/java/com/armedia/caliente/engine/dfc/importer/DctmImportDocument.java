@@ -627,7 +627,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			return;
 		} catch (DfException e) {
 			final String msg = String.format(
-				"Exception caught generating updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}",
+				"Exception caught updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}",
 				this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber, pageModifier);
 			context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount,
 				e.getClass().getCanonicalName(), e.getMessage());
