@@ -178,7 +178,6 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 
 			// Ok...so...we set the path to "whatever"...
 			DfcUtils.lockObject(this.log, user);
-			user.fetch(null);
 			user.setDefaultFolder(pathValue, (actual == null));
 			user.save();
 			// Update the system attributes, if we can
@@ -210,7 +209,6 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 
 				// It WAS a group! Set its group directory
 				DfcUtils.lockObject(this.log, group);
-				group.fetch(null);
 				group.setGroupDirectoryId(folder.getObjectId());
 				group.save();
 

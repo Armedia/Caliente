@@ -290,7 +290,6 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		private void ensureLocked() throws DfException {
 			if (!this.locked) {
 				DfcUtils.lockObject(this.log, this.parent);
-				this.parent.fetch(null);
 				this.locked = true;
 			}
 		}
@@ -1141,7 +1140,6 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			session.flushObject(id);
 			final IDfSysObject parent = IDfSysObject.class.cast(session.getObject(id));
 			DfcUtils.lockObject(this.log, parent);
-			parent.fetch(null);
 			parentCache.put(parentId, parent);
 		}
 
