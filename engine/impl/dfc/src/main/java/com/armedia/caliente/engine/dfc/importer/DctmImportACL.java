@@ -475,7 +475,6 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 
 			// Ok...so we relate this thing back to its owner as its internal ACL
 			DfcUtils.lockObject(this.log, user);
-			user.fetch(null);
 			user.setDefaultACLEx(acl.getDomain(), acl.getObjectName());
 			user.save();
 			// Update the system attributes, if we can

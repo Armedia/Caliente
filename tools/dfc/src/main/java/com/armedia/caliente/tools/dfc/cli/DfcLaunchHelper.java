@@ -27,7 +27,6 @@
 package com.armedia.caliente.tools.dfc.cli;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -193,22 +192,72 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 		return null;
 	}
 
-	private File findDfcProperties(OptionValues commandValues) {
+	private String checkExistingDirectory(File f) {
+		if (!f.exists()) { return "does not exist"; }
+		if (!f.isDirectory()) { return "is not a directory"; }
+		if (!f.canRead()) { return "cannot be read"; }
+		return null;
+	}
+
+	private File findDfcProperties(OptionValues commandValues) throws Exception {
 		File dfcProps = null;
 
 		// First try the parameter value ... if it's set, then it MUST exist or
 		// it's an error
-		String var = commandValues.getString(this.paramDfcProp, StringUtils.EMPTY);
-		if (!StringUtils.isEmpty(var)) {
+		String var = commandValues.getString(this.paramDfcProp);
+		if (var != null) {
+			if (StringUtils.isEmpty(var)) {
+				// I don't think this is possible, but check it anyway
+				throw new Exception(
+					"The --" + this.paramDfcProp.getLongOpt() + " parameter must be given a non-empty string");
+			}
 			dfcProps = CliUtils.newFileObject(var);
 			String error = checkExistingFile(dfcProps);
 			if (error == null) { return dfcProps; }
-			throw new RuntimeException(String.format("The DFC Properties file at [%s] %s", dfcProps, error));
-		} else {
-			// No parameter given, try the one on the current directory ...
-			dfcProps = CliUtils.newFileObject(DfcLaunchHelper.DEFAULT_DFC_PROPERTIES);
-			String error = checkExistingFile(dfcProps);
-			if (error == null) { return dfcProps; }
+			throw new Exception("The DFC Properties at [" + dfcProps + "] " + error);
+		} else if (commandValues.isPresent(this.paramDfcProp)) {
+			throw new Exception("The --" + this.paramDfcProp.getLongOpt() + " parameter must be given a string value");
+		}
+
+		// No parameter given, try the one on the current directory ...
+		dfcProps = CliUtils.newFileObject(DfcLaunchHelper.DEFAULT_DFC_PROPERTIES);
+		String error = checkExistingFile(dfcProps);
+		if (error == null) { return dfcProps; }
+
+		// If we reach this point, then we're telling the DFC to use whatever default it sees fit
+		return null;
+	}
+
+	private File findParameterizedFolder(OptionValues commandValues, boolean mustExist, Option param, String envVar)
+		throws Exception {
+		if (param != null) {
+			String var = commandValues.getString(param);
+			if (var != null) {
+				if (StringUtils.isEmpty(var)) {
+					// I don't think this is possible, but check it anyway
+					throw new IOException(
+						"The --" + param.getLongOpt() + " parameter must be given a non-empty string");
+				}
+				File directory = CliUtils.newFileObject(var);
+				String error = checkExistingDirectory(directory);
+				if ((error == null) || !mustExist) { return directory; }
+				throw new Exception("The directory at [" + directory + "] " + error);
+			} else if (commandValues.isPresent(param)) {
+				throw new Exception("The --" + param.getLongOpt() + " parameter must be given a string value");
+			}
+		}
+
+		if (StringUtils.isNotEmpty(envVar)) {
+			String var = System.getenv(envVar);
+			if (var == null) {
+				throw new Exception("The environment variable [" + envVar
+					+ "] is not set, can't set the Documentum working directory without it or a parameter pointing to it (--"
+					+ param.getLongOpt() + ")");
+			}
+			File directory = CliUtils.newFileObject(var);
+			String error = checkExistingDirectory(directory);
+			if ((error == null) || !mustExist) { return directory; }
+			throw new Exception("The Documentum working directory at [" + directory + "] " + error);
 		}
 
 		return null;
@@ -216,7 +265,6 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 
 	@Override
 	public Collection<URL> getClasspathPatches(OptionValues baseValues, OptionValues commandValues) {
-		final boolean dfcFound = checkForDfc();
 		List<URL> ret = new ArrayList<>(3);
 		try {
 
@@ -228,56 +276,35 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 			}
 
 			// Next, add ${DOCUMENTUM}/config to the classpath
-			String var = commandValues.getString(this.paramDctm, System.getenv(DfcLaunchHelper.ENV_DOCUMENTUM));
-			// Go with the environment
-			if (var == null) {
-				String msg = String.format("The environment variable [%s] is not set", DfcLaunchHelper.ENV_DOCUMENTUM);
-				if (!dfcFound) { throw new RuntimeException(msg); }
-				// this.log.warn("{}, integrated DFC may encounter errors", msg);
-			} else {
-				File f = CliUtils.newFileObject(var);
-				if (!f.exists()) {
-					FileUtils.forceMkdir(f);
-				}
-				if (!f.isDirectory()) {
-					throw new FileNotFoundException(
-						String.format("Could not find the directory [%s]", f.getAbsolutePath()));
-				}
-
-				ret.add(CliUtils.newFileObject(f, "config").toURI().toURL());
+			File dfcWork = findParameterizedFolder(commandValues, false, this.paramDctm,
+				DfcLaunchHelper.ENV_DOCUMENTUM);
+			if (!dfcWork.exists()) {
+				FileUtils.forceMkdir(dfcWork);
 			}
+			if (!dfcWork.isDirectory()) {
+				throw new Exception("Could not find or create the directory [" + dfcWork + " ]");
+			}
+
+			ret.add(CliUtils.newFileObject(dfcWork, "config").toURI().toURL());
 
 			// Next, identify the DOCUMENTUM_SHARED location, and if dctm.jar is in there
-			var = commandValues.getString(this.paramDfc, System.getenv(DfcLaunchHelper.ENV_DOCUMENTUM_SHARED));
-			// Go with the environment
-			if (var == null) {
-				String msg = String.format("The environment variable [%s] is not set",
-					DfcLaunchHelper.ENV_DOCUMENTUM_SHARED);
-				if (!dfcFound) { throw new RuntimeException(msg); }
-				// this.log.warn("{}, integrated DFC may encounter errors", msg);
+			File dfcLocation = findParameterizedFolder(commandValues, true, this.paramDfc,
+				DfcLaunchHelper.ENV_DOCUMENTUM_SHARED);
+			if (dfcLocation == null) {
+				throw new Exception(
+					"The DFC Location could not be discovered from parameters or environment variables");
 			}
 
-			if (var != null) {
-				// Next, is it a directory?
-				File f = CliUtils.newFileObject(var);
-				if (!f.isDirectory()) {
-					throw new FileNotFoundException(String.format("Could not find the [%s] directory [%s]",
-						DfcLaunchHelper.ENV_DOCUMENTUM_SHARED, f.getAbsolutePath()));
-				}
-
-				// Next, does dctm.jar exist in there?
-				if (!dfcFound) {
-					File tgt = CliUtils.newFileObject(f, DfcLaunchHelper.DCTM_JAR);
-					if (!tgt.isFile()) {
-						throw new FileNotFoundException(
-							String.format("Could not find the JAR file [%s]", tgt.getAbsolutePath()));
-					}
-
-					// Next, to the classpath
-					ret.add(tgt.toURI().toURL());
-				}
+			File dctmJar = CliUtils.newFileObject(dfcLocation, DfcLaunchHelper.DCTM_JAR);
+			String error = checkExistingFile(dctmJar);
+			if (error != null) {
+				throw new Exception(
+					"Could not find the JAR file dctm.jar in the DFC location [" + dfcLocation + "]: " + error);
 			}
-		} catch (IOException e) {
+
+			// Next, add dctm.jar to the classpath
+			ret.add(dctmJar.toURI().toURL());
+		} catch (Exception e) {
 			throw new RuntimeException("Failed to configure the dynamic DFC classpath", e);
 		}
 		return ret;
