@@ -91,6 +91,7 @@
 
 		<!-- JShare is for SharePoint exp support -->
 		<jshare.version>1.0.410</jshare.version>
+		<jshare.jar>${settings.localRepository}/com/independentsoft/jshare/${jshare.version}/jshare-${jshare.version}.jar</jshare.jar>
 
 		<!-- RIDC is for WebCenter exp support -->
 		<ridc.version>11.1.1.0</ridc.version>
