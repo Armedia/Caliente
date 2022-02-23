@@ -591,16 +591,10 @@
 		<module>engine/impl/sql</module>
 		<module>engine/impl/xml</module>
 
-		<!-- These modules require non-public libraries -->
-		<!-- TODO: Make them optional? I.e. within a profile? -->
-		<module>engine/impl/sharepoint</module>
-
 		<!-- The command-line tools -->
-		<module>cli/api</module>
+		<module>cli/caliente</module>
 		<module>cli/flat2db</module>
 		<module>cli/validator</module>
-		<!-- These tools require non-public libraries -->
-		<!-- TODO: Make them optional? I.e. within a profile? -->
 
 		<!-- Some general-use tools -->
 		<module>tools/alfresco-bi</module>
