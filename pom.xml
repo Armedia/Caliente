@@ -7,7 +7,7 @@
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
 	<artifactId>caliente</artifactId>
-	<version>4.0.3</version>
+	<version>4.0.4</version>
 	<packaging>pom</packaging>
 	<inceptionYear>2013</inceptionYear>
 
