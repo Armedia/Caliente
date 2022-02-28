@@ -1042,7 +1042,6 @@ public abstract class ExportEngine<//
 				final AtomicReference<String> currentSource = new AtomicReference<>(null);
 				final AtomicLong sourceCounter = new AtomicLong(0);
 				final AtomicLong totalCounter = new AtomicLong(0);
-				final AtomicReference<Exception> thrown = new AtomicReference<>(null);
 
 				final Consumer<ExportTarget> submitter = (target) -> {
 					if (target == null) { return; }
@@ -1084,21 +1083,14 @@ public abstract class ExportEngine<//
 									s.forEach(submitter);
 								}
 							}
+							listener.sourceSearchCompleted(line, sourceCounter.get(), totalCounter.get());
 						} catch (Exception e) {
-							thrown.set(e);
-						} finally {
-							try {
-								if (thrown.get() == null) {
-									listener.sourceSearchCompleted(line, sourceCounter.get(), totalCounter.get());
-								} else {
-									listener.sourceSearchFailed(line, sourceCounter.get(), totalCounter.get(),
-										thrown.get());
-								}
-							} finally {
-								thrown.set(null);
-							}
+							listener.sourceSearchFailed(line, sourceCounter.get(), totalCounter.get(), e);
 						}
 					});
+					listener.searchCompleted(totalCounter.get());
+				} catch (Exception e) {
+					listener.searchFailed(totalCounter.get(), e);
 				}
 			} finally {
 				List<ExportTarget> l = worker.waitForCompletion();
