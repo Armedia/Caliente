@@ -190,11 +190,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		mainInfo.setFileName(name);
 		mainInfo.setExtension(FilenameUtils.getExtension(name));
 
-		final boolean includeContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
-
+		final boolean ignoreContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		try {
 			final long length = storeContentStream(marshalled, translator, null, main, streamStore, mainInfo,
-				includeContent);
+				!ignoreContent);
 			mainInfo.setLength(length);
 		} catch (CmfStorageException e) {
 			this.log.error("Failed to store the primary content stream for {}", marshalled.getDescription(), e);
@@ -219,7 +218,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 					info.setProperty("width", String.valueOf(r.getWidth()));
 					try {
 						final long length = storeContentStream(marshalled, translator, r, cs, streamStore, info,
-							includeContent);
+							!ignoreContent);
 						info.setLength(length);
 					} catch (CmfStorageException e) {
 						this.log.error("Failed to store the {} rendition (# {}) for {}", r.getKind(), info.getIndex(),
