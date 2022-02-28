@@ -189,8 +189,12 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		String name = main.getFileName();
 		mainInfo.setFileName(name);
 		mainInfo.setExtension(FilenameUtils.getExtension(name));
+
+		final boolean includeContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
+
 		try {
-			final long length = storeContentStream(marshalled, translator, null, main, streamStore, mainInfo);
+			final long length = storeContentStream(marshalled, translator, null, main, streamStore, mainInfo,
+				includeContent);
 			mainInfo.setLength(length);
 		} catch (CmfStorageException e) {
 			this.log.error("Failed to store the primary content stream for {}", marshalled.getDescription(), e);
@@ -214,7 +218,8 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 					info.setProperty("height", String.valueOf(r.getHeight()));
 					info.setProperty("width", String.valueOf(r.getWidth()));
 					try {
-						final long length = storeContentStream(marshalled, translator, r, cs, streamStore, info);
+						final long length = storeContentStream(marshalled, translator, r, cs, streamStore, info,
+							includeContent);
 						info.setLength(length);
 					} catch (CmfStorageException e) {
 						this.log.error("Failed to store the {} rendition (# {}) for {}", r.getKind(), info.getIndex(),
@@ -228,12 +233,12 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	protected long storeContentStream(CmfObject<CmfValue> marshalled, CmfAttributeTranslator<CmfValue> translator,
-		Rendition r, ContentStream cs, CmfContentStore<?, ?> streamStore, CmfContentStream info)
+		Rendition r, ContentStream cs, CmfContentStore<?, ?> streamStore, CmfContentStream info, boolean includeContent)
 		throws CmfStorageException {
 		CmfContentStore<?, ?>.Handle<CmfValue> h = streamStore.addContentStream(translator, marshalled, info);
 		InputStream src = cs.getStream();
 		try {
-			return h.store(src, cs.getLength());
+			return (includeContent ? h.store(src, cs.getLength()) : cs.getLength());
 		} finally {
 			IOUtils.closeQuietly(src);
 		}

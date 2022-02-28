@@ -643,20 +643,23 @@ public abstract class ExportEngine<//
 				this.log.debug("Executing supplemental storage for {}", logLabel);
 			}
 
+			final boolean includeContent = !ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 			if (ctx.isSupportsCompanionMetadata(type)) {
 				CmfContentStream md = new CmfContentStream(marshaled, 0, "metadata", 1);
 				md.setProperty(CmfContentStream.BASENAME, "metadata." + type.name());
 				md.setExtension("xml");
 				CmfContentStore<?, ?>.Handle<CmfValue> h = streamStore
 					.addContentStream(CmfAttributeTranslator.CMFVALUE_TRANSLATOR, encoded, md);
-				try (OutputStream out = h.createStream()) {
-					XmlBase.storeToXML(new MetadataT(encoded), out);
-				} catch (JAXBException e) {
-					this.log.warn("Failed to construct the XML companion metadata for {}", marshaled.getDescription(),
-						e);
-				} catch (IOException e) {
-					this.log.warn("Failed to write out the XML companion metadata for {}", marshaled.getDescription(),
-						e);
+				if (includeContent) {
+					try (OutputStream out = h.createStream()) {
+						XmlBase.storeToXML(new MetadataT(encoded), out);
+					} catch (JAXBException e) {
+						this.log.warn("Failed to construct the XML companion metadata for {}",
+							marshaled.getDescription(), e);
+					} catch (IOException e) {
+						this.log.warn("Failed to write out the XML companion metadata for {}",
+							marshaled.getDescription(), e);
+					}
 				}
 			}
 

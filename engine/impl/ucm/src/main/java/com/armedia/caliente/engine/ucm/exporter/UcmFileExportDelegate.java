@@ -247,6 +247,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			}
 
 			CmfContentStream info = new CmfContentStream(marshalled, index++, renditionLabel, 0);
+			info.setLength(this.object.getSize());
 			try {
 				info.setMimeType(new MimeType(rendition.getFormat()));
 			} catch (MimeTypeParseException e) {
