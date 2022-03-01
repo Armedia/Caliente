@@ -290,7 +290,7 @@ public abstract class ExportEngine<//
 						break;
 
 					case DEPENDENCY_FAILED: // Manufacture a failure...
-						throw new ExportException("A dependency failed to export properly");
+						throw new ExportException("A dependency failed to export properly - " + result.extraInfo);
 
 					case SKIPPED: // fall-through
 					case UNSUPPORTED:
