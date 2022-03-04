@@ -260,7 +260,12 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 			} catch (Exception e) {
 				throw new CmfStorageException("Failed to create the missing bucket [" + this.bucket + "]", e);
 			}
+		}
 
+		final boolean enableVersioning = settings.getBoolean(S3ContentStoreSetting.ENABLE_VERSIONING);
+		// If it's a new bucket, or it's an old one that doesn't have versioning, and we're supposed
+		// to enable it ... then do so
+		if (!exists || (!supportsVersions && enableVersioning)) {
 			try {
 				this.client.putBucketVersioning((R) -> {
 					R.bucket(this.bucket);
@@ -268,8 +273,12 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 				});
 				supportsVersions = true;
 			} catch (Exception e) {
+				if (exists) {
+					throw new CmfStorageException(
+						String.format("Failed to enable versioning on the bucket [%s]", this.bucket), e);
+				}
 				supportsVersions = false;
-				this.log.error("Failed to enable versioning on bucket [{}]", this.bucket, e);
+				this.log.error("Failed to enable versioning on the bucket [{}]", this.bucket, e);
 			}
 		}
 		this.supportsVersions = supportsVersions;
