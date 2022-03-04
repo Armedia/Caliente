@@ -39,7 +39,9 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 
 	private static final String LOAD_OBJECTS_BY_ID = //
 		"       select o.*, n.new_name " + //
-			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+			"     from cmf_object o " + //
+			"              join cmf_export_plan p on (o.object_id = p.object_id and p.result = 'STORED') " + //
+			"              left outer join cmf_alt_name n on (o.object_id = n.object_id) " + //
 			"    where o.object_type = ? " + //
 			"      and o.object_id = any ( ? ) " + //
 			" order by o.tier_id, o.history_id, o.object_number" //
@@ -47,7 +49,9 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 
 	private static final String LOAD_OBJECTS_BY_HISTORY_ID = //
 		"       select o.*, n.new_name " + //
-			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+			"     from cmf_object o " + //
+			"              join cmf_export_plan p on (o.object_id = p.object_id and p.result = 'STORED') " + //
+			"              left outer join cmf_alt_name n on (o.object_id = n.object_id) " + //
 			"    where o.object_type = ? " + //
 			"      and o.history_id = any ( ? ) " + //
 			" order by o.tier_id, o.history_id, o.object_number" //
@@ -55,7 +59,9 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 
 	private static final String LOAD_OBJECTS_BY_ID_CURRENT = //
 		"       select o.*, n.new_name " + //
-			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+			"     from cmf_object o " + //
+			"              join cmf_export_plan p on (o.object_id = p.object_id and p.result = 'STORED') " + //
+			"              left outer join cmf_alt_name n on (o.object_id = n.object_id) " + //
 			"    where o.object_type = ? " + //
 			"      and o.object_id = any ( ? ) " + //
 			"      and o.history_current = true " + //
@@ -64,15 +70,20 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 
 	private static final String LOAD_OBJECT_NAMES_BY_ID = //
 		"       select o.object_id, o.object_name, n.new_name " + //
-			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+			"     from cmf_object o " + //
+			"              join cmf_export_plan p on (o.object_id = p.object_id and p.result = 'STORED') " + //
+			"              left outer join cmf_alt_name n on (o.object_id = n.object_id) " + //
 			"    where o.object_id = any ( ? ) " + //
 			" order by o.object_id " //
 	;
 
 	private static final String LOAD_OBJECT_NAMES_BY_ID_CURRENT = //
 		"       select o.object_id, o2.object_name, n.new_name " + //
-			"     from cmf_object o, " + //
-			"          cmf_object o2 left outer join cmf_alt_name n on (o2.object_id = n.object_id) " + //
+			"     from cmf_object o " + //
+			"              join cmf_export_plan p on (o.object_id = p.object_id and p.result = 'STORED'), " + //
+			"          cmf_object o2 " + //
+			"              join cmf_export_plan p2 on (o2.object_id = p2.object_id and p2.result = 'STORED') " + //
+			"              left outer join cmf_alt_name n on (o2.object_id = n.object_id) " + //
 			"    where o.object_id = any ( ? ) " + //
 			"      and o.object_type = o2.object_type " + //
 			"      and o.history_id = o2.history_id " + //
