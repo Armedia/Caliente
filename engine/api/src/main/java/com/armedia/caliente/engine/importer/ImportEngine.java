@@ -231,7 +231,9 @@ public abstract class ImportEngine<//
 									retry: while (true) {
 										retryEnabled = false;
 										if (useTx) {
+											this.log.debug("Starting a new transaction");
 											session.begin();
+											this.log.debug("New transaction started");
 										}
 										try {
 											if (currentAttempt == 0) {
@@ -280,12 +282,20 @@ public abstract class ImportEngine<//
 												}
 											}
 											if (useTx) {
+												this.log.debug("Committing the open transaction");
 												session.commit();
+												this.log.debug("Transaction committed");
 											}
 											i++;
 										} catch (Throwable t) {
 											if (useTx) {
+												if (this.log.isDebugEnabled()) {
+													this.log.warn("Rolling back the open transaction");
+												}
 												session.rollback();
+												if (this.log.isDebugEnabled()) {
+													this.log.warn("Transaction rolled back");
+												}
 											}
 
 											if (retryEnabled && (currentAttempt <= ImportEngine.this.retryCount)) {
