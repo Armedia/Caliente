@@ -32,13 +32,12 @@ import com.armedia.commons.utilities.cli.OptionGroupImpl;
 public class CLIGroup {
 
 	public static final OptionGroup BASE = new OptionGroupImpl("Base") //
-		.add(CLIParam.debug) //
 		.add(CLIParam.engine) //
 		.add(CLIParam.lib) //
 		.add(CLIParam.log) //
 		.add(CLIParam.log_cfg) //
 		.add(CLIParam.log_dir) //
-		.add(CLIParam.trace) //
+		.add(CLIParam.verbose) //
 	;
 
 	public static final OptionGroup STORE = new OptionGroupImpl("Data Store") //

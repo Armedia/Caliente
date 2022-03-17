@@ -622,10 +622,18 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 
 		Level newLevel = null;
-		if (baseValues.isPresent(CLIParam.trace)) {
-			newLevel = Level.TRACE;
-		} else if (baseValues.isPresent(CLIParam.debug)) {
-			newLevel = Level.DEBUG;
+		switch (baseValues.getOccurrences(CLIParam.verbose)) {
+			case 0:
+				break;
+			case 1:
+				newLevel = Level.DEBUG;
+				break;
+			case 2:
+				newLevel = Level.TRACE;
+				break;
+			default:
+				newLevel = Level.ALL;
+				break;
 		}
 
 		// If the log level has been changed, add it to the start message

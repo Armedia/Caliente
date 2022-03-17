@@ -105,11 +105,6 @@ public enum CLIParam implements Supplier<Option> {
 				"The directory into which the metadata database will be stored, or as per the XML file that describes the store configuration") //
 	), //
 
-	debug( //
-		new OptionImpl() //
-			.setDescription("Set the general log level for Caliente classes to DEBUG (ignored if --trace is given)") //
-	), //
-
 	direct_fs( //
 		new OptionImpl() //
 			.setDescription("Export files to local FS duplicating the CMS's path") //
@@ -463,11 +458,6 @@ public enum CLIParam implements Supplier<Option> {
 		ThreadsLaunchHelper.THREADS //
 	), //
 
-	trace( //
-		new OptionImpl() //
-			.setDescription("Set the general log level for Caliente classes to TRACE (supercedes --debug if given)") //
-	), //
-
 	transformations( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
@@ -501,6 +491,13 @@ public enum CLIParam implements Supplier<Option> {
 		new OptionImpl() //
 			.setDescription(
 				"Activate the validation of an object's requirements' import success during object import (object is skipped if any of its requirements fails to import properly)") //
+	), //
+
+	verbose( //
+		new OptionImpl() //
+			.setShortOpt('v') //
+			.setDescription(
+				"Increase the log verbosity level (not console, just in the logs). Can be specified up to 3 times with each instance increasing the log level further (DEBUG -> TRACE -> ALL), after which it has no effect") //
 	), //
 
 	//
