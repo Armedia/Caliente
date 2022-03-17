@@ -37,6 +37,7 @@ public class CLIGroup {
 		.add(CLIParam.log) //
 		.add(CLIParam.log_cfg) //
 		.add(CLIParam.log_dir) //
+		.add(CLIParam.log_level) //
 		.add(CLIParam.verbose) //
 	;
 

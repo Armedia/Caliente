@@ -29,6 +29,7 @@ package com.armedia.caliente.cli.caliente.options;
 import java.util.EnumSet;
 import java.util.function.Supplier;
 
+import com.armedia.caliente.cli.caliente.utils.RegExDB;
 import com.armedia.caliente.cli.caliente.utils.SmtpServer.SslMode;
 import com.armedia.caliente.engine.exporter.ExportResult;
 import com.armedia.caliente.engine.importer.ImportResult;
@@ -38,6 +39,7 @@ import com.armedia.commons.utilities.cli.Option;
 import com.armedia.commons.utilities.cli.OptionImpl;
 import com.armedia.commons.utilities.cli.filter.EnumValueFilter;
 import com.armedia.commons.utilities.cli.filter.IntegerValueFilter;
+import com.armedia.commons.utilities.cli.filter.RegexValueFilter;
 import com.armedia.commons.utilities.cli.filter.StringValueFilter;
 import com.armedia.commons.utilities.cli.utils.LibLaunchHelper;
 import com.armedia.commons.utilities.cli.utils.ThreadsLaunchHelper;
@@ -221,6 +223,15 @@ public enum CLIParam implements Supplier<Option> {
 			.setArgumentName("configuration") //
 			.setDescription(
 				"The Log4j configuration (XML format) to use instead of the default (can reference ${logName} from --log)") //
+	), //
+
+	log_level( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("logger:level[:additivity]") //
+			.setValueFilter(new RegexValueFilter(RegExDB.LOG_LEVEL)) //
+			.setDescription(
+				"A string describing a logger, and the level to use, with optional additivity (true/false). I.e. \"com.mysql.logging:DEBUG:true\"") //
 	), //
 
 	mail_auth( //

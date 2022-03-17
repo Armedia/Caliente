@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -59,6 +60,7 @@ import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.command.CommandModule;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
+import com.armedia.caliente.cli.caliente.utils.RegExDB;
 import com.armedia.caliente.engine.tools.HierarchicalOrganizer;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
@@ -645,7 +647,37 @@ public class Entrypoint extends AbstractEntrypoint {
 		// Make sure log4j is configured by directly invoking the requisite class
 		org.apache.log4j.Logger.getRootLogger().info("Logging active" + logLevelMessage);
 		if (newLevel != null) {
-			org.apache.log4j.Logger.getRootLogger().setLevel(newLevel);
+			org.apache.log4j.Logger.getLogger("com.armedia.caliente").setLevel(newLevel);
+		}
+
+		for (String level : baseValues.getStrings(CLIParam.log_level)) {
+			Matcher m = RegExDB.LOG_LEVEL.matcher(level);
+			if (!m.matches()) {
+				this.log.warn("Illegal log level specification found: [{}]", level);
+				continue;
+			}
+
+			org.apache.log4j.Logger newLog = org.apache.log4j.Logger.getLogger(m.group(1));
+			try {
+				newLevel = Level.toLevel(Integer.valueOf(m.group(2)));
+			} catch (NumberFormatException e) {
+				newLevel = Level.toLevel(m.group(2));
+			}
+
+			// Only mess with stuff if necessary ...
+			if (!Objects.equals(newLevel, newLog.getEffectiveLevel())) {
+				newLog.setLevel(newLevel);
+			}
+
+			String additivity = m.group(3);
+			if (StringUtils.isNotEmpty(additivity)) {
+				boolean b = Tools.toBoolean(additivity);
+
+				// Only mess with stuff if necessary ...
+				if (newLog.getAdditivity() != b) {
+					newLog.setAdditivity(b);
+				}
+			}
 		}
 
 		// Now, get the logs via SLF4J, which is what we'll be using moving forward...
