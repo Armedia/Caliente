@@ -650,7 +650,8 @@ public class Entrypoint extends AbstractEntrypoint {
 
 		// Now, get the logs via SLF4J, which is what we'll be using moving forward...
 		final Logger console = LoggerFactory.getLogger("console");
-		console.info("Launching Caliente v{} {} mode for engine {}{}", Entrypoint.VERSION, command, engine, Tools.NL);
+		console.info("Launching Caliente{} v{} {} mode for engine {}{}", logLevelMessage, Entrypoint.VERSION, command,
+			engine, Tools.NL);
 		Runtime runtime = Runtime.getRuntime();
 		console.info("Current heap size: {} MB", runtime.totalMemory() / 1024 / 1024);
 		console.info("Maximum heap size: {} MB", runtime.maxMemory() / 1024 / 1024);
