@@ -650,39 +650,42 @@ public class Entrypoint extends AbstractEntrypoint {
 			org.apache.log4j.Logger.getLogger("com.armedia.caliente").setLevel(newLevel);
 		}
 
-		for (String level : baseValues.getStrings(CLIParam.log_level)) {
-			Matcher m = RegExDB.LOG_LEVEL.matcher(level);
-			if (!m.matches()) {
-				this.log.warn("Illegal log level specification found: [{}]", level);
-				continue;
-			}
+		List<String> logLevels = baseValues.getStrings(CLIParam.log_level);
+		if ((logLevels != null) && !logLevels.isEmpty()) {
+			for (String level : logLevels) {
+				Matcher m = RegExDB.LOG_LEVEL.matcher(level);
+				if (!m.matches()) {
+					this.log.warn("Illegal log level specification found: [{}]", level);
+					continue;
+				}
 
-			String newName = m.group(1);
-			final org.apache.log4j.Logger newLog;
-			if (StringUtils.equalsIgnoreCase("root", newName)) {
-				newLog = org.apache.log4j.Logger.getRootLogger();
-			} else {
-				newLog = org.apache.log4j.Logger.getLogger(m.group(1));
-			}
+				String newName = m.group(1);
+				final org.apache.log4j.Logger newLog;
+				if (StringUtils.equalsIgnoreCase("root", newName)) {
+					newLog = org.apache.log4j.Logger.getRootLogger();
+				} else {
+					newLog = org.apache.log4j.Logger.getLogger(m.group(1));
+				}
 
-			try {
-				newLevel = Level.toLevel(Integer.valueOf(m.group(2)));
-			} catch (NumberFormatException e) {
-				newLevel = Level.toLevel(m.group(2));
-			}
-
-			// Only mess with stuff if necessary ...
-			if (!Objects.equals(newLevel, newLog.getEffectiveLevel())) {
-				newLog.setLevel(newLevel);
-			}
-
-			String additivity = m.group(3);
-			if (StringUtils.isNotEmpty(additivity)) {
-				boolean b = Tools.toBoolean(additivity);
+				try {
+					newLevel = Level.toLevel(Integer.valueOf(m.group(2)));
+				} catch (NumberFormatException e) {
+					newLevel = Level.toLevel(m.group(2));
+				}
 
 				// Only mess with stuff if necessary ...
-				if (newLog.getAdditivity() != b) {
-					newLog.setAdditivity(b);
+				if (!Objects.equals(newLevel, newLog.getEffectiveLevel())) {
+					newLog.setLevel(newLevel);
+				}
+
+				String additivity = m.group(3);
+				if (StringUtils.isNotEmpty(additivity)) {
+					boolean b = Tools.toBoolean(additivity);
+
+					// Only mess with stuff if necessary ...
+					if (newLog.getAdditivity() != b) {
+						newLog.setAdditivity(b);
+					}
 				}
 			}
 		}
