@@ -657,7 +657,14 @@ public class Entrypoint extends AbstractEntrypoint {
 				continue;
 			}
 
-			org.apache.log4j.Logger newLog = org.apache.log4j.Logger.getLogger(m.group(1));
+			String newName = m.group(1);
+			final org.apache.log4j.Logger newLog;
+			if (StringUtils.equalsIgnoreCase("root", newName)) {
+				newLog = org.apache.log4j.Logger.getRootLogger();
+			} else {
+				newLog = org.apache.log4j.Logger.getLogger(m.group(1));
+			}
+
 			try {
 				newLevel = Level.toLevel(Integer.valueOf(m.group(2)));
 			} catch (NumberFormatException e) {
