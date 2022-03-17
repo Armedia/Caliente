@@ -25,7 +25,7 @@ import com.armedia.commons.utilities.Tools;
  *
  * @author diego
  */
-public class LogLister {
+public class Log4JLogLister {
 
 	/**
 	 * This enum classifies the Log4J into 3 basic types: class-level logger (named after a
@@ -148,7 +148,7 @@ public class LogLister {
 	 * @param types
 	 */
 	public static Collection<Logger> getLoggers(LogType... types) {
-		return LogLister.getLoggers(LogLister.renderLogTypeCollection(types));
+		return Log4JLogLister.getLoggers(Log4JLogLister.renderLogTypeCollection(types));
 	}
 
 	/**
@@ -158,7 +158,7 @@ public class LogLister {
 	 * @param types
 	 */
 	public static Collection<Logger> getLoggers(Collection<LogType> types) {
-		return LogLister.getLoggers(LogLister.renderLogTypePredicate(types));
+		return Log4JLogLister.getLoggers(Log4JLogLister.renderLogTypePredicate(types));
 	}
 
 	/**
@@ -168,17 +168,17 @@ public class LogLister {
 	 * @param predicate
 	 */
 	public static Collection<Logger> getLoggers(Predicate<Logger> predicate) {
-		return LogLister.loggers(predicate) //
+		return Log4JLogLister.loggers(predicate) //
 			.collect(Collectors.toCollection(LinkedList::new)) //
 		;
 	}
 
 	public static Stream<Logger> loggers(LogType... types) {
-		return LogLister.loggers(LogLister.renderLogTypeCollection(types));
+		return Log4JLogLister.loggers(Log4JLogLister.renderLogTypeCollection(types));
 	}
 
 	public static Stream<Logger> loggers(Collection<LogType> types) {
-		return LogLister.loggers(LogLister.renderLogTypePredicate(types));
+		return Log4JLogLister.loggers(Log4JLogLister.renderLogTypePredicate(types));
 	}
 
 	/**

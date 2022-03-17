@@ -105,6 +105,11 @@ public enum CLIParam implements Supplier<Option> {
 				"The directory into which the metadata database will be stored, or as per the XML file that describes the store configuration") //
 	), //
 
+	debug( //
+		new OptionImpl() //
+			.setDescription("Set the general log level for Caliente classes to DEBUG (ignored if --trace is given)") //
+	), //
+
 	direct_fs( //
 		new OptionImpl() //
 			.setDescription("Export files to local FS duplicating the CMS's path") //
@@ -456,6 +461,11 @@ public enum CLIParam implements Supplier<Option> {
 
 	threads( //
 		ThreadsLaunchHelper.THREADS //
+	), //
+
+	trace( //
+		new OptionImpl() //
+			.setDescription("Set the general log level for Caliente classes to TRACE (supercedes --debug if given)") //
 	), //
 
 	transformations( //

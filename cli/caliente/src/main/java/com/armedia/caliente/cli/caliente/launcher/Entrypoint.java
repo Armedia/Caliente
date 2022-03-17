@@ -49,6 +49,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.log4j.Level;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -620,25 +621,24 @@ public class Entrypoint extends AbstractEntrypoint {
 			}
 		}
 
-		// Make sure log4j is configured by directly invoking the requisite class
-		String startMessage = "Logging active";
+		Level newLevel = null;
+		if (baseValues.isPresent(CLIParam.trace)) {
+			newLevel = Level.TRACE;
+		} else if (baseValues.isPresent(CLIParam.debug)) {
+			newLevel = Level.DEBUG;
+		}
 
 		// If the log level has been changed, add it to the start message
-		org.apache.log4j.Logger.getRootLogger().info(startMessage);
+		String logLevelMessage = "";
+		if (newLevel != null) {
+			logLevelMessage = " (" + newLevel + ")";
+		}
 
-		/*
-		LogLevel newLevel = null;
-		
-		// Make sure the declared Log4J loggers that are under our required logging level, match
-		// at least it
-		Predicate<org.apache.log4j.Logger> p = (l) -> {
-			LogLevel current = LogLevel.decode(l.getEffectiveLevel());
-			// If the current level is less granular than the requested level, we
-			// set the requested level
-			return !newLevel.isGreaterOrEqual(current);
-		};
-		LogLister.loggers(p).forEach((l) -> l.setLevel(newLevel.getLevel()));
-		*/
+		// Make sure log4j is configured by directly invoking the requisite class
+		org.apache.log4j.Logger.getRootLogger().info("Logging active" + logLevelMessage);
+		if (newLevel != null) {
+			org.apache.log4j.Logger.getRootLogger().setLevel(newLevel);
+		}
 
 		// Now, get the logs via SLF4J, which is what we'll be using moving forward...
 		final Logger console = LoggerFactory.getLogger("console");
