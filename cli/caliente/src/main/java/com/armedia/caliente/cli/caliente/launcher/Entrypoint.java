@@ -621,7 +621,24 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 
 		// Make sure log4j is configured by directly invoking the requisite class
-		org.apache.log4j.Logger.getRootLogger().info("Logging active");
+		String startMessage = "Logging active";
+
+		// If the log level has been changed, add it to the start message
+		org.apache.log4j.Logger.getRootLogger().info(startMessage);
+
+		/*
+		LogLevel newLevel = null;
+		
+		// Make sure the declared Log4J loggers that are under our required logging level, match
+		// at least it
+		Predicate<org.apache.log4j.Logger> p = (l) -> {
+			LogLevel current = LogLevel.decode(l.getEffectiveLevel());
+			// If the current level is less granular than the requested level, we
+			// set the requested level
+			return !newLevel.isGreaterOrEqual(current);
+		};
+		LogLister.loggers(p).forEach((l) -> l.setLevel(newLevel.getLevel()));
+		*/
 
 		// Now, get the logs via SLF4J, which is what we'll be using moving forward...
 		final Logger console = LoggerFactory.getLogger("console");
@@ -657,6 +674,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		return super.execute(args);
 	}
 
+	@Override
 	protected int execute(OptionParseResult result) throws Exception {
 		final OptionValues commandValues = result.getCommandValues();
 		final Collection<String> positionals = result.getPositionals();
