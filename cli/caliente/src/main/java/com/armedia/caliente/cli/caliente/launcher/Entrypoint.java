@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -60,7 +61,8 @@ import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.command.CommandModule;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.cli.caliente.utils.RegExDB;
+import com.armedia.caliente.cli.caliente.utils.Log4JUtils;
+import com.armedia.caliente.cli.caliente.utils.Log4JUtils.LoggerSettings;
 import com.armedia.caliente.engine.tools.HierarchicalOrganizer;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
@@ -651,42 +653,23 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 
 		List<String> logLevels = baseValues.getStrings(CLIParam.log_level);
+		List<LoggerSettings> loggerSettings = new LinkedList<>();
 		if ((logLevels != null) && !logLevels.isEmpty()) {
-			for (String level : logLevels) {
-				Matcher m = RegExDB.LOG_LEVEL.matcher(level);
+			for (String loggerSetting : logLevels) {
+				Matcher m = Log4JUtils.LOG_INFO.matcher(loggerSetting);
 				if (!m.matches()) {
-					this.log.warn("Illegal log level specification found: [{}]", level);
+					this.log.warn("Illegal log level specification found: [{}]", loggerSetting);
 					continue;
 				}
 
-				String newName = m.group(1);
-				final org.apache.log4j.Logger newLog;
-				if (StringUtils.equalsIgnoreCase("root", newName)) {
-					newLog = org.apache.log4j.Logger.getRootLogger();
-				} else {
-					newLog = org.apache.log4j.Logger.getLogger(m.group(1));
-				}
-
-				try {
-					newLevel = Level.toLevel(Integer.valueOf(m.group(2)));
-				} catch (NumberFormatException e) {
-					newLevel = Level.toLevel(m.group(2));
-				}
-
-				// Only mess with stuff if necessary ...
-				if (!Objects.equals(newLevel, newLog.getEffectiveLevel())) {
-					newLog.setLevel(newLevel);
-				}
-
-				String additivity = m.group(3);
-				if (StringUtils.isNotEmpty(additivity)) {
-					boolean b = Tools.toBoolean(additivity);
-
-					// Only mess with stuff if necessary ...
-					if (newLog.getAdditivity() != b) {
-						newLog.setAdditivity(b);
-					}
-				}
+				loggerSettings.add(new LoggerSettings(loggerSetting));
+			}
+		}
+		Log4JUtils.setCustomLogs(loggerSettings);
+		if (Log4JUtils.apply()) {
+			this.log.info("Applied the custom logger settings");
+			for (LoggerSettings l : loggerSettings) {
+				this.log.info(l.toString());
 			}
 		}
 

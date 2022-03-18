@@ -95,6 +95,7 @@
 
 	<root>
 		<level value="INFO" />
+		<appender-ref ref="stdout.async" />
 		<appender-ref ref="default.async" />
 	</root>
 </log4j:configuration>

@@ -29,7 +29,7 @@ package com.armedia.caliente.cli.caliente.options;
 import java.util.EnumSet;
 import java.util.function.Supplier;
 
-import com.armedia.caliente.cli.caliente.utils.RegExDB;
+import com.armedia.caliente.cli.caliente.utils.Log4JUtils;
 import com.armedia.caliente.cli.caliente.utils.SmtpServer.SslMode;
 import com.armedia.caliente.engine.exporter.ExportResult;
 import com.armedia.caliente.engine.importer.ImportResult;
@@ -229,7 +229,7 @@ public enum CLIParam implements Supplier<Option> {
 		new OptionImpl() //
 			.setArgumentLimits(1) //
 			.setArgumentName("logger:level[:additivity]") //
-			.setValueFilter(new RegexValueFilter(RegExDB.LOG_LEVEL)) //
+			.setValueFilter(new RegexValueFilter(Log4JUtils.LOG_INFO)) //
 			.setDescription(
 				"A string describing a logger, and the level to use, with optional additivity (true/false). I.e. \"com.mysql.logging:DEBUG:true\"") //
 	), //
