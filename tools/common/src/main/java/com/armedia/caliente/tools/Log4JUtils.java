@@ -103,7 +103,7 @@ public class Log4JUtils {
 				logger.setLevel(this.level);
 				changed = true;
 			}
-			if (logger.getAdditivity() != this.additive) {
+			if ((this.additive != null) && (logger.getAdditivity() != this.additive)) {
 				logger.setAdditivity(this.additive);
 				changed = true;
 			}
