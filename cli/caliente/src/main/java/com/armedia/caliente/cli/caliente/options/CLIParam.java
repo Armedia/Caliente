@@ -29,12 +29,12 @@ package com.armedia.caliente.cli.caliente.options;
 import java.util.EnumSet;
 import java.util.function.Supplier;
 
-import com.armedia.caliente.cli.caliente.utils.Log4JUtils;
 import com.armedia.caliente.cli.caliente.utils.SmtpServer.SslMode;
 import com.armedia.caliente.engine.exporter.ExportResult;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.store.CmfContentOrganizer;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.tools.Log4JUtils;
 import com.armedia.commons.utilities.cli.Option;
 import com.armedia.commons.utilities.cli.OptionImpl;
 import com.armedia.commons.utilities.cli.filter.EnumValueFilter;
