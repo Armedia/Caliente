@@ -666,15 +666,15 @@ public class Entrypoint extends AbstractEntrypoint {
 			}
 		}
 		Log4JUtils.setCustomLogs(loggerSettings);
+		final Logger console = LoggerFactory.getLogger("console");
 		if (Log4JUtils.apply()) {
-			this.log.info("Applied the custom logger settings");
+			console.info("Applied the custom logger settings");
 			for (LoggerSettings l : loggerSettings) {
-				this.log.info(l.toString());
+				console.info(l.toString());
 			}
 		}
 
 		// Now, get the logs via SLF4J, which is what we'll be using moving forward...
-		final Logger console = LoggerFactory.getLogger("console");
 		console.info("Launching Caliente{} v{} {} mode for engine {}{}", logLevelMessage, Entrypoint.VERSION, command,
 			engine, Tools.NL);
 		Runtime runtime = Runtime.getRuntime();
