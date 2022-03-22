@@ -1001,6 +1001,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			final String dql = String.format(dqlBase, DfcUtils.quoteString(objectName),
 				DfcUtils.quoteString(targetPath));
 			final String currentPath = String.format("%s/%s", targetPath, objectName);
+			this.log.debug("Searching for an object using qualification [{}]", dql);
 			IDfPersistentObject current = session.getObjectByQualification(dql);
 			if (current == null) {
 				// No match, we're good...
@@ -1009,6 +1010,11 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 						this.cmfObject.getDescription(), dql);
 				}
 				continue;
+			}
+
+			if (this.log.isDebugEnabled()) {
+				this.log.debug("Object found with id [{}] as a match for {}", current.getObjectId(),
+					this.cmfObject.getDescription());
 			}
 
 			// Verify hierarchy
