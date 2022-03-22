@@ -239,10 +239,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		IDfFolder existing = super.locateInCms(ctx);
 		if (existing != null) { return existing; }
 
+		final String objectName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
 		for (IDfValue pathValue : getTargetPaths()) {
-			String path = pathValue.asString();
+			String path = String.format("%s/%s", pathValue.asString(), objectName);
 			this.log.debug("Candidate FOLDER path: [{}]", path);
-			path = ctx.getTargetPath(pathValue.asString());
+			path = ctx.getTargetPath(path);
 			this.log.debug("Adjusted FOLDER path: [{}]", path);
 			existing = session.getFolderByPath(path);
 			if (existing != null) {
