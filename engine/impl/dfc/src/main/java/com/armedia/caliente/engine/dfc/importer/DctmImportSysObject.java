@@ -1004,7 +1004,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			IDfPersistentObject current = session.getObjectByQualification(dql);
 			if (current == null) {
 				// No match, we're good...
-				this.log.debug("Did not find a matching object using DQL: [{}]", dql);
+				if (this.log.isDebugEnabled()) {
+					this.log.debug("Did not find a matching object for {} using DQL qualification: [{}]",
+						this.cmfObject.getDescription(), dql);
+				}
 				continue;
 			}
 

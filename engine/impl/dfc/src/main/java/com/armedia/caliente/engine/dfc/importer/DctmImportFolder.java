@@ -235,7 +235,24 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString());
 			return session.getFolderByPath(ctx.getTargetPath(path));
 		}
-		return super.locateInCms(ctx);
+
+		IDfFolder existing = super.locateInCms(ctx);
+		if (existing != null) { return existing; }
+
+		for (IDfValue pathValue : getTargetPaths()) {
+			String path = pathValue.asString();
+			this.log.debug("Candidate FOLDER path: [{}]", path);
+			path = ctx.getTargetPath(pathValue.asString());
+			this.log.debug("Adjusted FOLDER path: [{}]", path);
+			existing = session.getFolderByPath(path);
+			if (existing != null) {
+				this.log.debug("Found a match using FOLDER path: [{}]", path);
+				break;
+			}
+			this.log.debug("Failed to find an existing folder matching {} at path [{}]",
+				this.cmfObject.getDescription(), path);
+		}
+		return existing;
 	}
 
 	@Override
