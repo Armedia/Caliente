@@ -977,7 +977,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected T locateExistingByPath(DctmImportContext ctx) throws ImportException, DfException {
 		final IDfSession session = ctx.getSession();
-		final String documentName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
+		final String objectName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
 
 		IDfType type = DctmTranslator.translateType(ctx, this.cmfObject);
 		if (type == null) {
@@ -992,14 +992,19 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		String existingPath = null;
 		T existing = null;
 		final Class<T> dfClass = getObjectClass();
+		Collection<IDfValue> targetPaths = getTargetPaths();
+		if (this.log.isDebugEnabled()) {
+			this.log.debug("Found {} target paths for {}", targetPaths.size(), this.cmfObject.getDescription());
+		}
 		for (IDfValue p : getTargetPaths()) {
 			final String targetPath = ctx.getTargetPath(p.asString());
-			final String dql = String.format(dqlBase, DfcUtils.quoteString(documentName),
+			final String dql = String.format(dqlBase, DfcUtils.quoteString(objectName),
 				DfcUtils.quoteString(targetPath));
-			final String currentPath = String.format("%s/%s", targetPath, documentName);
+			final String currentPath = String.format("%s/%s", targetPath, objectName);
 			IDfPersistentObject current = session.getObjectByQualification(dql);
 			if (current == null) {
 				// No match, we're good...
+				this.log.debug("Did not find a matching object using DQL: [{}]", dql);
 				continue;
 			}
 
@@ -1036,10 +1041,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			}
 
 			// Not the same, this is a problem
-			throw new ImportException(
-				String.format("Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
-					this.cmfObject.getLabel(), existing.getObjectId().getId(), existingPath,
-					current.getObjectId().getId(), currentPath));
+			throw new ImportException(String.format(
+				"Found two different objects matching the [%s] paths: [%s@%s] and [%s@%s]", this.cmfObject.getLabel(),
+				existing.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 
 		return existing;
