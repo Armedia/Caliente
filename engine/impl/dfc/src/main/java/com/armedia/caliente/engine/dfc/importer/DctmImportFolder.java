@@ -246,26 +246,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			}
 		}
 
-		existing = super.locateInCms(ctx);
-		if (existing != null) {
-			this.log.debug("Found a match using the folder-ID algorithm");
-			return existing;
-		}
-
-		for (IDfValue pathValue : getTargetPaths()) {
-			String path = String.format("%s/%s", pathValue.asString(), objectName);
-			this.log.debug("Candidate FOLDER path: [{}]", path);
-			path = ctx.getTargetPath(path);
-			this.log.debug("Adjusted FOLDER path: [{}]", path);
-			existing = session.getFolderByPath(path);
-			if (existing != null) {
-				this.log.debug("Found a match using FOLDER path: [{}]", path);
-				return existing;
-			}
-		}
-
-		this.log.debug("Failed to find an existing folder matching {}", this.cmfObject.getDescription());
-		return null;
+		return super.locateInCms(ctx);
 	}
 
 	@Override

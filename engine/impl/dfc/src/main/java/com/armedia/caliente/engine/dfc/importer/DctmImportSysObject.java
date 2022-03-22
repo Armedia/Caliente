@@ -1004,12 +1004,22 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			this.log.debug("Searching for an object using qualification [{}]", dql);
 			IDfPersistentObject current = session.getObjectByQualification(dql);
 			if (current == null) {
-				// No match, we're good...
 				if (this.log.isDebugEnabled()) {
 					this.log.debug("Did not find a matching object for {} using DQL qualification: [{}]",
 						this.cmfObject.getDescription(), dql);
+					this.log.debug("Searching for a matching object for {} using the path [{}]",
+						this.cmfObject.getDescription(), currentPath);
 				}
-				continue;
+
+				// No match, try by path?
+				current = session.getObjectByPath(currentPath);
+				if (current == null) {
+					if (this.log.isDebugEnabled()) {
+						this.log.debug("Did not find a matching object for {} using the path [{}]",
+							this.cmfObject.getDescription(), currentPath);
+					}
+					continue;
+				}
 			}
 
 			if (this.log.isDebugEnabled()) {
@@ -1054,7 +1064,6 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				"Found two different objects matching the [%s] paths: [%s@%s] and [%s@%s]", this.cmfObject.getLabel(),
 				existing.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
-
 		return existing;
 	}
 
