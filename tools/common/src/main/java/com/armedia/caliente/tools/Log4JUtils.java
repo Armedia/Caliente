@@ -94,9 +94,9 @@ public class Log4JUtils {
 		public boolean apply() {
 			Logger logger = null;
 			if (StringUtils.equalsIgnoreCase("root", this.name)) {
-				logger = org.apache.log4j.Logger.getRootLogger();
+				logger = Logger.getRootLogger();
 			} else {
-				logger = org.apache.log4j.Logger.getLogger(this.name);
+				logger = Logger.getLogger(this.name);
 			}
 			boolean changed = false;
 			if (!Objects.equals(logger.getLevel(), this.level)) {
