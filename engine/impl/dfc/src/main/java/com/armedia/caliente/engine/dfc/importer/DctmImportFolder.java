@@ -227,19 +227,31 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	protected IDfFolder locateInCms(DctmImportContext ctx) throws ImportException, DfException {
 		// If I'm a cabinet, then find it by cabinet name
 		IDfSession session = ctx.getSession();
+
+		final String objectName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
+		IDfFolder existing = null;
+
 		// Easier way: determine if we have parent folders...if not, then we're a cabinet
 		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
 		if ((p == null) || !p.hasValues()) {
 			// This is a cabinet...
-			String path = String.format("/%s",
-				this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString());
-			return session.getFolderByPath(ctx.getTargetPath(path));
+			String path = String.format("/%s", objectName);
+			this.log.debug("Candidate CABINET path: [{}]", path);
+			path = ctx.getTargetPath(path);
+			this.log.debug("Adjusted CABINET path: [{}]", path);
+			existing = session.getFolderByPath(path);
+			if (existing != null) {
+				this.log.debug("Found a match using the path: [{}]", path);
+				return existing;
+			}
 		}
 
-		IDfFolder existing = super.locateInCms(ctx);
-		if (existing != null) { return existing; }
+		existing = super.locateInCms(ctx);
+		if (existing != null) {
+			this.log.debug("Found a match using the folder-ID algorithm");
+			return existing;
+		}
 
-		final String objectName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
 		for (IDfValue pathValue : getTargetPaths()) {
 			String path = String.format("%s/%s", pathValue.asString(), objectName);
 			this.log.debug("Candidate FOLDER path: [{}]", path);
@@ -248,12 +260,12 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			existing = session.getFolderByPath(path);
 			if (existing != null) {
 				this.log.debug("Found a match using FOLDER path: [{}]", path);
-				break;
+				return existing;
 			}
-			this.log.debug("Failed to find an existing folder matching {} at path [{}]",
-				this.cmfObject.getDescription(), path);
 		}
-		return existing;
+
+		this.log.debug("Failed to find an existing folder matching {}", this.cmfObject.getDescription());
+		return null;
 	}
 
 	@Override
