@@ -1066,13 +1066,11 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 					// then we must fail the operation, for safety
 					typeIsCompatible = false;
 				}
-			} else if (!currentIsSubType && !currentIsSuperType) {
-				// If the types aren't related, explode loudly ...
-				typeIsCompatible = false;
 			} else {
-				// If the current type is both a subtype and a supertype of the expected type,
-				// it means it's the same type, so we do nothing ...
-				typeIsCompatible = true;
+				// If the hierarchy flags are the same, then we're only OK
+				// if they're both true. Otherwise, they're both false and that's
+				// a problem because the types aren't related at all
+				typeIsCompatible = (currentIsSubType && currentIsSuperType);
 			}
 
 			if (!typeIsCompatible) {
