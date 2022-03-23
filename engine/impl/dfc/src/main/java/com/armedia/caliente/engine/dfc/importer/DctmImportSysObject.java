@@ -975,6 +975,23 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		return p.getValues();
 	}
 
+	private boolean convertObjectType(IDfSession session, T obj, IDfType source, IDfType target)
+		throws ImportException, DfException {
+		// Validate that the types *must* be related
+		if (!target.isTypeOf(source.getName()) && !source.isTypeOf(target.getName())) {
+			if (this.log.isDebugEnabled()) {
+				this.log.warn("Cannot convert the type from {} to {} for {} ({}) because they're not related",
+					source.getName(), target.getName(), obj.getObjectId(), this.cmfObject.getDescription());
+			}
+			return false;
+		}
+		// Ok so they're related ... maybe try to modify the type into the subtype?
+		String changeTypeDQL = String.format("CHANGE OBJECTS %s (ALL) TO %s WHERE i_chronicle_id = ID(%s)",
+			source.getName(), target.getName(), obj.getChronicleId().getId());
+		DfcQuery.run(session, changeTypeDQL);
+		return true;
+	}
+
 	protected T locateExistingByPath(DctmImportContext ctx) throws ImportException, DfException {
 		final IDfSession session = ctx.getSession();
 		final String objectName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
@@ -986,6 +1003,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				this.cmfObject.getId()));
 		}
 
+		final boolean attemptTypeChange = this.factory.isAdjustTypesEnabled();
 		final String dqlBase = String.format("%s (ALL) where object_name = %%s and folder(%%s)", type.getName());
 
 		final boolean seeksReference = isReference();
@@ -1027,12 +1045,40 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 					this.cmfObject.getDescription());
 			}
 
-			// Verify hierarchy
-			if (!current.getType().isTypeOf(type.getName())) {
-				// Not a document...we have a problem
+			// Verify hierarchy ... is the existing object's type a subtype of the incoming type?
+			final boolean currentIsSubType = current.getType().isTypeOf(type.getName());
+			final boolean currentIsSuperType = type.isTypeOf(current.getType().getName());
+
+			boolean typeIsCompatible = false;
+			if (currentIsSubType != currentIsSuperType) {
+				typeIsCompatible = (currentIsSubType || attemptTypeChange);
+				if (attemptTypeChange) {
+					if (this.log.isDebugEnabled()) {
+						this.log.warn(
+							"Type mismatch for object [{}] (for {}): expected {} but was {} ... will attempt to change it",
+							current.getObjectId(), this.cmfObject.getDescription(), current.getType().getName(),
+							type.getName());
+					}
+					typeIsCompatible = convertObjectType(session, existing, current.getType(), type);
+					current.fetch(null); // Re-fetch the re-typed object
+				} else if (currentIsSuperType) {
+					// if we're not doing type changes, and the current is a supertype,
+					// then we must fail the operation, for safety
+					typeIsCompatible = false;
+				}
+			} else if (!currentIsSubType && !currentIsSuperType) {
+				// If the types aren't related, explode loudly ...
+				typeIsCompatible = false;
+			} else {
+				// If the current type is both a subtype and a supertype of the expected type,
+				// it means it's the same type, so we do nothing ...
+				typeIsCompatible = true;
+			}
+
+			if (!typeIsCompatible) {
 				throw new ImportException(String.format(
 					"Found an incompatible object in one of the %s [%s] %s's intended paths: [%s] = [%s:%s]",
-					this.cmfObject.getSubtype(), this.cmfObject.getLabel(), this.cmfObject.getSubtype(), currentPath,
+					this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getSubtype(), currentPath,
 					current.getType().getName(), current.getObjectId().getId()));
 			}
 

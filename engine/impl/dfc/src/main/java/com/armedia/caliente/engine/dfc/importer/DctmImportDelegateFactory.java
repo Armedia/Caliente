@@ -28,6 +28,7 @@ package com.armedia.caliente.engine.dfc.importer;
 
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
+import com.armedia.caliente.engine.dfc.DctmSetting;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.store.CmfObject;
@@ -39,8 +40,15 @@ import com.documentum.fc.common.IDfValue;
 public class DctmImportDelegateFactory
 	extends ImportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine> {
 
+	private final boolean adjustTypes;
+
 	protected DctmImportDelegateFactory(DctmImportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
+		this.adjustTypes = configuration.getBoolean(DctmSetting.ADJUST_TYPES);
+	}
+
+	boolean isAdjustTypesEnabled() {
+		return this.adjustTypes;
 	}
 
 	@Override

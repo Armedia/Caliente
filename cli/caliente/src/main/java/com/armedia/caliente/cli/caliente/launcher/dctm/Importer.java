@@ -34,6 +34,7 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
+import com.armedia.caliente.engine.dfc.DctmSetting;
 import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.commons.utilities.cli.Option;
@@ -53,8 +54,15 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 			"The default password to use for users being copied over (if not specified, the default is to use the same login name)") //
 	;
 
+	private static final Option ADJUST_TYPES = new OptionImpl() //
+		.setLongOpt("adjust-types") //
+		.setDescription(
+			"Enable changing target object types to match the source object, as allowed by the typing rules") //
+	;
+
 	private static final OptionGroup OPTIONS = new OptionGroupImpl("DFC Import") //
 		.add(Importer.DEFAULT_PASSWORD) //
+		.add(Importer.ADJUST_TYPES) //
 	;
 
 	Importer(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
@@ -97,6 +105,7 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		if (commandValues.isPresent(Importer.DEFAULT_PASSWORD)) {
 			settings.put(Setting.DEFAULT_USER_PASSWORD.getLabel(), commandValues.getString(Importer.DEFAULT_PASSWORD));
 		}
+		settings.put(DctmSetting.ADJUST_TYPES.getLabel(), commandValues.isPresent(Importer.ADJUST_TYPES));
 		return true;
 	}
 
