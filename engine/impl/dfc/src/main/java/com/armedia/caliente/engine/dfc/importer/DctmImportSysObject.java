@@ -986,7 +986,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			return false;
 		}
 		// Ok so they're related ... maybe try to modify the type into the subtype?
-		String changeTypeDQL = String.format("CHANGE OBJECTS %s (ALL) TO %s WHERE i_chronicle_id = ID(%s)",
+		String changeTypeDQL = String.format("CHANGE %s (ALL) OBJECTS TO %s WHERE i_chronicle_id = ID(%s)",
 			source.getName(), target.getName(), obj.getChronicleId().getId());
 		DfcQuery.run(session, changeTypeDQL);
 		return true;
