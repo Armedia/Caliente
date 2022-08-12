@@ -365,6 +365,13 @@ public class XmlImportDelegateFactory
 		l.add(v);
 	}
 
+	protected String renderAttributeName(String attributeName) {
+		if (StringUtils.isBlank(attributeName)) {
+			throw new IllegalArgumentException("Must provide a non-blank attribute name");
+		}
+		return String.format("caliente:%s", attributeName);
+	}
+
 	protected <T> T getXmlObject(CmfObject.Archetype t, Class<T> klazz) {
 		return klazz.cast(this.xml.get(t));
 	}

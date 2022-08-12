@@ -593,15 +593,15 @@ namespace Armedia.CMSMF.SharePoint.Import
             string path = (string)element.Element(ns + "sourcePath");
             string name = Tools.SanitizeSingleLineString((string)element.Element(ns + "name"));
             li["Title"] = name;
-            li["dctm_path"] = path;
-            li["dctm_name"] = name;
-            li["dctm_location"] = string.Format("{0}/{1}", path == "/" ? "" : path, name);
-            li["dctm_author_name"] = (string)element.Element(ns + "creator");
-            li["dctm_author"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)li["dctm_author_name"]);
-            li["dctm_editor_name"] = (string)element.Element(ns + "modifier");
-            li["dctm_editor"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)li["dctm_editor_name"]);
-            li["dctm_object_id"] = (string)element.Element(ns + "id");
-            li["dctm_acl_id"] = (string)element.Element(ns + "acl");
+            li["caliente_path"] = path;
+            li["caliente_name"] = name;
+            li["caliente_location"] = string.Format("{0}/{1}", path == "/" ? "" : path, name);
+            li["caliente_author_name"] = (string)element.Element(ns + "creator");
+            li["caliente_author"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)li["caliente_author_name"]);
+            li["caliente_editor_name"] = (string)element.Element(ns + "modifier");
+            li["caliente_editor"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)li["caliente_editor_name"]);
+            li["caliente_object_id"] = (string)element.Element(ns + "id");
+            li["caliente_acl_id"] = (string)element.Element(ns + "acl");
             ApplyAttributes(li, element.Element(ns + "attributes"), (string)element.Element(ns + "type"));
         }
 
@@ -610,8 +610,8 @@ namespace Armedia.CMSMF.SharePoint.Import
             XNamespace ns = element.GetDefaultNamespace();
             li["Created"] = Tools.ParseXmlDate(element.Element(ns + "creationDate"));
             li["Modified"] = Tools.ParseXmlDate(element.Element(ns + "modificationDate"));
-            li["Author"] = li["dctm_author"];
-            li["Editor"] = li["dctm_editor"];
+            li["Author"] = li["caliente_author"];
+            li["Editor"] = li["caliente_editor"];
         }
 
         protected void ApplyPermissions(ListItem li, XElement element)

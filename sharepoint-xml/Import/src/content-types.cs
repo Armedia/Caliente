@@ -380,7 +380,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         versionAtt.SetAttributeValue("repeating", "true");
                         versionAtt.SetAttributeValue("inherited", "false");
                         versionAtt.SetAttributeValue("sourceName", "keywords");
-                        versionAtt.SetAttributeValue("name", "dctm:keywords");
+                        versionAtt.SetAttributeValue("name", "caliente:keywords");
                         versionAtt.SetAttributeValue("dataType", "STRING");
                         attributeContainer.AddFirst(versionAtt);
 
@@ -389,7 +389,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         versionAtt.SetAttributeValue("repeating", "false");
                         versionAtt.SetAttributeValue("inherited", "false");
                         versionAtt.SetAttributeValue("sourceName", "acl_id");
-                        versionAtt.SetAttributeValue("name", "dctm:acl_id");
+                        versionAtt.SetAttributeValue("name", "caliente:acl_id");
                         versionAtt.SetAttributeValue("dataType", "STRING");
                         attributeContainer.AddFirst(versionAtt);
 
@@ -429,7 +429,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         // The attribute is either not inherited or its inheritance is ignored, so add it to the content type's declaration
                         string attName = att.Attribute("name").Value;
                         string attSourceName = att.Attribute("sourceName").Value;
-                        string finalName = string.Format("dctm_{0}", attSourceName);
+                        string finalName = string.Format("caliente_{0}", attSourceName);
                         // Special case for folder attributes inherited from dm_sysobject
                         bool inherited = XmlConvert.ToBoolean(att.Attribute("inherited").Value) && (typeName != "dm_folder");
                         bool repeating = XmlConvert.ToBoolean(att.Attribute("repeating").Value);

@@ -48,8 +48,8 @@ namespace Armedia.CMSMF.SharePoint.Import
 
                     string name = (string)formatXml.Element(ns + "name");
                     string description = (string)formatXml.Element(ns + "description");
-                    string dosExtension = XmlTools.GetAttributeValue(formatXml, "dctm:dos_extension");
-                    string mimeType = XmlTools.GetAttributeValue(formatXml, "dctm:mime_type");
+                    string dosExtension = XmlTools.GetAttributeValue(formatXml, "caliente:dos_extension");
+                    string mimeType = XmlTools.GetAttributeValue(formatXml, "caliente:mime_type");
                     Format format = new Format(name, dosExtension, mimeType, description);
                     if (!this.Formats.ContainsKey(name))
                     {

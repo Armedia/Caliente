@@ -563,7 +563,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                                         sw.WriteLine(name);
                                         sw.WriteLine(path);
                                         sw.WriteLine(versionNumber);
-                                        foreach (string kw in XmlTools.GetAttributeValues(version, "dctm:keywords"))
+                                        foreach (string kw in XmlTools.GetAttributeValues(version, "caliente:keywords"))
                                         {
                                             sw.WriteLine(kw);
                                         }
@@ -722,10 +722,10 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 }
                                 tracker.TrackProgress("The ACL for [{0}] v{1} will be {2}", safeFullPath, versionNumber, aclResult);
 
-                                newVersion.ListItemAllFields["dctm_antecedent_id"] = (string)version.Element(ns + "antecedentId");
-                                newVersion.ListItemAllFields["dctm_history_id"] = location.HistoryId;
-                                newVersion.ListItemAllFields["dctm_version"] = versionNumber;
-                                newVersion.ListItemAllFields["dctm_current"] = XmlConvert.ToBoolean((string)version.Element(ns + "current"));
+                                newVersion.ListItemAllFields["caliente_antecedent_id"] = (string)version.Element(ns + "antecedentId");
+                                newVersion.ListItemAllFields["caliente_history_id"] = location.HistoryId;
+                                newVersion.ListItemAllFields["caliente_version"] = versionNumber;
+                                newVersion.ListItemAllFields["caliente_current"] = XmlConvert.ToBoolean((string)version.Element(ns + "current"));
 
                                 newVersion.ListItemAllFields.Update();
                                 newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);

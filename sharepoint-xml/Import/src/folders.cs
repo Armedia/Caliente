@@ -183,7 +183,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         if (thisDepth == 0)
                         {
                             // Check to see if this is a cabinet we want to avoid
-                            if (XmlConvert.ToBoolean(XmlTools.GetAttributeValue(xml, "dctm:is_private")))
+                            if (XmlConvert.ToBoolean(XmlTools.GetAttributeValue(xml, "caliente:is_private")))
                             {
                                 Log.Info(string.Format("Skipping private cabinet [{0}]", f.FullPath));
                                 continue;

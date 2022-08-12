@@ -369,7 +369,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         switch (source)
                         {
                             case "LDAP":
-                                string ldapGuid = ((string)attributes.FirstOrDefault(a => a.Attribute("name").Value == "dctm:user_global_unique_id")).ToLower().Trim();
+                                string ldapGuid = ((string)attributes.FirstOrDefault(a => a.Attribute("name").Value == "caliente:user_global_unique_id")).ToLower().Trim();
                                 // ldapGuid will be of the form DIRECTORY:hexGuid, so we have to parse the directory name.  If it's the same directory
                                 // as our domain uses, then we can search by guid directly.  Otherwise, we have to search by samaccountname
                                 string[] data = ldapGuid.Split(':');
@@ -564,7 +564,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         switch (source)
                         {
                             case "LDAP":
-                                string ldapGuid = ((string)attributes.FirstOrDefault(a => a.Attribute("name").Value == "dctm:group_global_unique_id")).ToLower().Trim();
+                                string ldapGuid = ((string)attributes.FirstOrDefault(a => a.Attribute("name").Value == "caliente:group_global_unique_id")).ToLower().Trim();
                                 // ldapGuid will be of the form DIRECTORY:hexGuid, so we have to parse the directory name.  If it's the same directory
                                 // as our domain uses, then we can search by guid directly.  Otherwise, we have to search by samaccountname
                                 string[] data = ldapGuid.Split(':');

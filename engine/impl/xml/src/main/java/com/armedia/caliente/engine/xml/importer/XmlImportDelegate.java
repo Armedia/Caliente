@@ -82,6 +82,10 @@ public abstract class XmlImportDelegate extends
 		}
 	}
 
+	protected final String renderAttributeName(String name) {
+		return this.factory.renderAttributeName(name);
+	}
+
 	protected final void dumpProperties(List<PropertyT> list) {
 		for (String name : this.cmfObject.getPropertyNames()) {
 			final PropertyT property = new PropertyT();
