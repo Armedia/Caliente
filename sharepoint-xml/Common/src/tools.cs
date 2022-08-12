@@ -1,4 +1,4 @@
-﻿using log4net;
+using log4net;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;

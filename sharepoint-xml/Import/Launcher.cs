@@ -1,4 +1,4 @@
-﻿using Armedia.CMSMF.SharePoint.Common;
+using Armedia.CMSMF.SharePoint.Common;
 using CommandLine;
 using CommandLine.Text;
 using log4net;
