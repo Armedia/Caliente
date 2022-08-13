@@ -29,7 +29,6 @@ package com.armedia.caliente.engine.exporter;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationHandler;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -153,7 +152,7 @@ public abstract class ExportEngine<//
 	private final ConcurrentMap<String, String> idPathFixes = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, String> idFolderNames = new ConcurrentHashMap<>();
 
-	private class ExportListenerPropagator extends ListenerPropagator<ExportResult> implements InvocationHandler {
+	private class ExportListenerPropagator extends ListenerPropagator<ExportResult> {
 
 		private ExportListenerPropagator(CmfObjectCounter<ExportResult> counter) {
 			super(counter, getListeners(), ExportEngineListener.class);

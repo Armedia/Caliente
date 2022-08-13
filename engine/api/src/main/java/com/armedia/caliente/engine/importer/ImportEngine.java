@@ -27,7 +27,6 @@
 package com.armedia.caliente.engine.importer;
 
 import java.io.File;
-import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -390,7 +389,7 @@ public abstract class ImportEngine<//
 		}
 	}
 
-	private class ImportListenerPropagator extends ListenerPropagator<ImportResult> implements InvocationHandler {
+	private class ImportListenerPropagator extends ListenerPropagator<ImportResult> {
 
 		private ImportListenerPropagator(CmfObjectCounter<ImportResult> counter) {
 			super(counter, getListeners(), ImportEngineListener.class);
