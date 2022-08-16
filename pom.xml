@@ -479,7 +479,6 @@
 					<configuration>
 						<finalName>${executableName}-${project.version}${build.number}-exe</finalName>
 						<createSourcesJar>true</createSourcesJar>
-						<shadedSourcesContent>true</shadedSourcesContent>
 						<createDependencyReducedPom>false</createDependencyReducedPom>
 						<shadedArtifactAttached>true</shadedArtifactAttached>
 						<shadedClassifierName>exe</shadedClassifierName>
