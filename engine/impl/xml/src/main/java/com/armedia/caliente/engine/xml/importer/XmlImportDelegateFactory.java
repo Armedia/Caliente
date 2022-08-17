@@ -41,7 +41,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -84,6 +83,8 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 import com.armedia.commons.utilities.xml.XmlTools;
 
 public class XmlImportDelegateFactory
@@ -121,7 +122,7 @@ public class XmlImportDelegateFactory
 	private final boolean aggregateDocuments;
 	private final Path content;
 	private final Path metadataRoot;
-	private final AtomicBoolean schemaMissing = new AtomicBoolean(true);
+	private volatile boolean schemaMissing = true;
 	private final CmfContentOrganizer organizer;
 
 	private final ThreadLocal<List<DocumentVersionT>> threadedVersionList = ThreadLocal.withInitial(ArrayList::new);
@@ -256,38 +257,43 @@ public class XmlImportDelegateFactory
 		}
 
 		private void writeSchema() {
-			shareLockedUpgradable(XmlImportDelegateFactory.this.schemaMissing::get, () -> {
-				try (InputStream in = Thread.currentThread().getContextClassLoader()
-					.getResourceAsStream(XmlImportDelegateFactory.SCHEMA_NAME)) {
-					if (in == null) {
-						this.log.warn("Failed to load the schema from the resource [{}]",
-							XmlImportDelegateFactory.SCHEMA_NAME);
-						return;
-					}
-					final Path schemaFile = XmlImportDelegateFactory.this.metadataRoot
-						.resolve(XmlImportDelegateFactory.SCHEMA_NAME);
+			try (SharedAutoLock shared = sharedAutoLock()) {
+				if (!XmlImportDelegateFactory.this.schemaMissing) { return; }
+				try (MutexAutoLock mutex = shared.upgrade()) {
+					if (!XmlImportDelegateFactory.this.schemaMissing) { return; }
+					try (InputStream in = Thread.currentThread().getContextClassLoader()
+						.getResourceAsStream(XmlImportDelegateFactory.SCHEMA_NAME)) {
+						if (in == null) {
+							this.log.warn("Failed to load the schema from the resource [{}]",
+								XmlImportDelegateFactory.SCHEMA_NAME);
+							return;
+						}
+						final Path schemaFile = XmlImportDelegateFactory.this.metadataRoot
+							.resolve(XmlImportDelegateFactory.SCHEMA_NAME);
 
-					try (OutputStream out = new BufferedOutputStream(new FileOutputStream(schemaFile.toFile()))) {
-						IOUtils.copy(in, out);
-						XmlImportDelegateFactory.this.schemaMissing.set(false);
-					} catch (FileNotFoundException e) {
-						if (this.log.isTraceEnabled()) {
-							this.log.warn("Failed to create the schema file at [{}]", schemaFile, e);
-						} else {
-							this.log.warn("Failed to create the schema file at [{}]: {}", schemaFile, e.getMessage());
+						try (OutputStream out = new BufferedOutputStream(new FileOutputStream(schemaFile.toFile()))) {
+							IOUtils.copy(in, out);
+							XmlImportDelegateFactory.this.schemaMissing = false;
+						} catch (FileNotFoundException e) {
+							if (this.log.isTraceEnabled()) {
+								this.log.warn("Failed to create the schema file at [{}]", schemaFile, e);
+							} else {
+								this.log.warn("Failed to create the schema file at [{}]: {}", schemaFile,
+									e.getMessage());
+							}
+						} catch (IOException e) {
+							if (this.log.isTraceEnabled()) {
+								this.log.warn("Failed to copy the schema into the file at [{}]", schemaFile, e);
+							} else {
+								this.log.warn("Failed to copy the schema into the file at [{}]: {}", schemaFile,
+									e.getMessage());
+							}
 						}
 					} catch (IOException e) {
-						if (this.log.isTraceEnabled()) {
-							this.log.warn("Failed to copy the schema into the file at [{}]", schemaFile, e);
-						} else {
-							this.log.warn("Failed to copy the schema into the file at [{}]: {}", schemaFile,
-								e.getMessage());
-						}
+						this.log.warn(XmlImportDelegateFactory.SCHEMA_NAME);
 					}
-				} catch (IOException e) {
-					this.log.warn(XmlImportDelegateFactory.SCHEMA_NAME);
 				}
-			});
+			}
 		}
 	};
 
