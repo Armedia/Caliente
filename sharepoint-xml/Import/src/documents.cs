@@ -838,7 +838,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                             }
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         try
                         {

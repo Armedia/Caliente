@@ -163,7 +163,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 {
                                     ProcessAccumulatedFolders(session, accumulated);
                                 }
-                                catch (Exception e)
+                                catch (Exception)
                                 {
                                     Log.Error("Failed to process the current accumulated folder batch");
                                     throw;
@@ -210,7 +210,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         {
                             ProcessAccumulatedFolders(session, accumulated);
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             Log.Error("Failed to process the last accumulated folder batch");
                             throw;
