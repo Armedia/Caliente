@@ -196,6 +196,11 @@ public abstract class ImportDelegateFactory< //
 			targetPath = Tools.joinEscaped('/', l);
 		}
 
+		// If this isn't a path explicitly set by some other condition, we apply any
+		// leading path truncations that need to be applied
+		if (!fixed) {
+			targetPath = ctx.getTargetPath(targetPath);
+		}
 		return targetPath;
 	}
 
