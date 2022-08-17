@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Security;
 using System.Threading;
-using System.Drawing;
 using System.Xml.Linq;
-using OfficeDevPnP.Core;
 
 namespace Armedia.CMSMF.SharePoint.Common
 {
