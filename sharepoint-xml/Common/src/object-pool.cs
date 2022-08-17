@@ -56,16 +56,16 @@ namespace Armedia.CMSMF.SharePoint.Common
         private bool open;
         private ReaderWriterLock rwlock;
         private ConcurrentQueue<T> pool;
-        private PoolableObjectFactory<T> generator;
+        private PoolableObjectFactory<T> factory;
 
-        public ObjectPool(PoolableObjectFactory<T> generator)
+        public ObjectPool(PoolableObjectFactory<T> factory)
         {
-            if (generator == null)
-                throw new ArgumentNullException("generator");
+            if (factory == null)
+                throw new ArgumentNullException("factory");
             this.open = true;
             this.rwlock = new ReaderWriterLock();
             this.pool = new ConcurrentQueue<T>();
-            this.generator = generator;
+            this.factory = factory;
         }
 
         public Ref GetObject()
@@ -75,31 +75,45 @@ namespace Armedia.CMSMF.SharePoint.Common
                 this.rwlock.AcquireReaderLock(-1);
                 if (!this.open)
                     throw new InvalidOperationException("This pool is already closed");
-                bool createItem = false;
-                T item;
-                createItem = !this.pool.TryDequeue(out item);
-                if (createItem)
+
+                const int maxAttempts = 3;
+                for (int attempt = 1 ; attempt <= maxAttempts ; attempt++)
                 {
-                    item = this.generator.Create();
-                }
-                try
-                {
-                    if (this.generator.Validate(item))
+                    T item;
+                    bool existing = this.pool.TryDequeue(out item);
+                    if (!existing)
                     {
-                        this.generator.Activate(item);
+                        item = this.factory.Create();
                     }
+                    if (validateBeforeReturn(item))
+                    {
+                        return new Ref(item, this);
+                    }
+
+                    // Bad item ... nuke it and try again (if still viable)
+                    this.factory.Destroy(item);
                 }
-                catch (Exception)
-                {
-                    this.generator.Destroy(item);
-                    createItem = true;
-                }
-                return new Ref(item, this);
+                throw new Exception(string.Format("Failed to create a new pooled object after {0} attempts", maxAttempts));
             }
             finally
             {
                 this.rwlock.ReleaseReaderLock();
             }
+        }
+
+        private bool validateBeforeReturn(T item)
+        {
+            try
+            {
+                if (!this.factory.Validate(item)) return false;
+                this.factory.Activate(item);
+                return true;
+            }
+            catch (Exception)
+            {
+                // TODO: Log the failure somehow?
+                return false;
+            } 
         }
 
         private void Release(T item)
@@ -109,12 +123,12 @@ namespace Armedia.CMSMF.SharePoint.Common
                 this.rwlock.AcquireReaderLock(-1);
                 if (!this.open)
                     throw new InvalidOperationException("This pool is already closed");
-                bool destroyItem = !this.generator.Validate(item);
+                bool destroyItem = !this.factory.Validate(item);
                 if (!destroyItem)
                 {
                     try
                     {
-                        this.generator.Passivate(item);
+                        this.factory.Passivate(item);
                         this.pool.Enqueue(item);
                     }
                     catch (Exception)
@@ -122,7 +136,7 @@ namespace Armedia.CMSMF.SharePoint.Common
                         destroyItem = true;
                     }
                 }
-                if (destroyItem) this.generator.Destroy(item);
+                if (destroyItem) this.factory.Destroy(item);
             }
             finally
             {
@@ -142,7 +156,7 @@ namespace Armedia.CMSMF.SharePoint.Common
                     {
                         try
                         {
-                            this.generator.Destroy(t);
+                            this.factory.Destroy(t);
                         }
                         catch (Exception e)
                         {
