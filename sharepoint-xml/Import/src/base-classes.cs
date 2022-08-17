@@ -521,10 +521,10 @@ namespace Armedia.CMSMF.SharePoint.Import
             private set { }
         }
 
-        protected void ApplyAttributes(ListItem li, XElement attributes, String objectType)
+        protected void ApplyAttributes(ListItem li, XElement attributes, string contentType)
         {
             XNamespace ns = attributes.GetDefaultNamespace();
-            ImportedContentType typeObject = this.ContentTypeImporter.ResolveLibraryContentType(objectType);
+            ImportedContentType typeObject = this.ContentTypeImporter.ResolveLibraryContentType(contentType);
             foreach (XElement attribute in attributes.Elements(ns + "attribute"))
             {
                 string fieldName = attribute.Attribute("name").Value;
@@ -582,7 +582,7 @@ namespace Armedia.CMSMF.SharePoint.Import
         }
 
         // Reference: http://sharepoint.stackexchange.com/questions/130636/cannot-update-created-by-author-field-through-powershell
-        protected void ApplyMetadata(ListItem li, XElement element)
+        protected void ApplyMetadata(ListItem li, XElement element, ContentType contentType)
         {
             XNamespace ns = element.GetDefaultNamespace();
             string path = (string)element.Element(ns + "sourcePath");
@@ -597,7 +597,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             li["caliente_editor"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)li["caliente_editor_name"]);
             li["caliente_object_id"] = (string)element.Element(ns + "id");
             li["caliente_acl_id"] = (string)element.Element(ns + "acl");
-            ApplyAttributes(li, element.Element(ns + "attributes"), (string)element.Element(ns + "type"));
+            ApplyAttributes(li, element.Element(ns + "attributes"), contentType?.Name ?? (string)element.Element(ns + "type"));
         }
 
         protected void SetAuthorAndEditor(ListItem li, XElement element)
