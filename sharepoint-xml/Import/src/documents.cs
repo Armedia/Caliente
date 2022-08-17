@@ -703,16 +703,13 @@ namespace Armedia.CMSMF.SharePoint.Import
                                         {
                                             throw new Exception(string.Format("Could not find the content type [{0}] for document [{1}]", objectType, safeFullPath));
                                         }
-                                        else
-                                        {
-                                            tracker.TrackProgress("Could not find the content type [{0}] for document [{1}], so will use the fallback type [{2}]", objectType, safeFullPath, contentType.Name);
-                                            contentType = this.FallbackType;
-                                        }
+                                        tracker.TrackProgress("Could not find the content type [{0}] for document [{1}], so will use the fallback type [{2}]", objectType, safeFullPath, contentType.Name);
+                                        contentType = this.FallbackType;
                                     }
                                     tracker.TrackProgress("Assigning content type [{0}] (id={1}) to [{2}] (GUID=[{3}] UniqueId=[{4}])...", contentType.Name, contentType.Id, safeFullPath, newVersion.ListItemAllFields["UniqueId"], newVersion.ListItemAllFields["GUID"]);
                                 }
                                 newVersion.ListItemAllFields["ContentTypeId"] = contentType.Id;
-                                ApplyMetadata(newVersion.ListItemAllFields, version);
+                                ApplyMetadata(newVersion.ListItemAllFields, version, contentType);
 
                                 string aclResult = "inherited from its parent's";
                                 if (restoreAcl)

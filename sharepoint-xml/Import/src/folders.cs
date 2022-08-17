@@ -246,7 +246,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
                 FolderInfo parent = ResolveFolder(folder.Path);
                 bool individualAcl = (parent == null || (folder.Acl != parent.Acl));
-                ApplyMetadata(f.ListItemAllFields, xml);
+                ApplyMetadata(f.ListItemAllFields, xml, contentType);
                 string aclResult = "inherited";
                 if (individualAcl)
                 {
