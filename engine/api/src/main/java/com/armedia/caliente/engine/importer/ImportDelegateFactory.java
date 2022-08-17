@@ -168,16 +168,17 @@ public abstract class ImportDelegateFactory< //
 		CmfProperty<VALUE> prop = cmfObject.getProperty(IntermediateProperty.LATEST_PARENT_TREE_IDS);
 		if ((prop == null) || !prop.hasValues()) {
 			prop = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
+			if ((prop == null) || !prop.hasValues()) { return StringUtils.EMPTY; }
 		}
 
-		if ((prop == null) || !prop.hasValues()) { return StringUtils.EMPTY; }
 		CmfAttributeTranslator<VALUE> translator = cmfObject.getTranslator();
 		CmfValue sourcePath = translator.encodeProperty(prop).getValue();
 
 		String targetPath = null;
 
 		prop = cmfObject.getProperty(IntermediateProperty.FIXED_PATH);
-		if ((prop != null) && prop.hasValues()) {
+		final boolean fixed = (prop != null) && prop.hasValues();
+		if (fixed) {
 			targetPath = translator.encodeProperty(prop).getValue().asString();
 			if (!StringUtils.isEmpty(targetPath)) {
 				// The FIXED_PATH property is always absolute, but we need to generate
