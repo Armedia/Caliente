@@ -177,8 +177,7 @@ public abstract class ImportDelegateFactory< //
 		String targetPath = null;
 
 		prop = cmfObject.getProperty(IntermediateProperty.FIXED_PATH);
-		final boolean fixed = (prop != null) && prop.hasValues();
-		if (fixed) {
+		if ((prop != null) && prop.hasValues()) {
 			targetPath = translator.encodeProperty(prop).getValue().asString();
 			if (!StringUtils.isEmpty(targetPath)) {
 				// The FIXED_PATH property is always absolute, but we need to generate
@@ -196,12 +195,10 @@ public abstract class ImportDelegateFactory< //
 			targetPath = Tools.joinEscaped('/', l);
 		}
 
-		// If this isn't a path explicitly set by some other condition, we apply any
-		// leading path truncations that need to be applied
-		if (!fixed) {
-			targetPath = ctx.getTargetPath(targetPath);
-		}
-		return targetPath;
+		// Fixed paths are paths whose individual components have been "fixed" (i.e.
+		// character-corrected, length-corrected, or somesuch), so we still may have
+		// to truncate them accordingly
+		return ctx.getTargetPath(targetPath);
 	}
 
 	protected abstract ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ENGINE> newImportDelegate(
