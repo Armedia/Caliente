@@ -846,7 +846,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         {
                             Log.Error(string.Format("Failed to undo the checkout for document [{0}]", safeFullPath), e2);
                         }
-                        throw e;
+                        throw;
                     }
                 }
             }
