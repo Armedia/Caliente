@@ -159,14 +159,18 @@ namespace Armedia.CMSMF.SharePoint.Import
                             if (session != null)
                             {
                                 Log.Info(string.Format("Creating {0} folders in the target environment, depth {1}", accumulatedCount, thisDepth));
+                                bool ok = false;
                                 try
                                 {
                                     ProcessAccumulatedFolders(session, accumulated);
+                                    ok = true;
                                 }
-                                catch (Exception)
+                                finally
                                 {
-                                    Log.Error("Failed to process the current accumulated folder batch");
-                                    throw;
+                                    if (!ok)
+                                    {
+                                        Log.Error("Failed to process the current accumulated folder batch");
+                                    }
                                 }
                             }
                             accumulated.Clear();
@@ -206,14 +210,18 @@ namespace Armedia.CMSMF.SharePoint.Import
                     if ((session != null) && accumulatedCount > 0)
                     {
                         Log.Info(string.Format("Creating {0} folders in the target environment, depth {1}", accumulated.Count, currentDepth + 1));
+                        bool ok = false;
                         try
                         {
                             ProcessAccumulatedFolders(session, accumulated);
+                            ok = true;
                         }
-                        catch (Exception)
+                        finally
                         {
-                            Log.Error("Failed to process the last accumulated folder batch");
-                            throw;
+                            if (!ok)
+                            {
+                                Log.Error("Failed to process the last accumulated folder batch");
+                            }
                         }
                     }
                 }

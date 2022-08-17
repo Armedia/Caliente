@@ -466,6 +466,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                     string restoreVersionNumber = null;
                     string versionNumber = null;
                     string safeFullPath = null;
+                    bool ok = false;
                     try
                     {
                         while (document.ReadToFollowing("version") && !this.Abort)
@@ -837,28 +838,31 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 tracker.TrackProgress("Automatically published document [{0}]", safeFullPath);
                             }
                         }
+                        ok = true;
                     }
-                    catch (Exception)
+                    finally
                     {
-                        try
+                        if (!ok)
                         {
-                            // Something went wrong, and we're still checked out ... undo the checkout
-                            if (newVersion != null)
+                            try
                             {
-                                newVersion.RefreshLoad();
-                                session.ExecuteQuery();
-                                if (newVersion.CheckOutType != CheckOutType.None)
+                                // Something went wrong, and we're still checked out ... undo the checkout
+                                if (newVersion != null)
                                 {
-                                    newVersion.UndoCheckOut();
+                                    newVersion.RefreshLoad();
                                     session.ExecuteQuery();
+                                    if (newVersion.CheckOutType != CheckOutType.None)
+                                    {
+                                        newVersion.UndoCheckOut();
+                                        session.ExecuteQuery();
+                                    }
                                 }
                             }
+                            catch (Exception e2)
+                            {
+                                Log.Error(string.Format("Failed to undo the checkout for document [{0}]", safeFullPath), e2);
+                            }
                         }
-                        catch (Exception e2)
-                        {
-                            Log.Error(string.Format("Failed to undo the checkout for document [{0}]", safeFullPath), e2);
-                        }
-                        throw;
                     }
                 }
             }
