@@ -584,20 +584,42 @@ namespace Armedia.CMSMF.SharePoint.Import
         // Reference: http://sharepoint.stackexchange.com/questions/130636/cannot-update-created-by-author-field-through-powershell
         protected void ApplyMetadata(ListItem li, XElement element, ContentType contentType)
         {
+            ApplyControlMetadata(li, element);
+            XNamespace ns = element.GetDefaultNamespace();
+            ApplyAttributes(li, element.Element(ns + "attributes"), contentType?.Name ?? (string)element.Element(ns + "type"));
+        }
+
+        protected bool ItemHasAttribute(ListItem li, String name)
+        {
+            return (!string.IsNullOrEmpty(name) && li.FieldValues.ContainsKey(name) && li[name] != null);
+        }
+
+        protected void ApplyControlMetadata(ListItem li, XElement element)
+        {
             XNamespace ns = element.GetDefaultNamespace();
             string path = (string)element.Element(ns + "sourcePath");
             string name = Tools.SanitizeSingleLineString((string)element.Element(ns + "name"));
-            li["Title"] = name;
-            li["caliente_path"] = path;
-            li["caliente_name"] = name;
-            li["caliente_location"] = string.Format("{0}/{1}", path == "/" ? "" : path, name);
-            li["caliente_author_name"] = (string)element.Element(ns + "creator");
-            li["caliente_author"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)li["caliente_author_name"]);
-            li["caliente_editor_name"] = (string)element.Element(ns + "modifier");
-            li["caliente_editor"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)li["caliente_editor_name"]);
-            li["caliente_object_id"] = (string)element.Element(ns + "id");
-            li["caliente_acl_id"] = (string)element.Element(ns + "acl");
-            ApplyAttributes(li, element.Element(ns + "attributes"), contentType?.Name ?? (string)element.Element(ns + "type"));
+
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["Title"] = name;
+            values["caliente_path"] = path;
+            values["caliente_name"] = name;
+            values["caliente_location"] = string.Format("{0}/{1}", path == "/" ? "" : path, name);
+            values["caliente_author_name"] = (string)element.Element(ns + "creator");
+            values["caliente_author"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)values["caliente_author_name"]);
+            values["caliente_editor_name"] = (string)element.Element(ns + "modifier");
+            values["caliente_editor"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)values["caliente_editor_name"]);
+            values["caliente_object_id"] = (string)element.Element(ns + "id");
+            values["caliente_acl_id"] = (string)element.Element(ns + "acl");
+
+            // Now we go through the available attributes to see if these can be set
+            foreach (var kvp in values)
+            {
+                if (ItemHasAttribute(li, kvp.Key))
+                {
+                    li[kvp.Key] = kvp.Value;
+                }
+            }
         }
 
         protected void SetAuthorAndEditor(ListItem li, XElement element)
@@ -605,13 +627,23 @@ namespace Armedia.CMSMF.SharePoint.Import
             XNamespace ns = element.GetDefaultNamespace();
             li["Created"] = Tools.ParseXmlDate(element.Element(ns + "creationDate"));
             li["Modified"] = Tools.ParseXmlDate(element.Element(ns + "modificationDate"));
-            li["Author"] = li["caliente_author"];
-            li["Editor"] = li["caliente_editor"];
+            if (ItemHasAttribute(li, "caliente_author"))
+            {
+                li["Author"] = li["caliente_author"];
+            }
+            if (ItemHasAttribute(li, "caliente_editor"))
+            {
+                li["Editor"] = li["caliente_editor"];
+            }
         }
 
         protected void ApplyPermissions(ListItem li, XElement element)
         {
-            this.PermissionsImporter.ApplyPermissions(li, (string)element.Element(element.GetDefaultNamespace() + "acl"));
+            string aclId = (string)element.Element(element.GetDefaultNamespace() + "acl");
+            if (!string.IsNullOrEmpty(aclId))
+            {
+                this.PermissionsImporter.ApplyPermissions(li, aclId);
+            }
         }
 
         protected void ClearPermissions(ListItem li)
@@ -625,7 +657,11 @@ namespace Armedia.CMSMF.SharePoint.Import
         protected void ApplyOwnerPermission(ListItem li, XElement element)
         {
             XNamespace ns = element.GetDefaultNamespace();
-            this.PermissionsImporter.ApplyOwnerPermission(li, (string)element.Element(ns + "acl"), (string)element.Element(ns + "creator"));
+            string aclId = (string)element.Element(ns + "acl");
+            if (!string.IsNullOrEmpty(aclId))
+            {
+                this.PermissionsImporter.ApplyOwnerPermission(li, aclId, (string)element.Element(ns + "creator"));
+            }
         }
 
         protected ContentType ResolveContentType(string contentType)

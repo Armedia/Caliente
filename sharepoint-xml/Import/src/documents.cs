@@ -739,10 +739,22 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 }
                                 tracker.TrackProgress("The ACL for [{0}] v{1} will be {2}", safeFullPath, versionNumber, aclResult);
 
-                                newVersion.ListItemAllFields["caliente_antecedent_id"] = (string)version.Element(ns + "antecedentId");
-                                newVersion.ListItemAllFields["caliente_history_id"] = location.HistoryId;
-                                newVersion.ListItemAllFields["caliente_version"] = versionNumber;
-                                newVersion.ListItemAllFields["caliente_current"] = XmlConvert.ToBoolean((string)version.Element(ns + "current"));
+                                if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_antecedent_id"))
+                                {
+                                    newVersion.ListItemAllFields["caliente_antecedent_id"] = (string)version.Element(ns + "antecedentId");
+                                }
+                                if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_history_id"))
+                                {
+                                    newVersion.ListItemAllFields["caliente_history_id"] = location.HistoryId;
+                                }
+                                if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_version"))
+                                {
+                                    newVersion.ListItemAllFields["caliente_version"] = versionNumber;
+                                }
+                                if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_current"))
+                                {
+                                    newVersion.ListItemAllFields["caliente_current"] = XmlConvert.ToBoolean((string)version.Element(ns + "current"));
+                                }
 
                                 newVersion.ListItemAllFields.Update();
                                 newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
