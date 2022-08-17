@@ -302,10 +302,12 @@ namespace Armedia.CMSMF.SharePoint.Import
                 if (string.IsNullOrWhiteSpace(this.siteUrl)) errors.Add("Must provide a URL with which to connect to Sharepoint (siteUrl)");
 
                 // TODO: This may not need to be provided if we're using app authentication
+                /*
                 if (string.IsNullOrWhiteSpace(this.user) && string.IsNullOrWhiteSpace(this.applicationId))
                 {
                     errors.Add("Must provide either a user name or an application ID with which to connect to Sharepoint (user)");
                 }
+                */
 
                 if (!string.IsNullOrWhiteSpace(this.ldapUrl))
                 {
@@ -419,7 +421,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             log.Info("Initializing Application");
 
             if (options.indexOnly)
-            { 
+            {
                 ImportContext importContext = new ImportContext(null, options.content, options.metadata, options.caches);
                 FormatResolver formatResolver = new FormatResolver(importContext);
                 new DocumentImporter(new FolderImporter(importContext), formatResolver, options.locationMode, options.fixExtensions).StoreLocationIndex();

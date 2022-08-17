@@ -71,12 +71,12 @@ namespace Armedia.CMSMF.SharePoint.Common
             }
         }
 
-        public SharePointSession(SharePointSessionInfo info)
+        public SharePointSession(OfficeDevPnP.Core.AuthenticationManager authManager, SharePointSessionInfo info)
         {
-
+            // If we're using an application ID, we use that and forget everything else...
             if (!string.IsNullOrWhiteSpace(info.ApplicationId))
             {
-                this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetAzureADAppOnlyAuthenticatedContext(info.Url, info.ApplicationId, info.Domain, info.CertificateKey, info.CertificatePass);
+                this.ClientContext = authManager.GetAzureADAppOnlyAuthenticatedContext(info.Url, info.ApplicationId, info.Domain, info.CertificateKey, info.CertificatePass);
                 // this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetAppOnlyAuthenticatedContext(info.Url, info.ApplicationId, info.CertificatePass);
 
                 // this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetSharePointOnlineAuthenticatedContextTenant(info.Url, info.UserName + "@" + info.Domain, info.Password);
@@ -84,15 +84,16 @@ namespace Armedia.CMSMF.SharePoint.Common
                 // this.ClientContext.Credentials = new SharePointOnlineCredentials(info.UserName + "@" + info.Domain, info.Password);
             }
             else
+            // If we were given written auth parameters, we use those. This will fail if MFA is needed
+            if (!string.IsNullOrWhiteSpace(info.UserName))
             {
-                // this.ClientContext = new ClientContext(info.Url);
-                // this.ClientContext.Credentials = new NetworkCredential(info.UserName, info.Password, info.Domain);
-
+         	    this.ClientContext = authManager.GetSharePointOnlineAuthenticatedContextTenant(info.Url, info.UserName, info.Password);
+            }
+            else
+            // We're not even being given auth details, so we ask ...
+            {
                 // This one pops up the authentication window where one can log in with MFA
-                this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetWebLoginClientContext(info.Url);
-
-                // Will this support app passwords?
-                // this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetSharePointOnlineAuthenticatedContextTenant(info.Url, info.UserName, info.Password);
+                this.ClientContext = authManager.GetWebLoginClientContext(info.Url);
             }
             this.DocumentLibrary = this.ClientContext.Web.Lists.GetByTitle(info.Library);
             this.ClientContext.Load(this.DocumentLibrary, r => r.ForceCheckout, r => r.EnableVersioning, r => r.EnableMinorVersions, r => r.Title, r => r.ContentTypesEnabled, r => r.ContentTypes);
@@ -219,16 +220,18 @@ namespace Armedia.CMSMF.SharePoint.Common
     {
         private class SharePointSessionGenerator : PoolableObjectFactory<SharePointSession>
         {
+            private OfficeDevPnP.Core.AuthenticationManager AuthManager;
             private SharePointSessionInfo Info;
 
             public SharePointSessionGenerator(SharePointSessionInfo info)
             {
                 this.Info = info;
+                this.AuthManager = new OfficeDevPnP.Core.AuthenticationManager();
             }
 
             SharePointSession PoolableObjectFactory<SharePointSession>.Create()
             {
-                return new SharePointSession(this.Info);
+                return new SharePointSession(this.AuthManager, this.Info);
             }
 
             void PoolableObjectFactory<SharePointSession>.Destroy(SharePointSession t)
@@ -253,7 +256,14 @@ namespace Armedia.CMSMF.SharePoint.Common
 
             public void Dispose()
             {
-                this.Info.Dispose();
+                try
+                {
+                    this.AuthManager.Dispose();
+                }
+                finally
+                {
+                    this.Info.Dispose();
+                }
             }
 
             ~SharePointSessionGenerator()
