@@ -86,6 +86,12 @@ namespace Armedia.CMSMF.SharePoint.Import
                 [OptionAttribute("internalGroup", Required = false, HelpText = "The group to map internal documentum groups to")]
                 public string internalGroup { get; set; }
 
+                [OptionAttribute("fallbackDocumentType", Required = false, HelpText = "The content type to use when a document's content type can't be resolved")]
+                public string fallbackDocumentType { get; set; }
+
+                [OptionAttribute("fallbackFolderType", Required = false, HelpText = "The content type to use when a folder's content type can't be resolved")]
+                public string fallbackFolderType { get; set; }
+
                 [OptionAttribute("threads", Required = false, HelpText = "The number of threads to use in parallel import (min 1, max 32)")]
                 public int? threads { get; set; }
 
@@ -233,6 +239,8 @@ namespace Armedia.CMSMF.SharePoint.Import
             public string internalUser { get; private set; }
             public string fallbackGroup { get; private set; }
             public string internalGroup { get; private set; }
+            public string fallbackDocumentType { get; private set; }
+            public string fallbackFolderType { get; private set; }
             public int threads { get; private set; }
             public int retries { get; private set; }
             public int reuseCount { get; private set; }
@@ -424,7 +432,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             {
                 ImportContext importContext = new ImportContext(null, options.content, options.metadata, options.caches);
                 FormatResolver formatResolver = new FormatResolver(importContext);
-                new DocumentImporter(new FolderImporter(importContext), formatResolver, options.locationMode, options.fixExtensions).StoreLocationIndex();
+                new DocumentImporter(new FolderImporter(importContext, options.fallbackFolderType), formatResolver, options.locationMode, options.fixExtensions, options.fallbackDocumentType).StoreLocationIndex();
                 return 0;
             }
 
@@ -524,8 +532,8 @@ namespace Armedia.CMSMF.SharePoint.Import
                     }
 
                     PermissionsImporter permissionsImporter = new PermissionsImporter(userGroupImporter);
-                    FolderImporter folderImporter = new FolderImporter(contentTypeImporter, permissionsImporter);
-                    DocumentImporter documentImporter = new DocumentImporter(folderImporter, formatResolver, options.locationMode, options.fixExtensions);
+                    FolderImporter folderImporter = new FolderImporter(contentTypeImporter, permissionsImporter, options.fallbackFolderType);
+                    DocumentImporter documentImporter = new DocumentImporter(folderImporter, formatResolver, options.locationMode, options.fixExtensions, options.fallbackDocumentType);
                     bool aborted = false;
 
                     Console.CancelKeyPress += delegate (object sender, ConsoleCancelEventArgs e)

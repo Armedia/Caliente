@@ -36,6 +36,7 @@ namespace Armedia.CMSMF.SharePoint.Import
         public readonly FolderImporter FolderImporter;
         public readonly FormatResolver FormatResolver;
         private readonly Dictionary<string, DocumentLocation> Filenames;
+        private readonly ContentType FallbackType;
         public enum SimulationMode
         {
             NONE,
@@ -280,10 +281,19 @@ namespace Armedia.CMSMF.SharePoint.Import
             return count;
         }
 
-        public DocumentImporter(FolderImporter folderImporter, FormatResolver formatResolver, LocationMode locationMode, bool fixExtensions) : base("documents", folderImporter)
+        public DocumentImporter(FolderImporter folderImporter, FormatResolver formatResolver, LocationMode locationMode, bool fixExtensions, string fallbackType) : base("documents", folderImporter)
         {
             this.FolderImporter = folderImporter;
             this.FormatResolver = formatResolver;
+            if (!string.IsNullOrWhiteSpace(fallbackType))
+            {
+                this.FallbackType = ResolveContentType(fallbackType);
+                if (this.FallbackType == null) throw new Exception(string.Format("Fallback document type [{0}] could not be resolved", fallbackType));
+            }
+            else
+            {
+                this.FallbackType = null;
+            }
             this.Filenames = LoadNameMappings(folderImporter);
 
             XmlReader documentsXml = this.ImportContext.LoadIndex("documents");
@@ -689,7 +699,15 @@ namespace Armedia.CMSMF.SharePoint.Import
                                     contentType = ResolveContentType(objectType);
                                     if (contentType == null)
                                     {
-                                        throw new Exception(string.Format("Could not find the content type [{0}] for document [{0}]", objectType, safeFullPath));
+                                        if (this.FallbackType == null)
+                                        {
+                                            throw new Exception(string.Format("Could not find the content type [{0}] for document [{1}]", objectType, safeFullPath));
+                                        }
+                                        else
+                                        {
+                                            tracker.TrackProgress("Could not find the content type [{0}] for document [{1}], so will use the fallback type [{2}]", objectType, safeFullPath, contentType.Name);
+                                            contentType = this.FallbackType;
+                                        }
                                     }
                                     tracker.TrackProgress("Assigning content type [{0}] (id={1}) to [{2}] (GUID=[{3}] UniqueId=[{4}])...", contentType.Name, contentType.Id, safeFullPath, newVersion.ListItemAllFields["UniqueId"], newVersion.ListItemAllFields["GUID"]);
                                 }

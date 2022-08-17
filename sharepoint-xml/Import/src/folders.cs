@@ -102,18 +102,25 @@ namespace Armedia.CMSMF.SharePoint.Import
         }
 
         private readonly Dictionary<string, FolderInfo> Folders;
+        private readonly ContentType FallbackType;
 
-        public FolderImporter(ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter) : this(contentTypeImporter?.ImportContext ?? permissionsImporter.ImportContext, contentTypeImporter, permissionsImporter)
-        {
-        }
-        public FolderImporter(ImportContext importContext) : this(importContext, null, null)
+        public FolderImporter(ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter, string fallbackType) : this(contentTypeImporter?.ImportContext ?? permissionsImporter.ImportContext, contentTypeImporter, permissionsImporter, fallbackType)
         {
         }
 
-        private FolderImporter(ImportContext importContext, ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter) : base("folders", importContext, contentTypeImporter, permissionsImporter)
+        public FolderImporter(ImportContext importContext, string fallbackType) : this(importContext, null, null, fallbackType)
+        {
+        }
+
+        private FolderImporter(ImportContext importContext, ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter, string fallbackType) : base("folders", importContext, contentTypeImporter, permissionsImporter)
         {
             this.Folders = new Dictionary<string, FolderInfo>();
             XmlReader foldersXml = this.ImportContext.LoadIndex("folders");
+            if (!string.IsNullOrWhiteSpace(fallbackType))
+            {
+                this.FallbackType = ResolveContentType(fallbackType);
+                if (this.FallbackType == null) throw new Exception(string.Format("Fallback folder type [{0}] could not be resolved", fallbackType));
+            }
             if (foldersXml == null) return;
             using (foldersXml)
             {
@@ -234,6 +241,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                 Folder f = clientContext.Web.GetFolderByServerRelativeUrl(folder.Url);
                 tracker.TrackProgress("Gathering metadata and permissions for folder at [{0}]", folder.SafeFullPath);
                 ContentType contentType = ResolveContentType(folder.Type);
+                if (contentType == null) contentType = this.FallbackType;
                 if (contentType != null) f.ListItemAllFields["ContentTypeId"] = contentType.Id;
 
                 FolderInfo parent = ResolveFolder(folder.Path);
