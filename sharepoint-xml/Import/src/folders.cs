@@ -112,8 +112,10 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         private FolderImporter(ImportContext importContext, ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter) : base("folders", importContext, contentTypeImporter, permissionsImporter)
         {
-            Dictionary<string, FolderInfo> folderDictionary = new Dictionary<string, FolderInfo>();
-            using (XmlReader folders = this.ImportContext.LoadIndex("folders"))
+            this.Folders = new Dictionary<string, FolderInfo>();
+            XmlReader foldersXml = this.ImportContext.LoadIndex("folders");
+            if (foldersXml == null) return;
+            using (foldersXml)
             {
                 int currentDepth = 0;
                 Dictionary<string, List<FolderInfo>> accumulated = new Dictionary<string, List<FolderInfo>>();
@@ -122,24 +124,24 @@ namespace Armedia.CMSMF.SharePoint.Import
                 using (ObjectPool<SharePointSession>.Ref sessionRef = this.ImportContext.SessionFactory?.GetSession())
                 {
                     SharePointSession session = sessionRef?.Target;
-                    outer: while (folders.ReadToFollowing("folder"))
+                    outer: while (foldersXml.ReadToFollowing("folder"))
                     {
                         string location = null;
                         string path = null;
-                        using (XmlReader folder = folders.ReadSubtree())
+                        using (XmlReader folderXml = foldersXml.ReadSubtree())
                         {
                             // We're only interested in the <location> and <path> elements, so if they're not there
                             // we simply move on to the next folder
-                            if (!folder.ReadToFollowing("path"))
+                            if (!folderXml.ReadToFollowing("path"))
                             {
                                 goto outer;
                             }
-                            path = "/" + folder.ReadElementContentAsString();
-                            if (!folder.ReadToFollowing("location"))
+                            path = "/" + folderXml.ReadElementContentAsString();
+                            if (!folderXml.ReadToFollowing("location"))
                             {
                                 goto outer;
                             }
-                            location = folder.ReadElementContentAsString();
+                            location = folderXml.ReadElementContentAsString();
                         }
 
                         int thisDepth = (path == "/" ? 0 : thisDepth = Tools.CountChars(path, '/'));
@@ -192,7 +194,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         */
                         l.Add(f);
                         accumulatedCount++;
-                        folderDictionary[f.FullPath] = f;
+                        this.Folders[f.FullPath] = f;
                     }
                     if ((session != null) && accumulatedCount > 0)
                     {
@@ -209,8 +211,6 @@ namespace Armedia.CMSMF.SharePoint.Import
                     }
                 }
             }
-
-            this.Folders = folderDictionary;
         }
 
         public FolderInfo ResolveFolder(string path)

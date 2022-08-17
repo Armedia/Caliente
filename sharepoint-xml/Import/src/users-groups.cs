@@ -350,117 +350,121 @@ namespace Armedia.CMSMF.SharePoint.Import
             if ((internalName != null) && !usersByLogin.ContainsKey(internalName)) internalName = null;
 
             // Step 3: Scan through the XML file generating the mappings for the users being referenced
-            using (XmlReader usersXml = this.ImportContext.LoadIndex("users"))
+            XmlReader usersXml = this.ImportContext.LoadIndex("users");
+            if (usersXml != null)
             {
-                Log.Info(string.Format("Loaded {0} LDAP users, resolving the users in XML...", usersByGUID.Count));
-                while (usersXml.ReadToFollowing("user"))
+                using (usersXml)
                 {
-                    using (XmlReader userXml = usersXml.ReadSubtree())
+                    Log.Info(string.Format("Loaded {0} LDAP users, resolving the users in XML...", usersByGUID.Count));
+                    while (usersXml.ReadToFollowing("user"))
                     {
-                        XElement user = XElement.Load(userXml);
-                        XNamespace ns = user.GetDefaultNamespace();
-                        string name = (string)user.Element(ns + "name");
-                        string source = (string)user.Element(ns + "source");
-                        string loginName = (string)user.Element(ns + "loginName");
-                        string osName = (string)user.Element(ns + "osName");
-
-                        IEnumerable<XElement> attributes = user.Element(ns + "attributes").Elements(ns + "attribute");
-                        ImportedPrincipalInfo info = null;
-                        switch (source)
+                        using (XmlReader userXml = usersXml.ReadSubtree())
                         {
-                            case "LDAP":
-                                string ldapGuid = ((string)attributes.FirstOrDefault(a => a.Attribute("name").Value == "caliente:user_global_unique_id")).ToLower().Trim();
-                                // ldapGuid will be of the form DIRECTORY:hexGuid, so we have to parse the directory name.  If it's the same directory
-                                // as our domain uses, then we can search by guid directly.  Otherwise, we have to search by samaccountname
-                                string[] data = ldapGuid.Split(':');
-                                if (data[0] == ldapSyncAlias && usersByGUID.ContainsKey(data[1]))
-                                {
-                                    info = usersByGUID[data[1]];
-                                }
+                            XElement user = XElement.Load(userXml);
+                            XNamespace ns = user.GetDefaultNamespace();
+                            string name = (string)user.Element(ns + "name");
+                            string source = (string)user.Element(ns + "source");
+                            string loginName = (string)user.Element(ns + "loginName");
+                            string osName = (string)user.Element(ns + "osName");
 
-                                if (info == null)
-                                {
-                                    // Either not the same domain, or couldn't find the GUID in question, so...
+                            IEnumerable<XElement> attributes = user.Element(ns + "attributes").Elements(ns + "attribute");
+                            ImportedPrincipalInfo info = null;
+                            switch (source)
+                            {
+                                case "LDAP":
+                                    string ldapGuid = ((string)attributes.FirstOrDefault(a => a.Attribute("name").Value == "caliente:user_global_unique_id")).ToLower().Trim();
+                                    // ldapGuid will be of the form DIRECTORY:hexGuid, so we have to parse the directory name.  If it's the same directory
+                                    // as our domain uses, then we can search by guid directly.  Otherwise, we have to search by samaccountname
+                                    string[] data = ldapGuid.Split(':');
+                                    if (data[0] == ldapSyncAlias && usersByGUID.ContainsKey(data[1]))
+                                    {
+                                        info = usersByGUID[data[1]];
+                                    }
+
+                                    if (info == null)
+                                    {
+                                        // Either not the same domain, or couldn't find the GUID in question, so...
+                                        if (usersByLogin.ContainsKey(loginName))
+                                        {
+                                            info = usersByLogin[loginName];
+                                        }
+                                        else
+                                        if (usersByLogin.ContainsKey(osName))
+                                        {
+                                            info = usersByLogin[osName];
+                                        }
+                                        else
+                                        if (fallbackName != null)
+                                        {
+                                            info = usersByLogin[fallbackName];
+                                        }
+                                    }
+                                    break;
+                                case "dm_krb":
+                                    // We do things differently here...
+                                    if (usersByKerberosId.ContainsKey(osName))
+                                    {
+                                        info = usersByKerberosId[osName];
+                                    }
+                                    else
                                     if (usersByLogin.ContainsKey(loginName))
                                     {
                                         info = usersByLogin[loginName];
-                                    }
-                                    else
-                                    if (usersByLogin.ContainsKey(osName))
-                                    {
-                                        info = usersByLogin[osName];
                                     }
                                     else
                                     if (fallbackName != null)
                                     {
                                         info = usersByLogin[fallbackName];
                                     }
-                                }
-                                break;
-                            case "dm_krb":
-                                // We do things differently here...
-                                if (usersByKerberosId.ContainsKey(osName))
-                                {
-                                    info = usersByKerberosId[osName];
-                                }
-                                else
-                                if (usersByLogin.ContainsKey(loginName))
-                                {
-                                    info = usersByLogin[loginName];
-                                }
-                                else
-                                if (fallbackName != null)
-                                {
-                                    info = usersByLogin[fallbackName];
-                                }
-                                break;
-                            default:
-                                if (name.StartsWith("dm_"))
-                                {
-                                    if (internalName != null)
+                                    break;
+                                default:
+                                    if (name.StartsWith("dm_"))
                                     {
-                                        info = usersByLogin[internalName];
-                                    }
-                                }
-                                else
-                                {
-                                    if (usersByLogin.ContainsKey(loginName))
-                                    {
-                                        info = usersByLogin[loginName];
-                                    }
-                                    else
-                                    if (usersByLogin.ContainsKey(osName))
-                                    {
-                                        info = usersByLogin[osName];
-                                    }
-                                    else
-                                    {
-                                        string key = (name.StartsWith("${") ? internalName : fallbackName);
-                                        if (key != null)
+                                        if (internalName != null)
                                         {
-                                            info = usersByLogin[key];
+                                            info = usersByLogin[internalName];
                                         }
                                     }
-                                }
-                                break;
-                        }
+                                    else
+                                    {
+                                        if (usersByLogin.ContainsKey(loginName))
+                                        {
+                                            info = usersByLogin[loginName];
+                                        }
+                                        else
+                                        if (usersByLogin.ContainsKey(osName))
+                                        {
+                                            info = usersByLogin[osName];
+                                        }
+                                        else
+                                        {
+                                            string key = (name.StartsWith("${") ? internalName : fallbackName);
+                                            if (key != null)
+                                            {
+                                                info = usersByLogin[key];
+                                            }
+                                        }
+                                    }
+                                    break;
+                            }
 
-                        if (info != null)
-                        {
-                            users[name] = info;
-                            if (name.StartsWith("${"))
+                            if (info != null)
                             {
-                                users[loginName] = info;
+                                users[name] = info;
+                                if (name.StartsWith("${"))
+                                {
+                                    users[loginName] = info;
+                                }
                             }
                         }
                     }
-                }
-                // Make sure the fallbacks are in place
-                if (fallbackName != null && !users.ContainsKey(fallbackName)) users[fallbackName] = usersByLogin[fallbackName];
-                if (internalName != null && !users.ContainsKey(internalName)) users[internalName] = usersByLogin[internalName];
+                    // Make sure the fallbacks are in place
+                    if (fallbackName != null && !users.ContainsKey(fallbackName)) users[fallbackName] = usersByLogin[fallbackName];
+                    if (internalName != null && !users.ContainsKey(internalName)) users[internalName] = usersByLogin[internalName];
 
-                // Add the DM_WORLD mapping
-                users[DM_WORLD] = new ImportedPrincipalInfo(EVERYONE_NAME, null, EVERYONE_ID);
+                    // Add the DM_WORLD mapping
+                    users[DM_WORLD] = new ImportedPrincipalInfo(EVERYONE_NAME, null, EVERYONE_ID);
+                }
             }
             return users;
         }
@@ -546,65 +550,69 @@ namespace Armedia.CMSMF.SharePoint.Import
             if ((internalName != null) && !groupsByLogin.ContainsKey(internalName)) internalName = null;
 
             // Step 3: Scan through the XML file generating the mappings for the groups being referenced
-            using (XmlReader groupsXml = this.ImportContext.LoadIndex("groups"))
+            XmlReader groupsXml = this.ImportContext.LoadIndex("groups");
+            if (groupsXml != null)
             {
-                Log.Info(string.Format("Loaded {0} LDAP groups, resolving the groups in XML...", groupsByGUID.Count));
-                while (groupsXml.ReadToFollowing("group"))
+                using (groupsXml)
                 {
-                    using (XmlReader groupxml = groupsXml.ReadSubtree())
+                    Log.Info(string.Format("Loaded {0} LDAP groups, resolving the groups in XML...", groupsByGUID.Count));
+                    while (groupsXml.ReadToFollowing("group"))
                     {
-                        XElement group = XElement.Load(groupxml);
-                        XNamespace ns = group.GetDefaultNamespace();
-                        string name = (string)group.Element(ns + "name");
-                        string source = (string)group.Element(ns + "source");
-                        string type = (string)group.Element(ns + "type");
-
-                        IEnumerable<XElement> attributes = group.Element(ns + "attributes").Elements(ns + "attribute");
-                        ImportedPrincipalInfo info = null;
-                        switch (source)
+                        using (XmlReader groupXml = groupsXml.ReadSubtree())
                         {
-                            case "LDAP":
-                                string ldapGuid = ((string)attributes.FirstOrDefault(a => a.Attribute("name").Value == "caliente:group_global_unique_id")).ToLower().Trim();
-                                // ldapGuid will be of the form DIRECTORY:hexGuid, so we have to parse the directory name.  If it's the same directory
-                                // as our domain uses, then we can search by guid directly.  Otherwise, we have to search by samaccountname
-                                string[] data = ldapGuid.Split(':');
-                                if (data[0] == ldapSyncAlias && groupsByGUID.ContainsKey(data[1]))
-                                {
-                                    info = groupsByGUID[data[1]];
-                                }
+                            XElement group = XElement.Load(groupXml);
+                            XNamespace ns = group.GetDefaultNamespace();
+                            string name = (string)group.Element(ns + "name");
+                            string source = (string)group.Element(ns + "source");
+                            string type = (string)group.Element(ns + "type");
 
-                                if (info == null)
-                                {
-                                    // Either not the same domain, or couldn't find the GUID in question, so...
-                                    if (groupsByLogin.ContainsKey(name))
+                            IEnumerable<XElement> attributes = group.Element(ns + "attributes").Elements(ns + "attribute");
+                            ImportedPrincipalInfo info = null;
+                            switch (source)
+                            {
+                                case "LDAP":
+                                    string ldapGuid = ((string)attributes.FirstOrDefault(a => a.Attribute("name").Value == "caliente:group_global_unique_id")).ToLower().Trim();
+                                    // ldapGuid will be of the form DIRECTORY:hexGuid, so we have to parse the directory name.  If it's the same directory
+                                    // as our domain uses, then we can search by guid directly.  Otherwise, we have to search by samaccountname
+                                    string[] data = ldapGuid.Split(':');
+                                    if (data[0] == ldapSyncAlias && groupsByGUID.ContainsKey(data[1]))
                                     {
-                                        info = groupsByLogin[name];
+                                        info = groupsByGUID[data[1]];
                                     }
-                                    else
-                                    if (fallbackName != null)
-                                    {
-                                        info = groupsByLogin[fallbackName];
-                                    }
-                                }
-                                break;
-                            default:
-                                string key = (name.StartsWith("dm_") || name.StartsWith("${") ? internalName : fallbackName);
-                                if (key != null)
-                                {
-                                    info = groupsByLogin[key];
-                                }
-                                break;
-                        }
 
-                        if (info != null)
-                        {
-                            groups[name] = info;
+                                    if (info == null)
+                                    {
+                                        // Either not the same domain, or couldn't find the GUID in question, so...
+                                        if (groupsByLogin.ContainsKey(name))
+                                        {
+                                            info = groupsByLogin[name];
+                                        }
+                                        else
+                                        if (fallbackName != null)
+                                        {
+                                            info = groupsByLogin[fallbackName];
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    string key = (name.StartsWith("dm_") || name.StartsWith("${") ? internalName : fallbackName);
+                                    if (key != null)
+                                    {
+                                        info = groupsByLogin[key];
+                                    }
+                                    break;
+                            }
+
+                            if (info != null)
+                            {
+                                groups[name] = info;
+                            }
                         }
                     }
+                    // Make sure the fallbacks are in place
+                    if (fallbackName != null && !groups.ContainsKey(fallbackName)) groups[fallbackName] = groupsByLogin[fallbackName];
+                    if (internalName != null && !groups.ContainsKey(internalName)) groups[internalName] = groupsByLogin[internalName];
                 }
-                // Make sure the fallbacks are in place
-                if (fallbackName != null && !groups.ContainsKey(fallbackName)) groups[fallbackName] = groupsByLogin[fallbackName];
-                if (internalName != null && !groups.ContainsKey(internalName)) groups[internalName] = groupsByLogin[internalName];
             }
             return groups;
         }

@@ -3,7 +3,6 @@ using log4net;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks.Dataflow;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -212,7 +211,7 @@ namespace Armedia.CMSMF.SharePoint.Import
         protected Dictionary<string, DocumentLocation> LoadNameMappings(FolderImporter folderImporter)
         {
             Dictionary<string, DocumentLocation> filenames = new Dictionary<string, DocumentLocation>();
-            XmlReader documents = this.ImportContext.LoadOptionalIndex(LOCATION_INDEX_NAME);
+            XmlReader documents = this.ImportContext.LoadIndex(LOCATION_INDEX_NAME);
             if (documents != null)
             {
                 using (documents)
@@ -285,14 +284,17 @@ namespace Armedia.CMSMF.SharePoint.Import
         {
             this.FolderImporter = folderImporter;
             this.FormatResolver = formatResolver;
-            Dictionary<string, DocumentLocation> finalNames = LoadNameMappings(folderImporter);
+            this.Filenames = LoadNameMappings(folderImporter);
+
+            XmlReader documentsXml = this.ImportContext.LoadIndex("documents");
+            if (documentsXml == null) return;
 
             // We need to do two passes...
 
             // First pass: identify the incoming stuff, and remove them from their current parent folders
-            if (finalNames.Count > 0)
+            if (this.Filenames.Count > 0)
             {
-                using (XmlReader documentsXml = this.ImportContext.LoadIndex("documents"))
+                using (documentsXml)
                 {
                     while (documentsXml.ReadToFollowing("document"))
                     {
@@ -311,8 +313,8 @@ namespace Armedia.CMSMF.SharePoint.Import
                             long total = documentXml.ReadElementContentAsLong();
 
                             // If this is a new object, we simply skip it since we don't need to remove it
-                            if (!finalNames.ContainsKey(historyId)) continue;
-                            DocumentLocation current = finalNames[historyId];
+                            if (!this.Filenames.ContainsKey(historyId)) continue;
+                            DocumentLocation current = this.Filenames[historyId];
 
                             // We have an object, so we have to identify the name and path that it will carry
                             // and compare that the old one, to determine if it needs to be moved or renamed
@@ -346,12 +348,13 @@ namespace Armedia.CMSMF.SharePoint.Import
                         }
                     }
                 }
+                documentsXml = this.ImportContext.LoadIndex("documents");
             }
 
             // Second pass: at this stage, the parent folders have been cleansed of files that are about
             // to be re-ingested with differing names, so any new filename collisions will be calculated correctly,
             // and files that are being re-ingested but didn't change location will be preserved in the same place
-            using (XmlReader documentsXml = this.ImportContext.LoadIndex("documents"))
+            using (documentsXml)
             {
                 while (documentsXml.ReadToFollowing("document"))
                 {
@@ -379,7 +382,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         if (count < 1) continue;
 
                         DocumentLocation current = null;
-                        if (finalNames.ContainsKey(historyId)) current = finalNames[historyId];
+                        if (this.Filenames.ContainsKey(historyId)) current = this.Filenames[historyId];
 
                         // If we have fixing to do, we do it
                         if (fixExtensions)
@@ -411,11 +414,10 @@ namespace Armedia.CMSMF.SharePoint.Import
                             // The name remains the same, and the file wasn't removed, so no need to add it to the parent
                             safeName = current.Name;
                         }
-                        finalNames[historyId] = new DocumentLocation(historyId, total, version, parent, name, safeName, current);
+                        this.Filenames[historyId] = new DocumentLocation(historyId, total, version, parent, name, safeName, current);
                     }
                 }
             }
-            this.Filenames = finalNames;
         }
 
         public void StoreLocationIndex()
@@ -911,40 +913,42 @@ namespace Armedia.CMSMF.SharePoint.Import
         protected ICollection<DocumentInfo> IdentifyPending(ICollection<DocumentInfo> failed)
         {
             ICollection<DocumentInfo> pending = new List<DocumentInfo>();
-            using (XmlReader documents = this.ImportContext.LoadIndex("documents"))
+            XmlReader documentsXml = this.ImportContext.LoadIndex("documents");
+            if (documentsXml == null) return pending;
+            using (documentsXml)
             {
                 HashSet<string> histories = new HashSet<string>();
-                while (documents.ReadToFollowing("document") && !this.Abort)
+                while (documentsXml.ReadToFollowing("document") && !this.Abort)
                 {
                     string path = null;
                     string name = null;
                     string location = null;
                     string historyId = null;
-                    using (XmlReader document = documents.ReadSubtree())
+                    using (XmlReader documentXml = documentsXml.ReadSubtree())
                     {
-                        if (!document.ReadToFollowing("path"))
+                        if (!documentXml.ReadToFollowing("path"))
                         {
                             continue;
                         }
-                        path = document.ReadElementContentAsString();
+                        path = documentXml.ReadElementContentAsString();
 
-                        if (!document.ReadToFollowing("name"))
+                        if (!documentXml.ReadToFollowing("name"))
                         {
                             continue;
                         }
-                        name = document.ReadElementContentAsString();
+                        name = documentXml.ReadElementContentAsString();
 
-                        if (!document.ReadToFollowing("location"))
+                        if (!documentXml.ReadToFollowing("location"))
                         {
                             continue;
                         }
-                        location = document.ReadElementContentAsString();
+                        location = documentXml.ReadElementContentAsString();
 
-                        if (!document.ReadToFollowing("historyId"))
+                        if (!documentXml.ReadToFollowing("historyId"))
                         {
                             continue;
                         }
-                        historyId = document.ReadElementContentAsString();
+                        historyId = documentXml.ReadElementContentAsString();
                     }
 
                     if (!histories.Add(historyId))

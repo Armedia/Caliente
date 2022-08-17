@@ -39,11 +39,13 @@ namespace Armedia.CMSMF.SharePoint.Import
         {
             this.Log.Info("Loading the format information");
             this.Formats = new Dictionary<string, Format>();
-            using (XmlReader xml = this.ImportContext.LoadIndex("formats"))
+            XmlReader formatsXml = this.ImportContext.LoadIndex("formats");
+            if (formatsXml == null) return;
+            using (formatsXml)
             {
-                while (xml.ReadToFollowing("format"))
+                while (formatsXml.ReadToFollowing("format"))
                 {
-                    XElement formatXml = XElement.Load(xml.ReadSubtree());
+                    XElement formatXml = XElement.Load(formatsXml.ReadSubtree());
                     XNamespace ns = formatXml.GetDefaultNamespace();
 
                     string name = (string)formatXml.Element(ns + "name");

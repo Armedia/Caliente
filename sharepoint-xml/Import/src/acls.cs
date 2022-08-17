@@ -166,19 +166,20 @@ namespace Armedia.CMSMF.SharePoint.Import
         public PermissionsImporter(UserGroupImporter userGroupImporter) : base("permissions", userGroupImporter.ImportContext)
         {
             this.UserGroupImporter = userGroupImporter;
-            Dictionary<string, AccessControlList> acls = new Dictionary<string, AccessControlList>();
-            using (XmlReader aclsXml = this.ImportContext.LoadIndex("acls"))
+            this.Acls = new Dictionary<string, AccessControlList>();
+            XmlReader aclsXml = this.ImportContext.LoadIndex("acls");
+            if (aclsXml == null) return;
+            using (aclsXml)
             {
                 while (aclsXml.ReadToFollowing("acl"))
                 {
-                    using (XmlReader aclXml = aclsXml.ReadSubtree())
+                    using (XmlReader acl = aclsXml.ReadSubtree())
                     {
-                        AccessControlList a = new AccessControlList(XElement.Load(aclXml), userGroupImporter);
-                        acls[a.Id] = a;
+                        AccessControlList a = new AccessControlList(XElement.Load(acl), userGroupImporter);
+                        this.Acls[a.Id] = a;
                     }
                 }
             }
-            this.Acls = acls;
         }
 
         public void ApplyPermissions(ListItem item, string id)

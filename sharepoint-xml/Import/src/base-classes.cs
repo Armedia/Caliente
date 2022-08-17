@@ -185,14 +185,9 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         public XmlReader LoadIndex(string name)
         {
-            return XmlReader.Create(string.Format("{0}/index.{1}.xml", this.MetadataLocation, name), this.XmlSettings);
-        }
-
-        public XmlReader LoadOptionalIndex(string name)
-        {
             try
             {
-                return LoadIndex(name);
+                return XmlReader.Create(string.Format("{0}/index.{1}.xml", this.MetadataLocation, name), this.XmlSettings);
             }
             catch (FileNotFoundException)
             {
