@@ -75,9 +75,9 @@ namespace Armedia.CMSMF.SharePoint.Common
             if (!string.IsNullOrWhiteSpace(info.ApplicationId))
             {
                 this.ClientContext = authManager.GetAzureADAppOnlyAuthenticatedContext(info.Url, info.ApplicationId, info.Domain, info.CertificateKey, info.CertificatePass);
-                // this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetAppOnlyAuthenticatedContext(info.Url, info.ApplicationId, info.CertificatePass);
+                // this.ClientContext = authManager.GetAppOnlyAuthenticatedContext(info.Url, info.ApplicationId, info.CertificatePass);
 
-                // this.ClientContext = new OfficeDevPnP.Core.AuthenticationManager().GetSharePointOnlineAuthenticatedContextTenant(info.Url, info.UserName + "@" + info.Domain, info.Password);
+                // this.ClientContext = authManager.GetSharePointOnlineAuthenticatedContextTenant(info.Url, info.UserName + "@" + info.Domain, info.Password);
 
                 // this.ClientContext.Credentials = new SharePointOnlineCredentials(info.UserName + "@" + info.Domain, info.Password);
             }
