@@ -104,17 +104,21 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			this.cmfObject.getHistoryId());
 		CmfProperty<IDfValue> path = this.cmfObject.getProperty(IntermediateProperty.PATH);
 		if (path == null) { return true; }
+		boolean foundNonRootParent = false;
 		for (Iterator<IDfValue> it = path.iterator(); it.hasNext();) {
 			IDfValue v = it.next();
-			final String tgt = ctx.getTargetPath(v.asString());
-			if (Objects.equals("", tgt)) {
-				it.remove();
-			}
-			if (Objects.equals("/", tgt)) {
-				it.remove();
+			try {
+				final String tgt = ctx.getTargetPath(v.asString());
+				if ((StringUtils.isNotEmpty(tgt) && !"/".equals(tgt))) {
+					foundNonRootParent = true;
+					break;
+				}
+			} catch (ImportException e) {
+				// Ignore this, since this is b/c the target path call failed,
+				// we don't bubble the problem upwards.
 			}
 		}
-		if (!path.hasValues()) {
+		if (!foundNonRootParent) {
 			this.log.warn("Can't import {}  without a parent FOLDER or CABINET - skipping",
 				this.cmfObject.getDescription());
 			return true;
