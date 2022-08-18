@@ -35,6 +35,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.apache.groovy.parser.antlr4.util.StringUtils;
+
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmMappingUtils;
@@ -46,7 +48,6 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.tools.dfc.DfcUtils;
-import com.armedia.commons.utilities.FileNameTools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfGroup;
@@ -253,16 +254,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	protected IDfFolder newObject(DctmImportContext ctx) throws DfException, ImportException {
 		if (isReference()) { return newReference(ctx); }
 
-		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH);
-		CmfAttribute<IDfValue> a = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME);
-		String path = "";
-		final String name = a.getValue().asString();
-		if ((p != null) && p.hasValues()) {
-			path = p.getValue().asString();
-		}
-		path = ctx.getTargetPath(String.format("%s/%s", path, name));
-
-		if ("/".equals(FileNameTools.dirname(path, '/'))) {
+		String parentPath = this.factory.getFixedPath(this.cmfObject, ctx);
+		if (StringUtils.isEmpty(parentPath) || "/".equals(parentPath)) {
 			// TODO: Try to identify if the object's type is a cabinet subtype. If it is,
 			// then we don't need to modify it
 			String typeName = "dm_cabinet";
