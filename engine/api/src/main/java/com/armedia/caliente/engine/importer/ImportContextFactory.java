@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import org.apache.groovy.parser.antlr4.util.StringUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.TransferContextFactory;
@@ -103,12 +102,6 @@ public abstract class ImportContextFactory< //
 	protected static final String getTargetPath(String sourcePath, int pathTrunc, List<String> rootPath)
 		throws ImportException {
 		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a path to transform"); }
-		if (StringUtils.isEmpty(sourcePath)) {
-			sourcePath = "/";
-		}
-		if (!sourcePath.startsWith("/")) {
-			throw new IllegalArgumentException(String.format("The path [%s] must be absolute", sourcePath));
-		}
 		List<String> l = FileNameTools.tokenize(sourcePath, '/');
 		if (l.size() < pathTrunc) {
 			throw new ImportException(String.format(
