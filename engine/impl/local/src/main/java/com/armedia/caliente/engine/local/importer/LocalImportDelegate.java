@@ -50,7 +50,6 @@ import java.util.Objects;
 import org.apache.commons.lang3.SystemUtils;
 
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
-import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
@@ -60,7 +59,6 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.tools.FilenameEncoder;
@@ -110,14 +108,7 @@ public abstract class LocalImportDelegate extends
 
 		File tgt = ctx.getSession().getPath().toFile();
 
-		CmfProperty<CmfValue> pathProp = this.cmfObject.getProperty(IntermediateProperty.PATH);
-		String p = "/";
-		if ((pathProp != null) && pathProp.hasValues()) {
-			p = ctx.getTargetPath(pathProp.getValue().toString());
-		} else {
-			p = ctx.getTargetPath(p);
-		}
-
+		String p = this.factory.getFixedPath(this.cmfObject, ctx);
 		for (String s : FileNameTools.tokenize(p, '/')) {
 			tgt = new File(tgt, FilenameEncoder.safeEncode(s, windowsMode));
 		}
