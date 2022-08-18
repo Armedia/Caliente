@@ -186,58 +186,51 @@ public abstract class ImportDelegateFactory< //
 		if ((prop != null) && prop.hasValues()) {
 			for (CmfValue v : translator.encodeProperty(prop)) {
 				String targetPath = v.asString();
-				if (!StringUtils.isEmpty(targetPath)) {
-					// The FIXED_PATH property is always absolute, but we need to generate
-					// a relative path here, so we do just that: remove any leading slashes
-					targetPath = targetPath.replaceAll("^/+", "");
-				}
+				// Ensure we have only one leading slash ... these paths need to be
+				// absolute
+				targetPath = targetPath.replaceAll("^(/+)?", "/");
+
+				// Ensure the path is fixed ...
+				List<String> l = Tools.splitEscaped('/', targetPath);
+				l.replaceAll(pathFix);
+				targetPath = Tools.joinEscaped('/', l);
+
 				try {
-					paths.add(ctx.getTargetPath(targetPath));
+					targetPath = ctx.getTargetPath(targetPath);
 				} catch (ImportException e) {
 					// Ignore this, since we're simply overflowing the truncation
 					continue;
 				}
+				paths.add(targetPath);
 			}
+
+			// If we resolved paths from the FIXED_PATHS attribute, we stick with
+			// those
 			if (!paths.isEmpty()) { return paths; }
 		}
 
-		if (paths.isEmpty()) {
-			prop = cmfObject.getProperty(IntermediateProperty.LATEST_PARENT_TREE_IDS);
+		// If we got here, either the FIXED_PATHS was empty, or none of its
+		// paths were viable (due to truncation), so we try these other possibilities
+		prop = cmfObject.getProperty(IntermediateProperty.LATEST_PARENT_TREE_IDS);
+		if ((prop == null) || !prop.hasValues()) {
+			prop = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
 			if ((prop == null) || !prop.hasValues()) {
-				prop = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
-				if ((prop == null) || !prop.hasValues()) {
-					paths.add(StringUtils.EMPTY);
-					return paths;
-				}
+				// Shortcut - nothing to see, so don't continue
+				return paths;
 			}
-
-			for (CmfValue p : translator.encodeProperty(prop)) {
-				paths.add(resolveTreeIds(ctx, p.asString(), pathFix));
-			}
-		} else if (pathFix != null) {
-			// Split, and fix each path
-			paths.replaceAll((p) -> {
-				List<String> l = Tools.splitEscaped('/', p);
-				l.replaceAll(pathFix);
-				return Tools.joinEscaped('/', l);
-			});
 		}
 
-		// Fixed paths are paths whose individual components have been "fixed" (i.e.
-		// character-corrected, length-corrected, or somesuch), so we still may have
-		// to truncate them accordingly
-		Collection<String> ret = new ArrayList<>(paths.size());
-		for (String s : paths) {
+		// If either of the above are viable, then we resolve the paths, and
+		// apply the truncation, filtering out those who fail it...
+		for (CmfValue p : translator.encodeProperty(prop)) {
+			String path = resolveTreeIds(ctx, p.asString(), pathFix);
 			try {
-				ret.add(ctx.getTargetPath(s));
+				paths.add(ctx.getTargetPath(path));
 			} catch (ImportException e) {
 				// Ignore this, since we're simply overflowing the truncation
 			}
 		}
-		if (ret.isEmpty()) {
-			ret.add(StringUtils.EMPTY);
-		}
-		return ret;
+		return paths;
 	}
 
 	protected abstract ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ENGINE> newImportDelegate(
