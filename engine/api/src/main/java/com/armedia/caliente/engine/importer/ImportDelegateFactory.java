@@ -172,33 +172,44 @@ public abstract class ImportDelegateFactory< //
 		}
 
 		CmfAttributeTranslator<VALUE> translator = cmfObject.getTranslator();
-		CmfValue sourcePath = translator.encodeProperty(prop).getValue();
+		CmfProperty<CmfValue> encodedProp = translator.encodeProperty(prop);
+		for (CmfValue sourcePath : encodedProp) {
+			String targetPath = null;
 
-		String targetPath = null;
+			prop = cmfObject.getProperty(IntermediateProperty.FIXED_PATH);
+			if ((prop != null) && prop.hasValues()) {
+				targetPath = translator.encodeProperty(prop).getValue().asString();
+				if (!StringUtils.isEmpty(targetPath)) {
+					// The FIXED_PATH property is always absolute, but we need to generate
+					// a relative path here, so we do just that: remove any leading slashes
+					targetPath = targetPath.replaceAll("^/+", "");
+				}
+			}
 
-		prop = cmfObject.getProperty(IntermediateProperty.FIXED_PATH);
-		if ((prop != null) && prop.hasValues()) {
-			targetPath = translator.encodeProperty(prop).getValue().asString();
-			if (!StringUtils.isEmpty(targetPath)) {
-				// The FIXED_PATH property is always absolute, but we need to generate
-				// a relative path here, so we do just that: remove any leading slashes
-				targetPath = targetPath.replaceAll("^/+", "");
+			if (targetPath == null) {
+				// We don't need to fix path components on this branch b/c
+				// we're resolving against folders that have already been
+				// ingested, and thus the names have already been fixed
+				targetPath = resolveTreeIds(ctx, sourcePath.asString(), pathFix);
+			} else if (pathFix != null) {
+				// Split, and fix each path
+				List<String> l = Tools.splitEscaped('/', targetPath);
+				l.replaceAll(pathFix);
+				targetPath = Tools.joinEscaped('/', l);
+			}
+
+			// Fixed paths are paths whose individual components have been "fixed" (i.e.
+			// character-corrected, length-corrected, or somesuch), so we still may have
+			// to truncate them accordingly
+			try {
+				return ctx.getTargetPath(targetPath);
+			} catch (ImportException e) {
+				// This path is not viable b/c it's shallower than we're
+				// required to be due to path truncation, so we just skip it
+				continue;
 			}
 		}
-
-		if (targetPath == null) {
-			targetPath = resolveTreeIds(ctx, sourcePath.asString(), pathFix);
-		} else if (pathFix != null) {
-			// Split, and fix each path
-			List<String> l = Tools.splitEscaped('/', targetPath);
-			l.replaceAll(pathFix);
-			targetPath = Tools.joinEscaped('/', l);
-		}
-
-		// Fixed paths are paths whose individual components have been "fixed" (i.e.
-		// character-corrected, length-corrected, or somesuch), so we still may have
-		// to truncate them accordingly
-		return ctx.getTargetPath(targetPath);
+		return StringUtils.EMPTY;
 	}
 
 	protected abstract ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ENGINE> newImportDelegate(
