@@ -1015,6 +1015,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			this.log.debug("Found {} target paths for {}", targetPaths.size(), this.cmfObject.getDescription());
 		}
 		for (IDfValue p : getTargetPaths()) {
+			// TODO: PROBLEM - this path may have been fixed in some way, so the
+			// only way to do this is by scanning through the parent folder IDs, and
+			// resolving each of their individual paths in this manner ...
 			final String targetPath = ctx.getTargetPath(p.asString());
 			final String dql = String.format(dqlBase, DfcUtils.quoteString(objectName),
 				DfcUtils.quoteString(targetPath));
@@ -1130,6 +1133,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			CmfProperty<IDfValue> paths = this.cmfObject.getProperty(IntermediateProperty.PATH);
 			if ((pos == 0) && (parents.getValueCount() == 1) && (paths.getValueCount() == 1)) {
 				// This is a "fixup" from the path repairs, so we look up by path
+				// TODO: PROBLEM - this parent path may have been fixed in some way, so the
+				// only way to do this is by scanning through the parent folder IDs, and
+				// resolving each of their individual paths in this manner ...
 				String path = context.getTargetPath(paths.getValue().asString());
 				IDfFolder f = session.getFolderByPath(path);
 				if (f != null) { return f.getObjectId(); }
