@@ -191,9 +191,11 @@ public abstract class ImportDelegateFactory< //
 				targetPath = targetPath.replaceAll("^(/+)?", "/");
 
 				// Ensure the path is fixed ...
-				List<String> l = Tools.splitEscaped('/', targetPath);
-				l.replaceAll(pathFix);
-				targetPath = Tools.joinEscaped('/', l);
+				if (pathFix != null) {
+					List<String> l = Tools.splitEscaped('/', targetPath);
+					l.replaceAll(pathFix);
+					targetPath = Tools.joinEscaped('/', l);
+				}
 
 				try {
 					targetPath = ctx.getTargetPath(targetPath);
