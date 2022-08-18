@@ -85,6 +85,8 @@ public class XmlAggregateFoldersImportDelegate extends XmlAggregatedImportDelega
 		String path = getFixedPath(ctx);
 		if (StringUtils.isEmpty(path)) {
 			path = StringUtils.EMPTY;
+		} else {
+			path = path.replaceAll("^/+", "");
 		}
 		f.setSourcePath(path);
 		f.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());
