@@ -27,6 +27,7 @@
 package com.armedia.caliente.engine.importer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -165,51 +166,78 @@ public abstract class ImportDelegateFactory< //
 
 	public final String getFixedPath(CmfObject<VALUE> cmfObject, CONTEXT ctx, UnaryOperator<String> pathFix)
 		throws ImportException {
-		CmfProperty<VALUE> prop = cmfObject.getProperty(IntermediateProperty.LATEST_PARENT_TREE_IDS);
-		if ((prop == null) || !prop.hasValues()) {
-			prop = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
-			if ((prop == null) || !prop.hasValues()) { return StringUtils.EMPTY; }
-		}
+		return getFixedPaths(cmfObject, ctx, pathFix) //
+			.stream() //
+			.findFirst() //
+			.orElse(StringUtils.EMPTY) //
+		;
+	}
 
-		CmfAttributeTranslator<VALUE> translator = cmfObject.getTranslator();
-		CmfProperty<CmfValue> encodedProp = translator.encodeProperty(prop);
-		for (CmfValue sourcePath : encodedProp) {
-			String targetPath = null;
+	public final Collection<String> getFixedPaths(CmfObject<VALUE> cmfObject, CONTEXT ctx) throws ImportException {
+		return getFixedPaths(cmfObject, ctx, null);
+	}
 
-			prop = cmfObject.getProperty(IntermediateProperty.FIXED_PATH);
-			if ((prop != null) && prop.hasValues()) {
-				targetPath = translator.encodeProperty(prop).getValue().asString();
+	public final Collection<String> getFixedPaths(CmfObject<VALUE> cmfObject, CONTEXT ctx,
+		UnaryOperator<String> pathFix) throws ImportException {
+		final CmfAttributeTranslator<VALUE> translator = cmfObject.getTranslator();
+		List<String> paths = new ArrayList<>();
+
+		CmfProperty<VALUE> prop = cmfObject.getProperty(IntermediateProperty.FIXED_PATH);
+		if ((prop != null) && prop.hasValues()) {
+			for (CmfValue v : translator.encodeProperty(prop)) {
+				String targetPath = v.asString();
 				if (!StringUtils.isEmpty(targetPath)) {
 					// The FIXED_PATH property is always absolute, but we need to generate
 					// a relative path here, so we do just that: remove any leading slashes
 					targetPath = targetPath.replaceAll("^/+", "");
 				}
+				try {
+					paths.add(ctx.getTargetPath(targetPath));
+				} catch (ImportException e) {
+					// Ignore this, since we're simply overflowing the truncation
+					continue;
+				}
+			}
+			if (!paths.isEmpty()) { return paths; }
+		}
+
+		if (paths.isEmpty()) {
+			prop = cmfObject.getProperty(IntermediateProperty.LATEST_PARENT_TREE_IDS);
+			if ((prop == null) || !prop.hasValues()) {
+				prop = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
+				if ((prop == null) || !prop.hasValues()) {
+					paths.add(StringUtils.EMPTY);
+					return paths;
+				}
 			}
 
-			if (targetPath == null) {
-				// We don't need to fix path components on this branch b/c
-				// we're resolving against folders that have already been
-				// ingested, and thus the names have already been fixed
-				targetPath = resolveTreeIds(ctx, sourcePath.asString(), pathFix);
-			} else if (pathFix != null) {
-				// Split, and fix each path
-				List<String> l = Tools.splitEscaped('/', targetPath);
+			for (CmfValue p : translator.encodeProperty(prop)) {
+				paths.add(resolveTreeIds(ctx, p.asString(), pathFix));
+			}
+		} else if (pathFix != null) {
+			// Split, and fix each path
+			paths.replaceAll((p) -> {
+				List<String> l = Tools.splitEscaped('/', p);
 				l.replaceAll(pathFix);
-				targetPath = Tools.joinEscaped('/', l);
-			}
+				return Tools.joinEscaped('/', l);
+			});
+		}
 
-			// Fixed paths are paths whose individual components have been "fixed" (i.e.
-			// character-corrected, length-corrected, or somesuch), so we still may have
-			// to truncate them accordingly
+		// Fixed paths are paths whose individual components have been "fixed" (i.e.
+		// character-corrected, length-corrected, or somesuch), so we still may have
+		// to truncate them accordingly
+		Collection<String> ret = new ArrayList<>(paths.size());
+		for (String s : paths) {
 			try {
-				return ctx.getTargetPath(targetPath);
+				ret.add(ctx.getTargetPath(s));
 			} catch (ImportException e) {
-				// This path is not viable b/c it's shallower than we're
-				// required to be due to path truncation, so we just skip it
-				continue;
+				// Ignore this, since we're simply overflowing the truncation
 			}
 		}
-		return StringUtils.EMPTY;
+		if (ret.isEmpty()) {
+			ret.add(StringUtils.EMPTY);
+		}
+		return ret;
 	}
 
 	protected abstract ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ENGINE> newImportDelegate(
