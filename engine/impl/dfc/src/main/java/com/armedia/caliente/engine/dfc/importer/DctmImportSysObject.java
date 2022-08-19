@@ -1164,6 +1164,17 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				}
 				newParents.add(parentId.toString());
 			}
+
+			if (newParents.isEmpty()) {
+				// No parents were identified with the old IDs ... let's see if we can find them via
+				// their possibly new paths
+				for (String s : getFixedPaths(context)) {
+					IDfFolder f = context.getSession().getFolderByPath(s);
+					if (f != null) {
+						newParents.add(f.getObjectId().getId());
+					}
+				}
+			}
 		}
 		return newParents;
 	}
