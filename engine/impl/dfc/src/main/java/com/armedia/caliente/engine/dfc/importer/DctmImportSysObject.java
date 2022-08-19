@@ -491,39 +491,21 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected final boolean applyAcl(T sysObj, String aclDomain, String aclName, DctmImportContext ctx)
 		throws DfException, ImportException {
-		final String dql = String.format("select r_object_id from dm_acl where owner_name = %s and object_name = %s",
-			DfcUtils.quoteString(aclDomain), DfcUtils.quoteString(aclName));
-		IDfSession session = ctx.getSession();
-		final IDfId aclId;
-		try (DfcQuery query = new DfcQuery(session, dql, DfcQuery.Type.DF_READ_QUERY)) {
-			if (!query.hasNext()) {
-				// no such ACL
-				String msg = String.format(
-					"Failed to find the ACL [domain=%s, name=%s] for %s [%s](%s) - the target ACL couldn't be found",
-					aclDomain, aclName, this.cmfObject.getType().name(), this.cmfObject.getLabel(),
-					this.cmfObject.getId());
-				if (ctx.isSupported(CmfObject.Archetype.ACL)) { throw new ImportException(msg); }
-				this.log.warn(msg);
-				return false;
-			}
-			aclId = query.next().getId(DctmAttributes.R_OBJECT_ID);
+		IDfACL acl = ctx.getSession().getACL(aclDomain, aclName);
+		if (acl == null) {
+			// no such ACL
+			String msg = String.format(
+				"Failed to find the ACL [domain=%s, name=%s] for %s [%s](%s) - the target ACL couldn't be found",
+				aclDomain, aclName, this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
+			if (ctx.isSupported(CmfObject.Archetype.ACL)) { throw new ImportException(msg); }
+			this.log.warn(msg);
+			return false;
 		}
 
-		ctx.printf("Applying ACL [%s::%s](%s) to %s [%s](%s)", aclDomain, aclName, aclId.getId(),
+		ctx.printf("Applying ACL [%s::%s](%s) to %s [%s](%s)", aclDomain, aclName, acl.getObjectId(),
 			this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
 
-		sysObj.setACLDomain(aclDomain);
-		sysObj.setACLName(aclName);
-
-		/*
-		IDfACL acl = null;
-		
-		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-		
-		acl = IDfACL.class.cast(session.getObject(aclId));
-		sysObj.setACL(acl);
-		*/
 		return true;
 	}
 
