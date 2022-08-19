@@ -106,7 +106,14 @@ public abstract class SqlImportDelegate extends
 
 		File tgt = ctx.getSession().getFile();
 
-		String p = this.factory.getFixedPath(this.cmfObject, ctx);
+		String p = getFixedPath(ctx);
+
+		// Apply any truncations ...
+		p = ctx.getTargetPath(p);
+
+		// If the truncations overflowed, we puke out
+		if (p == null) { return null; }
+
 		for (String s : FileNameTools.tokenize(p, '/')) {
 			tgt = new File(tgt, FilenameEncoder.safeEncode(s, windowsMode));
 		}

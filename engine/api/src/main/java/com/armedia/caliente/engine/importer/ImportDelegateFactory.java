@@ -207,12 +207,6 @@ public abstract class ImportDelegateFactory< //
 					targetPath = Tools.joinEscaped('/', l);
 				}
 
-				try {
-					targetPath = ctx.getTargetPath(targetPath);
-				} catch (ImportException e) {
-					// Ignore this, since we're simply overflowing the truncation
-					continue;
-				}
 				paths.add(targetPath);
 			}
 
@@ -235,12 +229,7 @@ public abstract class ImportDelegateFactory< //
 		// If either of the above are viable, then we resolve the paths, and
 		// apply the truncation, filtering out those who fail it...
 		for (CmfValue p : translator.encodeProperty(prop)) {
-			String path = resolveTreeIds(ctx, p.asString(), pathFix);
-			try {
-				paths.add(ctx.getTargetPath(path));
-			} catch (ImportException e) {
-				// Ignore this, since we're simply overflowing the truncation
-			}
+			paths.add(resolveTreeIds(ctx, p.asString(), pathFix));
 		}
 		return paths;
 	}

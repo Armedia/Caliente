@@ -174,7 +174,13 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		final Session session = ctx.getSession();
 
 		// CMIS doesn't allow multi-filing, so we can only search for one path.
-		String path = this.factory.getFixedPath(this.cmfObject, ctx);
+		String path = getFixedPath(ctx);
+
+		// Apply any path truncations
+		path = ctx.getTargetPath(path);
+
+		// If we've truncated past our limit, we puke out
+		if (path == null) { return null; }
 
 		// Check to see if we have to return the root folder
 		if (StringUtils.isEmpty(path) || "/".equals(path)) {
@@ -313,6 +319,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			props.remove(PropertyIds.PARENT_ID);
 
 			List<Folder> parents = getParentFolders(ctx);
+			if ((parents == null) || parents.isEmpty()) { return Collections.singleton(ImportOutcome.SKIPPED); }
+
 			// Find the parent folder...
 			final Folder parent = parents.get(0);
 

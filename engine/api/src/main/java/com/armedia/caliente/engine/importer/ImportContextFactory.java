@@ -99,15 +99,10 @@ public abstract class ImportContextFactory< //
 
 	protected abstract FOLDER createFolder(SESSION session, FOLDER parent, String name) throws Exception;
 
-	protected static final String getTargetPath(String sourcePath, int pathTrunc, List<String> rootPath)
-		throws ImportException {
+	protected static final String getTargetPath(String sourcePath, int pathTrunc, List<String> rootPath) {
 		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a path to transform"); }
 		List<String> l = FileNameTools.tokenize(sourcePath, '/');
-		if (l.size() < pathTrunc) {
-			throw new ImportException(String.format(
-				"The path truncation setting (%d) is higher than the number of path components in [%s] (%d) - can't continue",
-				pathTrunc, sourcePath, l.size()));
-		}
+		if (l.size() < pathTrunc) { return null; }
 		l = l.subList(pathTrunc, l.size());
 		List<String> finalPath = new ArrayList<>(rootPath.size() + l.size());
 		finalPath.addAll(rootPath);
@@ -115,7 +110,7 @@ public abstract class ImportContextFactory< //
 		return FileNameTools.reconstitute(finalPath, true, false, '/');
 	}
 
-	public final String getTargetPath(String sourcePath) throws ImportException {
+	public final String getTargetPath(String sourcePath) {
 		return ImportContextFactory.getTargetPath(sourcePath, this.pathTrunc, this.rootPath);
 	}
 

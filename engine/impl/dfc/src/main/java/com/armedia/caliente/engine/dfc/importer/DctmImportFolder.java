@@ -30,7 +30,10 @@
 
 package com.armedia.caliente.engine.dfc.importer;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -254,7 +257,10 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	protected IDfFolder newObject(DctmImportContext ctx) throws DfException, ImportException {
 		if (isReference()) { return newReference(ctx); }
 
-		String parentPath = this.factory.getFixedPath(this.cmfObject, ctx);
+		String parentPath = getFixedPath(ctx);
+		// We don't need to check this for null, since this has already been checked in skipImport()
+		parentPath = ctx.getTargetPath(parentPath);
+
 		if (StringUtils.isEmpty(parentPath) || "/".equals(parentPath)) {
 			// TODO: Try to identify if the object's type is a cabinet subtype. If it is,
 			// then we don't need to modify it
@@ -268,5 +274,13 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			return newObject;
 		}
 		return super.newObject(ctx);
+	}
+
+	@Override
+	protected boolean skipImport(DctmImportContext ctx) throws DfException, ImportException {
+		List<String> paths = new ArrayList<>(getFixedPaths(ctx));
+		paths.replaceAll(ctx::getTargetPath);
+		paths.removeIf(Objects::isNull);
+		return paths.isEmpty();
 	}
 }

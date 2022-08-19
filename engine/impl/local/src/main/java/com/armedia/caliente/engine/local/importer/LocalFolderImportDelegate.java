@@ -57,6 +57,12 @@ public class LocalFolderImportDelegate extends LocalImportDelegate {
 				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
 
+		if (targetFile == null) {
+			// Must be skipped due to path truncations
+			Collections.singleton(
+				new ImportOutcome(ImportResult.SKIPPED, this.cmfObject.getId(), this.cmfObject.getDescription()));
+		}
+
 		if (targetFile.isDirectory()) {
 			return Collections.singleton(
 				new ImportOutcome(ImportResult.DUPLICATE, getNewId(targetFile), targetFile.getAbsolutePath()));
