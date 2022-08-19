@@ -66,6 +66,7 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.tools.dfc.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfcAclTools;
 import com.armedia.caliente.tools.dfc.DfcQuery;
 import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.Tools;
@@ -491,6 +492,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected final boolean applyAcl(T sysObj, String aclDomain, String aclName, DctmImportContext ctx)
 		throws DfException, ImportException {
+
 		IDfACL acl = ctx.getSession().getACL(aclDomain, aclName);
 		if (acl == null) {
 			// no such ACL
@@ -1257,16 +1259,23 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	protected void setOwnerGroupACLData(T sysObject, DctmImportContext ctx) throws ImportException, DfException {
 		// Set the owner and group
 		final IDfSession session = ctx.getSession();
-		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME);
-		if (att != null) {
-			final String actualUser = DctmMappingUtils.resolveMappableUser(session, att.getValue().asString());
+		CmfAttribute<IDfValue> nameAtt = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME);
+		CmfAttribute<IDfValue> permitAtt = this.cmfObject.getAttribute(DctmAttributes.OWNER_PERMIT);
+		if ((nameAtt != null) && (permitAtt != null)) {
+			final String actualUser = DctmMappingUtils.resolveMappableUser(session, nameAtt.getValue().asString());
 			try {
 				IDfUser u = DctmImportUser.locateExistingUser(ctx, actualUser);
 				if (u != null) {
+					final int actualPermit = permitAtt.getValue().asInteger();
+					if (!DfcAclTools.isValidPermit(actualPermit)) {
+						throw new ImportException(String.format("Invalid owner permit found for %s: %d",
+							this.cmfObject.getDescription(), actualPermit));
+					}
 					sysObject.setOwnerName(u.getUserName());
+					sysObject.setOwnerPermit(actualPermit);
 				} else {
 					String msg = String.format(
-						"Failed to set the owner for %s [%s](%s) to user [%s] - the user wasn't found - probably didn't need to be copied over",
+						"Failed to set the owner for %s to user [%s] - the user wasn't found - probably didn't need to be copied over",
 						this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
 						actualUser);
 					if (ctx.isSupported(CmfObject.Archetype.USER)) { throw new ImportException(msg); }
@@ -1281,12 +1290,19 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			}
 		}
 
-		att = this.cmfObject.getAttribute(DctmAttributes.GROUP_NAME);
-		if (att != null) {
-			String group = att.getValue().asString();
+		nameAtt = this.cmfObject.getAttribute(DctmAttributes.GROUP_NAME);
+		permitAtt = this.cmfObject.getAttribute(DctmAttributes.GROUP_PERMIT);
+		if ((nameAtt != null) && (permitAtt != null)) {
+			String group = nameAtt.getValue().asString();
 			IDfGroup g = session.getGroup(group);
 			if (g != null) {
+				final int actualPermit = permitAtt.getValue().asInteger();
+				if (!DfcAclTools.isValidPermit(actualPermit)) {
+					throw new ImportException(String.format("Invalid group permit found for %s: %d",
+						this.cmfObject.getDescription(), actualPermit));
+				}
 				sysObject.setGroupName(g.getGroupName());
+				sysObject.setGroupPermit(actualPermit);
 			} else {
 				String msg = String.format(
 					"Failed to set the group for %s [%s](%s) to group [%s] - the group wasn't found - probably didn't need to be copied over",
