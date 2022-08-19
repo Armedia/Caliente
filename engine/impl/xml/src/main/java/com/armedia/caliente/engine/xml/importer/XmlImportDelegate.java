@@ -31,8 +31,12 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.UUID;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.importer.ImportDelegate;
+import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.xml.common.XmlRoot;
 import com.armedia.caliente.engine.xml.common.XmlSessionWrapper;
 import com.armedia.caliente.engine.xml.importer.jaxb.AttributeT;
@@ -45,6 +49,8 @@ import com.armedia.caliente.store.CmfValue;
 
 public abstract class XmlImportDelegate extends
 	ImportDelegate<File, XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportDelegateFactory, XmlImportEngine> {
+
+	private static final String ROOT_MARKER = "<--:" + UUID.randomUUID() + ":-->";
 
 	protected static final ZoneOffset REFERENCE_TZ = ZoneOffset.UTC;
 	protected static final TimeZone TZUTC = TimeZone.getTimeZone(XmlImportDelegate.REFERENCE_TZ);
@@ -119,5 +125,29 @@ public abstract class XmlImportDelegate extends
 
 	protected XmlImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject) throws Exception {
 		super(factory, File.class, storedObject);
+	}
+
+	protected final String determineObjectPath(XmlImportContext ctx) throws ImportException {
+		String path = getFixedPath(ctx, XmlImportDelegate.ROOT_MARKER);
+		if (XmlImportDelegate.ROOT_MARKER.equals(path)) {
+			"".hashCode();
+			path = null;
+		}
+
+		// TODO: How will we verify if this object should be skipped because trimming the paths
+		// would result in an overflow? We have the problem that the path we've been given
+		// has already been truncated ... so if this is to blow up, it needs to be within
+		// getFixedPath() ...
+
+		if (StringUtils.isEmpty(path)) {
+			path = StringUtils.EMPTY;
+		} else {
+			// Ensure it's a relative path
+			path = path.replaceAll("^/+", "");
+		}
+
+		// TODO: If the object should not be ingested b/c its path would overflow the truncation
+		// count, we must return null here
+		return path;
 	}
 }

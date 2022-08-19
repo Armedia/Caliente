@@ -63,6 +63,7 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 		if (!ctx.getContentStore().isSupportsFileAccess()) { return null; }
 
 		FolderT f = this.delegate.createItem(translator, ctx);
+		if (f == null) { return null; }
 
 		String location = this.factory.renderXmlPath(ctx, this.cmfObject);
 		location = String.format("%s.folder.xml", location);

@@ -161,15 +161,25 @@ public abstract class ImportDelegateFactory< //
 	}
 
 	public final String getFixedPath(CmfObject<VALUE> cmfObject, CONTEXT ctx) throws ImportException {
-		return getFixedPath(cmfObject, ctx, null);
+		return getFixedPath(cmfObject, ctx, null, StringUtils.EMPTY);
+	}
+
+	public final String getFixedPath(CmfObject<VALUE> cmfObject, CONTEXT ctx, String valueIfNoneFound)
+		throws ImportException {
+		return getFixedPath(cmfObject, ctx, null, valueIfNoneFound);
 	}
 
 	public final String getFixedPath(CmfObject<VALUE> cmfObject, CONTEXT ctx, UnaryOperator<String> pathFix)
 		throws ImportException {
+		return getFixedPath(cmfObject, ctx, pathFix, StringUtils.EMPTY);
+	}
+
+	public final String getFixedPath(CmfObject<VALUE> cmfObject, CONTEXT ctx, UnaryOperator<String> pathFix,
+		String valueIfNoneFound) throws ImportException {
 		return getFixedPaths(cmfObject, ctx, pathFix) //
 			.stream() //
 			.findFirst() //
-			.orElse(StringUtils.EMPTY) //
+			.orElse(valueIfNoneFound) //
 		;
 	}
 

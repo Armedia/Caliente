@@ -32,8 +32,6 @@ import java.util.GregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
@@ -54,6 +52,9 @@ public class XmlAggregateFoldersImportDelegate extends XmlAggregatedImportDelega
 	@Override
 	protected FolderT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException {
+		final String path = determineObjectPath(ctx);
+		if (path == null) { return null; }
+
 		FolderT f = new FolderT();
 		DatatypeFactory dtf;
 		try {
@@ -82,12 +83,6 @@ public class XmlAggregateFoldersImportDelegate extends XmlAggregatedImportDelega
 
 		f.setName(getAttributeValue(IntermediateAttribute.NAME).asString());
 		f.setParentId(getAttributeValue(IntermediateAttribute.PARENT_ID).asString());
-		String path = getFixedPath(ctx);
-		if (StringUtils.isEmpty(path)) {
-			path = StringUtils.EMPTY;
-		} else {
-			path = path.replaceAll("^/+", "");
-		}
 		f.setSourcePath(path);
 		f.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());
 
