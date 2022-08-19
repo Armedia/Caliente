@@ -27,12 +27,10 @@
 package com.armedia.caliente.engine.importer;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.UnaryOperator;
 
 import org.apache.commons.lang3.StringUtils;
@@ -167,79 +165,40 @@ public abstract class ImportDelegateFactory< //
 
 	public final String getFixedPath(CmfObject<VALUE> cmfObject, CONTEXT ctx, UnaryOperator<String> pathFix)
 		throws ImportException {
-		return getFixedPaths(cmfObject, ctx, pathFix) //
-			.stream() //
-			.findFirst() //
-			.orElse(null) //
-		;
-	}
-
-	public final Collection<String> getFixedPaths(CmfObject<VALUE> cmfObject, CONTEXT ctx) throws ImportException {
-		return getFixedPaths(cmfObject, ctx, null);
-	}
-
-	public final Collection<String> getFixedPaths(CmfObject<VALUE> cmfObject, CONTEXT ctx,
-		UnaryOperator<String> pathFix) throws ImportException {
-		List<String> fixedPaths = computeFixedPaths(cmfObject, ctx, pathFix);
-		if (!fixedPaths.isEmpty()) {
-			// Apply truncations and remove any null values
-			fixedPaths.replaceAll(ctx::getTargetPath);
-			fixedPaths.removeIf(Objects::isNull);
-		}
-
-		if (!fixedPaths.isEmpty() && (pathFix != null)) {
-			// Apply any additional fixes ...
-			fixedPaths.replaceAll(pathFix);
-		}
-
-		// Return whatever's left ...
-		return fixedPaths;
-	}
-
-	private List<String> computeFixedPaths(CmfObject<VALUE> cmfObject, CONTEXT ctx, UnaryOperator<String> pathFix)
-		throws ImportException {
-		final CmfAttributeTranslator<VALUE> translator = cmfObject.getTranslator();
-		List<String> paths = new ArrayList<>();
-
-		CmfProperty<VALUE> prop = cmfObject.getProperty(IntermediateProperty.FIXED_PATH);
-		if ((prop != null) && prop.hasValues()) {
-			for (CmfValue v : translator.encodeProperty(prop)) {
-				String targetPath = v.asString();
-				// Ensure we have only one leading slash ... these paths need to be
-				// absolute
-				targetPath = targetPath.replaceAll("^(/+)?", "/");
-
-				// Ensure the path is fixed ...
-				if (pathFix != null) {
-					List<String> l = Tools.splitEscaped('/', targetPath);
-					l.replaceAll(pathFix);
-					targetPath = Tools.joinEscaped('/', l);
-				}
-
-				paths.add(targetPath);
-			}
-
-			// If we resolved paths from the FIXED_PATHS attribute, we stick with
-			// those
-			if (!paths.isEmpty()) { return paths; }
-		}
-
-		// If we got here, then FIXED_PATHS was empty, so we try these other possibilities
-		prop = cmfObject.getProperty(IntermediateProperty.LATEST_PARENT_TREE_IDS);
+		CmfProperty<VALUE> prop = cmfObject.getProperty(IntermediateProperty.LATEST_PARENT_TREE_IDS);
 		if ((prop == null) || !prop.hasValues()) {
 			prop = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
-			if ((prop == null) || !prop.hasValues()) {
-				// Shortcut - nothing to see, so don't continue
-				return paths;
+			if ((prop == null) || !prop.hasValues()) { return StringUtils.EMPTY; }
+		}
+
+		CmfAttributeTranslator<VALUE> translator = cmfObject.getTranslator();
+		CmfValue sourcePath = translator.encodeProperty(prop).getValue();
+
+		String targetPath = null;
+
+		prop = cmfObject.getProperty(IntermediateProperty.FIXED_PATH);
+		if ((prop != null) && prop.hasValues()) {
+			targetPath = translator.encodeProperty(prop).getValue().asString();
+			if (!StringUtils.isEmpty(targetPath)) {
+				// The FIXED_PATH property is always absolute, but we need to generate
+				// a relative path here, so we do just that: remove any leading slashes
+				targetPath = targetPath.replaceAll("^/+", "");
 			}
 		}
 
-		// If either of the above are viable, then we resolve the paths, and
-		// apply the truncation, filtering out those who fail it...
-		for (CmfValue p : translator.encodeProperty(prop)) {
-			paths.add(resolveTreeIds(ctx, p.asString(), pathFix));
+		if (targetPath == null) {
+			targetPath = resolveTreeIds(ctx, sourcePath.asString(), pathFix);
+		} else if (pathFix != null) {
+			// Split, and fix each path
+			List<String> l = Tools.splitEscaped('/', targetPath);
+			l.replaceAll(pathFix);
+			targetPath = Tools.joinEscaped('/', l);
 		}
-		return paths;
+
+		// Fixed paths are paths whose individual components have been "fixed" (i.e.
+		// character-corrected, length-corrected, or somesuch), so we still may have
+		// to truncate them accordingly
+		return ctx.getTargetPath(targetPath);
 	}
 
 	protected abstract ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ENGINE> newImportDelegate(

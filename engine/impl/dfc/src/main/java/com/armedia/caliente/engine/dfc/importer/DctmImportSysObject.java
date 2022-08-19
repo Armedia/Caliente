@@ -44,7 +44,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.commons.lang3.StringUtils;
@@ -967,13 +966,13 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		return isReference();
 	}
 
-	protected Collection<IDfValue> getTargetPaths(DctmImportContext ctx) throws DfException, ImportException {
-		return getFixedPaths(ctx).stream() //
-			.map(DfValueFactory::of) //
-			.collect( //
-				Collectors.toCollection(ArrayList::new) //
-			) //
-		;
+	protected Collection<IDfValue> getTargetPaths() throws DfException, ImportException {
+		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH);
+		if ((p == null) || (p.getValueCount() == 0)) {
+			throw new ImportException(String.format("No target paths specified for [%s](%s)", this.cmfObject.getLabel(),
+				this.cmfObject.getId()));
+		}
+		return p.getValues();
 	}
 
 	private boolean convertObjectType(IDfSession session, T obj, IDfType source, IDfType target)
@@ -1011,12 +1010,12 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		String existingPath = null;
 		T existing = null;
 		final Class<T> dfClass = getObjectClass();
-		Collection<IDfValue> targetPaths = getTargetPaths(ctx);
+		Collection<IDfValue> targetPaths = getTargetPaths();
 		if (this.log.isDebugEnabled()) {
 			this.log.debug("Found {} target paths for {}", targetPaths.size(), this.cmfObject.getDescription());
 		}
-		for (IDfValue p : targetPaths) {
-			final String targetPath = p.asString();
+		for (IDfValue p : getTargetPaths()) {
+			final String targetPath = ctx.getTargetPath(p.asString());
 			final String dql = String.format(dqlBase, DfcUtils.quoteString(objectName),
 				DfcUtils.quoteString(targetPath));
 			final String currentPath = String.format("%s/%s", targetPath, objectName);
@@ -1128,16 +1127,15 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if (mainFolderId.isNull()) {
 			// This is only valid if pos is 0, and it's the only parent value, and there's only one
 			// path value. If it's used under any other circumstance, it's an error.
-			Collection<String> paths = getFixedPaths(context);
-			if ((pos == 0) && (parents.getValueCount() == 1) && (paths.size() == 1)) {
+			CmfProperty<IDfValue> paths = this.cmfObject.getProperty(IntermediateProperty.PATH);
+			if ((pos == 0) && (parents.getValueCount() == 1) && (paths.getValueCount() == 1)) {
 				// This is a "fixup" from the path repairs, so we look up by path
-				String path = paths.iterator().next();
+				String path = context.getTargetPath(paths.getValue().asString());
 				IDfFolder f = session.getFolderByPath(path);
 				if (f != null) { return f.getObjectId(); }
 				this.log.warn("Fixup path [{}] for {} was not found", path, this.cmfObject.getDescription());
 			}
 		}
-
 		Mapping m = context.getValueMapper().getTargetMapping(DctmObjectType.FOLDER.getStoredObjectType(),
 			DctmAttributes.R_OBJECT_ID, mainFolderId.getId());
 		if (m != null) { return new DfId(m.getTargetValue()); }
@@ -1150,11 +1148,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if ((parents == null) || (parents.getValueCount() == 0)) {
 			// This might be a cabinet import, so we try to find the target folder
 			String rootPath = context.getTargetPath("/");
-			if (rootPath != null) {
-				IDfFolder root = context.getSession().getFolderByPath(rootPath);
-				if (root != null) {
-					newParents.add(root.getObjectId().getId());
-				}
+			IDfFolder root = context.getSession().getFolderByPath(rootPath);
+			if (root != null) {
+				newParents.add(root.getObjectId().getId());
 			}
 		} else {
 			for (int i = 0; i < parents.getValueCount(); i++) {

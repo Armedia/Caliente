@@ -370,11 +370,6 @@ public class AlfImportDelegateFactory
 	protected final ScanIndexItemMarker generateItemMarker(final AlfImportContext ctx, final boolean folder,
 		final CmfObject<CmfValue> cmfObject, CmfContentStream content, File contentFile, File metadataFile,
 		MarkerType type) throws ImportException {
-
-		String targetPath = getFixedPath(cmfObject, ctx);
-		// If the path is null, we must skip this object
-		if (targetPath == null) { return null; }
-
 		final int head;
 		final int count;
 		final int current;
@@ -453,6 +448,7 @@ public class AlfImportDelegateFactory
 		}
 		thisMarker.setNumber(number);
 
+		String targetPath = getFixedPath(cmfObject, ctx);
 		final boolean unfiled;
 		{
 			CmfProperty<CmfValue> unfiledProp = cmfObject.getProperty(IntermediateProperty.IS_UNFILED);
@@ -657,10 +653,6 @@ public class AlfImportDelegateFactory
 
 		final ScanIndexItemMarker thisMarker = generateItemMarker(ctx, folder, cmfObject, content, contentFile,
 			metadataFile, type);
-
-		// If this object must be skipped, skip it
-		if (thisMarker == null) { return; }
-
 		HistoryTracker history = null;
 		switch (type) {
 			case RENDITION_ROOT:

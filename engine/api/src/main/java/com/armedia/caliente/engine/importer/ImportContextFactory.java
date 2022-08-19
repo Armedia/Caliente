@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.apache.groovy.parser.antlr4.util.StringUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.TransferContextFactory;
@@ -99,10 +100,21 @@ public abstract class ImportContextFactory< //
 
 	protected abstract FOLDER createFolder(SESSION session, FOLDER parent, String name) throws Exception;
 
-	protected static final String getTargetPath(String sourcePath, int pathTrunc, List<String> rootPath) {
+	protected static final String getTargetPath(String sourcePath, int pathTrunc, List<String> rootPath)
+		throws ImportException {
 		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a path to transform"); }
+		if (StringUtils.isEmpty(sourcePath)) {
+			sourcePath = "/";
+		}
+		if (!sourcePath.startsWith("/")) {
+			throw new IllegalArgumentException(String.format("The path [%s] must be absolute", sourcePath));
+		}
 		List<String> l = FileNameTools.tokenize(sourcePath, '/');
-		if (l.size() < pathTrunc) { return null; }
+		if (l.size() < pathTrunc) {
+			throw new ImportException(String.format(
+				"The path truncation setting (%d) is higher than the number of path components in [%s] (%d) - can't continue",
+				pathTrunc, sourcePath, l.size()));
+		}
 		l = l.subList(pathTrunc, l.size());
 		List<String> finalPath = new ArrayList<>(rootPath.size() + l.size());
 		finalPath.addAll(rootPath);
@@ -110,7 +122,7 @@ public abstract class ImportContextFactory< //
 		return FileNameTools.reconstitute(finalPath, true, false, '/');
 	}
 
-	public final String getTargetPath(String sourcePath) {
+	public final String getTargetPath(String sourcePath) throws ImportException {
 		return ImportContextFactory.getTargetPath(sourcePath, this.pathTrunc, this.rootPath);
 	}
 

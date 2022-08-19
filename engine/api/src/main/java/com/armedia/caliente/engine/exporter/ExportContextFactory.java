@@ -40,7 +40,6 @@ import com.armedia.caliente.engine.common.SessionWrapper;
 import com.armedia.caliente.engine.tools.DefaultNameFixer;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.commons.utilities.CfgTools;
@@ -58,7 +57,7 @@ public abstract class ExportContextFactory< //
 		.freezeSet(EnumSet.of(CmfObject.Archetype.FOLDER, CmfObject.Archetype.DOCUMENT));
 
 	private final Set<CmfObject.Archetype> companionMetadata;
-	private final CmfNameFixer<VALUE> nameFixer;
+	private final DefaultNameFixer<VALUE> nameFixer;
 
 	protected ExportContextFactory(ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?> objectStore,
 		CmfContentStore<?, ?> contentStore, Logger output, WarningTracker tracker) throws Exception {

@@ -33,6 +33,7 @@ package com.armedia.caliente.engine.dfc.importer;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -101,21 +102,23 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		// We can't import this document if the destination directory is "/"
 		ctx.printf("HISTORY COUNTER: [%08x] from history [%s]", ctx.getHistoryPosition(),
 			this.cmfObject.getHistoryId());
-
-		List<String> paths = new ArrayList<>(getFixedPaths(ctx));
-		paths.removeIf(StringUtils::isEmpty);
-
-		// If there are paths left which survive truncation, we don't ignore the object.
-		// If no paths are left that survive truncation, we puke out. Also, we can't
-		// place documents on the root, so there MUST be at least one parent, which means
-		// we puke out if there were none. This is why we use StringUtils::isEmpty instead
-		// of just Objects::isNull - empty strings mean "root"
-		if (paths.isEmpty()) {
+		CmfProperty<IDfValue> path = this.cmfObject.getProperty(IntermediateProperty.PATH);
+		if (path == null) { return true; }
+		for (Iterator<IDfValue> it = path.iterator(); it.hasNext();) {
+			IDfValue v = it.next();
+			final String tgt = ctx.getTargetPath(v.asString());
+			if (Objects.equals("", tgt)) {
+				it.remove();
+			}
+			if (Objects.equals("/", tgt)) {
+				it.remove();
+			}
+		}
+		if (!path.hasValues()) {
 			this.log.warn("Can't import {}  without a parent FOLDER or CABINET - skipping",
 				this.cmfObject.getDescription());
 			return true;
 		}
-
 		return super.skipImport(ctx);
 	}
 

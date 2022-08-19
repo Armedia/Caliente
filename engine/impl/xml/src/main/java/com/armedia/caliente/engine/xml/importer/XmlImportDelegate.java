@@ -32,10 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.armedia.caliente.engine.importer.ImportDelegate;
-import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.xml.common.XmlRoot;
 import com.armedia.caliente.engine.xml.common.XmlSessionWrapper;
 import com.armedia.caliente.engine.xml.importer.jaxb.AttributeT;
@@ -122,19 +119,5 @@ public abstract class XmlImportDelegate extends
 
 	protected XmlImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject) throws Exception {
 		super(factory, File.class, storedObject);
-	}
-
-	protected final String determineObjectPath(XmlImportContext ctx) throws ImportException {
-		String path = getFixedPath(ctx);
-		if (path == null) { return null; }
-
-		if (StringUtils.isEmpty(path)) {
-			path = StringUtils.EMPTY;
-		} else {
-			// Ensure it's a relative path
-			path = path.replaceAll("^/+", "");
-		}
-
-		return path;
 	}
 }

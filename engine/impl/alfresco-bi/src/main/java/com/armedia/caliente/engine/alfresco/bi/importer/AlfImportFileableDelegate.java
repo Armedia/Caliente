@@ -513,8 +513,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 
 		String prefix = getFixedPath(ctx);
-		if (prefix == null) { return Collections.singleton(ImportOutcome.SKIPPED); }
-
 		String path = String.format("%s%s%s", prefix, StringUtils.isEmpty(prefix) ? "" : "/",
 			ctx.getHeadObject(this.cmfObject).getName());
 

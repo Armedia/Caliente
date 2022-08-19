@@ -45,7 +45,6 @@ import org.apache.chemistry.opencmis.commons.data.MutableAce;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlEntryImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlPrincipalDataImpl;
-import org.apache.groovy.parser.antlr4.util.StringUtils;
 
 import com.armedia.caliente.engine.cmis.CmisProperty;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
@@ -173,21 +172,41 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		final List<Folder> ret = new ArrayList<>();
 		final Session session = ctx.getSession();
 
-		// CMIS doesn't allow multi-filing, so we can only search for one path.
-		String path = getFixedPath(ctx);
-		// If we've truncated past our limit, we puke out
-		if (path == null) { return null; }
-
-		// Check to see if we have to return the root folder
-		if (StringUtils.isEmpty(path) || "/".equals(path)) {
-			ret.add(session.getRootFolder());
-		} else {
-			CmisObject obj = session.getObjectByPath(path);
-			if (Folder.class.isInstance(obj)) {
-				ret.add(Folder.class.cast(obj));
+		// We only search by path, since by CMIS specification, a folder may have one and only
+		// one parent (i.e. folder multi-filing is not supported). Thus, if an incoming object
+		// has multiple parents, we can't rely on the PARENT_ID property to do all our work
+		// for us since we know for a fact that each individual path must match an individual,
+		// distinct folder. Thus, all folders must be returned that match potential paths for
+		// the object, since we know for sure they will all be unique in their own right.
+		CmfProperty<CmfValue> prop = this.cmfObject.getProperty(IntermediateProperty.PATH);
+		if ((prop != null) && prop.hasValues()) {
+			for (CmfValue v : prop) {
+				if (v.isNull()) {
+					continue;
+				}
+				String path = ctx.getTargetPath(v.asString());
+				try {
+					CmisObject obj = session.getObjectByPath(path);
+					if (Folder.class.isInstance(obj)) {
+						ret.add(Folder.class.cast(obj));
+					}
+				} catch (CmisObjectNotFoundException e) {
+					// Only ignore missing parents if configured to do so
+					if (this.factory.isRequireAllParents()) { throw e; }
+					this.log.warn("Parent folder [{}] was not found for {}", path, this.cmfObject.getDescription());
+					continue;
+				}
 			}
 		}
 
+		if (ret.isEmpty()) {
+			if (this.factory.isRequireAllParents() && prop.hasValues()) {
+				throw new ImportException("None of the parent folders were located");
+			}
+
+			// If there are no parents, then the root folder is the parent
+			ret.add(session.getRootFolder());
+		}
 		return ret;
 	}
 
@@ -315,8 +334,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			props.remove(PropertyIds.PARENT_ID);
 
 			List<Folder> parents = getParentFolders(ctx);
-			if ((parents == null) || parents.isEmpty()) { return Collections.singleton(ImportOutcome.SKIPPED); }
-
 			// Find the parent folder...
 			final Folder parent = parents.get(0);
 
