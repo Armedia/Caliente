@@ -126,11 +126,6 @@ public abstract class XmlImportDelegate extends
 
 	protected final String determineObjectPath(XmlImportContext ctx) throws ImportException {
 		String path = getFixedPath(ctx);
-
-		// Apply truncations if needed
-		path = ctx.getTargetPath(path);
-
-		// If we over-truncated, puke out
 		if (path == null) { return null; }
 
 		if (StringUtils.isEmpty(path)) {

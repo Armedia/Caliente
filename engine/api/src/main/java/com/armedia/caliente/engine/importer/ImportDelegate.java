@@ -96,17 +96,8 @@ public abstract class ImportDelegate< //
 		return this.factory.getFixedPath(this.cmfObject, ctx);
 	}
 
-	public final String getFixedPath(CONTEXT ctx, String valueIfNoneFound) throws ImportException {
-		return this.factory.getFixedPath(this.cmfObject, ctx, valueIfNoneFound);
-	}
-
 	public final String getFixedPath(CONTEXT ctx, UnaryOperator<String> pathFix) throws ImportException {
 		return this.factory.getFixedPath(this.cmfObject, ctx, pathFix);
-	}
-
-	public final String getFixedPath(CONTEXT ctx, UnaryOperator<String> pathFix, String valueIfNoneFound)
-		throws ImportException {
-		return this.factory.getFixedPath(this.cmfObject, ctx, pathFix, valueIfNoneFound);
 	}
 
 	public final Collection<String> getFixedPaths(CONTEXT ctx) throws ImportException {

@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.UnaryOperator;
 
 import org.apache.commons.lang3.StringUtils;
@@ -161,25 +162,15 @@ public abstract class ImportDelegateFactory< //
 	}
 
 	public final String getFixedPath(CmfObject<VALUE> cmfObject, CONTEXT ctx) throws ImportException {
-		return getFixedPath(cmfObject, ctx, null, StringUtils.EMPTY);
-	}
-
-	public final String getFixedPath(CmfObject<VALUE> cmfObject, CONTEXT ctx, String valueIfNoneFound)
-		throws ImportException {
-		return getFixedPath(cmfObject, ctx, null, valueIfNoneFound);
+		return getFixedPath(cmfObject, ctx, null);
 	}
 
 	public final String getFixedPath(CmfObject<VALUE> cmfObject, CONTEXT ctx, UnaryOperator<String> pathFix)
 		throws ImportException {
-		return getFixedPath(cmfObject, ctx, pathFix, StringUtils.EMPTY);
-	}
-
-	public final String getFixedPath(CmfObject<VALUE> cmfObject, CONTEXT ctx, UnaryOperator<String> pathFix,
-		String valueIfNoneFound) throws ImportException {
 		return getFixedPaths(cmfObject, ctx, pathFix) //
 			.stream() //
 			.findFirst() //
-			.orElse(valueIfNoneFound) //
+			.orElse(null) //
 		;
 	}
 
@@ -189,6 +180,24 @@ public abstract class ImportDelegateFactory< //
 
 	public final Collection<String> getFixedPaths(CmfObject<VALUE> cmfObject, CONTEXT ctx,
 		UnaryOperator<String> pathFix) throws ImportException {
+		List<String> fixedPaths = computeFixedPaths(cmfObject, ctx, pathFix);
+		if (!fixedPaths.isEmpty()) {
+			// Apply truncations and remove any null values
+			fixedPaths.replaceAll(ctx::getTargetPath);
+			fixedPaths.removeIf(Objects::isNull);
+		}
+
+		if (!fixedPaths.isEmpty() && (pathFix != null)) {
+			// Apply any additional fixes ...
+			fixedPaths.replaceAll(pathFix);
+		}
+
+		// Return whatever's left ...
+		return fixedPaths;
+	}
+
+	private List<String> computeFixedPaths(CmfObject<VALUE> cmfObject, CONTEXT ctx, UnaryOperator<String> pathFix)
+		throws ImportException {
 		final CmfAttributeTranslator<VALUE> translator = cmfObject.getTranslator();
 		List<String> paths = new ArrayList<>();
 
@@ -215,8 +224,7 @@ public abstract class ImportDelegateFactory< //
 			if (!paths.isEmpty()) { return paths; }
 		}
 
-		// If we got here, either the FIXED_PATHS was empty, or none of its
-		// paths were viable (due to truncation), so we try these other possibilities
+		// If we got here, then FIXED_PATHS was empty, so we try these other possibilities
 		prop = cmfObject.getProperty(IntermediateProperty.LATEST_PARENT_TREE_IDS);
 		if ((prop == null) || !prop.hasValues()) {
 			prop = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);

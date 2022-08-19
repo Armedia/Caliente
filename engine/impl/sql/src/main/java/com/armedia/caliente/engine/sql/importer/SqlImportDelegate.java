@@ -105,13 +105,7 @@ public abstract class SqlImportDelegate extends
 		final boolean windowsMode = SystemUtils.IS_OS_WINDOWS;
 
 		File tgt = ctx.getSession().getFile();
-
 		String p = getFixedPath(ctx);
-
-		// Apply any truncations ...
-		p = ctx.getTargetPath(p);
-
-		// If the truncations overflowed, we puke out
 		if (p == null) { return null; }
 
 		for (String s : FileNameTools.tokenize(p, '/')) {

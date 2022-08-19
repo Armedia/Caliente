@@ -103,7 +103,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			this.cmfObject.getHistoryId());
 
 		List<String> paths = new ArrayList<>(getFixedPaths(ctx));
-		paths.replaceAll(ctx::getTargetPath);
 		paths.removeIf(StringUtils::isEmpty);
 
 		// If there are paths left which survive truncation, we don't ignore the object.

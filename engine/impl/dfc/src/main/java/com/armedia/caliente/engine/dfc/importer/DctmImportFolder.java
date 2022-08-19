@@ -30,10 +30,7 @@
 
 package com.armedia.caliente.engine.dfc.importer;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -152,6 +149,10 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 
 		for (Map.Entry<String, String> entry : m.entrySet()) {
 			final String actualUser = entry.getKey();
+
+			// TODO: PROBLEM - these paths may not have been checked for fixes/changes
+			// because we weren't able to ... need to figure this out - maybe store
+			// these references via folder IDs instead of paths?
 			final String pathValue = context.getTargetPath(entry.getValue());
 
 			// TODO: How do we decide if we should update the default folder for this user? What
@@ -242,6 +243,9 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			String path = String.format("/%s", objectName);
 			this.log.debug("Candidate CABINET path: [{}]", path);
 			path = ctx.getTargetPath(path);
+			// No need to check - if this object needed skipping due to path truncation,
+			// it would have already been skipped. If we've gotten this far it's b/c we're
+			// meant to actually do our work.
 			this.log.debug("Adjusted CABINET path: [{}]", path);
 			existing = session.getFolderByPath(path);
 			if (existing != null) {
@@ -256,11 +260,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	@Override
 	protected IDfFolder newObject(DctmImportContext ctx) throws DfException, ImportException {
 		if (isReference()) { return newReference(ctx); }
-
 		String parentPath = getFixedPath(ctx);
-		// We don't need to check this for null, since this has already been checked in skipImport()
-		parentPath = ctx.getTargetPath(parentPath);
-
 		if (StringUtils.isEmpty(parentPath) || "/".equals(parentPath)) {
 			// TODO: Try to identify if the object's type is a cabinet subtype. If it is,
 			// then we don't need to modify it
@@ -278,9 +278,6 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 
 	@Override
 	protected boolean skipImport(DctmImportContext ctx) throws DfException, ImportException {
-		List<String> paths = new ArrayList<>(getFixedPaths(ctx));
-		paths.replaceAll(ctx::getTargetPath);
-		paths.removeIf(Objects::isNull);
-		return paths.isEmpty();
+		return getFixedPaths(ctx).isEmpty();
 	}
 }

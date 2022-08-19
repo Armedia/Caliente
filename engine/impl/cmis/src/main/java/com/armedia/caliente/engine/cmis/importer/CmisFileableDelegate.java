@@ -175,10 +175,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 
 		// CMIS doesn't allow multi-filing, so we can only search for one path.
 		String path = getFixedPath(ctx);
-
-		// Apply any path truncations
-		path = ctx.getTargetPath(path);
-
 		// If we've truncated past our limit, we puke out
 		if (path == null) { return null; }
 
