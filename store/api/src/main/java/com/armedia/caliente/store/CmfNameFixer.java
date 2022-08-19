@@ -26,6 +26,8 @@
  *******************************************************************************/
 package com.armedia.caliente.store;
 
+import java.util.Map;
+
 public interface CmfNameFixer<VALUE> {
 
 	public boolean supportsType(CmfObject.Archetype type);
@@ -35,6 +37,8 @@ public interface CmfNameFixer<VALUE> {
 	public String fixName(CmfObject<VALUE> dataObject);
 
 	public void nameFixed(CmfObject<VALUE> dataObject, String oldName, String newName);
+
+	public Map<String, String> getMappings(CmfObject.Archetype type);
 
 	public default boolean handleException(Exception e) {
 		return false;
