@@ -229,7 +229,8 @@ public abstract class ImportDelegateFactory< //
 		if ((prop == null) || !prop.hasValues()) {
 			prop = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
 			if ((prop == null) || !prop.hasValues()) {
-				// Shortcut - nothing to see, so don't continue
+				// No parents ... this means the ROOT must be the parent.
+				paths.add(StringUtils.EMPTY);
 				return paths;
 			}
 		}
