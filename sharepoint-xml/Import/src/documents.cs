@@ -647,164 +647,175 @@ namespace Armedia.CMSMF.SharePoint.Import
                             bool restoreAcl = (acl != previousAcl && acl == location.Parent.Acl);
                             bool uniqueAcl = (acl != previousAcl && acl != location.Parent.Acl);
                             bool breakRoleInheritance = (uniqueAcl && previousAcl == location.Parent.Acl);
-
-                            using (stream)
+                            List<System.IO.Stream> leftoverStreams = new List<System.IO.Stream>();
+                            try
                             {
-                                if (checkedOut)
+                                using (stream)
                                 {
-                                    if (contentStreamSize <= UploadSegmentSizeInBytes)
+                                    if (checkedOut)
                                     {
-                                        // This can be uploaded directly
-                                        fileSaveBinaryInfo.ContentStream = stream;
-                                        newVersion.SaveBinary(fileSaveBinaryInfo);
+                                        if (contentStreamSize <= UploadSegmentSizeInBytes)
+                                        {
+                                            // This can be uploaded directly
+                                            fileSaveBinaryInfo.ContentStream = stream;
+                                            newVersion.SaveBinary(fileSaveBinaryInfo);
+                                        }
+                                        else
+                                        {
+                                            // This must be uploaded in segments
+                                            uploadSegments(leftoverStreams, tracker, session, clientContext, newVersion, stream);
+                                        }
+                                        newVersion.CheckIn(comment, CheckinType.MinorCheckIn);
+                                        tracker.TrackProgress("Checking in new version [{0}] for document [{1}] (at [{2}]) - {3:N0} bytes", versionNumber, sourcePath, safeFullPath, contentStreamSize);
+                                        session.ExecuteQuery();
+                                        ShowProgress();
+
+                                        // This load operation is required in order for the metadata creation to work
+                                        clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields, r => r.ListItemAllFields.RoleAssignments);
                                     }
                                     else
                                     {
-                                        // This must be uploaded in segments
-                                        newVersion = uploadSegments(tracker, session, newVersion, stream);
+                                        string currentUrl = targetUrl;
+                                        if (location.CurrentFullPath != null)
+                                        {
+                                            currentUrl = session.GetServerRelativeUrl(location.CurrentFullPath);
+                                            if (currentUrl != targetUrl) clientContext.Web.GetFileByServerRelativeUrl(currentUrl).DeleteObject();
+                                        }
+                                        clientContext.Web.GetFileByServerRelativeUrl(targetUrl).DeleteObject();
+                                        tracker.TrackProgress("Clearing out the existing document at [{0}] to make way for [{1}]", currentUrl, targetUrl);
+                                        session.ExecuteQuery();
+
+                                        Folder f = clientContext.Web.GetFolderByServerRelativeUrl(location.Parent.Url);
+
+                                        fileCreationInfo.Url = safeName;
+                                        fileCreationInfo.Overwrite = true;
+                                        if (contentStreamSize <= UploadSegmentSizeInBytes)
+                                        {
+                                            fileCreationInfo.ContentStream = stream;
+                                            newVersion = f.Files.Add(fileCreationInfo);
+                                        }
+                                        else
+                                        {
+                                            // Create an empty file ... now overwrite its contents
+                                            using (System.IO.MemoryStream mem = new System.IO.MemoryStream(CONTENT_FILLER))
+                                            {
+                                                fileCreationInfo.ContentStream = mem;
+                                                newVersion = f.Files.Add(fileCreationInfo);
+
+                                                // Now upload the chunks, overwriting the original file
+                                                uploadSegments(leftoverStreams, tracker, session, clientContext, newVersion, stream);
+                                            }
+                                        }
+
+                                        clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields, r => r.ListItemAllFields.RoleAssignments);
+                                        tracker.TrackProgress("Creating document [{0}] as [{1}] - {2:N0} bytes", sourcePath, safeFullPath, contentStreamSize);
                                     }
-                                    newVersion.CheckIn(comment, CheckinType.MinorCheckIn);
-                                    tracker.TrackProgress("Checking in new version [{0}] for document [{1}] (at [{2}]) - {3:N0} bytes", versionNumber, sourcePath, safeFullPath, contentStreamSize);
+
                                     session.ExecuteQuery();
                                     ShowProgress();
 
-                                    // This load operation is required in order for the metadata creation to work
-                                    clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields, r => r.ListItemAllFields.RoleAssignments);
-                                }
-                                else
-                                {
-                                    string currentUrl = targetUrl;
-                                    if (location.CurrentFullPath != null)
+                                    if (newVersion.CheckOutType == CheckOutType.None)
                                     {
-                                        currentUrl = session.GetServerRelativeUrl(location.CurrentFullPath);
-                                        if (currentUrl != targetUrl) clientContext.Web.GetFileByServerRelativeUrl(currentUrl).DeleteObject();
+                                        newVersion.CheckOut();
                                     }
-                                    clientContext.Web.GetFileByServerRelativeUrl(targetUrl).DeleteObject();
-                                    tracker.TrackProgress("Clearing out the existing document at [{0}] to make way for [{1}]", currentUrl, targetUrl);
-                                    session.ExecuteQuery();
-
-                                    Folder f = clientContext.Web.GetFolderByServerRelativeUrl(location.Parent.Url);
-
-                                    fileCreationInfo.Url = safeName;
-                                    fileCreationInfo.Overwrite = true;
-                                    if (contentStreamSize <= UploadSegmentSizeInBytes)
-                                    {
-                                        fileCreationInfo.ContentStream = stream;
-                                        newVersion = f.Files.Add(fileCreationInfo);
-                                    }
-                                    else
-                                    {
-                                        using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
-                                        {
-                                            // Create an empty file ... now overwrite its contents
-                                            fileCreationInfo.ContentStream = ms;
-                                            newVersion = f.Files.Add(fileCreationInfo);
-
-                                            // Now upload the chunks, overwriting the original file
-                                            newVersion = uploadSegments(tracker, session, newVersion, stream);
-                                        }
-                                    }
-
-                                    clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields, r => r.ListItemAllFields.RoleAssignments);
-                                    tracker.TrackProgress("Creating document [{0}] as [{1}] - {2:N0} bytes", sourcePath, safeFullPath, contentStreamSize);
-                                }
-
-                                session.ExecuteQuery();
-                                ShowProgress();
-
-                                if (newVersion.CheckOutType == CheckOutType.None)
-                                {
-                                    newVersion.CheckOut();
-                                }
-                                if (contentType == null)
-                                {
-                                    contentType = ResolveContentType(objectType);
                                     if (contentType == null)
                                     {
-                                        if (this.FallbackType == null)
+                                        contentType = ResolveContentType(objectType);
+                                        if (contentType == null)
                                         {
-                                            throw new Exception(string.Format("Could not find the content type [{0}] for document [{1}]", objectType, safeFullPath));
+                                            if (this.FallbackType == null)
+                                            {
+                                                throw new Exception(string.Format("Could not find the content type [{0}] for document [{1}]", objectType, safeFullPath));
+                                            }
+                                            tracker.TrackProgress("Could not find the content type [{0}] for document [{1}], so will use the fallback type [{2}]", objectType, safeFullPath, this.FallbackType.Name);
+                                            contentType = this.FallbackType;
                                         }
-                                        tracker.TrackProgress("Could not find the content type [{0}] for document [{1}], so will use the fallback type [{2}]", objectType, safeFullPath, this.FallbackType.Name);
-                                        contentType = this.FallbackType;
+                                        tracker.TrackProgress("Assigning content type [{0}] (id={1}) to [{2}] (GUID=[{3}] UniqueId=[{4}])...", contentType.Name, contentType.Id, safeFullPath, newVersion.ListItemAllFields["UniqueId"], newVersion.ListItemAllFields["GUID"]);
                                     }
-                                    tracker.TrackProgress("Assigning content type [{0}] (id={1}) to [{2}] (GUID=[{3}] UniqueId=[{4}])...", contentType.Name, contentType.Id, safeFullPath, newVersion.ListItemAllFields["UniqueId"], newVersion.ListItemAllFields["GUID"]);
-                                }
-                                newVersion.ListItemAllFields["ContentTypeId"] = contentType.Id;
-                                ApplyMetadata(newVersion.ListItemAllFields, version, contentType);
+                                    newVersion.ListItemAllFields["ContentTypeId"] = contentType.Id;
+                                    ApplyMetadata(newVersion.ListItemAllFields, version, contentType);
 
-                                string aclResult = "inherited from its parent's";
-                                if (restoreAcl)
-                                {
-                                    newVersion.ListItemAllFields.ResetRoleInheritance();
-                                    aclResult = "re-inherited from its parent's";
-                                }
-                                else
-                                if (uniqueAcl)
-                                {
-                                    if (breakRoleInheritance)
+                                    string aclResult = "inherited from its parent's";
+                                    if (restoreAcl)
                                     {
-                                        newVersion.ListItemAllFields.BreakRoleInheritance(false, false);
-                                        aclResult = "independent from its parent's";
+                                        newVersion.ListItemAllFields.ResetRoleInheritance();
+                                        aclResult = "re-inherited from its parent's";
                                     }
                                     else
+                                    if (uniqueAcl)
                                     {
-                                        aclResult = "independent from its previous version's and from its parent's";
-                                        ClearPermissions(newVersion.ListItemAllFields);
+                                        if (breakRoleInheritance)
+                                        {
+                                            newVersion.ListItemAllFields.BreakRoleInheritance(false, false);
+                                            aclResult = "independent from its parent's";
+                                        }
+                                        else
+                                        {
+                                            aclResult = "independent from its previous version's and from its parent's";
+                                            ClearPermissions(newVersion.ListItemAllFields);
+                                        }
+                                        ApplyPermissions(newVersion.ListItemAllFields, version);
                                     }
-                                    ApplyPermissions(newVersion.ListItemAllFields, version);
-                                }
-                                else
-                                if (previousAcl != location.Parent.Acl)
-                                {
-                                    aclResult = "preserved from the previous version";
-                                }
-                                tracker.TrackProgress("The ACL for [{0}] v{1} will be {2}", safeFullPath, versionNumber, aclResult);
+                                    else
+                                    if (previousAcl != location.Parent.Acl)
+                                    {
+                                        aclResult = "preserved from the previous version";
+                                    }
+                                    tracker.TrackProgress("The ACL for [{0}] v{1} will be {2}", safeFullPath, versionNumber, aclResult);
 
-                                if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_antecedent_id"))
-                                {
-                                    newVersion.ListItemAllFields["caliente_antecedent_id"] = (string)version.Element(ns + "antecedentId");
+                                    if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_antecedent_id"))
+                                    {
+                                        newVersion.ListItemAllFields["caliente_antecedent_id"] = (string)version.Element(ns + "antecedentId");
+                                    }
+                                    if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_history_id"))
+                                    {
+                                        newVersion.ListItemAllFields["caliente_history_id"] = location.HistoryId;
+                                    }
+                                    if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_version"))
+                                    {
+                                        newVersion.ListItemAllFields["caliente_version"] = versionNumber;
+                                    }
+                                    if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_current"))
+                                    {
+                                        newVersion.ListItemAllFields["caliente_current"] = XmlConvert.ToBoolean((string)version.Element(ns + "current"));
+                                    }
+
+                                    newVersion.ListItemAllFields.Update();
+                                    newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
+                                    session.ExecuteQuery();
+                                    ShowProgress();
+
+                                    clientContext.Load(newVersion);
+                                    clientContext.Load(newVersion.ListItemAllFields);
+                                    session.ExecuteQuery();
+                                    ShowProgress();
+
+                                    newVersion.CheckOut();
+                                    SetAuthorAndEditor(newVersion.ListItemAllFields, version);
+                                    if (uniqueAcl) ApplyOwnerPermission(newVersion.ListItemAllFields, version);
+
+                                    newVersion.ListItemAllFields.Update();
+                                    newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
+                                    newVersion.RefreshLoad();
+                                    clientContext.Load(newVersion.Versions);
+                                    session.ExecuteQuery();
+                                    ShowProgress();
+                                    previousAcl = acl;
+
+                                    if (XmlConvert.ToBoolean((string)version.Element(ns + "current")))
+                                    {
+                                        // This is the current version, so mark it
+                                        restoreVersionNumber = versionNumber;
+                                        restoreSpVersionLabel = newVersion.UIVersionLabel;
+                                    }
                                 }
-                                if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_history_id"))
+                            }
+                            finally
+                            {
+                                if (leftoverStreams.Count > 0)
                                 {
-                                    newVersion.ListItemAllFields["caliente_history_id"] = location.HistoryId;
-                                }
-                                if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_version"))
-                                {
-                                    newVersion.ListItemAllFields["caliente_version"] = versionNumber;
-                                }
-                                if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_current"))
-                                {
-                                    newVersion.ListItemAllFields["caliente_current"] = XmlConvert.ToBoolean((string)version.Element(ns + "current"));
-                                }
-
-                                newVersion.ListItemAllFields.Update();
-                                newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
-                                session.ExecuteQuery();
-                                ShowProgress();
-
-                                clientContext.Load(newVersion);
-                                clientContext.Load(newVersion.ListItemAllFields);
-                                session.ExecuteQuery();
-                                ShowProgress();
-
-                                newVersion.CheckOut();
-                                SetAuthorAndEditor(newVersion.ListItemAllFields, version);
-                                if (uniqueAcl) ApplyOwnerPermission(newVersion.ListItemAllFields, version);
-
-                                newVersion.ListItemAllFields.Update();
-                                newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
-                                newVersion.RefreshLoad();
-                                clientContext.Load(newVersion.Versions);
-                                session.ExecuteQuery();
-                                ShowProgress();
-                                previousAcl = acl;
-
-                                if (XmlConvert.ToBoolean((string)version.Element(ns + "current")))
-                                {
-                                    // This is the current version, so mark it
-                                    restoreVersionNumber = versionNumber;
-                                    restoreSpVersionLabel = newVersion.UIVersionLabel;
+                                    leftoverStreams.ForEach(s => s.Dispose());
+                                    leftoverStreams.Clear();
                                 }
                             }
                         }
@@ -870,7 +881,8 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 // Something went wrong, and we're still checked out ... undo the checkout
                                 if (newVersion != null)
                                 {
-                                    newVersion.RefreshLoad();
+                                    // Just in case ... make sure the attribute is read
+                                    clientContext.Load(newVersion, r => r.CheckOutType);
                                     session.ExecuteQuery();
                                     if (newVersion.CheckOutType != CheckOutType.None)
                                     {
@@ -889,38 +901,36 @@ namespace Armedia.CMSMF.SharePoint.Import
             }
         }
 
-        private File uploadSegments(ProgressTracker tracker, SharePointSession session, File version, System.IO.Stream stream)
+        private File uploadSegments(List<System.IO.Stream> chunks, ProgressTracker tracker, SharePointSession session, ClientContext clientContext, File version, System.IO.Stream stream)
         {
-            // We're over the threshold, we MUST apply a segmented upload approach
-            // TODO: Apply the upload algorithm from https://docs.microsoft.com/en-us/sharepoint/dev/solution-guidance/upload-large-files-sample-app-for-sharepoint
-
-            // TODO: See if an upload is already running from before ... if it is, I'm not sure we can cleanly resume... so much crap happening
-            // with checkout-checkin that resuming may not be viable ... for now, just cancel it if it exists.
             Guid uploadId = Guid.NewGuid();
-            // We expressly don't close this b/c we don't want the Dispose() invocation to cascade onto the main stream
-            System.IO.BinaryReader br = new System.IO.BinaryReader(stream);
-            byte[] buf = new byte[UploadSegmentSizeInBytes];
-            long appendPosition = 0;
-            ClientResult<long> bytesUploaded = null;
-
-            // Read data from file system in blocks.
-            while (true)
+            bool started = false;
+            try
             {
-                int bytesRead = br.Read(buf, 0, buf.Length);
+                // TODO: See if an upload is already running from before ... if it is, I'm not sure we can cleanly resume... so much crap happening
+                // with checkout-checkin that resuming may not be viable ... for now, just cancel it if it exists.
+                // We expressly don't close this b/c we don't want the Dispose() invocation to cascade onto the main stream
+                byte[] buf = new byte[UploadSegmentSizeInBytes];
+                long appendPosition = 0;
+                ClientResult<long> bytesUploaded = null;
 
-                // If we read nothing, we're at EOF, so skedaddle
-                if (bytesRead <= 0) break;
-
-                // Create a stream to read from the buffer however many bytes were read
-                using (System.IO.MemoryStream s = new System.IO.MemoryStream(buf, 0, bytesRead))
+                // Read data from file system in blocks.
+                while (true)
                 {
+                    int bytesRead = stream.Read(buf, 0, buf.Length);
+                    // If we read nothing, we're at EOF, so skedaddle
+                    if (bytesRead <= 0) break;
+
+                    // Create a stream to read from the buffer however many bytes were read
+                    System.IO.MemoryStream mem = new System.IO.MemoryStream(buf, 0, bytesRead);
+                    chunks.Add(mem);
                     // If we read fewer bytes than were requested to be read, this is the last chunk
                     // and we must call FinishUpload()
                     if (bytesRead < buf.Length)
                     {
                         // End sliced upload by calling FinishUpload.
                         tracker.TrackProgress("Completing the segmented upload with ID {0} of {1} bytes ({2} chunks)", uploadId, appendPosition + bytesRead, (appendPosition / buf.Length) + 1);
-                        version = version.FinishUpload(uploadId, appendPosition, s);
+                        version = version.FinishUpload(uploadId, appendPosition, mem);
                         session.ExecuteQuery();
                         break;
                     }
@@ -930,18 +940,36 @@ namespace Armedia.CMSMF.SharePoint.Import
                     if (appendPosition == 0)
                     {
                         tracker.TrackProgress("Starting a new segmented upload with ID {0}", uploadId);
-                        bytesUploaded = version.StartUpload(uploadId, s);
+                        bytesUploaded = version.StartUpload(uploadId, mem);
                     }
                     else
                     {
                         tracker.TrackProgress("Adding chunk # {0} for segmented upload with ID {0}", (appendPosition / buf.Length) + 1, uploadId);
-                        bytesUploaded = version.ContinueUpload(uploadId, appendPosition, s);
+                        bytesUploaded = version.ContinueUpload(uploadId, appendPosition, mem);
                     }
                     session.ExecuteQuery();
+                    started = true;
                     appendPosition = bytesUploaded.Value;
                 }
+                return version;
             }
-            return version;
+            catch (Exception)
+            {
+                // If something blows up, attempt to cancel the upload
+                if (started)
+                {
+                    try
+                    {
+                        version.CancelUpload(uploadId);
+                        session.ExecuteQuery();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Warn(string.Format("Failed to cancel the segmented upload with ID {0}", uploadId, e));
+                    }
+                }
+                throw;
+            }
         }
 
         private ICollection<DocumentInfo> IngestDocuments(ICollection<DocumentInfo> documents, int threads, SimulationMode simulationMode, LocationMode locationMode, bool autoPublish)
