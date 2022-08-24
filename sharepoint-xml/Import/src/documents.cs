@@ -34,7 +34,6 @@ namespace Armedia.CMSMF.SharePoint.Import
         public readonly FormatResolver FormatResolver;
         private readonly Dictionary<string, DocumentLocation> Filenames;
         private readonly ContentType FallbackType;
-        private readonly int UploadSegmentThresholdInBytes;
         private readonly int UploadSegmentSizeInBytes;
         public enum SimulationMode
         {
@@ -280,10 +279,9 @@ namespace Armedia.CMSMF.SharePoint.Import
             return count;
         }
 
-        public DocumentImporter(FolderImporter folderImporter, FormatResolver formatResolver, LocationMode locationMode, bool fixExtensions, string fallbackType, int uploadSegmentThresholdInMB, int uploadSegmentSizeInMB) : base("documents", folderImporter)
+        public DocumentImporter(FolderImporter folderImporter, FormatResolver formatResolver, LocationMode locationMode, bool fixExtensions, string fallbackType, int uploadSegmentSizeInMB) : base("documents", folderImporter)
         {
             // This comes in MB ... punt it to bytes
-            this.UploadSegmentThresholdInBytes = uploadSegmentThresholdInMB * 1024 * 1024;
             this.UploadSegmentSizeInBytes = uploadSegmentSizeInMB * 1024 * 1024;
             this.FolderImporter = folderImporter;
             this.FormatResolver = formatResolver;
@@ -543,13 +541,6 @@ namespace Armedia.CMSMF.SharePoint.Import
                                             contentStreamSize = streamInfo.Length;
                                         }
 
-                                        // TODO: Remove this IF() when we've implemented segmented uploads
-                                        if (contentStreamSize > UploadSegmentThresholdInBytes)
-                                        {
-                                            throw new UnsupportedDocumentException(string.Format("Maximum upload size for SharePoint is {0:N0} bytes, but the stream for [{1}] v{2} is {3:N0} bytes long ({4:N0} bytes too big) (described by [{5}])",
-                                                UploadSegmentThresholdInBytes, fullName, versionNumber, contentStreamSize, contentStreamSize - UploadSegmentThresholdInBytes, documentLocation));
-                                        }
-
                                         stream = streamInfo.OpenRead();
                                         if (stream != null) break;
                                     }
@@ -568,13 +559,6 @@ namespace Armedia.CMSMF.SharePoint.Import
                             {
                                 case SimulationMode.FULL:
                                 case SimulationMode.SHORT:
-                                    // TODO: Remove this IF() when we've implemented segmented uploads
-                                    if (contentStreamSize > UploadSegmentThresholdInBytes)
-                                    {
-                                        // If the stream is too big, and we're simulating, we simply bow out gracefully, and treat it as completed
-                                        throw new UnsupportedDocumentException(string.Format("Maximum upload size for SharePoint is {0:N0} bytes, but the stream for [{1}] v{2} is {3:N0} bytes long ({4:N0} bytes too big) (described by [{5}])",
-                                            UploadSegmentThresholdInBytes, fullName, versionNumber, contentStreamSize, contentStreamSize - UploadSegmentThresholdInBytes, documentLocation));
-                                    }
                                     if (contentStreamSize == 0)
                                     {
                                         // Short-circuit the case of the empty stream
@@ -668,8 +652,17 @@ namespace Armedia.CMSMF.SharePoint.Import
                             {
                                 if (checkedOut)
                                 {
-                                    uploadStream(session, newVersion, contentStreamSize, stream, s => fileSaveBinaryInfo.ContentStream = s);
-                                    newVersion.SaveBinary(fileSaveBinaryInfo);
+                                    if (contentStreamSize <= UploadSegmentSizeInBytes)
+                                    {
+                                        // This can be uploaded directly
+                                        fileSaveBinaryInfo.ContentStream = stream;
+                                        newVersion.SaveBinary(fileSaveBinaryInfo);
+                                    }
+                                    else
+                                    {
+                                        // This must be uploaded in segments
+                                        newVersion = uploadSegments(tracker, session, newVersion, stream);
+                                    }
                                     newVersion.CheckIn(comment, CheckinType.MinorCheckIn);
                                     tracker.TrackProgress("Checking in new version [{0}] for document [{1}] (at [{2}]) - {3:N0} bytes", versionNumber, sourcePath, safeFullPath, contentStreamSize);
                                     session.ExecuteQuery();
@@ -680,10 +673,6 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 }
                                 else
                                 {
-                                    fileCreationInfo.Url = safeName;
-                                    fileCreationInfo.Overwrite = true;
-                                    uploadStream(session, newVersion, contentStreamSize, stream, s => fileCreationInfo.ContentStream = s);
-
                                     string currentUrl = targetUrl;
                                     if (location.CurrentFullPath != null)
                                     {
@@ -695,7 +684,27 @@ namespace Armedia.CMSMF.SharePoint.Import
                                     session.ExecuteQuery();
 
                                     Folder f = clientContext.Web.GetFolderByServerRelativeUrl(location.Parent.Url);
-                                    newVersion = f.Files.Add(fileCreationInfo);
+
+                                    fileCreationInfo.Url = safeName;
+                                    fileCreationInfo.Overwrite = true;
+                                    if (contentStreamSize <= UploadSegmentSizeInBytes)
+                                    {
+                                        fileCreationInfo.ContentStream = stream;
+                                        newVersion = f.Files.Add(fileCreationInfo);
+                                    }
+                                    else
+                                    {
+                                        using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
+                                        {
+                                            // Create an empty file ... now overwrite its contents
+                                            fileCreationInfo.ContentStream = ms;
+                                            newVersion = f.Files.Add(fileCreationInfo);
+
+                                            // Now upload the chunks, overwriting the original file
+                                            newVersion = uploadSegments(tracker, session, newVersion, stream);
+                                        }
+                                    }
+
                                     clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields, r => r.ListItemAllFields.RoleAssignments);
                                     tracker.TrackProgress("Creating document [{0}] as [{1}] - {2:N0} bytes", sourcePath, safeFullPath, contentStreamSize);
                                 }
@@ -813,7 +822,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 tracker.TrackProgress("Restored document [{0}] to older version [{1}] (sp version {2})", safeFullPath, restoreVersionNumber, restoreSpVersionLabel);
                             }
 
-                            // We only do two attempts
+                            // We only do two attempts 
                             for (int i = 0 ; i < 2 ; i++)
                             {
                                 clientContext.Load(newVersion);
@@ -880,22 +889,59 @@ namespace Armedia.CMSMF.SharePoint.Import
             }
         }
 
-        private void uploadStream(SharePointSession session, File version, long contentStreamSize, System.IO.Stream stream, Func<System.IO.Stream, System.IO.Stream> simpleUpload)
+        private File uploadSegments(ProgressTracker tracker, SharePointSession session, File version, System.IO.Stream stream)
         {
-            // If we're under the threshold, punt the file over directly
-            if (contentStreamSize <= UploadSegmentThresholdInBytes)
-            {
-                simpleUpload(stream);
-                return;
-            }
-
             // We're over the threshold, we MUST apply a segmented upload approach
             // TODO: Apply the upload algorithm from https://docs.microsoft.com/en-us/sharepoint/dev/solution-guidance/upload-large-files-sample-app-for-sharepoint
 
             // TODO: See if an upload is already running from before ... if it is, I'm not sure we can cleanly resume... so much crap happening
             // with checkout-checkin that resuming may not be viable ... for now, just cancel it if it exists.
             Guid uploadId = Guid.NewGuid();
+            // We expressly don't close this b/c we don't want the Dispose() invocation to cascade onto the main stream
+            System.IO.BinaryReader br = new System.IO.BinaryReader(stream);
+            byte[] buf = new byte[UploadSegmentSizeInBytes];
+            long appendPosition = 0;
+            ClientResult<long> bytesUploaded = null;
 
+            // Read data from file system in blocks.
+            while (true)
+            {
+                int bytesRead = br.Read(buf, 0, buf.Length);
+
+                // If we read nothing, we're at EOF, so skedaddle
+                if (bytesRead <= 0) break;
+
+                // Create a stream to read from the buffer however many bytes were read
+                using (System.IO.MemoryStream s = new System.IO.MemoryStream(buf, 0, bytesRead))
+                {
+                    // If we read fewer bytes than were requested to be read, this is the last chunk
+                    // and we must call FinishUpload()
+                    if (bytesRead < buf.Length)
+                    {
+                        // End sliced upload by calling FinishUpload.
+                        tracker.TrackProgress("Completing the segmented upload with ID {0} of {1} bytes ({2} chunks)", uploadId, appendPosition + bytesRead, (appendPosition / buf.Length) + 1);
+                        version = version.FinishUpload(uploadId, appendPosition, s);
+                        session.ExecuteQuery();
+                        break;
+                    }
+
+                    // Ok so we're either starting an upload, or in the middle of one... so
+                    // just keep swimming :)
+                    if (appendPosition == 0)
+                    {
+                        tracker.TrackProgress("Starting a new segmented upload with ID {0}", uploadId);
+                        bytesUploaded = version.StartUpload(uploadId, s);
+                    }
+                    else
+                    {
+                        tracker.TrackProgress("Adding chunk # {0} for segmented upload with ID {0}", (appendPosition / buf.Length) + 1, uploadId);
+                        bytesUploaded = version.ContinueUpload(uploadId, appendPosition, s);
+                    }
+                    session.ExecuteQuery();
+                    appendPosition = bytesUploaded.Value;
+                }
+            }
+            return version;
         }
 
         private ICollection<DocumentInfo> IngestDocuments(ICollection<DocumentInfo> documents, int threads, SimulationMode simulationMode, LocationMode locationMode, bool autoPublish)
