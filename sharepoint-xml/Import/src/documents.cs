@@ -668,7 +668,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                             {
                                 if (checkedOut)
                                 {
-                                    uploadStream(newVersion, contentStreamSize, stream, s => fileSaveBinaryInfo.ContentStream = s);
+                                    uploadStream(session, newVersion, contentStreamSize, stream, s => fileSaveBinaryInfo.ContentStream = s);
                                     newVersion.SaveBinary(fileSaveBinaryInfo);
                                     newVersion.CheckIn(comment, CheckinType.MinorCheckIn);
                                     tracker.TrackProgress("Checking in new version [{0}] for document [{1}] (at [{2}]) - {3:N0} bytes", versionNumber, sourcePath, safeFullPath, contentStreamSize);
@@ -682,7 +682,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 {
                                     fileCreationInfo.Url = safeName;
                                     fileCreationInfo.Overwrite = true;
-                                    uploadStream(newVersion, contentStreamSize, stream, s => fileCreationInfo.ContentStream = s);
+                                    uploadStream(session, newVersion, contentStreamSize, stream, s => fileCreationInfo.ContentStream = s);
 
                                     string currentUrl = targetUrl;
                                     if (location.CurrentFullPath != null)
@@ -880,7 +880,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             }
         }
 
-        private void uploadStream(File version, long contentStreamSize, System.IO.Stream stream, Func<System.IO.Stream, System.IO.Stream> simpleUpload)
+        private void uploadStream(SharePointSession session, File version, long contentStreamSize, System.IO.Stream stream, Func<System.IO.Stream, System.IO.Stream> simpleUpload)
         {
             // If we're under the threshold, punt the file over directly
             if (contentStreamSize <= UploadSegmentThresholdInBytes)
