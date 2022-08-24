@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.commons.lang3.StringUtils;
@@ -65,6 +66,7 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.tools.dfc.DfValueFactory;
+import com.armedia.caliente.tools.dfc.DfcAclTools;
 import com.armedia.caliente.tools.dfc.DfcQuery;
 import com.armedia.caliente.tools.dfc.DfcUtils;
 import com.armedia.commons.utilities.Tools;
@@ -490,39 +492,22 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected final boolean applyAcl(T sysObj, String aclDomain, String aclName, DctmImportContext ctx)
 		throws DfException, ImportException {
-		final String dql = String.format("select r_object_id from dm_acl where owner_name = %s and object_name = %s",
-			DfcUtils.quoteString(aclDomain), DfcUtils.quoteString(aclName));
-		IDfSession session = ctx.getSession();
-		final IDfId aclId;
-		try (DfcQuery query = new DfcQuery(session, dql, DfcQuery.Type.DF_READ_QUERY)) {
-			if (!query.hasNext()) {
-				// no such ACL
-				String msg = String.format(
-					"Failed to find the ACL [domain=%s, name=%s] for %s [%s](%s) - the target ACL couldn't be found",
-					aclDomain, aclName, this.cmfObject.getType().name(), this.cmfObject.getLabel(),
-					this.cmfObject.getId());
-				if (ctx.isSupported(CmfObject.Archetype.ACL)) { throw new ImportException(msg); }
-				this.log.warn(msg);
-				return false;
-			}
-			aclId = query.next().getId(DctmAttributes.R_OBJECT_ID);
+
+		IDfACL acl = ctx.getSession().getACL(aclDomain, aclName);
+		if (acl == null) {
+			// no such ACL
+			String msg = String.format(
+				"Failed to find the ACL [domain=%s, name=%s] for %s [%s](%s) - the target ACL couldn't be found",
+				aclDomain, aclName, this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
+			if (ctx.isSupported(CmfObject.Archetype.ACL)) { throw new ImportException(msg); }
+			this.log.warn(msg);
+			return false;
 		}
 
-		ctx.printf("Applying ACL [%s::%s](%s) to %s [%s](%s)", aclDomain, aclName, aclId.getId(),
+		ctx.printf("Applying ACL [%s::%s](%s) to %s [%s](%s)", aclDomain, aclName, acl.getObjectId(),
 			this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
 
-		sysObj.setACLDomain(aclDomain);
-		sysObj.setACLName(aclName);
-
-		/*
-		IDfACL acl = null;
-		
-		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-		
-		acl = IDfACL.class.cast(session.getObject(aclId));
-		sysObj.setACL(acl);
-		*/
 		return true;
 	}
 
@@ -966,13 +951,13 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		return isReference();
 	}
 
-	protected Collection<IDfValue> getTargetPaths() throws DfException, ImportException {
-		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH);
-		if ((p == null) || (p.getValueCount() == 0)) {
-			throw new ImportException(String.format("No target paths specified for [%s](%s)", this.cmfObject.getLabel(),
-				this.cmfObject.getId()));
-		}
-		return p.getValues();
+	protected Collection<IDfValue> getTargetPaths(DctmImportContext ctx) throws DfException, ImportException {
+		return getFixedPaths(ctx).stream() //
+			.map(DfValueFactory::of) //
+			.collect( //
+				Collectors.toCollection(ArrayList::new) //
+			) //
+		;
 	}
 
 	private boolean convertObjectType(IDfSession session, T obj, IDfType source, IDfType target)
@@ -1010,12 +995,12 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		String existingPath = null;
 		T existing = null;
 		final Class<T> dfClass = getObjectClass();
-		Collection<IDfValue> targetPaths = getTargetPaths();
+		Collection<IDfValue> targetPaths = getTargetPaths(ctx);
 		if (this.log.isDebugEnabled()) {
 			this.log.debug("Found {} target paths for {}", targetPaths.size(), this.cmfObject.getDescription());
 		}
-		for (IDfValue p : getTargetPaths()) {
-			final String targetPath = ctx.getTargetPath(p.asString());
+		for (IDfValue p : targetPaths) {
+			final String targetPath = p.asString();
 			final String dql = String.format(dqlBase, DfcUtils.quoteString(objectName),
 				DfcUtils.quoteString(targetPath));
 			final String currentPath = String.format("%s/%s", targetPath, objectName);
@@ -1127,15 +1112,16 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if (mainFolderId.isNull()) {
 			// This is only valid if pos is 0, and it's the only parent value, and there's only one
 			// path value. If it's used under any other circumstance, it's an error.
-			CmfProperty<IDfValue> paths = this.cmfObject.getProperty(IntermediateProperty.PATH);
-			if ((pos == 0) && (parents.getValueCount() == 1) && (paths.getValueCount() == 1)) {
+			Collection<String> paths = getFixedPaths(context);
+			if ((pos == 0) && (parents.getValueCount() == 1) && (paths.size() == 1)) {
 				// This is a "fixup" from the path repairs, so we look up by path
-				String path = context.getTargetPath(paths.getValue().asString());
+				String path = paths.iterator().next();
 				IDfFolder f = session.getFolderByPath(path);
 				if (f != null) { return f.getObjectId(); }
 				this.log.warn("Fixup path [{}] for {} was not found", path, this.cmfObject.getDescription());
 			}
 		}
+
 		Mapping m = context.getValueMapper().getTargetMapping(DctmObjectType.FOLDER.getStoredObjectType(),
 			DctmAttributes.R_OBJECT_ID, mainFolderId.getId());
 		if (m != null) { return new DfId(m.getTargetValue()); }
@@ -1148,9 +1134,11 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if ((parents == null) || (parents.getValueCount() == 0)) {
 			// This might be a cabinet import, so we try to find the target folder
 			String rootPath = context.getTargetPath("/");
-			IDfFolder root = context.getSession().getFolderByPath(rootPath);
-			if (root != null) {
-				newParents.add(root.getObjectId().getId());
+			if (rootPath != null) {
+				IDfFolder root = context.getSession().getFolderByPath(rootPath);
+				if (root != null) {
+					newParents.add(root.getObjectId().getId());
+				}
 			}
 		} else {
 			for (int i = 0; i < parents.getValueCount(); i++) {
@@ -1159,6 +1147,17 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 					continue;
 				}
 				newParents.add(parentId.toString());
+			}
+
+			if (newParents.isEmpty()) {
+				// No parents were identified with the old IDs ... let's see if we can find them via
+				// their possibly new paths
+				for (String s : getFixedPaths(context)) {
+					IDfFolder f = context.getSession().getFolderByPath(s);
+					if (f != null) {
+						newParents.add(f.getObjectId().getId());
+					}
+				}
 			}
 		}
 		return newParents;
@@ -1260,16 +1259,23 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	protected void setOwnerGroupACLData(T sysObject, DctmImportContext ctx) throws ImportException, DfException {
 		// Set the owner and group
 		final IDfSession session = ctx.getSession();
-		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME);
-		if (att != null) {
-			final String actualUser = DctmMappingUtils.resolveMappableUser(session, att.getValue().asString());
+		CmfAttribute<IDfValue> nameAtt = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME);
+		CmfAttribute<IDfValue> permitAtt = this.cmfObject.getAttribute(DctmAttributes.OWNER_PERMIT);
+		if ((nameAtt != null) && (permitAtt != null)) {
+			final String actualUser = DctmMappingUtils.resolveMappableUser(session, nameAtt.getValue().asString());
 			try {
 				IDfUser u = DctmImportUser.locateExistingUser(ctx, actualUser);
 				if (u != null) {
+					final int actualPermit = permitAtt.getValue().asInteger();
+					if (!DfcAclTools.isValidPermit(actualPermit)) {
+						throw new ImportException(String.format("Invalid owner permit found for %s: %d",
+							this.cmfObject.getDescription(), actualPermit));
+					}
 					sysObject.setOwnerName(u.getUserName());
+					sysObject.setOwnerPermit(actualPermit);
 				} else {
 					String msg = String.format(
-						"Failed to set the owner for %s [%s](%s) to user [%s] - the user wasn't found - probably didn't need to be copied over",
+						"Failed to set the owner for %s to user [%s] - the user wasn't found - probably didn't need to be copied over",
 						this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
 						actualUser);
 					if (ctx.isSupported(CmfObject.Archetype.USER)) { throw new ImportException(msg); }
@@ -1284,12 +1290,19 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			}
 		}
 
-		att = this.cmfObject.getAttribute(DctmAttributes.GROUP_NAME);
-		if (att != null) {
-			String group = att.getValue().asString();
+		nameAtt = this.cmfObject.getAttribute(DctmAttributes.GROUP_NAME);
+		permitAtt = this.cmfObject.getAttribute(DctmAttributes.GROUP_PERMIT);
+		if ((nameAtt != null) && (permitAtt != null)) {
+			String group = nameAtt.getValue().asString();
 			IDfGroup g = session.getGroup(group);
 			if (g != null) {
+				final int actualPermit = permitAtt.getValue().asInteger();
+				if (!DfcAclTools.isValidPermit(actualPermit)) {
+					throw new ImportException(String.format("Invalid group permit found for %s: %d",
+						this.cmfObject.getDescription(), actualPermit));
+				}
 				sysObject.setGroupName(g.getGroupName());
+				sysObject.setGroupPermit(actualPermit);
 			} else {
 				String msg = String.format(
 					"Failed to set the group for %s [%s](%s) to group [%s] - the group wasn't found - probably didn't need to be copied over",

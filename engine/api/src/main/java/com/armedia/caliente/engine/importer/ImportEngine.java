@@ -66,6 +66,7 @@ import com.armedia.caliente.engine.tools.DefaultNameFixer;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectHandler;
@@ -594,7 +595,7 @@ public abstract class ImportEngine<//
 		// objects require fixing, we don't sweep the whole table, but instead submit
 		// the IDs that we want fixed.
 
-		DefaultNameFixer<CmfValue> nameFixer = new DefaultNameFixer<>(output, p);
+		CmfNameFixer<CmfValue> nameFixer = new DefaultNameFixer<>(output, p);
 		if (nameFixer.isEmpty()) {
 			output.info("Static name fix map is empty, will not {} any object names", verb);
 			return;
