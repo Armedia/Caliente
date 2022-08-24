@@ -116,6 +116,12 @@ namespace Armedia.CMSMF.SharePoint.Import
                 [OptionAttribute("fixExtensions", Required = false, HelpText = "Choose whether or not to automatically repair 'invalid' extensions by appending one based on the document's format")]
                 public bool? fixExtensions { get; set; }
 
+                [OptionAttribute("uploadSegmentThreshold", Required = false, HelpText = "When a file exceeds this size (in MB), it will be uploaded in chunks (of size uploadSegmentSize) instead of all-at-once")]
+                public int? uploadSegmentThreshold { get; set; }
+
+                [OptionAttribute("uploadSegmentSize", Required = false, HelpText = "The size of each upload chunk when uploading files larger than uploadSegmentThreshold (in MB)")]
+                public int? uploadSegmentSize { get; set; }
+
                 [OptionAttribute('?', "help", Required = false, HelpText = "Show this help message", DefaultValue = false)]
                 public bool help { get; set; }
 
@@ -215,6 +221,14 @@ namespace Armedia.CMSMF.SharePoint.Import
             private const string DEFAULT_FALLBACK_GROUP = "dm_fb_group";
             private const string DEFAULT_INTERNAL_GROUP = "dm_int_group";
 
+            private const int MIN_UPLOAD_SEGMENT_THRESHOLD = 1;
+            private const int MAX_UPLOAD_SEGMENT_THRESHOLD = 10;
+            private const int DEFAULT_UPLOAD_SEGMENT_THRESHOLD = MAX_UPLOAD_SEGMENT_THRESHOLD;
+
+            private const int MIN_UPLOAD_SEGMENT_SIZE = 1;
+            private const int MAX_UPLOAD_SEGMENT_SIZE = 10;
+            private const int DEFAULT_UPLOAD_SEGMENT_SIZE = MAX_UPLOAD_SEGMENT_SIZE;
+
             private readonly Settings CommandLine;
             private readonly Settings ConfigurationFile;
 
@@ -252,6 +266,8 @@ namespace Armedia.CMSMF.SharePoint.Import
             public bool indexOnly { get; set; }
             public bool help { get; private set; }
             public string baseDir { get; private set; }
+            public int uploadSegmentThreshold { get; private set; }
+            public int uploadSegmentSize { get; private set; }
 
             public Configuration(string baseDir, params string[] args)
             {
@@ -269,6 +285,8 @@ namespace Armedia.CMSMF.SharePoint.Import
                 this.autoPublish = DEFAULT_AUTO_PUBLISH;
                 this.locationMode = DEFAULT_USE_LAST_LOCATION;
                 this.fixExtensions = DEFAULT_FIX_EXTENSIONS;
+                this.uploadSegmentThreshold = DEFAULT_UPLOAD_SEGMENT_THRESHOLD;
+                this.uploadSegmentSize = DEFAULT_UPLOAD_SEGMENT_SIZE;
                 foreach (PropertyInfo src in this.CommandLine.GetType().GetProperties())
                 {
                     PropertyInfo tgt = GetType().GetProperty(src.Name);
@@ -347,6 +365,12 @@ namespace Armedia.CMSMF.SharePoint.Import
                 if (this.reuseCount == 0) this.reuseCount = 1;
                 if (this.retries < MIN_RETRIES) this.retries = MIN_RETRIES;
                 if (this.retries > MAX_RETRIES) this.retries = MAX_RETRIES;
+                if (this.uploadSegmentThreshold < MIN_UPLOAD_SEGMENT_THRESHOLD) this.uploadSegmentThreshold = MIN_UPLOAD_SEGMENT_THRESHOLD;
+                if (this.uploadSegmentThreshold > MAX_UPLOAD_SEGMENT_THRESHOLD) this.uploadSegmentThreshold = MAX_UPLOAD_SEGMENT_THRESHOLD;
+                if (this.uploadSegmentSize < MIN_UPLOAD_SEGMENT_SIZE) this.uploadSegmentSize = MIN_UPLOAD_SEGMENT_SIZE;
+                if (this.uploadSegmentSize > MAX_UPLOAD_SEGMENT_SIZE) this.uploadSegmentSize = MAX_UPLOAD_SEGMENT_SIZE;
+                // The upload segment size must be smaller than or equal to the threshold, else it makes no sense.
+                if (uploadSegmentSize > uploadSegmentThreshold) uploadSegmentSize = uploadSegmentThreshold;
                 return errors;
             }
         }
@@ -432,7 +456,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             {
                 ImportContext importContext = new ImportContext(null, options.content, options.metadata, options.caches);
                 FormatResolver formatResolver = new FormatResolver(importContext);
-                new DocumentImporter(new FolderImporter(importContext, options.fallbackFolderType), formatResolver, options.locationMode, options.fixExtensions, options.fallbackDocumentType).StoreLocationIndex();
+                new DocumentImporter(new FolderImporter(importContext, options.fallbackFolderType), formatResolver, options.locationMode, options.fixExtensions, options.fallbackDocumentType, options.uploadSegmentThreshold, options.uploadSegmentSize).StoreLocationIndex();
                 return 0;
             }
 
@@ -533,7 +557,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
                     PermissionsImporter permissionsImporter = new PermissionsImporter(userGroupImporter);
                     FolderImporter folderImporter = new FolderImporter(contentTypeImporter, permissionsImporter, options.fallbackFolderType);
-                    DocumentImporter documentImporter = new DocumentImporter(folderImporter, formatResolver, options.locationMode, options.fixExtensions, options.fallbackDocumentType);
+                    DocumentImporter documentImporter = new DocumentImporter(folderImporter, formatResolver, options.locationMode, options.fixExtensions, options.fallbackDocumentType, options.uploadSegmentThreshold, options.uploadSegmentSize);
                     bool aborted = false;
 
                     Console.CancelKeyPress += delegate (object sender, ConsoleCancelEventArgs e)
