@@ -34,6 +34,7 @@ import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -68,7 +69,7 @@ import javanet.staxutils.IndentingXMLStreamWriter;
 
 public final class XmlProperties {
 
-	public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+	public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 	public static final Class<?>[] NO_CLASSES = {};
 
 	public static final <T> Function<T, String> getDefaultSerializer() {
@@ -271,8 +272,10 @@ public final class XmlProperties {
 		try {
 			XMLStreamWriter xml = XmlProperties.getXMLStreamWriter(out, charsetName);
 			Marshaller marshaller = XmlProperties.getJAXBContext().createMarshaller();
+			marshaller.setProperty(Marshaller.JAXB_ENCODING, charset.name());
 			marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			FlexibleCharacterEscapeHandler.getInstance(charset).configureMarshaller(marshaller);
 
 			xml.writeStartDocument(charsetName, "1.1");
 			// Remove the DTD declaration - this can cause problems in some environments

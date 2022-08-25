@@ -82,6 +82,7 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.xml.FlexibleCharacterEscapeHandler;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
@@ -433,6 +434,7 @@ public class XmlImportDelegateFactory
 		m.setSchema(XmlImportDelegateFactory.SCHEMA);
 		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 		m.setProperty(Marshaller.JAXB_ENCODING, this.encoding.name());
+		FlexibleCharacterEscapeHandler.getInstance(this.encoding).configureMarshaller(m);
 		m.marshal(target, out);
 	}
 }
