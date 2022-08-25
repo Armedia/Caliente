@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * #%L
+ * Armedia Caliente
+ * %%
+ * Copyright (C) 2013 - 2019 Armedia, LLC
+ * %%
+ * This file is part of the Caliente software.
+ *
+ * If the software was purchased under a paid Caliente license, the terms of
+ * the paid license agreement will prevail.  Otherwise, the software is
+ * provided under the following open source license terms:
+ *
+ * Caliente is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Caliente is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Caliente. If not, see <http://www.gnu.org/licenses/>.
+ * #L%
+ *******************************************************************************/
 package com.armedia.caliente.tools.xml;
 
 import java.io.IOException;
@@ -9,11 +35,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
 
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ConcurrentTools;
 import com.sun.xml.bind.marshaller.CharacterEscapeHandler;
 
 public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
@@ -24,6 +53,43 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 		s.add("com.sun.xml.bind.characterEscapeHandler");
 		s.add("com.sun.xml.bind.marshaller.CharacterEscapeHandler");
 		NAMES = Tools.freezeSet(s);
+	}
+
+	private static final ConcurrentMap<String, FlexibleCharacterEscapeHandler> INSTANCES = new ConcurrentHashMap<>();
+
+	public static FlexibleCharacterEscapeHandler getInstance(String charsetName) {
+		return FlexibleCharacterEscapeHandler.getInstance(charsetName,
+			FlexibleCharacterEscapeHandler.DEFAULT_ENCODE_INVALID);
+	}
+
+	public static FlexibleCharacterEscapeHandler getInstance(Charset charset) {
+		return FlexibleCharacterEscapeHandler.getInstance(charset,
+			FlexibleCharacterEscapeHandler.DEFAULT_ENCODE_INVALID);
+	}
+
+	public static FlexibleCharacterEscapeHandler getInstance(String charsetName, boolean encodeInvalid) {
+		return FlexibleCharacterEscapeHandler.getInstance(charsetName, encodeInvalid,
+			FlexibleCharacterEscapeHandler.DEFAULT_EXCLUDE_DISCOURAGED);
+	}
+
+	public static FlexibleCharacterEscapeHandler getInstance(Charset charset, boolean encodeInvalid) {
+		return FlexibleCharacterEscapeHandler.getInstance(charset, encodeInvalid,
+			FlexibleCharacterEscapeHandler.DEFAULT_EXCLUDE_DISCOURAGED);
+	}
+
+	public static FlexibleCharacterEscapeHandler getInstance(String charsetName, boolean encodeInvalid,
+		boolean excludeDiscouraged) {
+		return FlexibleCharacterEscapeHandler.getInstance(
+			Charset.forName(Optional.of(charsetName).orElse(FlexibleCharacterEscapeHandler.DEFAULT_CHARSET.name())),
+			encodeInvalid, excludeDiscouraged);
+	}
+
+	public static FlexibleCharacterEscapeHandler getInstance(final Charset charset, final boolean encodeInvalid,
+		final boolean excludeDiscouraged) {
+		final Charset finalCharset = Optional.of(charset).orElse(FlexibleCharacterEscapeHandler.DEFAULT_CHARSET);
+		final String key = String.format("%s:%s:%s", finalCharset.name(), encodeInvalid, excludeDiscouraged);
+		return ConcurrentTools.createIfAbsent(FlexibleCharacterEscapeHandler.INSTANCES, key,
+			(k) -> FlexibleCharacterEscapeHandler.getInstance(finalCharset, encodeInvalid, excludeDiscouraged));
 	}
 
 	public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
@@ -41,28 +107,7 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 	private final boolean encodeInvalid;
 	private final boolean excludeDiscouraged;
 
-	public FlexibleCharacterEscapeHandler(String charsetName) {
-		this(charsetName, FlexibleCharacterEscapeHandler.DEFAULT_ENCODE_INVALID);
-	}
-
-	public FlexibleCharacterEscapeHandler(Charset charset) {
-		this(charset, FlexibleCharacterEscapeHandler.DEFAULT_ENCODE_INVALID);
-	}
-
-	public FlexibleCharacterEscapeHandler(String charsetName, boolean encodeInvalid) {
-		this(charsetName, encodeInvalid, FlexibleCharacterEscapeHandler.DEFAULT_EXCLUDE_DISCOURAGED);
-	}
-
-	public FlexibleCharacterEscapeHandler(Charset charset, boolean encodeInvalid) {
-		this(charset, encodeInvalid, FlexibleCharacterEscapeHandler.DEFAULT_EXCLUDE_DISCOURAGED);
-	}
-
-	public FlexibleCharacterEscapeHandler(String charsetName, boolean encodeInvalid, boolean excludeDiscouraged) {
-		this(Charset.forName(Optional.of(charsetName).orElse(FlexibleCharacterEscapeHandler.DEFAULT_CHARSET.name())), encodeInvalid,
-			excludeDiscouraged);
-	}
-
-	public FlexibleCharacterEscapeHandler(Charset charset, boolean encodeInvalid, boolean excludeDiscouraged) {
+	protected FlexibleCharacterEscapeHandler(Charset charset, boolean encodeInvalid, boolean excludeDiscouraged) {
 		this.charset = Optional.of(charset).orElse(FlexibleCharacterEscapeHandler.DEFAULT_CHARSET);
 		this.encoder = this.charset.newEncoder();
 		this.encodeInvalid = encodeInvalid;
@@ -168,7 +213,8 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 				return;
 
 			case '\"':
-				out.write(attributeValue ? FlexibleCharacterEscapeHandler.ENC_QUOT : FlexibleCharacterEscapeHandler.ENC_ATT_QUOT);
+				out.write(attributeValue ? FlexibleCharacterEscapeHandler.ENC_QUOT
+					: FlexibleCharacterEscapeHandler.ENC_ATT_QUOT);
 				return;
 
 			default:
