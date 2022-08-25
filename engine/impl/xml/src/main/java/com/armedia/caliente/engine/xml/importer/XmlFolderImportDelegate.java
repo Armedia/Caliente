@@ -81,7 +81,7 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 
 		boolean ok = false;
 		try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tgt.toFile()))) {
-			XmlImportDelegateFactory.marshalXml(f, out);
+			this.factory.marshalXml(f, out);
 			ok = true;
 		} catch (FileNotFoundException e) {
 			throw new ImportException(String.format("Failed to open an output stream to [%s]", tgt), e);

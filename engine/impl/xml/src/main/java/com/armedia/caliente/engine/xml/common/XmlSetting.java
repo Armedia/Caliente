@@ -27,6 +27,7 @@
 package com.armedia.caliente.engine.xml.common;
 
 import com.armedia.caliente.engine.TransferEngineSetting;
+import com.armedia.caliente.engine.xml.importer.XmlImportDelegateFactory;
 import com.armedia.caliente.store.CmfValue;
 
 public enum XmlSetting implements TransferEngineSetting {
@@ -35,6 +36,7 @@ public enum XmlSetting implements TransferEngineSetting {
 	AGGREGATE_FOLDERS(CmfValue.Type.BOOLEAN, false), //
 	AGGREGATE_DOCUMENTS(CmfValue.Type.BOOLEAN, false), //
 	ORGANIZER(CmfValue.Type.STRING), //
+	ENCODING(CmfValue.Type.STRING, XmlImportDelegateFactory.DEFAULT_ENCODING.name()), //
 	//
 	;
 

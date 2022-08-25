@@ -32,6 +32,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -91,6 +93,7 @@ public class XmlImportDelegateFactory
 	extends ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
 
 	private static final String SCHEMA_NAME = "caliente-engine-xml.xsd";
+	public static final Charset DEFAULT_ENCODING = StandardCharsets.UTF_8;
 
 	static final Schema SCHEMA;
 
@@ -103,7 +106,7 @@ public class XmlImportDelegateFactory
 		}
 	}
 
-	static void marshalXml(Object target, OutputStream out) throws JAXBException {
+	void marshalXml(Object target, OutputStream out) throws JAXBException {
 		if (target == null) { throw new IllegalArgumentException("Must supply an object to marshal"); }
 		if (out == null) {
 			throw new IllegalArgumentException(String.format("Nowhere to write %s to", target.getClass().getName()));
@@ -113,7 +116,7 @@ public class XmlImportDelegateFactory
 		Marshaller m = XmlTools.getContext(targetClass).createMarshaller();
 		m.setSchema(XmlImportDelegateFactory.SCHEMA);
 		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		m.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+		m.setProperty(Marshaller.JAXB_ENCODING, this.encoding.name());
 		m.marshal(target, out);
 	}
 
@@ -122,6 +125,7 @@ public class XmlImportDelegateFactory
 	private final boolean aggregateDocuments;
 	private final Path content;
 	private final Path metadataRoot;
+	private final Charset encoding;
 	private volatile boolean schemaMissing = true;
 	private final CmfContentOrganizer organizer;
 
@@ -169,7 +173,7 @@ public class XmlImportDelegateFactory
 						}
 						boolean ok = false;
 						try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tgt.toFile()))) {
-							XmlImportDelegateFactory.marshalXml(doc, out);
+							marshalXml(doc, out);
 							ok = true;
 						} catch (FileNotFoundException e) {
 							this.log.error("Failed to open an output stream to [{}]", tgt, e);
@@ -235,7 +239,7 @@ public class XmlImportDelegateFactory
 				final Path p = calculateConsolidatedFile(archetype);
 				boolean ok = false;
 				try (OutputStream out = new BufferedOutputStream(new FileOutputStream(p.toFile()))) {
-					XmlImportDelegateFactory.marshalXml(root, out);
+					marshalXml(root, out);
 					ok = true;
 				} catch (FileNotFoundException e) {
 					this.log.error("Failed to open the output file for the aggregate XML for type {} at [{}]",
@@ -297,7 +301,8 @@ public class XmlImportDelegateFactory
 		}
 	};
 
-	public XmlImportDelegateFactory(XmlImportEngine engine, CfgTools configuration) throws IOException {
+	public XmlImportDelegateFactory(XmlImportEngine engine, CfgTools configuration)
+		throws ImportException, IOException {
 		super(engine, configuration);
 		engine.addListener(this.documentListener);
 
@@ -317,6 +322,13 @@ public class XmlImportDelegateFactory
 
 		this.aggregateFolders = configuration.getBoolean(XmlSetting.AGGREGATE_FOLDERS);
 		this.aggregateDocuments = configuration.getBoolean(XmlSetting.AGGREGATE_DOCUMENTS);
+
+		final String encodingName = configuration.getString(XmlSetting.ENCODING);
+		try {
+			this.encoding = Charset.forName(encodingName);
+		} catch (Exception e) {
+			throw new ImportException(String.format("Illegal encoding name given [%s]", encodingName), e);
+		}
 
 		Map<CmfObject.Archetype, AggregatorBase<?>> xml = new EnumMap<>(CmfObject.Archetype.class);
 		xml.put(CmfObject.Archetype.USER, new UsersT());
@@ -361,7 +373,7 @@ public class XmlImportDelegateFactory
 		DocumentT doc = new DocumentT();
 		doc.getVersion().add(v);
 		try {
-			XmlImportDelegateFactory.marshalXml(doc, NullOutputStream.NULL_OUTPUT_STREAM);
+			marshalXml(doc, NullOutputStream.NULL_OUTPUT_STREAM);
 		} catch (JAXBException e) {
 			throw new ImportException(
 				String.format("Attempting to store version [%s] of history [%s], a marshalling error ocurred: %s",

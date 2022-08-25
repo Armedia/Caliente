@@ -71,10 +71,18 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 			"Instead of rendering a singular XML companion file for each Folder, render a single, large index for all Folders") //
 	;
 
+	private static final Option ENCODING = new OptionImpl() //
+		.setLongOpt("encoding") //
+		.setArgumentLimits(1) //
+		.setDescription("Use the given XML encoding instead of the default") //
+		.setDefault(XmlSetting.ENCODING.getDefaultValue() //
+		);
+
 	private static final OptionGroup OPTIONS = new OptionGroupImpl("XML Import") //
 		.add(Importer.ORGANIZER) //
 		.add(Importer.AGGREGATE_DOCUMENTS) //
 		.add(Importer.AGGREGATE_FOLDERS) //
+		.add(Importer.ENCODING) //
 	;
 
 	Importer(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
@@ -131,6 +139,7 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		settings.put(XmlSetting.ORGANIZER.getLabel(), commandValues.getString(Importer.ORGANIZER));
 		settings.put(XmlSetting.AGGREGATE_FOLDERS.getLabel(), commandValues.isPresent(Importer.AGGREGATE_FOLDERS));
 		settings.put(XmlSetting.AGGREGATE_DOCUMENTS.getLabel(), commandValues.isPresent(Importer.AGGREGATE_DOCUMENTS));
+		settings.put(XmlSetting.ENCODING.getLabel(), commandValues.getString(Importer.ENCODING));
 		return true;
 	}
 
