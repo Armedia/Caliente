@@ -219,8 +219,8 @@ namespace Armedia.CMSMF.SharePoint.Common
                     continue;
                 }
 
-                // Is this a control character of some kind? Perhaps the "null" character?
-                if (Char.IsControl(keyInfo.KeyChar) || (keyInfo.KeyChar == '\u0000')) continue;
+                // Is this a control character of some kind? (this includes the null character \u0000)
+                if (Char.IsControl(keyInfo.KeyChar)) continue;
 
                 // This is a character that we can use in a password, so use it!
                 str.AppendChar(keyInfo.KeyChar);
