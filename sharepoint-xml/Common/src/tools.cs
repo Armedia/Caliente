@@ -195,38 +195,36 @@ namespace Armedia.CMSMF.SharePoint.Common
         /// <returns>the string the user typed in </returns>
         public static SecureString ReadPassword(char mask)
         {
-            const int ENTER = 13, BACKSP = 8, CTRLBACKSP = 127;
-            int[] FILTERED = { 0, 27, 9, 10 /*, 32 space, if you care */ }; // const
-
             // First, clear the buffer...
             while (Console.KeyAvailable) Console.ReadKey(true);
 
-            char chr = (char)0;
             SecureString str = new SecureString();
-            while ((chr = System.Console.ReadKey(true).KeyChar) != ENTER)
+            while (true)
             {
-                if (chr == BACKSP)
+                ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+
+                // If we're done with the password, we stop reading
+                if (keyInfo.Key == ConsoleKey.Enter) break;
+
+                // This handles both backspace and control-backspace
+                if (keyInfo.Key == ConsoleKey.Backspace)
                 {
-                    if (str.Length > 0)
+                    int count = ((keyInfo.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control) ? str.Length : 1;
+                    while (count > 0)
                     {
-                        System.Console.Write("\b \b");
+                        Console.Write("\b \b");
                         str.RemoveAt(str.Length - 1);
+                        count--;
                     }
+                    continue;
                 }
-                else if (chr == CTRLBACKSP)
-                {
-                    while (str.Length > 0)
-                    {
-                        System.Console.Write("\b \b");
-                        str.RemoveAt(str.Length - 1);
-                    }
-                }
-                else if (FILTERED.Count(x => chr == x) > 0) { }
-                else
-                {
-                    str.AppendChar(chr);
-                    System.Console.Write(mask);
-                }
+
+                // Is this a control character of some kind? Perhaps the "null" character?
+                if (Char.IsControl(keyInfo.KeyChar) || (keyInfo.KeyChar == '\u0000')) continue;
+
+                // This is a character that we can use in a password, so use it!
+                str.AppendChar(keyInfo.KeyChar);
+                Console.Write(mask);
             }
 
             System.Console.WriteLine();
