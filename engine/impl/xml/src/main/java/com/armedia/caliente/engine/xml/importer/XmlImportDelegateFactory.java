@@ -106,20 +106,6 @@ public class XmlImportDelegateFactory
 		}
 	}
 
-	void marshalXml(Object target, OutputStream out) throws JAXBException {
-		if (target == null) { throw new IllegalArgumentException("Must supply an object to marshal"); }
-		if (out == null) {
-			throw new IllegalArgumentException(String.format("Nowhere to write %s to", target.getClass().getName()));
-		}
-
-		Class<?> targetClass = target.getClass();
-		Marshaller m = XmlTools.getContext(targetClass).createMarshaller();
-		m.setSchema(XmlImportDelegateFactory.SCHEMA);
-		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		m.setProperty(Marshaller.JAXB_ENCODING, this.encoding.name());
-		m.marshal(target, out);
-	}
-
 	private final Map<CmfObject.Archetype, AggregatorBase<?>> xml;
 	private final boolean aggregateFolders;
 	private final boolean aggregateDocuments;
@@ -434,5 +420,19 @@ public class XmlImportDelegateFactory
 		List<String> path = new LinkedList<>(location.containerSpec);
 		path.add(location.baseName);
 		return FileNameTools.reconstitute(path, false, false, '/');
+	}
+
+	void marshalXml(Object target, OutputStream out) throws JAXBException {
+		if (target == null) { throw new IllegalArgumentException("Must supply an object to marshal"); }
+		if (out == null) {
+			throw new IllegalArgumentException(String.format("Nowhere to write %s to", target.getClass().getName()));
+		}
+
+		Class<?> targetClass = target.getClass();
+		Marshaller m = XmlTools.getContext(targetClass).createMarshaller();
+		m.setSchema(XmlImportDelegateFactory.SCHEMA);
+		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+		m.setProperty(Marshaller.JAXB_ENCODING, this.encoding.name());
+		m.marshal(target, out);
 	}
 }
