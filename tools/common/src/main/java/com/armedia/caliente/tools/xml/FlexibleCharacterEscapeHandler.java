@@ -57,6 +57,20 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 
 	private static final ConcurrentMap<String, FlexibleCharacterEscapeHandler> INSTANCES = new ConcurrentHashMap<>();
 
+	public static FlexibleCharacterEscapeHandler getInstance() {
+		return FlexibleCharacterEscapeHandler.getInstance(FlexibleCharacterEscapeHandler.DEFAULT_CHARSET);
+	}
+
+	public static FlexibleCharacterEscapeHandler getInstance(boolean encodeInvalid) {
+		return FlexibleCharacterEscapeHandler.getInstance(FlexibleCharacterEscapeHandler.DEFAULT_CHARSET,
+			encodeInvalid);
+	}
+
+	public static FlexibleCharacterEscapeHandler getInstance(boolean encodeInvalid, boolean excludeDiscouraged) {
+		return FlexibleCharacterEscapeHandler.getInstance(FlexibleCharacterEscapeHandler.DEFAULT_CHARSET, encodeInvalid,
+			excludeDiscouraged);
+	}
+
 	public static FlexibleCharacterEscapeHandler getInstance(String charsetName) {
 		return FlexibleCharacterEscapeHandler.getInstance(charsetName,
 			FlexibleCharacterEscapeHandler.DEFAULT_ENCODE_INVALID);
@@ -80,20 +94,22 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 	public static FlexibleCharacterEscapeHandler getInstance(String charsetName, boolean encodeInvalid,
 		boolean excludeDiscouraged) {
 		return FlexibleCharacterEscapeHandler.getInstance(
-			Charset.forName(Optional.of(charsetName).orElse(FlexibleCharacterEscapeHandler.DEFAULT_CHARSET.name())),
+			Charset.forName(
+				Optional.ofNullable(charsetName).orElse(FlexibleCharacterEscapeHandler.DEFAULT_CHARSET.name())),
 			encodeInvalid, excludeDiscouraged);
 	}
 
 	public static FlexibleCharacterEscapeHandler getInstance(final Charset charset, final boolean encodeInvalid,
 		final boolean excludeDiscouraged) {
-		final Charset finalCharset = Optional.of(charset).orElse(FlexibleCharacterEscapeHandler.DEFAULT_CHARSET);
+		final Charset finalCharset = Optional.ofNullable(charset)
+			.orElse(FlexibleCharacterEscapeHandler.DEFAULT_CHARSET);
 		final String key = String.format("%s:%s:%s", finalCharset.name(), encodeInvalid, excludeDiscouraged);
 		return ConcurrentTools.createIfAbsent(FlexibleCharacterEscapeHandler.INSTANCES, key,
-			(k) -> FlexibleCharacterEscapeHandler.getInstance(finalCharset, encodeInvalid, excludeDiscouraged));
+			(k) -> new FlexibleCharacterEscapeHandler(finalCharset, encodeInvalid, excludeDiscouraged));
 	}
 
 	public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
-	public static final boolean DEFAULT_ENCODE_INVALID = false;
+	public static final boolean DEFAULT_ENCODE_INVALID = true;
 	public static final boolean DEFAULT_EXCLUDE_DISCOURAGED = false;
 
 	private static final String ENC_AMP = "&amp;";
