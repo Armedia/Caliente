@@ -434,7 +434,7 @@ public class XmlImportDelegateFactory
 		m.setSchema(XmlImportDelegateFactory.SCHEMA);
 		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 		m.setProperty(Marshaller.JAXB_ENCODING, this.encoding.name());
-		FlexibleCharacterEscapeHandler.getInstance(this.encoding).configureMarshaller(m);
+		FlexibleCharacterEscapeHandler.getInstance(this.encoding).configure(m);
 		m.marshal(target, out);
 	}
 }

@@ -106,7 +106,7 @@ public class AlfXmlIndex implements Closeable {
 		m.setProperty(Marshaller.JAXB_ENCODING, AlfXmlIndex.CHARSET.name());
 		m.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		FlexibleCharacterEscapeHandler.getInstance(AlfXmlIndex.CHARSET).configureMarshaller(this.marshaller);
+		FlexibleCharacterEscapeHandler.getInstance(AlfXmlIndex.CHARSET).configure(this.marshaller);
 
 		return m;
 	}

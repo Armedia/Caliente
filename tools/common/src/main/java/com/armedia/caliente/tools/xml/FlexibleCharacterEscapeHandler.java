@@ -47,7 +47,7 @@ import com.sun.xml.bind.marshaller.CharacterEscapeHandler;
 
 public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 
-	private static final Set<String> NAMES;
+	protected static final Set<String> NAMES;
 	static {
 		Set<String> s = new TreeSet<>();
 		s.add("com.sun.xml.bind.characterEscapeHandler");
@@ -130,7 +130,7 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 		this.excludeDiscouraged = excludeDiscouraged;
 	}
 
-	public Marshaller unconfigureMarshaller(Marshaller m) throws PropertyException {
+	public static Marshaller unconfigure(Marshaller m) throws PropertyException {
 		Objects.requireNonNull(m, "Must provide a marshaller to unconfigure");
 		for (String name : FlexibleCharacterEscapeHandler.NAMES) {
 			m.setProperty(name, null);
@@ -138,12 +138,17 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 		return m;
 	}
 
-	public Marshaller configureMarshaller(Marshaller m) throws PropertyException {
+	public static Marshaller configure(Marshaller m, FlexibleCharacterEscapeHandler h) throws PropertyException {
 		Objects.requireNonNull(m, "Must provide a marshaller to configure");
+		Objects.requireNonNull(h, "Must provide a FlexibleCharacterEscapeHandler to configure");
 		for (String name : FlexibleCharacterEscapeHandler.NAMES) {
-			m.setProperty(name, this);
+			m.setProperty(name, h);
 		}
 		return m;
+	}
+
+	public Marshaller configure(Marshaller m) throws PropertyException {
+		return FlexibleCharacterEscapeHandler.configure(m, this);
 	}
 
 	public final Charset getCharset() {
@@ -209,7 +214,9 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 			return this.excludeDiscouraged && isDiscouragedXmlCharacter(c);
 		}
 
-		return false;
+		// If it didn't fall into any of the above slots, then it's not an allowed
+		// character for XML
+		return true;
 	}
 
 	protected void encode(char c, boolean attributeValue, Writer out) throws IOException {

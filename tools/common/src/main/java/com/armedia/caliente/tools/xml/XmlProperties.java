@@ -275,7 +275,7 @@ public final class XmlProperties {
 			marshaller.setProperty(Marshaller.JAXB_ENCODING, charset.name());
 			marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-			FlexibleCharacterEscapeHandler.getInstance(charset).configureMarshaller(marshaller);
+			FlexibleCharacterEscapeHandler.getInstance(charset).configure(marshaller);
 
 			xml.writeStartDocument(charsetName, "1.1");
 			// Remove the DTD declaration - this can cause problems in some environments

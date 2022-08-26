@@ -105,7 +105,7 @@ public class XmlContentPersistor extends FileContentPersistor {
 		this.marshaller.setProperty(Marshaller.JAXB_ENCODING, charset.name());
 		this.marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 		this.marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		FlexibleCharacterEscapeHandler.getInstance(charset).configureMarshaller(this.marshaller);
+		FlexibleCharacterEscapeHandler.getInstance(charset).configure(this.marshaller);
 	}
 
 	@Override
