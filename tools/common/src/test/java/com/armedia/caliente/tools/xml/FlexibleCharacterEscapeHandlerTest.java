@@ -6,6 +6,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.time.Duration;
+import java.time.Instant;
 
 import javax.xml.bind.Marshaller;
 
@@ -488,6 +490,8 @@ public class FlexibleCharacterEscapeHandlerTest {
 					}
 
 					// Test all lengths
+					long i = 0;
+					Instant last = Instant.now();
 					for (int s = 0; s < chars.length; s++) {
 						final int maxLength = (chars.length - s);
 						for (int l = 0; l < maxLength; l++) {
@@ -503,6 +507,13 @@ public class FlexibleCharacterEscapeHandlerTest {
 							h.escape(chars, s, l, attributeValue, sw);
 							Assertions.assertEquals(encoded.toString(), sw.toString(),
 								String.format("Offsets: %d:%d", s, l));
+
+							if (Math.floorMod(i, 10000) == 0) {
+								Instant next = Instant.now();
+								System.out.printf("%s: %d (%d:%d)%n", Duration.between(last, next), i, s, l);
+								last = next;
+							}
+							i++;
 						}
 					}
 				}
