@@ -1,12 +1,15 @@
 package com.armedia.caliente.tools.xml;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 
 import javax.xml.bind.Marshaller;
 
+import org.apache.commons.lang3.StringUtils;
 import org.easymock.EasyMock;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -340,9 +343,10 @@ public class FlexibleCharacterEscapeHandlerTest {
 	public void testEncodeEscaped() throws Exception {
 		FlexibleCharacterEscapeHandler h = FlexibleCharacterEscapeHandler.getInstance();
 		StringBuilder sb = new StringBuilder();
-		for (char c = 0; c < 0xFFFF; c++) {
+		for (long l = 0; l < Character.MAX_VALUE; l++) {
+			final char c = (char) l;
 			sb.setLength(0);
-			sb.append("&#").append(Integer.toString(c)).append(";");
+			sb.append("&#").append(Long.toString(l)).append(";");
 			StringWriter sw = new StringWriter(16);
 			h.encodeEscaped(c, sw);
 			Assertions.assertEquals(sb.toString(), sw.toString());
@@ -352,7 +356,8 @@ public class FlexibleCharacterEscapeHandlerTest {
 	@Test
 	public void testIsDiscouragedXmlCharacter() {
 		FlexibleCharacterEscapeHandler h = FlexibleCharacterEscapeHandler.getInstance();
-		for (char c = 0x00; c < 0x110000; c++) {
+		for (long l = 0x00; l < Character.MAX_VALUE; l++) {
+			final char c = (char) l;
 			final boolean discouraged = false //
 				|| ((0x7F <= c) && (c <= 0x84)) //
 				|| ((0x86 <= c) && (c <= 0x9F)) //
@@ -381,13 +386,127 @@ public class FlexibleCharacterEscapeHandlerTest {
 
 	@Test
 	public void testIsInvalidXmlCharacter() {
+		boolean[] arr = {
+			true, false
+		};
+		for (boolean excludeDiscouraged : arr) {
+			FlexibleCharacterEscapeHandler h = FlexibleCharacterEscapeHandler.getInstance(true, excludeDiscouraged);
+			for (long l = 0x00; l < Character.MAX_VALUE; l++) {
+				final char c = (char) l;
+				final boolean knownValid = false //
+					|| (0x09 == c) //
+					|| (0x0A == c) //
+					|| (0x0D == c) //
+					|| ((0x20 <= c) && (c <= 0xD7FF)) //
+					|| ((0xE000 <= c) && (c <= 0xFFFD)) //
+				;
+				final boolean maybeValid = ((0x10000 <= c) && (c <= 0x10FFFF));
+
+				final boolean valid = knownValid //
+					|| (maybeValid && (!excludeDiscouraged || !h.isDiscouragedXmlCharacter(c))) //
+				;
+
+				Assertions.assertNotEquals(valid, h.isInvalidXmlCharacter(c));
+			}
+		}
 	}
 
 	@Test
-	public void testEncode() {
+	public void testEncode() throws IOException {
+		boolean[] arr = {
+			true, false
+		};
+		CharsetEncoder enc = null;
+		for (boolean encodeInvalid : arr) {
+			for (boolean excludeDiscouraged : arr) {
+				for (boolean attributeValue : arr) {
+					FlexibleCharacterEscapeHandler h = FlexibleCharacterEscapeHandler.getInstance(encodeInvalid,
+						excludeDiscouraged);
+					if (enc == null) {
+						enc = h.getCharset().newEncoder();
+					}
+					for (long l = 0x00; l < Character.MAX_VALUE; l++) {
+						final char c = (char) l;
+						String result = StringUtils.EMPTY;
+						switch (c) {
+							case '&':
+								result = "&amp;";
+								break;
+							case '<':
+								result = "&lt;";
+								break;
+							case '>':
+								result = "&gt;";
+								break;
+							case '"':
+								result = (attributeValue ? "&quot;" : "\"");
+								break;
+							default:
+								boolean valid = !h.isInvalidXmlCharacter(c);
+								if (valid || encodeInvalid) {
+									if (valid && enc.canEncode(c)) {
+										result = String.valueOf(c);
+									} else {
+										result = "&#" + Integer.toString(c) + ";";
+									}
+								}
+								break;
+						}
+
+						StringWriter sw = new StringWriter();
+						h.encode(c, attributeValue, sw);
+						Assertions.assertEquals(result, sw.toString());
+					}
+				}
+			}
+		}
 	}
 
 	@Test
-	public void testEscape() {
+	public void testEscape() throws IOException {
+		boolean[] arr = {
+			true, false
+		};
+		char[] chars = new char[Character.MAX_VALUE];
+		for (int i = 0x00; i < Character.MAX_VALUE; i++) {
+			chars[i] = (char) i;
+		}
+
+		StringBuilder encoded = new StringBuilder();
+
+		for (boolean encodeInvalid : arr) {
+			for (boolean excludeDiscouraged : arr) {
+				for (boolean attributeValue : arr) {
+					FlexibleCharacterEscapeHandler h = FlexibleCharacterEscapeHandler.getInstance(encodeInvalid,
+						excludeDiscouraged);
+
+					// Test 0 length
+					for (int s = 0; s < chars.length; s++) {
+						StringWriter sw = new StringWriter();
+						h.escape(chars, s, 0, attributeValue, sw);
+						Assertions.assertEquals(StringUtils.EMPTY, sw.toString());
+					}
+
+					// Test all lengths
+					for (int s = 0; s < chars.length; s++) {
+						final int maxLength = (chars.length - s);
+						for (int l = 0; l < maxLength; l++) {
+							encoded.setLength(0);
+
+							for (int o = s; o < (s + l); o++) {
+								StringWriter sw = new StringWriter();
+								h.encode(chars[o], attributeValue, sw);
+								encoded.append(sw.toString());
+							}
+
+							StringWriter sw = new StringWriter();
+							h.escape(chars, s, l, attributeValue, sw);
+							Assertions.assertEquals(encoded.toString(), sw.toString(),
+								String.format("Offsets: %d:%d", s, l));
+						}
+					}
+				}
+			}
+		}
 	}
 }

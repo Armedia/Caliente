@@ -112,9 +112,13 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 	public static final boolean DEFAULT_ENCODE_INVALID = true;
 	public static final boolean DEFAULT_EXCLUDE_DISCOURAGED = false;
 
+	private static final char CHR_AMP = '&';
 	private static final String ENC_AMP = "&amp;";
+	private static final char CHR_LT = '<';
 	private static final String ENC_LT = "&lt;";
+	private static final char CHR_GT = '>';
 	private static final String ENC_GT = "&gt;";
+	private static final char CHR_QUOT = '"';
 	private static final String ENC_QUOT = "&quot;";
 	private static final String ENC_ATT_QUOT = "\"";
 
@@ -173,6 +177,11 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 		if ((0x7F <= c) && (c <= 0x84)) { return true; }
 		if ((0x86 <= c) && (c <= 0x9F)) { return true; }
 		if ((0xFDD0 <= c) && (c <= 0xFDEF)) { return true; }
+
+		// All these values exist for completeness. In reality,
+		// Java char values are constrained between 0x0000 and
+		// 0xFFFF, so we will never be able to reach these
+		// values regardless (right?).
 		if ((0x1FFFE <= c) && (c <= 0x1FFFF)) { return true; }
 		if ((0x2FFFE <= c) && (c <= 0x2FFFF)) { return true; }
 		if ((0x3FFFE <= c) && (c <= 0x3FFFF)) { return true; }
@@ -207,6 +216,10 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 		if ((0x20 <= c) && (c <= 0xD7FF)) { return false; }
 		if ((0xE000 <= c) && (c <= 0xFFFD)) { return false; }
 
+		// This check exists for completeness. In reality,
+		// Java char values are constrained between 0x0000 and
+		// 0xFFFF, so we will never be able to reach these
+		// values regardless (right?).
 		if ((0x10000 <= c) && (c <= 0x10FFFF)) {
 			// If we're not excluding discouraged characters, we just accept
 			// whatever we got. Otherwise, we check to see if this is a character
@@ -223,19 +236,19 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 
 		// First off, the easy gimmes...
 		switch (c) {
-			case '&':
+			case CHR_AMP:
 				out.write(FlexibleCharacterEscapeHandler.ENC_AMP);
 				return;
 
-			case '<':
+			case CHR_LT:
 				out.write(FlexibleCharacterEscapeHandler.ENC_LT);
 				return;
 
-			case '>':
+			case CHR_GT:
 				out.write(FlexibleCharacterEscapeHandler.ENC_GT);
 				return;
 
-			case '\"':
+			case CHR_QUOT:
 				out.write(attributeValue ? FlexibleCharacterEscapeHandler.ENC_QUOT
 					: FlexibleCharacterEscapeHandler.ENC_ATT_QUOT);
 				return;
