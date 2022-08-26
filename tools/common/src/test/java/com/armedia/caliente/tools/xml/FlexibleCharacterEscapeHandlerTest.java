@@ -343,7 +343,7 @@ public class FlexibleCharacterEscapeHandlerTest {
 	public void testEncodeEscaped() throws Exception {
 		FlexibleCharacterEscapeHandler h = FlexibleCharacterEscapeHandler.getInstance();
 		StringBuilder sb = new StringBuilder();
-		for (long l = 0; l < Character.MAX_VALUE; l++) {
+		for (long l = Character.MIN_VALUE; l < Character.MAX_VALUE; l++) {
 			final char c = (char) l;
 			sb.setLength(0);
 			sb.append("&#").append(Long.toString(l)).append(";");
@@ -356,7 +356,7 @@ public class FlexibleCharacterEscapeHandlerTest {
 	@Test
 	public void testIsDiscouragedXmlCharacter() {
 		FlexibleCharacterEscapeHandler h = FlexibleCharacterEscapeHandler.getInstance();
-		for (long l = 0x00; l < Character.MAX_VALUE; l++) {
+		for (long l = Character.MIN_VALUE; l < Character.MAX_VALUE; l++) {
 			final char c = (char) l;
 			final boolean discouraged = false //
 				|| ((0x7F <= c) && (c <= 0x84)) //
@@ -391,7 +391,7 @@ public class FlexibleCharacterEscapeHandlerTest {
 		};
 		for (boolean excludeDiscouraged : arr) {
 			FlexibleCharacterEscapeHandler h = FlexibleCharacterEscapeHandler.getInstance(true, excludeDiscouraged);
-			for (long l = 0x00; l < Character.MAX_VALUE; l++) {
+			for (long l = Character.MIN_VALUE; l < Character.MAX_VALUE; l++) {
 				final char c = (char) l;
 				final boolean knownValid = false //
 					|| (0x09 == c) //
@@ -425,7 +425,7 @@ public class FlexibleCharacterEscapeHandlerTest {
 					if (enc == null) {
 						enc = h.getCharset().newEncoder();
 					}
-					for (long l = 0x00; l < Character.MAX_VALUE; l++) {
+					for (long l = Character.MIN_VALUE; l < Character.MAX_VALUE; l++) {
 						final char c = (char) l;
 						String result = StringUtils.EMPTY;
 						switch (c) {
@@ -468,7 +468,7 @@ public class FlexibleCharacterEscapeHandlerTest {
 			true, false
 		};
 		char[] chars = new char[Character.MAX_VALUE];
-		for (int i = 0x00; i < Character.MAX_VALUE; i++) {
+		for (int i = Character.MIN_VALUE; i < Character.MAX_VALUE; i++) {
 			chars[i] = (char) i;
 		}
 
