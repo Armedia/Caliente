@@ -55,6 +55,10 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 		NAMES = Tools.freezeSet(s);
 	}
 
+	public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+	public static final boolean DEFAULT_ENCODE_INVALID = false;
+	public static final boolean DEFAULT_EXCLUDE_DISCOURAGED = false;
+
 	private static final ConcurrentMap<String, FlexibleCharacterEscapeHandler> INSTANCES = new ConcurrentHashMap<>();
 
 	public static FlexibleCharacterEscapeHandler getInstance() {
@@ -107,10 +111,6 @@ public class FlexibleCharacterEscapeHandler implements CharacterEscapeHandler {
 		return ConcurrentTools.createIfAbsent(FlexibleCharacterEscapeHandler.INSTANCES, key,
 			(k) -> new FlexibleCharacterEscapeHandler(finalCharset, encodeInvalid, excludeDiscouraged));
 	}
-
-	public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
-	public static final boolean DEFAULT_ENCODE_INVALID = true;
-	public static final boolean DEFAULT_EXCLUDE_DISCOURAGED = false;
 
 	private static final char CHR_AMP = '&';
 	private static final String ENC_AMP = "&amp;";
