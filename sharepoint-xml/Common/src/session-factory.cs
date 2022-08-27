@@ -50,6 +50,7 @@ namespace Armedia.CMSMF.SharePoint.Common
 
     public sealed class SharePointSession : IDisposable
     {
+		const string USER_AGENT = "Armedia-Caliente-SP-Ingestor";
         public static readonly TimeSpan TIME_OUT = new TimeSpan(1, 0, 0);
 
         private static long counter = 0;
@@ -118,11 +119,14 @@ namespace Armedia.CMSMF.SharePoint.Common
             this.ClientContext.RequestTimeout = (int)TIME_OUT.TotalMilliseconds;
             this.ClientContext.PendingRequest.RequestExecutor.RequestKeepAlive = true;
             this.ClientContext.PendingRequest.RequestExecutor.WebRequest.KeepAlive = true;
+            this.ClientContext.PendingRequest.RequestExecutor.WebRequest.UserAgent = USER_AGENT;
             this.ClientContext.PendingRequest.RequestExecutor.WebRequest.Timeout = (int)TIME_OUT.TotalMilliseconds;
             // this.ClientContext.PendingRequest.RequestExecutor.WebRequest.ReadWriteTimeout = (int)TIME_OUT.TotalMilliseconds;
             long start = Environment.TickCount;
             try
             {
+				// TODO: Acquire permission to execute the query (i.e. respect the Retry-After header). During the check, if the check
+				// timeout expires, we clear out the lock so no other requests get blocked behind us...
                 this.ClientContext.ExecuteQuery();
             }
             catch (ServerException e)
@@ -133,6 +137,35 @@ namespace Armedia.CMSMF.SharePoint.Common
             catch (WebException e)
             {
                 long duration = (Environment.TickCount - start);
+
+				// TODO: We must check to see if Retry-After has been submitted. In particular, we must check to see
+				HttpWebResponse rsp = e.Response as HttpWebResponse;
+				if (rsp.StatusCode == (HttpStatusCode)429 || rsp.StatusCode == (HttpStatusCode)503)
+				{
+					// We got throttled!! Get the Retry-After header
+					int retrySeconds = 0;
+					String retryAfter = rsp.Headers.Get(System.Net.HttpResponseHeader.RetryAfter.ToString());
+					if (!String.IsNullOrEmpty(retryAfter))
+					{
+						try
+						{
+							retrySeconds = Int32.Parse(retryAfter);
+						}
+						catch (FormatException)
+						{
+							// TODO: log a warning we got throttled, couldn't figure out for how long, and will
+							// apply a default throttle amount
+						}
+					}
+
+					if (retrySeconds > 0)
+					{
+						// TODO: Enable the concurrency locks blocking all other sessions from issuing concurrent
+						// queries while the retry limit is active
+					}
+				}
+
+				// Whatever happened above, we still puke out ...
                 throw new ExecuteQueryException(string.Format("{1} ({2}.{3:000}s HRESULT=[0x{4:X8}] STATUS=[{5}] DATA=[{6}])", Environment.NewLine, e.Message, duration / 1000, duration % 1000, e.HResult, e.Status, e.Data), e);
             }
             catch (Exception e)
