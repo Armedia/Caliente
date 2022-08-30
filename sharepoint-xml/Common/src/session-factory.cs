@@ -1,3 +1,4 @@
+using log4net;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
@@ -52,6 +53,87 @@ namespace Armedia.CMSMF.SharePoint.Common
         }
     }
 
+    public class ThrottleHandler
+    {
+        const int FALLBACK_THROTTLE_SECS = 30;
+        private readonly TimeSpan TIMEOUT = TimeSpan.FromMilliseconds(-1);
+        private readonly ILog Log;
+        private readonly ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
+        private long Border = Environment.TickCount;
+
+        ThrottleHandler()
+        {
+            this.Log = LogManager.GetLogger(GetType());
+        }
+
+        public void ApplyThrottling()
+        {
+            Lock.EnterReadLock();
+            try
+            {
+                long now = Environment.TickCount;
+                long remaining = (Interlocked.Read(ref Border) - now);
+                if (remaining <= 0) return;
+                // First, let go of all locks ...
+                Lock.ExitReadLock();
+                try
+                {
+                    // Sleep for "remaining" milliseconds
+                    Thread.Sleep((int)remaining);
+                }
+                finally
+                {
+                    // Now, reacquire the locks so we can release them cleanly
+                    Lock.EnterReadLock();
+                }
+            }
+            finally
+            {
+                Lock.ExitReadLock();
+            }
+        }
+
+        public void RetryAfter(WebException e)
+        {
+            HttpWebResponse rsp = e.Response as HttpWebResponse;
+            if (rsp.StatusCode == (HttpStatusCode)429 || rsp.StatusCode == (HttpStatusCode)503)
+            {
+                // We got throttled!! Get the Retry-After header
+                int retrySeconds = 0;
+                string retryAfterHeader = System.Net.HttpResponseHeader.RetryAfter.ToString();
+                string retryAfter = rsp.Headers.Get(retryAfterHeader);
+                if (!string.IsNullOrEmpty(retryAfter))
+                {
+                    try
+                    {
+                        retrySeconds = Int32.Parse(retryAfter);
+                    }
+                    catch (FormatException fe)
+                    {
+                        retrySeconds = FALLBACK_THROTTLE_SECS;
+                        this.Log.Warn(string.Format("Received an HTTP response requiring throttling {0}, but the {1} header contained the value [{2}] which could not be parsed - will instead throttle for {3} seconds", rsp.StatusCode.GetTypeCode(), retryAfterHeader, retryAfter, retrySeconds, fe));
+                    }
+                }
+
+                if (retrySeconds <= 0) return;
+
+                // The new border will be "now" plus (retrySeconds + 1) seconds in the future
+                long newBorder = Environment.TickCount + ((retrySeconds + 1) * 1000);
+                Lock.EnterWriteLock();
+                try
+                {
+                    long oldBorder = Interlocked.Read(ref this.Border);
+                    // If the border moves forward, then do so ... otherwise, nothing to do here
+                    if (newBorder > oldBorder) Interlocked.Exchange(ref this.Border, newBorder);
+                }
+                finally
+                {
+                    Lock.ExitWriteLock();
+                }
+            }
+        }
+    }
+
     public sealed class SharePointSession : IDisposable
     {
         const string USER_AGENT = "Armedia-Caliente-SP-Ingestor";
@@ -60,6 +142,7 @@ namespace Armedia.CMSMF.SharePoint.Common
 
         private static long counter = 0;
 
+        private readonly ThrottleHandler ThrottleHandler;
         public readonly ClientContext ClientContext;
         public readonly List DocumentLibrary;
         public readonly string BaseUrl;
@@ -134,8 +217,7 @@ namespace Armedia.CMSMF.SharePoint.Common
             long start = Environment.TickCount;
             try
             {
-                // TODO: Acquire permission to execute the query (i.e. respect the Retry-After header). During the check, if the check
-                // timeout expires, we clear out the lock so no other requests get blocked behind us...
+                this.ThrottleHandler.ApplyThrottling();
                 this.ClientContext.ExecuteQueryRetry(this.RetryCount, this.RetryDelay, USER_AGENT);
             }
             catch (ServerException e)
@@ -146,32 +228,7 @@ namespace Armedia.CMSMF.SharePoint.Common
             catch (WebException e)
             {
                 long duration = (Environment.TickCount - start);
-                HttpWebResponse rsp = e.Response as HttpWebResponse;
-                if (rsp.StatusCode == (HttpStatusCode)429 || rsp.StatusCode == (HttpStatusCode)503)
-                {
-                    // We got throttled!! Get the Retry-After header
-                    int retrySeconds = 0;
-                    String retryAfter = rsp.Headers.Get(System.Net.HttpResponseHeader.RetryAfter.ToString());
-                    if (!String.IsNullOrEmpty(retryAfter))
-                    {
-                        try
-                        {
-                            retrySeconds = Int32.Parse(retryAfter);
-                        }
-                        catch (FormatException)
-                        {
-                            // TODO: log a warning we got throttled, couldn't figure out for how long, and will
-                            // apply a default throttle amount
-                        }
-                    }
-
-                    if (retrySeconds > 0)
-                    {
-                        // TODO: set the time marker for the given number of seconds in the future
-                        // (plus one), so that the Waiter method can apply the blocking/sleeping.
-                    }
-                }
-
+                this.ThrottleHandler.RetryAfter(e);
                 // Whatever happened above, we still puke out ...
                 throw new ExecuteQueryException(string.Format("{1} ({2}.{3:000}s HRESULT=[0x{4:X8}] STATUS=[{5}] DATA=[{6}])", Environment.NewLine, e.Message, duration / 1000, duration % 1000, e.HResult, e.Status, e.Data), e);
             }
