@@ -22,8 +22,10 @@ namespace Armedia.CMSMF.SharePoint.Common
         public readonly string ApplicationId;
         public readonly string CertificateKey;
         public readonly string CertificatePass;
+        public readonly int RetryCount;
+        public readonly int RetryDelay;
 
-        public SharePointSessionInfo(string url, string userName, SecureString password, string domain, string applicationId, string certificateKey, string certificatePass, string library, int maxBorrowCount)
+        public SharePointSessionInfo(string url, string userName, SecureString password, string domain, string applicationId, string certificateKey, string certificatePass, string library, int maxBorrowCount, int retryCount, int retryDelay)
         {
             this.Url = url.TrimEnd('/');
             this.UserName = userName;
@@ -35,6 +37,8 @@ namespace Armedia.CMSMF.SharePoint.Common
             this.Library = (!string.IsNullOrWhiteSpace(library) ? library : DEFAULT_LIBRARY_NAME);
             if (maxBorrowCount == 0) maxBorrowCount = 1;
             this.MaxBorrowCount = maxBorrowCount;
+            this.RetryCount = retryCount;
+            this.RetryDelay = retryDelay;
         }
 
         public void Dispose()
@@ -50,7 +54,8 @@ namespace Armedia.CMSMF.SharePoint.Common
 
     public sealed class SharePointSession : IDisposable
     {
-		const string USER_AGENT = "Armedia-Caliente-SP-Ingestor";
+        const string USER_AGENT = "Armedia-Caliente-SP-Ingestor";
+
         public static readonly TimeSpan TIME_OUT = new TimeSpan(1, 0, 0);
 
         private static long counter = 0;
@@ -61,6 +66,8 @@ namespace Armedia.CMSMF.SharePoint.Common
         public readonly Folder RootFolder;
         public readonly string Id;
         private long BorrowCount = 0;
+        private readonly int RetryCount;
+        private readonly int RetryDelay;
 
         private class ExecuteQueryException : Exception
         {
@@ -86,7 +93,7 @@ namespace Armedia.CMSMF.SharePoint.Common
             // If we were given written auth parameters, we use those. This will fail if MFA is needed
             if (!string.IsNullOrWhiteSpace(info.UserName))
             {
-         	    this.ClientContext = authManager.GetSharePointOnlineAuthenticatedContextTenant(info.Url, info.UserName, info.Password);
+                 this.ClientContext = authManager.GetSharePointOnlineAuthenticatedContextTenant(info.Url, info.UserName, info.Password);
             }
             else
             // We're not even being given auth details, so we ask ...
@@ -111,6 +118,8 @@ namespace Armedia.CMSMF.SharePoint.Common
                 user = string.Format("{0}\\{1}", info.Domain, user);
             }
             this.Id = string.Format("SHPT[{0}@{1}#{2}]", user, this.ClientContext.Url, Interlocked.Increment(ref counter));
+            this.RetryCount = info.RetryCount;
+            this.RetryDelay = info.RetryDelay;
         }
 
         public void ExecuteQuery()
@@ -125,9 +134,9 @@ namespace Armedia.CMSMF.SharePoint.Common
             long start = Environment.TickCount;
             try
             {
-				// TODO: Acquire permission to execute the query (i.e. respect the Retry-After header). During the check, if the check
-				// timeout expires, we clear out the lock so no other requests get blocked behind us...
-                this.ClientContext.ExecuteQuery();
+                // TODO: Acquire permission to execute the query (i.e. respect the Retry-After header). During the check, if the check
+                // timeout expires, we clear out the lock so no other requests get blocked behind us...
+                this.ClientContext.ExecuteQueryRetry(this.RetryCount, this.RetryDelay, USER_AGENT);
             }
             catch (ServerException e)
             {
@@ -138,34 +147,34 @@ namespace Armedia.CMSMF.SharePoint.Common
             {
                 long duration = (Environment.TickCount - start);
 
-				// TODO: We must check to see if Retry-After has been submitted. In particular, we must check to see
-				HttpWebResponse rsp = e.Response as HttpWebResponse;
-				if (rsp.StatusCode == (HttpStatusCode)429 || rsp.StatusCode == (HttpStatusCode)503)
-				{
-					// We got throttled!! Get the Retry-After header
-					int retrySeconds = 0;
-					String retryAfter = rsp.Headers.Get(System.Net.HttpResponseHeader.RetryAfter.ToString());
-					if (!String.IsNullOrEmpty(retryAfter))
-					{
-						try
-						{
-							retrySeconds = Int32.Parse(retryAfter);
-						}
-						catch (FormatException)
-						{
-							// TODO: log a warning we got throttled, couldn't figure out for how long, and will
-							// apply a default throttle amount
-						}
-					}
+                // TODO: We must check to see if Retry-After has been submitted. In particular, we must check to see
+                HttpWebResponse rsp = e.Response as HttpWebResponse;
+                if (rsp.StatusCode == (HttpStatusCode)429 || rsp.StatusCode == (HttpStatusCode)503)
+                {
+                    // We got throttled!! Get the Retry-After header
+                    int retrySeconds = 0;
+                    String retryAfter = rsp.Headers.Get(System.Net.HttpResponseHeader.RetryAfter.ToString());
+                    if (!String.IsNullOrEmpty(retryAfter))
+                    {
+                        try
+                        {
+                            retrySeconds = Int32.Parse(retryAfter);
+                        }
+                        catch (FormatException)
+                        {
+                            // TODO: log a warning we got throttled, couldn't figure out for how long, and will
+                            // apply a default throttle amount
+                        }
+                    }
 
-					if (retrySeconds > 0)
-					{
-						// TODO: Enable the concurrency locks blocking all other sessions from issuing concurrent
-						// queries while the retry limit is active
-					}
-				}
+                    if (retrySeconds > 0)
+                    {
+                        // TODO: Enable the concurrency locks blocking all other sessions from issuing concurrent
+                        // queries while the retry limit is active
+                    }
+                }
 
-				// Whatever happened above, we still puke out ...
+                // Whatever happened above, we still puke out ...
                 throw new ExecuteQueryException(string.Format("{1} ({2}.{3:000}s HRESULT=[0x{4:X8}] STATUS=[{5}] DATA=[{6}])", Environment.NewLine, e.Message, duration / 1000, duration % 1000, e.HResult, e.Status, e.Data), e);
             }
             catch (Exception e)

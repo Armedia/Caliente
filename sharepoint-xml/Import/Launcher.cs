@@ -98,6 +98,9 @@ namespace Armedia.CMSMF.SharePoint.Import
                 [OptionAttribute("retries", Required = false, HelpText = "The number of times to retry the document import failures when there is no success between attempts (min 0, max 3)")]
                 public int? retries { get; set; }
 
+                [OptionAttribute("retryDelay", Required = false, HelpText = "The number of milliseconds to wait between retries (min 500, max 30,000)")]
+                public int? retryDelay { get; set; }
+
                 [OptionAttribute("reuseCount", Required = false, HelpText = "The number of times to reuse each ClientContext instance (SharePoint session) before they get discarded (< 0 = forever, min = 1)")]
                 public int? reuseCount { get; set; }
 
@@ -205,6 +208,10 @@ namespace Armedia.CMSMF.SharePoint.Import
             private const int DEFAULT_RETRIES = MIN_RETRIES;
             private const int MAX_RETRIES = 3;
 
+            private const int MIN_RETRY_DELAY = 500;
+            private const int DEFAULT_RETRY_DELAY = MIN_RETRY_DELAY;
+            private const int MAX_RETRY_DELAY = 30000;
+
             private const int DEFAULT_REUSE_COUNT = 10;
             private const bool DEFAULT_CLEAN_TYPES = false;
             private const DocumentImporter.SimulationMode DEFAULT_SIMULATE_CONTENT = DocumentImporter.SimulationMode.NONE;
@@ -250,6 +257,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             public string fallbackFolderType { get; private set; }
             public int threads { get; private set; }
             public int retries { get; private set; }
+            public int retryDelay { get; private set; }
             public int reuseCount { get; private set; }
             public bool cleanTypes { get; private set; }
             public DocumentImporter.SimulationMode simulationMode { get; private set; }
@@ -356,6 +364,8 @@ namespace Armedia.CMSMF.SharePoint.Import
                 if (this.reuseCount == 0) this.reuseCount = 1;
                 if (this.retries < MIN_RETRIES) this.retries = MIN_RETRIES;
                 if (this.retries > MAX_RETRIES) this.retries = MAX_RETRIES;
+                if (this.retryDelay < MIN_RETRY_DELAY) this.retryDelay = MIN_RETRY_DELAY;
+                if (this.retryDelay > MAX_RETRY_DELAY) this.retryDelay = MAX_RETRY_DELAY;
                 if (this.uploadSegmentSize < MIN_UPLOAD_SEGMENT_SIZE) this.uploadSegmentSize = MIN_UPLOAD_SEGMENT_SIZE;
                 if (this.uploadSegmentSize > MAX_UPLOAD_SEGMENT_SIZE) this.uploadSegmentSize = MAX_UPLOAD_SEGMENT_SIZE;
                 return errors;
@@ -481,7 +491,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                     }
                 }
 
-                using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, userPassword, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.library, options.reuseCount)))
+                using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, userPassword, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.library, options.reuseCount, options.retries, options.retryDelay)))
                 {
                     ImportContext importContext = new ImportContext(sessionFactory, options.content, options.metadata, options.caches);
                     using (ObjectPool<SharePointSession>.Ref sessionRef = sessionFactory.GetSession())
