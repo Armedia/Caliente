@@ -53,15 +53,21 @@ namespace Armedia.CMSMF.SharePoint.Common
         }
     }
 
-    public class ThrottleHandler
+    public interface IThrottleHandler
+    {
+        void ApplyThrottling();
+
+        void RetryAfter(WebException e);
+    }
+
+    public class SimpleThrottleHandler : IThrottleHandler
     {
         const int FALLBACK_THROTTLE_SECS = 30;
-        private readonly TimeSpan TIMEOUT = TimeSpan.FromMilliseconds(-1);
         private readonly ILog Log;
         private readonly ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
         private long Border = Environment.TickCount;
 
-        ThrottleHandler()
+        public SimpleThrottleHandler()
         {
             this.Log = LogManager.GetLogger(GetType());
         }
@@ -71,20 +77,23 @@ namespace Armedia.CMSMF.SharePoint.Common
             Lock.EnterReadLock();
             try
             {
-                long now = Environment.TickCount;
-                long remaining = (Interlocked.Read(ref Border) - now);
-                if (remaining <= 0) return;
-                // First, let go of all locks ...
-                Lock.ExitReadLock();
-                try
+                while (true)
                 {
-                    // Sleep for "remaining" milliseconds
-                    Thread.Sleep((int)remaining);
-                }
-                finally
-                {
-                    // Now, reacquire the locks so we can release them cleanly
-                    Lock.EnterReadLock();
+                    long now = Environment.TickCount;
+                    long remaining = (Interlocked.Read(ref Border) - now);
+                    if (remaining <= 0) return;
+                    // First, let go of all locks ...
+                    Lock.ExitReadLock();
+                    try
+                    {
+                        // Sleep for "remaining" milliseconds
+                        Thread.Sleep((int)remaining);
+                    }
+                    finally
+                    {
+                        // Now, reacquire the locks so we can release them cleanly
+                        Lock.EnterReadLock();
+                    }
                 }
             }
             finally
@@ -142,7 +151,7 @@ namespace Armedia.CMSMF.SharePoint.Common
 
         private static long counter = 0;
 
-        private readonly ThrottleHandler ThrottleHandler;
+        private readonly IThrottleHandler ThrottleHandler;
         public readonly ClientContext ClientContext;
         public readonly List DocumentLibrary;
         public readonly string BaseUrl;
@@ -160,7 +169,7 @@ namespace Armedia.CMSMF.SharePoint.Common
             }
         }
 
-        public SharePointSession(OfficeDevPnP.Core.AuthenticationManager authManager, SharePointSessionInfo info)
+        public SharePointSession(OfficeDevPnP.Core.AuthenticationManager authManager, SharePointSessionInfo info, IThrottleHandler throttleHandler)
         {
             // If we're using an application ID, we use that and forget everything else...
             if (!string.IsNullOrWhiteSpace(info.ApplicationId))
@@ -317,6 +326,7 @@ namespace Armedia.CMSMF.SharePoint.Common
         {
             private OfficeDevPnP.Core.AuthenticationManager AuthManager;
             private SharePointSessionInfo Info;
+            private readonly IThrottleHandler ThrottleHandler = new SimpleThrottleHandler();
 
             public SharePointSessionGenerator(SharePointSessionInfo info)
             {
@@ -326,7 +336,7 @@ namespace Armedia.CMSMF.SharePoint.Common
 
             SharePointSession PoolableObjectFactory<SharePointSession>.Create()
             {
-                return new SharePointSession(this.AuthManager, this.Info);
+                return new SharePointSession(this.AuthManager, this.Info, this.ThrottleHandler);
             }
 
             void PoolableObjectFactory<SharePointSession>.Destroy(SharePointSession t)
