@@ -146,8 +146,6 @@ namespace Armedia.CMSMF.SharePoint.Common
             catch (WebException e)
             {
                 long duration = (Environment.TickCount - start);
-
-                // TODO: We must check to see if Retry-After has been submitted. In particular, we must check to see
                 HttpWebResponse rsp = e.Response as HttpWebResponse;
                 if (rsp.StatusCode == (HttpStatusCode)429 || rsp.StatusCode == (HttpStatusCode)503)
                 {
@@ -169,8 +167,8 @@ namespace Armedia.CMSMF.SharePoint.Common
 
                     if (retrySeconds > 0)
                     {
-                        // TODO: Enable the concurrency locks blocking all other sessions from issuing concurrent
-                        // queries while the retry limit is active
+                        // TODO: set the time marker for the given number of seconds in the future
+                        // (plus one), so that the Waiter method can apply the blocking/sleeping.
                     }
                 }
 
