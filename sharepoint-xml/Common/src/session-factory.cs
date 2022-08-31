@@ -171,6 +171,10 @@ namespace Armedia.CMSMF.SharePoint.Common
 
         public SharePointSession(OfficeDevPnP.Core.AuthenticationManager authManager, SharePointSessionInfo info, IThrottleHandler throttleHandler)
         {
+            this.RetryCount = info.RetryCount;
+            this.RetryDelay = info.RetryDelay;
+            this.ThrottleHandler = throttleHandler;
+
             // If we're using an application ID, we use that and forget everything else...
             if (!string.IsNullOrWhiteSpace(info.ApplicationId))
             {
@@ -210,8 +214,6 @@ namespace Armedia.CMSMF.SharePoint.Common
                 user = string.Format("{0}\\{1}", info.Domain, user);
             }
             this.Id = string.Format("SHPT[{0}@{1}#{2}]", user, this.ClientContext.Url, Interlocked.Increment(ref counter));
-            this.RetryCount = info.RetryCount;
-            this.RetryDelay = info.RetryDelay;
         }
 
         public void ExecuteQuery()
