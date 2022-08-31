@@ -663,7 +663,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                                         else
                                         {
                                             // This must be uploaded in segments
-                                            uploadSegments(leftoverStreams, tracker, session, clientContext, newVersion, stream);
+                                            uploadSegments(leftoverStreams, tracker, session, clientContext, newVersion, stream, sourcePath, versionNumber);
                                         }
                                         newVersion.CheckIn(comment, CheckinType.MinorCheckIn);
                                         tracker.TrackProgress("Checking in new version [{0}] for document [{1}] (at [{2}]) - {3:N0} bytes", versionNumber, sourcePath, safeFullPath, contentStreamSize);
@@ -703,7 +703,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                                                 newVersion = f.Files.Add(fileCreationInfo);
 
                                                 // Now upload the chunks, overwriting the original file
-                                                uploadSegments(leftoverStreams, tracker, session, clientContext, newVersion, stream);
+                                                uploadSegments(leftoverStreams, tracker, session, clientContext, newVersion, stream, sourcePath, versionNumber);
                                             }
                                         }
 
@@ -901,10 +901,11 @@ namespace Armedia.CMSMF.SharePoint.Import
             }
         }
 
-        private File uploadSegments(List<System.IO.Stream> chunks, ProgressTracker tracker, SharePointSession session, ClientContext clientContext, File version, System.IO.Stream stream)
+        private File uploadSegments(List<System.IO.Stream> chunks, ProgressTracker tracker, SharePointSession session, ClientContext clientContext, File version, System.IO.Stream stream, string sourcePath, string versionNumber)
         {
             Guid uploadId = Guid.NewGuid();
             bool started = false;
+            int segmentSizeMB = UploadSegmentSizeInBytes / (1024 * 1024);
             try
             {
                 // TODO: See if an upload is already running from before ... if it is, I'm not sure we can cleanly resume... so much crap happening
@@ -929,7 +930,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                     if (bytesRead < buf.Length)
                     {
                         // End sliced upload by calling FinishUpload.
-                        tracker.TrackProgress("Completing the segmented upload with ID {0} of {1} bytes ({2} chunks)", uploadId, appendPosition + bytesRead, (appendPosition / buf.Length) + 1);
+                        tracker.TrackProgress("Completing the segmented upload (ID={0}) of {1} bytes ({2} segments of {3}MB) for Document [{4}] (version [{5}])", uploadId, appendPosition + bytesRead, (appendPosition / buf.Length) + 1, segmentSizeMB, sourcePath, versionNumber);
                         version = version.FinishUpload(uploadId, appendPosition, mem);
                         session.ExecuteQuery();
                         break;
@@ -939,12 +940,12 @@ namespace Armedia.CMSMF.SharePoint.Import
                     // just keep swimming :)
                     if (appendPosition == 0)
                     {
-                        tracker.TrackProgress("Starting a new segmented upload with ID {0}", uploadId);
+                        tracker.TrackProgress("Starting a new segmented upload with ID {0} for Document [{1}] (version [{2}]) - segment size is {3}MB", uploadId, sourcePath, versionNumber, segmentSizeMB);
                         bytesUploaded = version.StartUpload(uploadId, mem);
                     }
                     else
                     {
-                        tracker.TrackProgress("Adding chunk # {0} for segmented upload with ID {0}", (appendPosition / buf.Length) + 1, uploadId);
+                        tracker.TrackProgress("Adding segment # {0} (ID={1}) for Document [{2}] (version [{3}])", (appendPosition / buf.Length) + 1, uploadId, sourcePath, versionNumber);
                         bytesUploaded = version.ContinueUpload(uploadId, appendPosition, mem);
                     }
                     session.ExecuteQuery();
