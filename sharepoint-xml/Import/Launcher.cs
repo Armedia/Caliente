@@ -122,24 +122,23 @@ namespace Armedia.CMSMF.SharePoint.Import
                 [OptionAttribute("uploadSegmentSize", Required = false, HelpText = "The maximum size to attempt a direct upload for. Files larger than this will be uploaded in multiple segments of at most this size (in MB, max 255)")]
                 public int? uploadSegmentSize { get; set; }
 
-                [OptionAttribute('?', "help", Required = false, HelpText = "Show this help message", DefaultValue = false)]
+                [OptionAttribute('?', "help", Required = false, HelpText = "Show this help message")]
                 public bool help { get; set; }
-
-                [ParserState]
-                public IParserState LastParserState { get; set; }
-
-                [HelpOption]
-                public string GetUsage()
-                {
-                    return HelpText.AutoBuild(this, (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));
-                }
 
                 // These are the options intended for internal use only
                 public bool? indexOnly { get; set; }
 
-                public Settings(params string[] args)
+                public static HelpText RenderHelp(ParserResult<Settings> result)
                 {
-                    Parser.Default.ParseArguments(args, this);
+                    return HelpText.AutoBuild(result, //
+                            (HelpText ht) => HelpText.DefaultParsingErrorsHandler(result, ht), //
+                            e => e //
+                        );
+                }
+
+                public Settings()
+                {
+
                 }
 
                 public Settings(string path)
@@ -230,6 +229,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             private const int DEFAULT_UPLOAD_SEGMENT_SIZE = 10;
 
             private readonly Settings CommandLine;
+            private readonly ParserResult<Settings> ParserResult;
             private readonly Settings ConfigurationFile;
 
             public string cfg { get; private set; }
@@ -272,8 +272,22 @@ namespace Armedia.CMSMF.SharePoint.Import
             public Configuration(string baseDir, params string[] args)
             {
                 this.baseDir = baseDir;
-                this.CommandLine = new Settings(args);
-                string cfgFile = (this.CommandLine.cfg != null ? this.CommandLine.cfg : string.Format("{0}\\config.xml", Directory.GetCurrentDirectory()));
+
+                int exitCode = 0;
+                this.ParserResult = Parser.Default.ParseArguments<Settings>(args);
+
+                this.ParserResult.WithNotParsed<Settings>(errs =>
+                {
+                    Console.WriteLine(Settings.RenderHelp(this.ParserResult));
+                    exitCode = 1;
+                });
+
+                // Explode, if required...
+                if (exitCode != 0) Environment.Exit(1);
+
+                this.CommandLine = this.ParserResult.Value;
+
+                string cfgFile = (this.CommandLine.cfg != null ? this.CommandLine.cfg : string.Format("{0}/config.xml", Directory.GetCurrentDirectory()));
                 this.ConfigurationFile = new Settings(cfgFile);
 
                 object[] parameters = new object[1];
@@ -286,7 +300,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                 this.locationMode = DEFAULT_USE_LAST_LOCATION;
                 this.fixExtensions = DEFAULT_FIX_EXTENSIONS;
                 this.uploadSegmentSize = DEFAULT_UPLOAD_SEGMENT_SIZE;
-                foreach (PropertyInfo src in this.CommandLine.GetType().GetProperties())
+                foreach (PropertyInfo src in typeof(Settings).GetProperties())
                 {
                     PropertyInfo tgt = GetType().GetProperty(src.Name);
                     if (tgt == null) continue;
@@ -318,7 +332,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
             public string GetUsage()
             {
-                return this.CommandLine.GetUsage();
+                return Settings.RenderHelp(this.ParserResult);
             }
 
             public List<string> ValidateConfiguration()
@@ -424,6 +438,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             string baseDir = Directory.GetCurrentDirectory();
             // Initialize log4j
             Configuration options = new Configuration(baseDir, args);
+
             if (options.help)
             {
                 Console.Error.WriteLine(options.GetUsage());
