@@ -47,6 +47,7 @@ import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.CfgTools;
@@ -180,7 +181,21 @@ public abstract class ImportDelegateFactory< //
 
 	public final Collection<String> getFixedPaths(CmfObject<VALUE> cmfObject, CONTEXT ctx,
 		UnaryOperator<String> pathFix) throws ImportException {
+
+		// Always work with the head version's paths
+		if (!cmfObject.isHistoryCurrent()) {
+			try {
+				return getFixedPaths(ctx.getHeadObject(cmfObject), ctx, pathFix);
+			} catch (CmfStorageException e) {
+				throw new ImportException(
+					String.format("Failed to locate the HEAD object for %s", cmfObject.getDescription()), e);
+			}
+		}
+
+		// We're the current version, so we do the actual searching
+
 		List<String> fixedPaths = computeFixedPaths(cmfObject, ctx, pathFix);
+
 		if (!fixedPaths.isEmpty()) {
 			// Apply truncations and remove any null values
 			fixedPaths.replaceAll(ctx::getTargetPath);
