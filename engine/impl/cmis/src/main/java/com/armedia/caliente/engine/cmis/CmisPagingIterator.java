@@ -69,10 +69,6 @@ public class CmisPagingIterator<E> implements Iterator<E> {
 		return this.count;
 	}
 
-	protected boolean accept(E next) {
-		return true;
-	}
-
 	protected boolean terminate() {
 		this.currentPage = null;
 		this.it = null;
@@ -108,6 +104,8 @@ public class CmisPagingIterator<E> implements Iterator<E> {
 
 	@Override
 	public void remove() {
-		this.it.remove();
+		if (this.it != null) {
+			this.it.remove();
+		}
 	}
 }
