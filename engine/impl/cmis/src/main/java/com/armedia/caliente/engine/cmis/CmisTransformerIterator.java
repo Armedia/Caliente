@@ -28,13 +28,15 @@ package com.armedia.caliente.engine.cmis;
 
 import java.util.Iterator;
 
+import com.armedia.commons.utilities.function.CheckedFunction;
+
 public final class CmisTransformerIterator<S, T> implements Iterator<T> {
 
 	private final Iterator<S> it;
-	private final CmisResultTransformer<S, T> transformer;
+	private final CheckedFunction<S, T, ? extends Exception> transformer;
 	private long current = 0;
 
-	public CmisTransformerIterator(Iterator<S> results, CmisResultTransformer<S, T> transformer) {
+	public CmisTransformerIterator(Iterator<S> results, CheckedFunction<S, T, ? extends Exception> transformer) {
 		if (transformer == null) { throw new IllegalArgumentException("Must provide a transformer"); }
 		this.transformer = transformer;
 		this.it = results;
@@ -48,8 +50,9 @@ public final class CmisTransformerIterator<S, T> implements Iterator<T> {
 	@Override
 	public T next() {
 		try {
+			T result = this.transformer.applyChecked(this.it.next());
 			this.current++;
-			return this.transformer.transform(this.it.next());
+			return result;
 		} catch (Exception e) {
 			throw new RuntimeException(String.format("Failed to transform query result #%d", this.current), e);
 		}

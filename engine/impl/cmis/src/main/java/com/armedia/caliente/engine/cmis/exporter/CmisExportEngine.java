@@ -48,7 +48,6 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.cmis.CmisPagingTransformerIterator;
 import com.armedia.caliente.engine.cmis.CmisRecursiveIterator;
-import com.armedia.caliente.engine.cmis.CmisResultTransformer;
 import com.armedia.caliente.engine.cmis.CmisSessionFactory;
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.cmis.CmisTransformerIterator;
@@ -70,7 +69,7 @@ import com.armedia.commons.utilities.Tools;
 public class CmisExportEngine extends
 	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory, CmisExportEngineFactory> {
 
-	private final class QueryResultTransformer implements CmisResultTransformer<QueryResult, ExportTarget> {
+	private final class QueryResultTransformer {
 		private final Session session;
 		private final Map<String, ObjectType> typeCache = new HashMap<>();
 
@@ -78,7 +77,6 @@ public class CmisExportEngine extends
 			this.session = session;
 		}
 
-		@Override
 		public ExportTarget transform(QueryResult r) throws Exception {
 			PropertyData<?> objectId = r.getPropertyById(PropertyIds.OBJECT_ID);
 			if (objectId == null) {
@@ -122,12 +120,9 @@ public class CmisExportEngine extends
 		}
 	}
 
-	private final CmisResultTransformer<CmisObject, ExportTarget> cmisObjectTransformer = new CmisResultTransformer<CmisObject, ExportTarget>() {
-		@Override
-		public ExportTarget transform(CmisObject result) throws Exception {
-			return new ExportTarget(decodeType(result.getType()), result.getId(), result.getId());
-		}
-	};
+	private final ExportTarget cmisObjectToExportTarget(CmisObject result) throws Exception {
+		return new ExportTarget(decodeType(result.getType()), result.getId(), result.getId());
+	}
 
 	public CmisExportEngine(CmisExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
@@ -147,7 +142,7 @@ public class CmisExportEngine extends
 			// This is a folder that we need to recurse into
 			return new CmisTransformerIterator<>(
 				new CmisRecursiveIterator(session, Folder.class.cast(obj), excludeEmptyFolders),
-				this.cmisObjectTransformer);
+				this::cmisObjectToExportTarget);
 		}
 
 		// Not a folder, so no need to recurse
@@ -167,7 +162,7 @@ public class CmisExportEngine extends
 		final boolean searchAllVersions = session.getRepositoryInfo().getCapabilities()
 			.isAllVersionsSearchableSupported();
 		return new CmisPagingTransformerIterator<>(session.query(query, searchAllVersions),
-			new QueryResultTransformer(session));
+			new QueryResultTransformer(session)::transform);
 	}
 
 	@Override
