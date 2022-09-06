@@ -65,11 +65,15 @@ namespace Armedia.CMSMF.SharePoint.Common
         const int FALLBACK_THROTTLE_SECS = 30;
         private readonly ILog Log;
         private readonly ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
+        private readonly DateTime Boot;
         private long Border = Environment.TickCount;
 
         public SimpleThrottleHandler()
         {
             this.Log = LogManager.GetLogger(GetType());
+
+            // This isn't perfect, but it's close enough for our purposes
+            this.Boot = DateTime.UtcNow - TimeSpan.FromMilliseconds(Environment.TickCount);
         }
 
         public void ApplyThrottling()
@@ -87,6 +91,7 @@ namespace Armedia.CMSMF.SharePoint.Common
                     try
                     {
                         // Sleep for "remaining" milliseconds
+                        this.Log.Info(string.Format("Throttling before the next request by sleeping for {0}ms", remaining));
                         Thread.Sleep((int)remaining);
                     }
                     finally
@@ -113,6 +118,7 @@ namespace Armedia.CMSMF.SharePoint.Common
                 string retryAfter = rsp.Headers.Get(retryAfterHeader);
                 if (!string.IsNullOrEmpty(retryAfter))
                 {
+                    this.Log.Info(string.Format("Got the {0} header with the value [{1}]", retryAfterHeader, retryAfter));
                     try
                     {
                         retrySeconds = Int32.Parse(retryAfter);
@@ -133,7 +139,11 @@ namespace Armedia.CMSMF.SharePoint.Common
                 {
                     long oldBorder = Interlocked.Read(ref this.Border);
                     // If the border moves forward, then do so ... otherwise, nothing to do here
-                    if (newBorder > oldBorder) Interlocked.Exchange(ref this.Border, newBorder);
+                    if (newBorder > oldBorder)
+                    {
+                        this.Log.Info(string.Format("Setting the new retry interval to {0}", this.Boot + TimeSpan.FromMilliseconds(newBorder)));
+                        Interlocked.Exchange(ref this.Border, newBorder);
+                    }
                 }
                 finally
                 {
