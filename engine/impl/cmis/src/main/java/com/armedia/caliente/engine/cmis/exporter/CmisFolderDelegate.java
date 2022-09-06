@@ -92,12 +92,8 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 
 		// We're supposed to add the child objects because we're not being added by an upwards
 		// recursion, so we add them
-		for (CmisFolderDelegate d : childFolders) {
-			ret.add(d);
-		}
-		for (CmisDocumentDelegate d : childDocs) {
-			ret.add(d);
-		}
+		ret.addAll(childFolders);
+		ret.addAll(childDocs);
 		return ret;
 	}
 
