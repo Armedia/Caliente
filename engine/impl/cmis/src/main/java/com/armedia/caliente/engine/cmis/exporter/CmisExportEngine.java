@@ -59,6 +59,7 @@ import com.armedia.caliente.engine.exporter.ExportSetting;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -121,7 +122,14 @@ public class CmisExportEngine extends
 	}
 
 	private final ExportTarget cmisObjectToExportTarget(CmisObject result) throws Exception {
-		return new ExportTarget(decodeType(result.getType()), result.getId(), result.getId());
+		ObjectType type = result.getType();
+		Archetype archetype = decodeType(type);
+		if (archetype == null) {
+			this.log.warn("Failed to decode the ArcheType for result [{}] (name={}, type={})", result.getId(),
+				result.getName(), type.getId());
+			return null;
+		}
+		return new ExportTarget(archetype, result.getId(), result.getId());
 	}
 
 	public CmisExportEngine(CmisExportEngineFactory factory, Logger output, WarningTracker warningTracker,
