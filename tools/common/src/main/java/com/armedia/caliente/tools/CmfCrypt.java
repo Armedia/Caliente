@@ -78,6 +78,8 @@ public class CmfCrypt implements CheckedCodec<String, byte[], Exception> {
 		}
 	}
 
+	public static final CmfCrypt DEFAULT = new CmfCrypt();
+
 	public static byte[] normalizeKey(byte[] key) {
 		return CmfCrypt.normalizeKey(key, true);
 	}
@@ -221,7 +223,7 @@ public class CmfCrypt implements CheckedCodec<String, byte[], Exception> {
 	private final Collection<Scheme> alternateSchemes;
 	private final Scheme encryptionScheme;
 
-	public CmfCrypt() {
+	private CmfCrypt() {
 		this(CmfCrypt.DEFAULT_SCHEME, CmfCrypt.NO_SCHEMES);
 	}
 

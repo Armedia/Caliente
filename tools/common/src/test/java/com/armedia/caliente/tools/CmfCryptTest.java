@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 public class CmfCryptTest {
 	@Test
 	public void testEncryptDecrypt() throws Exception {
-		CmfCrypt crypt = new CmfCrypt();
+		CmfCrypt crypt = CmfCrypt.DEFAULT;
 		for (int i = 0; i < 0xFF; i++) {
 			String str = String.format("Password-%02x-%s", i, UUID.randomUUID());
 			String encrypted = crypt.encrypt(str);
@@ -23,7 +23,7 @@ public class CmfCryptTest {
 
 	@Test
 	public void testEncodeDecode() throws Exception {
-		CmfCrypt crypt = new CmfCrypt();
+		CmfCrypt crypt = CmfCrypt.DEFAULT;
 		for (int i = 0; i < 0xFF; i++) {
 			String str = String.format("Password-%02x-%s", i, UUID.randomUUID());
 			byte[] encrypted = crypt.encode(str);

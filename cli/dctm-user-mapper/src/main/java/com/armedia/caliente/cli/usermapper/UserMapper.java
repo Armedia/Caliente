@@ -560,7 +560,7 @@ public class UserMapper {
 
 				try {
 					ldapPool = new LDAPConnectionPool(new LDAPConnection(sslSocketFactory, ldapUrl.getHost(),
-						ldapUrl.getPort(), bindDn, new CmfCrypt().decrypt(bindPass)), 2);
+						ldapUrl.getPort(), bindDn, CmfCrypt.DEFAULT.decrypt(bindPass)), 2);
 				} catch (LDAPException e) {
 					UserMapper.log.error("Failed to connect to LDAP", e);
 					return 1;

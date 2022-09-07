@@ -46,7 +46,7 @@ public class SqlImportEngineFactory extends
 	ImportEngineFactory<SqlRoot, CmfValue, SqlImportContext, SqlImportContextFactory, SqlImportDelegateFactory, SqlImportEngine> {
 
 	public SqlImportEngineFactory() {
-		super(false, new CmfCrypt());
+		super(false, CmfCrypt.DEFAULT);
 	}
 
 	@Override

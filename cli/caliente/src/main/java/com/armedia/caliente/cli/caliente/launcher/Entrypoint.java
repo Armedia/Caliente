@@ -112,7 +112,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		VERSION = Tools.coalesce(version, "(unknown)");
 	}
 
-	public static final CmfCrypt CRYPTO = new CmfCrypt();
+	public static final CmfCrypt CRYPTO = CmfCrypt.DEFAULT;
 	public static final String STORE_PROP_CONTENT_LOCATION_REQUIRED = "caliente.content.location.required";
 
 	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";

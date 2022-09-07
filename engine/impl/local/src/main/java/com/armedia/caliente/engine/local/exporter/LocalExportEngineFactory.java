@@ -46,7 +46,7 @@ public class LocalExportEngineFactory extends
 	ExportEngineFactory<LocalRoot, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory, LocalExportEngine> {
 
 	public LocalExportEngineFactory() {
-		super(false, new CmfCrypt());
+		super(false, CmfCrypt.DEFAULT);
 	}
 
 	@Override
