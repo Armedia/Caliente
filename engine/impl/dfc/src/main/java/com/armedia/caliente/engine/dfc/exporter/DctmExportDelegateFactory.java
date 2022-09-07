@@ -34,7 +34,6 @@ import java.util.Set;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
-import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.CfgTools;
@@ -86,46 +85,53 @@ public class DctmExportDelegateFactory
 			typeStr = object.getType().getName();
 			dctmType = DctmObjectType.decodeType(object);
 		}
+
 		if (dctmType == null) {
-			throw new ExportException(
-				String.format("Unsupported object type [%s] (objectId = [%s])", typeStr, object.getObjectId().getId()));
+			this.log.warn("Type [{}] is not supported - no delegate created for object with ID [{}]", typeStr,
+				object.getObjectId().getId());
+			return null;
 		}
 
-		Class<? extends IDfPersistentObject> requiredClass = dctmType.getDfClass();
-		if (requiredClass.isInstance(object)) {
-			DctmExportDelegate<?> delegate = null;
-			switch (dctmType) {
-				case STORE:
-					delegate = new DctmExportStore(this, session, object);
-					break;
-				case USER:
-					delegate = new DctmExportUser(this, session, object);
-					break;
-				case GROUP:
-					delegate = new DctmExportGroup(this, session, object);
-					break;
-				case ACL:
-					delegate = new DctmExportACL(this, session, object);
-					break;
-				case TYPE:
-					delegate = new DctmExportType(this, session, object);
-					break;
-				case FORMAT:
-					delegate = new DctmExportFormat(this, session, object);
-					break;
-				case FOLDER:
-					delegate = new DctmExportFolder(this, session, object);
-					break;
-				case DOCUMENT:
-					delegate = new DctmExportDocument(this, session, object);
-					break;
-				default:
-					break;
+		DctmExportDelegate<?> delegate = null;
+		if (dctmType != null) {
+			Class<? extends IDfPersistentObject> requiredClass = dctmType.getDfClass();
+			if (requiredClass.isInstance(object)) {
+				switch (dctmType) {
+					case STORE:
+						delegate = new DctmExportStore(this, session, object);
+						break;
+					case USER:
+						delegate = new DctmExportUser(this, session, object);
+						break;
+					case GROUP:
+						delegate = new DctmExportGroup(this, session, object);
+						break;
+					case ACL:
+						delegate = new DctmExportACL(this, session, object);
+						break;
+					case TYPE:
+						delegate = new DctmExportType(this, session, object);
+						break;
+					case FORMAT:
+						delegate = new DctmExportFormat(this, session, object);
+						break;
+					case FOLDER:
+						delegate = new DctmExportFolder(this, session, object);
+						break;
+					case DOCUMENT:
+						delegate = new DctmExportDocument(this, session, object);
+						break;
+					default:
+						break;
+				}
 			}
-			return delegate;
 		}
-		this.log.warn("Type [{}] is not supported - no delegate created for search key [{}]", type,
-			object.getObjectId().getId());
-		return null;
+
+		// Catch the instance where we don't support the object type...
+		if (delegate == null) {
+			this.log.warn("Archetype [{}] is not supported - no delegate created for object with ID [{}]", type,
+				object.getObjectId().getId());
+		}
+		return delegate;
 	}
 }
