@@ -95,6 +95,9 @@ namespace Armedia.CMSMF.SharePoint.Import
                 [OptionAttribute("threads", Required = false, HelpText = "The number of threads to use in parallel import (min 1, max 32)")]
                 public int? threads { get; set; }
 
+                [OptionAttribute("useQueryRetry", Required = false, HelpText = "Use ExecuteQueryRetry() instead of ExecuteQuery() (default = use ExecuteQuery())")]
+                public bool? useQueryRetry { get; set; }
+
                 [OptionAttribute("retries", Required = false, HelpText = "The number of times to retry the document import failures when there is no success between attempts (min 0, max 3)")]
                 public int? retries { get; set; }
 
@@ -203,9 +206,11 @@ namespace Armedia.CMSMF.SharePoint.Import
             private static readonly int DEFAULT_THREADS = ((Environment.ProcessorCount * 3) / 4);
             private const int MAX_THREADS = 32;
 
+            private const bool DEFAULT_USE_QUERY_RETRY = false;
+
             private const int MIN_RETRIES = 0;
-            private const int DEFAULT_RETRIES = MIN_RETRIES;
-            private const int MAX_RETRIES = 3;
+            private const int DEFAULT_RETRIES = 5;
+            private const int MAX_RETRIES = 10;
 
             private const int MIN_RETRY_DELAY = 500;
             private const int DEFAULT_RETRY_DELAY = MIN_RETRY_DELAY;
@@ -256,6 +261,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             public string fallbackDocumentType { get; private set; }
             public string fallbackFolderType { get; private set; }
             public int threads { get; private set; }
+            public bool useQueryRetry { get; private set; }
             public int retries { get; private set; }
             public int retryDelay { get; private set; }
             public int reuseCount { get; private set; }
@@ -299,6 +305,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                 this.autoPublish = DEFAULT_AUTO_PUBLISH;
                 this.locationMode = DEFAULT_USE_LAST_LOCATION;
                 this.fixExtensions = DEFAULT_FIX_EXTENSIONS;
+                this.useQueryRetry = DEFAULT_USE_QUERY_RETRY;
                 this.uploadSegmentSize = DEFAULT_UPLOAD_SEGMENT_SIZE;
                 foreach (PropertyInfo src in typeof(Settings).GetProperties())
                 {
@@ -506,7 +513,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                     }
                 }
 
-                using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, userPassword, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.library, options.reuseCount, options.retries, options.retryDelay)))
+                using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, userPassword, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.library, options.reuseCount, options.useQueryRetry, options.retries, options.retryDelay)))
                 {
                     ImportContext importContext = new ImportContext(sessionFactory, options.content, options.metadata, options.caches);
                     using (ObjectPool<SharePointSession>.Ref sessionRef = sessionFactory.GetSession())

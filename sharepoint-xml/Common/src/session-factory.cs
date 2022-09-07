@@ -23,10 +23,11 @@ namespace Armedia.CMSMF.SharePoint.Common
         public readonly string ApplicationId;
         public readonly string CertificateKey;
         public readonly string CertificatePass;
+        public readonly bool UseQueryRetry;
         public readonly int RetryCount;
         public readonly int RetryDelay;
 
-        public SharePointSessionInfo(string url, string userName, SecureString password, string domain, string applicationId, string certificateKey, string certificatePass, string library, int maxBorrowCount, int retryCount, int retryDelay)
+        public SharePointSessionInfo(string url, string userName, SecureString password, string domain, string applicationId, string certificateKey, string certificatePass, string library, int maxBorrowCount, bool useQueryRetry, int retryCount, int retryDelay)
         {
             this.Url = url.TrimEnd('/');
             this.UserName = userName;
@@ -40,6 +41,7 @@ namespace Armedia.CMSMF.SharePoint.Common
             this.MaxBorrowCount = maxBorrowCount;
             this.RetryCount = retryCount;
             this.RetryDelay = retryDelay;
+            this.UseQueryRetry = useQueryRetry;
         }
 
         public void Dispose()
@@ -168,6 +170,7 @@ namespace Armedia.CMSMF.SharePoint.Common
         public readonly Folder RootFolder;
         public readonly string Id;
         private long BorrowCount = 0;
+        private readonly bool UseQueryRetry;
         private readonly int RetryCount;
         private readonly int RetryDelay;
 
@@ -181,6 +184,7 @@ namespace Armedia.CMSMF.SharePoint.Common
 
         public SharePointSession(OfficeDevPnP.Core.AuthenticationManager authManager, SharePointSessionInfo info, IThrottleHandler throttleHandler)
         {
+            this.UseQueryRetry = info.UseQueryRetry;
             this.RetryCount = info.RetryCount;
             this.RetryDelay = info.RetryDelay;
             this.ThrottleHandler = throttleHandler;
@@ -239,7 +243,14 @@ namespace Armedia.CMSMF.SharePoint.Common
             try
             {
                 this.ThrottleHandler.ApplyThrottling();
-                this.ClientContext.ExecuteQueryRetry(this.RetryCount, this.RetryDelay, USER_AGENT);
+                if (this.UseQueryRetry)
+                {
+                    this.ClientContext.ExecuteQueryRetry(this.RetryCount, this.RetryDelay, USER_AGENT);
+                }
+                else
+                {
+                    this.ClientContext.ExecuteQuery();
+                }
             }
             catch (ServerException e)
             {
