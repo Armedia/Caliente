@@ -170,9 +170,7 @@ namespace Armedia.CMSMF.SharePoint.Common
         public readonly Folder RootFolder;
         public readonly string Id;
         private long BorrowCount = 0;
-        private readonly bool UseQueryRetry;
-        private readonly int RetryCount;
-        private readonly int RetryDelay;
+        private readonly Action<ClientContext, string> ExecuteQueryAction;
 
         private class ExecuteQueryException : Exception
         {
@@ -182,12 +180,10 @@ namespace Armedia.CMSMF.SharePoint.Common
             }
         }
 
-        public SharePointSession(OfficeDevPnP.Core.AuthenticationManager authManager, SharePointSessionInfo info, IThrottleHandler throttleHandler)
+        public SharePointSession(OfficeDevPnP.Core.AuthenticationManager authManager, SharePointSessionInfo info, IThrottleHandler throttleHandler, Action<ClientContext, string> executeQueryAction)
         {
-            this.UseQueryRetry = info.UseQueryRetry;
-            this.RetryCount = info.RetryCount;
-            this.RetryDelay = info.RetryDelay;
             this.ThrottleHandler = throttleHandler;
+            this.ExecuteQueryAction = executeQueryAction;
 
             // If we're using an application ID, we use that and forget everything else...
             if (!string.IsNullOrWhiteSpace(info.ApplicationId))
@@ -215,6 +211,7 @@ namespace Armedia.CMSMF.SharePoint.Common
             this.ClientContext.Load(this.DocumentLibrary, r => r.ForceCheckout, r => r.EnableVersioning, r => r.EnableMinorVersions, r => r.Title, r => r.ContentTypesEnabled, r => r.ContentTypes);
             this.ClientContext.Load(this.DocumentLibrary.RootFolder, f => f.ServerRelativeUrl, f => f.Name);
             this.ClientContext.Load(this.ClientContext.Web, w => w.Title, w => w.RoleDefinitions);
+
             ExecuteQuery();
             this.RootFolder = this.DocumentLibrary.RootFolder;
             this.BaseUrl = this.RootFolder.ServerRelativeUrl;
@@ -243,14 +240,7 @@ namespace Armedia.CMSMF.SharePoint.Common
             try
             {
                 this.ThrottleHandler.ApplyThrottling();
-                if (this.UseQueryRetry)
-                {
-                    this.ClientContext.ExecuteQueryRetry(this.RetryCount, this.RetryDelay, USER_AGENT);
-                }
-                else
-                {
-                    this.ClientContext.ExecuteQuery();
-                }
+                this.ExecuteQueryAction(this.ClientContext, USER_AGENT);
             }
             catch (ServerException e)
             {
@@ -350,16 +340,27 @@ namespace Armedia.CMSMF.SharePoint.Common
             private OfficeDevPnP.Core.AuthenticationManager AuthManager;
             private SharePointSessionInfo Info;
             private readonly IThrottleHandler ThrottleHandler = new SimpleThrottleHandler();
+            private readonly Action<ClientContext, string> ExecuteQuery;
 
             public SharePointSessionGenerator(SharePointSessionInfo info)
             {
                 this.Info = info;
                 this.AuthManager = new OfficeDevPnP.Core.AuthenticationManager();
+
+                if (info.UseQueryRetry)
+                {
+                    this.ExecuteQuery = (clientContext, userAgent) => clientContext.ExecuteQueryRetry(info.RetryCount, info.RetryDelay, userAgent);
+                }
+                else
+                {
+                    this.ExecuteQuery = (clientContext, userAgent) => clientContext.ExecuteQuery();
+                }
+
             }
 
             SharePointSession PoolableObjectFactory<SharePointSession>.Create()
             {
-                return new SharePointSession(this.AuthManager, this.Info, this.ThrottleHandler);
+                return new SharePointSession(this.AuthManager, this.Info, this.ThrottleHandler, this.ExecuteQuery);
             }
 
             void PoolableObjectFactory<SharePointSession>.Destroy(SharePointSession t)
