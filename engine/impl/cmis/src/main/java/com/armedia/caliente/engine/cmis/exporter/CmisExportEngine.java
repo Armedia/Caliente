@@ -81,7 +81,9 @@ public class CmisExportEngine extends
 		public ExportTarget transform(QueryResult r) throws Exception {
 			PropertyData<?> objectId = r.getPropertyById(PropertyIds.OBJECT_ID);
 			if (objectId == null) {
-				throw new ExportException("Failed to find the cmis:objectId property as part of the query result");
+				CmisExportEngine.this.log
+					.warn("UNSUPPORTED OBJECT: Failed to find the cmis:objectId property as part of the query result");
+				return null;
 			}
 
 			CmfObject.Archetype type = null;
@@ -106,17 +108,17 @@ public class CmisExportEngine extends
 					type = decodeType(value);
 				}
 				if (type != null) {
-					if (CmisExportEngine.this.log.isTraceEnabled()) {
-						CmisExportEngine.this.log.trace("Object type [{}] decoded as [{}]", firstValue, type);
-					}
+					CmisExportEngine.this.log.trace("Object type [{}] decoded as [{}]", firstValue, type);
 					break;
 				}
 			}
-			if (type == null) {
-				throw new ExportException(
-					"Failed to find the cmis:objectTypeId or the cmis:baseTypeId properties as part of the query result, or the returned value couldn't be decoded");
-			}
 			String id = Tools.toString(objectId.getFirstValue());
+			if (type == null) {
+				CmisExportEngine.this.log.warn(
+					"UNSUPPORTED OBJECT: Failed to find the cmis:objectTypeId or the cmis:baseTypeId properties as part of the query result for object with ID [{}], or the returned value couldn't be decoded",
+					id);
+				return null;
+			}
 			return ExportTarget.from(type, id, id);
 		}
 	}
@@ -126,8 +128,10 @@ public class CmisExportEngine extends
 		Archetype archetype = decodeType(type);
 		if (archetype == null) {
 			// TODO: Is it, perhaps, a reference? How to find out?
-			this.log.warn("Failed to decode the ArcheType for result [{}] (name={}, type={}, baseType={})",
-				result.getId(), result.getName(), type.getId(), type.getBaseTypeId().name());
+			this.log.warn(
+				"UNSUPPORTED OBJECT: Failed to decode the ArcheType for result [{}] (name={}, type={}, baseType={})",
+				result.getId(), result.getName(), type.getId(), result.getBaseTypeId().value());
+			return null;
 		}
 		return ExportTarget.from(archetype, result.getId(), result.getId());
 	}
@@ -154,6 +158,13 @@ public class CmisExportEngine extends
 		}
 
 		// Not a folder, so no need to recurse
+		Archetype type = decodeType(obj.getBaseType());
+		if (type == null) {
+			this.log.warn(
+				"UNSUPPORTED OBJECT: The object at path [{}](id={}) is not of a supported type (type={}, baseType={})",
+				path, obj.getId(), obj.getType().getId(), obj.getBaseTypeId().value());
+			return Collections.emptyListIterator();
+		}
 		return Collections.singleton(cmisObjectToExportTarget(obj)).iterator();
 	}
 
@@ -195,6 +206,12 @@ public class CmisExportEngine extends
 		try {
 			CmisObject obj = session.getObject(searchKey);
 			CmfObject.Archetype type = decodeType(obj.getBaseType());
+			if (type == null) {
+				this.log.warn(
+					"UNSUPPORTED OBJECT: the object located with search key [{}] is not of a supported type (name={}, type={}, baseType={})",
+					searchKey, obj.getName(), obj.getType().getId(), obj.getBaseTypeId().value());
+				return Stream.empty();
+			}
 
 			// Not a folder, so no recursion
 			if (type != CmfObject.Archetype.FOLDER) {
