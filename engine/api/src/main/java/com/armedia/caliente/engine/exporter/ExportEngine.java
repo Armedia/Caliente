@@ -425,6 +425,9 @@ public abstract class ExportEngine<//
 				referenced = sourceObject.identifyRequirements(marshaled, ctx);
 				if (referenced == null) {
 					referenced = Collections.emptyList();
+				} else {
+					// Make sure no null pointers make it past
+					referenced.removeIf(Objects::isNull);
 				}
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to identify the requirements for %s", logLabel), e);
@@ -737,6 +740,9 @@ public abstract class ExportEngine<//
 				referenced = sourceObject.identifyDependents(marshaled, ctx);
 				if (referenced == null) {
 					referenced = Collections.emptyList();
+				} else {
+					// Make sure no null pointers make it past
+					referenced.removeIf(Objects::isNull);
 				}
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to identify the dependents for %s", logLabel), e);
@@ -926,7 +932,7 @@ public abstract class ExportEngine<//
 						.newExportDelegate(s, target);
 					if (exportDelegate == null) {
 						// No object found with that ID...
-						ExportEngine.this.log.warn("No {} object found with searchKey[{}]",
+						ExportEngine.this.log.warn("No {} object found with searchKey[{}], or its type is unsupported",
 							(nextType != null ? nextType.name() : "globally unique"), nextKey);
 						return;
 					}
