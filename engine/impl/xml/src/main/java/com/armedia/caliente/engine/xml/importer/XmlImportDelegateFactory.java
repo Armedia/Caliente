@@ -395,11 +395,10 @@ public class XmlImportDelegateFactory
 			case FORMAT:
 				return new XmlFormatImportDelegate(this, storedObject);
 			case FOLDER:
-				if (this.aggregateFolders) {
-					return new XmlAggregateFoldersImportDelegate(this, storedObject);
-				} else {
-					return new XmlFolderImportDelegate(this, storedObject);
-				}
+				return this.aggregateFolders //
+					? new XmlAggregateFoldersImportDelegate(this, storedObject) //
+					: new XmlFolderImportDelegate(this, storedObject) //
+				;
 			case DOCUMENT:
 				return new XmlDocumentImportDelegate(this, storedObject);
 			default:
