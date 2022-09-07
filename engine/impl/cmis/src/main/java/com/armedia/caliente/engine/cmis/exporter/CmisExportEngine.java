@@ -117,7 +117,7 @@ public class CmisExportEngine extends
 					"Failed to find the cmis:objectTypeId or the cmis:baseTypeId properties as part of the query result, or the returned value couldn't be decoded");
 			}
 			String id = Tools.toString(objectId.getFirstValue());
-			return new ExportTarget(type, id, id);
+			return ExportTarget.from(type, id, id);
 		}
 	}
 
@@ -128,9 +128,8 @@ public class CmisExportEngine extends
 			// TODO: Is it, perhaps, a reference? How to find out?
 			this.log.warn("Failed to decode the ArcheType for result [{}] (name={}, type={}, baseType={})",
 				result.getId(), result.getName(), type.getId(), type.getBaseTypeId().name());
-			return null;
 		}
-		return new ExportTarget(archetype, result.getId(), result.getId());
+		return ExportTarget.from(archetype, result.getId(), result.getId());
 	}
 
 	public CmisExportEngine(CmisExportEngineFactory factory, Logger output, WarningTracker warningTracker,
@@ -155,8 +154,7 @@ public class CmisExportEngine extends
 		}
 
 		// Not a folder, so no need to recurse
-		return Collections.singleton(new ExportTarget(decodeType(obj.getBaseType()), obj.getId(), obj.getId()))
-			.iterator();
+		return Collections.singleton(cmisObjectToExportTarget(obj)).iterator();
 	}
 
 	@Override
@@ -200,7 +198,7 @@ public class CmisExportEngine extends
 
 			// Not a folder, so no recursion
 			if (type != CmfObject.Archetype.FOLDER) {
-				return Stream.of(new ExportTarget(type, obj.getId(), searchKey));
+				return Stream.of(ExportTarget.from(type, obj.getId(), searchKey));
 			}
 
 			// RECURSE!!!

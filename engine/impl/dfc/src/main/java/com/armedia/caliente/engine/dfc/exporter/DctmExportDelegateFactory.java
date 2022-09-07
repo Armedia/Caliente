@@ -33,7 +33,6 @@ import java.util.Set;
 
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
-import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
@@ -85,11 +84,7 @@ public class DctmExportDelegateFactory
 			dctmType = DctmObjectType.decodeType(type);
 		} else {
 			typeStr = object.getType().getName();
-			try {
-				dctmType = DctmObjectType.decodeType(object);
-			} catch (UnsupportedDctmObjectTypeException e) {
-				dctmType = null;
-			}
+			dctmType = DctmObjectType.decodeType(object);
 		}
 		if (dctmType == null) {
 			throw new ExportException(

@@ -830,7 +830,7 @@ public abstract class ExportEngine<//
 							CmfObjectRef tgt = ImportRestriction.parseQuiet(line);
 							if (tgt != null) {
 								// No need to search if it's a retry
-								ret.add(Stream.of(new ExportTarget(tgt.getType(), tgt.getId(), null)));
+								ret.add(Stream.of(ExportTarget.from(tgt)));
 							} else {
 								String directKey = line.substring(1);
 								if (StringUtils.isEmpty(directKey)) {
@@ -847,7 +847,7 @@ public abstract class ExportEngine<//
 					CmfObjectRef tgt = ImportRestriction.parseQuiet(source);
 					if (tgt != null) {
 						// No need to search if it's a retry
-						ret.add(Stream.of(new ExportTarget(tgt.getType(), tgt.getId(), null)));
+						ret.add(Stream.of(ExportTarget.from(tgt)));
 					} else {
 						if (StringUtils.isEmpty(searchKey)) { throw new ExportException("Invalid empty search key"); }
 						ret.add(sanitizeExportTargets(findExportTargetsBySearchKey(session, this.settings, searchKey)));

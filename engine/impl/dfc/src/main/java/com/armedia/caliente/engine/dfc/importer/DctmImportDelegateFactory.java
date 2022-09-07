@@ -29,8 +29,8 @@ package com.armedia.caliente.engine.dfc.importer;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.DctmSetting;
-import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
+import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.UnsupportedCmfObjectArchetypeException;
 import com.armedia.commons.utilities.CfgTools;
@@ -75,6 +75,6 @@ public class DctmImportDelegateFactory
 			default:
 				break;
 		}
-		throw new UnsupportedDctmObjectTypeException(String.format("Type [%s] is not supported", type.name()));
+		throw new ImportException(String.format("Objects of type [%s] are not supported", type.name()));
 	}
 }

@@ -99,7 +99,7 @@ public class DctmExportEngine extends
 			// Not a folder, so no recursion!
 			return Collections
 				.singleton(
-					new ExportTarget(DctmObjectType.decodeType(obj).getStoredObjectType(), id.getId(), id.getId()))
+					ExportTarget.from(DctmObjectType.decodeType(obj).getStoredObjectType(), id.getId(), id.getId()))
 				.stream();
 		}
 
@@ -119,7 +119,7 @@ public class DctmExportEngine extends
 			// Not a folder, so no recursion!
 			return Collections
 				.singleton(
-					new ExportTarget(DctmObjectType.decodeType(obj).getStoredObjectType(), id.getId(), id.getId()))
+					ExportTarget.from(DctmObjectType.decodeType(obj).getStoredObjectType(), id.getId(), id.getId()))
 				.stream();
 		}
 
