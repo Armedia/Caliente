@@ -125,8 +125,9 @@ public class CmisExportEngine extends
 		ObjectType type = result.getType();
 		Archetype archetype = decodeType(type);
 		if (archetype == null) {
-			this.log.warn("Failed to decode the ArcheType for result [{}] (name={}, type={})", result.getId(),
-				result.getName(), type.getId());
+			// TODO: Is it, perhaps, a reference? How to find out?
+			this.log.warn("Failed to decode the ArcheType for result [{}] (name={}, type={}, baseType={})",
+				result.getId(), result.getName(), type.getId(), type.getBaseTypeId().name());
 			return null;
 		}
 		return new ExportTarget(archetype, result.getId(), result.getId());
