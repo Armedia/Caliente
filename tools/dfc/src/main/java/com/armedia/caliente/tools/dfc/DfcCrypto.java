@@ -31,6 +31,8 @@ import com.documentum.fc.impl.util.RegistryPasswordUtils;
 
 public class DfcCrypto extends CmfCrypt {
 
+	public static final CmfCrypt INSTANCE = new DfcCrypto();
+
 	private static final Scheme DFC_SCHEME = new Scheme() {
 
 		@Override
@@ -50,7 +52,7 @@ public class DfcCrypto extends CmfCrypt {
 
 	};
 
-	public DfcCrypto() {
+	private DfcCrypto() {
 		super(DfcCrypto.DFC_SCHEME, CmfCrypt.DEFAULT_SCHEME);
 	}
 }
