@@ -78,6 +78,36 @@ public class CmfCrypt implements CheckedCodec<String, byte[], Exception> {
 		}
 	}
 
+	public static byte[] normalizeKey(byte[] key) {
+		return CmfCrypt.normalizeKey(key, true);
+	}
+
+	public static byte[] normalizeKey(byte[] key, boolean strengthen) {
+		if (key == null) {
+			// Defend against null keys
+			key = CmfCrypt.NO_BYTES;
+		}
+
+		if (key.length != 32) {
+			byte[] newKey = new byte[32];
+			if ((newKey.length > key.length) && strengthen) {
+				// Fill in each byte with its offset, to make the key stronger. We don't use
+				// random values b/c we want the result to be consistently reproducible
+				for (int i = 0; i < newKey.length; i++) {
+					newKey[i] = (byte) i;
+				}
+			}
+			// We copy up to the first 32 bytes from the original key into the new key
+			System.arraycopy(key, 0, newKey, 0, Math.min(key.length, newKey.length));
+
+			// Swap the references
+			key = newKey;
+		}
+
+		// Return the result
+		return key;
+	}
+
 	public static byte[] decodeBase64(String value) throws CryptException {
 		if (StringUtils.isEmpty(value)) { return CmfCrypt.NO_BYTES; }
 		if ((value.length() % 4) != 0) {
@@ -116,13 +146,14 @@ public class CmfCrypt implements CheckedCodec<String, byte[], Exception> {
 				pdk = true;
 				key = CmfCrypt.decodeBase64(CmfCrypt.ENCODED_KEY);
 			} else {
-				if ((key.length != 16) && (key.length != 24) && (key.length != 32)) {
-					throw new IllegalArgumentException("The key must be either 128, 192 or 256 bits");
-				}
-				this.key = new SecretKeySpec(key, CmfCrypt.CIPHER_ALGORITHM);
+				this.key = new SecretKeySpec(CmfCrypt.normalizeKey(key), CmfCrypt.CIPHER_ALGORITHM);
 			}
+
+			// Make sure we can work our magic both ways
 			getCipher(this.key, false);
 			getCipher(this.key, true);
+
+			// Store the description, for future reference
 			this.description = String.format("%s-%d-%s", CmfCrypt.CIPHER_SPEC, key.length * 8,
 				(pdk ? "default" : DigestUtils.sha256Hex(key)));
 		}
