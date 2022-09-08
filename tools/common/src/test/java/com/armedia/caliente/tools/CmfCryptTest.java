@@ -37,7 +37,7 @@ public class CmfCryptTest {
 			Assertions.assertNotEquals(Base64.encodeBase64String(str.getBytes(StandardCharsets.UTF_8)), other);
 
 			// Make sure we get the original value when we decode (decrypt) it
-			String decrypted = crypt.decode(encrypted);
+			CharSequence decrypted = crypt.decode(encrypted);
 			Assertions.assertEquals(str, decrypted);
 		}
 
@@ -49,9 +49,9 @@ public class CmfCryptTest {
 		Assertions.assertNotEquals(0, emptyData.length);
 		Assertions.assertArrayEquals(nullData, emptyData);
 
-		String nullStr = crypt.decode(null);
+		CharSequence nullStr = crypt.decode(null);
 		Assertions.assertNotNull(nullStr);
-		String emptyStr = crypt.decode(new byte[0]);
+		CharSequence emptyStr = crypt.decode(new byte[0]);
 		Assertions.assertNotNull(emptyStr);
 		Assertions.assertEquals(nullStr, emptyStr);
 	}
