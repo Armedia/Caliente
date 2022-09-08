@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.codec.CheckedCodec;
 
-public class CmfCrypt implements CheckedCodec<String, byte[], Exception> {
+public class CmfCrypt implements CheckedCodec<CharSequence, byte[], Exception> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -300,12 +300,12 @@ public class CmfCrypt implements CheckedCodec<String, byte[], Exception> {
 	}
 
 	@Override
-	public byte[] encode(String str) throws Exception {
-		return Base64.decodeBase64(encrypt(str));
+	public byte[] encode(CharSequence str) throws Exception {
+		return Base64.decodeBase64(encrypt(Tools.toString(str)));
 	}
 
 	@Override
-	public String decode(byte[] data) throws Exception {
+	public CharSequence decode(byte[] data) throws Exception {
 		return decrypt( //
 			((data != null) && (data.length > 0)) //
 				? Base64.encodeBase64String(data) //
