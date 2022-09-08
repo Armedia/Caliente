@@ -59,7 +59,9 @@ namespace Armedia.CMSMF.SharePoint.Common
     {
         void ApplyThrottling();
 
-        bool RetryAfter(WebException e);
+        bool CheckRetry(WebException e);
+
+        TimeSpan ApplyRetry(string retryAfter);
     }
 
     public class SimpleThrottleHandler : IThrottleHandler
@@ -77,7 +79,7 @@ namespace Armedia.CMSMF.SharePoint.Common
             this.Log = LogManager.GetLogger(GetType());
 
             // This isn't perfect, but it's close enough for our purposes
-            this.Boot = DateTime.UtcNow - TimeSpan.FromMilliseconds(Environment.TickCount);
+            this.Boot = DateTime.Now - TimeSpan.FromMilliseconds(Environment.TickCount);
         }
 
         public void ApplyThrottling()
@@ -94,8 +96,9 @@ namespace Armedia.CMSMF.SharePoint.Common
                     try
                     {
                         // Sleep for "remaining" milliseconds
-                        this.Log.Info(string.Format("Throttling before the next request by sleeping for {0}ms", remaining));
+                        this.Log.InfoFormat("Throttling before the next request by sleeping for {0}", TimeSpan.FromMilliseconds(remaining));
                         Thread.Sleep((int)remaining);
+                        this.Log.Info("Throttle threshold reached, will resume processing");
                     }
                     finally
                     {
@@ -110,7 +113,7 @@ namespace Armedia.CMSMF.SharePoint.Common
             }
         }
 
-        public bool RetryAfter(WebException e)
+        public bool CheckRetry(WebException e)
         {
             HttpWebResponse rsp = e.Response as HttpWebResponse;
             if (rsp == null) return false;
@@ -131,39 +134,54 @@ namespace Armedia.CMSMF.SharePoint.Common
 
             // We got throttled!! Get the Retry-After header
             // MORE INFO : https://docs.microsoft.com/en-us/answers/questions/318901/the-remote-server-returned-an-error-429.html?page=2&pageSize=10&sort=oldest
+            TimeSpan retry = ApplyRetry(rsp.Headers.Get(RETRY_AFTER));
+            this.Log.InfoFormat("Found the {0} header asking for a retry interval of {1}", RETRY_AFTER, retry);
+            return true;
+        }
+
+        public TimeSpan ApplyRetry(string retryAfter)
+        {
             int retrySeconds = 0;
-            string retryAfter = rsp.Headers.Get(RETRY_AFTER);
             if (!string.IsNullOrEmpty(retryAfter))
             {
-                this.Log.Info(string.Format("Got the {0} header with the value [{1}]", RETRY_AFTER, retryAfter));
+                this.Log.InfoFormat("Got the {0} header with the value [{1}]", RETRY_AFTER, retryAfter);
                 if (!Int32.TryParse(retryAfter, out retrySeconds))
                 {
                     retrySeconds = FALLBACK_THROTTLE_SECS;
-                    this.Log.Warn(string.Format("Received an HTTP response requiring throttling (status {0}), but the {1} header contained the value [{2}] which could not be parsed - will instead throttle for {3} seconds", rsp.StatusCode, RETRY_AFTER, retryAfter, retrySeconds));
+                    this.Log.WarnFormat("The requested retry value [{0}] could not be parsed - will instead throttle for {1} seconds", retryAfter, retrySeconds);
                 }
+            }
+            else
+            {
+                retrySeconds = FALLBACK_THROTTLE_SECS;
             }
 
-            if (retrySeconds > 0)
+            if (retrySeconds < 0)
             {
-                // The new border will be "now" plus (retrySeconds + 1) seconds in the future
-                long newBorder = Environment.TickCount + ((retrySeconds + 1) * 1000);
-                Lock.EnterWriteLock();
-                try
+                retrySeconds = 0;
+            }
+
+            // Bump up the number of seconds ...
+            retrySeconds++;
+
+            long newBorder = Environment.TickCount + (retrySeconds * 1000);
+            Lock.EnterWriteLock();
+            try
+            {
+                long oldBorder = Interlocked.Read(ref this.Border);
+                // If the border moves forward, then do so ... otherwise, nothing to do here
+                if (newBorder > oldBorder)
                 {
-                    long oldBorder = Interlocked.Read(ref this.Border);
-                    // If the border moves forward, then do so ... otherwise, nothing to do here
-                    if (newBorder > oldBorder)
-                    {
-                        this.Log.Info(string.Format("Setting the new retry interval to {0}", this.Boot + TimeSpan.FromMilliseconds(newBorder)));
-                        Interlocked.Exchange(ref this.Border, newBorder);
-                    }
-                }
-                finally
-                {
-                    Lock.ExitWriteLock();
+                    Interlocked.Exchange(ref this.Border, newBorder);
+                    this.Log.InfoFormat("Set the new retry interval to {0}", this.Boot + TimeSpan.FromMilliseconds(newBorder));
                 }
             }
-            return true;
+            finally
+            {
+                Lock.ExitWriteLock();
+            }
+
+            return TimeSpan.FromSeconds(retrySeconds);
         }
     }
 
@@ -173,6 +191,7 @@ namespace Armedia.CMSMF.SharePoint.Common
 
         public static readonly TimeSpan TIME_OUT = new TimeSpan(1, 0, 0);
 
+        /*
         private static long SIMULATE_429 = 1;
 
         public static void Simulate429(bool value)
@@ -185,6 +204,7 @@ namespace Armedia.CMSMF.SharePoint.Common
             long val = Interlocked.Read(ref SIMULATE_429);
             return (val != 0);
         }
+        */
 
         private static long counter = 0;
 
@@ -236,6 +256,7 @@ namespace Armedia.CMSMF.SharePoint.Common
             this.ClientContext.ExecutingWebRequest += delegate (object sender, WebRequestEventArgs e)
             {
                 // To simulate 429: https://blog.mastykarz.nl/simulating-throttling-sharepoint/
+                /*
                 if (Simulate429())
                 {
                     string path = e.WebRequestExecutor.WebRequest.RequestUri.AbsolutePath;
@@ -246,7 +267,8 @@ namespace Armedia.CMSMF.SharePoint.Common
                         // TODO frigging HOW?!?!?
                         "".GetHashCode();
                     }
-                }  
+                }
+                */
 
                 e.WebRequestExecutor.RequestKeepAlive = true;
                 e.WebRequestExecutor.WebRequest.KeepAlive = true;
@@ -296,7 +318,7 @@ namespace Armedia.CMSMF.SharePoint.Common
 
                         // First things first: are we retrying? If so, then do so...
                         // TODO: Is this the correct approach? What if we're not using ExecuteQueryRetry?
-                        if (this.ThrottleHandler.RetryAfter(e)) continue;
+                        this.ThrottleHandler.CheckRetry(e);
 
                         // We're not retrying, so we puke out ...
                         throw new ExecuteQueryException(string.Format("{1} ({2}.{3:000}s HRESULT=[0x{4:X8}] STATUS=[{5}] DATA=[{6}])", Environment.NewLine, e.Message, duration / 1000, duration % 1000, e.HResult, e.Status, e.Data), e);
