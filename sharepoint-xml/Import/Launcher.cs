@@ -411,6 +411,16 @@ namespace Armedia.CMSMF.SharePoint.Import
             }
             return new DirectoryEntry(options.ldapUrl, options.ldapBindDn, ldapBindPw);
         }
+
+        private static string GetVersionInfo()
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            Version version = assembly.GetName().Version;
+            String title = assembly.GetCustomAttribute<AssemblyTitleAttribute>().Title;
+            DateTime buildDate = new DateTime(2000, 1, 1).Add(new TimeSpan(TimeSpan.TicksPerDay * version.Build + TimeSpan.TicksPerSecond * 2 * version.Revision)).ToUniversalTime();
+            return string.Format("{1} v{2} (built at {3} UTC)", title, version, buildDate);
+        }
+
         public static void Main(string[] args)
         {
             int ret = 0;
@@ -427,6 +437,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                 }
                 else
                 {
+                    Console.Error.WriteLine(GetVersionInfo());
                     Console.Error.WriteLine("Uncaught exception caused a program crash: {0}", e);
                     Console.Error.WriteLine(e.StackTrace);
                     Console.Error.WriteLine("Press any key to exit...");
@@ -441,6 +452,8 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         public static int MainLoop(string[] args)
         {
+            string version = GetVersionInfo();
+
             ILog log = null;
             string baseDir = Directory.GetCurrentDirectory();
             // Initialize log4j
@@ -448,12 +461,14 @@ namespace Armedia.CMSMF.SharePoint.Import
 
             if (options.help)
             {
+                Console.Error.WriteLine(version);
                 Console.Error.WriteLine(options.GetUsage());
                 return 1;
             }
             List<string> errors = options.ValidateConfiguration();
             if (errors.Count > 0)
             {
+                Console.Error.WriteLine(version);
                 Console.Error.WriteLine(string.Format("{0} Configuration Errors detected:", errors.Count));
                 foreach (string e in errors) Console.Error.WriteLine(string.Format("\t* {0}", e));
                 return 2;
@@ -470,11 +485,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             XmlConfigurator.Configure(new FileInfo(string.Format("{0}\\log4net.xml", baseDir)));
             LOG = log = LogManager.GetLogger(typeof(Launcher));
             log.Info("Initializing Application");
-
-            // Spit out the version information
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            System.Diagnostics.FileVersionInfo fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
-            log.InfoFormat("{0} v{1}", assembly.GetCustomAttribute<AssemblyTitleAttribute>().Title, fvi.FileVersion);
+            log.Info(version);
 
             if (options.indexOnly)
             {
