@@ -418,7 +418,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             Version version = assembly.GetName().Version;
             String title = assembly.GetCustomAttribute<AssemblyTitleAttribute>().Title;
             DateTime buildDate = new DateTime(2000, 1, 1).Add(new TimeSpan(TimeSpan.TicksPerDay * version.Build + TimeSpan.TicksPerSecond * 2 * version.Revision)).ToUniversalTime();
-            return string.Format("{1} v{2} (built at {3} UTC)", title, version, buildDate);
+            return string.Format("{0} v{1} (built at {2} UTC)", title, version, buildDate);
         }
 
         public static void Main(string[] args)
