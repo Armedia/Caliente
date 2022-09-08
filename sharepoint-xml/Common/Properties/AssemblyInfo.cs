@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("CMSMF SharePoint Common")]
-[assembly: AssemblyDescription("CMSMF SharePoint Common Class Library")]
+[assembly: AssemblyTitle("Caliente SharePoint Common")]
+[assembly: AssemblyDescription("Caliente SharePoint Common Class Library")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Armedia LLC")]
-[assembly: AssemblyProduct("Armedia CMSMF SharePoint Common")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
+[assembly: AssemblyProduct("Armedia Caliente SharePoint Common")]
+[assembly: AssemblyCopyright("Copyright ©  2015-2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1.1.0")]
-[assembly: AssemblyFileVersion("1.1.1.0")]
+[assembly: AssemblyVersion("1.2.*")]
+// [assembly: AssemblyFileVersion("1.1.1.0")]

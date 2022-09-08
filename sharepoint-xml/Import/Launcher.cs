@@ -471,6 +471,11 @@ namespace Armedia.CMSMF.SharePoint.Import
             LOG = log = LogManager.GetLogger(typeof(Launcher));
             log.Info("Initializing Application");
 
+            // Spit out the version information
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            System.Diagnostics.FileVersionInfo fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+            log.InfoFormat("{0} v{1}", assembly.GetCustomAttribute<AssemblyTitleAttribute>().Title, fvi.FileVersion);
+
             if (options.indexOnly)
             {
                 ImportContext importContext = new ImportContext(null, options.content, options.metadata, options.caches);

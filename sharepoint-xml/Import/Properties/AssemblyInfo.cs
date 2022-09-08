@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("CMSMF SharePoint Importer")]
-[assembly: AssemblyDescription("CMSMF SharePoint Importer Tool")]
+[assembly: AssemblyTitle("Caliente SharePoint Importer")]
+[assembly: AssemblyDescription("Caliente SharePoint Importer Tool")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Armedia LLC")]
-[assembly: AssemblyProduct("Armedia CMSMF SharePoint Importer")]
-[assembly: AssemblyCopyright("Copyright ©  2015")]
+[assembly: AssemblyProduct("Armedia Caliente SharePoint Importer")]
+[assembly: AssemblyCopyright("Copyright ©  2015-2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1.2.0")]
-[assembly: AssemblyFileVersion("1.1.2.0")]
+[assembly: AssemblyVersion("1.2.*")]
+// [assembly: AssemblyFileVersion("1.1.2.0")]
