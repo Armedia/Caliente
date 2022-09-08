@@ -342,11 +342,11 @@ namespace Armedia.CMSMF.SharePoint.Common
         {
             try
             {
-                this.ObjectPool.Dispose();
+                this.ObjectPool?.Dispose();
             }
             finally
             {
-                this.Generator.Dispose();
+                this.Generator?.Dispose();
             }
         }
 
