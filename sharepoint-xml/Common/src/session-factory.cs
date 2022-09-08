@@ -185,10 +185,10 @@ namespace Armedia.CMSMF.SharePoint.Common
 
     public class ThrottleSimulatorExecutorFactory : WebRequestExecutorFactory
     {
-        private readonly WebRequestExecutorFactory delegator;
-
         private static readonly string PARAMETER = "test429=true";
         private static long SIMULATE_429 = 0;
+
+        private readonly WebRequestExecutorFactory Delegator;
 
         public static void Simulate429(bool value)
         {
@@ -203,7 +203,7 @@ namespace Armedia.CMSMF.SharePoint.Common
 
         public ThrottleSimulatorExecutorFactory(WebRequestExecutorFactory delegator)
         {
-            this.delegator = delegator;
+            this.Delegator = delegator;
         }
 
         public override WebRequestExecutor CreateWebRequestExecutor(ClientRuntimeContext context, string requestUrl)
@@ -219,13 +219,144 @@ namespace Armedia.CMSMF.SharePoint.Common
                 }
                 b.Query += PARAMETER;
             }
-
-            WebRequestExecutor result = delegator.CreateWebRequestExecutor(context, b.Uri.ToString());
+            WebRequestExecutor result = Delegator.CreateWebRequestExecutor(context, b.Uri.ToString());
             return result;
         }
     }
 
-    public sealed class SharePointSession : IDisposable
+    internal class RetryAwareWebRequestExecutor : WebRequestExecutor
+    {
+        private readonly IThrottleHandler ThrottleHandler;
+        private readonly WebRequestExecutor Executor;
+
+        public RetryAwareWebRequestExecutor(IThrottleHandler throttleHandler, WebRequestExecutor executor)
+        {
+            this.ThrottleHandler = throttleHandler;
+            this.Executor = executor;
+        }
+
+        public override string RequestContentType {
+            get
+            {
+                return this.Executor.RequestContentType;
+            }
+            set
+            {
+                this.Executor.RequestContentType = value;
+            }
+        }
+
+        public override WebHeaderCollection RequestHeaders
+        {
+            get
+            {
+                return this.Executor.RequestHeaders;
+            }
+        }
+
+        public override bool RequestKeepAlive
+        {
+            get
+            {
+                return this.Executor.RequestKeepAlive;
+            }
+            set
+            {
+                this.Executor.RequestKeepAlive = value;
+            }
+        }
+
+        public override string RequestMethod
+        {
+            get
+            {
+                return this.Executor.RequestMethod;
+            }
+            set
+            {
+                this.Executor.RequestMethod = value;
+            }
+        }
+
+        public override string ResponseContentType
+        {
+            get
+            {
+                return this.Executor.ResponseContentType;
+            }
+        }
+
+        public override WebHeaderCollection ResponseHeaders
+        {
+            get
+            {
+                return this.Executor.ResponseHeaders;
+            }
+        }
+
+        public override HttpStatusCode StatusCode
+        {
+            get
+            {
+                return this.Executor.StatusCode;
+            }
+        }
+
+        public override HttpWebRequest WebRequest
+        {
+            get
+            {
+                return this.Executor.WebRequest;
+            }
+        }
+
+        public override void Dispose()
+        {
+            this.Executor.Dispose();
+        }
+
+        public override void Execute()
+        {
+            // TODO: Implement the retry logic here to stow away a copy
+            // of the request to be executed so it can be retried later. Read
+            // the code in the PnP package to see how they do it ...
+            this.Executor.Execute();
+        }
+
+        public override System.Threading.Tasks.Task ExecuteAsync()
+        {
+            return this.Executor.ExecuteAsync();
+        }
+
+        public override System.IO.Stream GetRequestStream()
+        {
+            return this.Executor.GetRequestStream();
+        }
+
+        public override System.IO.Stream GetResponseStream()
+        {
+            return this.Executor.GetResponseStream();
+        }
+    }
+
+    internal class RetryAwareWebRequestExecutorFactory : WebRequestExecutorFactory
+    {
+        private readonly IThrottleHandler ThrottleHandler;
+        private readonly WebRequestExecutorFactory Factory;
+
+        public RetryAwareWebRequestExecutorFactory(IThrottleHandler throttleHandler, WebRequestExecutorFactory factory)
+        {
+            this.ThrottleHandler = throttleHandler;
+            this.Factory = factory;
+        }
+
+        public override WebRequestExecutor CreateWebRequestExecutor(ClientRuntimeContext context, string requestUrl)
+        {
+            return new RetryAwareWebRequestExecutor(this.ThrottleHandler, this.Factory.CreateWebRequestExecutor(context, requestUrl));
+        }
+    }
+
+        public sealed class SharePointSession : IDisposable
     {
         const string USER_AGENT = "NONISV|Armedia|Caliente-SP-Ingestor/1.0";
 
@@ -286,6 +417,10 @@ namespace Armedia.CMSMF.SharePoint.Common
                 e.WebRequestExecutor.WebRequest.Timeout = (int)TIME_OUT.TotalMilliseconds;
                 // e.WebRequestExecutor.WebRequest.ReadWriteTimeout = (int)TIME_OUT.TotalMilliseconds;
             };
+
+            // Use a custom request factory to support handling retry requests, since ExecuteQueryRetry() doesn't
+            // seem to do it properly
+            this.ClientContext.WebRequestExecutorFactory = new RetryAwareWebRequestExecutorFactory(throttleHandler, this.ClientContext.WebRequestExecutorFactory);
 
             // Use a custom request factory to simulate throttling
             // this.ClientContext.WebRequestExecutorFactory = new ThrottleSimulatorExecutorFactory(this.ClientContext.WebRequestExecutorFactory);
