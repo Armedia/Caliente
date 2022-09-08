@@ -64,7 +64,7 @@ namespace Armedia.CMSMF.SharePoint.Common
         TimeSpan ApplyRetry(string retryAfter);
     }
 
-    public class SimpleThrottleHandler : IThrottleHandler
+    internal class SimpleThrottleHandler : IThrottleHandler
     {
         const string RETRY_AFTER = "Retry-After";
         const int FALLBACK_THROTTLE_SECS = 30;
@@ -134,8 +134,9 @@ namespace Armedia.CMSMF.SharePoint.Common
 
             // We got throttled!! Get the Retry-After header
             // MORE INFO : https://docs.microsoft.com/en-us/answers/questions/318901/the-remote-server-returned-an-error-429.html?page=2&pageSize=10&sort=oldest
-            TimeSpan retry = ApplyRetry(rsp.Headers.Get(RETRY_AFTER));
-            this.Log.InfoFormat("Found the {0} header asking for a retry interval of {1}", RETRY_AFTER, retry);
+            string retryAfter = rsp.Headers.Get(RETRY_AFTER);
+            TimeSpan retry = ApplyRetry(retryAfter);
+            this.Log.InfoFormat("Found the {0} header asking for a retry interval of {1} seconds (will throttle for {2})", RETRY_AFTER, retryAfter, retry);
             return true;
         }
 
@@ -158,11 +159,8 @@ namespace Armedia.CMSMF.SharePoint.Common
 
             if (retrySeconds < 0)
             {
-                retrySeconds = 0;
+                retrySeconds = FALLBACK_THROTTLE_SECS;
             }
-
-            // Bump up the number of seconds ...
-            retrySeconds++;
 
             long newBorder = Environment.TickCount + (retrySeconds * 1000);
             Lock.EnterWriteLock();
@@ -185,14 +183,12 @@ namespace Armedia.CMSMF.SharePoint.Common
         }
     }
 
-    public sealed class SharePointSession : IDisposable
+    public class ThrottleSimulatorExecutorFactory : WebRequestExecutorFactory
     {
-        const string USER_AGENT = "NONISV|Armedia|Caliente-SP-Ingestor/1.0";
+        private readonly WebRequestExecutorFactory delegator;
 
-        public static readonly TimeSpan TIME_OUT = new TimeSpan(1, 0, 0);
-
-        /*
-        private static long SIMULATE_429 = 1;
+        private static readonly string PARAMETER = "test429=true";
+        private static long SIMULATE_429 = 0;
 
         public static void Simulate429(bool value)
         {
@@ -204,7 +200,36 @@ namespace Armedia.CMSMF.SharePoint.Common
             long val = Interlocked.Read(ref SIMULATE_429);
             return (val != 0);
         }
-        */
+
+        public ThrottleSimulatorExecutorFactory(WebRequestExecutorFactory delegator)
+        {
+            this.delegator = delegator;
+        }
+
+        public override WebRequestExecutor CreateWebRequestExecutor(ClientRuntimeContext context, string requestUrl)
+        {
+            string newUrl = requestUrl;
+            UriBuilder b = new UriBuilder(requestUrl);
+            if (Simulate429() && !string.IsNullOrEmpty(b.Path) && b.Path.EndsWith("/ProcessQuery"))
+            {
+                // If the query already has parameters, tack it onto the end
+                if (!string.IsNullOrEmpty(b.Query))
+                {
+                    b.Query += "&";
+                }
+                b.Query += PARAMETER;
+            }
+
+            WebRequestExecutor result = delegator.CreateWebRequestExecutor(context, b.Uri.ToString());
+            return result;
+        }
+    }
+
+    public sealed class SharePointSession : IDisposable
+    {
+        const string USER_AGENT = "NONISV|Armedia|Caliente-SP-Ingestor/1.0";
+
+        public static readonly TimeSpan TIME_OUT = new TimeSpan(1, 0, 0);
 
         private static long counter = 0;
 
@@ -255,27 +280,15 @@ namespace Armedia.CMSMF.SharePoint.Common
             // Make sure we ALWAYS include the USER_AGENT
             this.ClientContext.ExecutingWebRequest += delegate (object sender, WebRequestEventArgs e)
             {
-                // To simulate 429: https://blog.mastykarz.nl/simulating-throttling-sharepoint/
-                /*
-                if (Simulate429())
-                {
-                    string path = e.WebRequestExecutor.WebRequest.RequestUri.AbsolutePath;
-                    string method = e.WebRequestExecutor.RequestMethod;
-                    if (method.Equals(WebRequestMethods.Http.Post) && !string.IsNullOrEmpty(path) && path.EndsWith("/ProcessQuery"))
-                    {
-                        // TODO: Add the Test429=true query parameter
-                        // TODO frigging HOW?!?!?
-                        "".GetHashCode();
-                    }
-                }
-                */
-
                 e.WebRequestExecutor.RequestKeepAlive = true;
                 e.WebRequestExecutor.WebRequest.KeepAlive = true;
                 e.WebRequestExecutor.WebRequest.UserAgent = USER_AGENT;
                 e.WebRequestExecutor.WebRequest.Timeout = (int)TIME_OUT.TotalMilliseconds;
                 // e.WebRequestExecutor.WebRequest.ReadWriteTimeout = (int)TIME_OUT.TotalMilliseconds;
             };
+
+            // Use a custom request factory to simulate throttling
+            // this.ClientContext.WebRequestExecutorFactory = new ThrottleSimulatorExecutorFactory(this.ClientContext.WebRequestExecutorFactory);
 
             this.DocumentLibrary = this.ClientContext.Web.Lists.GetByTitle(info.Library);
             this.ClientContext.Load(this.DocumentLibrary, r => r.ForceCheckout, r => r.EnableVersioning, r => r.EnableMinorVersions, r => r.Title, r => r.ContentTypesEnabled, r => r.ContentTypes);
