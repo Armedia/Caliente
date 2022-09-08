@@ -431,18 +431,12 @@ namespace Armedia.CMSMF.SharePoint.Import
             catch (Exception e)
             {
                 ret = 1;
-                if (LOG != null)
-                {
-                    LOG.Error("Uncaught exception caused a program crash", e);
-                }
-                else
-                {
-                    Console.Error.WriteLine(GetVersionInfo());
-                    Console.Error.WriteLine("Uncaught exception caused a program crash: {0}", e);
-                    Console.Error.WriteLine(e.StackTrace);
-                    Console.Error.WriteLine("Press any key to exit...");
-                    Console.ReadKey();
-                }
+                LOG.Error("Uncaught exception caused a program crash", e);
+                Console.Error.WriteLine(GetVersionInfo());
+                Console.Error.WriteLine("Uncaught exception caused a program crash: {0}", e);
+                Console.Error.WriteLine(e.StackTrace);
+                Console.Error.WriteLine("Press any key to exit...");
+                Console.ReadKey();
             }
             finally
             {
