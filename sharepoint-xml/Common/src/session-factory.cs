@@ -59,12 +59,14 @@ namespace Armedia.CMSMF.SharePoint.Common
     {
         void ApplyThrottling();
 
-        void RetryAfter(WebException e);
+        bool RetryAfter(WebException e);
     }
 
     public class SimpleThrottleHandler : IThrottleHandler
     {
+        const string RETRY_AFTER = "Retry-After";
         const int FALLBACK_THROTTLE_SECS = 30;
+
         private readonly ILog Log;
         private readonly ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
         private readonly DateTime Boot;
@@ -85,8 +87,7 @@ namespace Armedia.CMSMF.SharePoint.Common
             {
                 while (true)
                 {
-                    long now = Environment.TickCount;
-                    long remaining = (Interlocked.Read(ref Border) - now);
+                    long remaining = (Interlocked.Read(ref Border) - Environment.TickCount);
                     if (remaining <= 0) return;
                     // First, let go of all locks ...
                     Lock.ExitReadLock();
@@ -109,31 +110,41 @@ namespace Armedia.CMSMF.SharePoint.Common
             }
         }
 
-        public void RetryAfter(WebException e)
+        public bool RetryAfter(WebException e)
         {
             HttpWebResponse rsp = e.Response as HttpWebResponse;
-            if (rsp.StatusCode == (HttpStatusCode)429 || rsp.StatusCode == (HttpStatusCode)503)
+            if (rsp == null) return false;
+
+            int statusCode = (int)rsp.StatusCode;
+            switch (statusCode)
             {
-                // We got throttled!! Get the Retry-After header
-                int retrySeconds = 0;
-                string retryAfterHeader = System.Net.HttpResponseHeader.RetryAfter.ToString();
-                string retryAfter = rsp.Headers.Get(retryAfterHeader);
-                if (!string.IsNullOrEmpty(retryAfter))
+                case 429:
+                case 503:
+                case 504:
+                    // We got throttled... keep going!
+                    break;
+
+                default:
+                    // Something else ... don't return
+                    return false;
+            }
+
+            // We got throttled!! Get the Retry-After header
+            // MORE INFO : https://docs.microsoft.com/en-us/answers/questions/318901/the-remote-server-returned-an-error-429.html?page=2&pageSize=10&sort=oldest
+            int retrySeconds = 0;
+            string retryAfter = rsp.Headers.Get(RETRY_AFTER);
+            if (!string.IsNullOrEmpty(retryAfter))
+            {
+                this.Log.Info(string.Format("Got the {0} header with the value [{1}]", RETRY_AFTER, retryAfter));
+                if (!Int32.TryParse(retryAfter, out retrySeconds))
                 {
-                    this.Log.Info(string.Format("Got the {0} header with the value [{1}]", retryAfterHeader, retryAfter));
-                    try
-                    {
-                        retrySeconds = Int32.Parse(retryAfter);
-                    }
-                    catch (FormatException fe)
-                    {
-                        retrySeconds = FALLBACK_THROTTLE_SECS;
-                        this.Log.Warn(string.Format("Received an HTTP response requiring throttling {0}, but the {1} header contained the value [{2}] which could not be parsed - will instead throttle for {3} seconds", rsp.StatusCode.GetTypeCode(), retryAfterHeader, retryAfter, retrySeconds, fe));
-                    }
+                    retrySeconds = FALLBACK_THROTTLE_SECS;
+                    this.Log.Warn(string.Format("Received an HTTP response requiring throttling (status {0}), but the {1} header contained the value [{2}] which could not be parsed - will instead throttle for {3} seconds", rsp.StatusCode, RETRY_AFTER, retryAfter, retrySeconds));
                 }
+            }
 
-                if (retrySeconds <= 0) return;
-
+            if (retrySeconds > 0)
+            {
                 // The new border will be "now" plus (retrySeconds + 1) seconds in the future
                 long newBorder = Environment.TickCount + ((retrySeconds + 1) * 1000);
                 Lock.EnterWriteLock();
@@ -152,14 +163,28 @@ namespace Armedia.CMSMF.SharePoint.Common
                     Lock.ExitWriteLock();
                 }
             }
+            return true;
         }
     }
 
     public sealed class SharePointSession : IDisposable
     {
-        const string USER_AGENT = "Armedia-Caliente-SP-Ingestor";
+        const string USER_AGENT = "NONISV|Armedia|Caliente-SP-Ingestor/1.0";
 
         public static readonly TimeSpan TIME_OUT = new TimeSpan(1, 0, 0);
+
+        private static long SIMULATE_429 = 1;
+
+        public static void Simulate429(bool value)
+        {
+            Interlocked.Exchange(ref SIMULATE_429, (value ? 1L : 0L));
+        }
+
+        public static bool Simulate429()
+        {
+            long val = Interlocked.Read(ref SIMULATE_429);
+            return (val != 0);
+        }
 
         private static long counter = 0;
 
@@ -207,6 +232,29 @@ namespace Armedia.CMSMF.SharePoint.Common
                 // This one pops up the authentication window where one can log in with MFA
                 this.ClientContext = authManager.GetWebLoginClientContext(info.Url);
             }
+            // Make sure we ALWAYS include the USER_AGENT
+            this.ClientContext.ExecutingWebRequest += delegate (object sender, WebRequestEventArgs e)
+            {
+                // To simulate 429: https://blog.mastykarz.nl/simulating-throttling-sharepoint/
+                if (Simulate429())
+                {
+                    string path = e.WebRequestExecutor.WebRequest.RequestUri.AbsolutePath;
+                    string method = e.WebRequestExecutor.RequestMethod;
+                    if (method.Equals(WebRequestMethods.Http.Post) && !string.IsNullOrEmpty(path) && path.EndsWith("/ProcessQuery"))
+                    {
+                        // TODO: Add the Test429=true query parameter
+                        // TODO frigging HOW?!?!?
+                        "".GetHashCode();
+                    }
+                }  
+
+                e.WebRequestExecutor.RequestKeepAlive = true;
+                e.WebRequestExecutor.WebRequest.KeepAlive = true;
+                e.WebRequestExecutor.WebRequest.UserAgent = USER_AGENT;
+                e.WebRequestExecutor.WebRequest.Timeout = (int)TIME_OUT.TotalMilliseconds;
+                // e.WebRequestExecutor.WebRequest.ReadWriteTimeout = (int)TIME_OUT.TotalMilliseconds;
+            };
+
             this.DocumentLibrary = this.ClientContext.Web.Lists.GetByTitle(info.Library);
             this.ClientContext.Load(this.DocumentLibrary, r => r.ForceCheckout, r => r.EnableVersioning, r => r.EnableMinorVersions, r => r.Title, r => r.ContentTypesEnabled, r => r.ContentTypes);
             this.ClientContext.Load(this.DocumentLibrary.RootFolder, f => f.ServerRelativeUrl, f => f.Name);
@@ -231,28 +279,34 @@ namespace Armedia.CMSMF.SharePoint.Common
         {
             // Read into: https://docs.microsoft.com/en-us/sharepoint/dev/solution-guidance/security-apponly-azuread
             this.ClientContext.RequestTimeout = (int)TIME_OUT.TotalMilliseconds;
-            this.ClientContext.PendingRequest.RequestExecutor.RequestKeepAlive = true;
-            this.ClientContext.PendingRequest.RequestExecutor.WebRequest.KeepAlive = true;
-            this.ClientContext.PendingRequest.RequestExecutor.WebRequest.UserAgent = USER_AGENT;
-            this.ClientContext.PendingRequest.RequestExecutor.WebRequest.Timeout = (int)TIME_OUT.TotalMilliseconds;
-            // this.ClientContext.PendingRequest.RequestExecutor.WebRequest.ReadWriteTimeout = (int)TIME_OUT.TotalMilliseconds;
             long start = Environment.TickCount;
             try
             {
-                this.ThrottleHandler.ApplyThrottling();
-                this.ExecuteQueryAction(this.ClientContext, USER_AGENT);
+                while (true)
+                {
+                    this.ThrottleHandler.ApplyThrottling();
+                    try
+                    {
+                        this.ExecuteQueryAction(this.ClientContext, USER_AGENT);
+                        break;
+                    }
+                    catch (WebException e)
+                    {
+                        long duration = (Environment.TickCount - start);
+
+                        // First things first: are we retrying? If so, then do so...
+                        // TODO: Is this the correct approach? What if we're not using ExecuteQueryRetry?
+                        if (this.ThrottleHandler.RetryAfter(e)) continue;
+
+                        // We're not retrying, so we puke out ...
+                        throw new ExecuteQueryException(string.Format("{1} ({2}.{3:000}s HRESULT=[0x{4:X8}] STATUS=[{5}] DATA=[{6}])", Environment.NewLine, e.Message, duration / 1000, duration % 1000, e.HResult, e.Status, e.Data), e);
+                    }
+                }
             }
             catch (ServerException e)
             {
                 long duration = (Environment.TickCount - start);
                 throw new ExecuteQueryException(string.Format("{1} ({2}.{3:000}s){0}\tHRESULT=[0x{4:X8}]{0}\tServerErrorCode=[0x{5:X8}]{0}\tServerErrorDetails=[{6}]{0}\tServerErrorTraceCorrelationId=[{7}]{0}\tServerErrorTypeName=[{8}]{0}\tServerErrorValue=[{9}]{0}\tServerStackTrace=[{10}]{0}", Environment.NewLine, e.Message, duration / 1000, duration % 1000, e.HResult, e.ServerErrorCode, e.ServerErrorDetails, e.ServerErrorTraceCorrelationId, e.ServerErrorTypeName, e.ServerErrorValue, e.ServerStackTrace), e);
-            }
-            catch (WebException e)
-            {
-                long duration = (Environment.TickCount - start);
-                this.ThrottleHandler.RetryAfter(e);
-                // Whatever happened above, we still puke out ...
-                throw new ExecuteQueryException(string.Format("{1} ({2}.{3:000}s HRESULT=[0x{4:X8}] STATUS=[{5}] DATA=[{6}])", Environment.NewLine, e.Message, duration / 1000, duration % 1000, e.HResult, e.Status, e.Data), e);
             }
             catch (Exception e)
             {

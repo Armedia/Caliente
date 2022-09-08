@@ -979,44 +979,65 @@ namespace Armedia.CMSMF.SharePoint.Import
             List<DocumentInfo> failures = new List<DocumentInfo>();
             ActionBlock<DocumentInfo> ingestor = new ActionBlock<DocumentInfo>(docInfo =>
             {
-                if (this.Abort) return;
-                Result r = Result.Failed;
-                try
+                while (true)
                 {
-                    r = Result.Failed;
-                    Exception exc = null;
-                    bool markIgnored = false;
+                    if (this.Abort) return;
+                    bool retry = false;
+                    Result r = Result.Failed;
                     try
                     {
-                        StoreDocument(docInfo.XmlLocation, docInfo.Tracker, simulationMode, locationMode, autoPublish);
-                        docInfo.Tracker.DeleteOutcomeMarker();
-                        r = Result.Completed;
-                    }
-                    catch (Exception e)
-                    {
-                        if (e is UnsupportedDocumentException)
+                        r = Result.Failed;
+                        Exception exc = null;
+                        bool markIgnored = false;
+                        try
                         {
-                            markIgnored = true;
+                            StoreDocument(docInfo.XmlLocation, docInfo.Tracker, simulationMode, locationMode, autoPublish);
+                            docInfo.Tracker.DeleteOutcomeMarker();
+                            r = Result.Completed;
                         }
-                        else
+                        catch (Exception e)
                         {
-                            lock (failures)
+                            /*
+                            if (e is ThrottlingException)
                             {
-                                failures.Add(docInfo);
+                                // We've been throttled ... we need to retry this document (right now?)
+                                retry = true;
+                                Log.Warn("We got throttled, complain about it and mention that we'll retry the document");
+                                continue;
+                            }
+                            */
+
+                            if (e is UnsupportedDocumentException)
+                            {
+                                markIgnored = true;
+                            }
+                            else
+                            {
+                                lock (failures)
+                                {
+                                    failures.Add(docInfo);
+                                }
+                            }
+                            exc = e;
+                            Log.Error(string.Format("Failed to import the document history for [{0}] described by [{1}]", docInfo.SourcePath, docInfo.XmlLocation), e);
+                        }
+                        finally
+                        {
+                            if (!retry)
+                            {
+                                docInfo.Tracker.SaveOutcomeMarker(r, exc, markIgnored);
+                                IncreaseProgress();
                             }
                         }
-                        exc = e;
-                        Log.Error(string.Format("Failed to import the document history for [{0}] described by [{1}]", docInfo.SourcePath, docInfo.XmlLocation), e);
                     }
                     finally
                     {
-                        docInfo.Tracker.SaveOutcomeMarker(r, exc, markIgnored);
-                        IncreaseProgress();
+                        if (!retry)
+                        {
+                            IncrementCounter(r);
+                        }
                     }
-                }
-                finally
-                {
-                    IncrementCounter(r);
+                    break;
                 }
             }, new ExecutionDataflowBlockOptions
             {
