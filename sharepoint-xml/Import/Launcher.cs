@@ -206,7 +206,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             private static readonly int DEFAULT_THREADS = ((Environment.ProcessorCount * 3) / 4);
             private const int MAX_THREADS = 32;
 
-            private const bool DEFAULT_USE_QUERY_RETRY = false;
+            private const bool DEFAULT_USE_QUERY_RETRY = true;
 
             private const int MIN_RETRIES = 0;
             private const int DEFAULT_RETRIES = 5;
