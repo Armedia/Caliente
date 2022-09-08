@@ -212,9 +212,9 @@ namespace Armedia.CMSMF.SharePoint.Import
             private const int DEFAULT_RETRIES = 5;
             private const int MAX_RETRIES = 10;
 
-            private const int MIN_RETRY_DELAY = 500;
+            private const int MIN_RETRY_DELAY = 5000;
             private const int DEFAULT_RETRY_DELAY = MIN_RETRY_DELAY;
-            private const int MAX_RETRY_DELAY = 30000;
+            private const int MAX_RETRY_DELAY = 60000;
 
             private const int DEFAULT_REUSE_COUNT = 10;
             private const bool DEFAULT_CLEAN_TYPES = false;
