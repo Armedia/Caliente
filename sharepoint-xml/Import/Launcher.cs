@@ -366,7 +366,7 @@ namespace Caliente.SharePoint.Import
                 }
                 if (errors.Count > 0) return errors;
 
-                if (string.IsNullOrEmpty(this.content)) this.content = string.Format("{0}\\contents", Directory.GetCurrentDirectory()).Replace('\\', '/');
+                if (string.IsNullOrEmpty(this.content)) this.content = string.Format("{0}\\streams", Directory.GetCurrentDirectory()).Replace('\\', '/');
                 if (string.IsNullOrEmpty(this.metadata)) this.metadata = string.Format("{0}\\xml-metadata", Directory.GetCurrentDirectory()).Replace('\\', '/');
                 if (string.IsNullOrEmpty(this.caches)) this.caches = string.Format("{0}\\caches", Directory.GetCurrentDirectory()).Replace('\\', '/');
                 if (string.IsNullOrWhiteSpace(this.ldapBindDn)) this.ldapBindDn = "";
