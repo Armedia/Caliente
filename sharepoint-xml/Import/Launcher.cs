@@ -418,6 +418,17 @@ namespace Caliente.SharePoint.Import
             return string.Format("{0} v{1} (built at {2} UTC)", title, version, buildDate);
         }
 
+        private static string GetExeLocation()
+        {
+            return Path.GetDirectoryName(Environment.GetCommandLineArgs()[0]);
+        }
+
+        private static string GetExeName()
+        {
+            return Path.GetFileNameWithoutExtension(Environment.GetCommandLineArgs()[0]);
+        }
+
+
         public static void Main(string[] args)
         {
             int ret = 0;
@@ -445,6 +456,34 @@ namespace Caliente.SharePoint.Import
             {
                 Environment.Exit(ret);
             }
+        }
+
+        private static FileInfo FindLogConfiguration(string dir, string fileName)
+        {
+            string path = string.Format("{0}\\{1}", dir, fileName);
+            FileInfo config = new FileInfo(path);
+            if (!config.Exists) return null;
+            return config;
+        }
+
+        private static bool ConfigureLogging(string baseDir)
+        {
+            string[] nameOptions = { GetExeName() + ".log", "log4net.xml" };
+            string[] directoryOptions = { baseDir, GetExeLocation() };
+            foreach (string s in directoryOptions)
+            {
+                foreach (string n in nameOptions)
+                {
+                    FileInfo config = FindLogConfiguration(s, n);
+                    if (config != null)
+                    {
+                        Console.Out.WriteLine(string.Format("Initializing logging from [{0}]...", config));
+                        XmlConfigurator.Configure(config);
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public static int MainLoop(string[] args)
@@ -479,7 +518,7 @@ namespace Caliente.SharePoint.Import
             Environment.SetEnvironmentVariable("CMF_LOGDATE", string.Format("{0:yyyyMMdd-HHmmss}", DateTime.Now));
             Environment.SetEnvironmentVariable("CMF_LOGDIR", logDir);
 
-            XmlConfigurator.Configure(new FileInfo(string.Format("{0}\\log4net.xml", baseDir)));
+            ConfigureLogging(baseDir);
             LOG = log = LogManager.GetLogger(typeof(Launcher));
             log.Info("Initializing Application");
             log.Info(version);
