@@ -56,10 +56,10 @@ namespace Caliente.SharePoint.Import
                 [OptionAttribute("library", Required = false, HelpText = "The Document Library to import files into")]
                 public string library { get; set; }
 
-                [OptionAttribute("content", Required = false, HelpText = "The location on the filesystem for the import content")]
-                public string content { get; set; }
+                [OptionAttribute("streams", Required = false, HelpText = "The location on the filesystem for the import content streams")]
+                public string streams { get; set; }
 
-                [OptionAttribute("metadata", Required = false, HelpText = "The location on the filesystem for the import content's metadata")]
+                [OptionAttribute("metadata", Required = false, HelpText = "The location on the filesystem for the import objects' metadata")]
                 public string metadata { get; set; }
 
                 [OptionAttribute("caches", Required = false, HelpText = "The location on the filesystem for the work-in-progress data caches")]
@@ -246,7 +246,7 @@ namespace Caliente.SharePoint.Import
             public string certificatePass { get; private set; }
             public string ldapSyncDomain { get; private set; }
             public string library { get; private set; }
-            public string content { get; private set; }
+            public string streams { get; private set; }
             public string metadata { get; private set; }
             public string caches { get; private set; }
             public string ldapUrl { get; private set; }
@@ -366,7 +366,7 @@ namespace Caliente.SharePoint.Import
                 }
                 if (errors.Count > 0) return errors;
 
-                if (string.IsNullOrEmpty(this.content)) this.content = string.Format("{0}\\streams", Directory.GetCurrentDirectory()).Replace('\\', '/');
+                if (string.IsNullOrEmpty(this.streams)) this.streams = string.Format("{0}\\streams", Directory.GetCurrentDirectory()).Replace('\\', '/');
                 if (string.IsNullOrEmpty(this.metadata)) this.metadata = string.Format("{0}\\xml-metadata", Directory.GetCurrentDirectory()).Replace('\\', '/');
                 if (string.IsNullOrEmpty(this.caches)) this.caches = string.Format("{0}\\caches", Directory.GetCurrentDirectory()).Replace('\\', '/');
                 if (string.IsNullOrWhiteSpace(this.ldapBindDn)) this.ldapBindDn = "";
@@ -525,7 +525,7 @@ namespace Caliente.SharePoint.Import
 
             if (options.indexOnly)
             {
-                ImportContext importContext = new ImportContext(null, options.content, options.metadata, options.caches);
+                ImportContext importContext = new ImportContext(null, options.streams, options.metadata, options.caches);
                 FormatResolver formatResolver = new FormatResolver(importContext);
                 new DocumentImporter(new FolderImporter(importContext, options.fallbackFolderType), formatResolver, options.locationMode, options.fixExtensions, options.fallbackDocumentType, options.uploadSegmentSize).StoreLocationIndex();
                 return 0;
@@ -567,7 +567,7 @@ namespace Caliente.SharePoint.Import
 
                 using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, userPassword, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.library, options.reuseCount, options.useQueryRetry, options.retries, options.useRetryWrapper)))
                 {
-                    ImportContext importContext = new ImportContext(sessionFactory, options.content, options.metadata, options.caches);
+                    ImportContext importContext = new ImportContext(sessionFactory, options.streams, options.metadata, options.caches);
                     using (ObjectPool<SharePointSession>.Ref sessionRef = sessionFactory.GetSession())
                     {
                         SharePointSession session = sessionRef.Target;
