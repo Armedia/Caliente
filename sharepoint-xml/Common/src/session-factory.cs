@@ -11,7 +11,7 @@ using System.ServiceModel.Channels;
 using System.Threading;
 using System.Xml.Linq;
 
-namespace Armedia.CMSMF.SharePoint.Common
+namespace Caliente.SharePoint.Common
 {
 
     public class ThrottleSimulatorExecutorFactory : WebRequestExecutorFactory

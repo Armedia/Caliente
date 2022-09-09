@@ -2,7 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Armedia.CMSMF.SharePoint.Common
+namespace Caliente.SharePoint.Common
 {
 
     public interface PoolableObjectFactory<T>

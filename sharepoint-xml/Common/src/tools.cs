@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Armedia.CMSMF.SharePoint.Common
+namespace Caliente.SharePoint.Common
 {
     public sealed class Tools
     {

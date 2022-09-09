@@ -10,15 +10,15 @@
     <ProjectGuid>{F528D6DC-3860-4AA1-B2B0-7E83B8013EE7}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Armedia.CMSMF.SharePoint.Export</RootNamespace>
-    <AssemblyName>Armedia.CMSMF.SharePoint.Export</AssemblyName>
+    <RootNamespace>Caliente.SharePoint.Export</RootNamespace>
+    <AssemblyName>Caliente.SharePoint.Export</AssemblyName>
     <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>Armedia.CMSMF.SharePoint.Export.Launcher</StartupObject>
+    <StartupObject>Caliente.SharePoint.Export.Launcher</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>

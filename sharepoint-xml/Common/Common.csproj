@@ -12,8 +12,8 @@
     <ProjectGuid>{AA4D5548-FC2A-4AA4-AEDF-EA9B2661D75A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Armedia.CMSMF.SharePoint.Common</RootNamespace>
-    <AssemblyName>Armedia.CMSMF.SharePoint.Common</AssemblyName>
+    <RootNamespace>Caliente.SharePoint.Common</RootNamespace>
+    <AssemblyName>Caliente.SharePoint.Common</AssemblyName>
     <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />

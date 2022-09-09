@@ -1,4 +1,4 @@
-using Armedia.CMSMF.SharePoint.Common;
+using Caliente.SharePoint.Common;
 using log4net;
 using Microsoft.SharePoint.Client;
 using System;
@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Armedia.CMSMF.SharePoint.Import
+namespace Caliente.SharePoint.Import
 {
     public class Format
     {

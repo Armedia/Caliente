@@ -10,8 +10,8 @@
     <ProjectGuid>{C66820CA-01C0-46E2-889D-5DEAA832884B}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Armedia.CMSMF.SharePoint.Import</RootNamespace>
-    <AssemblyName>Armedia.CMSMF.SharePoint.Import</AssemblyName>
+    <RootNamespace>Caliente.SharePoint.Import</RootNamespace>
+    <AssemblyName>Caliente.SharePoint.Import</AssemblyName>
     <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -33,7 +33,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>Armedia.CMSMF.SharePoint.Import.Launcher</StartupObject>
+    <StartupObject>Caliente.SharePoint.Import.Launcher</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>

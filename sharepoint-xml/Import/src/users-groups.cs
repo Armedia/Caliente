@@ -1,4 +1,4 @@
-using Armedia.CMSMF.SharePoint.Common;
+using Caliente.SharePoint.Common;
 using log4net;
 using Microsoft.SharePoint.Client;
 using System;
@@ -10,7 +10,7 @@ using System.Xml;
 using System.Xml.Linq;
 
 // Reference: http://stackoverflow.com/questions/10168240/encrypting-decrypting-a-string-in-c-sharp
-namespace Armedia.CMSMF.SharePoint.Import
+namespace Caliente.SharePoint.Import
 {
     public class UserGroupImporter : BaseImporter
     {

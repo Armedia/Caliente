@@ -1,4 +1,4 @@
-using Armedia.CMSMF.SharePoint.Common;
+using Caliente.SharePoint.Common;
 using CommandLine;
 using CommandLine.Text;
 using log4net;
@@ -13,7 +13,7 @@ using System.Reflection;
 using System.Security;
 using System.Xml.Linq;
 
-namespace Armedia.CMSMF.SharePoint.Import
+namespace Caliente.SharePoint.Import
 {
     class Launcher
     {
