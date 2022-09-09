@@ -17,7 +17,7 @@ namespace Caliente.SharePoint.Import
         public bool Modified = false;
         public bool Exists = false;
 
-        public FolderInfo(string location) : base(location)
+        public FolderInfo(string location, string relativeLocation) : base(location, relativeLocation)
         {
             this.Files = new HashSet<string>();
         }
@@ -27,7 +27,7 @@ namespace Caliente.SharePoint.Import
     {
         protected static readonly ILog LOG = LogManager.GetLogger(typeof(FolderImporter));
 
-        private void ProcessAccumulatedFolders(SharePointSession session, Dictionary<string, List<FolderInfo>> folders)
+        private void ProcessAccumulatedFolders(ImportContext importContext, SharePointSession session, Dictionary<string, List<FolderInfo>> folders)
         {
             // This allows for the case where we're only creating indexes, and don't want to touch the repository
             if (session == null) return;
@@ -64,7 +64,7 @@ namespace Caliente.SharePoint.Import
                 Folder parentFolder = spFolders[parent];
                 foreach (FolderInfo f in folders[parent])
                 {
-                    ProgressTracker tracker = new ProgressTracker(f.Location, this.Log);
+                    ProgressTracker tracker = new ProgressTracker(importContext.FormatProgressLocation(f.RelativeLocation), this.Log);
                     if (tracker.Completed)
                     {
                         f.SPObj = parentFolder.Folders.GetByUrl(f.SafeName);
@@ -162,7 +162,7 @@ namespace Caliente.SharePoint.Import
                                 bool ok = false;
                                 try
                                 {
-                                    ProcessAccumulatedFolders(session, accumulated);
+                                    ProcessAccumulatedFolders(importContext, session, accumulated);
                                     ok = true;
                                 }
                                 finally
@@ -179,7 +179,7 @@ namespace Caliente.SharePoint.Import
                         }
 
                         // A new folder to handle...
-                        FolderInfo f = new FolderInfo(this.ImportContext.FormatMetadataLocation(location));
+                        FolderInfo f = new FolderInfo(this.ImportContext.FormatMetadataLocation(location), location);
 
                         List<FolderInfo> l = null;
                         if (!accumulated.ContainsKey(f.SafePath))
@@ -213,7 +213,7 @@ namespace Caliente.SharePoint.Import
                         bool ok = false;
                         try
                         {
-                            ProcessAccumulatedFolders(session, accumulated);
+                            ProcessAccumulatedFolders(importContext, session, accumulated);
                             ok = true;
                         }
                         finally
@@ -273,7 +273,7 @@ namespace Caliente.SharePoint.Import
             }
         }
 
-        private ICollection<FolderInfo> FinalizeFolders(ICollection<FolderInfo> pending, int importThreads)
+        private ICollection<FolderInfo> FinalizeFolders(ImportContext importContext, ICollection<FolderInfo> pending, int importThreads)
         {
             List<FolderInfo> failed = new List<FolderInfo>();
             ActionBlock<FolderInfo> processor = new ActionBlock<FolderInfo>(folderInfo =>
@@ -282,7 +282,7 @@ namespace Caliente.SharePoint.Import
                 Result r = Result.Skipped;
                 try
                 {
-                    ProgressTracker tracker = new ProgressTracker(folderInfo.Location, this.Log);
+                    ProgressTracker tracker = new ProgressTracker(importContext.FormatProgressLocation(folderInfo.RelativeLocation), this.Log);
                     if (!folderInfo.Modified && folderInfo.Exists && !tracker.Failed)
                     {
                         if (Log.IsDebugEnabled)
@@ -366,7 +366,7 @@ namespace Caliente.SharePoint.Import
             return pending;
         }
 
-        public void FinalizeFolders(int threads, int retries)
+        public void FinalizeFolders(ImportContext importContext, int threads, int retries)
         {
             ICollection<FolderInfo> failed = new List<FolderInfo>();
             Log.Info("Checking existing status to identify which folders need processing");
@@ -388,7 +388,7 @@ namespace Caliente.SharePoint.Import
                 attempt++;
                 Log.Info(string.Format("Identified {0} folders in need of processing (of which {1} are retries) (attempt #{2}/{3})", pending.Count, failed.Count, attempt, retries + 1));
                 int lastPending = pending.Count;
-                pending = FinalizeFolders(pending, threads);
+                pending = FinalizeFolders(importContext, pending, threads);
                 failed = pending;
                 if (pending.Count < lastPending)
                 {

@@ -58,14 +58,14 @@ namespace Caliente.SharePoint.Import
             public readonly string SourcePath;
             public readonly ProgressTracker Tracker;
 
-            public DocumentInfo(ILog log, string historyId, string path, string name, string xmlLocation)
+            public DocumentInfo(ILog log, string historyId, string path, string name, string xmlLocation, string progressLocation)
             {
                 this.HistoryId = historyId;
                 this.Path = path;
                 this.Name = name;
                 this.SourcePath = string.Format("{0}/{1}", (path == "/" ? "" : path), name);
                 this.XmlLocation = xmlLocation;
-                this.Tracker = new ProgressTracker(xmlLocation, log);
+                this.Tracker = new ProgressTracker(progressLocation, log);
             }
         }
 
@@ -1114,7 +1114,7 @@ namespace Caliente.SharePoint.Import
                         continue;
                     }
 
-                    DocumentInfo docInfo = new DocumentInfo(this.Log, historyId, path, name, this.ImportContext.FormatMetadataLocation(location));
+                    DocumentInfo docInfo = new DocumentInfo(this.Log, historyId, path, name, this.ImportContext.FormatMetadataLocation(location), this.ImportContext.FormatProgressLocation(location));
                     if (docInfo.Tracker.Completed)
                     {
                         Log.Debug(string.Format("Skipping file [{0}] - already completed", docInfo.SourcePath));

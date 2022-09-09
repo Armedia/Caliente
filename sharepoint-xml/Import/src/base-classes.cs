@@ -25,16 +25,18 @@ namespace Caliente.SharePoint.Import
         public readonly string SafeFullPath;
         public readonly string Type;
         public readonly string Location;
+        public readonly string RelativeLocation;
         public readonly DateTime CreationDate;
         public readonly string Creator;
         public readonly DateTime ModificationDate;
         public readonly string Modifier;
 
-        protected FSObjectInfo(string location)
+        protected FSObjectInfo(string fullLocation, string relativeLocation)
         {
-            XElement xml = XElement.Load(location);
+            XElement xml = XElement.Load(fullLocation);
             XNamespace ns = xml.GetDefaultNamespace();
-            this.Location = location;
+            this.Location = fullLocation;
+            this.RelativeLocation = relativeLocation;
             this.Id = (string)xml.Element(ns + "id");
             this.Acl = (string)xml.Element(ns + "acl");
             this.Path = "/" + (string)xml.Element(ns + "sourcePath");
@@ -169,14 +171,16 @@ namespace Caliente.SharePoint.Import
         public readonly SharePointSessionFactory SessionFactory;
         private readonly string ContentLocation;
         private readonly string MetadataLocation;
+        private readonly string ProgressLocation;
         private readonly string CacheLocation;
         private readonly XmlReaderSettings XmlSettings;
 
-        public ImportContext(SharePointSessionFactory sessionFactory, string contentLocation, string metadataLocation, string cacheLocation)
+        public ImportContext(SharePointSessionFactory sessionFactory, string contentLocation, string metadataLocation, string progressLocation, string cacheLocation)
         {
             this.SessionFactory = sessionFactory;
             this.ContentLocation = contentLocation;
             this.MetadataLocation = metadataLocation;
+            this.ProgressLocation = progressLocation;
             this.CacheLocation = cacheLocation;
             this.XmlSettings = new XmlReaderSettings();
             this.XmlSettings.DtdProcessing = DtdProcessing.Parse;
@@ -221,6 +225,11 @@ namespace Caliente.SharePoint.Import
         public string FormatMetadataLocation(string location)
         {
             return FormatLocation(this.MetadataLocation, location);
+        }
+
+        public string FormatProgressLocation(string location)
+        {
+            return FormatLocation(this.ProgressLocation, location);
         }
 
         public string FormatCacheLocation(string location)
@@ -345,11 +354,11 @@ namespace Caliente.SharePoint.Import
             private readonly ILog Log;
             private readonly System.Collections.Generic.List<string> Progress;
 
-            public ProgressTracker(string xmlLocation, ILog log)
+            public ProgressTracker(string descriptorLocation, ILog log)
             {
                 this.Progress = new System.Collections.Generic.List<string>();
                 this.Log = log;
-                this.DescriptorLocation = xmlLocation;
+                this.DescriptorLocation = descriptorLocation;
                 this.CompletedMarker = new FileInfo(string.Format("{0}.completed", this.DescriptorLocation));
                 this.FailedMarker = new FileInfo(string.Format("{0}.failed", this.DescriptorLocation));
                 this.IgnoreMarker = new FileInfo(string.Format("{0}.ignore", this.DescriptorLocation));
@@ -376,6 +385,9 @@ namespace Caliente.SharePoint.Import
                     case Result.Failed: fi = this.FailedMarker; break;
                 }
 
+                // Make sure the directory it resides in ALWAYS exists
+                if (!fi.Directory.Exists) Directory.CreateDirectory(fi.Directory.FullName);
+
                 bool appending = fi.Exists;
                 using (StreamWriter sw = (appending ? fi.AppendText() : fi.CreateText()))
                 {
@@ -396,8 +408,8 @@ namespace Caliente.SharePoint.Import
 
             public void DeleteOutcomeMarker()
             {
-                this.CompletedMarker.Delete();
-                this.FailedMarker.Delete();
+                if (this.CompletedMarker.Exists) this.CompletedMarker.Delete();
+                if (this.FailedMarker.Exists) this.FailedMarker.Delete();
             }
 
             public bool Completed

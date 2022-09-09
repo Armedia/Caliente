@@ -62,6 +62,9 @@ namespace Caliente.SharePoint.Import
                 [OptionAttribute("metadata", Required = false, HelpText = "The location on the filesystem for the import objects' metadata")]
                 public string metadata { get; set; }
 
+                [OptionAttribute("progress", Required = false, HelpText = "The location on the filesystem for the progress tracker files")]
+                public string progress { get; set; }
+
                 [OptionAttribute("caches", Required = false, HelpText = "The location on the filesystem for the work-in-progress data caches")]
                 public string caches { get; set; }
 
@@ -248,6 +251,7 @@ namespace Caliente.SharePoint.Import
             public string library { get; private set; }
             public string streams { get; private set; }
             public string metadata { get; private set; }
+            public string progress { get; private set; }
             public string caches { get; private set; }
             public string ldapUrl { get; private set; }
             public string ldapBindDn { get; private set; }
@@ -366,9 +370,11 @@ namespace Caliente.SharePoint.Import
                 }
                 if (errors.Count > 0) return errors;
 
-                if (string.IsNullOrEmpty(this.streams)) this.streams = string.Format("{0}\\streams", Directory.GetCurrentDirectory()).Replace('\\', '/');
-                if (string.IsNullOrEmpty(this.metadata)) this.metadata = string.Format("{0}\\xml-metadata", Directory.GetCurrentDirectory()).Replace('\\', '/');
-                if (string.IsNullOrEmpty(this.caches)) this.caches = string.Format("{0}\\caches", Directory.GetCurrentDirectory()).Replace('\\', '/');
+                string cwd = Directory.GetCurrentDirectory();
+                if (string.IsNullOrEmpty(this.streams)) this.streams = string.Format("{0}\\streams", cwd).Replace('\\', '/');
+                if (string.IsNullOrEmpty(this.metadata)) this.metadata = string.Format("{0}\\xml-metadata", cwd).Replace('\\', '/');
+                if (string.IsNullOrEmpty(this.progress)) this.progress = string.Format("{0}\\xml-metadata-progress", cwd).Replace('\\', '/');
+                if (string.IsNullOrEmpty(this.caches)) this.caches = string.Format("{0}\\caches", cwd).Replace('\\', '/');
                 if (string.IsNullOrWhiteSpace(this.ldapBindDn)) this.ldapBindDn = "";
                 if (string.IsNullOrEmpty(this.ldapBindPw)) this.ldapBindPw = "";
 
@@ -525,7 +531,7 @@ namespace Caliente.SharePoint.Import
 
             if (options.indexOnly)
             {
-                ImportContext importContext = new ImportContext(null, options.streams, options.metadata, options.caches);
+                ImportContext importContext = new ImportContext(null, options.streams, options.metadata, options.progress, options.caches);
                 FormatResolver formatResolver = new FormatResolver(importContext);
                 new DocumentImporter(new FolderImporter(importContext, options.fallbackFolderType), formatResolver, options.locationMode, options.fixExtensions, options.fallbackDocumentType, options.uploadSegmentSize).StoreLocationIndex();
                 return 0;
@@ -567,7 +573,7 @@ namespace Caliente.SharePoint.Import
 
                 using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, userPassword, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.library, options.reuseCount, options.useQueryRetry, options.retries, options.useRetryWrapper)))
                 {
-                    ImportContext importContext = new ImportContext(sessionFactory, options.streams, options.metadata, options.caches);
+                    ImportContext importContext = new ImportContext(sessionFactory, options.streams, options.metadata, options.progress, options.caches);
                     using (ObjectPool<SharePointSession>.Ref sessionRef = sessionFactory.GetSession())
                     {
                         SharePointSession session = sessionRef.Target;
@@ -652,7 +658,7 @@ namespace Caliente.SharePoint.Import
                     try
                     {
                         documentImporter.StoreDocuments(options.threads, options.simulationMode, options.locationMode, options.autoPublish, options.retries);
-                        folderImporter.FinalizeFolders(options.threads, options.retries);
+                        folderImporter.FinalizeFolders(importContext, options.threads, options.retries);
                         documentImporter.StoreLocationIndex();
                     }
                     finally

@@ -29,7 +29,7 @@
 	-->
 
 	<!-- Source Content Settings -->
-	<content>C:/Users/drivera/Desktop/Caliente/ingestion/streams</content>
+	<streams>C:/Users/drivera/Desktop/Caliente/ingestion/streams</streams>
 	<metadata>C:/Users/drivera/Desktop/Caliente/ingestion/xml-metadata</metadata>
 
 	<!-- user mapping settings -->
