@@ -468,7 +468,7 @@ namespace Caliente.SharePoint.Import
 
         private static bool ConfigureLogging(string baseDir)
         {
-            string[] nameOptions = { GetExeName() + ".log", "log4net.xml" };
+            string[] nameOptions = { GetExeName() + ".log.xml", "log4net.xml" };
             string[] directoryOptions = { baseDir, GetExeLocation() };
             foreach (string s in directoryOptions)
             {
