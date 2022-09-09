@@ -1,8 +1,0 @@
-{
-  "runtimeOptions": {
-    "tfm": "netstandard1.4",
-    "configProperties": {
-      "System.Reflection.Metadata.MetadataUpdater.IsSupported": false
-    }
-  }
-}
