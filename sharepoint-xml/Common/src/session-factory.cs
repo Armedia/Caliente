@@ -1,15 +1,63 @@
 using log4net;
 using Microsoft.SharePoint.Client;
+using PnP.Framework.Diagnostics;
 using PnP.Framework.Http;
+using PnP.Framework.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Security;
+using System.ServiceModel.Channels;
 using System.Threading;
 using System.Xml.Linq;
 
 namespace Armedia.CMSMF.SharePoint.Common
 {
+
+    public class ThrottleSimulatorExecutorFactory : WebRequestExecutorFactory
+    {
+        private static readonly string PARAMETER = "test429=true";
+        private static long SIMULATE_429 = 0;
+
+        private readonly WebRequestExecutorFactory Delegator;
+        private readonly ILog Log;
+
+        public static void Simulate429(bool value)
+        {
+            Interlocked.Exchange(ref SIMULATE_429, (value ? 1L : 0L));
+        }
+
+        private static bool Simulate429()
+        {
+            // Only return true every 20th invocation
+            long val = Interlocked.Increment(ref SIMULATE_429);
+            return ((val % 20) == 0);
+        }
+
+        public ThrottleSimulatorExecutorFactory(WebRequestExecutorFactory delegator)
+        {
+            this.Delegator = delegator;
+            this.Log = LogManager.GetLogger(typeof(ThrottleSimulatorExecutorFactory));
+        }
+
+        public override WebRequestExecutor CreateWebRequestExecutor(ClientRuntimeContext context, string requestUrl)
+        {
+            string newUrl = requestUrl;
+            UriBuilder b = new UriBuilder(requestUrl);
+            if (Simulate429() && !string.IsNullOrEmpty(b.Path) && b.Path.EndsWith("/ProcessQuery"))
+            {
+                // If the query already has parameters, tack it onto the end
+                if (!string.IsNullOrEmpty(b.Query))
+                {
+                    b.Query += "&";
+                }
+                b.Query += PARAMETER;
+                Log.Warn("********** ISSUING A RETRY TEST **********");
+            }
+            WebRequestExecutor result = Delegator.CreateWebRequestExecutor(context, b.Uri.ToString());
+            return result;
+        }
+    }
 
     public class SharePointSessionInfo : IDisposable
     {
@@ -26,9 +74,9 @@ namespace Armedia.CMSMF.SharePoint.Common
         public readonly string CertificatePass;
         public readonly bool UseQueryRetry;
         public readonly int RetryCount;
-        public readonly int RetryDelay;
+        public readonly bool UseRetryWrapper;
 
-        public SharePointSessionInfo(string url, string userName, SecureString password, string domain, string applicationId, string certificateKey, string certificatePass, string library, int maxBorrowCount, bool useQueryRetry, int retryCount, int retryDelay)
+        public SharePointSessionInfo(string url, string userName, SecureString password, string domain, string applicationId, string certificateKey, string certificatePass, string library, int maxBorrowCount, bool useQueryRetry, int retryCount, bool useRetryWrapper)
         {
             this.Url = url.TrimEnd('/');
             this.UserName = userName;
@@ -40,9 +88,9 @@ namespace Armedia.CMSMF.SharePoint.Common
             this.Library = (!string.IsNullOrWhiteSpace(library) ? library : DEFAULT_LIBRARY_NAME);
             if (maxBorrowCount == 0) maxBorrowCount = 1;
             this.MaxBorrowCount = maxBorrowCount;
-            this.RetryCount = retryCount;
-            this.RetryDelay = retryDelay;
             this.UseQueryRetry = useQueryRetry;
+            this.RetryCount = retryCount;
+            this.UseRetryWrapper = useRetryWrapper;
         }
 
         public void Dispose()
@@ -80,11 +128,12 @@ namespace Armedia.CMSMF.SharePoint.Common
             }
         }
 
-        public SharePointSession(PnP.Framework.AuthenticationManager authManager, SharePointSessionInfo info, Action<ClientContext, string> executeQueryAction)
+        // PnP.Framework.AuthenticationManager authManager
+        public SharePointSession(Func<ClientContext> authenticator, SharePointSessionInfo info, Action<ClientContext, string> executeQueryAction)
         {
             this.ExecuteQueryAction = executeQueryAction;
 
-            this.ClientContext = authManager.GetContext(info.Url);
+            this.ClientContext = authenticator();
 
             // Make sure we ALWAYS include the USER_AGENT
             this.ClientContext.ExecutingWebRequest += delegate (object sender, WebRequestEventArgs e)
@@ -98,7 +147,10 @@ namespace Armedia.CMSMF.SharePoint.Common
 
             // Use a custom request factory to support handling retry requests, since ExecuteQueryRetry() doesn't
             // seem to do it properly
-            this.ClientContext.WebRequestExecutorFactory = new HttpClientWebRequestExecutorFactory(PnPHttpClient.Instance.GetHttpClient());
+            if (info.UseRetryWrapper)
+            {
+                this.ClientContext.WebRequestExecutorFactory = new HttpClientWebRequestExecutorFactory(PnPHttpClient.Instance.GetHttpClient());
+            }
 
             // Use a custom request factory to simulate throttling
             // this.ClientContext.WebRequestExecutorFactory = new ThrottleSimulatorExecutorFactory(this.ClientContext.WebRequestExecutorFactory);
@@ -116,11 +168,11 @@ namespace Armedia.CMSMF.SharePoint.Common
             {
                 user = "Guest";
             }
-            if (info.Domain != null)
+            if (!string.IsNullOrEmpty(info.Domain))
             {
-                user = string.Format("{0}\\{1}", info.Domain, user);
+                user = string.Format("{0}@{1}", user, info.Domain);
             }
-            this.Id = string.Format("SHPT[{0}@{1}#{2}]", user, this.ClientContext.Url, Interlocked.Increment(ref counter));
+            this.Id = string.Format("SHPT[{0}::{1}#{2}]", user, this.ClientContext.Url, Interlocked.Increment(ref counter));
         }
 
         public void ExecuteQuery()
@@ -225,30 +277,58 @@ namespace Armedia.CMSMF.SharePoint.Common
     {
         private class SharePointSessionGenerator : PoolableObjectFactory<SharePointSession>
         {
-            private PnP.Framework.AuthenticationManager AuthManager;
+            private readonly Func<ClientContext> Authenticator;
+            // private PnP.Framework.AuthenticationManager AuthManager;
             private SharePointSessionInfo Info;
             private readonly Action<ClientContext, string> ExecuteQuery;
 
             public SharePointSessionGenerator(SharePointSessionInfo info)
             {
                 this.Info = info;
-
+                // Important reading: https://github.com/pnp/pnpframework/blob/dev/docs/MigratingFromPnPSitesCore.md
                 // If we're using an application ID, we use that and forget everything else...
                 if (!string.IsNullOrWhiteSpace(this.Info.ApplicationId))
                 {
-                    this.AuthManager = new PnP.Framework.AuthenticationManager(info.ApplicationId, info.CertificateKey, info.CertificatePass, info.Domain);
+                    // WAS:
+                    // authManager.GetAzureADAppOnlyAuthenticatedContext(info.Url, info.ApplicationId, info.Domain, info.CertificateKey, info.CertificatePass);
+                    // this.AuthManager = new PnP.Framework.AuthenticationManager(this.Info.ApplicationId, this.Info.CertificateKey, this.Info.CertificatePass, this.Info.Domain);
+                    this.Authenticator = () =>
+                        new PnP.Framework.AuthenticationManager(this.Info.ApplicationId, this.Info.CertificateKey, this.Info.CertificatePass, this.Info.Domain) //
+                           .GetContext(this.Info.Url) //
+                    ;
                 }
                 else
                 // If we were given written auth parameters, we use those. This will fail if MFA is needed
-                if (!string.IsNullOrWhiteSpace(info.UserName))
+                if (!string.IsNullOrWhiteSpace(this.Info.UserName))
                 {
-                    this.AuthManager = new PnP.Framework.AuthenticationManager(info.UserName, info.Password);
+                    if (!string.IsNullOrEmpty(this.Info.Domain))
+                    {
+                        // this.AuthManager = new PnP.Framework.AuthenticationManager(this.Info.Domain, this.Info.UserName, this.Info.Password);
+                        this.Authenticator = () =>
+                        {
+                            ClientContext ctx = new ClientContext(this.Info.Url);
+                            ctx.Credentials = new SharePointOnlineCredentials(this.Info.UserName + "@" + this.Info.Domain, this.Info.Password);
+                            return ctx;
+                        };
+                    }
+                    else
+                    {
+                        // Requires Admin authorization per:
+                        // https://www.sharepointdiary.com/2021/08/fix-connect-pnponline-aadsts65001-user-or-administrator-has-not-consented-to-use-the-application.html
+                        // this.AuthManager = new PnP.Framework.AuthenticationManager(this.Info.UserName, this.Info.Password);
+                        this.Authenticator = () =>
+                        {
+                            ClientContext ctx = new ClientContext(this.Info.Url);
+                            ctx.Credentials = new SharePointOnlineCredentials(this.Info.UserName, this.Info.Password);
+                            return ctx;
+                        };
+                    }
                 }
                 else
-                // We're not even being given auth details, so we ask ...
                 {
-                    // This one pops up the authentication window where one can log in with MFA
-                    this.AuthManager = new PnP.Framework.AuthenticationManager();
+                    // TODO: There is no longer support for interactive/MFA authentication ... would have to copy it from:
+                    // https://github.com/pnp/powershell/blob/dev/src/Commands/Utilities/BrowserHelper.cs
+                    throw new Exception("Insufficient authentication information is given - cannot continue");
                 }
 
                 if (info.UseQueryRetry)
@@ -264,7 +344,7 @@ namespace Armedia.CMSMF.SharePoint.Common
 
             SharePointSession PoolableObjectFactory<SharePointSession>.Create()
             {
-                return new SharePointSession(this.AuthManager, this.Info, this.ExecuteQuery);
+                return new SharePointSession(this.Authenticator, this.Info, this.ExecuteQuery);
             }
 
             void PoolableObjectFactory<SharePointSession>.Destroy(SharePointSession t)
@@ -291,7 +371,7 @@ namespace Armedia.CMSMF.SharePoint.Common
             {
                 try
                 {
-                    this.AuthManager?.Dispose();
+                    // this.AuthManager?.Dispose();
                 }
                 finally
                 {
