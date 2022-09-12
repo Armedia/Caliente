@@ -33,12 +33,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_023227EDCD4578E8E1D4FEA1490BF258"
-        "OwnerKey" = "8:_ABBEABC38EED4D50A4675E73ADE58105"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_03CD2205356911EAAA22DE9E333E3E64"
         "OwnerKey" = "8:_ABBEABC38EED4D50A4675E73ADE58105"
         "MsmSig" = "8:_UNDEFINED"
@@ -143,6 +137,12 @@
         {
         "MsmKey" = "8:_091DDF7E3B93F59434B850682FB5B5C8"
         "OwnerKey" = "8:_288C1AED550E26086B1B980891E01B43"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_09A890E7F11D1863005F0D0072BC92D7"
+        "OwnerKey" = "8:_ABBEABC38EED4D50A4675E73ADE58105"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -399,6 +399,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_22E6460B2E6347DBB2D2493BA97A210F"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_256B3661F064F1348D53D3E4A95FDACC"
         "OwnerKey" = "8:_DA29D8167F023AF298581B566BCD50DF"
         "MsmSig" = "8:_UNDEFINED"
@@ -520,7 +526,7 @@
         "Entry"
         {
         "MsmKey" = "8:_288C1AED550E26086B1B980891E01B43"
-        "OwnerKey" = "8:_023227EDCD4578E8E1D4FEA1490BF258"
+        "OwnerKey" = "8:_09A890E7F11D1863005F0D0072BC92D7"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -1210,7 +1216,7 @@
         "Entry"
         {
         "MsmKey" = "8:_7F2B4D7C48E3F0E7CF70A954B5F20B21"
-        "OwnerKey" = "8:_023227EDCD4578E8E1D4FEA1490BF258"
+        "OwnerKey" = "8:_09A890E7F11D1863005F0D0072BC92D7"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -1246,7 +1252,7 @@
         "Entry"
         {
         "MsmKey" = "8:_8BC557435691F8EE505FF3CEAFA03C92"
-        "OwnerKey" = "8:_023227EDCD4578E8E1D4FEA1490BF258"
+        "OwnerKey" = "8:_09A890E7F11D1863005F0D0072BC92D7"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -1258,7 +1264,7 @@
         "Entry"
         {
         "MsmKey" = "8:_8BC830690C133A34F6B7527B68A6BD00"
-        "OwnerKey" = "8:_023227EDCD4578E8E1D4FEA1490BF258"
+        "OwnerKey" = "8:_09A890E7F11D1863005F0D0072BC92D7"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -1600,7 +1606,7 @@
         "Entry"
         {
         "MsmKey" = "8:_B329FC3D16A907B61F595C3910F673F1"
-        "OwnerKey" = "8:_023227EDCD4578E8E1D4FEA1490BF258"
+        "OwnerKey" = "8:_09A890E7F11D1863005F0D0072BC92D7"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -2086,7 +2092,7 @@
         "Entry"
         {
         "MsmKey" = "8:_DC948EBC6DC52131AB6786CEA6F17884"
-        "OwnerKey" = "8:_023227EDCD4578E8E1D4FEA1490BF258"
+        "OwnerKey" = "8:_09A890E7F11D1863005F0D0072BC92D7"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -2338,13 +2344,13 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_ABBEABC38EED4D50A4675E73ADE58105"
+        "OwnerKey" = "8:_09A890E7F11D1863005F0D0072BC92D7"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_023227EDCD4578E8E1D4FEA1490BF258"
+        "OwnerKey" = "8:_ABBEABC38EED4D50A4675E73ADE58105"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -3717,37 +3723,6 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_023227EDCD4578E8E1D4FEA1490BF258"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Caliente.SharePoint.Common, Version=1.2.8287.21241, Culture=neutral, processorArchitecture=AMD64"
-                "ScatterAssemblies"
-                {
-                    "_023227EDCD4578E8E1D4FEA1490BF258"
-                    {
-                    "Name" = "8:Caliente.SharePoint.Common.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:Caliente.SharePoint.Common.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_39FA1E771206457C892922CE1C717B46"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_03CD2205356911EAAA22DE9E333E3E64"
             {
             "AssemblyRegister" = "3:1"
@@ -4072,6 +4047,37 @@
                     }
                 }
             "SourcePath" = "8:PnP.Core.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_39FA1E771206457C892922CE1C717B46"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_09A890E7F11D1863005F0D0072BC92D7"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Caliente.SharePoint.Common, Version=1.2.8287.27003, Culture=neutral, processorArchitecture=AMD64"
+                "ScatterAssemblies"
+                {
+                    "_09A890E7F11D1863005F0D0072BC92D7"
+                    {
+                    "Name" = "8:Caliente.SharePoint.Common.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:Caliente.SharePoint.Common.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_39FA1E771206457C892922CE1C717B46"
@@ -4738,6 +4744,26 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_22E6460B2E6347DBB2D2493BA97A210F"
+            {
+            "SourcePath" = "8:\\\\storage.rivera.prv\\home\\Armedia\\Caliente\\sharepoint-xml\\Import\\Import.ico"
+            "TargetName" = "8:Import.ico"
+            "Tag" = "8:"
+            "Folder" = "8:_39FA1E771206457C892922CE1C717B46"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_256B3661F064F1348D53D3E4A95FDACC"
@@ -7625,7 +7651,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A18850C14A6F4A84A308543D9D389D9A"
             {
-            "SourcePath" = "8:..\\Import\\Caliente.SharePoint.Import.log.xml"
+            "SourcePath" = "8:\\\\storage.rivera.prv\\home\\Armedia\\Caliente\\sharepoint-xml\\Import\\Caliente.SharePoint.Import.log.xml"
             "TargetName" = "8:Caliente.SharePoint.Import.log.xml"
             "Tag" = "8:"
             "Folder" = "8:_39FA1E771206457C892922CE1C717B46"
@@ -10197,7 +10223,7 @@
         "Keywords" = "8:"
         "ARPCOMMENTS" = "8:Installer for Caliente's SharePoint Ingestor Engine"
         "ARPURLINFOABOUT" = "8:"
-        "ARPPRODUCTICON" = "8:"
+        "ARPPRODUCTICON" = "8:_22E6460B2E6347DBB2D2493BA97A210F"
         "ARPIconIndex" = "3:0"
         "SearchPath" = "8:"
         "UseSystemSearchPath" = "11:TRUE"
@@ -10729,7 +10755,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_ABBEABC38EED4D50A4675E73ADE58105"
             {
-            "SourcePath" = "8:..\\Import\\obj\\x64\\Debug\\Caliente.SharePoint.Import.exe"
+            "SourcePath" = "8:\\\\storage.rivera.prv\\home\\Armedia\\Caliente\\sharepoint-xml\\Import\\obj\\x64\\Debug\\Caliente.SharePoint.Import.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_39FA1E771206457C892922CE1C717B46"
