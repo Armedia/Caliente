@@ -1,5 +1,6 @@
 using Caliente.SharePoint.Common;
 using log4net;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
@@ -27,7 +28,9 @@ namespace Caliente.SharePoint.Import
     {
         protected static readonly ILog LOG = LogManager.GetLogger(typeof(FolderImporter));
 
-        private void ProcessAccumulatedFolders(ImportContext importContext, SharePointSession session, Dictionary<string, List<FolderInfo>> folders)
+        private readonly bool OrphanAclSplit;
+
+        private void ProcessAccumulatedFolders(ImportContext importContext, SharePointSession session, Dictionary<string, List<FolderInfo>> parentFolders)
         {
             // This allows for the case where we're only creating indexes, and don't want to touch the repository
             if (session == null) return;
@@ -38,9 +41,10 @@ namespace Caliente.SharePoint.Import
             // to find their parent folder(s), and add the new folders
             Web web = clientContext.Web;
             // Step 1: gather all the parent folders in this batch
-            Dictionary<string, Folder> spFolders = new Dictionary<string, Folder>();
-            List<FolderInfo> processed = new List<FolderInfo>();
-            foreach (string parent in folders.Keys)
+            Dictionary<string, Folder> parentSPObjects = new Dictionary<string, Folder>();
+            // Split the fetching of the parent folders into batches of 50, to be safe
+            int parentBatch = 0;
+            foreach (string parent in parentFolders.Keys)
             {
                 Folder f = null;
                 if (parent == "")
@@ -52,68 +56,111 @@ namespace Caliente.SharePoint.Import
                     f = web.GetFolderByServerRelativeUrl(rootFolder.ServerRelativeUrl + parent);
                 }
                 clientContext.Load(f, r => r.ServerRelativeUrl);
-                spFolders[parent] = f;
+                parentSPObjects[parent] = f;
+
+                if (++parentBatch >= 50)
+                {
+                    // Now get all the accumulated parent folders in a single query.
+                    Log.InfoFormat("Fetching the next {0} parent folders for this level", parentBatch);
+                    session.ExecuteQuery();
+                    parentBatch = 0;
+                }
             }
-            // Now get all the parent folders in a single query
-            session.ExecuteQuery();
+
+            if (parentBatch > 0)
+            {
+                // We have parents to fetch, so fetch them
+                Log.InfoFormat("Fetching the last {0} parent folders for this level", parentBatch);
+                session.ExecuteQuery();
+            }
 
             // Step 2: go through all the parent folders, and create their children
-            int batch = 0;
-            foreach (string parent in folders.Keys)
+            Dictionary<string, ProgressTracker> trackers = new Dictionary<string, ProgressTracker>();
+            List<List<FolderInfo>> batches = new List<List<FolderInfo>>();
+            Action<List<FolderInfo>> processBatch = (batch) =>
             {
-                Folder parentFolder = spFolders[parent];
-                foreach (FolderInfo f in folders[parent])
+                if ((batch == null) || batch.IsNullOrEmpty()) return;
+                Log.InfoFormat("Executing the query for the creation of the last {0} folders", batch.Count);
+                session.ExecuteQuery();
+                batches.Add(batch);
+            };
+
+            List<FolderInfo> processed = new List<FolderInfo>();
+            List<FolderInfo> currentBatch = null;
+            foreach (string parent in parentFolders.Keys)
+            {
+                Folder parentFolder = parentSPObjects[parent];
+                foreach (FolderInfo f in parentFolders[parent])
                 {
+                    if (currentBatch == null) currentBatch = new List<FolderInfo>();
                     ProgressTracker tracker = new ProgressTracker(importContext.FormatProgressLocation(f.RelativeLocation), this.Log);
+                    trackers[f.Id] = tracker;
                     if (tracker.Completed)
                     {
                         f.SPObj = parentFolder.Folders.GetByUrl(f.SafeName);
                         f.Exists = true;
-                        Log.Info(string.Format("Loaded existing folder [{0}] from [{1}]", f.FullPath, f.SafeFullPath));
+                        Log.InfoFormat("Loaded existing folder [{0}] from [{1}]", f.FullPath, f.SafeFullPath);
                     }
                     else
                     {
                         f.SPObj = parentFolder.Folders.Add(f.SafeName);
                         f.Modified = true;
-                        Log.Info(string.Format("Added folder [{0}] for creation as [{1}]", f.FullPath, f.SafeFullPath));
+                        Log.InfoFormat("Added folder [{0}] for creation as [{1}]", f.FullPath, f.SafeFullPath);
                     }
                     clientContext.Load(f.SPObj, r => r.ServerRelativeUrl);
+                    currentBatch.Add(f);
                     processed.Add(f);
-                    // Do them in bunches of 50
-                    if (++batch >= 50)
+
+                    // Do them in bunches of 50 to reduce the number of queries
+                    if (currentBatch.Count >= 50)
                     {
-                        Log.Info(string.Format("Executing the creation of the last {0} folders", batch));
-                        session.ExecuteQuery();
-                        batch = 0;
+                        processBatch(currentBatch);
+                        currentBatch = null;
                     }
                 }
             }
-            // Now, create all the children in a single query
-            if (batch > 0)
+
+            // This is the remainder in the last batch, so handle it
+            processBatch(currentBatch);
+
+            // Update the url
+            processed.ForEach(f => f.Url = f.SPObj.ServerRelativeUrl);
+
+            // TODO: Decide if this is the right time and place to ApplyMetadata, using the captured batches for
+            // this depth level since we know that a) all parents already must exist, and b) the folders are empty.
+            //
+            // This might be important in the event that ACLs need to be split out b/c there's a limitation associated
+            // with how many objects a folder tree contains: can't split the ACL if the tree contains more than 100K objects,
+            // so if we need to split the ACL, we should do it ASAP - doubly so when the folders are freshly created
+            // and thus empty.
+            //
+            // TODO: Not yet enabled b/c we're not sure it's the right thing to do just yet
+            /*
+            foreach (List<FolderInfo> batch in batches)
             {
-                Log.Info(string.Format("Executing the creation of the last {0} folders", batch));
+                foreach (FolderInfo folder in batch)
+                {
+                    ApplyMetadata(folder, trackers[folder.Id], false);
+                }
                 session.ExecuteQuery();
             }
-            foreach (FolderInfo f in processed)
-            {
-                // Update the server relative URLs for each of them
-                f.Url = f.SPObj.ServerRelativeUrl;
-            }
+            */
         }
 
         private readonly Dictionary<string, FolderInfo> Folders;
         private readonly ContentType FallbackType;
 
-        public FolderImporter(ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter, string fallbackType) : this(contentTypeImporter?.ImportContext ?? permissionsImporter.ImportContext, contentTypeImporter, permissionsImporter, fallbackType)
+        public FolderImporter(ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter, string fallbackType, bool orphanAclSplit) : this(contentTypeImporter?.ImportContext ?? permissionsImporter.ImportContext, contentTypeImporter, permissionsImporter, fallbackType, orphanAclSplit)
         {
         }
 
-        public FolderImporter(ImportContext importContext, string fallbackType) : this(importContext, null, null, fallbackType)
+        public FolderImporter(ImportContext importContext, string fallbackType, bool orphanAclSplit) : this(importContext, null, null, fallbackType, orphanAclSplit)
         {
         }
 
-        private FolderImporter(ImportContext importContext, ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter, string fallbackType) : base("folders", importContext, contentTypeImporter, permissionsImporter)
+        private FolderImporter(ImportContext importContext, ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter, string fallbackType, bool orphanAclSplit) : base("folders", importContext, contentTypeImporter, permissionsImporter)
         {
+            this.OrphanAclSplit = orphanAclSplit;
             this.Folders = new Dictionary<string, FolderInfo>();
             XmlReader foldersXml = this.ImportContext.LoadIndex("folders");
             if (!string.IsNullOrWhiteSpace(fallbackType))
@@ -239,6 +286,11 @@ namespace Caliente.SharePoint.Import
 
         private void ApplyMetadata(FolderInfo folder, ProgressTracker tracker)
         {
+            ApplyMetadata(folder, tracker, true);
+        }
+
+        private void ApplyMetadata(FolderInfo folder, ProgressTracker tracker, bool executeQuery)
+        {
             // Apply the actual metadata to the folder, including permissions, attributes, etc.
             using (ObjectPool<SharePointSession>.Ref sessionRef = this.ImportContext.SessionFactory.GetSession())
             {
@@ -253,7 +305,7 @@ namespace Caliente.SharePoint.Import
                 if (contentType != null) f.ListItemAllFields["ContentTypeId"] = contentType.Id;
 
                 FolderInfo parent = ResolveFolder(folder.Path);
-                bool individualAcl = (parent == null || (folder.Acl != parent.Acl));
+                bool individualAcl = (this.OrphanAclSplit) && (parent == null || (folder.Acl != parent.Acl));
                 ApplyMetadata(f.ListItemAllFields, xml, contentType);
                 string aclResult = "inherited";
                 if (individualAcl)
@@ -268,8 +320,9 @@ namespace Caliente.SharePoint.Import
                 f.ListItemAllFields.Update();
                 f.Update();
                 tracker.TrackProgress("Applying metadata and permissions on folder at [{0}]", folder.SafeFullPath);
-                session.ExecuteQuery();
+                if (executeQuery) session.ExecuteQuery();
                 ShowProgress();
+                folder.SPObj = f;
             }
         }
 
