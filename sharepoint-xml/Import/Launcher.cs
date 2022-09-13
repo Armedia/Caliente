@@ -107,8 +107,8 @@ namespace Caliente.SharePoint.Import
                 [OptionAttribute("useRetryWrapper", Required = false, HelpText = "Use the PnP.Framework's HttpClientWebRequestExecutorFactory as a wrapper for HTTP requests")]
                 public bool? useRetryWrapper { get; set; }
 
-                [OptionAttribute("orphanAclSplit", Required = false, HelpText = "Define whether parentless folders (from the source) should get their own ACL, or inherit their destination parent's")]
-                public bool? orphanAclSplit{ get; set; }
+                [OptionAttribute("orphanAclInherit", Required = false, HelpText = "Define whether parentless folders (from the source) or inherit their destination parent's ACL, or get their own (i.e. break inheritance)")]
+                public bool? orphanAclInherit{ get; set; }
 
                 [OptionAttribute("reuseCount", Required = false, HelpText = "The number of times to reuse each ClientContext instance (SharePoint session) before they get discarded (< 0 = forever, min = 1)")]
                 public int? reuseCount { get; set; }
@@ -236,7 +236,7 @@ namespace Caliente.SharePoint.Import
             private const int MIN_UPLOAD_SEGMENT_SIZE = 1;
             private const int MAX_UPLOAD_SEGMENT_SIZE = 255;
             private const int DEFAULT_UPLOAD_SEGMENT_SIZE = 10;
-            private const bool DEFAULT_ORPHAN_ACL_SPLIT = false;
+            private const bool DEFAULT_ORPHAN_ACL_INHERIT = true;
 
             private readonly Settings CommandLine;
             private readonly ParserResult<Settings> ParserResult;
@@ -280,7 +280,7 @@ namespace Caliente.SharePoint.Import
             public bool help { get; private set; }
             public string baseDir { get; private set; }
             public int uploadSegmentSize { get; private set; }
-            public bool orphanAclSplit { get; private set; }
+            public bool orphanAclInherit { get; private set; }
 
             public Configuration(string baseDir, params string[] args)
             {
@@ -315,7 +315,7 @@ namespace Caliente.SharePoint.Import
                 this.uploadSegmentSize = DEFAULT_UPLOAD_SEGMENT_SIZE;
                 this.useQueryRetry = DEFAULT_USE_QUERY_RETRY;
                 this.useRetryWrapper = DEFAULT_USE_RETRY_WRAPPER;
-                this.orphanAclSplit = DEFAULT_ORPHAN_ACL_SPLIT;
+                this.orphanAclInherit = DEFAULT_ORPHAN_ACL_INHERIT;
                 foreach (PropertyInfo src in typeof(Settings).GetProperties())
                 {
                     PropertyInfo tgt = GetType().GetProperty(src.Name);
@@ -539,7 +539,7 @@ namespace Caliente.SharePoint.Import
             {
                 ImportContext importContext = new ImportContext(null, options.streams, options.metadata, options.progress, options.caches);
                 FormatResolver formatResolver = new FormatResolver(importContext);
-                new DocumentImporter(new FolderImporter(importContext, options.fallbackFolderType, options.orphanAclSplit), formatResolver, options.locationMode, options.fixExtensions, options.fallbackDocumentType, options.uploadSegmentSize).StoreLocationIndex();
+                new DocumentImporter(new FolderImporter(importContext, options.fallbackFolderType, options.orphanAclInherit), formatResolver, options.locationMode, options.fixExtensions, options.fallbackDocumentType, options.uploadSegmentSize).StoreLocationIndex();
                 return 0;
             }
 
@@ -639,7 +639,7 @@ namespace Caliente.SharePoint.Import
                     }
 
                     PermissionsImporter permissionsImporter = new PermissionsImporter(userGroupImporter);
-                    FolderImporter folderImporter = new FolderImporter(contentTypeImporter, permissionsImporter, options.fallbackFolderType, options.orphanAclSplit);
+                    FolderImporter folderImporter = new FolderImporter(contentTypeImporter, permissionsImporter, options.fallbackFolderType, options.orphanAclInherit);
                     DocumentImporter documentImporter = new DocumentImporter(folderImporter, formatResolver, options.locationMode, options.fixExtensions, options.fallbackDocumentType, options.uploadSegmentSize);
                     bool aborted = false;
 

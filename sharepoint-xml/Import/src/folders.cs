@@ -28,7 +28,7 @@ namespace Caliente.SharePoint.Import
     {
         protected static readonly ILog LOG = LogManager.GetLogger(typeof(FolderImporter));
 
-        private readonly bool OrphanAclSplit;
+        private readonly bool OrphanAclInherit;
 
         private void ProcessAccumulatedFolders(ImportContext importContext, SharePointSession session, Dictionary<string, List<FolderInfo>> parentFolders)
         {
@@ -150,17 +150,17 @@ namespace Caliente.SharePoint.Import
         private readonly Dictionary<string, FolderInfo> Folders;
         private readonly ContentType FallbackType;
 
-        public FolderImporter(ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter, string fallbackType, bool orphanAclSplit) : this(contentTypeImporter?.ImportContext ?? permissionsImporter.ImportContext, contentTypeImporter, permissionsImporter, fallbackType, orphanAclSplit)
+        public FolderImporter(ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter, string fallbackType, bool orphanAclInherit) : this(contentTypeImporter?.ImportContext ?? permissionsImporter.ImportContext, contentTypeImporter, permissionsImporter, fallbackType, orphanAclInherit)
         {
         }
 
-        public FolderImporter(ImportContext importContext, string fallbackType, bool orphanAclSplit) : this(importContext, null, null, fallbackType, orphanAclSplit)
+        public FolderImporter(ImportContext importContext, string fallbackType, bool orphanAclInherit) : this(importContext, null, null, fallbackType, orphanAclInherit)
         {
         }
 
-        private FolderImporter(ImportContext importContext, ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter, string fallbackType, bool orphanAclSplit) : base("folders", importContext, contentTypeImporter, permissionsImporter)
+        private FolderImporter(ImportContext importContext, ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter, string fallbackType, bool orphanAclInherit) : base("folders", importContext, contentTypeImporter, permissionsImporter)
         {
-            this.OrphanAclSplit = orphanAclSplit;
+            this.OrphanAclInherit = orphanAclInherit;
             this.Folders = new Dictionary<string, FolderInfo>();
             XmlReader foldersXml = this.ImportContext.LoadIndex("folders");
             if (!string.IsNullOrWhiteSpace(fallbackType))
@@ -305,7 +305,7 @@ namespace Caliente.SharePoint.Import
                 if (contentType != null) f.ListItemAllFields["ContentTypeId"] = contentType.Id;
 
                 FolderInfo parent = ResolveFolder(folder.Path);
-                bool individualAcl = (this.OrphanAclSplit) && (parent == null || (folder.Acl != parent.Acl));
+                bool individualAcl = (parent != null ? !string.Equals(folder.Acl, parent.Acl) : (!this.OrphanAclInherit || !string.IsNullOrEmpty(folder.Acl)));
                 ApplyMetadata(f.ListItemAllFields, xml, contentType);
                 string aclResult = "inherited";
                 if (individualAcl)
