@@ -4068,7 +4068,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Caliente.SharePoint.Common, Version=1.2.8291.27535, Culture=neutral, processorArchitecture=AMD64"
+            "AssemblyAsmDisplayName" = "8:Caliente.SharePoint.Common, Version=1.2.8292.19979, Culture=neutral, processorArchitecture=AMD64"
                 "ScatterAssemblies"
                 {
                 }
@@ -10200,15 +10200,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Caliente SharePoint Importer"
-        "ProductCode" = "8:{AD900CA1-2D51-4F1C-940D-C139EE9DFB72}"
-        "PackageCode" = "8:{8AE5E62B-53C8-4A46-93A3-F0B3F17035F2}"
+        "ProductCode" = "8:{326D09A5-BB99-4DAA-9297-B9680770AE38}"
+        "PackageCode" = "8:{DE027E8C-6969-460C-B5DC-7EDB5829DAAD}"
         "UpgradeCode" = "8:{2E059E9F-C7C4-4664-816A-0EB8404C6D4A}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.0.3"
+        "ProductVersion" = "8:1.0.4"
         "Manufacturer" = "8:Armedia LLC"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
