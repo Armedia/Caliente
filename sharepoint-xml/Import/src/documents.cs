@@ -63,7 +63,7 @@ namespace Caliente.SharePoint.Import
                 this.HistoryId = historyId;
                 this.Path = path;
                 this.Name = name;
-                this.SourcePath = string.Format("{0}/{1}", (path == "/" ? "" : path), name);
+                this.SourcePath = $"{(path == "/" ? "" : path)}/{name}";
                 this.XmlLocation = xmlLocation;
                 this.Tracker = new ProgressTracker(progressLocation, log);
             }
@@ -102,7 +102,7 @@ namespace Caliente.SharePoint.Import
             {
                 get
                 {
-                    if (!this.HasParent) throw new Exception(string.Format("Did not resolve parent folder [{0}] during the initialization phase.  This is a bug.", this.SourcePath));
+                    if (!this.HasParent) throw new Exception($"Did not resolve parent folder [{this.SourcePath}] during the initialization phase.  This is a bug.");
                     return this._Parent;
                 }
 
@@ -128,7 +128,7 @@ namespace Caliente.SharePoint.Import
                 this.Name = safeName;
                 this.Version = version;
                 this.VersionCount = totalVersions;
-                this.FullPath = string.Format("{0}/{1}", this.Path, this.Name);
+                this.FullPath = $"{this.Path}/{this.Name}";
             }
 
             public DocumentLocation(XmlReader xml, FolderImporter folderImporter) : this(XElement.Load(xml), folderImporter)
@@ -192,7 +192,7 @@ namespace Caliente.SharePoint.Import
 
             public override string ToString()
             {
-                return string.Format("[{0}:{1}]{2}", this.HistoryId, this.Version, this.FullPath);
+                return $"[{this.HistoryId}:{this.Version}]{this.FullPath}";
             }
 
             public int CompareTo(DocumentLocation other)
@@ -288,7 +288,7 @@ namespace Caliente.SharePoint.Import
             if (!string.IsNullOrWhiteSpace(fallbackType))
             {
                 this.FallbackType = ResolveContentType(fallbackType);
-                if (this.FallbackType == null) throw new Exception(string.Format("Fallback document type [{0}] could not be resolved", fallbackType));
+                if (this.FallbackType == null) throw new Exception($"Fallback document type [{fallbackType}] could not be resolved");
             }
             else
             {
@@ -343,7 +343,7 @@ namespace Caliente.SharePoint.Import
                                 // Does it already have a valid extension? The extension is everything after the last dot...
                                 if ((format != null) && !string.IsNullOrWhiteSpace(format.DosExtension) && string.IsNullOrWhiteSpace(EXTENSION_EXTRACTOR.Match(name).Groups[1].Value))
                                 {
-                                    name = string.Format("{0}.{1}", name, format.DosExtension);
+                                    name = $"{name}.{format.DosExtension}";
                                 }
                             }
 
@@ -400,14 +400,14 @@ namespace Caliente.SharePoint.Import
                             // Does it already have a valid extension? The extension is everything after the last dot...
                             if ((format != null) && !string.IsNullOrWhiteSpace(format.DosExtension) && string.IsNullOrWhiteSpace(EXTENSION_EXTRACTOR.Match(name).Groups[1].Value))
                             {
-                                name = string.Format("{0}.{1}", name, format.DosExtension);
+                                name = $"{name}.{format.DosExtension}";
                             }
                         }
 
                         FolderInfo parent = folderImporter.ResolveFolder(path);
                         if (parent == null)
                         {
-                            Log.Warn(string.Format("The parent was not found for [{0}/{1}]", path, name));
+                            Log.WarnFormat("The parent was not found for [{0}/{1}]", path, name);
                             continue;
                         }
 
@@ -497,7 +497,7 @@ namespace Caliente.SharePoint.Import
                             versionNumber = (string)version.Element(ns + "version");
                             string path = (string)version.Element(ns + "sourcePath");
                             string name = Tools.SanitizeSingleLineString((string)version.Element(ns + "name"));
-                            string fullName = string.Format("{0}/{1}", path, name);
+                            string fullName = $"{path}/{name}";
 
                             tracker.TrackProgress("Processing version [{0}] for document [{1}] (#{2:N0} of {3:N0})", versionNumber, location.FullPath, ++versionCount, location.VersionCount);
 
@@ -537,7 +537,7 @@ namespace Caliente.SharePoint.Import
                                     {
                                         if (streamInfo.Length != contentStreamSize)
                                         {
-                                            Log.Warn(string.Format("Stream size mismatch for [{0}] v{1} - expected {2:N0} bytes, but the actual stream is {3:N0} bytes", fullName, versionNumber, contentStreamSize, streamInfo.Length));
+                                            Log.WarnFormat("Stream size mismatch for [{0}] v{1} - expected {2:N0} bytes, but the actual stream is {3:N0} bytes", fullName, versionNumber, contentStreamSize, streamInfo.Length);
                                             contentStreamSize = streamInfo.Length;
                                         }
 
@@ -550,7 +550,7 @@ namespace Caliente.SharePoint.Import
                                         simulationMode = SimulationMode.FULL;
                                         break;
                                     }
-                                    throw new Exception(string.Format("Could not locate the content stream at [{0}] for document [{1}] version [{2}] (described by [{3}])", contentStreamLocation, fullName, versionNumber, documentLocation));
+                                    throw new Exception($"Could not locate the content stream at [{contentStreamLocation}] for document [{fullName}] version [{versionNumber}] (described by [{documentLocation}])");
                             }
 
                             // We split the switch into two, instead of just a single big one, because the simulation mode may change
@@ -640,7 +640,7 @@ namespace Caliente.SharePoint.Import
                             // Finally, if this is a checked out version, do the checkin
                             comment = XmlTools.GetAttributeValue(version, "cmis:checkinComment") ?? "";
                             safeFullPath = location.FullPath;
-                            string sourcePath = string.Format("{0}/{1}", path, name);
+                            string sourcePath = $"{path}/{name}";
                             string targetUrl = session.GetServerRelativeUrl(location.FullPath);
 
                             string acl = (string)version.Element(ns + "acl");
@@ -725,7 +725,7 @@ namespace Caliente.SharePoint.Import
                                         {
                                             if (this.FallbackType == null)
                                             {
-                                                throw new Exception(string.Format("Could not find the content type [{0}] for document [{1}]", objectType, safeFullPath));
+                                                throw new Exception($"Could not find the content type [{objectType}] for document [{safeFullPath}]");
                                             }
                                             tracker.TrackProgress("Could not find the content type [{0}] for document [{1}], so will use the fallback type [{2}]", objectType, safeFullPath, this.FallbackType.Name);
                                             contentType = this.FallbackType;
@@ -828,7 +828,7 @@ namespace Caliente.SharePoint.Import
                             {
                                 newVersion.CheckOut();
                                 newVersion.Versions.RestoreByLabel(restoreSpVersionLabel);
-                                newVersion.CheckIn(string.Format("Restored to version {0}", restoreVersionNumber), CheckinType.MinorCheckIn);
+                                newVersion.CheckIn($"Restored to version {restoreVersionNumber}", CheckinType.MinorCheckIn);
                                 session.ExecuteQuery();
                                 tracker.TrackProgress("Restored document [{0}] to older version [{1}] (sp version {2})", safeFullPath, restoreVersionNumber, restoreSpVersionLabel);
                             }
@@ -850,7 +850,7 @@ namespace Caliente.SharePoint.Import
                                 {
                                     // If on the second check we failed, we don't try to set it again, and we simply explode accordingly
                                     ContentType actual = this.ContentTypeImporter.ResolveContentType(finalId)?.Type;
-                                    throw new Exception(string.Format("Failed to re-set the content type for [{0}] - expected to set [{1}] with ID={2} but was actually set as [{3}] with ID={4} (GUID=[{5}] UniqueId=[{6}])", safeFullPath, contentType.Name, contentType.Id, actual?.Name, finalId));
+                                    throw new Exception($"Failed to re-set the content type for [{safeFullPath}] - expected to set [{contentType.Name}] with ID={contentType.Id} but was actually set as [{actual?.Name}] with ID={finalId}]");
                                 }
 
                                 // One last attempt...try to set the type...
@@ -893,7 +893,14 @@ namespace Caliente.SharePoint.Import
                             }
                             catch (Exception e2)
                             {
-                                Log.Error(string.Format("Failed to undo the checkout for document [{0}]", safeFullPath), e2);
+                                if (Log.IsDebugEnabled)
+                                {
+                                    Log.Error($"Failed to undo the checkout for document [{safeFullPath}]", e2);
+                                }
+                                else
+                                {
+                                    Log.Error($"Failed to undo the checkout for document [{safeFullPath}]");
+                                }
                             }
                         }
                     }
@@ -966,7 +973,7 @@ namespace Caliente.SharePoint.Import
                     }
                     catch (Exception e)
                     {
-                        Log.Warn(string.Format("Failed to cancel the segmented upload with ID {0}", uploadId, e));
+                        Log.Warn($"Failed to cancel the segmented upload with ID {uploadId}", e);
                     }
                 }
                 throw;
@@ -1019,7 +1026,7 @@ namespace Caliente.SharePoint.Import
                                 }
                             }
                             exc = e;
-                            Log.Error(string.Format("Failed to import the document history for [{0}] described by [{1}]", docInfo.SourcePath, docInfo.XmlLocation), e);
+                            Log.Error($"Failed to import the document history for [{docInfo.SourcePath}] described by [{docInfo.XmlLocation}]", e);
                         }
                         finally
                         {
@@ -1117,12 +1124,12 @@ namespace Caliente.SharePoint.Import
                     DocumentInfo docInfo = new DocumentInfo(this.Log, historyId, path, name, this.ImportContext.FormatMetadataLocation(location), this.ImportContext.FormatProgressLocation(location));
                     if (docInfo.Tracker.Completed)
                     {
-                        Log.Debug(string.Format("Skipping file [{0}] - already completed", docInfo.SourcePath));
+                        Log.DebugFormat("Skipping file [{0}] - already completed", docInfo.SourcePath);
                         IncrementCounter(Result.Skipped);
                     }
                     else if (docInfo.Tracker.Ignored)
                     {
-                        Log.Debug(string.Format("Skipping file [{0}] - marked as ignorable", docInfo.SourcePath));
+                        Log.DebugFormat("Skipping file [{0}] - marked as ignorable", docInfo.SourcePath);
                         IncrementCounter(Result.Skipped);
                     }
                     else
@@ -1149,7 +1156,7 @@ namespace Caliente.SharePoint.Import
 
             if (pending.Count == 0)
             {
-                Log.Info(string.Format("No documents are in need of processing"));
+                Log.Info("No documents are in need of processing");
                 return;
             }
 
@@ -1159,18 +1166,18 @@ namespace Caliente.SharePoint.Import
             {
                 ResetCounter(Result.Failed);
                 attempt++;
-                Log.Info(string.Format("Identified {0} documents in need of processing (of which {1} are retries) (attempt #{2}/{3})", pending.Count, failed.Count, attempt, retries + 1));
+                Log.InfoFormat("Identified {0} documents in need of processing (of which {1} are retries) (attempt #{2}/{3})", pending.Count, failed.Count, attempt, retries + 1);
                 int lastPending = pending.Count;
                 pending = IngestDocuments(pending, threads, simulationMode, locationMode, autoPublish);
                 failed = pending;
                 if (pending.Count < lastPending)
                 {
-                    Log.Info(string.Format("{0} files were processed in this attempt, with {1} retryable failures", lastPending - pending.Count, pending.Count));
+                    Log.InfoFormat("{0} files were processed in this attempt, with {1} retryable failures", lastPending - pending.Count, pending.Count);
                     attempt = 0;
                 }
                 else
                 {
-                    Log.Info(string.Format("No change in the data set - {0} were pending, and {1} failed", lastPending, pending.Count));
+                    Log.InfoFormat("No change in the data set - {0} were pending, and {1} failed", lastPending, pending.Count);
                 }
             }
         }

@@ -551,7 +551,7 @@ namespace Caliente.SharePoint.Import
             string logDir = $"{options.data}/logs";
             System.IO.Directory.CreateDirectory(logDir);
 
-            Environment.SetEnvironmentVariable("CMF_LOGDATE", string.Format("{0:yyyyMMdd-HHmmss}", DateTime.Now));
+            Environment.SetEnvironmentVariable("CMF_LOGDATE", $"{DateTime.Now:yyyyMMdd-HHmmss}");
             Environment.SetEnvironmentVariable("CMF_LOGDIR", logDir);
 
             ConfigureLogging(baseDir);

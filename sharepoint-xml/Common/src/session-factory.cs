@@ -170,9 +170,9 @@ namespace Caliente.SharePoint.Common
             }
             if (!string.IsNullOrEmpty(info.Domain))
             {
-                user = string.Format("{0}@{1}", user, info.Domain);
+                user = $"{user}@{info.Domain}";
             }
-            this.Id = string.Format("SHPT[{0}::{1}#{2}]", user, this.ClientContext.Url, Interlocked.Increment(ref counter));
+            this.Id = $"SHPT[{user}::{this.ClientContext.Url}#{Interlocked.Increment(ref counter)}]";
         }
 
         public void ExecuteQuery()
@@ -206,7 +206,7 @@ namespace Caliente.SharePoint.Common
             if (path == null) throw new ArgumentNullException("path");
             if (path == "" || path == "/") return this.BaseUrl;
             string prepend = (path.StartsWith("/") ? "" : "/");
-            return string.Format("{0}{1}{2}", this.BaseUrl, prepend, path);
+            return $"{this.BaseUrl}{prepend}{path}";
         }
 
         private ListItemCollection GetItemByUniqueIdentifier(string fieldName, string value)
@@ -264,7 +264,7 @@ namespace Caliente.SharePoint.Common
 
         public override string ToString()
         {
-            return string.Format("SHPT[{0}#{1}]", this.ClientContext.Url, this.Id);
+            return $"SHPT[{this.ClientContext.Url}#{this.Id}]";
         }
 
         public void Dispose()

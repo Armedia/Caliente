@@ -43,8 +43,8 @@ namespace Caliente.SharePoint.Import
             this.SafePath = Tools.MakeSafePath(this.Path);
             this.Name = Tools.SanitizeSingleLineString((string)xml.Element(ns + "name"));
             this.SafeName = Tools.MakeSafeFolderName(this.Name, null);
-            this.FullPath = string.Format("{0}/{1}", (this.Path == "/" ? "" : this.Path), this.Name);
-            this.SafeFullPath = string.Format("{0}/{1}", this.SafePath, this.SafeName);
+            this.FullPath = $"{(this.Path == "/" ? "" : this.Path)}/{this.Name}";
+            this.SafeFullPath = $"{this.SafePath}/{this.SafeName}";
             this.CreationDate = Tools.ParseXmlDate(xml.Element(ns + "creationDate"));
             this.Creator = (string)xml.Element(ns + "creator");
             this.ModificationDate = Tools.ParseXmlDate(xml.Element(ns + "modificationDate"));
@@ -191,7 +191,7 @@ namespace Caliente.SharePoint.Import
         {
             try
             {
-                return XmlReader.Create(string.Format("{0}/index.{1}.xml", this.MetadataLocation, name), this.XmlSettings);
+                return XmlReader.Create($"{this.MetadataLocation}/index.{name}.xml", this.XmlSettings);
             }
             catch (FileNotFoundException)
             {
@@ -203,7 +203,7 @@ namespace Caliente.SharePoint.Import
 
         public XmlWriter CreateIndex(string name, string rootElement)
         {
-            XmlTextWriter w = new XmlFile(string.Format("{0}/{1}", this.MetadataLocation, name), UTF8Encoding.UTF8);
+            XmlTextWriter w = new XmlFile($"{this.MetadataLocation}/{name}", UTF8Encoding.UTF8);
             w.WriteStartDocument();
             w.WriteDocType(rootElement, null, null, null);
             w.WriteStartElement(rootElement);
@@ -219,7 +219,7 @@ namespace Caliente.SharePoint.Import
 
         private String FormatLocation(String basePath, String location)
         {
-            return string.Format("{0}/{1}", basePath, location);
+            return $"{basePath}/{location}";
         }
 
         public string FormatMetadataLocation(string location)
@@ -359,20 +359,20 @@ namespace Caliente.SharePoint.Import
                 this.Progress = new System.Collections.Generic.List<string>();
                 this.Log = log;
                 this.DescriptorLocation = descriptorLocation;
-                this.CompletedMarker = new FileInfo(string.Format("{0}.completed", this.DescriptorLocation));
-                this.FailedMarker = new FileInfo(string.Format("{0}.failed", this.DescriptorLocation));
-                this.IgnoreMarker = new FileInfo(string.Format("{0}.ignore", this.DescriptorLocation));
+                this.CompletedMarker = new FileInfo($"{this.DescriptorLocation}.completed");
+                this.FailedMarker = new FileInfo($"{this.DescriptorLocation}.failed");
+                this.IgnoreMarker = new FileInfo($"{this.DescriptorLocation}.ignore");
             }
 
             public void TrackProgress(string format, params object[] args)
             {
                 if (this.Progress.Count == 0)
                 {
-                    this.Progress.Add(string.Format("{0:O} BEGIN ACTION REPORT FOR [{1}]", DateTime.Now, this.DescriptorLocation));
+                    this.Progress.Add($"{DateTime.Now:O} BEGIN ACTION REPORT FOR [{this.DescriptorLocation}]");
                 }
                 string msg = string.Format(format, args);
                 this.Log.Info(msg);
-                Progress.Add(string.Format("{0:O} {1}", DateTime.Now, msg));
+                Progress.Add($"{DateTime.Now:O} {msg}");
             }
 
             public void SaveOutcomeMarker(Result r, Exception e, bool markIgnored = false)
@@ -616,7 +616,7 @@ namespace Caliente.SharePoint.Import
             values["Title"] = name;
             values["caliente_path"] = path;
             values["caliente_name"] = name;
-            values["caliente_location"] = string.Format("{0}/{1}", path == "/" ? "" : path, name);
+            values["caliente_location"] = $"{((path == "/") ? "" : path)}/{name}";
             values["caliente_author_name"] = (string)element.Element(ns + "creator");
             values["caliente_author"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)values["caliente_author_name"]);
             values["caliente_editor_name"] = (string)element.Element(ns + "modifier");

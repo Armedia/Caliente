@@ -25,7 +25,7 @@ namespace Caliente.SharePoint.Import
 
         public override string ToString()
         {
-            return string.Format("Format{name={0}, ext={1}, type={2}, desc={3} }", this.Name, this.DosExtension, this.MimeType, this.Description);
+            return $"Format[name={this.Name}, ext={this.DosExtension}, type={this.MimeType}, desc={this.Description}]";
         }
     }
 
@@ -60,7 +60,7 @@ namespace Caliente.SharePoint.Import
                     else
                     {
                         // Log a warning...and discard the new format
-                        this.Log.Warn(string.Format("Duplicate format name [{0}] - mapped to {1} and {2}", name, this.Formats[name], format));
+                        this.Log.WarnFormat("Duplicate format name [{0}] - mapped to {1} and {2}", name, this.Formats[name], format);
                     }
                 }
             }

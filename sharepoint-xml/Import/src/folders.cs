@@ -166,7 +166,7 @@ namespace Caliente.SharePoint.Import
             if (!string.IsNullOrWhiteSpace(fallbackType))
             {
                 this.FallbackType = ResolveContentType(fallbackType);
-                if (this.FallbackType == null) throw new Exception(string.Format("Fallback folder type [{0}] could not be resolved", fallbackType));
+                if (this.FallbackType == null) throw new Exception($"Fallback folder type [{fallbackType}] could not be resolved");
             }
             if (foldersXml == null) return;
             using (foldersXml)
@@ -205,7 +205,7 @@ namespace Caliente.SharePoint.Import
                         {
                             if (session != null)
                             {
-                                Log.Info(string.Format("Creating {0} folders in the target environment, depth {1}", accumulatedCount, thisDepth));
+                                Log.InfoFormat("Creating {0} folders in the target environment, depth {1}", accumulatedCount, thisDepth);
                                 bool ok = false;
                                 try
                                 {
@@ -245,7 +245,7 @@ namespace Caliente.SharePoint.Import
                             // Check to see if this is a cabinet we want to avoid
                             if (XmlConvert.ToBoolean(XmlTools.GetAttributeValue(xml, "caliente:is_private")))
                             {
-                                Log.Info(string.Format("Skipping private cabinet [{0}]", f.FullPath));
+                                Log.InfoFormat("Skipping private cabinet [{0}]", f.FullPath);
                                 continue;
                             }
                         }
@@ -256,7 +256,7 @@ namespace Caliente.SharePoint.Import
                     }
                     if ((session != null) && accumulatedCount > 0)
                     {
-                        Log.Info(string.Format("Creating {0} folders in the target environment, depth {1}", accumulated.Count, currentDepth + 1));
+                        Log.InfoFormat("Creating {0} folders in the target environment, depth {1}", accumulated.Count, currentDepth + 1);
                         bool ok = false;
                         try
                         {
@@ -338,10 +338,7 @@ namespace Caliente.SharePoint.Import
                     ProgressTracker tracker = new ProgressTracker(importContext.FormatProgressLocation(folderInfo.RelativeLocation), this.Log);
                     if (!folderInfo.Modified && folderInfo.Exists && !tracker.Failed)
                     {
-                        if (Log.IsDebugEnabled)
-                        {
-                            Log.Debug(string.Format("Skipping folder [{0}] - already completed", folderInfo.FullPath));
-                        }
+                        Log.DebugFormat("Skipping folder [{0}] - already completed", folderInfo.FullPath);
                         IncreaseProgress();
                         return;
                     }
@@ -361,7 +358,7 @@ namespace Caliente.SharePoint.Import
                         {
                             failed.Add(folderInfo);
                         }
-                        Log.Error(string.Format("Failed to apply the metadata to the folder at [{0}]", folderInfo.SafeFullPath), e);
+                        Log.Error($"Failed to apply the metadata to the folder at [{folderInfo.SafeFullPath}]", e);
                     }
                     finally
                     {
@@ -429,7 +426,7 @@ namespace Caliente.SharePoint.Import
 
             if (pending.Count == 0)
             {
-                Log.Info(string.Format("No folders are in need of processing"));
+                Log.Info("No folders are in need of processing");
                 return;
             }
 
@@ -439,18 +436,18 @@ namespace Caliente.SharePoint.Import
             {
                 ResetCounter(Result.Failed);
                 attempt++;
-                Log.Info(string.Format("Identified {0} folders in need of processing (of which {1} are retries) (attempt #{2}/{3})", pending.Count, failed.Count, attempt, retries + 1));
+                Log.InfoFormat("Identified {0} folders in need of processing (of which {1} are retries) (attempt #{2}/{3})", pending.Count, failed.Count, attempt, retries + 1);
                 int lastPending = pending.Count;
                 pending = FinalizeFolders(importContext, pending, threads);
                 failed = pending;
                 if (pending.Count < lastPending)
                 {
-                    Log.Info(string.Format("{0} folders were successfully processed in this attempt, with {1} failures", lastPending - pending.Count, pending.Count));
+                    Log.InfoFormat("{0} folders were successfully processed in this attempt, with {1} failures", lastPending - pending.Count, pending.Count);
                     attempt = 0;
                 }
                 else
                 {
-                    Log.Info(string.Format("No change in the data set - {0} were pending, and {1} failed", lastPending, pending.Count));
+                    Log.InfoFormat("No change in the data set - {0} were pending, and {1} failed", lastPending, pending.Count);
                 }
             }
         }

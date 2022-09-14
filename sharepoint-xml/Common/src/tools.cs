@@ -166,7 +166,7 @@ namespace Caliente.SharePoint.Common
 
             if (objectId != null)
             {
-                ret = string.Format("{0}_{1}", objectId, ret);
+                ret = $"{objectId}_{ret}";
             }
             if (ret.Length > 127)
             {
@@ -177,7 +177,7 @@ namespace Caliente.SharePoint.Common
                 if (lastDot >= 0)
                 {
                     string ext = ret.Substring(lastDot);
-                    ret = string.Format("{0}{1}", ret.Substring(0, 127 - ext.Length), ext);
+                    ret = $"{ret.Substring(0, 127 - ext.Length)}{ext}";
                 }
                 else
                 {
@@ -276,17 +276,17 @@ namespace Caliente.SharePoint.Common
                 {
                     try
                     {
-                        Info.Replace(this.Target.FullName, string.Format("{0}.bak-{1:yyyyMMddHHmmss}", this.Target.FullName, DateTime.Now));
+                        this.Info.Replace(this.Target.FullName, $"{this.Target.FullName}.bak-{DateTime.Now:yyyyMMddHHmmss}");
                         return;
                     }
                     catch (IOException e)
                     {
-                        if (Log.IsDebugEnabled) Log.Debug(string.Format("Failed to create a backup for the XML file at [{0}]", this.Target.FullName), e);
+                        if (Log.IsDebugEnabled) Log.Debug($"Failed to create a backup for the XML file at [{this.Target.FullName}]", e);
                     }
                 }
                 this.Target.Delete();
             }
-            Info.MoveTo(this.Target.FullName);
+            this.Info.MoveTo(this.Target.FullName);
         }
     }
 

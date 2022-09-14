@@ -53,7 +53,7 @@ namespace Caliente.SharePoint.Import
 
                 if (!string.IsNullOrEmpty(this.Domain))
                 {
-                    this.FullLogin = string.Format("{0}\\{1}", this.Domain, this.LoginName);
+                    this.FullLogin = $"{this.Domain}\\{this.LoginName}";
                 }
                 else
                 {
@@ -73,7 +73,7 @@ namespace Caliente.SharePoint.Import
 
                 if (!string.IsNullOrEmpty(this.Domain))
                 {
-                    this.FullLogin = string.Format("{0}\\{1}", this.Domain, this.LoginName);
+                    this.FullLogin = $"{this.Domain}\\{this.LoginName}";
                 }
                 else
                 {
@@ -101,7 +101,7 @@ namespace Caliente.SharePoint.Import
 
                 if (!string.IsNullOrEmpty(this.Domain))
                 {
-                    this.FullLogin = string.Format("{0}\\{1}", this.Domain, this.LoginName);
+                    this.FullLogin = $"{this.Domain}\\{this.LoginName}";
                 }
                 else
                 {
@@ -118,10 +118,7 @@ namespace Caliente.SharePoint.Import
             public Principal Resolve(ClientContext clientContext)
             {
                 if (clientContext == null) throw new ArgumentNullException("clientContext");
-                if (Log.IsDebugEnabled)
-                {
-                    Log.Debug(string.Format("Resolving Principal [{0}]...", this.FullLogin));
-                }
+                Log.DebugFormat("Resolving Principal [{0}]...", this.FullLogin);
                 Principal principal = clientContext.Web.EnsureUser(this.FullLogin);
                 clientContext.Load(principal, p => p.Id, p => p.LoginName, p => p.PrincipalType);
                 return principal;
@@ -173,7 +170,7 @@ namespace Caliente.SharePoint.Import
         {
             string path = ldapDirectory.Path;
             string domain = ((string)ldapDirectory.Properties["name"][0]).ToUpper();
-            string fileName = string.Format("cache.{0}.{1}@{2}.xml", type, domain, path);
+            string fileName = $"cache.{type}.{domain}@{path}.xml";
             fileName = Tools.MakeSafeFileName(fileName);
             fileName = this.ImportContext.FormatCacheLocation(fileName);
             return new System.IO.FileInfo(fileName);
@@ -213,7 +210,7 @@ namespace Caliente.SharePoint.Import
                 }
                 else
                 {
-                    Log.Warn(string.Format("Cache for {0} has no date stamp, will use the file's modification time instead", type));
+                    Log.WarnFormat("Cache for {0} has no date stamp, will use the file's modification time instead", type);
                 }
             }
             catch (Exception e)
@@ -221,21 +218,21 @@ namespace Caliente.SharePoint.Import
                 // Not a valid date in XML, use the file's modification date
                 if (Log.IsDebugEnabled)
                 {
-                    Log.Warn(string.Format("Failed to read the {0} cache's date stamp, will use the file's modification time instead", type), e);
+                    Log.Warn($"Failed to read the {type} cache's date stamp, will use the file's modification time instead", e);
                 }
                 else
                 {
-                    Log.Warn(string.Format("Failed to read the {0} cache's date stamp, will use the file's modification time instead", type));
+                    Log.WarnFormat("Failed to read the {0} cache's date stamp, will use the file's modification time instead", type);
                 }
             }
 
             if ((DateTime.UtcNow - date) >= MAX_AGE)
             {
-                Log.Warn(string.Format("Cache for {0} is too old, discarding it (MAX_AGE = {1})", type, MAX_AGE));
+                Log.WarnFormat("Cache for {0} is too old, discarding it (MAX_AGE = {1})", type, MAX_AGE);
                 r.Close();
                 return null;
             }
-            Log.Warn(string.Format("Cache for {0} is valid, will obtain entries from it (created on {1})", type, date));
+            Log.WarnFormat("Cache for {0} is valid, will obtain entries from it (created on {1})", type, date);
             return r;
         }
 
@@ -263,7 +260,7 @@ namespace Caliente.SharePoint.Import
             Dictionary<string, ImportedPrincipalInfo> users = new Dictionary<string, ImportedPrincipalInfo>();
             // Step 1: Get all the AD users in one pass - this is quicker
             string domain = ((string)ldapDirectory.Properties["name"][0]).ToUpper();
-            Log.Info(string.Format("Loading LDAP Users from {0} (domain = {1})", ldapDirectory.Path, domain));
+            Log.InfoFormat("Loading LDAP Users from {0} (domain = {1})", ldapDirectory.Path, domain);
             Dictionary<string, ImportedPrincipalInfo> usersByGUID = new Dictionary<string, ImportedPrincipalInfo>();
             Dictionary<string, ImportedPrincipalInfo> usersByLogin = new Dictionary<string, ImportedPrincipalInfo>();
             Dictionary<string, ImportedPrincipalInfo> usersByKerberosId = new Dictionary<string, ImportedPrincipalInfo>();
@@ -287,7 +284,7 @@ namespace Caliente.SharePoint.Import
                                 usersByLogin[info.LoginName] = info;
                                 if (info.KerberosId != null) usersByKerberosId[info.KerberosId] = info;
                             }
-                            if ((++c % PAGE_SIZE) == 0) Log.Info(string.Format("Loaded {0} users from the cache", c));
+                            if ((++c % PAGE_SIZE) == 0) Log.InfoFormat("Loaded {0} users from the cache", c);
                         }
                         cacheLoaded = true;
                     }
@@ -297,7 +294,7 @@ namespace Caliente.SharePoint.Import
                     usersByGUID.Clear();
                     usersByLogin.Clear();
                     usersByKerberosId.Clear();
-                    Log.Warn(string.Format("Failed to load data from the user cache for LDAP directory [{0}] (for {1})", ldapDirectory.Path, domain), e);
+                    Log.Warn($"Failed to load data from the user cache for LDAP directory [{ldapDirectory.Path}] (for {domain})", e);
                 }
                 finally
                 {
@@ -323,7 +320,7 @@ namespace Caliente.SharePoint.Import
                                 usersByLogin[info.LoginName] = info;
                                 if (info.KerberosId != null) usersByKerberosId[info.KerberosId] = info;
                             }
-                            if ((++c % ldapSearch.PageSize) == 0) Log.Info(string.Format("Loaded {0} users", c));
+                            if ((++c % ldapSearch.PageSize) == 0) Log.InfoFormat("Loaded {0} users", c);
                         }
                     }
                 }
@@ -341,7 +338,7 @@ namespace Caliente.SharePoint.Import
                 }
                 catch (Exception e)
                 {
-                    Log.Warn(string.Format("Failed to write the user cache for the LDAP directory at [{0}] (domain {1})", ldapDirectory.Path, ldapDirectory.Name), e);
+                    Log.Warn($"Failed to write the user cache for the LDAP directory at [{ldapDirectory.Path}] (domain {ldapDirectory.Name})", e);
                 }
             }
 
@@ -355,7 +352,7 @@ namespace Caliente.SharePoint.Import
             {
                 using (usersXml)
                 {
-                    Log.Info(string.Format("Loaded {0} LDAP users, resolving the users in XML...", usersByGUID.Count));
+                    Log.InfoFormat("Loaded {0} LDAP users, resolving the users in XML...", usersByGUID.Count);
                     while (usersXml.ReadToFollowing("user"))
                     {
                         using (XmlReader userXml = usersXml.ReadSubtree())
@@ -473,7 +470,7 @@ namespace Caliente.SharePoint.Import
         {
             Dictionary<string, ImportedPrincipalInfo> groups = new Dictionary<string, ImportedPrincipalInfo>();
             string domain = ((string)ldapDirectory.Properties["name"][0]).ToUpper();
-            Log.Info(string.Format("Loading LDAP Groups from {0}", ldapDirectory.Path));
+            Log.InfoFormat("Loading LDAP Groups from {0}", ldapDirectory.Path);
             Dictionary<string, ImportedPrincipalInfo> groupsByGUID = new Dictionary<string, ImportedPrincipalInfo>();
             Dictionary<string, ImportedPrincipalInfo> groupsByLogin = new Dictionary<string, ImportedPrincipalInfo>();
 
@@ -492,7 +489,7 @@ namespace Caliente.SharePoint.Import
                             ImportedPrincipalInfo info = new ImportedPrincipalInfo(XElement.Load(cache.ReadSubtree()));
                             groupsByGUID[info.Guid] = info;
                             groupsByLogin[info.LoginName] = info;
-                            if ((++c % PAGE_SIZE) == 0) Log.Info(string.Format("Loaded {0} users from the cache", c));
+                            if ((++c % PAGE_SIZE) == 0) Log.InfoFormat("Loaded {0} users from the cache", c);
                         }
                         cacheLoaded = true;
                     }
@@ -501,7 +498,7 @@ namespace Caliente.SharePoint.Import
                 {
                     groupsByGUID.Clear();
                     groupsByLogin.Clear();
-                    Log.Warn(string.Format("Failed to load data from the group cache for LDAP directory [{0}] (for {1})", ldapDirectory.Path, domain), e);
+                    Log.Warn($"Failed to load data from the group cache for LDAP directory [{ldapDirectory.Path}] (for {domain})", e);
                 }
                 finally
                 {
@@ -523,7 +520,7 @@ namespace Caliente.SharePoint.Import
                             ImportedPrincipalInfo info = new ImportedPrincipalInfo(r, domain);
                             groupsByGUID[info.Guid] = info;
                             groupsByLogin[info.LoginName] = info;
-                            if ((++c % ldapSearch.PageSize) == 0) Log.Info(string.Format("Loaded {0} groups", c));
+                            if ((++c % ldapSearch.PageSize) == 0) Log.InfoFormat("Loaded {0} groups", c);
                         }
                     }
                 }
@@ -541,7 +538,7 @@ namespace Caliente.SharePoint.Import
                 }
                 catch (Exception e)
                 {
-                    Log.Warn(string.Format("Failed to write the group cache for the LDAP directory at [{0}] (domain {1})", ldapDirectory.Path, ldapDirectory.Name), e);
+                    Log.Warn($"Failed to write the group cache for the LDAP directory at [{ldapDirectory.Path}] (domain {ldapDirectory.Name})", e);
                 }
             }
 
@@ -555,7 +552,7 @@ namespace Caliente.SharePoint.Import
             {
                 using (groupsXml)
                 {
-                    Log.Info(string.Format("Loaded {0} LDAP groups, resolving the groups in XML...", groupsByGUID.Count));
+                    Log.InfoFormat("Loaded {0} LDAP groups, resolving the groups in XML...", groupsByGUID.Count);
                     while (groupsXml.ReadToFollowing("group"))
                     {
                         using (XmlReader groupXml = groupsXml.ReadSubtree())

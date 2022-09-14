@@ -136,7 +136,7 @@ namespace Caliente.SharePoint.Import
 
         public ContentTypeImporter(ImportContext importContext, String documentLibraryName, bool clearFirst) : base("content types", importContext)
         {
-            this.Log.Info(string.Format("Mapping the object types to content types and columns to the site and the library [{0}]...", documentLibraryName));
+            this.Log.InfoFormat("Mapping the object types to content types and columns to the site and the library [{0}]...", documentLibraryName);
 
             // TODO: Make these two configurable
             this.TypeGroup = TYPE_GROUP;
@@ -268,9 +268,9 @@ namespace Caliente.SharePoint.Import
                                     }
                                 }
 
-                                Log.Info(string.Format("Creating content type {0} (descended from [{1}]])", typeName, superType.Name));
+                                Log.InfoFormat("Creating content type {0} (descended from [{1}]])", typeName, superType.Name);
                                 ContentTypeCreationInformation ctInfo = new ContentTypeCreationInformation();
-                                ctInfo.Description = string.Format("Documentum Type {0}", typeName);
+                                ctInfo.Description = $"Source Type {typeName}";
                                 ctInfo.Name = typeName;
                                 ctInfo.ParentContentType = (superType != null ? superType.Type : null);
                                 ctInfo.Group = this.TypeGroup;
@@ -434,7 +434,7 @@ namespace Caliente.SharePoint.Import
                                 // The attribute is either not inherited or its inheritance is ignored, so add it to the content type's declaration
                                 string attName = att.Attribute("name").Value;
                                 string attSourceName = att.Attribute("sourceName").Value;
-                                string finalName = string.Format("caliente_{0}", attSourceName);
+                                string finalName = $"caliente_{attSourceName}";
                                 // Special case for folder attributes inherited from dm_sysobject
                                 bool inherited = XmlConvert.ToBoolean(att.Attribute("inherited").Value) && (typeName != "dm_folder");
                                 bool repeating = XmlConvert.ToBoolean(att.Attribute("repeating").Value);
@@ -458,7 +458,7 @@ namespace Caliente.SharePoint.Import
                                     }
                                     else
                                     {
-                                        Log.Info(string.Format("Creating field {0} (first declared by {1})", finalName, typeName));
+                                        Log.InfoFormat("Creating field {0} (first declared by {1})", finalName, typeName);
                                         FieldType attType = Tools.DecodeFieldType(att.Attribute("dataType").Value);
                                         if (repeating)
                                         {
@@ -473,7 +473,7 @@ namespace Caliente.SharePoint.Import
                                         Guid guid = Guid.NewGuid();
 
 
-                                        string fieldXml = string.Format("<Field DisplayName='{0}' Name='{1}' ID='{2}' Group='{3}' Type='{4}' />", finalName, finalName, guid.ToString(), this.FieldGroup, attType);
+                                        string fieldXml = $"<Field DisplayName='{finalName}' Name='{finalName}' ID='{guid}' Group='{this.FieldGroup}' Type='{attType}' />";
                                         fieldLink.Field = clientContext.Web.Fields.AddFieldAsXml(fieldXml, false, AddFieldOptions.AddFieldInternalNameHint);
                                         clientContext.Load(fieldLink.Field, f => f.Id, f => f.FieldTypeKind, f => f.StaticName, f => f.Group);
                                         existingFields[finalName] = fieldLink.Field;

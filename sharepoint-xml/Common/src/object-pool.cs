@@ -93,7 +93,7 @@ namespace Caliente.SharePoint.Common
                     // Bad item ... nuke it and try again (if still viable)
                     this.factory.Destroy(item);
                 }
-                throw new Exception(string.Format("Failed to create a new pooled object after {0} attempts", maxAttempts));
+                throw new Exception($"Failed to create a new pooled object after {maxAttempts} attempts");
             }
             finally
             {
