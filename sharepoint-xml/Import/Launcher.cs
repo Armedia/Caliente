@@ -56,16 +56,19 @@ namespace Caliente.SharePoint.Import
                 [OptionAttribute("library", Required = false, HelpText = "The Document Library to import files into")]
                 public string library { get; set; }
 
-                [OptionAttribute("streams", Required = false, HelpText = "The location on the filesystem for the import content streams")]
+                [OptionAttribute("data", Required = false, HelpText = "The root directory where all the Caliente data is located")]
+                public string data { get; set; }
+
+                [OptionAttribute("streams", Required = false, HelpText = "The location on the filesystem for the import content streams (default = ${data}/streams)")]
                 public string streams { get; set; }
 
-                [OptionAttribute("metadata", Required = false, HelpText = "The location on the filesystem for the import objects' metadata")]
+                [OptionAttribute("metadata", Required = false, HelpText = "The location on the filesystem for the import objects' metadata (default = ${data}/xml-metadata)")]
                 public string metadata { get; set; }
 
                 [OptionAttribute("progress", Required = false, HelpText = "The location on the filesystem for the progress tracker files")]
                 public string progress { get; set; }
 
-                [OptionAttribute("caches", Required = false, HelpText = "The location on the filesystem for the work-in-progress data caches")]
+                [OptionAttribute("caches", Required = false, HelpText = "The location on the filesystem for the work-in-progress data caches (default = ${data}/caches)")]
                 public string caches { get; set; }
 
                 [OptionAttribute("ldapUrl", Required = false, HelpText = "The LDAP directory to synchronize with")]
@@ -156,14 +159,14 @@ namespace Caliente.SharePoint.Import
 
                     // Apply the defaults from the configuration
                     if (!configFile.Exists) return;
-                    Console.Out.WriteLine(string.Format("Loading configuration from [{0}]...", configFile.FullName));
+                    Console.Out.WriteLine($"Loading configuration from [{configFile.FullName}]...");
                     XElement cfg = XElement.Load(configFile.FullName);
                     XNamespace ns = cfg.GetDefaultNamespace();
                     object[] parameters = new object[1];
                     foreach (PropertyInfo p in GetType().GetProperties())
                     {
                         OptionAttribute opt = Attribute.GetCustomAttribute(p, typeof(OptionAttribute)) as OptionAttribute;
-                        string propertyName = opt?.LongName ?? string.Format("cmsmf.{0}", p.Name);
+                        string propertyName = opt?.LongName ?? $"cmsmf.{p.Name}";
 
                         // Not null? Get its XML value
                         string value = (string)cfg.Element(ns + propertyName);
@@ -189,7 +192,7 @@ namespace Caliente.SharePoint.Import
                                 }
                                 catch (ArgumentException e)
                                 {
-                                    throw new Exception(string.Format("The string [{0}] is not a valid member of enum {1}", value, t.FullName), e);
+                                    throw new Exception($"The string [{value}] is not a valid member of enum {t.FullName}", e);
                                 }
                             }
                             else
@@ -211,6 +214,12 @@ namespace Caliente.SharePoint.Import
             private const int MIN_THREADS = 1;
             private static readonly int DEFAULT_THREADS = ((Environment.ProcessorCount * 3) / 4);
             private const int MAX_THREADS = 32;
+
+            private const string DEFAULT_DATA_DIR = "caliente";
+            private const string DEFAULT_STREAMS_DIR = "streams";
+            private const string DEFAULT_XML_METADATA_DIR = "xml-metadata";
+            private const string DEFAULT_PROGRESS_DIR = "sharepoint-progress";
+            private const string DEFAULT_CACHES_DIR = "sharepoint-caches";
 
             private const bool DEFAULT_USE_QUERY_RETRY = true;
 
@@ -253,6 +262,7 @@ namespace Caliente.SharePoint.Import
             public string certificatePass { get; private set; }
             public string ldapSyncDomain { get; private set; }
             public string library { get; private set; }
+            public string data { get; private set; }
             public string streams { get; private set; }
             public string metadata { get; private set; }
             public string progress { get; private set; }
@@ -300,7 +310,7 @@ namespace Caliente.SharePoint.Import
 
                 this.CommandLine = this.ParserResult.Value;
 
-                string cfgFile = (this.CommandLine.cfg != null ? this.CommandLine.cfg : string.Format("{0}/config.xml", Directory.GetCurrentDirectory()));
+                string cfgFile = (this.CommandLine.cfg != null ? this.CommandLine.cfg : $"{this.baseDir}\\config.xml");
                 this.ConfigurationFile = new Settings(cfgFile);
 
                 object[] parameters = new object[1];
@@ -371,16 +381,31 @@ namespace Caliente.SharePoint.Import
 
                 if (!string.IsNullOrWhiteSpace(this.applicationId))
                 {
-                    if (string.IsNullOrWhiteSpace(this.certificateKey)) this.certificateKey = string.Format("{0}\\Caliente.pfx", this.baseDir);
+                    if (string.IsNullOrWhiteSpace(this.certificateKey)) this.certificateKey = $"{this.baseDir}\\Caliente.pfx";
                     if (string.IsNullOrWhiteSpace(this.domain)) errors.Add("Must provide the domain the application ID is valid for (domain)");
                 }
                 if (errors.Count > 0) return errors;
 
-                string cwd = Directory.GetCurrentDirectory();
-                if (string.IsNullOrEmpty(this.streams)) this.streams = string.Format("{0}\\streams", cwd).Replace('\\', '/');
-                if (string.IsNullOrEmpty(this.metadata)) this.metadata = string.Format("{0}\\xml-metadata", cwd).Replace('\\', '/');
-                if (string.IsNullOrEmpty(this.progress)) this.progress = string.Format("{0}\\xml-metadata-progress", cwd).Replace('\\', '/');
-                if (string.IsNullOrEmpty(this.caches)) this.caches = string.Format("{0}\\caches", cwd).Replace('\\', '/');
+                if (string.IsNullOrEmpty(this.data)) this.data = $"${this.baseDir}/{DEFAULT_DATA_DIR}";
+                this.data = this.data.Replace('\\', '/');
+                if (!Directory.Exists(this.data))
+                {
+                    errors.Add($"The data directory [{this.data}] does not exist");
+                }
+                if (string.IsNullOrEmpty(this.streams)) this.streams = $"{this.data}/{DEFAULT_STREAMS_DIR}";
+                if (!Directory.Exists(this.streams))
+                {
+                    errors.Add($"The streams directory [{this.streams}] does not exist");
+                }
+
+                if (string.IsNullOrEmpty(this.metadata)) this.metadata = $"{this.data}/{DEFAULT_XML_METADATA_DIR}";
+                if (!Directory.Exists(this.metadata))
+                {
+                    errors.Add($"The metadata directory [{this.metadata}] does not exist");
+                }
+
+                if (string.IsNullOrEmpty(this.progress)) this.progress = $"{this.data}/{DEFAULT_PROGRESS_DIR}";
+                if (string.IsNullOrEmpty(this.caches)) this.caches = $"{this.data}/{DEFAULT_CACHES_DIR}";
                 if (string.IsNullOrWhiteSpace(this.ldapBindDn)) this.ldapBindDn = "";
                 if (string.IsNullOrEmpty(this.ldapBindPw)) this.ldapBindPw = "";
 
@@ -410,7 +435,7 @@ namespace Caliente.SharePoint.Import
             string ldapBindPw = options.ldapBindPw;
             if (string.IsNullOrEmpty(ldapBindPw))
             {
-                Console.Write(string.Format("Enter LDAP password for DN=[{0}] @ [{1}]: ", options.ldapBindDn, options.ldapUrl));
+                Console.Write($"Enter LDAP password for DN=[{options.ldapBindDn}] @ [{options.ldapUrl}]: ");
                 SecureString password = Tools.ReadPassword();
                 ldapBindPw = password.ToString();
             }
@@ -427,7 +452,7 @@ namespace Caliente.SharePoint.Import
             Version version = assembly.GetName().Version;
             String title = assembly.GetCustomAttribute<AssemblyTitleAttribute>().Title;
             DateTime buildDate = new DateTime(2000, 1, 1).Add(new TimeSpan(TimeSpan.TicksPerDay * version.Build + TimeSpan.TicksPerSecond * 2 * version.Revision)).ToUniversalTime();
-            return string.Format("{0} v{1} (built at {2} UTC)", title, version, buildDate);
+            return $"{title} v{version} (built at {buildDate} UTC)";
         }
 
         private static string GetExeLocation()
@@ -472,24 +497,23 @@ namespace Caliente.SharePoint.Import
 
         private static FileInfo FindLogConfiguration(string dir, string fileName)
         {
-            string path = string.Format("{0}\\{1}", dir, fileName);
-            FileInfo config = new FileInfo(path);
+            FileInfo config = new FileInfo($"{dir}\\{fileName}");
             if (!config.Exists) return null;
             return config;
         }
 
         private static bool ConfigureLogging(string baseDir)
         {
-            string[] nameOptions = { GetExeName() + ".log.xml", "log4net.xml" };
+            string[] nameOptions = { $"{GetExeName()}.log.xml", "log4net.xml" };
             string[] directoryOptions = { baseDir, GetExeLocation() };
-            foreach (string s in directoryOptions)
+            foreach (string directory in directoryOptions)
             {
-                foreach (string n in nameOptions)
+                foreach (string name in nameOptions)
                 {
-                    FileInfo config = FindLogConfiguration(s, n);
+                    FileInfo config = FindLogConfiguration(directory, name);
                     if (config != null)
                     {
-                        Console.Out.WriteLine(string.Format("Initializing logging from [{0}]...", config));
+                        Console.Out.WriteLine($"Initializing logging from [{config}]...");
                         XmlConfigurator.Configure(config);
                         return true;
                     }
@@ -517,14 +541,14 @@ namespace Caliente.SharePoint.Import
             if (errors.Count > 0)
             {
                 Console.Error.WriteLine(version);
-                Console.Error.WriteLine(string.Format("{0} Configuration Errors detected:", errors.Count));
-                foreach (string e in errors) Console.Error.WriteLine(string.Format("\t* {0}", e));
+                Console.Error.WriteLine($"{errors.Count} Configuration Errors detected:");
+                foreach (string e in errors) Console.Error.WriteLine($"\t* {e}");
                 return 2;
             }
 
             System.IO.Directory.CreateDirectory(options.caches);
 
-            string logDir = string.Format("{0}\\logs", baseDir);
+            string logDir = $"{options.data}/logs";
             System.IO.Directory.CreateDirectory(logDir);
 
             Environment.SetEnvironmentVariable("CMF_LOGDATE", string.Format("{0:yyyyMMdd-HHmmss}", DateTime.Now));
@@ -549,26 +573,26 @@ namespace Caliente.SharePoint.Import
 
             using (DirectoryEntry ldapDirectory = BindToLDAP(options))
             {
-                log.Info(string.Format("Using SharePoint at [{0}]", options.siteUrl));
+                log.Info($"Using SharePoint at [{options.siteUrl}]");
 
                 string userString = options.user;
                 if (!string.IsNullOrWhiteSpace(options.domain))
                 {
-                    userString = string.Format("{0}@{1}", userString, options.domain);
+                    userString = $"{userString}@{options.domain}";
                 }
 
                 SecureString userPassword = null;
                 if (!string.IsNullOrWhiteSpace(options.user)) {
                     if (options.password == null)
                     {
-                        Console.Write(string.Format("Enter The Sharepoint Password for [{0}]: ", userString));
+                        Console.Write($"Enter The Sharepoint Password for [{userString}]: ");
                         userPassword = Tools.ReadPassword();
                     }
                     else
                     {
                         String pass = CRYPT.Decrypt(options.password);
                         pass = CRYPT.Encrypt(pass);
-                        log.Info(string.Format("Using stored credentials for [{0}] = [{1}]", userString, pass));
+                        log.Info($"Using stored credentials for [{userString}] = [{pass}]");
                         userPassword = new SecureString();
                         foreach (char c in CRYPT.Decrypt(pass))
                         {
@@ -614,7 +638,7 @@ namespace Caliente.SharePoint.Import
                     }
                     if (contentTypeImporter == null)
                     {
-                        log.Error(string.Format("ContentTypeImporter failed to initialize after {0} attempts", options.retries + 1));
+                        log.ErrorFormat("ContentTypeImporter failed to initialize after {0} attempts", options.retries + 1);
                         return 3;
                     }
 
@@ -634,7 +658,7 @@ namespace Caliente.SharePoint.Import
                     }
                     if (userGroupImporter == null)
                     {
-                        log.Error(string.Format("UserGroupImporter failed to initialize after {0} attempts", options.retries + 1));
+                        log.ErrorFormat("UserGroupImporter failed to initialize after {0} attempts", options.retries + 1);
                         return 4;
                     }
 
