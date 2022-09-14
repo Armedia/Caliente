@@ -3,6 +3,7 @@ using CommandLine;
 using CommandLine.Text;
 using log4net;
 using log4net.Config;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using System.DirectoryServices;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Runtime.Remoting.Messaging;
 using System.Security;
 using System.Xml.Linq;
 
@@ -56,7 +58,7 @@ namespace Caliente.SharePoint.Import
                 [OptionAttribute("library", Required = false, HelpText = "The Document Library to import files into")]
                 public string library { get; set; }
 
-                [OptionAttribute("data", Required = false, HelpText = "The root directory where all the Caliente data is located")]
+                [OptionAttribute("data", Required = false, HelpText = "The root directory where all the Caliente data is located (default = ./caliente)")]
                 public string data { get; set; }
 
                 [OptionAttribute("streams", Required = false, HelpText = "The location on the filesystem for the import content streams (default = ${data}/streams)")]
@@ -65,11 +67,14 @@ namespace Caliente.SharePoint.Import
                 [OptionAttribute("metadata", Required = false, HelpText = "The location on the filesystem for the import objects' metadata (default = ${data}/xml-metadata)")]
                 public string metadata { get; set; }
 
-                [OptionAttribute("progress", Required = false, HelpText = "The location on the filesystem for the progress tracker files")]
+                [OptionAttribute("progress", Required = false, HelpText = "The location on the filesystem for the progress tracker files (default = ${data}/sharepoint-progress)")]
                 public string progress { get; set; }
 
-                [OptionAttribute("caches", Required = false, HelpText = "The location on the filesystem for the work-in-progress data caches (default = ${data}/caches)")]
+                [OptionAttribute("caches", Required = false, HelpText = "The location on the filesystem for the work-in-progress data caches (default = ${data}/sharepoint-caches)")]
                 public string caches { get; set; }
+
+                [OptionAttribute("logs", Required = false, HelpText = "The location on the filesystem for the log files (default = ${data}/logs)")]
+                public string logs { get; set; }
 
                 [OptionAttribute("ldapUrl", Required = false, HelpText = "The LDAP directory to synchronize with")]
                 public string ldapUrl { get; set; }
@@ -220,6 +225,7 @@ namespace Caliente.SharePoint.Import
             private const string DEFAULT_XML_METADATA_DIR = "xml-metadata";
             private const string DEFAULT_PROGRESS_DIR = "sharepoint-progress";
             private const string DEFAULT_CACHES_DIR = "sharepoint-caches";
+            private const string DEFAULT_LOGS_DIR = "logs";
 
             private const bool DEFAULT_USE_QUERY_RETRY = true;
 
@@ -267,6 +273,7 @@ namespace Caliente.SharePoint.Import
             public string metadata { get; private set; }
             public string progress { get; private set; }
             public string caches { get; private set; }
+            public string logs { get; private set; }
             public string ldapUrl { get; private set; }
             public string ldapBindDn { get; private set; }
             public string ldapBindPw { get; private set; }
@@ -361,6 +368,14 @@ namespace Caliente.SharePoint.Import
                 return Settings.RenderHelp(this.ParserResult);
             }
 
+            private string ComputePath(string value, Func<string> fallback)
+            {
+                string ret = value;
+                if (string.IsNullOrEmpty(value) && (fallback != null)) ret = fallback();
+                if (!string.IsNullOrEmpty(ret)) ret = Path.GetFullPath(ret).Replace('\\', '/');
+                return ret;
+            }
+
             public List<string> ValidateConfiguration()
             {
                 List<string> errors = new List<string>();
@@ -386,26 +401,28 @@ namespace Caliente.SharePoint.Import
                 }
                 if (errors.Count > 0) return errors;
 
-                if (string.IsNullOrEmpty(this.data)) this.data = $"${this.baseDir}/{DEFAULT_DATA_DIR}";
-                this.data = this.data.Replace('\\', '/');
+                this.data = ComputePath(this.data, () => $"${this.baseDir}/{DEFAULT_DATA_DIR}");
                 if (!Directory.Exists(this.data))
                 {
                     errors.Add($"The data directory [{this.data}] does not exist");
                 }
-                if (string.IsNullOrEmpty(this.streams)) this.streams = $"{this.data}/{DEFAULT_STREAMS_DIR}";
+
+                this.streams = ComputePath(this.streams, () => $"{this.data}/{DEFAULT_STREAMS_DIR}");
                 if (!Directory.Exists(this.streams))
                 {
                     errors.Add($"The streams directory [{this.streams}] does not exist");
                 }
 
-                if (string.IsNullOrEmpty(this.metadata)) this.metadata = $"{this.data}/{DEFAULT_XML_METADATA_DIR}";
+                this.metadata = ComputePath(this.metadata, () => $"{this.data}/{DEFAULT_XML_METADATA_DIR}");
                 if (!Directory.Exists(this.metadata))
                 {
                     errors.Add($"The metadata directory [{this.metadata}] does not exist");
                 }
 
-                if (string.IsNullOrEmpty(this.progress)) this.progress = $"{this.data}/{DEFAULT_PROGRESS_DIR}";
-                if (string.IsNullOrEmpty(this.caches)) this.caches = $"{this.data}/{DEFAULT_CACHES_DIR}";
+                this.progress = ComputePath(this.progress, () => $"{this.data}/{DEFAULT_PROGRESS_DIR}");
+                this.caches = ComputePath(this.caches, () => $"{this.data}/{DEFAULT_CACHES_DIR}");
+                this.logs = ComputePath(this.logs, () => $"{this.data}/{DEFAULT_LOGS_DIR}");
+
                 if (string.IsNullOrWhiteSpace(this.ldapBindDn)) this.ldapBindDn = "";
                 if (string.IsNullOrEmpty(this.ldapBindPw)) this.ldapBindPw = "";
 
@@ -547,12 +564,10 @@ namespace Caliente.SharePoint.Import
             }
 
             System.IO.Directory.CreateDirectory(options.caches);
-
-            string logDir = $"{options.data}/logs";
-            System.IO.Directory.CreateDirectory(logDir);
+            System.IO.Directory.CreateDirectory(options.logs);
 
             Environment.SetEnvironmentVariable("CMF_LOGDATE", $"{DateTime.Now:yyyyMMdd-HHmmss}");
-            Environment.SetEnvironmentVariable("CMF_LOGDIR", logDir);
+            Environment.SetEnvironmentVariable("CMF_LOGDIR", options.logs);
 
             ConfigureLogging(baseDir);
             LOG = log = LogManager.GetLogger(typeof(Launcher));
