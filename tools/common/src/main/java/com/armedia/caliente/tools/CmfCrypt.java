@@ -78,8 +78,6 @@ public class CmfCrypt implements CheckedCodec<CharSequence, byte[], Exception> {
 		}
 	}
 
-	public static final CmfCrypt DEFAULT = new CmfCrypt();
-
 	public static byte[] normalizeKey(byte[] key) {
 		return CmfCrypt.normalizeKey(key, true);
 	}
@@ -219,6 +217,8 @@ public class CmfCrypt implements CheckedCodec<CharSequence, byte[], Exception> {
 			throw new RuntimeException("Failed to initialize the default encryption scheme", e);
 		}
 	}
+
+	public static final CmfCrypt DEFAULT = new CmfCrypt();
 
 	private final Collection<Scheme> alternateSchemes;
 	private final Scheme encryptionScheme;
