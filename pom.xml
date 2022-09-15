@@ -73,7 +73,7 @@
 		<stax-utils.version>20070216</stax-utils.version>
 		<tomcat.version>9.0.27</tomcat.version>
 		<unboundid-ldapsdk.version>5.1.0</unboundid-ldapsdk.version>
-		<utilities.version>1.3.7</utilities.version>
+		<utilities.version>1.3.8</utilities.version>
 		<woodstox.version>6.2.1</woodstox.version>
 		<jackson.version>2.12.6.1</jackson.version>
 		<jaxb-api.version>2.3.1</jaxb-api.version>
