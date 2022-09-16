@@ -166,24 +166,25 @@ namespace Caliente.SharePoint.Import
             }
         }
 
-        private System.IO.FileInfo GetCacheFile(DirectoryEntry ldapDirectory, string type)
+        private string GetCacheFile(DirectoryEntry ldapDirectory, string type)
         {
             string path = ldapDirectory.Path;
             string domain = ((string)ldapDirectory.Properties["name"][0]).ToUpper();
             string fileName = $"cache.{type}.{domain}@{path}.xml";
             fileName = Tools.MakeSafeFileName(fileName);
             fileName = this.ImportContext.FormatCacheLocation(fileName);
-            return new System.IO.FileInfo(fileName);
+            return fileName;
         }
 
         private XmlReader LoadCache(DirectoryEntry ldapDirectory, string type)
         {
-            System.IO.FileInfo file = GetCacheFile(ldapDirectory, type);
-            if (!file.Exists) return null;
+            string file = GetCacheFile(ldapDirectory, type);
+            if (!System.IO.File.Exists(file)) return null;
             XmlReaderSettings settings = new XmlReaderSettings();
             settings.DtdProcessing = DtdProcessing.Parse;
             settings.MaxCharactersFromEntities = 1024;
-            System.IO.StreamReader stream = file.OpenText();
+            
+            System.IO.StreamReader stream = System.IO.File.OpenText(file);
             XmlReader r = null;
             bool ok = false;
             try
@@ -197,11 +198,11 @@ namespace Caliente.SharePoint.Import
                 if (!ok)
                 {
                     stream.Close();
-                    file.Delete();
+                    System.IO.File.Delete(file);
                 }
             }
             if (!r.ReadToFollowing(type)) return null;
-            DateTime date = file.LastWriteTimeUtc;
+            DateTime date = System.IO.File.GetLastAccessTimeUtc(file);
             try
             {
                 if (r.HasAttributes && r.MoveToAttribute("date"))
@@ -238,8 +239,7 @@ namespace Caliente.SharePoint.Import
 
         private void StoreCache(DirectoryEntry ldapDirectory, string type, ICollection<ImportedPrincipalInfo> principals)
         {
-            System.IO.FileInfo file = GetCacheFile(ldapDirectory, type);
-            using (XmlTextWriter w = new XmlFile(file, UTF8Encoding.UTF8, false))
+            using (XmlTextWriter w = new XmlFile(GetCacheFile(ldapDirectory, type), UTF8Encoding.UTF8, false))
             {
                 w.WriteStartDocument();
                 w.WriteDocType(type, null, null, null);

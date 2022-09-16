@@ -160,12 +160,11 @@ namespace Caliente.SharePoint.Import
 
                 public Settings(string path)
                 {
-                    FileInfo configFile = new FileInfo(path);
+                    if (!System.IO.File.Exists(path)) return;
 
                     // Apply the defaults from the configuration
-                    if (!configFile.Exists) return;
-                    Console.Out.WriteLine($"Loading configuration from [{configFile.FullName}]...");
-                    XElement cfg = XElement.Load(configFile.FullName);
+                    Console.Out.WriteLine($"Loading configuration from [{path}]...");
+                    XElement cfg = XElement.Load(path);
                     XNamespace ns = cfg.GetDefaultNamespace();
                     object[] parameters = new object[1];
                     foreach (PropertyInfo p in GetType().GetProperties())
@@ -512,10 +511,10 @@ namespace Caliente.SharePoint.Import
             }
         }
 
-        private static FileInfo FindLogConfiguration(string dir, string fileName)
+        private static string FindLogConfiguration(string dir, string fileName)
         {
-            FileInfo config = new FileInfo($"{dir}\\{fileName}");
-            if (!config.Exists) return null;
+            string config = $"{dir}\\{fileName}";
+            if (!System.IO.File.Exists(config)) return null;
             return config;
         }
 
@@ -527,11 +526,14 @@ namespace Caliente.SharePoint.Import
             {
                 foreach (string name in nameOptions)
                 {
-                    FileInfo config = FindLogConfiguration(directory, name);
-                    if (config != null)
+                    string config = FindLogConfiguration(directory, name);
+                    if (!string.IsNullOrEmpty(config))
                     {
                         Console.Out.WriteLine($"Initializing logging from [{config}]...");
-                        XmlConfigurator.Configure(config);
+                        using (Stream stream = System.IO.File.OpenRead(config))
+                        {
+                            XmlConfigurator.Configure(stream);
+                        }
                         return true;
                     }
                 }

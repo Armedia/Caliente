@@ -1,5 +1,6 @@
 using Caliente.SharePoint.Common;
 using log4net;
+using Microsoft.Identity.Client;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
@@ -219,7 +220,8 @@ namespace Caliente.SharePoint.Import
 
         private String FormatLocation(String basePath, String location)
         {
-            return $"{basePath}/{location}";
+            // Make sure we always use forward slashes
+            return $"{basePath}/{location}".Replace('\\', '/');
         }
 
         public string FormatMetadataLocation(string location)
@@ -249,6 +251,7 @@ namespace Caliente.SharePoint.Import
 
         public readonly ImportContext ImportContext;
         protected readonly ILog Log;
+        protected readonly ILog FailedLog;
         private long TotalProgress = 0;
         private long LastProgress = Environment.TickCount;
         private long ProgressCounter = 0;
@@ -277,6 +280,7 @@ namespace Caliente.SharePoint.Import
         {
             this.ImportContext = importContext;
             this.Log = LogManager.GetLogger(GetType());
+            this.FailedLog = LogManager.GetLogger("Failed");
             this.Label = (string.IsNullOrWhiteSpace(label) ? DEFAULT_LABEL : label.ToUpper());
         }
 
@@ -347,28 +351,31 @@ namespace Caliente.SharePoint.Import
 
         protected class ProgressTracker
         {
-            private readonly FileInfo CompletedMarker;
-            private readonly FileInfo FailedMarker;
-            private readonly FileInfo IgnoreMarker;
+            private readonly string CompletedMarker;
+            private readonly string FailedMarker;
+            private readonly string IgnoreMarker;
+            private readonly string MetadataLocation;
             private readonly string DescriptorLocation;
             private readonly ILog Log;
             private readonly System.Collections.Generic.List<string> Progress;
 
-            public ProgressTracker(string descriptorLocation, ILog log)
+            public ProgressTracker(string metadataLocation, string descriptorLocation, ILog log)
             {
                 this.Progress = new System.Collections.Generic.List<string>();
                 this.Log = log;
-                this.DescriptorLocation = descriptorLocation;
-                this.CompletedMarker = new FileInfo($"{this.DescriptorLocation}.completed");
-                this.FailedMarker = new FileInfo($"{this.DescriptorLocation}.failed");
-                this.IgnoreMarker = new FileInfo($"{this.DescriptorLocation}.ignore");
+                this.MetadataLocation = metadataLocation;
+                // Apparently, it won't delete files if the path has forward slashes ...
+                this.DescriptorLocation = descriptorLocation.Replace('/', '\\');
+                this.CompletedMarker = $"{this.DescriptorLocation}.completed";
+                this.FailedMarker = $"{this.DescriptorLocation}.failed";
+                this.IgnoreMarker = $"{this.DescriptorLocation}.ignore";
             }
 
             public void TrackProgress(string format, params object[] args)
             {
                 if (this.Progress.Count == 0)
                 {
-                    this.Progress.Add($"{DateTime.Now:O} BEGIN ACTION REPORT FOR [{this.DescriptorLocation}]");
+                    this.Progress.Add($"{DateTime.Now:O} BEGIN ACTION REPORT FOR [{this.MetadataLocation}]");
                 }
                 string msg = string.Format(format, args);
                 this.Log.Info(msg);
@@ -378,7 +385,7 @@ namespace Caliente.SharePoint.Import
             public void SaveOutcomeMarker(Result r, Exception e, bool markIgnored = false)
             {
                 if (r == Result.Skipped) return;
-                FileInfo fi = null;
+                string fi = null;
                 switch (r)
                 {
                     case Result.Completed: fi = this.CompletedMarker; break;
@@ -386,10 +393,11 @@ namespace Caliente.SharePoint.Import
                 }
 
                 // Make sure the directory it resides in ALWAYS exists
-                if (!fi.Directory.Exists) Directory.CreateDirectory(fi.Directory.FullName);
+                string dir = Path.GetDirectoryName(fi);
+                if (!System.IO.Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-                bool appending = fi.Exists;
-                using (StreamWriter sw = (appending ? fi.AppendText() : fi.CreateText()))
+                bool appending = FileExists(fi);
+                using (StreamWriter sw = (appending ? System.IO.File.AppendText(fi) : System.IO.File.CreateText(fi)))
                 {
                     if (appending) sw.WriteLine();
                     foreach (string str in this.Progress)
@@ -400,33 +408,49 @@ namespace Caliente.SharePoint.Import
                     sw.WriteLine("{0:O} {1}", DateTime.Now, r);
                     sw.Flush();
                 }
+
+                // Make sure we nuke the failed marker if the job was completed - we don't really
+                // care about any retries that may have happened, really ... these can be located
+                // in the logs if they're of interest
+                if ((r == Result.Completed) && this.Failed) Delete(this.FailedMarker);
+
                 if (markIgnored)
                 {
-                    this.IgnoreMarker.AppendText().Close();
+                    System.IO.File.AppendText(this.IgnoreMarker).Close();
                 }
+            }
+
+            private bool FileExists(string marker)
+            {
+                return (!string.IsNullOrEmpty(marker) && System.IO.File.Exists(marker));
+            }
+
+            private void Delete(string marker)
+            {
+                if (marker != null) System.IO.File.Delete(marker);
             }
 
             public void DeleteOutcomeMarker()
             {
-                if (this.CompletedMarker.Exists) this.CompletedMarker.Delete();
-                if (this.FailedMarker.Exists) this.FailedMarker.Delete();
+                if (this.Completed) Delete(this.CompletedMarker);
+                if (this.Failed) Delete(this.FailedMarker);
             }
 
             public bool Completed
             {
-                get { return this.CompletedMarker.Exists; }
+                get { return FileExists(this.CompletedMarker); }
                 private set { }
             }
 
             public bool Failed
             {
-                get { return this.FailedMarker.Exists; }
+                get { return FileExists(this.FailedMarker); }
                 private set { }
             }
 
             public bool Ignored
             {
-                get { return this.IgnoreMarker.Exists; }
+                get { return FileExists(this.IgnoreMarker); }
                 private set { }
             }
         }
@@ -685,7 +709,21 @@ namespace Caliente.SharePoint.Import
         {
             return this.ContentTypeImporter.ResolveContentType(id)?.Type;
         }
+
+        protected void LogFailure(string type, string id, string path, string xml)
+        {
+            string str = "";
+            bool first = true;
+            foreach (string s in new string[] { type, id, path, xml })
+            {
+                if (!first) str += ",";
+                str += Tools.ToCSV(s);
+                first = false;
+            }
+            FailedLog.Info(str);
+        }
     }
+
     public class Crypt
     {
         private const string DEFAULT_KEY = @"6RBjZgfVO+KhuPU0qSqmdQ==";

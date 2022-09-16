@@ -65,7 +65,7 @@ namespace Caliente.SharePoint.Import
                 this.Name = name;
                 this.SourcePath = $"{(path == "/" ? "" : path)}/{name}";
                 this.XmlLocation = xmlLocation;
-                this.Tracker = new ProgressTracker(progressLocation, log);
+                this.Tracker = new ProgressTracker(xmlLocation, progressLocation, log);
             }
         }
 
@@ -532,16 +532,16 @@ namespace Caliente.SharePoint.Import
                                         stream = new System.IO.MemoryStream(CONTENT_FILLER);
                                         break;
                                     }
-                                    System.IO.FileInfo streamInfo = new System.IO.FileInfo(contentStreamLocation);
-                                    if (streamInfo.Exists)
+                                    if (System.IO.File.Exists(contentStreamLocation))
                                     {
+                                        System.IO.FileInfo streamInfo = new System.IO.FileInfo(contentStreamLocation);
                                         if (streamInfo.Length != contentStreamSize)
                                         {
                                             Log.WarnFormat("Stream size mismatch for [{0}] v{1} - expected {2:N0} bytes, but the actual stream is {3:N0} bytes", fullName, versionNumber, contentStreamSize, streamInfo.Length);
                                             contentStreamSize = streamInfo.Length;
                                         }
 
-                                        stream = streamInfo.OpenRead();
+                                        stream = System.IO.File.OpenRead(contentStreamLocation);
                                         if (stream != null) break;
                                     }
                                     if (simulationMode == SimulationMode.MISSING)
@@ -986,65 +986,44 @@ namespace Caliente.SharePoint.Import
             List<DocumentInfo> failures = new List<DocumentInfo>();
             ActionBlock<DocumentInfo> ingestor = new ActionBlock<DocumentInfo>(docInfo =>
             {
-                while (true)
+                if (this.Abort) return;
+                Result r = Result.Failed;
+                try
                 {
-                    if (this.Abort) return;
-                    bool retry = false;
-                    Result r = Result.Failed;
+                    r = Result.Failed;
+                    Exception exc = null;
+                    bool markIgnored = false;
                     try
                     {
-                        r = Result.Failed;
-                        Exception exc = null;
-                        bool markIgnored = false;
-                        try
+                        StoreDocument(docInfo.XmlLocation, docInfo.Tracker, simulationMode, locationMode, autoPublish);
+                        docInfo.Tracker.DeleteOutcomeMarker();
+                        r = Result.Completed;
+                    }
+                    catch (Exception e)
+                    {
+                        if (e is UnsupportedDocumentException)
                         {
-                            StoreDocument(docInfo.XmlLocation, docInfo.Tracker, simulationMode, locationMode, autoPublish);
-                            docInfo.Tracker.DeleteOutcomeMarker();
-                            r = Result.Completed;
+                            markIgnored = true;
                         }
-                        catch (Exception e)
+                        else
                         {
-                            /*
-                            if (e is ThrottlingException)
+                            lock (failures)
                             {
-                                // We've been throttled ... we need to retry this document (right now?)
-                                retry = true;
-                                Log.Warn("We got throttled, complain about it and mention that we'll retry the document");
-                                continue;
-                            }
-                            */
-
-                            if (e is UnsupportedDocumentException)
-                            {
-                                markIgnored = true;
-                            }
-                            else
-                            {
-                                lock (failures)
-                                {
-                                    failures.Add(docInfo);
-                                }
-                            }
-                            exc = e;
-                            Log.Error($"Failed to import the document history for [{docInfo.SourcePath}] described by [{docInfo.XmlLocation}]", e);
-                        }
-                        finally
-                        {
-                            if (!retry)
-                            {
-                                docInfo.Tracker.SaveOutcomeMarker(r, exc, markIgnored);
-                                IncreaseProgress();
+                                failures.Add(docInfo);
                             }
                         }
+                        exc = e;
+                        Log.Error($"Failed to import the document history for [{docInfo.SourcePath}](historyId={docInfo.HistoryId}) described by [{docInfo.XmlLocation}]", e);
                     }
                     finally
                     {
-                        if (!retry)
-                        {
-                            IncrementCounter(r);
-                        }
+                        docInfo.Tracker.SaveOutcomeMarker(r, exc, markIgnored);
+                        IncreaseProgress();
                     }
-                    break;
+                }
+                finally
+                {
+                    IncrementCounter(r);
                 }
             }, new ExecutionDataflowBlockOptions
             {
@@ -1179,6 +1158,13 @@ namespace Caliente.SharePoint.Import
                 {
                     Log.InfoFormat("No change in the data set - {0} were pending, and {1} failed", lastPending, pending.Count);
                 }
+            }
+
+            // Spit out a list of objects to retry, in CSV format
+            foreach (DocumentInfo info in pending)
+            {
+                // Documents need a leading slash on their source path, folders do not
+                LogFailure("DOCUMENT", info.HistoryId, $"/{info.SourcePath}", info.XmlLocation);
             }
         }
     }

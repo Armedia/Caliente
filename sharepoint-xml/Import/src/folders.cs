@@ -93,7 +93,7 @@ namespace Caliente.SharePoint.Import
                 foreach (FolderInfo f in parentFolders[parent])
                 {
                     if (currentBatch == null) currentBatch = new List<FolderInfo>();
-                    ProgressTracker tracker = new ProgressTracker(importContext.FormatProgressLocation(f.RelativeLocation), this.Log);
+                    ProgressTracker tracker = new ProgressTracker(importContext.FormatMetadataLocation(f.RelativeLocation), importContext.FormatProgressLocation(f.RelativeLocation), this.Log);
                     trackers[f.Id] = tracker;
                     if (tracker.Completed)
                     {
@@ -335,7 +335,7 @@ namespace Caliente.SharePoint.Import
                 Result r = Result.Skipped;
                 try
                 {
-                    ProgressTracker tracker = new ProgressTracker(importContext.FormatProgressLocation(folderInfo.RelativeLocation), this.Log);
+                    ProgressTracker tracker = new ProgressTracker(importContext.FormatMetadataLocation(folderInfo.RelativeLocation), importContext.FormatProgressLocation(folderInfo.RelativeLocation), this.Log);
                     if (!folderInfo.Modified && folderInfo.Exists && !tracker.Failed)
                     {
                         Log.DebugFormat("Skipping folder [{0}] - already completed", folderInfo.FullPath);
@@ -348,8 +348,8 @@ namespace Caliente.SharePoint.Import
                     try
                     {
                         ApplyMetadata(folderInfo, tracker);
-                        r = Result.Completed;
                         tracker.DeleteOutcomeMarker();
+                        r = Result.Completed;
                     }
                     catch (Exception e)
                     {
@@ -449,6 +449,12 @@ namespace Caliente.SharePoint.Import
                 {
                     Log.InfoFormat("No change in the data set - {0} were pending, and {1} failed", lastPending, pending.Count);
                 }
+            }
+
+            // Spit out a list of objects to retry, in CSV format
+            foreach (FolderInfo info in pending)
+            {
+                LogFailure("FOLDER", info.Id, info.FullPath, info.Location);
             }
         }
     }

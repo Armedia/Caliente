@@ -2,6 +2,7 @@ using log4net;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 using System.Security;
@@ -240,15 +241,24 @@ namespace Caliente.SharePoint.Common
         {
             return ReadPassword('*');
         }
+
+        public static string ToCSV(string value, char sep = ',')
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            if (value.Contains(sep) || value.Contains("\"") || value.Contains("\n") || value.Contains("\r"))
+                value = '"' + value.Replace("\"", "\"\"") + '"';
+            return value;
+        }
     }
+
     public class XmlFile : XmlTextWriter
     {
         private readonly ILog Log;
-        private readonly FileInfo Info;
+        private readonly string Info;
         private readonly bool Backup;
-        private readonly FileInfo Target;
+        private readonly string Target;
 
-        private XmlFile(object marker, FileInfo info, Encoding encoding, bool backup = true) : base(info.Open(FileMode.Create), encoding)
+        private XmlFile(object marker, string info, Encoding encoding, bool backup = true) : base(System.IO.File.Open(info, FileMode.Create), encoding)
         {
             this.Log = LogManager.GetLogger(GetType());
             this.Backup = backup;
@@ -258,35 +268,31 @@ namespace Caliente.SharePoint.Common
             this.IndentChar = '\t';
         }
 
-        public XmlFile(string targetFilename, Encoding encoding, bool backup = true) : this(null, new FileInfo(Path.GetTempFileName()), encoding, backup)
+        public XmlFile(string targetFilename, Encoding encoding, bool backup = true) : this(null, Path.GetTempFileName(), encoding, backup)
         {
-            this.Target = new FileInfo(targetFilename);
-        }
-
-        public XmlFile(FileInfo target, Encoding encoding, bool backup = true) : this(target.FullName, encoding, backup)
-        {
+            this.Target = targetFilename;
         }
 
         public override void Close()
         {
             base.Close();
-            if (this.Target.Exists)
+            if (System.IO.File.Exists(this.Target))
             {
                 if (this.Backup)
                 {
                     try
                     {
-                        this.Info.Replace(this.Target.FullName, $"{this.Target.FullName}.bak-{DateTime.Now:yyyyMMddHHmmss}");
+                        System.IO.File.Replace(this.Info, this.Target, $"{this.Target}.bak-{DateTime.Now:yyyyMMddHHmmss}");
                         return;
                     }
                     catch (IOException e)
                     {
-                        if (Log.IsDebugEnabled) Log.Debug($"Failed to create a backup for the XML file at [{this.Target.FullName}]", e);
+                        if (Log.IsDebugEnabled) Log.Debug($"Failed to create a backup for the XML file at [{this.Target}]", e);
                     }
                 }
-                this.Target.Delete();
+                System.IO.File.Delete(this.Target);
             }
-            this.Info.MoveTo(this.Target.FullName);
+            System.IO.File.Move(this.Info, this.Target);
         }
     }
 
