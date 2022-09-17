@@ -211,7 +211,7 @@ namespace Caliente.SharePoint.Common
                 if (keyInfo.Key == ConsoleKey.Backspace)
                 {
                     int count = ((keyInfo.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control) ? str.Length : 1;
-                    while (count > 0)
+                    while ((count > 0) && (str.Length > 0))
                     {
                         Console.Write("\b \b");
                         str.RemoveAt(str.Length - 1);
