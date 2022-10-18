@@ -43,6 +43,7 @@ import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
+import com.armedia.commons.utilities.EncodedString;
 import com.armedia.commons.utilities.cli.OptionScheme;
 import com.armedia.commons.utilities.cli.OptionValues;
 
@@ -111,8 +112,13 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 			settings.put(CmisSessionSetting.USER.getLabel(), user);
 		}
 
-		if (!StringUtils.isEmpty(password)) {
-			settings.put(CmisSessionSetting.PASSWORD.getLabel(), password);
+		if (password != null) {
+			try {
+				settings.put(CmisSessionSetting.PASSWORD.getLabel(),
+					EncodedString.from(getCrypto().decrypt(password), getCrypto()));
+			} catch (Exception e) {
+				throw new CalienteException("Failed to safeguard the password in an encrypted object", e);
+			}
 		}
 
 		BindingType bindingType = commandValues.getEnum(BindingType.class, EngineInterface.BINDING_TYPE);

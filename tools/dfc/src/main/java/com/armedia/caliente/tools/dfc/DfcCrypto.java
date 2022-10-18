@@ -50,7 +50,9 @@ public class DfcCrypto extends CmfCrypt {
 
 	};
 
-	public DfcCrypto() {
+	public static final CmfCrypt INSTANCE = new DfcCrypto();
+
+	private DfcCrypto() {
 		super(DfcCrypto.DFC_SCHEME, CmfCrypt.DEFAULT_SCHEME);
 	}
 }

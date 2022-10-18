@@ -232,7 +232,7 @@ class FilenameMapper {
 
 		final DfcSessionPool dfcPool;
 		try {
-			dfcPool = new DfcSessionPool(docbase, dctmUser, new DfcCrypto().decrypt(dctmPass));
+			dfcPool = new DfcSessionPool(docbase, dctmUser, DfcCrypto.INSTANCE.decrypt(dctmPass));
 		} catch (DfException e) {
 			this.log.error("Failed to open the session pool to docbase [{}] as [{}]", docbase, dctmUser, e);
 			return 1;

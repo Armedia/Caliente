@@ -171,11 +171,8 @@ public class CmisExportDelegateFactory
 	}
 
 	protected List<String> getPaths(FileableCmisObject f) {
-		List<String> paths = ConcurrentTools.createIfAbsent(this.pathsCache, f.getId(), (objectId) -> {
-			List<String> p = f.getPaths();
-			System.out.printf("Paths for %s[%s] = %s%n", f.getClass().getSimpleName(), f.getId(), p);
-			return Tools.freezeList(p);
-		});
+		List<String> paths = ConcurrentTools.createIfAbsent(this.pathsCache, f.getId(),
+			(objectId) -> Tools.freezeList(f.getPaths()));
 		return new ArrayList<>(paths);
 	}
 

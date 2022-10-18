@@ -55,7 +55,6 @@ import com.armedia.caliente.engine.common.TypeDefinitionEncoder;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
-import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -202,9 +201,8 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 		// getExtraProperties(ctx, properties, dfType);
 		DctmObjectType dctmTypeObjectType;
 		boolean ret = false;
-		try {
-			dctmTypeObjectType = DctmObjectType.decodeType(dfType);
-
+		dctmTypeObjectType = DctmObjectType.decodeType(dfType);
+		if (dctmTypeObjectType != null) {
 			final int attCount = type.getValueCount(DctmAttributes.ATTR_NAME);
 			// We map the name for every attribute, just to be safe
 			final CmfAttributeTranslator<IDfValue> translator = this.factory.getTranslator();
@@ -222,7 +220,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			properties.add(orig);
 			properties.add(mapped);
 			ret = true;
-		} catch (UnsupportedDctmObjectTypeException e) {
+		} else {
 			// if this isn't a type we support (because it's a supertype that doesn't map to
 			// a concrete type), then we simply skip adding the "target" marker property
 		}

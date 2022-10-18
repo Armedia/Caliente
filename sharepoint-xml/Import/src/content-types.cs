@@ -1,4 +1,4 @@
-﻿using Armedia.CMSMF.SharePoint.Common;
+using Caliente.SharePoint.Common;
 using log4net;
 using Microsoft.SharePoint.Client;
 using System;
@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Armedia.CMSMF.SharePoint.Import
+namespace Caliente.SharePoint.Import
 {
     public class ImportedContentType
     {
@@ -136,7 +136,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         public ContentTypeImporter(ImportContext importContext, String documentLibraryName, bool clearFirst) : base("content types", importContext)
         {
-            this.Log.Info(string.Format("Mapping the object types to content types and columns to the site and the library [{0}]...", documentLibraryName));
+            this.Log.InfoFormat("Mapping the object types to content types and columns to the site and the library [{0}]...", documentLibraryName);
 
             // TODO: Make these two configurable
             this.TypeGroup = TYPE_GROUP;
@@ -202,290 +202,297 @@ namespace Armedia.CMSMF.SharePoint.Import
 
                 // Now we go over the XML declarations
                 HashSet<string> newTypes = new HashSet<string>();
-                XElement types = XElement.Load(this.ImportContext.LoadIndex("types"));
-                XNamespace ns = types.GetDefaultNamespace();
-                foreach (XElement type in types.Elements(ns + "type"))
+                XmlReader contentTypesXml = this.ImportContext.LoadIndex("types");
+                if (contentTypesXml != null)
                 {
-                    string typeName = (string)type.Element(ns + "name");
-                    ImportedContentType finalType = null;
-                    HashSet<string> linkNames = new HashSet<string>();
-                    bool skipInherited = true;
-                    bool patchFields = false;
-                    bool versionableType = false;
-                    bool containerType = false;
-                    if (siteContentTypes.ContainsKey(typeName))
+                    using (contentTypesXml)
                     {
-                        finalType = siteContentTypes[typeName];
-                        foreach (FieldLink link in finalType.Type.FieldLinks)
+                        XElement types = XElement.Load(contentTypesXml);
+                        XNamespace ns = types.GetDefaultNamespace();
+                        foreach (XElement type in types.Elements(ns + "type"))
                         {
-                            linkNames.Add(link.Name);
-                        }
-                        if (typeName == "dm_sysobject" || typeName == "dm_folder")
-                        {
-                            patchFields = true;
-                            versionableType = (typeName == "dm_sysobject");
-                            containerType = (typeName == "dm_folder");
-                        }
-                    }
-                    else
-                    {
-                        // New type...create it
-                        ImportedContentType superType = null;
-                        XElement superTypeElement = type.Element(ns + "superType");
-                        if ((superTypeElement != null) && (typeName != "dm_folder"))
-                        {
-                            string stName = (string)superTypeElement;
-                            if (siteContentTypes.ContainsKey(stName))
+                            string typeName = (string)type.Element(ns + "name");
+                            ImportedContentType finalType = null;
+                            HashSet<string> linkNames = new HashSet<string>();
+                            bool skipInherited = true;
+                            bool patchFields = false;
+                            bool versionableType = false;
+                            bool containerType = false;
+                            if (siteContentTypes.ContainsKey(typeName))
                             {
-                                superType = siteContentTypes[stName];
-                            }
-                        }
-
-                        if (superType == null)
-                        {
-                            switch (typeName)
-                            {
-                                case "dm_sysobject":
-                                    superType = siteContentTypes["Document"];
-                                    // skipInherited = false;
+                                finalType = siteContentTypes[typeName];
+                                foreach (FieldLink link in finalType.Type.FieldLinks)
+                                {
+                                    linkNames.Add(link.Name);
+                                }
+                                if (typeName == "dm_sysobject" || typeName == "dm_folder")
+                                {
                                     patchFields = true;
-                                    versionableType = true;
-                                    break;
-                                case "dm_folder":
-                                    superType = siteContentTypes["Folder"];
-                                    // skipInherited = false;
-                                    patchFields = true;
-                                    containerType = true;
-                                    break;
-                                default:
-                                    // This isn't a type we're intereseted in, so we skip it
-                                    continue;
-                            }
-                        }
-
-                        Log.Info(string.Format("Creating content type {0} (descended from [{1}]])", typeName, superType.Name));
-                        ContentTypeCreationInformation ctInfo = new ContentTypeCreationInformation();
-                        ctInfo.Description = string.Format("Documentum Type {0}", typeName);
-                        ctInfo.Name = typeName;
-                        ctInfo.ParentContentType = (superType != null ? superType.Type : null);
-                        ctInfo.Group = this.TypeGroup;
-
-                        ContentType contentTypeObj = contentTypeCollection.Add(ctInfo);
-                        clientContext.Load(contentTypeObj, t => t.Id);
-                        session.ExecuteQuery();
-
-                        finalType = new ImportedContentType(this, contentTypeObj, superType.Id);
-                        siteContentTypes[typeName] = finalType;
-                        contentTypesById[finalType.Id.StringValue] = finalType;
-                    }
-
-                    // Now we link the type to its fields, as needed
-                    int updateCount = 0;
-
-                    XElement attributeContainer = type.Element(ns + "attributes");
-                    if (patchFields)
-                    {
-                        XElement versionAtt = new XElement(ns + "attribute");
-                        versionAtt.SetAttributeValue("length", "32");
-                        versionAtt.SetAttributeValue("repeating", "false");
-                        versionAtt.SetAttributeValue("inherited", "false");
-                        versionAtt.SetAttributeValue("sourceName", "version");
-                        versionAtt.SetAttributeValue("name", "cmf:version");
-                        versionAtt.SetAttributeValue("dataType", "STRING");
-                        attributeContainer.AddFirst(versionAtt);
-
-                        versionAtt = new XElement(ns + "attribute");
-                        versionAtt.SetAttributeValue("length", "400");
-                        versionAtt.SetAttributeValue("repeating", "false");
-                        versionAtt.SetAttributeValue("inherited", "false");
-                        versionAtt.SetAttributeValue("sourceName", "title");
-                        versionAtt.SetAttributeValue("name", "cmis:description");
-                        versionAtt.SetAttributeValue("dataType", "STRING");
-                        attributeContainer.AddFirst(versionAtt);
-
-                        versionAtt = new XElement(ns + "attribute");
-                        versionAtt.SetAttributeValue("length", "128");
-                        versionAtt.SetAttributeValue("repeating", "false");
-                        versionAtt.SetAttributeValue("inherited", "false");
-                        versionAtt.SetAttributeValue("sourceName", "author_name");
-                        versionAtt.SetAttributeValue("name", "shpt:authorName");
-                        versionAtt.SetAttributeValue("dataType", "STRING");
-                        attributeContainer.AddFirst(versionAtt);
-
-                        versionAtt = new XElement(ns + "attribute");
-                        versionAtt.SetAttributeValue("length", "0");
-                        versionAtt.SetAttributeValue("repeating", "false");
-                        versionAtt.SetAttributeValue("inherited", "false");
-                        versionAtt.SetAttributeValue("sourceName", "author");
-                        versionAtt.SetAttributeValue("name", "shpt:author");
-                        versionAtt.SetAttributeValue("dataType", "USER");
-                        attributeContainer.AddFirst(versionAtt);
-
-                        versionAtt = new XElement(ns + "attribute");
-                        versionAtt.SetAttributeValue("length", "128");
-                        versionAtt.SetAttributeValue("repeating", "false");
-                        versionAtt.SetAttributeValue("inherited", "false");
-                        versionAtt.SetAttributeValue("sourceName", "editor_name");
-                        versionAtt.SetAttributeValue("name", "shpt:editorName");
-                        versionAtt.SetAttributeValue("dataType", "STRING");
-                        attributeContainer.AddFirst(versionAtt);
-
-                        versionAtt = new XElement(ns + "attribute");
-                        versionAtt.SetAttributeValue("length", "0");
-                        versionAtt.SetAttributeValue("repeating", "false");
-                        versionAtt.SetAttributeValue("inherited", "false");
-                        versionAtt.SetAttributeValue("sourceName", "editor");
-                        versionAtt.SetAttributeValue("name", "shpt:editor");
-                        versionAtt.SetAttributeValue("dataType", "USER");
-                        attributeContainer.AddFirst(versionAtt);
-
-                        versionAtt = new XElement(ns + "attribute");
-                        versionAtt.SetAttributeValue("length", "16");
-                        versionAtt.SetAttributeValue("repeating", "false");
-                        versionAtt.SetAttributeValue("inherited", "false");
-                        versionAtt.SetAttributeValue("sourceName", "object_id");
-                        versionAtt.SetAttributeValue("name", "cmis:objectId");
-                        versionAtt.SetAttributeValue("dataType", "STRING");
-                        attributeContainer.AddFirst(versionAtt);
-
-                        versionAtt = new XElement(ns + "attribute");
-                        versionAtt.SetAttributeValue("length", "256");
-                        versionAtt.SetAttributeValue("repeating", "false");
-                        versionAtt.SetAttributeValue("inherited", "false");
-                        versionAtt.SetAttributeValue("sourceName", "location");
-                        versionAtt.SetAttributeValue("name", "cmf:location");
-                        versionAtt.SetAttributeValue("dataType", "STRING");
-                        attributeContainer.AddFirst(versionAtt);
-
-                        versionAtt = new XElement(ns + "attribute");
-                        versionAtt.SetAttributeValue("length", "256");
-                        versionAtt.SetAttributeValue("repeating", "false");
-                        versionAtt.SetAttributeValue("inherited", "false");
-                        versionAtt.SetAttributeValue("sourceName", "path");
-                        versionAtt.SetAttributeValue("name", "cmis:path");
-                        versionAtt.SetAttributeValue("dataType", "STRING");
-                        attributeContainer.AddFirst(versionAtt);
-
-                        versionAtt = new XElement(ns + "attribute");
-                        versionAtt.SetAttributeValue("length", "256");
-                        versionAtt.SetAttributeValue("repeating", "false");
-                        versionAtt.SetAttributeValue("inherited", "false");
-                        versionAtt.SetAttributeValue("sourceName", "name");
-                        versionAtt.SetAttributeValue("name", "cmis:name");
-                        versionAtt.SetAttributeValue("dataType", "STRING");
-                        attributeContainer.AddFirst(versionAtt);
-
-                        versionAtt = new XElement(ns + "attribute");
-                        versionAtt.SetAttributeValue("length", "1024");
-                        versionAtt.SetAttributeValue("repeating", "true");
-                        versionAtt.SetAttributeValue("inherited", "false");
-                        versionAtt.SetAttributeValue("sourceName", "keywords");
-                        versionAtt.SetAttributeValue("name", "dctm:keywords");
-                        versionAtt.SetAttributeValue("dataType", "STRING");
-                        attributeContainer.AddFirst(versionAtt);
-
-                        versionAtt = new XElement(ns + "attribute");
-                        versionAtt.SetAttributeValue("length", "16");
-                        versionAtt.SetAttributeValue("repeating", "false");
-                        versionAtt.SetAttributeValue("inherited", "false");
-                        versionAtt.SetAttributeValue("sourceName", "acl_id");
-                        versionAtt.SetAttributeValue("name", "dctm:acl_id");
-                        versionAtt.SetAttributeValue("dataType", "STRING");
-                        attributeContainer.AddFirst(versionAtt);
-
-                        if (versionableType)
-                        {
-                            versionAtt = new XElement(ns + "attribute");
-                            versionAtt.SetAttributeValue("length", "16");
-                            versionAtt.SetAttributeValue("repeating", "false");
-                            versionAtt.SetAttributeValue("inherited", "false");
-                            versionAtt.SetAttributeValue("sourceName", "history_id");
-                            versionAtt.SetAttributeValue("name", "cmis:versionSeriesId");
-                            versionAtt.SetAttributeValue("dataType", "STRING");
-                            attributeContainer.AddFirst(versionAtt);
-
-                            versionAtt = new XElement(ns + "attribute");
-                            versionAtt.SetAttributeValue("length", "16");
-                            versionAtt.SetAttributeValue("repeating", "false");
-                            versionAtt.SetAttributeValue("inherited", "false");
-                            versionAtt.SetAttributeValue("sourceName", "antecedent_id");
-                            versionAtt.SetAttributeValue("name", "cmf:version_antecedent_id");
-                            versionAtt.SetAttributeValue("dataType", "STRING");
-                            attributeContainer.AddFirst(versionAtt);
-
-                            versionAtt = new XElement(ns + "attribute");
-                            versionAtt.SetAttributeValue("length", "0");
-                            versionAtt.SetAttributeValue("repeating", "false");
-                            versionAtt.SetAttributeValue("inherited", "false");
-                            versionAtt.SetAttributeValue("sourceName", "current");
-                            versionAtt.SetAttributeValue("name", "cmis:isLatestVersion");
-                            versionAtt.SetAttributeValue("dataType", "BOOLEAN");
-                            attributeContainer.AddFirst(versionAtt);
-                        }
-                    }
-
-                    foreach (XElement att in attributeContainer.Elements(ns + "attribute"))
-                    {
-                        // The attribute is either not inherited or its inheritance is ignored, so add it to the content type's declaration
-                        string attName = att.Attribute("name").Value;
-                        string attSourceName = att.Attribute("sourceName").Value;
-                        string finalName = string.Format("dctm_{0}", attSourceName);
-                        // Special case for folder attributes inherited from dm_sysobject
-                        bool inherited = XmlConvert.ToBoolean(att.Attribute("inherited").Value) && (typeName != "dm_folder");
-                        bool repeating = XmlConvert.ToBoolean(att.Attribute("repeating").Value);
-
-                        // If this is an inherited attribute, we won't add it because we're not interested in it
-                        if (inherited && skipInherited) continue;
-
-                        ImportedContentTypeField finalField = null;
-                        if (linkNames.Contains(finalName) || (inherited && skipInherited))
-                        {
-                            // Existing or inherited link...
-                            finalField = new ImportedContentTypeField(existingFields[finalName], attName, finalName, attSourceName, repeating);
-                        }
-                        else
-                        {
-                            FieldLinkCreationInformation fieldLink = new FieldLinkCreationInformation();
-                            if (existingFields.ContainsKey(finalName))
-                            {
-                                finalField = new ImportedContentTypeField(existingFields[finalName], attName, finalName, attSourceName, repeating);
-                                fieldLink.Field = finalField.Field;
+                                    versionableType = (typeName == "dm_sysobject");
+                                    containerType = (typeName == "dm_folder");
+                                }
                             }
                             else
                             {
-                                Log.Info(string.Format("Creating field {0} (first declared by {1})", finalName, typeName));
-                                FieldType attType = Tools.DecodeFieldType(att.Attribute("dataType").Value);
-                                if (repeating)
+                                // New type...create it
+                                ImportedContentType superType = null;
+                                XElement superTypeElement = type.Element(ns + "superType");
+                                if ((superTypeElement != null) && (typeName != "dm_folder"))
                                 {
-                                    // Default repeating fields to strings, since they'll be concatenated
-                                    attType = FieldType.Note;
+                                    string stName = (string)superTypeElement;
+                                    if (siteContentTypes.ContainsKey(stName))
+                                    {
+                                        superType = siteContentTypes[stName];
+                                    }
                                 }
-                                int length = XmlConvert.ToInt32(att.Attribute("length").Value);
-                                if (length > 255)
+
+                                if (superType == null)
                                 {
-                                    attType = FieldType.Note;
+                                    switch (typeName)
+                                    {
+                                        case "dm_sysobject":
+                                            superType = siteContentTypes["Document"];
+                                            // skipInherited = false;
+                                            patchFields = true;
+                                            versionableType = true;
+                                            break;
+                                        case "dm_folder":
+                                            superType = siteContentTypes["Folder"];
+                                            // skipInherited = false;
+                                            patchFields = true;
+                                            containerType = true;
+                                            break;
+                                        default:
+                                            // This isn't a type we're intereseted in, so we skip it
+                                            continue;
+                                    }
                                 }
-                                Guid guid = Guid.NewGuid();
 
+                                Log.InfoFormat("Creating content type {0} (descended from [{1}]])", typeName, superType.Name);
+                                ContentTypeCreationInformation ctInfo = new ContentTypeCreationInformation();
+                                ctInfo.Description = $"Source Type {typeName}";
+                                ctInfo.Name = typeName;
+                                ctInfo.ParentContentType = (superType != null ? superType.Type : null);
+                                ctInfo.Group = this.TypeGroup;
 
-                                string fieldXml = string.Format("<Field DisplayName='{0}' Name='{1}' ID='{2}' Group='{3}' Type='{4}' />", finalName, finalName, guid.ToString(), this.FieldGroup, attType);
-                                fieldLink.Field = clientContext.Web.Fields.AddFieldAsXml(fieldXml, false, AddFieldOptions.AddFieldInternalNameHint);
-                                clientContext.Load(fieldLink.Field, f => f.Id, f => f.FieldTypeKind, f => f.StaticName, f => f.Group);
-                                existingFields[finalName] = fieldLink.Field;
-                                finalField = new ImportedContentTypeField(existingFields[finalName], attName, finalName, attSourceName, repeating);
+                                ContentType contentTypeObj = contentTypeCollection.Add(ctInfo);
+                                clientContext.Load(contentTypeObj, t => t.Id);
+                                session.ExecuteQuery();
+
+                                finalType = new ImportedContentType(this, contentTypeObj, superType.Id);
+                                siteContentTypes[typeName] = finalType;
+                                contentTypesById[finalType.Id.StringValue] = finalType;
                             }
-                            finalType.Type.FieldLinks.Add(fieldLink);
-                            linkNames.Add(finalName);
-                            updateCount++;
+
+                            // Now we link the type to its fields, as needed
+                            int updateCount = 0;
+
+                            XElement attributeContainer = type.Element(ns + "attributes");
+                            if (patchFields)
+                            {
+                                XElement versionAtt = new XElement(ns + "attribute");
+                                versionAtt.SetAttributeValue("length", "32");
+                                versionAtt.SetAttributeValue("repeating", "false");
+                                versionAtt.SetAttributeValue("inherited", "false");
+                                versionAtt.SetAttributeValue("sourceName", "version");
+                                versionAtt.SetAttributeValue("name", "cmf:version");
+                                versionAtt.SetAttributeValue("dataType", "STRING");
+                                attributeContainer.AddFirst(versionAtt);
+
+                                versionAtt = new XElement(ns + "attribute");
+                                versionAtt.SetAttributeValue("length", "400");
+                                versionAtt.SetAttributeValue("repeating", "false");
+                                versionAtt.SetAttributeValue("inherited", "false");
+                                versionAtt.SetAttributeValue("sourceName", "title");
+                                versionAtt.SetAttributeValue("name", "cmis:description");
+                                versionAtt.SetAttributeValue("dataType", "STRING");
+                                attributeContainer.AddFirst(versionAtt);
+
+                                versionAtt = new XElement(ns + "attribute");
+                                versionAtt.SetAttributeValue("length", "128");
+                                versionAtt.SetAttributeValue("repeating", "false");
+                                versionAtt.SetAttributeValue("inherited", "false");
+                                versionAtt.SetAttributeValue("sourceName", "author_name");
+                                versionAtt.SetAttributeValue("name", "shpt:authorName");
+                                versionAtt.SetAttributeValue("dataType", "STRING");
+                                attributeContainer.AddFirst(versionAtt);
+
+                                versionAtt = new XElement(ns + "attribute");
+                                versionAtt.SetAttributeValue("length", "0");
+                                versionAtt.SetAttributeValue("repeating", "false");
+                                versionAtt.SetAttributeValue("inherited", "false");
+                                versionAtt.SetAttributeValue("sourceName", "author");
+                                versionAtt.SetAttributeValue("name", "shpt:author");
+                                versionAtt.SetAttributeValue("dataType", "USER");
+                                attributeContainer.AddFirst(versionAtt);
+
+                                versionAtt = new XElement(ns + "attribute");
+                                versionAtt.SetAttributeValue("length", "128");
+                                versionAtt.SetAttributeValue("repeating", "false");
+                                versionAtt.SetAttributeValue("inherited", "false");
+                                versionAtt.SetAttributeValue("sourceName", "editor_name");
+                                versionAtt.SetAttributeValue("name", "shpt:editorName");
+                                versionAtt.SetAttributeValue("dataType", "STRING");
+                                attributeContainer.AddFirst(versionAtt);
+
+                                versionAtt = new XElement(ns + "attribute");
+                                versionAtt.SetAttributeValue("length", "0");
+                                versionAtt.SetAttributeValue("repeating", "false");
+                                versionAtt.SetAttributeValue("inherited", "false");
+                                versionAtt.SetAttributeValue("sourceName", "editor");
+                                versionAtt.SetAttributeValue("name", "shpt:editor");
+                                versionAtt.SetAttributeValue("dataType", "USER");
+                                attributeContainer.AddFirst(versionAtt);
+
+                                versionAtt = new XElement(ns + "attribute");
+                                versionAtt.SetAttributeValue("length", "16");
+                                versionAtt.SetAttributeValue("repeating", "false");
+                                versionAtt.SetAttributeValue("inherited", "false");
+                                versionAtt.SetAttributeValue("sourceName", "object_id");
+                                versionAtt.SetAttributeValue("name", "cmis:objectId");
+                                versionAtt.SetAttributeValue("dataType", "STRING");
+                                attributeContainer.AddFirst(versionAtt);
+
+                                versionAtt = new XElement(ns + "attribute");
+                                versionAtt.SetAttributeValue("length", "256");
+                                versionAtt.SetAttributeValue("repeating", "false");
+                                versionAtt.SetAttributeValue("inherited", "false");
+                                versionAtt.SetAttributeValue("sourceName", "location");
+                                versionAtt.SetAttributeValue("name", "cmf:location");
+                                versionAtt.SetAttributeValue("dataType", "STRING");
+                                attributeContainer.AddFirst(versionAtt);
+
+                                versionAtt = new XElement(ns + "attribute");
+                                versionAtt.SetAttributeValue("length", "256");
+                                versionAtt.SetAttributeValue("repeating", "false");
+                                versionAtt.SetAttributeValue("inherited", "false");
+                                versionAtt.SetAttributeValue("sourceName", "path");
+                                versionAtt.SetAttributeValue("name", "cmis:path");
+                                versionAtt.SetAttributeValue("dataType", "STRING");
+                                attributeContainer.AddFirst(versionAtt);
+
+                                versionAtt = new XElement(ns + "attribute");
+                                versionAtt.SetAttributeValue("length", "256");
+                                versionAtt.SetAttributeValue("repeating", "false");
+                                versionAtt.SetAttributeValue("inherited", "false");
+                                versionAtt.SetAttributeValue("sourceName", "name");
+                                versionAtt.SetAttributeValue("name", "cmis:name");
+                                versionAtt.SetAttributeValue("dataType", "STRING");
+                                attributeContainer.AddFirst(versionAtt);
+
+                                versionAtt = new XElement(ns + "attribute");
+                                versionAtt.SetAttributeValue("length", "1024");
+                                versionAtt.SetAttributeValue("repeating", "true");
+                                versionAtt.SetAttributeValue("inherited", "false");
+                                versionAtt.SetAttributeValue("sourceName", "keywords");
+                                versionAtt.SetAttributeValue("name", "caliente:keywords");
+                                versionAtt.SetAttributeValue("dataType", "STRING");
+                                attributeContainer.AddFirst(versionAtt);
+
+                                versionAtt = new XElement(ns + "attribute");
+                                versionAtt.SetAttributeValue("length", "16");
+                                versionAtt.SetAttributeValue("repeating", "false");
+                                versionAtt.SetAttributeValue("inherited", "false");
+                                versionAtt.SetAttributeValue("sourceName", "acl_id");
+                                versionAtt.SetAttributeValue("name", "caliente:acl_id");
+                                versionAtt.SetAttributeValue("dataType", "STRING");
+                                attributeContainer.AddFirst(versionAtt);
+
+                                if (versionableType)
+                                {
+                                    versionAtt = new XElement(ns + "attribute");
+                                    versionAtt.SetAttributeValue("length", "16");
+                                    versionAtt.SetAttributeValue("repeating", "false");
+                                    versionAtt.SetAttributeValue("inherited", "false");
+                                    versionAtt.SetAttributeValue("sourceName", "history_id");
+                                    versionAtt.SetAttributeValue("name", "cmis:versionSeriesId");
+                                    versionAtt.SetAttributeValue("dataType", "STRING");
+                                    attributeContainer.AddFirst(versionAtt);
+
+                                    versionAtt = new XElement(ns + "attribute");
+                                    versionAtt.SetAttributeValue("length", "16");
+                                    versionAtt.SetAttributeValue("repeating", "false");
+                                    versionAtt.SetAttributeValue("inherited", "false");
+                                    versionAtt.SetAttributeValue("sourceName", "antecedent_id");
+                                    versionAtt.SetAttributeValue("name", "cmf:version_antecedent_id");
+                                    versionAtt.SetAttributeValue("dataType", "STRING");
+                                    attributeContainer.AddFirst(versionAtt);
+
+                                    versionAtt = new XElement(ns + "attribute");
+                                    versionAtt.SetAttributeValue("length", "0");
+                                    versionAtt.SetAttributeValue("repeating", "false");
+                                    versionAtt.SetAttributeValue("inherited", "false");
+                                    versionAtt.SetAttributeValue("sourceName", "current");
+                                    versionAtt.SetAttributeValue("name", "cmis:isLatestVersion");
+                                    versionAtt.SetAttributeValue("dataType", "BOOLEAN");
+                                    attributeContainer.AddFirst(versionAtt);
+                                }
+                            }
+
+                            foreach (XElement att in attributeContainer.Elements(ns + "attribute"))
+                            {
+                                // The attribute is either not inherited or its inheritance is ignored, so add it to the content type's declaration
+                                string attName = att.Attribute("name").Value;
+                                string attSourceName = att.Attribute("sourceName").Value;
+                                string finalName = $"caliente_{attSourceName}";
+                                // Special case for folder attributes inherited from dm_sysobject
+                                bool inherited = XmlConvert.ToBoolean(att.Attribute("inherited").Value) && (typeName != "dm_folder");
+                                bool repeating = XmlConvert.ToBoolean(att.Attribute("repeating").Value);
+
+                                // If this is an inherited attribute, we won't add it because we're not interested in it
+                                if (inherited && skipInherited) continue;
+
+                                ImportedContentTypeField finalField = null;
+                                if (linkNames.Contains(finalName) || (inherited && skipInherited))
+                                {
+                                    // Existing or inherited link...
+                                    finalField = new ImportedContentTypeField(existingFields[finalName], attName, finalName, attSourceName, repeating);
+                                }
+                                else
+                                {
+                                    FieldLinkCreationInformation fieldLink = new FieldLinkCreationInformation();
+                                    if (existingFields.ContainsKey(finalName))
+                                    {
+                                        finalField = new ImportedContentTypeField(existingFields[finalName], attName, finalName, attSourceName, repeating);
+                                        fieldLink.Field = finalField.Field;
+                                    }
+                                    else
+                                    {
+                                        Log.InfoFormat("Creating field {0} (first declared by {1})", finalName, typeName);
+                                        FieldType attType = Tools.DecodeFieldType(att.Attribute("dataType").Value);
+                                        if (repeating)
+                                        {
+                                            // Default repeating fields to strings, since they'll be concatenated
+                                            attType = FieldType.Note;
+                                        }
+                                        int length = XmlConvert.ToInt32(att.Attribute("length").Value);
+                                        if (length > 255)
+                                        {
+                                            attType = FieldType.Note;
+                                        }
+                                        Guid guid = Guid.NewGuid();
+
+
+                                        string fieldXml = $"<Field DisplayName='{finalName}' Name='{finalName}' ID='{guid}' Group='{this.FieldGroup}' Type='{attType}' />";
+                                        fieldLink.Field = clientContext.Web.Fields.AddFieldAsXml(fieldXml, false, AddFieldOptions.AddFieldInternalNameHint);
+                                        clientContext.Load(fieldLink.Field, f => f.Id, f => f.FieldTypeKind, f => f.StaticName, f => f.Group);
+                                        existingFields[finalName] = fieldLink.Field;
+                                        finalField = new ImportedContentTypeField(existingFields[finalName], attName, finalName, attSourceName, repeating);
+                                    }
+                                    finalType.Type.FieldLinks.Add(fieldLink);
+                                    linkNames.Add(finalName);
+                                    updateCount++;
+                                }
+                                finalType.AddField(finalField);
+                            }
+                            if (updateCount > 0)
+                            {
+                                finalType.Type.Update(true);
+                                session.ExecuteQuery();
+                            }
+                            newTypes.Add(typeName);
                         }
-                        finalType.AddField(finalField);
                     }
-                    if (updateCount > 0)
-                    {
-                        finalType.Type.Update(true);
-                        session.ExecuteQuery();
-                    }
-                    newTypes.Add(typeName);
                 }
 
                 // Now, make sure this type exists in the document library

@@ -32,6 +32,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -41,7 +43,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -81,15 +82,19 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.xml.FlexibleCharacterEscapeHandler;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.MutexAutoLock;
+import com.armedia.commons.utilities.concurrent.SharedAutoLock;
 import com.armedia.commons.utilities.xml.XmlTools;
 
 public class XmlImportDelegateFactory
 	extends ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
 
 	private static final String SCHEMA_NAME = "caliente-engine-xml.xsd";
+	public static final Charset DEFAULT_ENCODING = StandardCharsets.UTF_8;
 
 	static final Schema SCHEMA;
 
@@ -102,26 +107,13 @@ public class XmlImportDelegateFactory
 		}
 	}
 
-	static void marshalXml(Object target, OutputStream out) throws JAXBException {
-		if (target == null) { throw new IllegalArgumentException("Must supply an object to marshal"); }
-		if (out == null) {
-			throw new IllegalArgumentException(String.format("Nowhere to write %s to", target.getClass().getName()));
-		}
-
-		Class<?> targetClass = target.getClass();
-		Marshaller m = XmlTools.getContext(targetClass).createMarshaller();
-		m.setSchema(XmlImportDelegateFactory.SCHEMA);
-		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		m.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
-		m.marshal(target, out);
-	}
-
 	private final Map<CmfObject.Archetype, AggregatorBase<?>> xml;
 	private final boolean aggregateFolders;
 	private final boolean aggregateDocuments;
 	private final Path content;
 	private final Path metadataRoot;
-	private final AtomicBoolean schemaMissing = new AtomicBoolean(true);
+	private final Charset encoding;
+	private volatile boolean schemaMissing = true;
 	private final CmfContentOrganizer organizer;
 
 	private final ThreadLocal<List<DocumentVersionT>> threadedVersionList = ThreadLocal.withInitial(ArrayList::new);
@@ -168,7 +160,7 @@ public class XmlImportDelegateFactory
 						}
 						boolean ok = false;
 						try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tgt.toFile()))) {
-							XmlImportDelegateFactory.marshalXml(doc, out);
+							marshalXml(doc, out);
 							ok = true;
 						} catch (FileNotFoundException e) {
 							this.log.error("Failed to open an output stream to [{}]", tgt, e);
@@ -234,7 +226,7 @@ public class XmlImportDelegateFactory
 				final Path p = calculateConsolidatedFile(archetype);
 				boolean ok = false;
 				try (OutputStream out = new BufferedOutputStream(new FileOutputStream(p.toFile()))) {
-					XmlImportDelegateFactory.marshalXml(root, out);
+					marshalXml(root, out);
 					ok = true;
 				} catch (FileNotFoundException e) {
 					this.log.error("Failed to open the output file for the aggregate XML for type {} at [{}]",
@@ -256,42 +248,48 @@ public class XmlImportDelegateFactory
 		}
 
 		private void writeSchema() {
-			shareLockedUpgradable(XmlImportDelegateFactory.this.schemaMissing::get, () -> {
-				try (InputStream in = Thread.currentThread().getContextClassLoader()
-					.getResourceAsStream(XmlImportDelegateFactory.SCHEMA_NAME)) {
-					if (in == null) {
-						this.log.warn("Failed to load the schema from the resource [{}]",
-							XmlImportDelegateFactory.SCHEMA_NAME);
-						return;
-					}
-					final Path schemaFile = XmlImportDelegateFactory.this.metadataRoot
-						.resolve(XmlImportDelegateFactory.SCHEMA_NAME);
+			try (SharedAutoLock shared = sharedAutoLock()) {
+				if (!XmlImportDelegateFactory.this.schemaMissing) { return; }
+				try (MutexAutoLock mutex = shared.upgrade()) {
+					if (!XmlImportDelegateFactory.this.schemaMissing) { return; }
+					try (InputStream in = Thread.currentThread().getContextClassLoader()
+						.getResourceAsStream(XmlImportDelegateFactory.SCHEMA_NAME)) {
+						if (in == null) {
+							this.log.warn("Failed to load the schema from the resource [{}]",
+								XmlImportDelegateFactory.SCHEMA_NAME);
+							return;
+						}
+						final Path schemaFile = XmlImportDelegateFactory.this.metadataRoot
+							.resolve(XmlImportDelegateFactory.SCHEMA_NAME);
 
-					try (OutputStream out = new BufferedOutputStream(new FileOutputStream(schemaFile.toFile()))) {
-						IOUtils.copy(in, out);
-						XmlImportDelegateFactory.this.schemaMissing.set(false);
-					} catch (FileNotFoundException e) {
-						if (this.log.isTraceEnabled()) {
-							this.log.warn("Failed to create the schema file at [{}]", schemaFile, e);
-						} else {
-							this.log.warn("Failed to create the schema file at [{}]: {}", schemaFile, e.getMessage());
+						try (OutputStream out = new BufferedOutputStream(new FileOutputStream(schemaFile.toFile()))) {
+							IOUtils.copy(in, out);
+							XmlImportDelegateFactory.this.schemaMissing = false;
+						} catch (FileNotFoundException e) {
+							if (this.log.isTraceEnabled()) {
+								this.log.warn("Failed to create the schema file at [{}]", schemaFile, e);
+							} else {
+								this.log.warn("Failed to create the schema file at [{}]: {}", schemaFile,
+									e.getMessage());
+							}
+						} catch (IOException e) {
+							if (this.log.isTraceEnabled()) {
+								this.log.warn("Failed to copy the schema into the file at [{}]", schemaFile, e);
+							} else {
+								this.log.warn("Failed to copy the schema into the file at [{}]: {}", schemaFile,
+									e.getMessage());
+							}
 						}
 					} catch (IOException e) {
-						if (this.log.isTraceEnabled()) {
-							this.log.warn("Failed to copy the schema into the file at [{}]", schemaFile, e);
-						} else {
-							this.log.warn("Failed to copy the schema into the file at [{}]: {}", schemaFile,
-								e.getMessage());
-						}
+						this.log.warn(XmlImportDelegateFactory.SCHEMA_NAME);
 					}
-				} catch (IOException e) {
-					this.log.warn(XmlImportDelegateFactory.SCHEMA_NAME);
 				}
-			});
+			}
 		}
 	};
 
-	public XmlImportDelegateFactory(XmlImportEngine engine, CfgTools configuration) throws IOException {
+	public XmlImportDelegateFactory(XmlImportEngine engine, CfgTools configuration)
+		throws ImportException, IOException {
 		super(engine, configuration);
 		engine.addListener(this.documentListener);
 
@@ -311,6 +309,13 @@ public class XmlImportDelegateFactory
 
 		this.aggregateFolders = configuration.getBoolean(XmlSetting.AGGREGATE_FOLDERS);
 		this.aggregateDocuments = configuration.getBoolean(XmlSetting.AGGREGATE_DOCUMENTS);
+
+		final String encodingName = configuration.getString(XmlSetting.ENCODING);
+		try {
+			this.encoding = Charset.forName(encodingName);
+		} catch (Exception e) {
+			throw new ImportException(String.format("Illegal encoding name given [%s]", encodingName), e);
+		}
 
 		Map<CmfObject.Archetype, AggregatorBase<?>> xml = new EnumMap<>(CmfObject.Archetype.class);
 		xml.put(CmfObject.Archetype.USER, new UsersT());
@@ -355,7 +360,7 @@ public class XmlImportDelegateFactory
 		DocumentT doc = new DocumentT();
 		doc.getVersion().add(v);
 		try {
-			XmlImportDelegateFactory.marshalXml(doc, NullOutputStream.NULL_OUTPUT_STREAM);
+			marshalXml(doc, NullOutputStream.NULL_OUTPUT_STREAM);
 		} catch (JAXBException e) {
 			throw new ImportException(
 				String.format("Attempting to store version [%s] of history [%s], a marshalling error ocurred: %s",
@@ -363,6 +368,13 @@ public class XmlImportDelegateFactory
 				e);
 		}
 		l.add(v);
+	}
+
+	protected String renderAttributeName(String attributeName) {
+		if (StringUtils.isBlank(attributeName)) {
+			throw new IllegalArgumentException("Must provide a non-blank attribute name");
+		}
+		return String.format("caliente:%s", attributeName);
 	}
 
 	protected <T> T getXmlObject(CmfObject.Archetype t, Class<T> klazz) {
@@ -383,11 +395,10 @@ public class XmlImportDelegateFactory
 			case FORMAT:
 				return new XmlFormatImportDelegate(this, storedObject);
 			case FOLDER:
-				if (this.aggregateFolders) {
-					return new XmlAggregateFoldersImportDelegate(this, storedObject);
-				} else {
-					return new XmlFolderImportDelegate(this, storedObject);
-				}
+				return this.aggregateFolders //
+					? new XmlAggregateFoldersImportDelegate(this, storedObject) //
+					: new XmlFolderImportDelegate(this, storedObject) //
+				;
 			case DOCUMENT:
 				return new XmlDocumentImportDelegate(this, storedObject);
 			default:
@@ -409,5 +420,20 @@ public class XmlImportDelegateFactory
 		List<String> path = new LinkedList<>(location.containerSpec);
 		path.add(location.baseName);
 		return FileNameTools.reconstitute(path, false, false, '/');
+	}
+
+	void marshalXml(Object target, OutputStream out) throws JAXBException {
+		if (target == null) { throw new IllegalArgumentException("Must supply an object to marshal"); }
+		if (out == null) {
+			throw new IllegalArgumentException(String.format("Nowhere to write %s to", target.getClass().getName()));
+		}
+
+		Class<?> targetClass = target.getClass();
+		Marshaller m = XmlTools.getContext(targetClass).createMarshaller();
+		m.setSchema(XmlImportDelegateFactory.SCHEMA);
+		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+		m.setProperty(Marshaller.JAXB_ENCODING, this.encoding.name());
+		FlexibleCharacterEscapeHandler.getInstance(this.encoding).configure(m);
+		m.marshal(target, out);
 	}
 }

@@ -46,7 +46,7 @@ public class ShptExportEngineFactory extends
 	ExportEngineFactory<ShptSession, CmfValue, ShptExportContext, ShptExportContextFactory, ShptExportDelegateFactory, ShptExportEngine> {
 
 	public ShptExportEngineFactory() {
-		super(false, new CmfCrypt());
+		super(false, CmfCrypt.DEFAULT);
 	}
 
 	@Override

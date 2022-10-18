@@ -28,7 +28,6 @@ package com.armedia.caliente.engine.dfc.exporter;
 
 import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
-import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.tools.dfc.DfcQuery;
@@ -42,27 +41,25 @@ import com.documentum.fc.common.IDfId;
 
 public class DctmExportTools {
 
-	public static ExportTarget getExportTarget(IDfPersistentObject source)
-		throws DfException, UnsupportedDctmObjectTypeException {
+	public static ExportTarget getExportTarget(IDfPersistentObject source) throws DfException {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
 		final IDfId id = source.getObjectId();
 		final DctmObjectType type = DctmObjectType.decodeType(source);
+		if (type == null) { return null; }
 		final String strId = id.getId();
-		return new ExportTarget(type.getStoredObjectType(), strId, strId);
+		return ExportTarget.from(type.getStoredObjectType(), strId, strId);
 	}
 
-	public static ExportTarget getExportTarget(IDfTypedObject source)
-		throws DfException, UnsupportedDctmObjectTypeException {
+	public static ExportTarget getExportTarget(IDfTypedObject source) throws DfException {
 		return DctmExportTools.getExportTarget(source, null);
 	}
 
-	public static ExportTarget getExportTarget(IDfTypedObject source, String idAttribute)
-		throws DfException, UnsupportedDctmObjectTypeException {
+	public static ExportTarget getExportTarget(IDfTypedObject source, String idAttribute) throws DfException {
 		return DctmExportTools.getExportTarget(source, idAttribute, null);
 	}
 
 	public static ExportTarget getExportTarget(IDfTypedObject source, String idAttribute, String typeAttribute)
-		throws DfException, UnsupportedDctmObjectTypeException {
+		throws DfException {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
 		idAttribute = Tools.coalesce(idAttribute, DctmAttributes.R_OBJECT_ID);
 		if (!source.hasAttr(idAttribute)) {
@@ -102,14 +99,11 @@ public class DctmExportTools {
 		}
 
 		final String strId = id.getId();
-		if (objectType == null) {
-			throw new UnsupportedDctmObjectTypeException(String.format("from r_object_id %s", strId));
-		}
-		return new ExportTarget(objectType, strId, strId);
+		return ExportTarget.from(objectType, strId, strId);
 	}
 
 	public static ExportTarget getExportTarget(final IDfSession session, final IDfId id, String typeAttribute)
-		throws DfException, UnsupportedDctmObjectTypeException {
+		throws DfException {
 		if (id == null) { throw new IllegalArgumentException("Must provide an object ID to create a target for"); }
 
 		// This is the best case scenario - we deduced the object's archetype from its ID,
@@ -134,9 +128,6 @@ public class DctmExportTools {
 		}
 
 		final String strId = id.getId();
-		if (objectType == null) {
-			throw new UnsupportedDctmObjectTypeException(String.format("from r_object_id %s", strId));
-		}
-		return new ExportTarget(objectType, strId, strId);
+		return ExportTarget.from(objectType, strId, strId);
 	}
 }

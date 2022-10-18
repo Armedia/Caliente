@@ -178,7 +178,7 @@ public abstract class ImportContext< //
 		return this.cmfObjectStore;
 	}
 
-	public final String getTargetPath(String sourcePath) throws ImportException {
+	public final String getTargetPath(String sourcePath) {
 		return this.factory.getTargetPath(sourcePath);
 	}
 

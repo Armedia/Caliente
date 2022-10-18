@@ -37,6 +37,7 @@ import com.armedia.caliente.engine.common.SessionFactoryException;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.EncodedString;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 
@@ -48,15 +49,20 @@ public class DctmSessionFactory extends SessionFactory<IDfSession> {
 
 	private final DfcSessionFactory factory;
 
-	public DctmSessionFactory(CfgTools settings, CmfCrypt crypto) throws DfException {
+	public DctmSessionFactory(CfgTools settings, CmfCrypt crypto) throws Exception {
 		super(settings, crypto);
 		String username = settings.getString(DctmSetting.USERNAME);
-		String password = settings.getString(DctmSetting.PASSWORD);
-		try {
-			password = crypto.encrypt(crypto.decrypt(password));
-		} catch (Exception e) {
-			throw new DfException("Failed to re-encrypt the password", e);
+
+		EncodedString encodedPassword = settings.getAs(DctmSetting.PASSWORD, EncodedString.class);
+		String password = null;
+		if (encodedPassword != null) {
+			try {
+				password = crypto.encrypt(encodedPassword.decode().toString());
+			} catch (Exception e) {
+				throw new DfException("Failed to re-encrypt the password", e);
+			}
 		}
+
 		String docbase = settings.getString(DctmSetting.DOCBASE);
 		this.factory = new DfcSessionFactory(username, password, docbase);
 	}
