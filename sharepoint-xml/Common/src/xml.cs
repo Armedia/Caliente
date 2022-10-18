@@ -3,7 +3,7 @@ using System.CodeDom.Compiler;
 using System.Diagnostics;
 using System.Xml.Serialization;
 
-namespace Armedia.CMSMF.SharePoint.Common.Xml
+namespace Caliente.SharePoint.Common.Xml
 {
     public sealed class Constants
     {

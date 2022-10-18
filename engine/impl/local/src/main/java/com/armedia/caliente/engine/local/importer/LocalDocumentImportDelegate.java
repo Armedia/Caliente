@@ -62,6 +62,11 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 				String.format("Failed to calculate the target file for %s", this.cmfObject.getDescription()), e);
 		}
 
+		if (targetFile == null) {
+			// Must be skipped due to path truncations
+			return Collections.singleton(ImportOutcome.SKIPPED);
+		}
+
 		// Copy the contents over...
 		List<CmfContentStream> contents;
 		try {

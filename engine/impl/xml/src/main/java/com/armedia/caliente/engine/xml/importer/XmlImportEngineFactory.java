@@ -46,7 +46,7 @@ public class XmlImportEngineFactory extends
 	ImportEngineFactory<XmlRoot, CmfValue, XmlImportContext, XmlImportContextFactory, XmlImportDelegateFactory, XmlImportEngine> {
 
 	public XmlImportEngineFactory() {
-		super(false, new CmfCrypt());
+		super(false, CmfCrypt.DEFAULT);
 	}
 
 	@Override

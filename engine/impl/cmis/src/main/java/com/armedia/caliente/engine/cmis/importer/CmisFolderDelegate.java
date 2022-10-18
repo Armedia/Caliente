@@ -28,6 +28,7 @@ package com.armedia.caliente.engine.cmis.importer;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -71,6 +72,8 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 		props.remove(PropertyIds.PARENT_ID);
 
 		List<Folder> parents = getParentFolders(ctx);
+		if ((parents == null) || parents.isEmpty()) { return Collections.singleton(ImportOutcome.SKIPPED); }
+
 		List<ImportOutcome> outcomes = new ArrayList<>(parents.size());
 		CmfAttribute<CmfValue> nameAtt = this.cmfObject.getAttribute(PropertyIds.NAME);
 		if ((nameAtt == null) || !nameAtt.hasValues()) {

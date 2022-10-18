@@ -27,7 +27,6 @@
 package com.armedia.caliente.engine.importer;
 
 import java.io.File;
-import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -67,6 +66,7 @@ import com.armedia.caliente.engine.tools.DefaultNameFixer;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectHandler;
@@ -231,7 +231,9 @@ public abstract class ImportEngine<//
 									retry: while (true) {
 										retryEnabled = false;
 										if (useTx) {
+											this.log.debug("Starting a new transaction");
 											session.begin();
+											this.log.debug("New transaction started");
 										}
 										try {
 											if (currentAttempt == 0) {
@@ -280,12 +282,20 @@ public abstract class ImportEngine<//
 												}
 											}
 											if (useTx) {
+												this.log.debug("Committing the open transaction");
 												session.commit();
+												this.log.debug("Transaction committed");
 											}
 											i++;
 										} catch (Throwable t) {
 											if (useTx) {
+												if (this.log.isDebugEnabled()) {
+													this.log.warn("Rolling back the open transaction");
+												}
 												session.rollback();
+												if (this.log.isDebugEnabled()) {
+													this.log.warn("Transaction rolled back");
+												}
 											}
 
 											if (retryEnabled && (currentAttempt <= ImportEngine.this.retryCount)) {
@@ -380,7 +390,7 @@ public abstract class ImportEngine<//
 		}
 	}
 
-	private class ImportListenerPropagator extends ListenerPropagator<ImportResult> implements InvocationHandler {
+	private class ImportListenerPropagator extends ListenerPropagator<ImportResult> {
 
 		private ImportListenerPropagator(CmfObjectCounter<ImportResult> counter) {
 			super(counter, getListeners(), ImportEngineListener.class);
@@ -585,7 +595,7 @@ public abstract class ImportEngine<//
 		// objects require fixing, we don't sweep the whole table, but instead submit
 		// the IDs that we want fixed.
 
-		DefaultNameFixer<CmfValue> nameFixer = new DefaultNameFixer<>(output, p);
+		CmfNameFixer<CmfValue> nameFixer = new DefaultNameFixer<>(output, p);
 		if (nameFixer.isEmpty()) {
 			output.info("Static name fix map is empty, will not {} any object names", verb);
 			return;

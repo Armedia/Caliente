@@ -49,6 +49,7 @@ import com.armedia.caliente.engine.common.SessionFactoryException;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.CryptException;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.EncodedString;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisSessionFactory extends SessionFactory<Session> {
@@ -74,7 +75,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 			String v = settings.getString(s);
 			switch (s) {
 				case PASSWORD:
-					v = this.crypto.decrypt(v);
+					v = settings.getAs(s, EncodedString.class).decode().toString();
 					break;
 				case REPOSITORY_ID:
 					repoId = v;

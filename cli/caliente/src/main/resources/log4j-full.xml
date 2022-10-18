@@ -67,12 +67,9 @@
 	</appender>
 
 	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
+
 	<logger name="h2database">
 		<level value="WARN" />
-	</logger>
-
-	<logger name="com.armedia.commons.utilities.cli.caliente">
-		<level value="DEBUG" />
 	</logger>
 
 	<logger name="org.apache.http">

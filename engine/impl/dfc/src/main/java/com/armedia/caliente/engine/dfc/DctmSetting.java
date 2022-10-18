@@ -34,7 +34,8 @@ public enum DctmSetting implements TransferEngineSetting {
 	//
 	DOCBASE(DfcSessionFactory.DOCBASE, CmfValue.Type.STRING),
 	USERNAME(DfcSessionFactory.USERNAME, CmfValue.Type.STRING),
-	PASSWORD(DfcSessionFactory.PASSWORD, CmfValue.Type.STRING)
+	PASSWORD(DfcSessionFactory.PASSWORD, CmfValue.Type.STRING),
+	ADJUST_TYPES(CmfValue.Type.BOOLEAN, Boolean.FALSE),
 	//
 	;
 

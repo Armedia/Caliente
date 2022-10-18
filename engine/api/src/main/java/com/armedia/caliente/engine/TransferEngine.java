@@ -268,7 +268,7 @@ public abstract class TransferEngine< //
 		String id = Tools.toString(referrentId.getValue(), true);
 		String key = Tools.toString(referrentKey.getValue(), true);
 		if ((type == null) || (id == null)) { return null; }
-		return new ExportTarget(CmfObject.Archetype.valueOf(type), id, key);
+		return ExportTarget.from(CmfObject.Archetype.valueOf(type), id, key);
 	}
 
 	public final void setReferrent(CmfObject<VALUE> marshaled, ExportTarget referrent) throws ExportException {
