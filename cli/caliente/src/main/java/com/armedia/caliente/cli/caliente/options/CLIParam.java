@@ -34,10 +34,12 @@ import com.armedia.caliente.engine.exporter.ExportResult;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.store.CmfContentOrganizer;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.tools.Log4JUtils;
 import com.armedia.commons.utilities.cli.Option;
 import com.armedia.commons.utilities.cli.OptionImpl;
 import com.armedia.commons.utilities.cli.filter.EnumValueFilter;
 import com.armedia.commons.utilities.cli.filter.IntegerValueFilter;
+import com.armedia.commons.utilities.cli.filter.RegexValueFilter;
 import com.armedia.commons.utilities.cli.filter.StringValueFilter;
 import com.armedia.commons.utilities.cli.utils.LibLaunchHelper;
 import com.armedia.commons.utilities.cli.utils.ThreadsLaunchHelper;
@@ -221,6 +223,15 @@ public enum CLIParam implements Supplier<Option> {
 			.setArgumentName("configuration") //
 			.setDescription(
 				"The Log4j configuration (XML format) to use instead of the default (can reference ${logName} from --log)") //
+	), //
+
+	log_level( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("logger:level[:additivity]") //
+			.setValueFilter(new RegexValueFilter(Log4JUtils.LOG_INFO)) //
+			.setDescription(
+				"A string describing a logger, and the level to use, with optional additivity (true/false). I.e. \"com.mysql.logging:DEBUG:true\"") //
 	), //
 
 	mail_auth( //
@@ -491,6 +502,13 @@ public enum CLIParam implements Supplier<Option> {
 		new OptionImpl() //
 			.setDescription(
 				"Activate the validation of an object's requirements' import success during object import (object is skipped if any of its requirements fails to import properly)") //
+	), //
+
+	verbose( //
+		new OptionImpl() //
+			.setShortOpt('v') //
+			.setDescription(
+				"Increase the log verbosity level (not console, just in the logs). Can be specified up to 3 times with each instance increasing the log level further (DEBUG -> TRACE -> ALL), after which it has no effect") //
 	), //
 
 	//

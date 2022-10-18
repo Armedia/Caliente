@@ -428,7 +428,7 @@ public class DctmAttributeHandlers {
 	}
 
 	public static AttributeHandler getAttributeHandler(IDfPersistentObject object, IDfAttr attribute)
-		throws DfException, UnsupportedDctmObjectTypeException {
+		throws DfException {
 		if (object == null) {
 			throw new IllegalArgumentException("Must provide an object to identify the attribute handler for");
 		}

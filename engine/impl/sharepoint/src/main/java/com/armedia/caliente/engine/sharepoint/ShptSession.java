@@ -41,6 +41,7 @@ import org.apache.http.conn.HttpClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.commons.utilities.EncodedString;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Attachment;
@@ -103,12 +104,12 @@ public class ShptSession {
 
 	private final URL url;
 	private final String user;
-	private final String password;
+	private final EncodedString password;
 	private final String domain;
 
 	private Service service = null;
 
-	public ShptSession(URL url, String user, String password, String domain) {
+	public ShptSession(URL url, String user, EncodedString password, String domain) {
 		this.url = url;
 		this.user = user;
 		this.password = password;
@@ -152,7 +153,11 @@ public class ShptSession {
 	}
 
 	protected Service newService() {
-		return new Service(this.url.toString(), this.user, this.password, this.domain);
+		try {
+			return new Service(this.url.toString(), this.user, this.password.decode().toString(), this.domain);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to decrypt the password", e);
+		}
 	}
 
 	public Field addDependentLookupField(String displayName, String primaryLookupFieldId, String showField,

@@ -35,6 +35,7 @@ import java.util.Set;
 import com.armedia.commons.utilities.CfgTools;
 
 public final class XmlCommon {
+	public static final String DEFAULT_ATTRIBUTE_PREFIX = "caliente";
 	public static final String TARGET_NAME = "xml";
 	public static final String METADATA_ROOT = "xml-metadata";
 	public static final Set<String> TARGETS = Collections.singleton(XmlCommon.TARGET_NAME);

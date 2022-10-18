@@ -1,4 +1,4 @@
-﻿using Armedia.CMSMF.SharePoint.Common;
+using Caliente.SharePoint.Common;
 using log4net;
 using Microsoft.SharePoint.Client;
 using System;
@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Armedia.CMSMF.SharePoint.Import
+namespace Caliente.SharePoint.Import
 {
     public class Format
     {
@@ -25,7 +25,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         public override string ToString()
         {
-            return string.Format("Format{name={0}, ext={1}, type={2}, desc={3} }", this.Name, this.DosExtension, this.MimeType, this.Description);
+            return $"Format[name={this.Name}, ext={this.DosExtension}, type={this.MimeType}, desc={this.Description}]";
         }
     }
 
@@ -39,17 +39,19 @@ namespace Armedia.CMSMF.SharePoint.Import
         {
             this.Log.Info("Loading the format information");
             this.Formats = new Dictionary<string, Format>();
-            using (XmlReader xml = this.ImportContext.LoadIndex("formats"))
+            XmlReader formatsXml = this.ImportContext.LoadIndex("formats");
+            if (formatsXml == null) return;
+            using (formatsXml)
             {
-                while (xml.ReadToFollowing("format"))
+                while (formatsXml.ReadToFollowing("format"))
                 {
-                    XElement formatXml = XElement.Load(xml.ReadSubtree());
+                    XElement formatXml = XElement.Load(formatsXml.ReadSubtree());
                     XNamespace ns = formatXml.GetDefaultNamespace();
 
                     string name = (string)formatXml.Element(ns + "name");
                     string description = (string)formatXml.Element(ns + "description");
-                    string dosExtension = XmlTools.GetAttributeValue(formatXml, "dctm:dos_extension");
-                    string mimeType = XmlTools.GetAttributeValue(formatXml, "dctm:mime_type");
+                    string dosExtension = XmlTools.GetAttributeValue(formatXml, "caliente:dos_extension");
+                    string mimeType = XmlTools.GetAttributeValue(formatXml, "caliente:mime_type");
                     Format format = new Format(name, dosExtension, mimeType, description);
                     if (!this.Formats.ContainsKey(name))
                     {
@@ -58,7 +60,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                     else
                     {
                         // Log a warning...and discard the new format
-                        this.Log.Warn(string.Format("Duplicate format name [{0}] - mapped to {1} and {2}", name, this.Formats[name], format));
+                        this.Log.WarnFormat("Duplicate format name [{0}] - mapped to {1} and {2}", name, this.Formats[name], format);
                     }
                 }
             }

@@ -1,5 +1,6 @@
-﻿using Armedia.CMSMF.SharePoint.Common;
+using Caliente.SharePoint.Common;
 using log4net;
+using Microsoft.Identity.Client;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Armedia.CMSMF.SharePoint.Import
+namespace Caliente.SharePoint.Import
 {
     public abstract class FSObjectInfo
     {
@@ -25,24 +26,26 @@ namespace Armedia.CMSMF.SharePoint.Import
         public readonly string SafeFullPath;
         public readonly string Type;
         public readonly string Location;
+        public readonly string RelativeLocation;
         public readonly DateTime CreationDate;
         public readonly string Creator;
         public readonly DateTime ModificationDate;
         public readonly string Modifier;
 
-        protected FSObjectInfo(string location)
+        protected FSObjectInfo(string fullLocation, string relativeLocation)
         {
-            XElement xml = XElement.Load(location);
+            XElement xml = XElement.Load(fullLocation);
             XNamespace ns = xml.GetDefaultNamespace();
-            this.Location = location;
+            this.Location = fullLocation;
+            this.RelativeLocation = relativeLocation;
             this.Id = (string)xml.Element(ns + "id");
             this.Acl = (string)xml.Element(ns + "acl");
             this.Path = "/" + (string)xml.Element(ns + "sourcePath");
             this.SafePath = Tools.MakeSafePath(this.Path);
             this.Name = Tools.SanitizeSingleLineString((string)xml.Element(ns + "name"));
             this.SafeName = Tools.MakeSafeFolderName(this.Name, null);
-            this.FullPath = string.Format("{0}/{1}", (this.Path == "/" ? "" : this.Path), this.Name);
-            this.SafeFullPath = string.Format("{0}/{1}", this.SafePath, this.SafeName);
+            this.FullPath = $"{(this.Path == "/" ? "" : this.Path)}/{this.Name}";
+            this.SafeFullPath = $"{this.SafePath}/{this.SafeName}";
             this.CreationDate = Tools.ParseXmlDate(xml.Element(ns + "creationDate"));
             this.Creator = (string)xml.Element(ns + "creator");
             this.ModificationDate = Tools.ParseXmlDate(xml.Element(ns + "modificationDate"));
@@ -169,14 +172,16 @@ namespace Armedia.CMSMF.SharePoint.Import
         public readonly SharePointSessionFactory SessionFactory;
         private readonly string ContentLocation;
         private readonly string MetadataLocation;
+        private readonly string ProgressLocation;
         private readonly string CacheLocation;
         private readonly XmlReaderSettings XmlSettings;
 
-        public ImportContext(SharePointSessionFactory sessionFactory, string contentLocation, string metadataLocation, string cacheLocation)
+        public ImportContext(SharePointSessionFactory sessionFactory, string contentLocation, string metadataLocation, string progressLocation, string cacheLocation)
         {
             this.SessionFactory = sessionFactory;
             this.ContentLocation = contentLocation;
             this.MetadataLocation = metadataLocation;
+            this.ProgressLocation = progressLocation;
             this.CacheLocation = cacheLocation;
             this.XmlSettings = new XmlReaderSettings();
             this.XmlSettings.DtdProcessing = DtdProcessing.Parse;
@@ -185,14 +190,9 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         public XmlReader LoadIndex(string name)
         {
-            return XmlReader.Create(string.Format("{0}/index.{1}.xml", this.MetadataLocation, name), this.XmlSettings);
-        }
-
-        public XmlReader LoadOptionalIndex(string name)
-        {
             try
             {
-                return LoadIndex(name);
+                return XmlReader.Create($"{this.MetadataLocation}/index.{name}.xml", this.XmlSettings);
             }
             catch (FileNotFoundException)
             {
@@ -204,7 +204,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         public XmlWriter CreateIndex(string name, string rootElement)
         {
-            XmlTextWriter w = new XmlFile(string.Format("{0}/{1}", this.MetadataLocation, name), UTF8Encoding.UTF8);
+            XmlTextWriter w = new XmlFile($"{this.MetadataLocation}/{name}", UTF8Encoding.UTF8);
             w.WriteStartDocument();
             w.WriteDocType(rootElement, null, null, null);
             w.WriteStartElement(rootElement);
@@ -220,12 +220,18 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         private String FormatLocation(String basePath, String location)
         {
-            return string.Format("{0}/{1}", basePath, location);
+            // Make sure we always use forward slashes
+            return $"{basePath}/{location}".Replace('\\', '/');
         }
 
         public string FormatMetadataLocation(string location)
         {
             return FormatLocation(this.MetadataLocation, location);
+        }
+
+        public string FormatProgressLocation(string location)
+        {
+            return FormatLocation(this.ProgressLocation, location);
         }
 
         public string FormatCacheLocation(string location)
@@ -245,6 +251,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         public readonly ImportContext ImportContext;
         protected readonly ILog Log;
+        protected readonly ILog FailedLog;
         private long TotalProgress = 0;
         private long LastProgress = Environment.TickCount;
         private long ProgressCounter = 0;
@@ -273,6 +280,7 @@ namespace Armedia.CMSMF.SharePoint.Import
         {
             this.ImportContext = importContext;
             this.Log = LogManager.GetLogger(GetType());
+            this.FailedLog = LogManager.GetLogger("Failed");
             this.Label = (string.IsNullOrWhiteSpace(label) ? DEFAULT_LABEL : label.ToUpper());
         }
 
@@ -343,46 +351,53 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         protected class ProgressTracker
         {
-            private readonly FileInfo CompletedMarker;
-            private readonly FileInfo FailedMarker;
-            private readonly FileInfo IgnoreMarker;
+            private readonly string CompletedMarker;
+            private readonly string FailedMarker;
+            private readonly string IgnoreMarker;
+            private readonly string MetadataLocation;
             private readonly string DescriptorLocation;
             private readonly ILog Log;
             private readonly System.Collections.Generic.List<string> Progress;
 
-            public ProgressTracker(string xmlLocation, ILog log)
+            public ProgressTracker(string metadataLocation, string descriptorLocation, ILog log)
             {
                 this.Progress = new System.Collections.Generic.List<string>();
                 this.Log = log;
-                this.DescriptorLocation = xmlLocation;
-                this.CompletedMarker = new FileInfo(string.Format("{0}.completed", this.DescriptorLocation));
-                this.FailedMarker = new FileInfo(string.Format("{0}.failed", this.DescriptorLocation));
-                this.IgnoreMarker = new FileInfo(string.Format("{0}.ignore", this.DescriptorLocation));
+                this.MetadataLocation = metadataLocation;
+                // Apparently, it won't delete files if the path has forward slashes ...
+                this.DescriptorLocation = descriptorLocation.Replace('/', '\\');
+                this.CompletedMarker = $"{this.DescriptorLocation}.completed";
+                this.FailedMarker = $"{this.DescriptorLocation}.failed";
+                this.IgnoreMarker = $"{this.DescriptorLocation}.ignore";
             }
 
             public void TrackProgress(string format, params object[] args)
             {
                 if (this.Progress.Count == 0)
                 {
-                    this.Progress.Add(string.Format("{0:O} BEGIN ACTION REPORT FOR [{1}]", DateTime.Now, this.DescriptorLocation));
+                    this.Progress.Add($"{DateTime.Now:O} BEGIN ACTION REPORT FOR [{this.MetadataLocation}]");
                 }
                 string msg = string.Format(format, args);
                 this.Log.Info(msg);
-                Progress.Add(string.Format("{0:O} {1}", DateTime.Now, msg));
+                Progress.Add($"{DateTime.Now:O} {msg}");
             }
 
             public void SaveOutcomeMarker(Result r, Exception e, bool markIgnored = false)
             {
                 if (r == Result.Skipped) return;
-                FileInfo fi = null;
+                string fi = null;
                 switch (r)
                 {
                     case Result.Completed: fi = this.CompletedMarker; break;
                     case Result.Failed: fi = this.FailedMarker; break;
                 }
 
-                bool appending = fi.Exists;
-                using (StreamWriter sw = (appending ? fi.AppendText() : fi.CreateText()))
+                // Make sure the directory it resides in ALWAYS exists
+                string dir = Path.GetDirectoryName(fi);
+                if (!System.IO.Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+                bool appending = FileExists(fi);
+                using (StreamWriter sw = (appending ? System.IO.File.AppendText(fi) : System.IO.File.CreateText(fi)))
                 {
                     if (appending) sw.WriteLine();
                     foreach (string str in this.Progress)
@@ -393,33 +408,49 @@ namespace Armedia.CMSMF.SharePoint.Import
                     sw.WriteLine("{0:O} {1}", DateTime.Now, r);
                     sw.Flush();
                 }
+
+                // Make sure we nuke the failed marker if the job was completed - we don't really
+                // care about any retries that may have happened, really ... these can be located
+                // in the logs if they're of interest
+                if ((r == Result.Completed) && this.Failed) Delete(this.FailedMarker);
+
                 if (markIgnored)
                 {
-                    this.IgnoreMarker.AppendText().Close();
+                    System.IO.File.AppendText(this.IgnoreMarker).Close();
                 }
+            }
+
+            private bool FileExists(string marker)
+            {
+                return (!string.IsNullOrEmpty(marker) && System.IO.File.Exists(marker));
+            }
+
+            private void Delete(string marker)
+            {
+                if (marker != null) System.IO.File.Delete(marker);
             }
 
             public void DeleteOutcomeMarker()
             {
-                this.CompletedMarker.Delete();
-                this.FailedMarker.Delete();
+                if (this.Completed) Delete(this.CompletedMarker);
+                if (this.Failed) Delete(this.FailedMarker);
             }
 
             public bool Completed
             {
-                get { return this.CompletedMarker.Exists; }
+                get { return FileExists(this.CompletedMarker); }
                 private set { }
             }
 
             public bool Failed
             {
-                get { return this.FailedMarker.Exists; }
+                get { return FileExists(this.FailedMarker); }
                 private set { }
             }
 
             public bool Ignored
             {
-                get { return this.IgnoreMarker.Exists; }
+                get { return FileExists(this.IgnoreMarker); }
                 private set { }
             }
         }
@@ -526,10 +557,10 @@ namespace Armedia.CMSMF.SharePoint.Import
             private set { }
         }
 
-        protected void ApplyAttributes(ListItem li, XElement attributes, String objectType)
+        protected void ApplyAttributes(ListItem li, XElement attributes, string contentType)
         {
             XNamespace ns = attributes.GetDefaultNamespace();
-            ImportedContentType typeObject = this.ContentTypeImporter.ResolveLibraryContentType(objectType);
+            ImportedContentType typeObject = this.ContentTypeImporter.ResolveLibraryContentType(contentType);
             foreach (XElement attribute in attributes.Elements(ns + "attribute"))
             {
                 string fieldName = attribute.Attribute("name").Value;
@@ -587,22 +618,44 @@ namespace Armedia.CMSMF.SharePoint.Import
         }
 
         // Reference: http://sharepoint.stackexchange.com/questions/130636/cannot-update-created-by-author-field-through-powershell
-        protected void ApplyMetadata(ListItem li, XElement element)
+        protected void ApplyMetadata(ListItem li, XElement element, ContentType contentType)
+        {
+            ApplyControlMetadata(li, element);
+            XNamespace ns = element.GetDefaultNamespace();
+            ApplyAttributes(li, element.Element(ns + "attributes"), contentType?.Name ?? (string)element.Element(ns + "type"));
+        }
+
+        protected bool ItemHasAttribute(ListItem li, String name)
+        {
+            return (!string.IsNullOrEmpty(name) && li.FieldValues.ContainsKey(name) && li[name] != null);
+        }
+
+        protected void ApplyControlMetadata(ListItem li, XElement element)
         {
             XNamespace ns = element.GetDefaultNamespace();
             string path = (string)element.Element(ns + "sourcePath");
             string name = Tools.SanitizeSingleLineString((string)element.Element(ns + "name"));
-            li["Title"] = name;
-            li["dctm_path"] = path;
-            li["dctm_name"] = name;
-            li["dctm_location"] = string.Format("{0}/{1}", path == "/" ? "" : path, name);
-            li["dctm_author_name"] = (string)element.Element(ns + "creator");
-            li["dctm_author"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)li["dctm_author_name"]);
-            li["dctm_editor_name"] = (string)element.Element(ns + "modifier");
-            li["dctm_editor"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)li["dctm_editor_name"]);
-            li["dctm_object_id"] = (string)element.Element(ns + "id");
-            li["dctm_acl_id"] = (string)element.Element(ns + "acl");
-            ApplyAttributes(li, element.Element(ns + "attributes"), (string)element.Element(ns + "type"));
+
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            values["Title"] = name;
+            values["caliente_path"] = path;
+            values["caliente_name"] = name;
+            values["caliente_location"] = $"{((path == "/") ? "" : path)}/{name}";
+            values["caliente_author_name"] = (string)element.Element(ns + "creator");
+            values["caliente_author"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)values["caliente_author_name"]);
+            values["caliente_editor_name"] = (string)element.Element(ns + "modifier");
+            values["caliente_editor"] = this.UserGroupImporter.ResolveUser(li.Context as ClientContext, (string)values["caliente_editor_name"]);
+            values["caliente_object_id"] = (string)element.Element(ns + "id");
+            values["caliente_acl_id"] = (string)element.Element(ns + "acl");
+
+            // Now we go through the available attributes to see if these can be set
+            foreach (var kvp in values)
+            {
+                if (ItemHasAttribute(li, kvp.Key))
+                {
+                    li[kvp.Key] = kvp.Value;
+                }
+            }
         }
 
         protected void SetAuthorAndEditor(ListItem li, XElement element)
@@ -610,13 +663,23 @@ namespace Armedia.CMSMF.SharePoint.Import
             XNamespace ns = element.GetDefaultNamespace();
             li["Created"] = Tools.ParseXmlDate(element.Element(ns + "creationDate"));
             li["Modified"] = Tools.ParseXmlDate(element.Element(ns + "modificationDate"));
-            li["Author"] = li["dctm_author"];
-            li["Editor"] = li["dctm_editor"];
+            if (ItemHasAttribute(li, "caliente_author"))
+            {
+                li["Author"] = li["caliente_author"];
+            }
+            if (ItemHasAttribute(li, "caliente_editor"))
+            {
+                li["Editor"] = li["caliente_editor"];
+            }
         }
 
         protected void ApplyPermissions(ListItem li, XElement element)
         {
-            this.PermissionsImporter.ApplyPermissions(li, (string)element.Element(element.GetDefaultNamespace() + "acl"));
+            string aclId = (string)element.Element(element.GetDefaultNamespace() + "acl");
+            if (!string.IsNullOrEmpty(aclId))
+            {
+                this.PermissionsImporter.ApplyPermissions(li, aclId);
+            }
         }
 
         protected void ClearPermissions(ListItem li)
@@ -630,7 +693,11 @@ namespace Armedia.CMSMF.SharePoint.Import
         protected void ApplyOwnerPermission(ListItem li, XElement element)
         {
             XNamespace ns = element.GetDefaultNamespace();
-            this.PermissionsImporter.ApplyOwnerPermission(li, (string)element.Element(ns + "acl"), (string)element.Element(ns + "creator"));
+            string aclId = (string)element.Element(ns + "acl");
+            if (!string.IsNullOrEmpty(aclId))
+            {
+                this.PermissionsImporter.ApplyOwnerPermission(li, aclId, (string)element.Element(ns + "creator"));
+            }
         }
 
         protected ContentType ResolveContentType(string contentType)
@@ -642,7 +709,21 @@ namespace Armedia.CMSMF.SharePoint.Import
         {
             return this.ContentTypeImporter.ResolveContentType(id)?.Type;
         }
+
+        protected void LogFailure(string type, string id, string path, string xml)
+        {
+            string str = "";
+            bool first = true;
+            foreach (string s in new string[] { type, id, path, xml })
+            {
+                if (!first) str += ",";
+                str += Tools.ToCSV(s);
+                first = false;
+            }
+            FailedLog.Info(str);
+        }
     }
+
     public class Crypt
     {
         private const string DEFAULT_KEY = @"6RBjZgfVO+KhuPU0qSqmdQ==";

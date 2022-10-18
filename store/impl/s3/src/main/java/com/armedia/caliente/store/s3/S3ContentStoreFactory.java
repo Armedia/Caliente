@@ -109,13 +109,13 @@ public class S3ContentStoreFactory extends CmfContentStoreFactory<S3ContentStore
 		SYSTEM {
 			@Override
 			public AwsCredentialsProvider build(CfgTools cfg) {
-				return EnvironmentVariableCredentialsProvider.create();
+				return SystemPropertyCredentialsProvider.create();
 			}
 		}, //
 		ENVIRONMENT {
 			@Override
 			public AwsCredentialsProvider build(CfgTools cfg) {
-				return SystemPropertyCredentialsProvider.create();
+				return EnvironmentVariableCredentialsProvider.create();
 			}
 		}, //
 			//

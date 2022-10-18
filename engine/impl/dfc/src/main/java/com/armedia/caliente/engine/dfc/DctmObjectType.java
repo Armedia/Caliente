@@ -218,8 +218,7 @@ public enum DctmObjectType {
 		DctmObjectType.OBJECT_TYPE_TRANSLATOR = Tools.freezeMap(m);
 	}
 
-	public static DctmObjectType decodeType(IDfPersistentObject object)
-		throws DfException, UnsupportedDctmObjectTypeException {
+	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		IDfId id = object.getObjectId();
 		DctmObjectType type = DctmObjectType.decodeType(id);
@@ -227,42 +226,38 @@ public enum DctmObjectType {
 		return DctmObjectType.decodeType(object.getType());
 	}
 
-	public static DctmObjectType decodeType(IDfSession session, String typeName)
-		throws DfException, UnsupportedDctmObjectTypeException {
+	public static DctmObjectType decodeType(IDfSession session, String typeName) throws DfException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to find the type in"); }
 		if (typeName == null) { throw new IllegalArgumentException("Must provide a type to find"); }
 		IDfType type = session.getType(typeName);
-		if (type == null) { throw new UnsupportedDctmObjectTypeException(typeName); }
+		if (type == null) { return null; }
 		return DctmObjectType.decodeType(type);
 	}
 
-	public static DctmObjectType decodeType(IDfType type) throws DfException, UnsupportedDctmObjectTypeException {
+	public static DctmObjectType decodeType(IDfType type) throws DfException {
 		if (type == null) { throw new IllegalArgumentException("Must provide a type to decode"); }
-		final String typeName = type.getName();
 		while (type != null) {
-			try {
-				return DctmObjectType.decodeType(type.getName());
-			} catch (UnsupportedDctmObjectTypeException e) {
-				// This type isn't supported...try its parent
-				IDfType parent = type.getSuperType();
-				if ((parent == null) && "dm_sysobject".equalsIgnoreCase(type.getName())) {
-					// If we're about to fail, take one last look... if the supertype is EXACTLY
-					// dm_sysobject, then we return DOCUMENT
-					return DctmObjectType.DOCUMENT;
-				}
-				type = parent;
-				continue;
+			DctmObjectType objectType = DctmObjectType.decodeType(type.getName());
+
+			// Type is supported, return it!
+			if (objectType != null) { return objectType; }
+
+			// This type isn't supported...try its parent
+			IDfType parent = type.getSuperType();
+			if ((parent == null) && "dm_sysobject".equalsIgnoreCase(type.getName())) {
+				// If we're about to fail, take one last look... if the supertype is EXACTLY
+				// dm_sysobject, then we return DOCUMENT
+				return DctmObjectType.DOCUMENT;
 			}
+			type = parent;
 		}
 		// The only way we get here is if we can't decode into a supported type
-		throw new UnsupportedDctmObjectTypeException(typeName);
+		return null;
 	}
 
-	private static DctmObjectType decodeType(String type) throws UnsupportedDctmObjectTypeException {
+	private static DctmObjectType decodeType(String type) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a type to decode"); }
-		DctmObjectType ret = DctmObjectType.DM_TYPE_DECODER.get(type);
-		if (ret == null) { throw new UnsupportedDctmObjectTypeException(type); }
-		return ret;
+		return DctmObjectType.DM_TYPE_DECODER.get(type);
 	}
 
 	public static DctmObjectType decodeType(CmfObject.Archetype type) {

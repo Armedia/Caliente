@@ -1,8 +1,9 @@
-﻿using Armedia.CMSMF.SharePoint.Common;
+using Caliente.SharePoint.Common;
 using CommandLine;
 using CommandLine.Text;
 using log4net;
 using log4net.Config;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
@@ -10,10 +11,11 @@ using System.DirectoryServices;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Runtime.Remoting.Messaging;
 using System.Security;
 using System.Xml.Linq;
 
-namespace Armedia.CMSMF.SharePoint.Import
+namespace Caliente.SharePoint.Import
 {
     class Launcher
     {
@@ -56,14 +58,23 @@ namespace Armedia.CMSMF.SharePoint.Import
                 [OptionAttribute("library", Required = false, HelpText = "The Document Library to import files into")]
                 public string library { get; set; }
 
-                [OptionAttribute("content", Required = false, HelpText = "The location on the filesystem for the import content")]
-                public string content { get; set; }
+                [OptionAttribute("data", Required = false, HelpText = "The root directory where all the Caliente data is located (default = ./caliente)")]
+                public string data { get; set; }
 
-                [OptionAttribute("metadata", Required = false, HelpText = "The location on the filesystem for the import content's metadata")]
+                [OptionAttribute("streams", Required = false, HelpText = "The location on the filesystem for the import content streams (default = ${data}/streams)")]
+                public string streams { get; set; }
+
+                [OptionAttribute("metadata", Required = false, HelpText = "The location on the filesystem for the import objects' metadata (default = ${data}/xml-metadata)")]
                 public string metadata { get; set; }
 
-                [OptionAttribute("caches", Required = false, HelpText = "The location on the filesystem for the work-in-progress data caches")]
+                [OptionAttribute("progress", Required = false, HelpText = "The location on the filesystem for the progress tracker files (default = ${data}/sharepoint-progress)")]
+                public string progress { get; set; }
+
+                [OptionAttribute("caches", Required = false, HelpText = "The location on the filesystem for the work-in-progress data caches (default = ${data}/sharepoint-caches)")]
                 public string caches { get; set; }
+
+                [OptionAttribute("logs", Required = false, HelpText = "The location on the filesystem for the log files (default = ${data}/logs)")]
+                public string logs { get; set; }
 
                 [OptionAttribute("ldapUrl", Required = false, HelpText = "The LDAP directory to synchronize with")]
                 public string ldapUrl { get; set; }
@@ -86,11 +97,26 @@ namespace Armedia.CMSMF.SharePoint.Import
                 [OptionAttribute("internalGroup", Required = false, HelpText = "The group to map internal documentum groups to")]
                 public string internalGroup { get; set; }
 
+                [OptionAttribute("fallbackDocumentType", Required = false, HelpText = "The content type to use when a document's content type can't be resolved")]
+                public string fallbackDocumentType { get; set; }
+
+                [OptionAttribute("fallbackFolderType", Required = false, HelpText = "The content type to use when a folder's content type can't be resolved")]
+                public string fallbackFolderType { get; set; }
+
                 [OptionAttribute("threads", Required = false, HelpText = "The number of threads to use in parallel import (min 1, max 32)")]
                 public int? threads { get; set; }
 
+                [OptionAttribute("useQueryRetry", Required = false, HelpText = "Use ExecuteQueryRetry() instead of ExecuteQuery() (default = use ExecuteQuery())")]
+                public bool? useQueryRetry { get; set; }
+
                 [OptionAttribute("retries", Required = false, HelpText = "The number of times to retry the document import failures when there is no success between attempts (min 0, max 3)")]
                 public int? retries { get; set; }
+
+                [OptionAttribute("useRetryWrapper", Required = false, HelpText = "Use the PnP.Framework's HttpClientWebRequestExecutorFactory as a wrapper for HTTP requests")]
+                public bool? useRetryWrapper { get; set; }
+
+                [OptionAttribute("orphanAclInherit", Required = false, HelpText = "Define whether parentless folders (from the source) or inherit their destination parent's ACL, or get their own (i.e. break inheritance)")]
+                public bool? orphanAclInherit{ get; set; }
 
                 [OptionAttribute("reuseCount", Required = false, HelpText = "The number of times to reuse each ClientContext instance (SharePoint session) before they get discarded (< 0 = forever, min = 1)")]
                 public int? reuseCount { get; set; }
@@ -110,40 +136,41 @@ namespace Armedia.CMSMF.SharePoint.Import
                 [OptionAttribute("fixExtensions", Required = false, HelpText = "Choose whether or not to automatically repair 'invalid' extensions by appending one based on the document's format")]
                 public bool? fixExtensions { get; set; }
 
-                [OptionAttribute('?', "help", Required = false, HelpText = "Show this help message", DefaultValue = false)]
+                [OptionAttribute("uploadSegmentSize", Required = false, HelpText = "The maximum size to attempt a direct upload for. Files larger than this will be uploaded in multiple segments of at most this size (in MB, max 255)")]
+                public int? uploadSegmentSize { get; set; }
+
+                [OptionAttribute('?', "help", Required = false, HelpText = "Show this help message")]
                 public bool help { get; set; }
-
-                [ParserState]
-                public IParserState LastParserState { get; set; }
-
-                [HelpOption]
-                public string GetUsage()
-                {
-                    return HelpText.AutoBuild(this, (HelpText current) => HelpText.DefaultParsingErrorsHandler(this, current));
-                }
 
                 // These are the options intended for internal use only
                 public bool? indexOnly { get; set; }
 
-                public Settings(params string[] args)
+                public static HelpText RenderHelp(ParserResult<Settings> result)
                 {
-                    Parser.Default.ParseArguments(args, this);
+                    return HelpText.AutoBuild(result, //
+                            (HelpText ht) => HelpText.DefaultParsingErrorsHandler(result, ht), //
+                            e => e //
+                        );
+                }
+
+                public Settings()
+                {
+
                 }
 
                 public Settings(string path)
                 {
-                    FileInfo configFile = new FileInfo(path);
+                    if (!System.IO.File.Exists(path)) return;
 
                     // Apply the defaults from the configuration
-                    if (!configFile.Exists) return;
-                    Console.Out.WriteLine(string.Format("Loading configuration from [{0}]...", configFile.FullName));
-                    XElement cfg = XElement.Load(configFile.FullName);
+                    Console.Out.WriteLine($"Loading configuration from [{path}]...");
+                    XElement cfg = XElement.Load(path);
                     XNamespace ns = cfg.GetDefaultNamespace();
                     object[] parameters = new object[1];
                     foreach (PropertyInfo p in GetType().GetProperties())
                     {
                         OptionAttribute opt = Attribute.GetCustomAttribute(p, typeof(OptionAttribute)) as OptionAttribute;
-                        string propertyName = opt?.LongName ?? string.Format("cmsmf.{0}", p.Name);
+                        string propertyName = opt?.LongName ?? $"cmsmf.{p.Name}";
 
                         // Not null? Get its XML value
                         string value = (string)cfg.Element(ns + propertyName);
@@ -169,7 +196,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 }
                                 catch (ArgumentException e)
                                 {
-                                    throw new Exception(string.Format("The string [{0}] is not a valid member of enum {1}", value, t.FullName), e);
+                                    throw new Exception($"The string [{value}] is not a valid member of enum {t.FullName}", e);
                                 }
                             }
                             else
@@ -192,9 +219,20 @@ namespace Armedia.CMSMF.SharePoint.Import
             private static readonly int DEFAULT_THREADS = ((Environment.ProcessorCount * 3) / 4);
             private const int MAX_THREADS = 32;
 
+            private const string DEFAULT_DATA_DIR = "caliente";
+            private const string DEFAULT_STREAMS_DIR = "streams";
+            private const string DEFAULT_XML_METADATA_DIR = "xml-metadata";
+            private const string DEFAULT_PROGRESS_DIR = "sharepoint-progress";
+            private const string DEFAULT_CACHES_DIR = "sharepoint-caches";
+            private const string DEFAULT_LOGS_DIR = "logs";
+
+            private const bool DEFAULT_USE_QUERY_RETRY = true;
+
             private const int MIN_RETRIES = 0;
-            private const int DEFAULT_RETRIES = MIN_RETRIES;
-            private const int MAX_RETRIES = 3;
+            private const int DEFAULT_RETRIES = 5;
+            private const int MAX_RETRIES = 10;
+
+            private const bool DEFAULT_USE_RETRY_WRAPPER = false;
 
             private const int DEFAULT_REUSE_COUNT = 10;
             private const bool DEFAULT_CLEAN_TYPES = false;
@@ -209,7 +247,13 @@ namespace Armedia.CMSMF.SharePoint.Import
             private const string DEFAULT_FALLBACK_GROUP = "dm_fb_group";
             private const string DEFAULT_INTERNAL_GROUP = "dm_int_group";
 
+            private const int MIN_UPLOAD_SEGMENT_SIZE = 1;
+            private const int MAX_UPLOAD_SEGMENT_SIZE = 255;
+            private const int DEFAULT_UPLOAD_SEGMENT_SIZE = 10;
+            private const bool DEFAULT_ORPHAN_ACL_INHERIT = true;
+
             private readonly Settings CommandLine;
+            private readonly ParserResult<Settings> ParserResult;
             private readonly Settings ConfigurationFile;
 
             public string cfg { get; private set; }
@@ -223,9 +267,12 @@ namespace Armedia.CMSMF.SharePoint.Import
             public string certificatePass { get; private set; }
             public string ldapSyncDomain { get; private set; }
             public string library { get; private set; }
-            public string content { get; private set; }
+            public string data { get; private set; }
+            public string streams { get; private set; }
             public string metadata { get; private set; }
+            public string progress { get; private set; }
             public string caches { get; private set; }
+            public string logs { get; private set; }
             public string ldapUrl { get; private set; }
             public string ldapBindDn { get; private set; }
             public string ldapBindPw { get; private set; }
@@ -233,8 +280,12 @@ namespace Armedia.CMSMF.SharePoint.Import
             public string internalUser { get; private set; }
             public string fallbackGroup { get; private set; }
             public string internalGroup { get; private set; }
+            public string fallbackDocumentType { get; private set; }
+            public string fallbackFolderType { get; private set; }
             public int threads { get; private set; }
+            public bool useQueryRetry { get; private set; }
             public int retries { get; private set; }
+            public bool useRetryWrapper { get; private set; }
             public int reuseCount { get; private set; }
             public bool cleanTypes { get; private set; }
             public DocumentImporter.SimulationMode simulationMode { get; private set; }
@@ -244,12 +295,28 @@ namespace Armedia.CMSMF.SharePoint.Import
             public bool indexOnly { get; set; }
             public bool help { get; private set; }
             public string baseDir { get; private set; }
+            public int uploadSegmentSize { get; private set; }
+            public bool orphanAclInherit { get; private set; }
 
             public Configuration(string baseDir, params string[] args)
             {
                 this.baseDir = baseDir;
-                this.CommandLine = new Settings(args);
-                string cfgFile = (this.CommandLine.cfg != null ? this.CommandLine.cfg : string.Format("{0}\\config.xml", Directory.GetCurrentDirectory()));
+
+                int exitCode = 0;
+                this.ParserResult = Parser.Default.ParseArguments<Settings>(args);
+
+                this.ParserResult.WithNotParsed<Settings>(errs =>
+                {
+                    Console.WriteLine(Settings.RenderHelp(this.ParserResult));
+                    exitCode = 1;
+                });
+
+                // Explode, if required...
+                if (exitCode != 0) Environment.Exit(1);
+
+                this.CommandLine = this.ParserResult.Value;
+
+                string cfgFile = (this.CommandLine.cfg != null ? this.CommandLine.cfg : $"{this.baseDir}\\config.xml");
                 this.ConfigurationFile = new Settings(cfgFile);
 
                 object[] parameters = new object[1];
@@ -261,7 +328,11 @@ namespace Armedia.CMSMF.SharePoint.Import
                 this.autoPublish = DEFAULT_AUTO_PUBLISH;
                 this.locationMode = DEFAULT_USE_LAST_LOCATION;
                 this.fixExtensions = DEFAULT_FIX_EXTENSIONS;
-                foreach (PropertyInfo src in this.CommandLine.GetType().GetProperties())
+                this.uploadSegmentSize = DEFAULT_UPLOAD_SEGMENT_SIZE;
+                this.useQueryRetry = DEFAULT_USE_QUERY_RETRY;
+                this.useRetryWrapper = DEFAULT_USE_RETRY_WRAPPER;
+                this.orphanAclInherit = DEFAULT_ORPHAN_ACL_INHERIT;
+                foreach (PropertyInfo src in typeof(Settings).GetProperties())
                 {
                     PropertyInfo tgt = GetType().GetProperty(src.Name);
                     if (tgt == null) continue;
@@ -293,7 +364,15 @@ namespace Armedia.CMSMF.SharePoint.Import
 
             public string GetUsage()
             {
-                return this.CommandLine.GetUsage();
+                return Settings.RenderHelp(this.ParserResult);
+            }
+
+            private string ComputePath(string value, Func<string> fallback)
+            {
+                string ret = value;
+                if (string.IsNullOrEmpty(value) && (fallback != null)) ret = fallback();
+                if (!string.IsNullOrEmpty(ret)) ret = Path.GetFullPath(ret).Replace('\\', '/');
+                return ret;
             }
 
             public List<string> ValidateConfiguration()
@@ -302,10 +381,12 @@ namespace Armedia.CMSMF.SharePoint.Import
                 if (string.IsNullOrWhiteSpace(this.siteUrl)) errors.Add("Must provide a URL with which to connect to Sharepoint (siteUrl)");
 
                 // TODO: This may not need to be provided if we're using app authentication
+                /*
                 if (string.IsNullOrWhiteSpace(this.user) && string.IsNullOrWhiteSpace(this.applicationId))
                 {
                     errors.Add("Must provide either a user name or an application ID with which to connect to Sharepoint (user)");
                 }
+                */
 
                 if (!string.IsNullOrWhiteSpace(this.ldapUrl))
                 {
@@ -314,14 +395,33 @@ namespace Armedia.CMSMF.SharePoint.Import
 
                 if (!string.IsNullOrWhiteSpace(this.applicationId))
                 {
-                    if (string.IsNullOrWhiteSpace(this.certificateKey)) this.certificateKey = string.Format("{0}\\Caliente.pfx", this.baseDir);
+                    if (string.IsNullOrWhiteSpace(this.certificateKey)) this.certificateKey = $"{this.baseDir}\\Caliente.pfx";
                     if (string.IsNullOrWhiteSpace(this.domain)) errors.Add("Must provide the domain the application ID is valid for (domain)");
                 }
                 if (errors.Count > 0) return errors;
 
-                if (string.IsNullOrEmpty(this.content)) this.content = string.Format("{0}\\contents", Directory.GetCurrentDirectory()).Replace('\\', '/');
-                if (string.IsNullOrEmpty(this.metadata)) this.metadata = string.Format("{0}\\xml-metadata", Directory.GetCurrentDirectory()).Replace('\\', '/');
-                if (string.IsNullOrEmpty(this.caches)) this.caches = string.Format("{0}\\caches", Directory.GetCurrentDirectory()).Replace('\\', '/');
+                this.data = ComputePath(this.data, () => $"${this.baseDir}/{DEFAULT_DATA_DIR}");
+                if (!Directory.Exists(this.data))
+                {
+                    errors.Add($"The data directory [{this.data}] does not exist");
+                }
+
+                this.streams = ComputePath(this.streams, () => $"{this.data}/{DEFAULT_STREAMS_DIR}");
+                if (!Directory.Exists(this.streams))
+                {
+                    errors.Add($"The streams directory [{this.streams}] does not exist");
+                }
+
+                this.metadata = ComputePath(this.metadata, () => $"{this.data}/{DEFAULT_XML_METADATA_DIR}");
+                if (!Directory.Exists(this.metadata))
+                {
+                    errors.Add($"The metadata directory [{this.metadata}] does not exist");
+                }
+
+                this.progress = ComputePath(this.progress, () => $"{this.data}/{DEFAULT_PROGRESS_DIR}");
+                this.caches = ComputePath(this.caches, () => $"{this.data}/{DEFAULT_CACHES_DIR}");
+                this.logs = ComputePath(this.logs, () => $"{this.data}/{DEFAULT_LOGS_DIR}");
+
                 if (string.IsNullOrWhiteSpace(this.ldapBindDn)) this.ldapBindDn = "";
                 if (string.IsNullOrEmpty(this.ldapBindPw)) this.ldapBindPw = "";
 
@@ -337,6 +437,8 @@ namespace Armedia.CMSMF.SharePoint.Import
                 if (this.reuseCount == 0) this.reuseCount = 1;
                 if (this.retries < MIN_RETRIES) this.retries = MIN_RETRIES;
                 if (this.retries > MAX_RETRIES) this.retries = MAX_RETRIES;
+                if (this.uploadSegmentSize < MIN_UPLOAD_SEGMENT_SIZE) this.uploadSegmentSize = MIN_UPLOAD_SEGMENT_SIZE;
+                if (this.uploadSegmentSize > MAX_UPLOAD_SEGMENT_SIZE) this.uploadSegmentSize = MAX_UPLOAD_SEGMENT_SIZE;
                 return errors;
             }
         }
@@ -349,7 +451,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             string ldapBindPw = options.ldapBindPw;
             if (string.IsNullOrEmpty(ldapBindPw))
             {
-                Console.Write(string.Format("Enter LDAP password for DN=[{0}] @ [{1}]: ", options.ldapBindDn, options.ldapUrl));
+                Console.Write($"Enter LDAP password for DN=[{options.ldapBindDn}] @ [{options.ldapUrl}]: ");
                 SecureString password = Tools.ReadPassword();
                 ldapBindPw = password.ToString();
             }
@@ -359,6 +461,27 @@ namespace Armedia.CMSMF.SharePoint.Import
             }
             return new DirectoryEntry(options.ldapUrl, options.ldapBindDn, ldapBindPw);
         }
+
+        private static string GetVersionInfo()
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            Version version = assembly.GetName().Version;
+            String title = assembly.GetCustomAttribute<AssemblyTitleAttribute>().Title;
+            DateTime buildDate = new DateTime(2000, 1, 1).Add(new TimeSpan(TimeSpan.TicksPerDay * version.Build + TimeSpan.TicksPerSecond * 2 * version.Revision)).ToUniversalTime();
+            return $"{title} v{version} (built at {buildDate} UTC)";
+        }
+
+        private static string GetExeLocation()
+        {
+            return Path.GetDirectoryName(Environment.GetCommandLineArgs()[0]);
+        }
+
+        private static string GetExeName()
+        {
+            return Path.GetFileNameWithoutExtension(Environment.GetCommandLineArgs()[0]);
+        }
+
+
         public static void Main(string[] args)
         {
             int ret = 0;
@@ -375,6 +498,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                 }
                 else
                 {
+                    Console.Error.WriteLine(GetVersionInfo());
                     Console.Error.WriteLine("Uncaught exception caused a program crash: {0}", e);
                     Console.Error.WriteLine(e.StackTrace);
                     Console.Error.WriteLine("Press any key to exit...");
@@ -387,42 +511,76 @@ namespace Armedia.CMSMF.SharePoint.Import
             }
         }
 
+        private static string FindLogConfiguration(string dir, string fileName)
+        {
+            string config = $"{dir}\\{fileName}";
+            if (!System.IO.File.Exists(config)) return null;
+            return config;
+        }
+
+        private static bool ConfigureLogging(string baseDir)
+        {
+            string[] nameOptions = { $"{GetExeName()}.log.xml", "log4net.xml" };
+            string[] directoryOptions = { baseDir, GetExeLocation() };
+            foreach (string directory in directoryOptions)
+            {
+                foreach (string name in nameOptions)
+                {
+                    string config = FindLogConfiguration(directory, name);
+                    if (!string.IsNullOrEmpty(config))
+                    {
+                        Console.Out.WriteLine($"Initializing logging from [{config}]...");
+                        using (Stream stream = System.IO.File.OpenRead(config))
+                        {
+                            XmlConfigurator.Configure(stream);
+                        }
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public static int MainLoop(string[] args)
         {
+            string version = GetVersionInfo();
+
             ILog log = null;
             string baseDir = Directory.GetCurrentDirectory();
             // Initialize log4j
             Configuration options = new Configuration(baseDir, args);
+
             if (options.help)
             {
+                Console.Error.WriteLine(version);
                 Console.Error.WriteLine(options.GetUsage());
                 return 1;
             }
             List<string> errors = options.ValidateConfiguration();
             if (errors.Count > 0)
             {
-                Console.Error.WriteLine(string.Format("{0} Configuration Errors detected:", errors.Count));
-                foreach (string e in errors) Console.Error.WriteLine(string.Format("\t* {0}", e));
+                Console.Error.WriteLine(version);
+                Console.Error.WriteLine($"{errors.Count} Configuration Errors detected:");
+                foreach (string e in errors) Console.Error.WriteLine($"\t* {e}");
                 return 2;
             }
 
             System.IO.Directory.CreateDirectory(options.caches);
+            System.IO.Directory.CreateDirectory(options.logs);
 
-            string logDir = string.Format("{0}\\logs", baseDir);
-            System.IO.Directory.CreateDirectory(logDir);
+            Environment.SetEnvironmentVariable("CMF_LOGDATE", $"{DateTime.Now:yyyyMMdd-HHmmss}");
+            Environment.SetEnvironmentVariable("CMF_LOGDIR", options.logs);
 
-            Environment.SetEnvironmentVariable("CMF_LOGDATE", string.Format("{0:yyyyMMdd-HHmmss}", DateTime.Now));
-            Environment.SetEnvironmentVariable("CMF_LOGDIR", logDir);
-
-            XmlConfigurator.Configure(new FileInfo(string.Format("{0}\\log4net.xml", baseDir)));
+            ConfigureLogging(baseDir);
             LOG = log = LogManager.GetLogger(typeof(Launcher));
             log.Info("Initializing Application");
+            log.Info(version);
 
             if (options.indexOnly)
-            { 
-                ImportContext importContext = new ImportContext(null, options.content, options.metadata, options.caches);
+            {
+                ImportContext importContext = new ImportContext(null, options.streams, options.metadata, options.progress, options.caches);
                 FormatResolver formatResolver = new FormatResolver(importContext);
-                new DocumentImporter(new FolderImporter(importContext), formatResolver, options.locationMode, options.fixExtensions).StoreLocationIndex();
+                new DocumentImporter(new FolderImporter(importContext, options.fallbackFolderType, options.orphanAclInherit), formatResolver, options.locationMode, options.fixExtensions, options.fallbackDocumentType, options.uploadSegmentSize).StoreLocationIndex();
                 return 0;
             }
 
@@ -432,26 +590,26 @@ namespace Armedia.CMSMF.SharePoint.Import
 
             using (DirectoryEntry ldapDirectory = BindToLDAP(options))
             {
-                log.Info(string.Format("Using SharePoint at [{0}]", options.siteUrl));
+                log.Info($"Using SharePoint at [{options.siteUrl}]");
 
                 string userString = options.user;
                 if (!string.IsNullOrWhiteSpace(options.domain))
                 {
-                    userString = string.Format("{0}@{1}", userString, options.domain);
+                    userString = $"{userString}@{options.domain}";
                 }
 
                 SecureString userPassword = null;
                 if (!string.IsNullOrWhiteSpace(options.user)) {
                     if (options.password == null)
                     {
-                        Console.Write(string.Format("Enter The Sharepoint Password for [{0}]: ", userString));
+                        Console.Write($"Enter The Sharepoint Password for [{userString}]: ");
                         userPassword = Tools.ReadPassword();
                     }
                     else
                     {
                         String pass = CRYPT.Decrypt(options.password);
                         pass = CRYPT.Encrypt(pass);
-                        log.Info(string.Format("Using stored credentials for [{0}] = [{1}]", userString, pass));
+                        log.Info($"Using stored credentials for [{userString}] = [{pass}]");
                         userPassword = new SecureString();
                         foreach (char c in CRYPT.Decrypt(pass))
                         {
@@ -460,9 +618,9 @@ namespace Armedia.CMSMF.SharePoint.Import
                     }
                 }
 
-                using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, userPassword, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.library, options.reuseCount)))
+                using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, userPassword, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.library, options.reuseCount, options.useQueryRetry, options.retries, options.useRetryWrapper)))
                 {
-                    ImportContext importContext = new ImportContext(sessionFactory, options.content, options.metadata, options.caches);
+                    ImportContext importContext = new ImportContext(sessionFactory, options.streams, options.metadata, options.progress, options.caches);
                     using (ObjectPool<SharePointSession>.Ref sessionRef = sessionFactory.GetSession())
                     {
                         SharePointSession session = sessionRef.Target;
@@ -497,7 +655,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                     }
                     if (contentTypeImporter == null)
                     {
-                        log.Error(string.Format("ContentTypeImporter failed to initialize after {0} attempts", options.retries + 1));
+                        log.ErrorFormat("ContentTypeImporter failed to initialize after {0} attempts", options.retries + 1);
                         return 3;
                     }
 
@@ -517,13 +675,13 @@ namespace Armedia.CMSMF.SharePoint.Import
                     }
                     if (userGroupImporter == null)
                     {
-                        log.Error(string.Format("UserGroupImporter failed to initialize after {0} attempts", options.retries + 1));
+                        log.ErrorFormat("UserGroupImporter failed to initialize after {0} attempts", options.retries + 1);
                         return 4;
                     }
 
                     PermissionsImporter permissionsImporter = new PermissionsImporter(userGroupImporter);
-                    FolderImporter folderImporter = new FolderImporter(contentTypeImporter, permissionsImporter);
-                    DocumentImporter documentImporter = new DocumentImporter(folderImporter, formatResolver, options.locationMode, options.fixExtensions);
+                    FolderImporter folderImporter = new FolderImporter(contentTypeImporter, permissionsImporter, options.fallbackFolderType, options.orphanAclInherit);
+                    DocumentImporter documentImporter = new DocumentImporter(folderImporter, formatResolver, options.locationMode, options.fixExtensions, options.fallbackDocumentType, options.uploadSegmentSize);
                     bool aborted = false;
 
                     Console.CancelKeyPress += delegate (object sender, ConsoleCancelEventArgs e)
@@ -547,7 +705,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                     try
                     {
                         documentImporter.StoreDocuments(options.threads, options.simulationMode, options.locationMode, options.autoPublish, options.retries);
-                        folderImporter.FinalizeFolders(options.threads, options.retries);
+                        folderImporter.FinalizeFolders(importContext, options.threads, options.retries);
                         documentImporter.StoreLocationIndex();
                     }
                     finally
