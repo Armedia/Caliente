@@ -4,7 +4,7 @@
 
 	<name>Armedia Caliente CLI - Documentum Data Generator</name>
 	<description>A CLI executable that generates custom data and metadata in Documentum</description>
-	<groupId>com.armedia.commons.utilities.cli</groupId>
+	<groupId>com.armedia.caliente.cli</groupId>
 	<artifactId>caliente-cli-dctm-datagen</artifactId>
 	<packaging>jar</packaging>
 

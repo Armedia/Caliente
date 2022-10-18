@@ -18,6 +18,7 @@
 	<properties>
 		<aws.version>2.16.20</aws.version>
 		<stax-utils.version>20070216</stax-utils.version>
+		<stax2-api.version>4.2.1</stax2-api.version>
 	</properties>
 
 	<dependencies>
@@ -34,17 +35,11 @@
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.codehaus.woodstox</groupId>
-			<artifactId>stax2-api</artifactId>
-			<version>4.2.1</version>
-			<scope>runtime</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>org.codehaus.woodstox</groupId>
 			<artifactId>stax2-api</artifactId>
-			<version>3.1.4</version>
+			<version>${stax2-api.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 

@@ -4,7 +4,7 @@
 
 	<name>Armedia Caliente CLI - Caliente CLI</name>
 	<description>A command-line interface through which to launch Caliente</description>
-	<groupId>com.armedia.commons.utilities.cli</groupId>
+	<groupId>com.armedia.caliente.cli</groupId>
 	<artifactId>caliente-cli-caliente</artifactId>
 	<packaging>jar</packaging>
 

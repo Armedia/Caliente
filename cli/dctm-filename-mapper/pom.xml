@@ -4,7 +4,7 @@
 
 	<name>Armedia Caliente CLI - Documentum Filename Mapper</name>
 	<description>A standalone tool to repair and deduplicate filenames (Documentum version)</description>
-	<groupId>com.armedia.commons.utilities.cli</groupId>
+	<groupId>com.armedia.caliente.cli</groupId>
 	<artifactId>caliente-cli-dctm-filename-mapper</artifactId>
 	<packaging>jar</packaging>
 

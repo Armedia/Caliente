@@ -4,7 +4,7 @@
 
 	<name>Armedia Caliente CLI - Documentum DQL Query Tool</name>
 	<description>A CLI executable that runs DQL queries and saves the results to CSV</description>
-	<groupId>com.armedia.commons.utilities.cli</groupId>
+	<groupId>com.armedia.caliente.cli</groupId>
 	<artifactId>caliente-cli-dctm-query</artifactId>
 	<packaging>jar</packaging>
 
