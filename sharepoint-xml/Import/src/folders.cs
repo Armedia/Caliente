@@ -1,5 +1,6 @@
-﻿using Armedia.CMSMF.SharePoint.Common;
+using Caliente.SharePoint.Common;
 using log4net;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Threading.Tasks.Dataflow;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Armedia.CMSMF.SharePoint.Import
+namespace Caliente.SharePoint.Import
 {
     public class FolderInfo : FSObjectInfo
     {
@@ -17,7 +18,7 @@ namespace Armedia.CMSMF.SharePoint.Import
         public bool Modified = false;
         public bool Exists = false;
 
-        public FolderInfo(string location) : base(location)
+        public FolderInfo(string location, string relativeLocation) : base(location, relativeLocation)
         {
             this.Files = new HashSet<string>();
         }
@@ -27,7 +28,9 @@ namespace Armedia.CMSMF.SharePoint.Import
     {
         protected static readonly ILog LOG = LogManager.GetLogger(typeof(FolderImporter));
 
-        private void ProcessAccumulatedFolders(SharePointSession session, Dictionary<string, List<FolderInfo>> folders)
+        private readonly bool OrphanAclInherit;
+
+        private void ProcessAccumulatedFolders(ImportContext importContext, SharePointSession session, Dictionary<string, List<FolderInfo>> parentFolders)
         {
             // This allows for the case where we're only creating indexes, and don't want to touch the repository
             if (session == null) return;
@@ -38,9 +41,10 @@ namespace Armedia.CMSMF.SharePoint.Import
             // to find their parent folder(s), and add the new folders
             Web web = clientContext.Web;
             // Step 1: gather all the parent folders in this batch
-            Dictionary<string, Folder> spFolders = new Dictionary<string, Folder>();
-            List<FolderInfo> processed = new List<FolderInfo>();
-            foreach (string parent in folders.Keys)
+            Dictionary<string, Folder> parentSPObjects = new Dictionary<string, Folder>();
+            // Split the fetching of the parent folders into batches of 50, to be safe
+            int parentBatch = 0;
+            foreach (string parent in parentFolders.Keys)
             {
                 Folder f = null;
                 if (parent == "")
@@ -52,68 +56,120 @@ namespace Armedia.CMSMF.SharePoint.Import
                     f = web.GetFolderByServerRelativeUrl(rootFolder.ServerRelativeUrl + parent);
                 }
                 clientContext.Load(f, r => r.ServerRelativeUrl);
-                spFolders[parent] = f;
+                parentSPObjects[parent] = f;
+
+                if (++parentBatch >= 50)
+                {
+                    // Now get all the accumulated parent folders in a single query.
+                    Log.InfoFormat("Fetching the next {0} parent folders for this level", parentBatch);
+                    session.ExecuteQuery();
+                    parentBatch = 0;
+                }
             }
-            // Now get all the parent folders in a single query
-            session.ExecuteQuery();
+
+            if (parentBatch > 0)
+            {
+                // We have parents to fetch, so fetch them
+                Log.InfoFormat("Fetching the last {0} parent folders for this level", parentBatch);
+                session.ExecuteQuery();
+            }
 
             // Step 2: go through all the parent folders, and create their children
-            int batch = 0;
-            foreach (string parent in folders.Keys)
+            Dictionary<string, ProgressTracker> trackers = new Dictionary<string, ProgressTracker>();
+            List<List<FolderInfo>> batches = new List<List<FolderInfo>>();
+            Action<List<FolderInfo>> processBatch = (batch) =>
             {
-                Folder parentFolder = spFolders[parent];
-                foreach (FolderInfo f in folders[parent])
+                if ((batch == null) || batch.IsNullOrEmpty()) return;
+                Log.InfoFormat("Executing the query for the creation of the last {0} folders", batch.Count);
+                session.ExecuteQuery();
+                batches.Add(batch);
+            };
+
+            List<FolderInfo> processed = new List<FolderInfo>();
+            List<FolderInfo> currentBatch = null;
+            foreach (string parent in parentFolders.Keys)
+            {
+                Folder parentFolder = parentSPObjects[parent];
+                foreach (FolderInfo f in parentFolders[parent])
                 {
-                    ProgressTracker tracker = new ProgressTracker(f.Location, this.Log);
+                    if (currentBatch == null) currentBatch = new List<FolderInfo>();
+                    ProgressTracker tracker = new ProgressTracker(importContext.FormatMetadataLocation(f.RelativeLocation), importContext.FormatProgressLocation(f.RelativeLocation), this.Log);
+                    trackers[f.Id] = tracker;
                     if (tracker.Completed)
                     {
                         f.SPObj = parentFolder.Folders.GetByUrl(f.SafeName);
                         f.Exists = true;
-                        Log.Info(string.Format("Loaded existing folder [{0}] from [{1}]", f.FullPath, f.SafeFullPath));
+                        Log.InfoFormat("Loaded existing folder [{0}] from [{1}]", f.FullPath, f.SafeFullPath);
                     }
                     else
                     {
                         f.SPObj = parentFolder.Folders.Add(f.SafeName);
                         f.Modified = true;
-                        Log.Info(string.Format("Added folder [{0}] for creation as [{1}]", f.FullPath, f.SafeFullPath));
+                        Log.InfoFormat("Added folder [{0}] for creation as [{1}]", f.FullPath, f.SafeFullPath);
                     }
                     clientContext.Load(f.SPObj, r => r.ServerRelativeUrl);
+                    currentBatch.Add(f);
                     processed.Add(f);
-                    // Do them in bunches of 50
-                    if (++batch >= 50)
+
+                    // Do them in bunches of 50 to reduce the number of queries
+                    if (currentBatch.Count >= 50)
                     {
-                        Log.Info(string.Format("Executing the creation of the last {0} folders", batch));
-                        session.ExecuteQuery();
-                        batch = 0;
+                        processBatch(currentBatch);
+                        currentBatch = null;
                     }
                 }
             }
-            // Now, create all the children in a single query
-            if (batch > 0)
+
+            // This is the remainder in the last batch, so handle it
+            processBatch(currentBatch);
+
+            // Update the url
+            processed.ForEach(f => f.Url = f.SPObj.ServerRelativeUrl);
+
+            // TODO: Decide if this is the right time and place to ApplyMetadata, using the captured batches for
+            // this depth level since we know that a) all parents already must exist, and b) the folders are empty.
+            //
+            // This might be important in the event that ACLs need to be split out b/c there's a limitation associated
+            // with how many objects a folder tree contains: can't split the ACL if the tree contains more than 100K objects,
+            // so if we need to split the ACL, we should do it ASAP - doubly so when the folders are freshly created
+            // and thus empty.
+            //
+            // TODO: Not yet enabled b/c we're not sure it's the right thing to do just yet
+            /*
+            foreach (List<FolderInfo> batch in batches)
             {
-                Log.Info(string.Format("Executing the creation of the last {0} folders", batch));
+                foreach (FolderInfo folder in batch)
+                {
+                    ApplyMetadata(folder, trackers[folder.Id], false);
+                }
                 session.ExecuteQuery();
             }
-            foreach (FolderInfo f in processed)
-            {
-                // Update the server relative URLs for each of them
-                f.Url = f.SPObj.ServerRelativeUrl;
-            }
+            */
         }
 
         private readonly Dictionary<string, FolderInfo> Folders;
+        private readonly ContentType FallbackType;
 
-        public FolderImporter(ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter) : this(contentTypeImporter?.ImportContext ?? permissionsImporter.ImportContext, contentTypeImporter, permissionsImporter)
-        {
-        }
-        public FolderImporter(ImportContext importContext) : this(importContext, null, null)
+        public FolderImporter(ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter, string fallbackType, bool orphanAclInherit) : this(contentTypeImporter?.ImportContext ?? permissionsImporter.ImportContext, contentTypeImporter, permissionsImporter, fallbackType, orphanAclInherit)
         {
         }
 
-        private FolderImporter(ImportContext importContext, ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter) : base("folders", importContext, contentTypeImporter, permissionsImporter)
+        public FolderImporter(ImportContext importContext, string fallbackType, bool orphanAclInherit) : this(importContext, null, null, fallbackType, orphanAclInherit)
         {
-            Dictionary<string, FolderInfo> folderDictionary = new Dictionary<string, FolderInfo>();
-            using (XmlReader folders = this.ImportContext.LoadIndex("folders"))
+        }
+
+        private FolderImporter(ImportContext importContext, ContentTypeImporter contentTypeImporter, PermissionsImporter permissionsImporter, string fallbackType, bool orphanAclInherit) : base("folders", importContext, contentTypeImporter, permissionsImporter)
+        {
+            this.OrphanAclInherit = orphanAclInherit;
+            this.Folders = new Dictionary<string, FolderInfo>();
+            XmlReader foldersXml = this.ImportContext.LoadIndex("folders");
+            if (!string.IsNullOrWhiteSpace(fallbackType))
+            {
+                this.FallbackType = ResolveContentType(fallbackType);
+                if (this.FallbackType == null) throw new Exception($"Fallback folder type [{fallbackType}] could not be resolved");
+            }
+            if (foldersXml == null) return;
+            using (foldersXml)
             {
                 int currentDepth = 0;
                 Dictionary<string, List<FolderInfo>> accumulated = new Dictionary<string, List<FolderInfo>>();
@@ -122,24 +178,24 @@ namespace Armedia.CMSMF.SharePoint.Import
                 using (ObjectPool<SharePointSession>.Ref sessionRef = this.ImportContext.SessionFactory?.GetSession())
                 {
                     SharePointSession session = sessionRef?.Target;
-                    outer: while (folders.ReadToFollowing("folder"))
+                    outer: while (foldersXml.ReadToFollowing("folder"))
                     {
                         string location = null;
                         string path = null;
-                        using (XmlReader folder = folders.ReadSubtree())
+                        using (XmlReader folderXml = foldersXml.ReadSubtree())
                         {
                             // We're only interested in the <location> and <path> elements, so if they're not there
                             // we simply move on to the next folder
-                            if (!folder.ReadToFollowing("path"))
+                            if (!folderXml.ReadToFollowing("path"))
                             {
                                 goto outer;
                             }
-                            path = "/" + folder.ReadElementContentAsString();
-                            if (!folder.ReadToFollowing("location"))
+                            path = "/" + folderXml.ReadElementContentAsString();
+                            if (!folderXml.ReadToFollowing("location"))
                             {
                                 goto outer;
                             }
-                            location = folder.ReadElementContentAsString();
+                            location = folderXml.ReadElementContentAsString();
                         }
 
                         int thisDepth = (path == "/" ? 0 : thisDepth = Tools.CountChars(path, '/'));
@@ -149,15 +205,19 @@ namespace Armedia.CMSMF.SharePoint.Import
                         {
                             if (session != null)
                             {
-                                Log.Info(string.Format("Creating {0} folders in the target environment, depth {1}", accumulatedCount, thisDepth));
+                                Log.InfoFormat("Creating {0} folders in the target environment, depth {1}", accumulatedCount, thisDepth);
+                                bool ok = false;
                                 try
                                 {
-                                    ProcessAccumulatedFolders(session, accumulated);
+                                    ProcessAccumulatedFolders(importContext, session, accumulated);
+                                    ok = true;
                                 }
-                                catch (Exception e)
+                                finally
                                 {
-                                    Log.Error("Failed to process the current accumulated folder batch");
-                                    throw e;
+                                    if (!ok)
+                                    {
+                                        Log.Error("Failed to process the current accumulated folder batch");
+                                    }
                                 }
                             }
                             accumulated.Clear();
@@ -166,7 +226,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         }
 
                         // A new folder to handle...
-                        FolderInfo f = new FolderInfo(this.ImportContext.FormatMetadataLocation(location));
+                        FolderInfo f = new FolderInfo(this.ImportContext.FormatMetadataLocation(location), location);
 
                         List<FolderInfo> l = null;
                         if (!accumulated.ContainsKey(f.SafePath))
@@ -183,34 +243,36 @@ namespace Armedia.CMSMF.SharePoint.Import
                         if (thisDepth == 0)
                         {
                             // Check to see if this is a cabinet we want to avoid
-                            if (XmlConvert.ToBoolean(XmlTools.GetAttributeValue(xml, "dctm:is_private")))
+                            if (XmlConvert.ToBoolean(XmlTools.GetAttributeValue(xml, "caliente:is_private")))
                             {
-                                Log.Info(string.Format("Skipping private cabinet [{0}]", f.FullPath));
+                                Log.InfoFormat("Skipping private cabinet [{0}]", f.FullPath);
                                 continue;
                             }
                         }
                         */
                         l.Add(f);
                         accumulatedCount++;
-                        folderDictionary[f.FullPath] = f;
+                        this.Folders[f.FullPath] = f;
                     }
                     if ((session != null) && accumulatedCount > 0)
                     {
-                        Log.Info(string.Format("Creating {0} folders in the target environment, depth {1}", accumulated.Count, currentDepth + 1));
+                        Log.InfoFormat("Creating {0} folders in the target environment, depth {1}", accumulated.Count, currentDepth + 1);
+                        bool ok = false;
                         try
                         {
-                            ProcessAccumulatedFolders(session, accumulated);
+                            ProcessAccumulatedFolders(importContext, session, accumulated);
+                            ok = true;
                         }
-                        catch (Exception e)
+                        finally
                         {
-                            Log.Error("Failed to process the last accumulated folder batch");
-                            throw e;
+                            if (!ok)
+                            {
+                                Log.Error("Failed to process the last accumulated folder batch");
+                            }
                         }
                     }
                 }
             }
-
-            this.Folders = folderDictionary;
         }
 
         public FolderInfo ResolveFolder(string path)
@@ -224,6 +286,11 @@ namespace Armedia.CMSMF.SharePoint.Import
 
         private void ApplyMetadata(FolderInfo folder, ProgressTracker tracker)
         {
+            ApplyMetadata(folder, tracker, true);
+        }
+
+        private void ApplyMetadata(FolderInfo folder, ProgressTracker tracker, bool executeQuery)
+        {
             // Apply the actual metadata to the folder, including permissions, attributes, etc.
             using (ObjectPool<SharePointSession>.Ref sessionRef = this.ImportContext.SessionFactory.GetSession())
             {
@@ -234,11 +301,12 @@ namespace Armedia.CMSMF.SharePoint.Import
                 Folder f = clientContext.Web.GetFolderByServerRelativeUrl(folder.Url);
                 tracker.TrackProgress("Gathering metadata and permissions for folder at [{0}]", folder.SafeFullPath);
                 ContentType contentType = ResolveContentType(folder.Type);
+                if (contentType == null) contentType = this.FallbackType;
                 if (contentType != null) f.ListItemAllFields["ContentTypeId"] = contentType.Id;
 
                 FolderInfo parent = ResolveFolder(folder.Path);
-                bool individualAcl = (parent == null || (folder.Acl != parent.Acl));
-                ApplyMetadata(f.ListItemAllFields, xml);
+                bool individualAcl = (parent != null ? !string.Equals(folder.Acl, parent.Acl) : (!this.OrphanAclInherit || !string.IsNullOrEmpty(folder.Acl)));
+                ApplyMetadata(f.ListItemAllFields, xml, contentType);
                 string aclResult = "inherited";
                 if (individualAcl)
                 {
@@ -252,12 +320,13 @@ namespace Armedia.CMSMF.SharePoint.Import
                 f.ListItemAllFields.Update();
                 f.Update();
                 tracker.TrackProgress("Applying metadata and permissions on folder at [{0}]", folder.SafeFullPath);
-                session.ExecuteQuery();
+                if (executeQuery) session.ExecuteQuery();
                 ShowProgress();
+                folder.SPObj = f;
             }
         }
 
-        private ICollection<FolderInfo> FinalizeFolders(ICollection<FolderInfo> pending, int importThreads)
+        private ICollection<FolderInfo> FinalizeFolders(ImportContext importContext, ICollection<FolderInfo> pending, int importThreads)
         {
             List<FolderInfo> failed = new List<FolderInfo>();
             ActionBlock<FolderInfo> processor = new ActionBlock<FolderInfo>(folderInfo =>
@@ -266,13 +335,10 @@ namespace Armedia.CMSMF.SharePoint.Import
                 Result r = Result.Skipped;
                 try
                 {
-                    ProgressTracker tracker = new ProgressTracker(folderInfo.Location, this.Log);
+                    ProgressTracker tracker = new ProgressTracker(importContext.FormatMetadataLocation(folderInfo.RelativeLocation), importContext.FormatProgressLocation(folderInfo.RelativeLocation), this.Log);
                     if (!folderInfo.Modified && folderInfo.Exists && !tracker.Failed)
                     {
-                        if (Log.IsDebugEnabled)
-                        {
-                            Log.Debug(string.Format("Skipping folder [{0}] - already completed", folderInfo.FullPath));
-                        }
+                        Log.DebugFormat("Skipping folder [{0}] - already completed", folderInfo.FullPath);
                         IncreaseProgress();
                         return;
                     }
@@ -282,8 +348,8 @@ namespace Armedia.CMSMF.SharePoint.Import
                     try
                     {
                         ApplyMetadata(folderInfo, tracker);
-                        r = Result.Completed;
                         tracker.DeleteOutcomeMarker();
+                        r = Result.Completed;
                     }
                     catch (Exception e)
                     {
@@ -292,7 +358,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         {
                             failed.Add(folderInfo);
                         }
-                        Log.Error(string.Format("Failed to apply the metadata to the folder at [{0}]", folderInfo.SafeFullPath), e);
+                        Log.Error($"Failed to apply the metadata to the folder at [{folderInfo.SafeFullPath}]", e);
                     }
                     finally
                     {
@@ -350,7 +416,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             return pending;
         }
 
-        public void FinalizeFolders(int threads, int retries)
+        public void FinalizeFolders(ImportContext importContext, int threads, int retries)
         {
             ICollection<FolderInfo> failed = new List<FolderInfo>();
             Log.Info("Checking existing status to identify which folders need processing");
@@ -360,7 +426,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
             if (pending.Count == 0)
             {
-                Log.Info(string.Format("No folders are in need of processing"));
+                Log.Info("No folders are in need of processing");
                 return;
             }
 
@@ -370,19 +436,25 @@ namespace Armedia.CMSMF.SharePoint.Import
             {
                 ResetCounter(Result.Failed);
                 attempt++;
-                Log.Info(string.Format("Identified {0} folders in need of processing (of which {1} are retries) (attempt #{2}/{3})", pending.Count, failed.Count, attempt, retries + 1));
+                Log.InfoFormat("Identified {0} folders in need of processing (of which {1} are retries) (attempt #{2}/{3})", pending.Count, failed.Count, attempt, retries + 1);
                 int lastPending = pending.Count;
-                pending = FinalizeFolders(pending, threads);
+                pending = FinalizeFolders(importContext, pending, threads);
                 failed = pending;
                 if (pending.Count < lastPending)
                 {
-                    Log.Info(string.Format("{0} folders were successfully processed in this attempt, with {1} failures", lastPending - pending.Count, pending.Count));
+                    Log.InfoFormat("{0} folders were successfully processed in this attempt, with {1} failures", lastPending - pending.Count, pending.Count);
                     attempt = 0;
                 }
                 else
                 {
-                    Log.Info(string.Format("No change in the data set - {0} were pending, and {1} failed", lastPending, pending.Count));
+                    Log.InfoFormat("No change in the data set - {0} were pending, and {1} failed", lastPending, pending.Count);
                 }
+            }
+
+            // Spit out a list of objects to retry, in CSV format
+            foreach (FolderInfo info in pending)
+            {
+                LogFailure("FOLDER", info.Id, info.FullPath, info.Location);
             }
         }
     }

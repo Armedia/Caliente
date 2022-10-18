@@ -46,7 +46,7 @@ public class DctmExportEngineFactory extends
 	ExportEngineFactory<IDfSession, IDfValue, DctmExportContext, DctmExportContextFactory, DctmExportDelegateFactory, DctmExportEngine> {
 
 	public DctmExportEngineFactory() {
-		super(true, new DfcCrypto());
+		super(true, DfcCrypto.INSTANCE);
 	}
 
 	@Override

@@ -48,7 +48,6 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.cmis.CmisPagingTransformerIterator;
 import com.armedia.caliente.engine.cmis.CmisRecursiveIterator;
-import com.armedia.caliente.engine.cmis.CmisResultTransformer;
 import com.armedia.caliente.engine.cmis.CmisSessionFactory;
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.cmis.CmisTransformerIterator;
@@ -60,6 +59,7 @@ import com.armedia.caliente.engine.exporter.ExportSetting;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObject.Archetype;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -70,7 +70,7 @@ import com.armedia.commons.utilities.Tools;
 public class CmisExportEngine extends
 	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory, CmisExportEngineFactory> {
 
-	private final class QueryResultTransformer implements CmisResultTransformer<QueryResult, ExportTarget> {
+	private final class QueryResultTransformer {
 		private final Session session;
 		private final Map<String, ObjectType> typeCache = new HashMap<>();
 
@@ -78,11 +78,12 @@ public class CmisExportEngine extends
 			this.session = session;
 		}
 
-		@Override
 		public ExportTarget transform(QueryResult r) throws Exception {
 			PropertyData<?> objectId = r.getPropertyById(PropertyIds.OBJECT_ID);
 			if (objectId == null) {
-				throw new ExportException("Failed to find the cmis:objectId property as part of the query result");
+				CmisExportEngine.this.log
+					.warn("UNSUPPORTED OBJECT: Failed to find the cmis:objectId property as part of the query result");
+				return null;
 			}
 
 			CmfObject.Archetype type = null;
@@ -107,27 +108,33 @@ public class CmisExportEngine extends
 					type = decodeType(value);
 				}
 				if (type != null) {
-					if (CmisExportEngine.this.log.isTraceEnabled()) {
-						CmisExportEngine.this.log.trace("Object type [{}] decoded as [{}]", firstValue, type);
-					}
+					CmisExportEngine.this.log.trace("Object type [{}] decoded as [{}]", firstValue, type);
 					break;
 				}
 			}
-			if (type == null) {
-				throw new ExportException(
-					"Failed to find the cmis:objectTypeId or the cmis:baseTypeId properties as part of the query result, or the returned value couldn't be decoded");
-			}
 			String id = Tools.toString(objectId.getFirstValue());
-			return new ExportTarget(type, id, id);
+			if (type == null) {
+				CmisExportEngine.this.log.warn(
+					"UNSUPPORTED OBJECT: Failed to find the cmis:objectTypeId or the cmis:baseTypeId properties as part of the query result for object with ID [{}], or the returned value couldn't be decoded",
+					id);
+				return null;
+			}
+			return ExportTarget.from(type, id, id);
 		}
 	}
 
-	private final CmisResultTransformer<CmisObject, ExportTarget> cmisObjectTransformer = new CmisResultTransformer<CmisObject, ExportTarget>() {
-		@Override
-		public ExportTarget transform(CmisObject result) throws Exception {
-			return new ExportTarget(decodeType(result.getType()), result.getId(), result.getId());
+	private final ExportTarget cmisObjectToExportTarget(CmisObject result) throws Exception {
+		ObjectType type = result.getType();
+		Archetype archetype = decodeType(type);
+		if (archetype == null) {
+			// TODO: Is it, perhaps, a reference? How to find out?
+			this.log.warn(
+				"UNSUPPORTED OBJECT: Failed to decode the ArcheType for result [{}] (name={}, type={}, baseType={})",
+				result.getId(), result.getName(), type.getId(), result.getBaseTypeId().value());
+			return null;
 		}
-	};
+		return ExportTarget.from(archetype, result.getId(), result.getId());
+	}
 
 	public CmisExportEngine(CmisExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
@@ -147,12 +154,18 @@ public class CmisExportEngine extends
 			// This is a folder that we need to recurse into
 			return new CmisTransformerIterator<>(
 				new CmisRecursiveIterator(session, Folder.class.cast(obj), excludeEmptyFolders),
-				this.cmisObjectTransformer);
+				this::cmisObjectToExportTarget);
 		}
 
 		// Not a folder, so no need to recurse
-		return Collections.singleton(new ExportTarget(decodeType(obj.getBaseType()), obj.getId(), obj.getId()))
-			.iterator();
+		Archetype type = decodeType(obj.getBaseType());
+		if (type == null) {
+			this.log.warn(
+				"UNSUPPORTED OBJECT: The object at path [{}](id={}) is not of a supported type (type={}, baseType={})",
+				path, obj.getId(), obj.getType().getId(), obj.getBaseTypeId().value());
+			return Collections.emptyListIterator();
+		}
+		return Collections.singleton(cmisObjectToExportTarget(obj)).iterator();
 	}
 
 	@Override
@@ -167,7 +180,7 @@ public class CmisExportEngine extends
 		final boolean searchAllVersions = session.getRepositoryInfo().getCapabilities()
 			.isAllVersionsSearchableSupported();
 		return new CmisPagingTransformerIterator<>(session.query(query, searchAllVersions),
-			new QueryResultTransformer(session));
+			new QueryResultTransformer(session)::transform);
 	}
 
 	@Override
@@ -193,10 +206,16 @@ public class CmisExportEngine extends
 		try {
 			CmisObject obj = session.getObject(searchKey);
 			CmfObject.Archetype type = decodeType(obj.getBaseType());
+			if (type == null) {
+				this.log.warn(
+					"UNSUPPORTED OBJECT: the object located with search key [{}] is not of a supported type (name={}, type={}, baseType={})",
+					searchKey, obj.getName(), obj.getType().getId(), obj.getBaseTypeId().value());
+				return Stream.empty();
+			}
 
 			// Not a folder, so no recursion
 			if (type != CmfObject.Archetype.FOLDER) {
-				return Stream.of(new ExportTarget(type, obj.getId(), searchKey));
+				return Stream.of(ExportTarget.from(type, obj.getId(), searchKey));
 			}
 
 			// RECURSE!!!

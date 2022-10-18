@@ -54,11 +54,11 @@ public class XmlGroupImportDelegate extends XmlAggregatedImportDelegate<GroupT, 
 		group.setSource(getAttributeValue(IntermediateAttribute.GROUP_SOURCE).asString());
 		group.setType(getAttributeValue(IntermediateAttribute.GROUP_TYPE).asString());
 
-		for (CmfValue v : getAttributeValues("dctm:users_names")) {
+		for (CmfValue v : getAttributeValues(renderAttributeName("users_names"))) {
 			group.addUser(v.asString());
 		}
 
-		for (CmfValue v : getAttributeValues("dctm:groups_names")) {
+		for (CmfValue v : getAttributeValues(renderAttributeName("groups_names"))) {
 			group.addGroup(v.asString());
 		}
 

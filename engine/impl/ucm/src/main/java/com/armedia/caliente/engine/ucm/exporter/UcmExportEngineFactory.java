@@ -46,7 +46,7 @@ public class UcmExportEngineFactory extends
 	ExportEngineFactory<UcmSession, CmfValue, UcmExportContext, UcmExportContextFactory, UcmExportDelegateFactory, UcmExportEngine> {
 
 	public UcmExportEngineFactory() {
-		super(false, new CmfCrypt());
+		super(false, CmfCrypt.DEFAULT);
 	}
 
 	@Override

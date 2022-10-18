@@ -39,16 +39,19 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
 
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.log4j.Level;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +70,8 @@ import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.caliente.tools.Log4JUtils;
+import com.armedia.caliente.tools.Log4JUtils.LoggerSettings;
 import com.armedia.caliente.tools.ParameterTools;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
@@ -107,7 +112,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		VERSION = Tools.coalesce(version, "(unknown)");
 	}
 
-	public static final CmfCrypt CRYPTO = new CmfCrypt();
+	public static final CmfCrypt CRYPTO = CmfCrypt.DEFAULT;
 	public static final String STORE_PROP_CONTENT_LOCATION_REQUIRED = "caliente.content.location.required";
 
 	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";
@@ -620,12 +625,58 @@ public class Entrypoint extends AbstractEntrypoint {
 			}
 		}
 
+		Level newLevel = null;
+		switch (baseValues.getOccurrences(CLIParam.verbose)) {
+			case 0:
+				break;
+			case 1:
+				newLevel = Level.DEBUG;
+				break;
+			case 2:
+				newLevel = Level.TRACE;
+				break;
+			default:
+				newLevel = Level.ALL;
+				break;
+		}
+
+		// If the log level has been changed, add it to the start message
+		String logLevelMessage = "";
+		if (newLevel != null) {
+			logLevelMessage = " (" + newLevel + ")";
+		}
+
 		// Make sure log4j is configured by directly invoking the requisite class
-		org.apache.log4j.Logger.getRootLogger().info("Logging active");
+		org.apache.log4j.Logger.getRootLogger().info("Logging active" + logLevelMessage);
+		if (newLevel != null) {
+			org.apache.log4j.Logger.getLogger("com.armedia.caliente").setLevel(newLevel);
+		}
+
+		List<String> logLevels = baseValues.getStrings(CLIParam.log_level);
+		List<LoggerSettings> loggerSettings = new LinkedList<>();
+		if ((logLevels != null) && !logLevels.isEmpty()) {
+			for (String loggerSetting : logLevels) {
+				Matcher m = Log4JUtils.LOG_INFO.matcher(loggerSetting);
+				if (!m.matches()) {
+					this.log.warn("Illegal log level specification found: [{}]", loggerSetting);
+					continue;
+				}
+
+				loggerSettings.add(new LoggerSettings(loggerSetting));
+			}
+		}
+		Log4JUtils.setCustomLogs(loggerSettings);
+		final Logger console = LoggerFactory.getLogger("console");
+		if (Log4JUtils.apply()) {
+			console.info("Applied the custom logger settings");
+			for (LoggerSettings l : loggerSettings) {
+				console.info(l.toString());
+			}
+		}
 
 		// Now, get the logs via SLF4J, which is what we'll be using moving forward...
-		final Logger console = LoggerFactory.getLogger("console");
-		console.info("Launching Caliente v{} {} mode for engine {}{}", Entrypoint.VERSION, command, engine, Tools.NL);
+		console.info("Launching Caliente{} v{} {} mode for engine {}{}", logLevelMessage, Entrypoint.VERSION, command,
+			engine, Tools.NL);
 		Runtime runtime = Runtime.getRuntime();
 		console.info("Current heap size: {} MB", runtime.totalMemory() / 1024 / 1024);
 		console.info("Maximum heap size: {} MB", runtime.maxMemory() / 1024 / 1024);
@@ -657,6 +708,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		return super.execute(args);
 	}
 
+	@Override
 	protected int execute(OptionParseResult result) throws Exception {
 		final OptionValues commandValues = result.getCommandValues();
 		final Collection<String> positionals = result.getPositionals();

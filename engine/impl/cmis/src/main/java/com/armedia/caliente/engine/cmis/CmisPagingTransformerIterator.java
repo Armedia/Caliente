@@ -30,12 +30,15 @@ import java.util.Iterator;
 
 import org.apache.chemistry.opencmis.client.api.ItemIterable;
 
+import com.armedia.commons.utilities.function.CheckedFunction;
+
 public final class CmisPagingTransformerIterator<S, T> implements Iterator<T> {
 
 	private final CmisPagingIterator<S> it;
-	private final CmisResultTransformer<S, T> transformer;
+	private final CheckedFunction<S, T, ? extends Exception> transformer;
 
-	public CmisPagingTransformerIterator(ItemIterable<S> results, CmisResultTransformer<S, T> transformer) {
+	public CmisPagingTransformerIterator(ItemIterable<S> results,
+		CheckedFunction<S, T, ? extends Exception> transformer) {
 		if (transformer == null) { throw new IllegalArgumentException("Must provide a transformer"); }
 		this.transformer = transformer;
 		this.it = new CmisPagingIterator<>(results);
@@ -49,7 +52,7 @@ public final class CmisPagingTransformerIterator<S, T> implements Iterator<T> {
 	@Override
 	public T next() {
 		try {
-			return this.transformer.transform(this.it.next());
+			return this.transformer.applyChecked(this.it.next());
 		} catch (Exception e) {
 			throw new RuntimeException(String.format("Failed to transform query result #%d", this.it.getCount()), e);
 		}

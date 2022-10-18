@@ -87,17 +87,18 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 				childFolders.add(new CmisFolderDelegate(this.factory, ctx.getSession(), Folder.class.cast(o)));
 			} else if (o instanceof Document) {
 				childDocs.add(new CmisDocumentDelegate(this.factory, ctx.getSession(), Document.class.cast(o)));
+			} else {
+				this.log.warn(
+					"Unknown or unsupported object type for [{}/{}]({}): [{}]({}) found while exploring FOLDER ({})",
+					this.object.getPath(), o.getName(), o.getId(), o.getType().getId(), o.getClass().getName(),
+					this.object.getId());
 			}
 		}
 
 		// We're supposed to add the child objects because we're not being added by an upwards
 		// recursion, so we add them
-		for (CmisFolderDelegate d : childFolders) {
-			ret.add(d);
-		}
-		for (CmisDocumentDelegate d : childDocs) {
-			ret.add(d);
-		}
+		ret.addAll(childFolders);
+		ret.addAll(childDocs);
 		return ret;
 	}
 

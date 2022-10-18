@@ -3,3 +3,4 @@ bin
 obj
 sample
 *.csproj.user
+**/ignore
