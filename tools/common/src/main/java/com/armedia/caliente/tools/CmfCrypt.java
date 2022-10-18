@@ -27,6 +27,7 @@
 package com.armedia.caliente.tools;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -40,16 +41,17 @@ import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.codec.CheckedCodec;
 
-public class CmfCrypt {
+public class CmfCrypt implements CheckedCodec<CharSequence, byte[], Exception> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -57,7 +59,7 @@ public class CmfCrypt {
 	private static final Pattern BASE64_VALIDATOR = Pattern
 		.compile("^[a-zA-Z0-9+/]+(?:[AEIMQUYcgkosw048]=|[AQgw]==)?$");
 	private static final byte[] NO_BYTES = new byte[0];
-	private static final Charset CHARSET = Charset.forName("UTF-8");
+	private static final Charset CHARSET = StandardCharsets.UTF_8;
 	private static final String ENCODED_KEY = "6RBjZgfVO+KhuPU0qSqmdQ==";
 	private static final SecretKey KEY;
 	private static final String CIPHER_ALGORITHM = "AES";
@@ -66,14 +68,48 @@ public class CmfCrypt {
 	protected static final Collection<Scheme> NO_SCHEMES = Collections.emptyList();
 
 	static {
-		final byte[] key = DatatypeConverter.parseBase64Binary(CmfCrypt.ENCODED_KEY);
-		KEY = new SecretKeySpec(key, CmfCrypt.CIPHER_ALGORITHM);
+		try {
+			KEY = new SecretKeySpec( //
+				CmfCrypt.decodeBase64(CmfCrypt.ENCODED_KEY), //
+				CmfCrypt.CIPHER_ALGORITHM //
+			);
+		} catch (CryptException e) {
+			throw new RuntimeException("Failed to initialize the simple encryption engine", e);
+		}
+	}
+
+	public static byte[] normalizeKey(byte[] key) {
+		return CmfCrypt.normalizeKey(key, true);
+	}
+
+	public static byte[] normalizeKey(byte[] key, boolean strengthen) {
+		if (key == null) {
+			// Defend against null keys
+			key = CmfCrypt.NO_BYTES;
+		}
+
+		if (key.length != 32) {
+			byte[] newKey = new byte[32];
+			if ((newKey.length > key.length) && strengthen) {
+				// Fill in each byte with its offset, to make the key stronger. We don't use
+				// random values b/c we want the result to be consistently reproducible
+				for (int i = 0; i < newKey.length; i++) {
+					newKey[i] = (byte) i;
+				}
+			}
+			// We copy up to the first 32 bytes from the original key into the new key
+			System.arraycopy(key, 0, newKey, 0, Math.min(key.length, newKey.length));
+
+			// Swap the references
+			key = newKey;
+		}
+
+		// Return the result
+		return key;
 	}
 
 	public static byte[] decodeBase64(String value) throws CryptException {
-		if (value == null) { throw new IllegalArgumentException("Must provide a value to decode"); }
-		value = value.trim();
-		if (value.length() == 0) { return CmfCrypt.NO_BYTES; }
+		if (StringUtils.isEmpty(value)) { return CmfCrypt.NO_BYTES; }
 		if ((value.length() % 4) != 0) {
 			throw new CryptException(
 				String.format("Bad Base64 value - its length should be a multiple of 4, but it's %d", value.length()));
@@ -83,7 +119,7 @@ public class CmfCrypt {
 			throw new CryptException(String.format("Bad Base64 value - doesn't match the required syntax of <%s>",
 				CmfCrypt.BASE64_VALIDATOR.pattern()));
 		}
-		return DatatypeConverter.parseBase64Binary(value);
+		return Base64.decodeBase64(value);
 	}
 
 	protected static interface Scheme {
@@ -108,15 +144,16 @@ public class CmfCrypt {
 			if (key == null) {
 				this.key = CmfCrypt.KEY;
 				pdk = true;
-				key = DatatypeConverter.parseBase64Binary(CmfCrypt.ENCODED_KEY);
+				key = CmfCrypt.decodeBase64(CmfCrypt.ENCODED_KEY);
 			} else {
-				if ((key.length != 16) && (key.length != 24) && (key.length != 32)) {
-					throw new IllegalArgumentException("The key must be either 128, 192 or 256 bits");
-				}
-				this.key = new SecretKeySpec(key, CmfCrypt.CIPHER_ALGORITHM);
+				this.key = new SecretKeySpec(CmfCrypt.normalizeKey(key), CmfCrypt.CIPHER_ALGORITHM);
 			}
+
+			// Make sure we can work our magic both ways
 			getCipher(this.key, false);
 			getCipher(this.key, true);
+
+			// Store the description, for future reference
 			this.description = String.format("%s-%d-%s", CmfCrypt.CIPHER_SPEC, key.length * 8,
 				(pdk ? "default" : DigestUtils.sha256Hex(key)));
 		}
@@ -131,24 +168,38 @@ public class CmfCrypt {
 
 		@Override
 		public String decryptValue(String value) throws Exception {
-			final byte[] data;
 			try {
-				data = getCipher(this.key, false).doFinal(CmfCrypt.decodeBase64(value));
+				return new String( //
+					getCipher(this.key, false) //
+						.doFinal( //
+							CmfCrypt.decodeBase64( //
+								// Don't allow nulls to spoil our fun
+								StringUtils.isNotEmpty(value) //
+									? value //
+									: StringUtils.EMPTY //
+							) //
+						), //
+					CmfCrypt.CHARSET //
+				);
 			} catch (Exception e) {
 				throw new CryptException("Failed to decrypt the given value", e);
 			}
-			return new String(data, CmfCrypt.CHARSET);
 		}
 
 		@Override
 		public String encryptValue(String value) throws Exception {
-			final byte[] data;
 			try {
-				data = getCipher(this.key, true).doFinal(value.getBytes(CmfCrypt.CHARSET));
+				return Base64.encodeBase64String( //
+					getCipher(this.key, true) //
+						.doFinal( //
+							// Don't allow nulls to spoil our fun
+							Tools.coalesce(value, StringUtils.EMPTY) //
+								.getBytes(CmfCrypt.CHARSET) //
+						) //
+				);
 			} catch (Exception e) {
 				throw new CryptException("Failed to encrypt the given value", e);
 			}
-			return DatatypeConverter.printBase64Binary(data);
 		}
 
 		@Override
@@ -167,10 +218,12 @@ public class CmfCrypt {
 		}
 	}
 
+	public static final CmfCrypt DEFAULT = new CmfCrypt();
+
 	private final Collection<Scheme> alternateSchemes;
 	private final Scheme encryptionScheme;
 
-	public CmfCrypt() {
+	private CmfCrypt() {
 		this(CmfCrypt.DEFAULT_SCHEME, CmfCrypt.NO_SCHEMES);
 	}
 
@@ -244,5 +297,19 @@ public class CmfCrypt {
 			throw new Exception(
 				String.format("Failed to encrypt the value [%s] using any of the available encryption schemes", value));
 		}
+	}
+
+	@Override
+	public byte[] encode(CharSequence str) throws Exception {
+		return Base64.decodeBase64(encrypt(Tools.toString(str)));
+	}
+
+	@Override
+	public CharSequence decode(byte[] data) throws Exception {
+		return decrypt( //
+			((data != null) && (data.length > 0)) //
+				? Base64.encodeBase64String(data) //
+				: StringUtils.EMPTY //
+		);
 	}
 }

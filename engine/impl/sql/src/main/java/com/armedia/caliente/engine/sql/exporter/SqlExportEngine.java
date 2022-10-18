@@ -89,7 +89,7 @@ public class SqlExportEngine extends
 		}
 		return StreamTools
 			.of(new SqlRecursiveIterator(session, configuration.getBoolean(SqlSetting.IGNORE_EMPTY_FOLDERS)))
-			.map((localFile) -> new ExportTarget(
+			.map((localFile) -> ExportTarget.from(
 				localFile.getAbsolute().isFile() ? CmfObject.Archetype.DOCUMENT : CmfObject.Archetype.FOLDER,
 				localFile.getId(), localFile.getSafePath()));
 	}

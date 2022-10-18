@@ -38,13 +38,15 @@ import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
+import com.armedia.caliente.engine.dfc.DctmSetting;
 import com.armedia.caliente.engine.dfc.common.DctmCommon;
 import com.armedia.caliente.engine.dfc.exporter.DctmExportEngineFactory;
 import com.armedia.caliente.engine.dfc.importer.DctmImportEngineFactory;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
+import com.armedia.caliente.tools.dfc.DfcCrypto;
 import com.armedia.caliente.tools.dfc.cli.DfcLaunchHelper;
-import com.armedia.caliente.tools.dfc.pool.DfcSessionFactory;
+import com.armedia.commons.utilities.EncodedString;
 import com.armedia.commons.utilities.cli.OptionGroup;
 import com.armedia.commons.utilities.cli.OptionGroupImpl;
 import com.armedia.commons.utilities.cli.OptionScheme;
@@ -97,13 +99,18 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 		}
 
 		if (!StringUtils.isEmpty(server)) {
-			settings.put(DfcSessionFactory.DOCBASE, server);
+			settings.put(DctmSetting.DOCBASE.getLabel(), server);
 		}
 		if (!StringUtils.isEmpty(user)) {
-			settings.put(DfcSessionFactory.USERNAME, user);
+			settings.put(DctmSetting.USERNAME.getLabel(), user);
 		}
-		if (!StringUtils.isEmpty(password)) {
-			settings.put(DfcSessionFactory.PASSWORD, password);
+		if (password != null) {
+			try {
+				settings.put(DctmSetting.PASSWORD.getLabel(),
+					EncodedString.from(DfcCrypto.INSTANCE.decrypt(password), DfcCrypto.INSTANCE));
+			} catch (Exception e) {
+				throw new CalienteException("Failed to safeguard the password in an encrypted object", e);
+			}
 		}
 		return true;
 	}

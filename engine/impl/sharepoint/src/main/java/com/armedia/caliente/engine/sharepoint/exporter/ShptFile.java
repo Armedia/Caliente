@@ -426,12 +426,21 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	@Override
 	protected List<CmfContentStream> storeContent(ShptExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshaled, CmfContentStore<?, ?> streamStore, boolean includeRenditions) {
-		final ShptSession session = ctx.getSession();
+		final List<CmfContentStream> ret = new ArrayList<>();
 		CmfContentStream info = new CmfContentStream(marshaled, 0);
+		ret.add(info);
+
+		final ShptSession session = ctx.getSession();
 		final String name = this.object.getName();
 		info.setFileName(name);
 		info.setExtension(FilenameUtils.getExtension(name));
 		CmfContentStore<?, ?>.Handle<CmfValue> h = streamStore.addContentStream(translator, marshaled, info);
+		if (ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT)) {
+			info.setLength(-1);
+			info.setMimeType(MimeTools.DEFAULT_MIME_TYPE);
+			return ret;
+		}
+
 		// TODO: sadly, this is not memory efficient for larger files...
 		BinaryMemoryBuffer buf = new BinaryMemoryBuffer(10240);
 		try (InputStream in = (this.version == null) ? session.getFileStream(this.object.getServerRelativeUrl())
@@ -461,8 +470,6 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			CmfValue.of(type.getBaseType())));
 		info.setMimeType(MimeTools.resolveMimeType(type.getBaseType()));
 		info.setLength(buf.getCurrentSize());
-		List<CmfContentStream> ret = new ArrayList<>();
-		ret.add(info);
 		return ret;
 	}
 

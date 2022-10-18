@@ -33,7 +33,6 @@ package com.armedia.caliente.engine.dfc.exporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.tools.dfc.DfcUtils;
@@ -74,20 +73,22 @@ public class DctmExportTargetIterator extends CloseableIterator<ExportTarget> {
 
 		this.index++;
 		try {
-			return found(DctmExportTools.getExportTarget(this.collection, this.idAttribute, this.typeAttribute));
+			ExportTarget target = DctmExportTools.getExportTarget(this.collection, this.idAttribute,
+				this.typeAttribute);
+			if (target == null) {
+				String dump = " (dump failed)";
+				try {
+					dump = String.format(":%n%s%n", this.collection.dump());
+				} catch (DfException e2) {
+					if (this.log.isTraceEnabled()) {
+						this.log.error("Failed to generate the debug dump for object # {}", this.index, e2);
+					}
+				}
+				this.log.warn("Item # {} is not a supported export target: {}", this.index, dump);
+			}
+			return found(target);
 		} catch (DfException e) {
 			throw new ExportException(String.format("DfException caught constructing export target # %d", this.index),
-				e);
-		} catch (UnsupportedDctmObjectTypeException e) {
-			String dump = " (dump failed)";
-			try {
-				dump = String.format(":%n%s%n", this.collection.dump());
-			} catch (DfException e2) {
-				if (this.log.isTraceEnabled()) {
-					this.log.error("Failed to generate the debug dump for object # {}", this.index, e2);
-				}
-			}
-			throw new ExportException(String.format("Item # %d is not a supported export target: %s", this.index, dump),
 				e);
 		}
 	}

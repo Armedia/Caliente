@@ -57,8 +57,32 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 			"The name for the content organizer to use for the XML file structure (default: same as used by the configured content store)") //
 	;
 
+	private static final Option AGGREGATE_DOCUMENTS = new OptionImpl() //
+		.setLongOpt("aggregate-documents") //
+		.setArgumentLimits(0, 0) //
+		.setDescription(
+			"Instead of rendering a singular XML companion file for each Document, render a single, large index for all Documents") //
+	;
+
+	private static final Option AGGREGATE_FOLDERS = new OptionImpl() //
+		.setLongOpt("aggregate-folders") //
+		.setArgumentLimits(0, 0) //
+		.setDescription(
+			"Instead of rendering a singular XML companion file for each Folder, render a single, large index for all Folders") //
+	;
+
+	private static final Option ENCODING = new OptionImpl() //
+		.setLongOpt("encoding") //
+		.setArgumentLimits(1) //
+		.setDescription("Use the given XML encoding instead of the default") //
+		.setDefault(XmlSetting.ENCODING.getDefaultValue() //
+		);
+
 	private static final OptionGroup OPTIONS = new OptionGroupImpl("XML Import") //
 		.add(Importer.ORGANIZER) //
+		.add(Importer.AGGREGATE_DOCUMENTS) //
+		.add(Importer.AGGREGATE_FOLDERS) //
+		.add(Importer.ENCODING) //
 	;
 
 	Importer(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
@@ -113,6 +137,9 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 
 		settings.put(XmlSetting.ROOT.getLabel(), targetDir.getAbsolutePath());
 		settings.put(XmlSetting.ORGANIZER.getLabel(), commandValues.getString(Importer.ORGANIZER));
+		settings.put(XmlSetting.AGGREGATE_FOLDERS.getLabel(), commandValues.isPresent(Importer.AGGREGATE_FOLDERS));
+		settings.put(XmlSetting.AGGREGATE_DOCUMENTS.getLabel(), commandValues.isPresent(Importer.AGGREGATE_DOCUMENTS));
+		settings.put(XmlSetting.ENCODING.getLabel(), commandValues.getString(Importer.ENCODING));
 		return true;
 	}
 

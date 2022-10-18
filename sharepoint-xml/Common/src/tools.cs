@@ -1,7 +1,8 @@
-﻿using log4net;
+using log4net;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 using System.Security;
@@ -10,7 +11,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Armedia.CMSMF.SharePoint.Common
+namespace Caliente.SharePoint.Common
 {
     public sealed class Tools
     {
@@ -166,7 +167,7 @@ namespace Armedia.CMSMF.SharePoint.Common
 
             if (objectId != null)
             {
-                ret = string.Format("{0}_{1}", objectId, ret);
+                ret = $"{objectId}_{ret}";
             }
             if (ret.Length > 127)
             {
@@ -177,7 +178,7 @@ namespace Armedia.CMSMF.SharePoint.Common
                 if (lastDot >= 0)
                 {
                     string ext = ret.Substring(lastDot);
-                    ret = string.Format("{0}{1}", ret.Substring(0, 127 - ext.Length), ext);
+                    ret = $"{ret.Substring(0, 127 - ext.Length)}{ext}";
                 }
                 else
                 {
@@ -195,38 +196,36 @@ namespace Armedia.CMSMF.SharePoint.Common
         /// <returns>the string the user typed in </returns>
         public static SecureString ReadPassword(char mask)
         {
-            const int ENTER = 13, BACKSP = 8, CTRLBACKSP = 127;
-            int[] FILTERED = { 0, 27, 9, 10 /*, 32 space, if you care */ }; // const
-
             // First, clear the buffer...
             while (Console.KeyAvailable) Console.ReadKey(true);
 
-            char chr = (char)0;
             SecureString str = new SecureString();
-            while ((chr = System.Console.ReadKey(true).KeyChar) != ENTER)
+            while (true)
             {
-                if (chr == BACKSP)
+                ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+
+                // If we're done with the password, we stop reading
+                if (keyInfo.Key == ConsoleKey.Enter) break;
+
+                // This handles both backspace and control-backspace
+                if (keyInfo.Key == ConsoleKey.Backspace)
                 {
-                    if (str.Length > 0)
+                    int count = ((keyInfo.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control) ? str.Length : 1;
+                    while ((count > 0) && (str.Length > 0))
                     {
-                        System.Console.Write("\b \b");
+                        Console.Write("\b \b");
                         str.RemoveAt(str.Length - 1);
+                        count--;
                     }
+                    continue;
                 }
-                else if (chr == CTRLBACKSP)
-                {
-                    while (str.Length > 0)
-                    {
-                        System.Console.Write("\b \b");
-                        str.RemoveAt(str.Length - 1);
-                    }
-                }
-                else if (FILTERED.Count(x => chr == x) > 0) { }
-                else
-                {
-                    str.AppendChar(chr);
-                    System.Console.Write(mask);
-                }
+
+                // Is this a control character of some kind? (this includes the null character \u0000)
+                if (Char.IsControl(keyInfo.KeyChar)) continue;
+
+                // This is a character that we can use in a password, so use it!
+                str.AppendChar(keyInfo.KeyChar);
+                Console.Write(mask);
             }
 
             System.Console.WriteLine();
@@ -242,15 +241,24 @@ namespace Armedia.CMSMF.SharePoint.Common
         {
             return ReadPassword('*');
         }
+
+        public static string ToCSV(string value, char sep = ',')
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            if (value.Contains(sep) || value.Contains("\"") || value.Contains("\n") || value.Contains("\r"))
+                value = '"' + value.Replace("\"", "\"\"") + '"';
+            return value;
+        }
     }
+
     public class XmlFile : XmlTextWriter
     {
         private readonly ILog Log;
-        private readonly FileInfo Info;
+        private readonly string Info;
         private readonly bool Backup;
-        private readonly FileInfo Target;
+        private readonly string Target;
 
-        private XmlFile(object marker, FileInfo info, Encoding encoding, bool backup = true) : base(info.Open(FileMode.Create), encoding)
+        private XmlFile(object marker, string info, Encoding encoding, bool backup = true) : base(System.IO.File.Open(info, FileMode.Create), encoding)
         {
             this.Log = LogManager.GetLogger(GetType());
             this.Backup = backup;
@@ -260,35 +268,31 @@ namespace Armedia.CMSMF.SharePoint.Common
             this.IndentChar = '\t';
         }
 
-        public XmlFile(string targetFilename, Encoding encoding, bool backup = true) : this(null, new FileInfo(Path.GetTempFileName()), encoding, backup)
+        public XmlFile(string targetFilename, Encoding encoding, bool backup = true) : this(null, Path.GetTempFileName(), encoding, backup)
         {
-            this.Target = new FileInfo(targetFilename);
-        }
-
-        public XmlFile(FileInfo target, Encoding encoding, bool backup = true) : this(target.FullName, encoding, backup)
-        {
+            this.Target = targetFilename;
         }
 
         public override void Close()
         {
             base.Close();
-            if (this.Target.Exists)
+            if (System.IO.File.Exists(this.Target))
             {
                 if (this.Backup)
                 {
                     try
                     {
-                        Info.Replace(this.Target.FullName, string.Format("{0}.bak-{1:yyyyMMddHHmmss}", this.Target.FullName, DateTime.Now));
+                        System.IO.File.Replace(this.Info, this.Target, $"{this.Target}.bak-{DateTime.Now:yyyyMMddHHmmss}");
                         return;
                     }
                     catch (IOException e)
                     {
-                        if (Log.IsDebugEnabled) Log.Debug(string.Format("Failed to create a backup for the XML file at [{0}]", this.Target.FullName), e);
+                        if (Log.IsDebugEnabled) Log.Debug($"Failed to create a backup for the XML file at [{this.Target}]", e);
                     }
                 }
-                this.Target.Delete();
+                System.IO.File.Delete(this.Target);
             }
-            Info.MoveTo(this.Target.FullName);
+            System.IO.File.Move(this.Info, this.Target);
         }
     }
 

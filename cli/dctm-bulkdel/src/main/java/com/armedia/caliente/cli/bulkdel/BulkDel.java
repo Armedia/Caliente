@@ -159,7 +159,7 @@ public class BulkDel {
 			final String user = this.dfcLaunchHelper.getDfcUser(cli);
 			final String password = this.dfcLaunchHelper.getDfcPassword(cli);
 
-			final DfcSessionPool pool = new DfcSessionPool(docbase, user, new DfcCrypto().decrypt(password));
+			final DfcSessionPool pool = new DfcSessionPool(docbase, user, DfcCrypto.INSTANCE.decrypt(password));
 
 			final boolean recursive = cli.isPresent(CLIParam.recursive);
 			final boolean deleteAllChildren = cli.isPresent(CLIParam.delete_all_children);

@@ -30,7 +30,6 @@
 
 package com.armedia.caliente.engine.sharepoint;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.apache.commons.pool2.PooledObject;
@@ -40,6 +39,7 @@ import com.armedia.caliente.engine.common.SessionFactory;
 import com.armedia.caliente.engine.common.SessionFactoryException;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.EncodedString;
 
 /**
  *
@@ -49,14 +49,14 @@ public class ShptSessionFactory extends SessionFactory<ShptSession> {
 
 	private final URL url;
 	private final String user;
-	private final String password;
+	private final EncodedString password;
 	private final String domain;
 
-	public ShptSessionFactory(CfgTools settings, CmfCrypt crypto) throws MalformedURLException {
+	public ShptSessionFactory(CfgTools settings, CmfCrypt crypto) throws Exception {
 		super(settings, crypto);
 		this.url = new URL(settings.getString(ShptSetting.URL));
 		this.user = settings.getString(ShptSetting.USER);
-		this.password = crypto.decrypt(settings.getString(ShptSetting.PASSWORD));
+		this.password = settings.getAs(ShptSetting.PASSWORD, EncodedString.class);
 		this.domain = settings.getString(ShptSetting.DOMAIN);
 	}
 

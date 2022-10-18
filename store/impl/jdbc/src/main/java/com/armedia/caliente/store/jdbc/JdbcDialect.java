@@ -319,11 +319,12 @@ public abstract class JdbcDialect {
 		),
 
 		LOAD_OBJECT_TYPES( //
-			"       select object_type, count(*) " + //
-				"     from cmf_object " + //
-				" group by object_type " + // ),
+			"       select o.object_type, count(*) " + //
+				"     from cmf_object o " + //
+				"              join cmf_export_plan p on (o.object_id = p.object_id and p.result = 'STORED') " + //
+				" group by o.object_type " + // ),
 				"   having count(*) > 0 " + //
-				" order by object_type " //
+				" order by o.object_type " //
 		),
 
 		LOAD_CONTENTS( //
@@ -335,7 +336,9 @@ public abstract class JdbcDialect {
 
 		LOAD_OBJECT_HISTORY_CURRENT_BY_HISTORY_ID( //
 			"       select o.*, n.new_name " + //
-				"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+				"     from cmf_object o " + //
+				"              join cmf_export_plan p on (o.object_id = p.object_id and p.result = 'STORED') " + //
+				"              left outer join cmf_alt_name n on (o.object_id = n.object_id) " + //
 				"    where o.object_type = ? " + //
 				"      and o.history_id = ? " + //
 				"      and o.history_current = true " + //
@@ -344,28 +347,35 @@ public abstract class JdbcDialect {
 
 		LOAD_OBJECT_HISTORY_LATEST_BY_HISTORY_ID( //
 			"       select o.*, n.new_name " + //
-				"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+				"     from cmf_object o " + //
+				"              join cmf_export_plan p on (o.object_id = p.object_id and p.result = 'STORED') " + //
+				"              left outer join cmf_alt_name n on (o.object_id = n.object_id) " + //
 				"    where o.object_number = ( " + //
-				"              select max(object_number) " + //
-				"                from cmf_object " + //
-				"               where object_type = ? " + //
-				"                 and history_id = ? " + //
+				"              select max(o2.object_number) " + //
+				"                from cmf_object o2 " + //
+				"                         join cmf_export_plan p2 on (o2.object_id = p2.object_id and p2.result = 'STORED') "
+				+ //
+				"               where o2.object_type = ? " + //
+				"                 and o2.history_id = ? " + //
 				"          ) " //
 		),
 
 		LOAD_OBJECTS( //
 			"       select o.*, n.new_name " + //
-				"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+				"     from cmf_object o " + //
+				"              join cmf_export_plan p on (o.object_id = p.object_id and p.result = 'STORED') " + //
+				"              left outer join cmf_alt_name n on (o.object_id = n.object_id) " + //
 				"    where o.object_type = ? " + //
 				" order by o.tier_id, o.history_id, o.object_number" //
 		),
 
 		LOAD_FILTERED_OBJECTS( //
 			"       select o.*, n.new_name " + //
-				"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id), " + //
-				"          cmf_object_filter f " + //
-				"    where o.object_id = f.object_id " + //
-				"      and o.object_type = ? " + //
+				"     from cmf_object o " + //
+				"              join cmf_export_plan p on (o.object_id = p.object_id and p.result = 'STORED') " + //
+				"              join cmf_object_filter f on (o.object_id = f.object_id)  " + //
+				"              left outer join cmf_alt_name n on (o.object_id = n.object_id) " + //
+				"    where o.object_type = ? " + //
 				" order by o.tier_id, o.history_id, o.object_number" //
 		),
 
@@ -498,10 +508,10 @@ public abstract class JdbcDialect {
 
 		SCAN_OBJECT_TREE( //
 			"       select t.*, coalesce(n.new_name, o.object_name) as name " + //
-				"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id), " + //
-				"          cmf_object_tree t " + //
-				"    where o.object_id = t.object_id " + //
-				"      and o.history_current = true " + //
+				"     from cmf_object o " + //
+				"              join cmf_object_tree t on (o.object_id = t.object_id) " + //
+				"              left outer join cmf_alt_name n on (o.object_id = n.object_id) " + //
+				"    where o.history_current = true " + //
 				" order by t.object_id, t.parent_pos " //
 		),
 		//

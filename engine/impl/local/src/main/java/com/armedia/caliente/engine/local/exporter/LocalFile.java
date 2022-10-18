@@ -65,7 +65,7 @@ class LocalFile {
 				: CmfObject.Archetype.DOCUMENT;
 			final String objectId = calculateId.apply(path);
 			final String safePath = PathTools.encodeSafePath(path.toString());
-			return new ExportTarget(archetype, objectId, safePath);
+			return ExportTarget.from(archetype, objectId, safePath);
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}

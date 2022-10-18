@@ -26,22 +26,41 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.exporter;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectSearchSpec;
 
 public final class ExportTarget extends CmfObjectSearchSpec {
 	private static final long serialVersionUID = 1L;
 
-	public ExportTarget(CmfObjectSearchSpec spec) {
+	private ExportTarget(CmfObjectSearchSpec spec) {
 		super(spec);
 	}
 
-	public ExportTarget(CmfObject.Archetype type, String id, String searchKey) {
+	private ExportTarget(CmfObject.Archetype type, String id, String searchKey) {
 		super(type, id, searchKey);
 	}
 
 	@Override
 	public String toString() {
 		return String.format("ExportTarget [type=%s, id=%s, searchKey=%s]", getType().name(), getId(), getSearchKey());
+	}
+
+	public static ExportTarget from(CmfObjectSearchSpec spec) {
+		if (spec == null) { return null; }
+		return new ExportTarget(spec);
+	}
+
+	public static ExportTarget from(CmfObjectRef ref) {
+		if (ref == null) { return null; }
+		return new ExportTarget(ref.getType(), ref.getId(), null);
+	}
+
+	public static ExportTarget from(CmfObject.Archetype type, String id, String searchKey) {
+		if (type == null) { return null; }
+		if (StringUtils.isEmpty(id)) { return null; }
+		return new ExportTarget(type, id, searchKey);
 	}
 }

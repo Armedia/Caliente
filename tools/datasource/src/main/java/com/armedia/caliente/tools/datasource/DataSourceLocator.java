@@ -51,7 +51,9 @@ public abstract class DataSourceLocator {
 	static {
 		DataSourceLocator.LOADER.setErrorListener((c, e) -> {
 			if (DataSourceLocator.LOG.isDebugEnabled()) {
-				DataSourceLocator.LOG.warn("Failed to instantiate a DataSourceLocator class", e);
+				DataSourceLocator.LOG.warn("Failed to instantiate a DataSourceLocator of class: [{}]", c.getName());
+			} else if (DataSourceLocator.LOG.isTraceEnabled()) {
+				DataSourceLocator.LOG.warn("Failed to instantiate a DataSourceLocator of class: [{}]", c.getName(), e);
 			}
 		});
 		DataSourceLocator.LOADER.setHideErrors(false);
