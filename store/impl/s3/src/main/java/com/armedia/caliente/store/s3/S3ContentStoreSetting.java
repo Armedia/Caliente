@@ -40,6 +40,7 @@ public enum S3ContentStoreSetting implements ConfigurationSetting {
 	PROFILE_LOCATION,
 	PROFILE_NAME,
 	CREATE_MISSING_BUCKET(false),
+	ENABLE_VERSIONING(false),
 	ATTACH_METADATA(false),
 	TRANSLATE_ATTRIBUTE_NAMES(true),
 	BUCKET,

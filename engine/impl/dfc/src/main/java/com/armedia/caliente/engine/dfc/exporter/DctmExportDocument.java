@@ -401,11 +401,10 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 				info, marshaled.getDescription(), e);
 		}
 
-		if (skipContent) { return info; }
-
 		// CmfStore the content in the filesystem
 		CmfContentStore<?, ?>.Handle<IDfValue> contentHandle = streamStore.addContentStream(translator, marshaled,
 			info);
+		if (skipContent) { return info; }
 		try {
 			if (contentHandle.getSourceStore().isSupportsFileAccess()) {
 				document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, info.getRenditionPage(),

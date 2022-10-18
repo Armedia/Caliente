@@ -50,13 +50,17 @@ import com.armedia.caliente.engine.ucm.UcmSessionSetting.SSLMode;
 import com.armedia.caliente.engine.ucm.UcmSetting;
 import com.armedia.caliente.engine.ucm.exporter.UcmExportEngine;
 import com.armedia.caliente.engine.ucm.exporter.UcmExportEngineFactory;
+import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.commons.utilities.EncodedString;
+import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.cli.OptionScheme;
 import com.armedia.commons.utilities.cli.OptionValues;
 import com.armedia.commons.utilities.cli.launcher.LaunchClasspathHelper;
 
 public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
 
-	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
+	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings, CmfCrypt crypt)
+		throws CalienteException {
 
 		String server = commandValues.getString(CLIParam.server);
 
@@ -164,7 +168,12 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 
 		String password = commandValues.getString(CLIParam.password);
 		if (password != null) {
-			settings.put(UcmSessionSetting.PASSWORD.getLabel(), password);
+			crypt = Tools.coalesce(crypt, CmfCrypt.DEFAULT);
+			try {
+				settings.put(UcmSessionSetting.PASSWORD.getLabel(), EncodedString.from(crypt.decrypt(password), crypt));
+			} catch (Exception e) {
+				throw new CalienteException("Failed to safeguard the password using an encrypted encapsulator", e);
+			}
 		}
 
 		return true;

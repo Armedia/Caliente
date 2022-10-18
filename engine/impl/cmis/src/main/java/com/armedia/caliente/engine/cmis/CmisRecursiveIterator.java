@@ -26,6 +26,7 @@
  *******************************************************************************/
 package com.armedia.caliente.engine.cmis;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -97,26 +98,32 @@ public class CmisRecursiveIterator implements Iterator<CmisObject> {
 					continue;
 				}
 
-				final String fullPath;
-				if (f instanceof FileableCmisObject) {
-					FileableCmisObject F = FileableCmisObject.class.cast(f);
-					List<String> paths = F.getPaths();
-					if (!paths.isEmpty()) {
-						fullPath = paths.get(0);
+				String fullPath = null;
+				// Don't try to compute fullPath unless trace is enabled ...
+				if (this.log.isTraceEnabled()) {
+					if (f instanceof FileableCmisObject) {
+						FileableCmisObject F = FileableCmisObject.class.cast(f);
+						List<String> paths = Collections.emptyList();
+						try {
+							paths = F.getPaths();
+							if (!paths.isEmpty()) {
+								fullPath = paths.get(0);
+							} else {
+								fullPath = String.format("${unfiled}:%s", f.getName());
+							}
+						} catch (Exception e) {
+							this.log.trace("Failed to get the paths for {} ({}) with ID [{}] (name = [{}])",
+								f.getBaseType().getId(), f.getType().getId(), f.getId(), f.getName(), e);
+							fullPath = String.format("${error}:%s", f.getName());
+						}
 					} else {
 						fullPath = String.format("${unfiled}:%s", f.getName());
 					}
-				} else {
-					fullPath = String.format("${unfiled}:%s", f.getName());
-				}
-				if (this.log.isTraceEnabled()) {
 					this.log.trace("Found {} [{}]", f.getType().getId(), fullPath);
 				}
 
 				if (f instanceof Folder) {
-					if (this.log.isTraceEnabled()) {
-						this.log.trace("Recursing into {} [{}]", f.getType().getId(), fullPath);
-					}
+					this.log.trace("Recursing into {} [{}]", f.getType().getId(), fullPath);
 					state.folderCount++;
 					this.stateStack.push(new RecursiveState(Folder.class.cast(f)));
 					continue recursion;

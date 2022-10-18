@@ -43,6 +43,7 @@ import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
+import com.armedia.commons.utilities.EncodedString;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.cli.Option;
 import com.armedia.commons.utilities.cli.OptionGroup;
@@ -121,7 +122,12 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 			settings.put(CmisSessionSetting.USER.getLabel(), user);
 		}
 		if (password != null) {
-			settings.put(CmisSessionSetting.PASSWORD.getLabel(), password);
+			try {
+				settings.put(CmisSessionSetting.PASSWORD.getLabel(),
+					EncodedString.from(getCrypto().decrypt(password), getCrypto()));
+			} catch (Exception e) {
+				throw new CalienteException("Failed to safeguard the password in an encrypted object", e);
+			}
 		}
 		String repoName = commandValues.getString(CLIParam.domain, "-default-");
 		settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), Tools.coalesce(repoName, "-default-"));

@@ -50,7 +50,6 @@ import java.util.Objects;
 import org.apache.commons.lang3.SystemUtils;
 
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
-import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
@@ -60,7 +59,6 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.tools.FilenameEncoder;
@@ -69,8 +67,7 @@ import com.armedia.commons.utilities.FileNameTools;
 public abstract class SqlImportDelegate extends
 	ImportDelegate<File, SqlRoot, SqlSessionWrapper, CmfValue, SqlImportContext, SqlImportDelegateFactory, SqlImportEngine> {
 
-	protected SqlImportDelegate(SqlImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
-		throws Exception {
+	protected SqlImportDelegate(SqlImportDelegateFactory factory, CmfObject<CmfValue> storedObject) throws Exception {
 		super(factory, File.class, storedObject);
 	}
 
@@ -108,14 +105,8 @@ public abstract class SqlImportDelegate extends
 		final boolean windowsMode = SystemUtils.IS_OS_WINDOWS;
 
 		File tgt = ctx.getSession().getFile();
-
-		CmfProperty<CmfValue> pathProp = this.cmfObject.getProperty(IntermediateProperty.PATH);
-		String p = "/";
-		if ((pathProp != null) && pathProp.hasValues()) {
-			p = ctx.getTargetPath(pathProp.getValue().toString());
-		} else {
-			p = ctx.getTargetPath(p);
-		}
+		String p = getFixedPath(ctx);
+		if (p == null) { return null; }
 
 		for (String s : FileNameTools.tokenize(p, '/')) {
 			tgt = new File(tgt, FilenameEncoder.safeEncode(s, windowsMode));

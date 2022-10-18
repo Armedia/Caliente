@@ -63,6 +63,9 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
 	protected DocumentVersionT createVersion(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException {
+		final String path = determineObjectPath(ctx);
+		if (path == null) { return null; }
+
 		DocumentVersionT v = new DocumentVersionT();
 		DatatypeFactory dtf;
 		try {
@@ -98,7 +101,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
 		v.setName(this.cmfObject.getName());
 		v.setParentId(getAttributeValue(IntermediateAttribute.PARENT_ID).asString());
-		v.setSourcePath(getFixedPath(ctx));
+		v.setSourcePath(path);
 		v.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());
 		v.setFormat(getAttributeValue(IntermediateAttribute.CONTENT_STREAM_MIME_TYPE).asString());
 		v.setHistoryId(getAttributeValue(IntermediateAttribute.VERSION_SERIES_ID).asString());

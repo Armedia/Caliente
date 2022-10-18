@@ -69,7 +69,7 @@ public abstract class ExportDelegate< //
 		this.object = object;
 
 		// Now we invoke everything that needs to be calculated
-		this.exportTarget = new ExportTarget(calculateType(session, object), calculateObjectId(session, object),
+		this.exportTarget = ExportTarget.from(calculateType(session, object), calculateObjectId(session, object),
 			calculateSearchKey(session, object));
 		this.label = calculateLabel(session, object);
 		this.dependencyTier = calculateDependencyTier(session, object);

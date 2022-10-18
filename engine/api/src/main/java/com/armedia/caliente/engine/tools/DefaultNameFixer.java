@@ -90,6 +90,7 @@ public class DefaultNameFixer<VALUE> implements CmfNameFixer<VALUE> {
 		return this.idMap.containsKey(type);
 	}
 
+	@Override
 	public final Map<String, String> getMappings(CmfObject.Archetype type) {
 		return this.idMap.get(type);
 	}

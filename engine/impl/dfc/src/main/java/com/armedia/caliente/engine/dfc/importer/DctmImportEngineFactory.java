@@ -46,7 +46,7 @@ public class DctmImportEngineFactory extends
 	ImportEngineFactory<IDfSession, IDfValue, DctmImportContext, DctmImportContextFactory, DctmImportDelegateFactory, DctmImportEngine> {
 
 	public DctmImportEngineFactory() {
-		super(true, new DfcCrypto());
+		super(true, DfcCrypto.INSTANCE);
 	}
 
 	@Override

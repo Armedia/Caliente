@@ -265,7 +265,7 @@ public class DataGen {
 			final String user = this.dfcLaunchHelper.getDfcUser(cli);
 			final String password = this.dfcLaunchHelper.getDfcPassword(cli);
 
-			final DfcSessionPool pool = new DfcSessionPool(docbase, user, new DfcCrypto().decrypt(password));
+			final DfcSessionPool pool = new DfcSessionPool(docbase, user, DfcCrypto.INSTANCE.decrypt(password));
 
 			try {
 				final IDfSession mainSession;

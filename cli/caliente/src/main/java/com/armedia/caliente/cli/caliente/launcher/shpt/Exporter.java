@@ -43,6 +43,7 @@ import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.sharepoint.ShptSetting;
+import com.armedia.commons.utilities.EncodedString;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.cli.Option;
 import com.armedia.commons.utilities.cli.OptionGroup;
@@ -107,7 +108,15 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 
 		settings.put(ShptSetting.USER.getLabel(), user);
 		settings.put(ShptSetting.DOMAIN.getLabel(), domain);
-		settings.put(ShptSetting.PASSWORD.getLabel(), password);
+
+		if (password != null) {
+			try {
+				settings.put(ShptSetting.PASSWORD.getLabel(),
+					EncodedString.from(getCrypto().decrypt(password), getCrypto()));
+			} catch (Exception e) {
+				throw new CalienteException("Failed to safeguard the password in an encrypted object", e);
+			}
+		}
 
 		URI baseUri;
 		// Ensure it has a trailing slash...this will be useful later

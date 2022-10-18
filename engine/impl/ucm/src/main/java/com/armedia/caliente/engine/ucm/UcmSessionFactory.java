@@ -43,6 +43,7 @@ import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.KeyStoreTools;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.EncodedString;
 import com.armedia.commons.utilities.Tools;
 
 import oracle.stellent.ridc.IdcClientManager;
@@ -58,16 +59,21 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 
 	private class IdcContextSeed {
 		private final String user;
-		private final String password;
+		private final EncodedString password;
 
-		public IdcContextSeed(String user, String password) {
+		public IdcContextSeed(String user, EncodedString password) {
 			this.user = user;
 			this.password = password;
 		}
 
 		public IdcContext newInstance() {
 			if (this.password == null) { return new IdcContext(this.user); }
-			return new IdcContext(this.user, UcmSessionFactory.this.crypto.decrypt(this.password));
+			try {
+				String pass = (this.password != null ? this.password.decode().toString() : StringUtils.EMPTY);
+				return new IdcContext(this.user, pass);
+			} catch (Exception e) {
+				throw new RuntimeException("Failed to decrypt the password", e);
+			}
 		}
 	}
 
@@ -113,7 +119,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 		}
 
 		String userName = settings.getString(UcmSessionSetting.USER);
-		String password = settings.getString(UcmSessionSetting.PASSWORD);
+		EncodedString password = settings.getAs(UcmSessionSetting.PASSWORD, EncodedString.class);
 
 		this.context = new IdcContextSeed(userName, password);
 

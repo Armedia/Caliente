@@ -55,7 +55,7 @@ public class DctmSchemaServiceTest {
 		settings.put(DctmSetting.PASSWORD.getLabel(), "123");
 
 		CfgTools cfg = new CfgTools(settings);
-		try (DctmSessionFactory factory = new DctmSessionFactory(cfg, new DfcCrypto())) {
+		try (DctmSessionFactory factory = new DctmSessionFactory(cfg, DfcCrypto.INSTANCE)) {
 			try (SessionWrapper<IDfSession> session = factory.acquireSession()) {
 				try (DctmSchemaService schema = new DctmSchemaService(session.get())) {
 					for (String name : schema.getObjectTypeNames()) {

@@ -29,7 +29,6 @@ package com.armedia.caliente.engine.exporter;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationHandler;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -153,7 +152,7 @@ public abstract class ExportEngine<//
 	private final ConcurrentMap<String, String> idPathFixes = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, String> idFolderNames = new ConcurrentHashMap<>();
 
-	private class ExportListenerPropagator extends ListenerPropagator<ExportResult> implements InvocationHandler {
+	private class ExportListenerPropagator extends ListenerPropagator<ExportResult> {
 
 		private ExportListenerPropagator(CmfObjectCounter<ExportResult> counter) {
 			super(counter, getListeners(), ExportEngineListener.class);
@@ -290,7 +289,7 @@ public abstract class ExportEngine<//
 						break;
 
 					case DEPENDENCY_FAILED: // Manufacture a failure...
-						throw new ExportException("A dependency failed to export properly");
+						throw new ExportException("A dependency failed to export properly - " + result.extraInfo);
 
 					case SKIPPED: // fall-through
 					case UNSUPPORTED:
@@ -426,6 +425,9 @@ public abstract class ExportEngine<//
 				referenced = sourceObject.identifyRequirements(marshaled, ctx);
 				if (referenced == null) {
 					referenced = Collections.emptyList();
+				} else {
+					// Make sure no null pointers make it past
+					referenced.removeIf(Objects::isNull);
 				}
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to identify the requirements for %s", logLabel), e);
@@ -643,20 +645,23 @@ public abstract class ExportEngine<//
 				this.log.debug("Executing supplemental storage for {}", logLabel);
 			}
 
+			final boolean includeContent = !ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 			if (ctx.isSupportsCompanionMetadata(type)) {
 				CmfContentStream md = new CmfContentStream(marshaled, 0, "metadata", 1);
 				md.setProperty(CmfContentStream.BASENAME, "metadata." + type.name());
 				md.setExtension("xml");
 				CmfContentStore<?, ?>.Handle<CmfValue> h = streamStore
 					.addContentStream(CmfAttributeTranslator.CMFVALUE_TRANSLATOR, encoded, md);
-				try (OutputStream out = h.createStream()) {
-					XmlBase.storeToXML(new MetadataT(encoded), out);
-				} catch (JAXBException e) {
-					this.log.warn("Failed to construct the XML companion metadata for {}", marshaled.getDescription(),
-						e);
-				} catch (IOException e) {
-					this.log.warn("Failed to write out the XML companion metadata for {}", marshaled.getDescription(),
-						e);
+				if (includeContent) {
+					try (OutputStream out = h.createStream()) {
+						XmlBase.storeToXML(new MetadataT(encoded), out);
+					} catch (JAXBException e) {
+						this.log.warn("Failed to construct the XML companion metadata for {}",
+							marshaled.getDescription(), e);
+					} catch (IOException e) {
+						this.log.warn("Failed to write out the XML companion metadata for {}",
+							marshaled.getDescription(), e);
+					}
 				}
 			}
 
@@ -735,6 +740,9 @@ public abstract class ExportEngine<//
 				referenced = sourceObject.identifyDependents(marshaled, ctx);
 				if (referenced == null) {
 					referenced = Collections.emptyList();
+				} else {
+					// Make sure no null pointers make it past
+					referenced.removeIf(Objects::isNull);
 				}
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to identify the dependents for %s", logLabel), e);
@@ -828,7 +836,7 @@ public abstract class ExportEngine<//
 							CmfObjectRef tgt = ImportRestriction.parseQuiet(line);
 							if (tgt != null) {
 								// No need to search if it's a retry
-								ret.add(Stream.of(new ExportTarget(tgt.getType(), tgt.getId(), null)));
+								ret.add(Stream.of(ExportTarget.from(tgt)));
 							} else {
 								String directKey = line.substring(1);
 								if (StringUtils.isEmpty(directKey)) {
@@ -845,7 +853,7 @@ public abstract class ExportEngine<//
 					CmfObjectRef tgt = ImportRestriction.parseQuiet(source);
 					if (tgt != null) {
 						// No need to search if it's a retry
-						ret.add(Stream.of(new ExportTarget(tgt.getType(), tgt.getId(), null)));
+						ret.add(Stream.of(ExportTarget.from(tgt)));
 					} else {
 						if (StringUtils.isEmpty(searchKey)) { throw new ExportException("Invalid empty search key"); }
 						ret.add(sanitizeExportTargets(findExportTargetsBySearchKey(session, this.settings, searchKey)));
@@ -924,7 +932,7 @@ public abstract class ExportEngine<//
 						.newExportDelegate(s, target);
 					if (exportDelegate == null) {
 						// No object found with that ID...
-						ExportEngine.this.log.warn("No {} object found with searchKey[{}]",
+						ExportEngine.this.log.warn("No {} object found with searchKey[{}], or its type is unsupported",
 							(nextType != null ? nextType.name() : "globally unique"), nextKey);
 						return;
 					}
@@ -1039,7 +1047,6 @@ public abstract class ExportEngine<//
 				final AtomicReference<String> currentSource = new AtomicReference<>(null);
 				final AtomicLong sourceCounter = new AtomicLong(0);
 				final AtomicLong totalCounter = new AtomicLong(0);
-				final AtomicReference<Exception> thrown = new AtomicReference<>(null);
 
 				final Consumer<ExportTarget> submitter = (target) -> {
 					if (target == null) { return; }
@@ -1081,21 +1088,14 @@ public abstract class ExportEngine<//
 									s.forEach(submitter);
 								}
 							}
+							listener.sourceSearchCompleted(line, sourceCounter.get(), totalCounter.get());
 						} catch (Exception e) {
-							thrown.set(e);
-						} finally {
-							try {
-								if (thrown.get() == null) {
-									listener.sourceSearchCompleted(line, sourceCounter.get(), totalCounter.get());
-								} else {
-									listener.sourceSearchFailed(line, sourceCounter.get(), totalCounter.get(),
-										thrown.get());
-								}
-							} finally {
-								thrown.set(null);
-							}
+							listener.sourceSearchFailed(line, sourceCounter.get(), totalCounter.get(), e);
 						}
 					});
+					listener.searchCompleted(totalCounter.get());
+				} catch (Exception e) {
+					listener.searchFailed(totalCounter.get(), e);
 				}
 			} finally {
 				List<ExportTarget> l = worker.waitForCompletion();

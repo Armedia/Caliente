@@ -46,7 +46,7 @@ public class SqlExportEngineFactory extends
 	ExportEngineFactory<SqlRoot, CmfValue, SqlExportContext, SqlExportContextFactory, SqlExportDelegateFactory, SqlExportEngine> {
 
 	public SqlExportEngineFactory() {
-		super(false, new CmfCrypt());
+		super(false, CmfCrypt.DEFAULT);
 	}
 
 	@Override

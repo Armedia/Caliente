@@ -57,7 +57,7 @@ public class BaseTest {
 
 	@BeforeAll
 	public static final void setUpClass() throws Exception {
-		CmfCrypt crypto = new CmfCrypt();
+		CmfCrypt crypto = CmfCrypt.DEFAULT;
 		Map<String, String> settingsMap = new TreeMap<>();
 		CfgTools settings = new CfgTools(settingsMap);
 

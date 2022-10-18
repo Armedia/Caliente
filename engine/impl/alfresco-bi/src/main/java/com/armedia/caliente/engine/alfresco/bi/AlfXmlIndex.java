@@ -50,6 +50,7 @@ import javax.xml.stream.XMLStreamWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.tools.xml.FlexibleCharacterEscapeHandler;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.xml.XmlTools;
@@ -105,6 +106,8 @@ public class AlfXmlIndex implements Closeable {
 		m.setProperty(Marshaller.JAXB_ENCODING, AlfXmlIndex.CHARSET.name());
 		m.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+		FlexibleCharacterEscapeHandler.getInstance(AlfXmlIndex.CHARSET).configure(this.marshaller);
+
 		return m;
 	}
 

@@ -46,7 +46,7 @@ public class CmisImportEngineFactory extends
 	ImportEngineFactory<Session, CmfValue, CmisImportContext, CmisImportContextFactory, CmisImportDelegateFactory, CmisImportEngine> {
 
 	public CmisImportEngineFactory() {
-		super(false, new CmfCrypt());
+		super(false, CmfCrypt.DEFAULT);
 	}
 
 	@Override

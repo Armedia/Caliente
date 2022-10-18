@@ -132,7 +132,7 @@ public class DctmTypeDumper {
 
 		final DfcSessionPool pool;
 		try {
-			pool = new DfcSessionPool(docbase, user, new DfcCrypto().decrypt(password));
+			pool = new DfcSessionPool(docbase, user, DfcCrypto.INSTANCE.decrypt(password));
 		} catch (DfException e) {
 			this.log.error("Failed to create the DFC session pool", e);
 			return 1;

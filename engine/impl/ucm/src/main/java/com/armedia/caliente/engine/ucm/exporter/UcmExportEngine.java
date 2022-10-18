@@ -83,7 +83,7 @@ public class UcmExportEngine extends
 		// TODO: Not like!! Doesn't match the spirit of what we're trying to do
 		Builder<ExportTarget> builder = Stream.builder();
 		session.iterateURISearchResults(query,
-			(s, o, u) -> builder.accept(new ExportTarget(CmfObject.Archetype.DOCUMENT, u.toString(), u.toString())));
+			(s, o, u) -> builder.accept(ExportTarget.from(CmfObject.Archetype.DOCUMENT, u.toString(), u.toString())));
 		return builder.build();
 	}
 
@@ -111,7 +111,7 @@ public class UcmExportEngine extends
 		}
 
 		if (!UcmModel.isFolderURI(uri)) {
-			return Stream.of(new ExportTarget(CmfObject.Archetype.DOCUMENT, uri.toString(), uri.toString()));
+			return Stream.of(ExportTarget.from(CmfObject.Archetype.DOCUMENT, uri.toString(), uri.toString()));
 		}
 
 		// This is a folder....
@@ -130,12 +130,12 @@ public class UcmExportEngine extends
 		UcmFSObject object = session.getObject(path);
 		switch (object.getType()) {
 			case FILE:
-				return Stream.of(new ExportTarget(CmfObject.Archetype.DOCUMENT, object.getUniqueURI().toString(),
+				return Stream.of(ExportTarget.from(CmfObject.Archetype.DOCUMENT, object.getUniqueURI().toString(),
 					object.getURI().toString()));
 
 			case FOLDER:
 				if (object.isShortcut()) {
-					return Stream.of(new ExportTarget(CmfObject.Archetype.FOLDER, object.getUniqueURI().toString(),
+					return Stream.of(ExportTarget.from(CmfObject.Archetype.FOLDER, object.getUniqueURI().toString(),
 						object.getURI().toString()));
 				}
 
@@ -145,7 +145,7 @@ public class UcmExportEngine extends
 				// Not a shortcut, so we'll recurse into it and submit each and every one of
 				// its contents, but we won't be recursing into shortcuts
 				session.iterateFolderContentsRecursive(folder, false, (s, p, u, o) -> builder.accept(
-					new ExportTarget(o.getType().archetype, o.getUniqueURI().toString(), o.getURI().toString())));
+					ExportTarget.from(o.getType().archetype, o.getUniqueURI().toString(), o.getURI().toString())));
 				return builder.build();
 		}
 		return Stream.empty();

@@ -1,15 +1,14 @@
-﻿using Armedia.CMSMF.SharePoint.Common;
+using Caliente.SharePoint.Common;
 using log4net;
 using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks.Dataflow;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace Armedia.CMSMF.SharePoint.Import
+namespace Caliente.SharePoint.Import
 {
 
     public class UnsupportedDocumentException : Exception
@@ -26,9 +25,6 @@ namespace Armedia.CMSMF.SharePoint.Import
 
     public class DocumentImporter : FSObjectImporter
     {
-        // This is a SharePoint boundary, and cannot be exceeded
-        private const int MAX_UPLOAD_SIZE = (2047 * 1024 * 1024);
-
         public static readonly Regex EXTENSION_EXTRACTOR = new Regex("\\.([a-z0-9][a-z0-9_~-]*)$", RegexOptions.IgnoreCase);
         private static readonly byte[] CONTENT_FILLER = new byte[0];
 
@@ -37,6 +33,8 @@ namespace Armedia.CMSMF.SharePoint.Import
         public readonly FolderImporter FolderImporter;
         public readonly FormatResolver FormatResolver;
         private readonly Dictionary<string, DocumentLocation> Filenames;
+        private readonly ContentType FallbackType;
+        private readonly int UploadSegmentSizeInBytes;
         public enum SimulationMode
         {
             NONE,
@@ -60,14 +58,14 @@ namespace Armedia.CMSMF.SharePoint.Import
             public readonly string SourcePath;
             public readonly ProgressTracker Tracker;
 
-            public DocumentInfo(ILog log, string historyId, string path, string name, string xmlLocation)
+            public DocumentInfo(ILog log, string historyId, string path, string name, string xmlLocation, string progressLocation)
             {
                 this.HistoryId = historyId;
                 this.Path = path;
                 this.Name = name;
-                this.SourcePath = string.Format("{0}/{1}", (path == "/" ? "" : path), name);
+                this.SourcePath = $"{(path == "/" ? "" : path)}/{name}";
                 this.XmlLocation = xmlLocation;
-                this.Tracker = new ProgressTracker(xmlLocation, log);
+                this.Tracker = new ProgressTracker(xmlLocation, progressLocation, log);
             }
         }
 
@@ -104,7 +102,7 @@ namespace Armedia.CMSMF.SharePoint.Import
             {
                 get
                 {
-                    if (!this.HasParent) throw new Exception(string.Format("Did not resolve parent folder [{0}] during the initialization phase.  This is a bug.", this.SourcePath));
+                    if (!this.HasParent) throw new Exception($"Did not resolve parent folder [{this.SourcePath}] during the initialization phase.  This is a bug.");
                     return this._Parent;
                 }
 
@@ -130,7 +128,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                 this.Name = safeName;
                 this.Version = version;
                 this.VersionCount = totalVersions;
-                this.FullPath = string.Format("{0}/{1}", this.Path, this.Name);
+                this.FullPath = $"{this.Path}/{this.Name}";
             }
 
             public DocumentLocation(XmlReader xml, FolderImporter folderImporter) : this(XElement.Load(xml), folderImporter)
@@ -194,7 +192,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
             public override string ToString()
             {
-                return string.Format("[{0}:{1}]{2}", this.HistoryId, this.Version, this.FullPath);
+                return $"[{this.HistoryId}:{this.Version}]{this.FullPath}";
             }
 
             public int CompareTo(DocumentLocation other)
@@ -212,7 +210,7 @@ namespace Armedia.CMSMF.SharePoint.Import
         protected Dictionary<string, DocumentLocation> LoadNameMappings(FolderImporter folderImporter)
         {
             Dictionary<string, DocumentLocation> filenames = new Dictionary<string, DocumentLocation>();
-            XmlReader documents = this.ImportContext.LoadOptionalIndex(LOCATION_INDEX_NAME);
+            XmlReader documents = this.ImportContext.LoadIndex(LOCATION_INDEX_NAME);
             if (documents != null)
             {
                 using (documents)
@@ -281,18 +279,32 @@ namespace Armedia.CMSMF.SharePoint.Import
             return count;
         }
 
-        public DocumentImporter(FolderImporter folderImporter, FormatResolver formatResolver, LocationMode locationMode, bool fixExtensions) : base("documents", folderImporter)
+        public DocumentImporter(FolderImporter folderImporter, FormatResolver formatResolver, LocationMode locationMode, bool fixExtensions, string fallbackType, int uploadSegmentSizeInMB) : base("documents", folderImporter)
         {
+            // This comes in MB ... punt it to bytes
+            this.UploadSegmentSizeInBytes = uploadSegmentSizeInMB * 1024 * 1024;
             this.FolderImporter = folderImporter;
             this.FormatResolver = formatResolver;
-            Dictionary<string, DocumentLocation> finalNames = LoadNameMappings(folderImporter);
+            if (!string.IsNullOrWhiteSpace(fallbackType))
+            {
+                this.FallbackType = ResolveContentType(fallbackType);
+                if (this.FallbackType == null) throw new Exception($"Fallback document type [{fallbackType}] could not be resolved");
+            }
+            else
+            {
+                this.FallbackType = null;
+            }
+            this.Filenames = LoadNameMappings(folderImporter);
+
+            XmlReader documentsXml = this.ImportContext.LoadIndex("documents");
+            if (documentsXml == null) return;
 
             // We need to do two passes...
 
             // First pass: identify the incoming stuff, and remove them from their current parent folders
-            if (finalNames.Count > 0)
+            if (this.Filenames.Count > 0)
             {
-                using (XmlReader documentsXml = this.ImportContext.LoadIndex("documents"))
+                using (documentsXml)
                 {
                     while (documentsXml.ReadToFollowing("document"))
                     {
@@ -311,8 +323,8 @@ namespace Armedia.CMSMF.SharePoint.Import
                             long total = documentXml.ReadElementContentAsLong();
 
                             // If this is a new object, we simply skip it since we don't need to remove it
-                            if (!finalNames.ContainsKey(historyId)) continue;
-                            DocumentLocation current = finalNames[historyId];
+                            if (!this.Filenames.ContainsKey(historyId)) continue;
+                            DocumentLocation current = this.Filenames[historyId];
 
                             // We have an object, so we have to identify the name and path that it will carry
                             // and compare that the old one, to determine if it needs to be moved or renamed
@@ -331,7 +343,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 // Does it already have a valid extension? The extension is everything after the last dot...
                                 if ((format != null) && !string.IsNullOrWhiteSpace(format.DosExtension) && string.IsNullOrWhiteSpace(EXTENSION_EXTRACTOR.Match(name).Groups[1].Value))
                                 {
-                                    name = string.Format("{0}.{1}", name, format.DosExtension);
+                                    name = $"{name}.{format.DosExtension}";
                                 }
                             }
 
@@ -346,12 +358,13 @@ namespace Armedia.CMSMF.SharePoint.Import
                         }
                     }
                 }
+                documentsXml = this.ImportContext.LoadIndex("documents");
             }
 
             // Second pass: at this stage, the parent folders have been cleansed of files that are about
             // to be re-ingested with differing names, so any new filename collisions will be calculated correctly,
             // and files that are being re-ingested but didn't change location will be preserved in the same place
-            using (XmlReader documentsXml = this.ImportContext.LoadIndex("documents"))
+            using (documentsXml)
             {
                 while (documentsXml.ReadToFollowing("document"))
                 {
@@ -379,7 +392,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                         if (count < 1) continue;
 
                         DocumentLocation current = null;
-                        if (finalNames.ContainsKey(historyId)) current = finalNames[historyId];
+                        if (this.Filenames.ContainsKey(historyId)) current = this.Filenames[historyId];
 
                         // If we have fixing to do, we do it
                         if (fixExtensions)
@@ -387,11 +400,17 @@ namespace Armedia.CMSMF.SharePoint.Import
                             // Does it already have a valid extension? The extension is everything after the last dot...
                             if ((format != null) && !string.IsNullOrWhiteSpace(format.DosExtension) && string.IsNullOrWhiteSpace(EXTENSION_EXTRACTOR.Match(name).Groups[1].Value))
                             {
-                                name = string.Format("{0}.{1}", name, format.DosExtension);
+                                name = $"{name}.{format.DosExtension}";
                             }
                         }
 
                         FolderInfo parent = folderImporter.ResolveFolder(path);
+                        if (parent == null)
+                        {
+                            Log.WarnFormat("The parent was not found for [{0}/{1}]", path, name);
+                            continue;
+                        }
+
                         string safeName = null;
                         if (current == null || current.Removed)
                         {
@@ -411,11 +430,10 @@ namespace Armedia.CMSMF.SharePoint.Import
                             // The name remains the same, and the file wasn't removed, so no need to add it to the parent
                             safeName = current.Name;
                         }
-                        finalNames[historyId] = new DocumentLocation(historyId, total, version, parent, name, safeName, current);
+                        this.Filenames[historyId] = new DocumentLocation(historyId, total, version, parent, name, safeName, current);
                     }
                 }
             }
-            this.Filenames = finalNames;
         }
 
         public void StoreLocationIndex()
@@ -454,6 +472,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                     string restoreVersionNumber = null;
                     string versionNumber = null;
                     string safeFullPath = null;
+                    bool ok = false;
                     try
                     {
                         while (document.ReadToFollowing("version") && !this.Abort)
@@ -478,7 +497,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                             versionNumber = (string)version.Element(ns + "version");
                             string path = (string)version.Element(ns + "sourcePath");
                             string name = Tools.SanitizeSingleLineString((string)version.Element(ns + "name"));
-                            string fullName = string.Format("{0}/{1}", path, name);
+                            string fullName = $"{path}/{name}";
 
                             tracker.TrackProgress("Processing version [{0}] for document [{1}] (#{2:N0} of {3:N0})", versionNumber, location.FullPath, ++versionCount, location.VersionCount);
 
@@ -513,21 +532,16 @@ namespace Armedia.CMSMF.SharePoint.Import
                                         stream = new System.IO.MemoryStream(CONTENT_FILLER);
                                         break;
                                     }
-                                    System.IO.FileInfo streamInfo = new System.IO.FileInfo(contentStreamLocation);
-                                    if (streamInfo.Exists)
+                                    if (System.IO.File.Exists(contentStreamLocation))
                                     {
+                                        System.IO.FileInfo streamInfo = new System.IO.FileInfo(contentStreamLocation);
                                         if (streamInfo.Length != contentStreamSize)
                                         {
-                                            Log.Warn(string.Format("Stream size mismatch for [{0}] v{1} - expected {2:N0} bytes, but the actual stream is {3:N0} bytes", fullName, versionNumber, contentStreamSize, streamInfo.Length));
+                                            Log.WarnFormat("Stream size mismatch for [{0}] v{1} - expected {2:N0} bytes, but the actual stream is {3:N0} bytes", fullName, versionNumber, contentStreamSize, streamInfo.Length);
                                             contentStreamSize = streamInfo.Length;
                                         }
 
-                                        if (contentStreamSize > MAX_UPLOAD_SIZE)
-                                        {
-                                            throw new UnsupportedDocumentException(string.Format("Maximum upload size for SharePoint is {0:N0} bytes, but the stream for [{1}] v{2} is {3:N0} bytes long ({4:N0} bytes too big) (described by [{5}])", MAX_UPLOAD_SIZE, fullName, versionNumber, contentStreamSize, contentStreamSize - MAX_UPLOAD_SIZE, documentLocation));
-                                        }
-
-                                        stream = streamInfo.OpenRead();
+                                        stream = System.IO.File.OpenRead(contentStreamLocation);
                                         if (stream != null) break;
                                     }
                                     if (simulationMode == SimulationMode.MISSING)
@@ -536,7 +550,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                                         simulationMode = SimulationMode.FULL;
                                         break;
                                     }
-                                    throw new Exception(string.Format("Could not locate the content stream at [{0}] for document [{1}] version [{2}] (described by [{3}])", contentStreamLocation, fullName, versionNumber, documentLocation));
+                                    throw new Exception($"Could not locate the content stream at [{contentStreamLocation}] for document [{fullName}] version [{versionNumber}] (described by [{documentLocation}])");
                             }
 
                             // We split the switch into two, instead of just a single big one, because the simulation mode may change
@@ -545,11 +559,6 @@ namespace Armedia.CMSMF.SharePoint.Import
                             {
                                 case SimulationMode.FULL:
                                 case SimulationMode.SHORT:
-                                    if (contentStreamSize > MAX_UPLOAD_SIZE)
-                                    {
-                                        // If the stream is too big, and we're simulating, we simply bow out gracefully, and treat it as completed
-                                        throw new UnsupportedDocumentException(string.Format("Maximum upload size for SharePoint is {0:N0} bytes, but the stream for [{1}] v{2} is {3:N0} bytes long ({4:N0} bytes too big) (described by [{5}])", MAX_UPLOAD_SIZE, fullName, versionNumber, contentStreamSize, contentStreamSize - MAX_UPLOAD_SIZE, documentLocation));
-                                    }
                                     if (contentStreamSize == 0)
                                     {
                                         // Short-circuit the case of the empty stream
@@ -563,7 +572,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                                         sw.WriteLine(name);
                                         sw.WriteLine(path);
                                         sw.WriteLine(versionNumber);
-                                        foreach (string kw in XmlTools.GetAttributeValues(version, "dctm:keywords"))
+                                        foreach (string kw in XmlTools.GetAttributeValues(version, "caliente:keywords"))
                                         {
                                             sw.WriteLine(kw);
                                         }
@@ -631,129 +640,182 @@ namespace Armedia.CMSMF.SharePoint.Import
                             // Finally, if this is a checked out version, do the checkin
                             comment = XmlTools.GetAttributeValue(version, "cmis:checkinComment") ?? "";
                             safeFullPath = location.FullPath;
-                            string sourcePath = string.Format("{0}/{1}", path, name);
+                            string sourcePath = $"{path}/{name}";
                             string targetUrl = session.GetServerRelativeUrl(location.FullPath);
 
                             string acl = (string)version.Element(ns + "acl");
                             bool restoreAcl = (acl != previousAcl && acl == location.Parent.Acl);
                             bool uniqueAcl = (acl != previousAcl && acl != location.Parent.Acl);
                             bool breakRoleInheritance = (uniqueAcl && previousAcl == location.Parent.Acl);
-
-                            using (stream)
+                            List<System.IO.Stream> leftoverStreams = new List<System.IO.Stream>();
+                            try
                             {
-                                if (checkedOut)
+                                using (stream)
                                 {
-                                    fileSaveBinaryInfo.ContentStream = stream;
-                                    newVersion.SaveBinary(fileSaveBinaryInfo);
-                                    newVersion.CheckIn(comment, CheckinType.MinorCheckIn);
-                                    tracker.TrackProgress("Checking in new version [{0}] for document [{1}] (at [{2}]) - {3:N0} bytes", versionNumber, sourcePath, safeFullPath, contentStreamSize);
-                                    session.ExecuteQuery();
-                                    ShowProgress();
-
-                                    // This load operation is required in order for the metadata creation to work
-                                    clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields, r => r.ListItemAllFields.RoleAssignments);
-                                }
-                                else
-                                {
-                                    fileCreationInfo.Url = safeName;
-                                    fileCreationInfo.Overwrite = true;
-                                    fileCreationInfo.ContentStream = stream;
-
-                                    string currentUrl = targetUrl;
-                                    if (location.CurrentFullPath != null)
+                                    if (checkedOut)
                                     {
-                                        currentUrl = session.GetServerRelativeUrl(location.CurrentFullPath);
-                                        if (currentUrl != targetUrl) clientContext.Web.GetFileByServerRelativeUrl(currentUrl).DeleteObject();
-                                    }
-                                    clientContext.Web.GetFileByServerRelativeUrl(targetUrl).DeleteObject();
-                                    tracker.TrackProgress("Clearing out the existing document at [{0}] to make way for [{1}]", currentUrl, targetUrl);
-                                    session.ExecuteQuery();
+                                        if (contentStreamSize <= UploadSegmentSizeInBytes)
+                                        {
+                                            // This can be uploaded directly
+                                            fileSaveBinaryInfo.ContentStream = stream;
+                                            newVersion.SaveBinary(fileSaveBinaryInfo);
+                                        }
+                                        else
+                                        {
+                                            // This must be uploaded in segments
+                                            uploadSegments(leftoverStreams, tracker, session, clientContext, newVersion, stream, sourcePath, versionNumber);
+                                        }
+                                        newVersion.CheckIn(comment, CheckinType.MinorCheckIn);
+                                        tracker.TrackProgress("Checking in new version [{0}] for document [{1}] (at [{2}]) - {3:N0} bytes", versionNumber, sourcePath, safeFullPath, contentStreamSize);
+                                        session.ExecuteQuery();
+                                        ShowProgress();
 
-                                    Folder f = clientContext.Web.GetFolderByServerRelativeUrl(location.Parent.Url);
-                                    newVersion = f.Files.Add(fileCreationInfo);
-                                    clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields, r => r.ListItemAllFields.RoleAssignments);
-                                    tracker.TrackProgress("Creating document [{0}] as [{1}] - {2:N0} bytes", sourcePath, safeFullPath, contentStreamSize);
-                                }
-
-                                session.ExecuteQuery();
-                                ShowProgress();
-
-                                if (newVersion.CheckOutType == CheckOutType.None)
-                                {
-                                    newVersion.CheckOut();
-                                }
-                                if (contentType == null)
-                                {
-                                    contentType = ResolveContentType(objectType);
-                                    if (contentType == null)
-                                    {
-                                        throw new Exception(string.Format("Could not find the content type [{0}] for document [{0}]", objectType, safeFullPath));
-                                    }
-                                    tracker.TrackProgress("Assigning content type [{0}] (id={1}) to [{2}] (GUID=[{3}] UniqueId=[{4}])...", contentType.Name, contentType.Id, safeFullPath, newVersion.ListItemAllFields["UniqueId"], newVersion.ListItemAllFields["GUID"]);
-                                }
-                                newVersion.ListItemAllFields["ContentTypeId"] = contentType.Id;
-                                ApplyMetadata(newVersion.ListItemAllFields, version);
-
-                                string aclResult = "inherited from its parent's";
-                                if (restoreAcl)
-                                {
-                                    newVersion.ListItemAllFields.ResetRoleInheritance();
-                                    aclResult = "re-inherited from its parent's";
-                                }
-                                else
-                                if (uniqueAcl)
-                                {
-                                    if (breakRoleInheritance)
-                                    {
-                                        newVersion.ListItemAllFields.BreakRoleInheritance(false, false);
-                                        aclResult = "independent from its parent's";
+                                        // This load operation is required in order for the metadata creation to work
+                                        clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields, r => r.ListItemAllFields.RoleAssignments);
                                     }
                                     else
                                     {
-                                        aclResult = "independent from its previous version's and from its parent's";
-                                        ClearPermissions(newVersion.ListItemAllFields);
+                                        string currentUrl = targetUrl;
+                                        if (location.CurrentFullPath != null)
+                                        {
+                                            currentUrl = session.GetServerRelativeUrl(location.CurrentFullPath);
+                                            if (currentUrl != targetUrl) clientContext.Web.GetFileByServerRelativeUrl(currentUrl).DeleteObject();
+                                        }
+                                        clientContext.Web.GetFileByServerRelativeUrl(targetUrl).DeleteObject();
+                                        tracker.TrackProgress("Clearing out the existing document at [{0}] to make way for [{1}]", currentUrl, targetUrl);
+                                        session.ExecuteQuery();
+
+                                        Folder f = clientContext.Web.GetFolderByServerRelativeUrl(location.Parent.Url);
+
+                                        fileCreationInfo.Url = safeName;
+                                        fileCreationInfo.Overwrite = true;
+                                        if (contentStreamSize <= UploadSegmentSizeInBytes)
+                                        {
+                                            fileCreationInfo.ContentStream = stream;
+                                            newVersion = f.Files.Add(fileCreationInfo);
+                                        }
+                                        else
+                                        {
+                                            // Create an empty file ... now overwrite its contents
+                                            using (System.IO.MemoryStream mem = new System.IO.MemoryStream(CONTENT_FILLER))
+                                            {
+                                                fileCreationInfo.ContentStream = mem;
+                                                newVersion = f.Files.Add(fileCreationInfo);
+
+                                                // Now upload the chunks, overwriting the original file
+                                                uploadSegments(leftoverStreams, tracker, session, clientContext, newVersion, stream, sourcePath, versionNumber);
+                                            }
+                                        }
+
+                                        clientContext.Load(newVersion, r => r.UIVersionLabel, r => r.MajorVersion, r => r.MinorVersion, r => r.CheckOutType, r => r.ListItemAllFields, r => r.ListItemAllFields.RoleAssignments);
+                                        tracker.TrackProgress("Creating document [{0}] as [{1}] - {2:N0} bytes", sourcePath, safeFullPath, contentStreamSize);
                                     }
-                                    ApplyPermissions(newVersion.ListItemAllFields, version);
+
+                                    session.ExecuteQuery();
+                                    ShowProgress();
+
+                                    if (newVersion.CheckOutType == CheckOutType.None)
+                                    {
+                                        newVersion.CheckOut();
+                                    }
+                                    if (contentType == null)
+                                    {
+                                        contentType = ResolveContentType(objectType);
+                                        if (contentType == null)
+                                        {
+                                            if (this.FallbackType == null)
+                                            {
+                                                throw new Exception($"Could not find the content type [{objectType}] for document [{safeFullPath}]");
+                                            }
+                                            tracker.TrackProgress("Could not find the content type [{0}] for document [{1}], so will use the fallback type [{2}]", objectType, safeFullPath, this.FallbackType.Name);
+                                            contentType = this.FallbackType;
+                                        }
+                                        tracker.TrackProgress("Assigning content type [{0}] (id={1}) to [{2}] (GUID=[{3}] UniqueId=[{4}])...", contentType.Name, contentType.Id, safeFullPath, newVersion.ListItemAllFields["UniqueId"], newVersion.ListItemAllFields["GUID"]);
+                                    }
+                                    newVersion.ListItemAllFields["ContentTypeId"] = contentType.Id;
+                                    ApplyMetadata(newVersion.ListItemAllFields, version, contentType);
+
+                                    string aclResult = "inherited from its parent's";
+                                    if (restoreAcl)
+                                    {
+                                        newVersion.ListItemAllFields.ResetRoleInheritance();
+                                        aclResult = "re-inherited from its parent's";
+                                    }
+                                    else
+                                    if (uniqueAcl)
+                                    {
+                                        if (breakRoleInheritance)
+                                        {
+                                            newVersion.ListItemAllFields.BreakRoleInheritance(false, false);
+                                            aclResult = "independent from its parent's";
+                                        }
+                                        else
+                                        {
+                                            aclResult = "independent from its previous version's and from its parent's";
+                                            ClearPermissions(newVersion.ListItemAllFields);
+                                        }
+                                        ApplyPermissions(newVersion.ListItemAllFields, version);
+                                    }
+                                    else
+                                    if (previousAcl != location.Parent.Acl)
+                                    {
+                                        aclResult = "preserved from the previous version";
+                                    }
+                                    tracker.TrackProgress("The ACL for [{0}] v{1} will be {2}", safeFullPath, versionNumber, aclResult);
+
+                                    if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_antecedent_id"))
+                                    {
+                                        newVersion.ListItemAllFields["caliente_antecedent_id"] = (string)version.Element(ns + "antecedentId");
+                                    }
+                                    if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_history_id"))
+                                    {
+                                        newVersion.ListItemAllFields["caliente_history_id"] = location.HistoryId;
+                                    }
+                                    if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_version"))
+                                    {
+                                        newVersion.ListItemAllFields["caliente_version"] = versionNumber;
+                                    }
+                                    if (ItemHasAttribute(newVersion.ListItemAllFields, "caliente_current"))
+                                    {
+                                        newVersion.ListItemAllFields["caliente_current"] = XmlConvert.ToBoolean((string)version.Element(ns + "current"));
+                                    }
+
+                                    newVersion.ListItemAllFields.Update();
+                                    newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
+                                    session.ExecuteQuery();
+                                    ShowProgress();
+
+                                    clientContext.Load(newVersion);
+                                    clientContext.Load(newVersion.ListItemAllFields);
+                                    session.ExecuteQuery();
+                                    ShowProgress();
+
+                                    newVersion.CheckOut();
+                                    SetAuthorAndEditor(newVersion.ListItemAllFields, version);
+                                    if (uniqueAcl) ApplyOwnerPermission(newVersion.ListItemAllFields, version);
+
+                                    newVersion.ListItemAllFields.Update();
+                                    newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
+                                    newVersion.RefreshLoad();
+                                    clientContext.Load(newVersion.Versions);
+                                    session.ExecuteQuery();
+                                    ShowProgress();
+                                    previousAcl = acl;
+
+                                    if (XmlConvert.ToBoolean((string)version.Element(ns + "current")))
+                                    {
+                                        // This is the current version, so mark it
+                                        restoreVersionNumber = versionNumber;
+                                        restoreSpVersionLabel = newVersion.UIVersionLabel;
+                                    }
                                 }
-                                else
-                                if (previousAcl != location.Parent.Acl)
+                            }
+                            finally
+                            {
+                                if (leftoverStreams.Count > 0)
                                 {
-                                    aclResult = "preserved from the previous version";
-                                }
-                                tracker.TrackProgress("The ACL for [{0}] v{1} will be {2}", safeFullPath, versionNumber, aclResult);
-
-                                newVersion.ListItemAllFields["dctm_antecedent_id"] = (string)version.Element(ns + "antecedentId");
-                                newVersion.ListItemAllFields["dctm_history_id"] = location.HistoryId;
-                                newVersion.ListItemAllFields["dctm_version"] = versionNumber;
-                                newVersion.ListItemAllFields["dctm_current"] = XmlConvert.ToBoolean((string)version.Element(ns + "current"));
-
-                                newVersion.ListItemAllFields.Update();
-                                newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
-                                session.ExecuteQuery();
-                                ShowProgress();
-
-                                clientContext.Load(newVersion);
-                                clientContext.Load(newVersion.ListItemAllFields);
-                                session.ExecuteQuery();
-                                ShowProgress();
-
-                                newVersion.CheckOut();
-                                SetAuthorAndEditor(newVersion.ListItemAllFields, version);
-                                if (uniqueAcl) ApplyOwnerPermission(newVersion.ListItemAllFields, version);
-
-                                newVersion.ListItemAllFields.Update();
-                                newVersion.CheckIn(comment, CheckinType.OverwriteCheckIn);
-                                newVersion.RefreshLoad();
-                                clientContext.Load(newVersion.Versions);
-                                session.ExecuteQuery();
-                                ShowProgress();
-                                previousAcl = acl;
-
-                                if (XmlConvert.ToBoolean((string)version.Element(ns + "current")))
-                                {
-                                    // This is the current version, so mark it
-                                    restoreVersionNumber = versionNumber;
-                                    restoreSpVersionLabel = newVersion.UIVersionLabel;
+                                    leftoverStreams.ForEach(s => s.Dispose());
+                                    leftoverStreams.Clear();
                                 }
                             }
                         }
@@ -766,12 +828,12 @@ namespace Armedia.CMSMF.SharePoint.Import
                             {
                                 newVersion.CheckOut();
                                 newVersion.Versions.RestoreByLabel(restoreSpVersionLabel);
-                                newVersion.CheckIn(string.Format("Restored to version {0}", restoreVersionNumber), CheckinType.MinorCheckIn);
+                                newVersion.CheckIn($"Restored to version {restoreVersionNumber}", CheckinType.MinorCheckIn);
                                 session.ExecuteQuery();
                                 tracker.TrackProgress("Restored document [{0}] to older version [{1}] (sp version {2})", safeFullPath, restoreVersionNumber, restoreSpVersionLabel);
                             }
 
-                            // We only do two attempts
+                            // We only do two attempts 
                             for (int i = 0 ; i < 2 ; i++)
                             {
                                 clientContext.Load(newVersion);
@@ -788,7 +850,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 {
                                     // If on the second check we failed, we don't try to set it again, and we simply explode accordingly
                                     ContentType actual = this.ContentTypeImporter.ResolveContentType(finalId)?.Type;
-                                    throw new Exception(string.Format("Failed to re-set the content type for [{0}] - expected to set [{1}] with ID={2} but was actually set as [{3}] with ID={4} (GUID=[{5}] UniqueId=[{6}])", safeFullPath, contentType.Name, contentType.Id, actual?.Name, finalId));
+                                    throw new Exception($"Failed to re-set the content type for [{safeFullPath}] - expected to set [{contentType.Name}] with ID={contentType.Id} but was actually set as [{actual?.Name}] with ID={finalId}]");
                                 }
 
                                 // One last attempt...try to set the type...
@@ -808,30 +870,113 @@ namespace Armedia.CMSMF.SharePoint.Import
                                 tracker.TrackProgress("Automatically published document [{0}]", safeFullPath);
                             }
                         }
+                        ok = true;
                     }
-                    catch (Exception e)
+                    finally
                     {
-                        try
+                        if (!ok)
                         {
-                            // Something went wrong, and we're still checked out ... undo the checkout
-                            if (newVersion != null)
+                            try
                             {
-                                newVersion.RefreshLoad();
-                                session.ExecuteQuery();
-                                if (newVersion.CheckOutType != CheckOutType.None)
+                                // Something went wrong, and we're still checked out ... undo the checkout
+                                if (newVersion != null)
                                 {
-                                    newVersion.UndoCheckOut();
+                                    // Just in case ... make sure the attribute is read
+                                    clientContext.Load(newVersion, r => r.CheckOutType);
                                     session.ExecuteQuery();
+                                    if (newVersion.CheckOutType != CheckOutType.None)
+                                    {
+                                        newVersion.UndoCheckOut();
+                                        session.ExecuteQuery();
+                                    }
+                                }
+                            }
+                            catch (Exception e2)
+                            {
+                                if (Log.IsDebugEnabled)
+                                {
+                                    Log.Error($"Failed to undo the checkout for document [{safeFullPath}]", e2);
+                                }
+                                else
+                                {
+                                    Log.Error($"Failed to undo the checkout for document [{safeFullPath}]");
                                 }
                             }
                         }
-                        catch (Exception e2)
-                        {
-                            Log.Error(string.Format("Failed to undo the checkout for document [{0}]", safeFullPath), e2);
-                        }
-                        throw e;
                     }
                 }
+            }
+        }
+
+        private File uploadSegments(List<System.IO.Stream> chunks, ProgressTracker tracker, SharePointSession session, ClientContext clientContext, File version, System.IO.Stream stream, string sourcePath, string versionNumber)
+        {
+            Guid uploadId = Guid.NewGuid();
+            bool started = false;
+            int segmentSizeMB = UploadSegmentSizeInBytes / (1024 * 1024);
+            try
+            {
+                // TODO: See if an upload is already running from before ... if it is, I'm not sure we can cleanly resume... so much crap happening
+                // with checkout-checkin that resuming may not be viable ... for now, just cancel it if it exists.
+                // We expressly don't close this b/c we don't want the Dispose() invocation to cascade onto the main stream
+                byte[] buf = new byte[UploadSegmentSizeInBytes];
+                long appendPosition = 0;
+                ClientResult<long> bytesUploaded = null;
+
+                // Read data from file system in blocks.
+                while (true)
+                {
+                    int bytesRead = stream.Read(buf, 0, buf.Length);
+                    // If we read nothing, we're at EOF, so skedaddle
+                    if (bytesRead <= 0) break;
+
+                    // Create a stream to read from the buffer however many bytes were read
+                    System.IO.MemoryStream mem = new System.IO.MemoryStream(buf, 0, bytesRead);
+                    chunks.Add(mem);
+                    // If we read fewer bytes than were requested to be read, this is the last chunk
+                    // and we must call FinishUpload()
+                    if (bytesRead < buf.Length)
+                    {
+                        // End sliced upload by calling FinishUpload.
+                        tracker.TrackProgress("Completing the segmented upload (ID={0}) of {1} bytes ({2} segments of {3}MB) for Document [{4}] (version [{5}])", uploadId, appendPosition + bytesRead, (appendPosition / buf.Length) + 1, segmentSizeMB, sourcePath, versionNumber);
+                        version = version.FinishUpload(uploadId, appendPosition, mem);
+                        session.ExecuteQuery();
+                        break;
+                    }
+
+                    // Ok so we're either starting an upload, or in the middle of one... so
+                    // just keep swimming :)
+                    if (appendPosition == 0)
+                    {
+                        tracker.TrackProgress("Starting a new segmented upload with ID {0} for Document [{1}] (version [{2}]) - segment size is {3}MB", uploadId, sourcePath, versionNumber, segmentSizeMB);
+                        bytesUploaded = version.StartUpload(uploadId, mem);
+                    }
+                    else
+                    {
+                        tracker.TrackProgress("Adding segment # {0} (ID={1}) for Document [{2}] (version [{3}])", (appendPosition / buf.Length) + 1, uploadId, sourcePath, versionNumber);
+                        bytesUploaded = version.ContinueUpload(uploadId, appendPosition, mem);
+                    }
+                    session.ExecuteQuery();
+                    started = true;
+                    appendPosition = bytesUploaded.Value;
+                }
+                return version;
+            }
+            catch (Exception)
+            {
+                // If something blows up, attempt to cancel the upload
+                if (started)
+                {
+                    try
+                    {
+                        version.CancelUpload(uploadId);
+                        session.ExecuteQuery();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Warn($"Failed to cancel the segmented upload with ID {uploadId}", e);
+                    }
+                }
+                throw;
             }
         }
 
@@ -868,7 +1013,7 @@ namespace Armedia.CMSMF.SharePoint.Import
                             }
                         }
                         exc = e;
-                        Log.Error(string.Format("Failed to import the document history for [{0}] described by [{1}]", docInfo.SourcePath, docInfo.XmlLocation), e);
+                        Log.Error($"Failed to import the document history for [{docInfo.SourcePath}](historyId={docInfo.HistoryId}) described by [{docInfo.XmlLocation}]", e);
                     }
                     finally
                     {
@@ -911,40 +1056,42 @@ namespace Armedia.CMSMF.SharePoint.Import
         protected ICollection<DocumentInfo> IdentifyPending(ICollection<DocumentInfo> failed)
         {
             ICollection<DocumentInfo> pending = new List<DocumentInfo>();
-            using (XmlReader documents = this.ImportContext.LoadIndex("documents"))
+            XmlReader documentsXml = this.ImportContext.LoadIndex("documents");
+            if (documentsXml == null) return pending;
+            using (documentsXml)
             {
                 HashSet<string> histories = new HashSet<string>();
-                while (documents.ReadToFollowing("document") && !this.Abort)
+                while (documentsXml.ReadToFollowing("document") && !this.Abort)
                 {
                     string path = null;
                     string name = null;
                     string location = null;
                     string historyId = null;
-                    using (XmlReader document = documents.ReadSubtree())
+                    using (XmlReader documentXml = documentsXml.ReadSubtree())
                     {
-                        if (!document.ReadToFollowing("path"))
+                        if (!documentXml.ReadToFollowing("path"))
                         {
                             continue;
                         }
-                        path = document.ReadElementContentAsString();
+                        path = documentXml.ReadElementContentAsString();
 
-                        if (!document.ReadToFollowing("name"))
+                        if (!documentXml.ReadToFollowing("name"))
                         {
                             continue;
                         }
-                        name = document.ReadElementContentAsString();
+                        name = documentXml.ReadElementContentAsString();
 
-                        if (!document.ReadToFollowing("location"))
+                        if (!documentXml.ReadToFollowing("location"))
                         {
                             continue;
                         }
-                        location = document.ReadElementContentAsString();
+                        location = documentXml.ReadElementContentAsString();
 
-                        if (!document.ReadToFollowing("historyId"))
+                        if (!documentXml.ReadToFollowing("historyId"))
                         {
                             continue;
                         }
-                        historyId = document.ReadElementContentAsString();
+                        historyId = documentXml.ReadElementContentAsString();
                     }
 
                     if (!histories.Add(historyId))
@@ -953,15 +1100,15 @@ namespace Armedia.CMSMF.SharePoint.Import
                         continue;
                     }
 
-                    DocumentInfo docInfo = new DocumentInfo(this.Log, historyId, path, name, this.ImportContext.FormatMetadataLocation(location));
+                    DocumentInfo docInfo = new DocumentInfo(this.Log, historyId, path, name, this.ImportContext.FormatMetadataLocation(location), this.ImportContext.FormatProgressLocation(location));
                     if (docInfo.Tracker.Completed)
                     {
-                        Log.Debug(string.Format("Skipping file [{0}] - already completed", docInfo.SourcePath));
+                        Log.DebugFormat("Skipping file [{0}] - already completed", docInfo.SourcePath);
                         IncrementCounter(Result.Skipped);
                     }
                     else if (docInfo.Tracker.Ignored)
                     {
-                        Log.Debug(string.Format("Skipping file [{0}] - marked as ignorable", docInfo.SourcePath));
+                        Log.DebugFormat("Skipping file [{0}] - marked as ignorable", docInfo.SourcePath);
                         IncrementCounter(Result.Skipped);
                     }
                     else
@@ -988,7 +1135,7 @@ namespace Armedia.CMSMF.SharePoint.Import
 
             if (pending.Count == 0)
             {
-                Log.Info(string.Format("No documents are in need of processing"));
+                Log.Info("No documents are in need of processing");
                 return;
             }
 
@@ -998,19 +1145,26 @@ namespace Armedia.CMSMF.SharePoint.Import
             {
                 ResetCounter(Result.Failed);
                 attempt++;
-                Log.Info(string.Format("Identified {0} documents in need of processing (of which {1} are retries) (attempt #{2}/{3})", pending.Count, failed.Count, attempt, retries + 1));
+                Log.InfoFormat("Identified {0} documents in need of processing (of which {1} are retries) (attempt #{2}/{3})", pending.Count, failed.Count, attempt, retries + 1);
                 int lastPending = pending.Count;
                 pending = IngestDocuments(pending, threads, simulationMode, locationMode, autoPublish);
                 failed = pending;
                 if (pending.Count < lastPending)
                 {
-                    Log.Info(string.Format("{0} files were processed in this attempt, with {1} retryable failures", lastPending - pending.Count, pending.Count));
+                    Log.InfoFormat("{0} files were processed in this attempt, with {1} retryable failures", lastPending - pending.Count, pending.Count);
                     attempt = 0;
                 }
                 else
                 {
-                    Log.Info(string.Format("No change in the data set - {0} were pending, and {1} failed", lastPending, pending.Count));
+                    Log.InfoFormat("No change in the data set - {0} were pending, and {1} failed", lastPending, pending.Count);
                 }
+            }
+
+            // Spit out a list of objects to retry, in CSV format
+            foreach (DocumentInfo info in pending)
+            {
+                // Documents need a leading slash on their source path, folders do not
+                LogFailure("DOCUMENT", info.HistoryId, $"/{info.SourcePath}", info.XmlLocation);
             }
         }
     }
