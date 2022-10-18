@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.log4j.Level;
 
 import com.documentum.fc.common.DfFileWatcher;
-import com.documentum.fc.common.DfLoggerDisabled;
+import com.documentum.fc.common.DfLogger;
 import com.documentum.fc.common.DfPreferences;
 import com.documentum.fc.common.DfUtil;
 import com.documentum.fc.common.impl.preferences.IPreferencesObserver;
@@ -60,7 +60,7 @@ public class LoggingConfigurator {
 		if (LoggingConfigurator.s_preferenceObserver == null) {
 			LoggingConfigurator.s_preferenceObserver = new PreferencesObserver();
 
-			DfLoggerDisabled.isInfoEnabled(LoggingConfigurator.class);
+			DfLogger.isInfoEnabled(LoggingConfigurator.class);
 			if (LoggingConfigurator.s_log4jConfiguration != null) {
 				File file = DfUtil.getFileFromUrl(LoggingConfigurator.s_log4jConfiguration);
 				if (file != null) {

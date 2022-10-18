@@ -30,6 +30,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 import javax.xml.bind.Marshaller;
@@ -40,6 +41,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 import com.armedia.caliente.cli.ticketdecoder.xml.Content;
 import com.armedia.caliente.cli.ticketdecoder.xml.Rendition;
+import com.armedia.caliente.tools.xml.FlexibleCharacterEscapeHandler;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.function.CheckedLazySupplier;
 import com.armedia.commons.utilities.xml.XmlTools;
@@ -99,9 +101,11 @@ public class XmlContentPersistor extends FileContentPersistor {
 		this.xml.flush();
 
 		this.marshaller = XmlTools.getMarshaller("ticket-decoder.xsd", Content.class, Rendition.class);
-		this.marshaller.setProperty(Marshaller.JAXB_ENCODING, Charset.defaultCharset().name());
+		Charset charset = StandardCharsets.UTF_8;
+		this.marshaller.setProperty(Marshaller.JAXB_ENCODING, charset.name());
 		this.marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 		this.marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+		FlexibleCharacterEscapeHandler.getInstance(charset).configure(this.marshaller);
 	}
 
 	@Override

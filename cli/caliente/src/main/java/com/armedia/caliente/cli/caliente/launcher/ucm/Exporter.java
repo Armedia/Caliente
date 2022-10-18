@@ -153,7 +153,7 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 	protected boolean doConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
-		return EngineInterface.commonConfigure(commandValues, settings);
+		return EngineInterface.commonConfigure(commandValues, settings, getCrypto());
 	}
 
 	@Override

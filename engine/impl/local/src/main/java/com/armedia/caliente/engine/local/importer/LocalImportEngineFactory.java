@@ -46,7 +46,7 @@ public class LocalImportEngineFactory extends
 	ImportEngineFactory<LocalRoot, CmfValue, LocalImportContext, LocalImportContextFactory, LocalImportDelegateFactory, LocalImportEngine> {
 
 	public LocalImportEngineFactory() {
-		super(false, new CmfCrypt());
+		super(false, CmfCrypt.DEFAULT);
 	}
 
 	@Override

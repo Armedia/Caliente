@@ -67,11 +67,11 @@ public class XmlAclImportDelegate extends XmlAggregatedImportDelegate<AclT, Acls
 	@Override
 	protected AclT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException {
-		CmfAttribute<CmfValue> accessorName = this.cmfObject.getAttribute("dctm:r_accessor_name");
-		CmfAttribute<CmfValue> accessorPermit = this.cmfObject.getAttribute("dctm:r_accessor_permit");
-		CmfAttribute<CmfValue> accessorXpermit = this.cmfObject.getAttribute("dctm:r_accessor_xpermit");
-		CmfAttribute<CmfValue> permitType = this.cmfObject.getAttribute("dctm:r_permit_type");
-		CmfAttribute<CmfValue> isGroup = this.cmfObject.getAttribute("dctm:r_is_group");
+		CmfAttribute<CmfValue> accessorName = this.cmfObject.getAttribute(renderAttributeName("r_accessor_name"));
+		CmfAttribute<CmfValue> accessorPermit = this.cmfObject.getAttribute(renderAttributeName("r_accessor_permit"));
+		CmfAttribute<CmfValue> accessorXpermit = this.cmfObject.getAttribute(renderAttributeName("r_accessor_xpermit"));
+		CmfAttribute<CmfValue> permitType = this.cmfObject.getAttribute(renderAttributeName("r_permit_type"));
+		CmfAttribute<CmfValue> isGroup = this.cmfObject.getAttribute(renderAttributeName("r_is_group"));
 
 		if (ObjectUtils.anyNull(accessorName, accessorPermit, accessorXpermit, permitType, isGroup)) {
 			// Insufficient information...
@@ -81,7 +81,7 @@ public class XmlAclImportDelegate extends XmlAggregatedImportDelegate<AclT, Acls
 		AclT acl = new AclT();
 
 		acl.setId(this.cmfObject.getId());
-		acl.setDescription(getAttributeValue("dctm:description").asString());
+		acl.setDescription(getAttributeValue(renderAttributeName("description")).asString());
 
 		final int entries = accessorName.getValueCount();
 		StringBuilder str = new StringBuilder();

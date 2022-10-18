@@ -33,6 +33,7 @@ import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import javax.xml.bind.Marshaller;
 import javax.xml.namespace.NamespaceContext;
@@ -42,6 +43,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 import com.armedia.caliente.cli.typedumper.xml.Attribute;
 import com.armedia.caliente.cli.typedumper.xml.Type;
+import com.armedia.caliente.tools.xml.FlexibleCharacterEscapeHandler;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.BaseShareableLockable;
@@ -106,10 +108,12 @@ public class XmlTypePersistor extends BaseShareableLockable implements TypePersi
 			this.xml.writeStartElement(rootElement);
 			this.xml.flush();
 
+			Charset charset = StandardCharsets.UTF_8;
 			this.marshaller = XmlTools.getMarshaller("type-dumper.xsd", Type.class, Attribute.class);
-			this.marshaller.setProperty(Marshaller.JAXB_ENCODING, Charset.defaultCharset().name());
+			this.marshaller.setProperty(Marshaller.JAXB_ENCODING, charset.name());
 			this.marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 			this.marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			FlexibleCharacterEscapeHandler.getInstance(charset).configure(this.marshaller);
 
 			this.first = true;
 		}

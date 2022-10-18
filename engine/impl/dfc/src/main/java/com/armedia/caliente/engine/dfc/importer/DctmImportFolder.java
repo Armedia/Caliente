@@ -35,6 +35,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.apache.groovy.parser.antlr4.util.StringUtils;
+
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmMappingUtils;
@@ -47,7 +49,6 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.tools.dfc.DfcUtils;
-import com.armedia.commons.utilities.FileNameTools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfGroup;
@@ -149,6 +150,10 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 
 		for (Map.Entry<String, String> entry : m.entrySet()) {
 			final String actualUser = entry.getKey();
+
+			// TODO: PROBLEM - these paths may not have been checked for fixes/changes
+			// because we weren't able to ... need to figure this out - maybe store
+			// these references via folder IDs instead of paths?
 			final String pathValue = context.getTargetPath(entry.getValue());
 
 			// TODO: How do we decide if we should update the default folder for this user? What
@@ -228,31 +233,36 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	protected IDfFolder locateInCms(DctmImportContext ctx) throws ImportException, DfException {
 		// If I'm a cabinet, then find it by cabinet name
 		IDfSession session = ctx.getSession();
+
+		final String objectName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
+		IDfFolder existing = null;
+
 		// Easier way: determine if we have parent folders...if not, then we're a cabinet
 		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
 		if ((p == null) || !p.hasValues()) {
 			// This is a cabinet...
-			String path = String.format("/%s",
-				this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString());
-			return session.getFolderByPath(ctx.getTargetPath(path));
+			String path = String.format("/%s", objectName);
+			this.log.debug("Candidate CABINET path: [{}]", path);
+			path = ctx.getTargetPath(path);
+			// No need to check - if this object needed skipping due to path truncation,
+			// it would have already been skipped. If we've gotten this far it's b/c we're
+			// meant to actually do our work.
+			this.log.debug("Adjusted CABINET path: [{}]", path);
+			existing = session.getFolderByPath(path);
+			if (existing != null) {
+				this.log.debug("Found a match using the path: [{}]", path);
+				return existing;
+			}
 		}
+
 		return super.locateInCms(ctx);
 	}
 
 	@Override
 	protected IDfFolder newObject(DctmImportContext ctx) throws DfException, ImportException {
 		if (isReference()) { return newReference(ctx); }
-
-		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH);
-		CmfAttribute<IDfValue> a = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME);
-		String path = "";
-		final String name = a.getValue().asString();
-		if ((p != null) && p.hasValues()) {
-			path = p.getValue().asString();
-		}
-		path = ctx.getTargetPath(String.format("%s/%s", path, name));
-
-		if ("/".equals(FileNameTools.dirname(path, '/'))) {
+		String parentPath = getFixedPath(ctx);
+		if (StringUtils.isEmpty(parentPath) || "/".equals(parentPath)) {
 			// TODO: Try to identify if the object's type is a cabinet subtype. If it is,
 			// then we don't need to modify it
 			String typeName = "dm_cabinet";

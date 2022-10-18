@@ -67,12 +67,12 @@ public class XmlTypeImportDelegate extends XmlAggregatedImportDelegate<TypeT, Ty
 			type.setSuperType(null);
 		}
 
-		final int attrCount = getAttributeValue("dctm:attr_count").asInteger();
-		final int startPosition = getAttributeValue("dctm:start_pos").asInteger();
-		CmfAttribute<CmfValue> attName = this.cmfObject.getAttribute("dctm:attr_name");
-		CmfAttribute<CmfValue> attType = this.cmfObject.getAttribute("dctm:attr_type");
-		CmfAttribute<CmfValue> attRep = this.cmfObject.getAttribute("dctm:attr_repeating");
-		CmfAttribute<CmfValue> attLen = this.cmfObject.getAttribute("dctm:attr_length");
+		final int attrCount = getAttributeValue(renderAttributeName("attr_count")).asInteger();
+		final int startPosition = getAttributeValue(renderAttributeName("start_pos")).asInteger();
+		CmfAttribute<CmfValue> attName = this.cmfObject.getAttribute(renderAttributeName("attr_name"));
+		CmfAttribute<CmfValue> attType = this.cmfObject.getAttribute(renderAttributeName("attr_type"));
+		CmfAttribute<CmfValue> attRep = this.cmfObject.getAttribute(renderAttributeName("attr_repeating"));
+		CmfAttribute<CmfValue> attLen = this.cmfObject.getAttribute(renderAttributeName("attr_length"));
 
 		CmfProperty<CmfValue> origName = this.cmfObject.getProperty(IntermediateProperty.ORIG_ATTR_NAME);
 		CmfProperty<CmfValue> mappedName = this.cmfObject.getProperty(IntermediateProperty.MAPPED_ATTR_NAME);

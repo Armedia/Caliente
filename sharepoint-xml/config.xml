@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE import>
+<import>
+	<!-- LDAP Settings -->
+	<!--
+	<ldapSyncDomain>ARMEDIA</ldapSyncDomain>
+	<ldapUrl>LDAP://DC=ARMEDIA,DC=com</ldapUrl>
+	<ldapBindDn>CN=JIRA Admin PR,CN=Users,DC=armedia,DC=com</ldapBindDn>
+	<ldapBindPw>j1RAaDm!N2010</ldapBindPw>
+	-->
+
+	<!-- Sharepoint Target Settings -->
+	<siteUrl>https://armedia.sharepoint.com/Projects/CM/</siteUrl>
+	<library>Documents</library>
+	
+	<user>drivera@armedia.com</user>
+	<!--
+	<domain>ARMEDIA</domain>
+	<user>drivera</user>
+	<domain>armedia.com</domain>
+	<user>diego.rivera</user>
+	<domain>armediacaliente.onmicrosoft.com</domain>
+	<password>q67aynzXV@YPRkG</password>
+	<domain>armediacaliente.onmicrosoft.com</domain>
+
+	<applicationId>cb966e64-9dae-4136-b810-2343a9492aec</applicationId>
+	<certificateKey>C:/Users/drivera/Desktop/Caliente/ingestion/Caliente.pfx</certificateKey>
+	<certificatePass>123</certificatePass>
+	-->
+
+	<!-- Source Content Settings -->
+	<streams>C:/Users/drivera/Desktop/Caliente/ingestion/streams</streams>
+	<metadata>C:/Users/drivera/Desktop/Caliente/ingestion/xml-metadata</metadata>
+
+	<!-- user mapping settings -->
+	<fallbackUser>drivera@armedia.com</fallbackUser>
+	<internalUser>drivera@armedia.com</internalUser>
+	<fallbackGroup>AntwerpDemo</fallbackGroup>
+	<internalGroup>AntwerpDemo</internalGroup>
+
+	<!-- fallback content types -->
+	<fallbackDocumentType>Document</fallbackDocumentType>
+	<fallbackFolderType>Folder</fallbackFolderType>
+
+	<!-- other settings -->
+	<threads>10</threads>
+	<reuseCount>10</reuseCount>
+	<cleanTypes>true</cleanTypes>
+	<simulationMode>none</simulationMode>
+	<locationMode>current</locationMode>
+	<fixExtensions>true</fixExtensions>
+	<autoPublish>true</autoPublish>
+	<retries>5</retries>
+	<cmsmf.indexOnly>false</cmsmf.indexOnly>
+</import>
