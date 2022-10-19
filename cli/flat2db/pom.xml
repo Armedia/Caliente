@@ -4,14 +4,14 @@
 
 	<name>Armedia Caliente CLI - Flat File to Database Converter</name>
 	<description>A standalone tool to convert flat files (XLS, CSV, XML) into Database tables</description>
-	<groupId>com.armedia.commons.utilities.cli</groupId>
+	<groupId>com.armedia.caliente.cli</groupId>
 	<artifactId>caliente-cli-flat2db</artifactId>
 	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
 		<artifactId>caliente</artifactId>
-		<version>${revision}</version>
+		<version>4.0.4</version>
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
@@ -30,12 +30,6 @@
 			<groupId>com.armedia.caliente</groupId>
 			<artifactId>caliente-tools</artifactId>
 			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.commons</groupId>
-			<artifactId>utilities</artifactId>
 			<scope>compile</scope>
 		</dependency>
 

@@ -4,14 +4,14 @@
 
 	<name>Armedia Caliente CLI - Documentum Ticket Decoder Tool</name>
 	<description>A CLI executable that decodes Documentum content store tickets</description>
-	<groupId>com.armedia.commons.utilities.cli</groupId>
+	<groupId>com.armedia.caliente.cli</groupId>
 	<artifactId>caliente-cli-dctm-ticket-decoder</artifactId>
 	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
 		<artifactId>caliente</artifactId>
-		<version>${revision}</version>
+		<version>4.0.4</version>
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 

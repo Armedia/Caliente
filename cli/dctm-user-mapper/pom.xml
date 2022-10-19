@@ -4,14 +4,14 @@
 
 	<name>Armedia Caliente CLI - Username Mapper</name>
 	<description>A CLI executable that maps Documentum users to an LDAP instance</description>
-	<groupId>com.armedia.commons.utilities.cli</groupId>
+	<groupId>com.armedia.caliente.cli</groupId>
 	<artifactId>caliente-cli-dctm-user-mapper</artifactId>
 	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
 		<artifactId>caliente</artifactId>
-		<version>${revision}</version>
+		<version>4.0.4</version>
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
 

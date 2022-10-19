@@ -7,7 +7,7 @@
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
 	<artifactId>caliente</artifactId>
-	<version>${revision}</version>
+	<version>4.0.4</version>
 	<packaging>pom</packaging>
 	<inceptionYear>2013</inceptionYear>
 
@@ -45,7 +45,7 @@
 
 	<properties>
 		<!-- This is the main project version -->
-		<revision>4.0.4</revision>
+		<!-- <revision>4.0.4</revision> -->
 
 		<maven.min-version>3.3.9</maven.min-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -530,6 +530,15 @@
 						</archive>
 					</configuration>
 				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>flatten-maven-plugin</artifactId>
+					<version>1.3.0</version>
+					<configuration>
+						<updatePomFile>true</updatePomFile>
+						<flattenMode>resolveCiFriendliesOnly</flattenMode>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 		<plugins>
@@ -619,6 +628,28 @@
 					</execution>
 				</executions>
 			</plugin>
+<!--
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>flatten.process-resources</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>flatten</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>flatten.clean</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+-->
 		</plugins>
 	</build>
 
