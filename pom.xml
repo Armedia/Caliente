@@ -7,7 +7,7 @@
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
 	<artifactId>caliente</artifactId>
-	<version>${revision}</version>
+	<version>4.0.4</version>
 	<packaging>pom</packaging>
 	<inceptionYear>2013</inceptionYear>
 
@@ -45,7 +45,7 @@
 
 	<properties>
 		<!-- This is the main project version -->
-		<revision>4.0.4</revision>
+		<!-- <revision>4.0.4</revision> -->
 
 		<maven.min-version>3.3.9</maven.min-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -613,6 +613,7 @@
 					</execution>
 				</executions>
 			</plugin>
+<!--
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>flatten-maven-plugin</artifactId>
@@ -633,6 +634,7 @@
 					</execution>
 				</executions>
 			</plugin>
+-->
 		</plugins>
 	</build>
 
