@@ -511,6 +511,11 @@
 					<configuration>
 						<archive>
 							<manifestEntries>
+								<Name>${project.name}</Name>
+								<Implementation-Title>${project.description}</Implementation-Title>
+								<Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+								<Implementation-Version>${project.version}</Implementation-Version>
+								<Implementation-Build-Date>${maven.build.timestamp}</Implementation-Build-Date>
 								<SCM-Branch>${scmBranch}</SCM-Branch>
 								<SCM-Revision>${commitHash}</SCM-Revision>
 								<SCM-Build-Time>${buildTimestamp}</SCM-Build-Time>
