@@ -119,6 +119,7 @@ public class CLIGroup {
 	public static final OptionGroup CONNECTION = new OptionGroupImpl("Common Connection") //
 		.addFrom(CLIGroup.AUTHENTICATION) //
 		.add(CLIParam.server) //
+		.add(CLIParam.ssl_untrusted) //
 	;
 
 	public static final OptionGroup DOMAIN_CONNECTION = new OptionGroupImpl("Domain Connection") //
