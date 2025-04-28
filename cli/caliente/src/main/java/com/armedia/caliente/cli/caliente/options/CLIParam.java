@@ -450,6 +450,11 @@ public enum CLIParam implements Supplier<Option> {
 			.setDescription("Don't process the actual content streams") //
 	), //
 
+	ssl_untrusted( //
+		new OptionImpl() //
+			.setDescription("Disable HTTPS certificate validation") //
+	), //
+
 	streams( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
