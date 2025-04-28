@@ -1044,7 +1044,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 					Path p = getPath(locator);
 					if (!Files.exists(p) || !Files.isRegularFile(p)) {
 						throw new CmfStorageException(
-							String.format("Locator [%s] doesn't refer to an existing and valid file", locator));
+							String.format("Locator [%s] doesn't refer to an existing and valid file (%s)", locator, p));
 					}
 					return Files.size(p);
 				} catch (IOException e) {

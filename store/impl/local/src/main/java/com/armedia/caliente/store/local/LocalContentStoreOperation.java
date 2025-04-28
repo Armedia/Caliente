@@ -31,9 +31,9 @@ import java.io.File;
 import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfStoreOperation;
 
-public class LocalStoreOperation extends CmfStoreOperation<File> {
+public class LocalContentStoreOperation extends CmfStoreOperation<File> {
 
-	public LocalStoreOperation(File wrapped, boolean exclusive) {
+	public LocalContentStoreOperation(File wrapped, boolean exclusive) {
 		super(wrapped, exclusive);
 	}
 

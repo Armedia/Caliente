@@ -26,9 +26,17 @@
  *******************************************************************************/
 package com.armedia.caliente.cli.caliente.command;
 
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,6 +158,32 @@ public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory
 
 	protected void postConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
+		if (commandValues.isPresent(CLIParam.ssl_untrusted)) {
+			try {
+				final SSLContext sc = SSLContext.getInstance("SSL");
+				sc.init(null, new TrustManager[] {
+					new X509TrustManager() {
+						@Override
+						public X509Certificate[] getAcceptedIssuers() {
+							return null;
+						}
+
+						@Override
+						public void checkClientTrusted(X509Certificate[] certs, String authType) {
+						}
+
+						@Override
+						public void checkServerTrusted(X509Certificate[] certs, String authType) {
+						}
+					}
+				}, new java.security.SecureRandom());
+				SSLContext.setDefault(sc);
+				HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+				HttpsURLConnection.setDefaultHostnameVerifier((h, s) -> true);
+			} catch (NoSuchAlgorithmException | KeyManagementException e) {
+				throw new CalienteException("Failed to disable SSL Trust to support self-signed certificates", e);
+			}
+		}
 	}
 
 	protected void postValidateSettings(CalienteState state, Map<String, Object> settings) throws CalienteException {
