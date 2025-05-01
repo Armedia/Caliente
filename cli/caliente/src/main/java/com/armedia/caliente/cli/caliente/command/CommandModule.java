@@ -144,8 +144,8 @@ public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory
 		settings.put(TransferSetting.RETRY_ATTEMPTS.getLabel(), commandValues.getInteger(CLIParam.retry_count));
 
 		int threads = commandValues.getInteger(CLIParam.threads);
-		threads = Tools.ensureBetween(ThreadsLaunchHelper.DEFAULT_MIN_THREADS, threads,
-			ThreadsLaunchHelper.DEFAULT_MAX_THREADS);
+		int max = (commandValues.isDefined(CLIParam.uncap_threads) ? Integer.MAX_VALUE : ThreadsLaunchHelper.DEFAULT_MAX_THREADS);
+		threads = Tools.ensureBetween(ThreadsLaunchHelper.DEFAULT_MIN_THREADS, threads, max);
 		settings.put(TransferSetting.THREAD_COUNT.getLabel(), threads);
 
 		return true;

@@ -883,7 +883,7 @@ public abstract class ExportEngine<//
 		final CmfObjectStore<?> objectStore = exportState.objectStore;
 		final CfgTools settings = exportState.cfg;
 		final int threadCount = getThreadCount(settings);
-		String msg = String.format("Will export items using %d threads", threadCount);
+		String msg = String.format("Will export items using %,d threads (detected %,d cores)", threadCount, Runtime.getRuntime().availableProcessors());
 		this.log.info(msg);
 		if (output != null) {
 			output.info(msg);
