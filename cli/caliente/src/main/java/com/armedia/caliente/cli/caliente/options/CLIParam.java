@@ -488,6 +488,10 @@ public enum CLIParam implements Supplier<Option> {
 			.setDescription("The number of leading path components to trim from the content being imported") //
 	), //
 
+	uncap_threads( //
+		ThreadsLaunchHelper.UNCAP_THREADS //
+	), //
+
 	user( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
