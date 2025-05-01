@@ -114,7 +114,7 @@ public class CsvFormatter {
 		if (data == null) { return null; }
 		if (data.size() != this.columns) {
 			throw new IllegalArgumentException(
-				String.format("Insufficient data: expected %d data columns, but got %d", this.columns, data.size()));
+				String.format("Insufficient data: expected %,d data columns, but got %,d", this.columns, data.size()));
 		}
 		StringBuilder sb = new StringBuilder();
 		boolean first = true;

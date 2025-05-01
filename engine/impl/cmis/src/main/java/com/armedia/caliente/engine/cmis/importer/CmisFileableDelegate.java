@@ -130,7 +130,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 
 				if (accessorNames.getValueCount() != accessorActions.getValueCount()) {
 					throw new CmfStorageException(
-						String.format("ACL accessors and actions have different object counts (%d != %d) for %s",
+						String.format("ACL accessors and actions have different object counts (%,d != %,d) for %s",
 							accessorNames.getValueCount(), accessorActions.getValueCount(),
 							CmisFileableDelegate.this.cmfObject.getDescription()));
 				}

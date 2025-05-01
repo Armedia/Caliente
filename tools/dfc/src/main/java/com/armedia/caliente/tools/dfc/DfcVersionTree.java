@@ -312,7 +312,7 @@ public class DfcVersionTree {
 		if (this.log.isTraceEnabled()) {
 			this.log.trace("Total of {} items lack antecedents in chronicle [{}]: {}", missingAntecedent.size(),
 				chronicleId, missingAntecedent);
-			this.log.trace("Total of %d corrections required for the full tree for chronicle [{}]: {}", patches.size(),
+			this.log.trace("Total of {} corrections required for the full tree for chronicle [{}]: {}", patches.size(),
 				chronicleId, patches);
 		}
 		this.chronicle = chronicle;

@@ -57,7 +57,7 @@ class JdbcTools {
 		while (rs.next()) {
 			c++;
 			if (c < 0) {
-				throw new SQLException(String.format("Counter wraparound after %d items", Integer.MAX_VALUE));
+				throw new SQLException(String.format("Counter wraparound after %,d items", Integer.MAX_VALUE));
 			}
 		}
 		return c;
@@ -67,7 +67,7 @@ class JdbcTools {
 		long c = 0;
 		while (rs.next()) {
 			c++;
-			if (c < 0) { throw new SQLException(String.format("Counter wraparound after %d items", Long.MAX_VALUE)); }
+			if (c < 0) { throw new SQLException(String.format("Counter wraparound after %,d items", Long.MAX_VALUE)); }
 		}
 		return c;
 	};

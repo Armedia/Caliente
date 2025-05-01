@@ -853,7 +853,7 @@ public abstract class ImportEngine<//
 								workerCounter.waitUntilValue(0);
 							} catch (InterruptedException e) {
 								throw new CmfStorageException(
-									String.format("Thread interrupted while waiting for tier [%d] to complete", tierId),
+									String.format("Thread interrupted while waiting for tier [%,d] to complete", tierId),
 									e);
 							} finally {
 								output.info("Completed {} tier {}", type.name(), tierId);

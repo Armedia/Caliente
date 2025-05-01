@@ -1019,7 +1019,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				// if we found the object, we should at least be able to find it in the
 				// history list (i.e. a history of 1)
 				Exception e = new Exception(String.format(
-					"No history entries were found for ID [%s], %d errors were detected during the search", hid,
+					"No history entries were found for ID [%s], %,d errors were detected during the search", hid,
 					errors.size()));
 				errors.forEach((p) -> e.addSuppressed(p.getValue()));
 				throw e;

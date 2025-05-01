@@ -178,7 +178,7 @@ public class PropertiesTest {
 		}
 
 		if (p.size() != q.size()) {
-			throw new RuntimeException(String.format("Size difference: %d vs %d", p.size(), q.size()));
+			throw new RuntimeException(String.format("Size difference: %,d vs %,d", p.size(), q.size()));
 		}
 		Map<String, String> matched = new TreeMap<>();
 		Set<String> missing = new TreeSet<>();

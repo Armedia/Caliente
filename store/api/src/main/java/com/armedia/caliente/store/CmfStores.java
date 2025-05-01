@@ -133,7 +133,7 @@ public final class CmfStores extends BaseShareableLockable {
 					createStore(storeCfg, parent);
 				} catch (Throwable t) {
 					String msg = String.format(
-						"Exception raised attempting to initialize %s store #%d from the definitions at [%s]",
+						"Exception raised attempting to initialize %s store #%,d from the definitions at [%s]",
 						this.type, i, config);
 					if (this.log.isDebugEnabled()) {
 						this.log.warn(msg, t);

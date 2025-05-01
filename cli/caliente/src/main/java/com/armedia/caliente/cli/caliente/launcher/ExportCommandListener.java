@@ -105,7 +105,7 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 				* ExportCommandListener.NANOS_IN_SECOND;
 
 			objectLine = String.format(
-				"Exported %d messages (~%.2f/s, %d since last report ~%s ago (%d ns), ~%.2f/s average)", totalItems,
+				"Exported %,d messages (~%.2f/s, %,d since last report ~%s ago (%,d ns), ~%.2f/s average)", totalItems,
 				currentRate, currentItems, currentDuration, currentDuration.toNanos(), totalRate);
 			this.console.info("PROGRESS REPORT{}\t{}{}{}{}", Tools.NL, objectLine, Tools.NL, Tools.NL,
 				this.counter.generateCummulativeReport(1));

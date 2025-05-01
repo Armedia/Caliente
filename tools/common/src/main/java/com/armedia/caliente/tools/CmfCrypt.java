@@ -112,7 +112,7 @@ public class CmfCrypt implements CheckedCodec<CharSequence, byte[], Exception> {
 		if (StringUtils.isEmpty(value)) { return CmfCrypt.NO_BYTES; }
 		if ((value.length() % 4) != 0) {
 			throw new CryptException(
-				String.format("Bad Base64 value - its length should be a multiple of 4, but it's %d", value.length()));
+				String.format("Bad Base64 value - its length should be a multiple of 4, but it's %,d", value.length()));
 		}
 		Matcher m = CmfCrypt.BASE64_VALIDATOR.matcher(value);
 		if (!m.matches()) {

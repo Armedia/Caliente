@@ -380,7 +380,7 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 		final String trailer = toStringTrailer();
 		final String trailerSep = ((trailer != null) && (trailer.length() > 0) ? ", " : "");
 		return String.format(
-			"%s [type=%s, subtype=%s, secondaries=%s, id=%s, name=%s, searchKey=%s, dependencyTier=%d, historyId=%s, historyCurrent=%s, label=%s%s%s]",
+			"%s [type=%s, subtype=%s, secondaries=%s, id=%s, name=%s, searchKey=%s, dependencyTier=%,d, historyId=%s, historyCurrent=%s, label=%s%s%s]",
 			getClass().getSimpleName(), getType(), this.subtype, this.secondaries, getId(), this.name, getSearchKey(),
 			this.dependencyTier, this.historyId, this.historyCurrent, this.label, trailerSep, trailer);
 	}

@@ -520,7 +520,7 @@ public abstract class ExportEngine<//
 							() -> ctx.printf("Waiting on a dependency:%n\tFOR  : %s%n\tFROM : %s%n\tOWNER: %s for %s",
 								status.getTargetLabel(), logLabel, status.getCreatorThread().getName(),
 								status.getReferrentLabel()));
-						ctx.printf("Waited for %s from %s for %d ms", status.getTargetLabel(), logLabel, waitTime);
+						ctx.printf("Waited for %s from %s for %,d ms", status.getTargetLabel(), logLabel, waitTime);
 					} catch (InterruptedException e) {
 						Thread.interrupted();
 						throw new ExportException(String.format(
@@ -681,7 +681,7 @@ public abstract class ExportEngine<//
 						continue;
 					}
 					ExportException e2 = new ExportException(
-						String.format("Failed to execute the content storage for %s after %d attempts", logLabel,
+						String.format("Failed to execute the content storage for %s after %,d attempts", logLabel,
 							this.retryCount),
 						e);
 					suppressed.forEach(e2::addSuppressed);

@@ -150,7 +150,7 @@ public class Rendition {
 
 	@Override
 	public String toString() {
-		return String.format("Rendition [type=%d, format=%s, modifier=%s, pageCount=%d, pages=%s]", this.type,
+		return String.format("Rendition [type=%d, format=%s, modifier=%s, pageCount=%,d, pages=%s]", this.type,
 			this.format, this.modifier, this.pageCount, this.pages);
 	}
 }

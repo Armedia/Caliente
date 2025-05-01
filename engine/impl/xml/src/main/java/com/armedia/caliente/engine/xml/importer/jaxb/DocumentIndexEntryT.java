@@ -104,7 +104,7 @@ public class DocumentIndexEntryT {
 
 	@Override
 	public String toString() {
-		return String.format("DocumentIndexEntryT [historyId=%s, count=%d, versions=%s]", this.historyId, getCount(),
+		return String.format("DocumentIndexEntryT [historyId=%s, count=%,d, versions=%s]", this.historyId, getCount(),
 			this.versions);
 	}
 }

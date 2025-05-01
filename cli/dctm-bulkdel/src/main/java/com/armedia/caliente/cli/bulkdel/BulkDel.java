@@ -253,7 +253,7 @@ public class BulkDel {
 					} else {
 						targets = addExplicitTargets(cli, mainSession, op);
 					}
-					this.log.info("%d target objects added: %s%n", targets.size(), targets);
+					this.log.info("{} target objects added: {}", targets.size(), targets);
 
 					if (op.execute()) {
 						System.out.printf("Deletion successful!%n");

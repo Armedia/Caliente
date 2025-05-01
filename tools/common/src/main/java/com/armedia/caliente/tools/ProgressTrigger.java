@@ -69,7 +69,7 @@ public class ProgressTrigger extends BaseShareableLockable {
 			this.duration = Objects.requireNonNull(duration, "Must provide an interval");
 			this.count = count;
 			this.string = new LazySupplier<>(
-				() -> String.format("%d/%s (~%.3f/s)", count, duration, getRatePerSecond()));
+				() -> String.format("%,d/%s (~%.3f/s)", count, duration, getRatePerSecond()));
 		}
 
 		public Duration getDuration() {

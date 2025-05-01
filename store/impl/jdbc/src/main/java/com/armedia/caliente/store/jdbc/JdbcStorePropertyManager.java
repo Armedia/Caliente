@@ -126,7 +126,7 @@ public class JdbcStorePropertyManager {
 				int n = JdbcTools.getQueryRunner().update(c, getSql(Op.UPDATE), newValueString, property);
 				if (n != 1) {
 					throw new CmfStorageException(String.format(
-						"Failed to properly update store property [%s] - updated %d values instead of just 1", property,
+						"Failed to properly update store property [%s] - updated %,d values instead of just 1", property,
 						n));
 				}
 			} else {

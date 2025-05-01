@@ -196,7 +196,7 @@ class DqlQuery {
 					if ((kw2 == null) || !kw.chasers.contains(kw2)) {
 						// This next keyword isn't one of the required chasers, and thus
 						// constitutes a syntax error
-						throw new Exception(String.format("The keyword %s (at index %d) must be followed by one of %s",
+						throw new Exception(String.format("The keyword %s (at index %,d) must be followed by one of %s",
 							kw, this.m.start(1), kw.chasers));
 					}
 					clause = DqlQuery.CLAUSES.get(String.format("%s %s", w1, w2));
@@ -276,7 +276,7 @@ class DqlQuery {
 			} else {
 				if (nextClause.clause.ordinal() < clause.clause.ordinal()) {
 					throw new Exception(
-						String.format("SQL Clauses out of order: %s (at index %d) can't come before %s (at index %d)",
+						String.format("SQL Clauses out of order: %s (at index %,d) can't come before %s (at index %d)",
 							clause.clause, clause.clauseStart, nextClause.clause, nextClause.clauseStart));
 				}
 				data = dql.substring(clause.dataStart, nextClause.clauseStart).trim();

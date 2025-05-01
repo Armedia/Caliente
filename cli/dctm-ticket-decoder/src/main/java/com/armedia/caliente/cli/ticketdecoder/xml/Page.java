@@ -125,7 +125,7 @@ public class Page {
 
 	@Override
 	public String toString() {
-		return String.format("Rendition [number=%d, length=%d, hash=%s, path=[%s]]", this.number, this.length,
+		return String.format("Rendition [number=%d, length=%,d, hash=%s, path=[%s]]", this.number, this.length,
 			this.hash, this.path);
 	}
 }

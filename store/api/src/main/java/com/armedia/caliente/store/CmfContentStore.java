@@ -698,7 +698,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 					long written = out.transferFrom(in, 0, Long.MAX_VALUE);
 					if ((size >= 0) && (written != size)) {
 						throw new CmfStorageException(
-							String.format("Incorrect size written out - expected to write %d bytes, but wrote out %d",
+							String.format("Incorrect size written out - expected to write %,d bytes, but wrote out %,d",
 								size, written));
 					}
 					return written;
@@ -727,7 +727,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			long written = p.getValue();
 			if ((size >= 0) && (written != size)) {
 				throw new CmfStorageException(String.format(
-					"Incorrect size written out - expected to write %d bytes, but wrote out %d", size, written));
+					"Incorrect size written out - expected to write %,d bytes, but wrote out %,d", size, written));
 			}
 
 			// TODO: Update the handle's locator

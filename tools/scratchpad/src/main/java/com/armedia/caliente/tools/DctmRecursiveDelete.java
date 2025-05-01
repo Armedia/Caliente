@@ -65,7 +65,7 @@ public class DctmRecursiveDelete {
 						added.add(path);
 					}
 				}
-				System.out.printf("%d Target folders added: %s%n", added.size(), added);
+				System.out.printf("%,d Target folders added: %s%n", added.size(), added);
 				op.setDeepFolders(ok);
 				op.setSession(session);
 				op.setOperationMonitor(new IDfOperationMonitor() {
