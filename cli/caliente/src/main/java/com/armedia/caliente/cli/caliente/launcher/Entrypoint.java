@@ -51,6 +51,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.text.StringSubstitutor;
 import org.apache.log4j.Level;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.slf4j.Logger;
@@ -471,9 +472,22 @@ public class Entrypoint extends AbstractEntrypoint {
 		}
 	}
 
+    protected String process(String value) {
+        if (value == null) return value;
+
+        // First, try envvars...
+        value = StringSubstitutor.replace(value, System.getenv());
+
+        // Then, try sysprops
+        value = StringSubstitutor.replaceSystemProperties(value);
+
+        // Return the final result
+        return value;
+    }
+
 	protected boolean applyStoreProperties(StoreConfiguration cfg, Properties properties) {
 		if ((properties == null) || properties.isEmpty()) { return false; }
-		String storeType = properties.getProperty(Entrypoint.STORE_TYPE_PROPERTY);
+		String storeType = process(properties.getProperty(Entrypoint.STORE_TYPE_PROPERTY));
 		if (!StringUtils.isEmpty(storeType)) {
 			cfg.setType(storeType);
 		}
@@ -481,7 +495,7 @@ public class Entrypoint extends AbstractEntrypoint {
 		for (String s : properties.stringPropertyNames()) {
 			String v = properties.getProperty(s);
 			if (v != null) {
-				m.put(s, v);
+				m.put(s, process(v));
 			}
 		}
 		return true;
