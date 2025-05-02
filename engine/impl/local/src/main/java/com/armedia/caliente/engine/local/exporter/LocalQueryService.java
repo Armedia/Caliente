@@ -830,10 +830,23 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		this.failOnInvalid = queries.isFailOnInvalidPath();
 	}
 
+	protected String process(String value) {
+		if (value == null) return value;
+
+		// First, try envvars...
+		value = StringSubstitutor.replace(value, System.getenv());
+
+		// Then, try sysprops
+		value = StringSubstitutor.replaceSystemProperties(value);
+
+		// Return the final result
+		return value;
+	}
+
 	private void setValue(String name, String value, Map<String, String> map) {
 		value = StringUtils.strip(value);
 		if (!StringUtils.isEmpty(value)) {
-			map.put(String.format("jdbc.%s", name), StringSubstitutor.replaceSystemProperties(value));
+			map.put(String.format("jdbc.%s", name), process(value));
 		}
 	}
 
