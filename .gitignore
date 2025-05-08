@@ -2,3 +2,7 @@
 /tmp/
 **/.*.swp
 **/.swp
+
+**/.project
+**/.classpath
+**/.settings

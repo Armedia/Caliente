@@ -1,7 +1,0 @@
-<root>
-  <facet id="jpt.jaxb">
-    <node name="classgen">
-      <attribute name="package" value="com.armedia.commons.utilities.cli.caliente.launcher.dctm.io.xml"/>
-    </node>
-  </facet>
-</root>
