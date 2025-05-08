@@ -241,7 +241,6 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		this.client = clientBuilder.build();
 
 		final boolean createMissingBucket = settings.getBoolean(S3ContentStoreSetting.CREATE_MISSING_BUCKET);
-		boolean exists = false;
 		try {
 			this.client.headBucket((R) -> R.bucket(this.bucket));
 		} catch (NoSuchBucketException e) {
