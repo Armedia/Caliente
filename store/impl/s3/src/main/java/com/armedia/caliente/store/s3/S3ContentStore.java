@@ -96,6 +96,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.BucketAlreadyExistsException;
 import software.amazon.awssdk.services.s3.model.BucketVersioningStatus;
 import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
 import software.amazon.awssdk.services.s3.model.CompletedPart;
@@ -240,32 +241,27 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 		this.client = clientBuilder.build();
 
 		final boolean createMissingBucket = settings.getBoolean(S3ContentStoreSetting.CREATE_MISSING_BUCKET);
-		boolean supportsVersions = false;
 		boolean exists = false;
 		try {
 			this.client.headBucket((R) -> R.bucket(this.bucket));
-			exists = true;
-			supportsVersions = (this.client.getBucketVersioning((R) -> R.bucket(this.bucket))
-				.status() == BucketVersioningStatus.ENABLED);
 		} catch (NoSuchBucketException e) {
-			if (!createMissingBucket) {
-				throw new CmfStorageException("No bucket named [" + this.bucket + "] was found", e);
-			}
-		}
-
-		if (!exists) {
 			// If the bucket is missing, and we're supposed to create it, then do so
+			if (!createMissingBucket)  throw new CmfStorageException("No bucket named [" + this.bucket + "] was found", e);
 			try {
 				this.client.createBucket((R) -> R.bucket(this.bucket));
-			} catch (Exception e) {
-				throw new CmfStorageException("Failed to create the missing bucket [" + this.bucket + "]", e);
+			} catch (BucketAlreadyExistsException e2) {
+				// Huh? a race, eh?  Doesn't matter ... we're good anyway
+			} catch (Exception e2) {
+				throw new CmfStorageException("Failed to create the missing bucket [" + this.bucket + "]", e2);
 			}
 		}
 
+
+		boolean supportsVersions = (this.client.getBucketVersioning((R) -> R.bucket(this.bucket)).status() == BucketVersioningStatus.ENABLED);
 		final boolean enableVersioning = settings.getBoolean(S3ContentStoreSetting.ENABLE_VERSIONING);
 		// If it's a new bucket, or it's an old one that doesn't have versioning, and we're supposed
 		// to enable it ... then do so
-		if (!exists || (!supportsVersions && enableVersioning)) {
+		if (!supportsVersions && enableVersioning) {
 			try {
 				this.client.putBucketVersioning((R) -> {
 					R.bucket(this.bucket);
@@ -273,10 +269,6 @@ public class S3ContentStore extends CmfContentStore<S3Locator, S3StoreOperation>
 				});
 				supportsVersions = true;
 			} catch (Exception e) {
-				if (exists) {
-					throw new CmfStorageException(
-						String.format("Failed to enable versioning on the bucket [%s]", this.bucket), e);
-				}
 				supportsVersions = false;
 				this.log.error("Failed to enable versioning on the bucket [{}]", this.bucket, e);
 			}
