@@ -108,7 +108,7 @@
 		<repository>
 			<id>armedia-nexus</id>
 			<name>Armedia Nexus Repository</name>
-			<url>https://project.armedia.com/nexus/content/repositories/armedia.release/</url>
+			<url>https://nexus.armedia.com/content/repositories/armedia.release/</url>
 		</repository>
 	</distributionManagement>
 
@@ -116,7 +116,7 @@
 		<repository>
 			<id>Armedia Repository</id>
 			<name>Armedia Artifacts Repository</name>
-			<url>https://project.armedia.com/nexus/content/groups/armedia/</url>
+			<url>https://nexus.armedia.com/content/groups/armedia/</url>
 		</repository>
 		<repository>
 			<id>Alfresco Public Repository</id>
@@ -129,7 +129,7 @@
 		<pluginRepository>
 			<id>Armedia Repository</id>
 			<name>Armedia Artifacts Repository</name>
-			<url>https://project.armedia.com/nexus/content/groups/armedia/</url>
+			<url>https://nexus.armedia.com/content/groups/armedia/</url>
 		</pluginRepository>
 	</pluginRepositories>
 
