@@ -437,9 +437,6 @@
 						<source>${project.build.target}</source>
 						<target>${project.build.target}</target>
 						<compilerId>eclipse</compilerId>
-						<compilerArguments>
-							<properties>${project.basedir}/.settings/org.eclipse.jdt.core.prefs</properties>
-						</compilerArguments>
 						<showWarnings>true</showWarnings>
 						<showDeprecation>true</showDeprecation>
 					</configuration>
