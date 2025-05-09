@@ -152,7 +152,7 @@ public class DfcQuery extends CloseableIterator<IDfTypedObject> {
 		return new DfcQuery(query.getSession(), query.getDql(), query.getType(), query.getBatchSize());
 	}
 
-	public <EX extends Throwable> void forEachRemaining(CheckedConsumer<? super IDfTypedObject, EX> consumer)
+	public <EX extends Exception> void forEachRemaining(CheckedConsumer<? super IDfTypedObject, EX> consumer)
 		throws DfException, EX {
 		Objects.requireNonNull(consumer, "Must provide a non-null consumer");
 		while (hasNext()) {

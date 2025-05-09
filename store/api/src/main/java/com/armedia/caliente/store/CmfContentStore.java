@@ -598,7 +598,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			final boolean tx = ((op != null) && op.begin());
 			boolean ok = true;
 
-			private <V, T extends Throwable> V doWork(CheckedSupplier<V, T> r) throws T {
+			private <V, E extends Exception> V doWork(CheckedSupplier<V, E> r) throws E {
 				boolean o = false;
 				try {
 					V v = r.getChecked();
@@ -609,7 +609,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 				}
 			}
 
-			private <T extends Throwable> void doWork(CheckedRunnable<T> r) throws T {
+			private <E extends Exception> void doWork(CheckedRunnable<E> r) throws E {
 				boolean o = false;
 				try {
 					r.runChecked();
@@ -939,7 +939,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			final boolean tx = ((op != null) && op.begin());
 			boolean ok = true;
 
-			private <V, T extends Throwable> V doWork(CheckedSupplier<V, T> r) throws T {
+			private <V, E extends Exception> V doWork(CheckedSupplier<V, E> r) throws E {
 				boolean o = false;
 				try {
 					V v = r.getChecked();
@@ -950,7 +950,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 				}
 			}
 
-			private <T extends Throwable> void doWork(CheckedRunnable<T> r) throws T {
+			private <E extends Exception> void doWork(CheckedRunnable<E> r) throws E {
 				boolean o = false;
 				try {
 					r.runChecked();

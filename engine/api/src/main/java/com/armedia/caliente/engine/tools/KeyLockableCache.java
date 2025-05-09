@@ -258,7 +258,7 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 		}
 	}
 
-	public final <EX extends Throwable> V computeIfAbsent(K key, CheckedFunction<K, V, EX> f) throws EX {
+	public final <EX extends Exception> V computeIfAbsent(K key, CheckedFunction<K, V, EX> f) throws EX {
 		return computeIfMatches(key, Objects::isNull, f);
 	}
 
@@ -269,7 +269,7 @@ public final class KeyLockableCache<K extends Serializable, V> extends BaseShare
 	 * is carried out and its result returned.
 	 * </p>
 	 */
-	public final <EX extends Throwable> V computeIfMatches(K key, Predicate<V> predicate, CheckedFunction<K, V, EX> f)
+	public final <EX extends Exception> V computeIfMatches(K key, Predicate<V> predicate, CheckedFunction<K, V, EX> f)
 		throws EX {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		Objects.requireNonNull(f, "Must provide a non-null initializer");
