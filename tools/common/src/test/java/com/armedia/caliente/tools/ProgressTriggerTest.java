@@ -205,7 +205,7 @@ public class ProgressTriggerTest {
 			Assertions.assertEquals(counter.get(), r.getAggregateStatistics().getCount());
 			long timeDelta = (r.getIntervalStatistics().getDuration().toNanos());
 			if (timeDelta < intervalNanos) {
-				Assertions.fail(String.format("The interval should have been at least %d nanos, but was %d",
+				Assertions.fail(String.format("The interval should have been at least %,d nanos, but was %,d",
 					intervalNanos, timeDelta));
 			}
 			System.out.printf("Progress report (by time): %s | %s%n", r.getIntervalStatistics(),
@@ -233,7 +233,7 @@ public class ProgressTriggerTest {
 			Assertions.assertEquals(interval, r.getTriggerInterval());
 			long timeDelta = (r.getIntervalStatistics().getDuration().toNanos());
 			if (timeDelta < intervalNanos) {
-				Assertions.fail(String.format("The interval should have been at least %d nanos, but was %d",
+				Assertions.fail(String.format("The interval should have been at least %,d nanos, but was %,d",
 					intervalNanos, timeDelta));
 			}
 			System.out.printf("Progress report (parallel by time): %s | %s%n", r.getIntervalStatistics(),

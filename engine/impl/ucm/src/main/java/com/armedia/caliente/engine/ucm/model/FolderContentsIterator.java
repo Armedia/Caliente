@@ -175,7 +175,7 @@ public class FolderContentsIterator {
 			}).getResponseAsBinder();
 		} catch (IdcClientException e) {
 			throw new UcmServiceException(
-				String.format("Failed to retrieve page %d for folder [%s]", this.pageCount + 1, this.searchKey), e);
+				String.format("Failed to retrieve page %,d for folder [%s]", this.pageCount + 1, this.searchKey), e);
 		}
 	}
 

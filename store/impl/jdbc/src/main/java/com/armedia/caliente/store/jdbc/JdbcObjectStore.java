@@ -1017,7 +1017,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 			final String refValue = (targetValue == null ? sourceValue : targetValue);
 			int count = qr.update(c, sql, type.name(), name, refValue);
 			if (count > 0) {
-				this.log.info("Deleted the mappings [{}/{}/{}->{}] : %d", type, name, sourceValue, targetValue, count);
+				this.log.info("Deleted the mappings [{}/{}/{}->{}] : {}", type, name, sourceValue, targetValue, count);
 			}
 			return;
 		}
@@ -1140,7 +1140,7 @@ public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 
 			if (result > 1) {
 				throw new CmfStorageException(
-					String.format("REFERENTIAL INTEGRITY IS NOT BEING ENFORCED: %d PLAN records for %s", result,
+					String.format("REFERENTIAL INTEGRITY IS NOT BEING ENFORCED: %,d PLAN records for %s", result,
 						target.getShortLabel()));
 			}
 

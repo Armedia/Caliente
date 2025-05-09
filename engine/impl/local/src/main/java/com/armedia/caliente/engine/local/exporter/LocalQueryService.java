@@ -830,10 +830,23 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 		this.failOnInvalid = queries.isFailOnInvalidPath();
 	}
 
+	protected String process(String value) {
+		if (value == null) return value;
+
+		// First, try envvars...
+		value = StringSubstitutor.replace(value, System.getenv());
+
+		// Then, try sysprops
+		value = StringSubstitutor.replaceSystemProperties(value);
+
+		// Return the final result
+		return value;
+	}
+
 	private void setValue(String name, String value, Map<String, String> map) {
 		value = StringUtils.strip(value);
 		if (!StringUtils.isEmpty(value)) {
-			map.put(String.format("jdbc.%s", name), StringSubstitutor.replaceSystemProperties(value));
+			map.put(String.format("jdbc.%s", name), process(value));
 		}
 	}
 
@@ -1019,7 +1032,7 @@ public class LocalQueryService extends BaseShareableLockable implements AutoClos
 				// if we found the object, we should at least be able to find it in the
 				// history list (i.e. a history of 1)
 				Exception e = new Exception(String.format(
-					"No history entries were found for ID [%s], %d errors were detected during the search", hid,
+					"No history entries were found for ID [%s], %,d errors were detected during the search", hid,
 					errors.size()));
 				errors.forEach((p) -> e.addSuppressed(p.getValue()));
 				throw e;

@@ -24,7 +24,7 @@ public class AlphaCounter {
 				int v = ((i + 1) % base);
 				if (c == '\0') {
 					throw new IllegalArgumentException(
-						String.format("Illegal digit '\\0' at position %d in [%s]", i, digits));
+						String.format("Illegal digit '\\0' at position %,d in [%s]", i, digits));
 				}
 				Integer old = digitToValue.put(c, v);
 				if (old != null) {
@@ -86,7 +86,7 @@ public class AlphaCounter {
 			char c = str.charAt(i);
 			if (!digitToValue.containsKey(c)) {
 				throw new IllegalArgumentException(String
-					.format("Character [%s] in position %d in [%s] is not a valid alpha counter character", c, i, str));
+					.format("Character [%s] in position %,d in [%s] is not a valid alpha counter character", c, i, str));
 			}
 			int value = digitToValue.get(c);
 			ret += (value != 0 ? value : base);

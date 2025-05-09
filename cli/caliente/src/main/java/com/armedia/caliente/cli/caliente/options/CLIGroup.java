@@ -76,6 +76,7 @@ public class CLIGroup {
 		.add(CLIParam.skip_content) //
 		.add(CLIParam.threads) //
 		.add(CLIParam.transformations) //
+		.add(CLIParam.uncap_threads) //
 	;
 
 	public static final OptionGroup EXPORT_COMMON = new OptionGroupImpl("Common Export") //
@@ -109,6 +110,7 @@ public class CLIGroup {
 		.add(CLIParam.no_versions) //
 		.add(CLIParam.non_recursive) //
 		.add(CLIParam.threads) //
+		.add(CLIParam.uncap_threads) //
 	;
 
 	public static final OptionGroup AUTHENTICATION = new OptionGroupImpl("Basic Authentication") //

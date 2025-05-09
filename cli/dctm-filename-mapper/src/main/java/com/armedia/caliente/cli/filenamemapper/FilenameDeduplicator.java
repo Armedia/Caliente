@@ -455,7 +455,7 @@ public class FilenameDeduplicator {
 					left += c.conflicts.size();
 				}
 				throw new IllegalStateException(
-					String.format("Failed to resolve the remaining conflicts (%d left in %d containers)", left,
+					String.format("Failed to resolve the remaining conflicts (%,d left in %,d containers)", left,
 						this.conflictContainers.size()));
 			}
 		}

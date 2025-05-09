@@ -124,28 +124,34 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 
 	protected final <E> E runConcurrently(CheckedFunction<OPERATION, E, CmfStorageException> operation)
 		throws CmfStorageException {
-		return runOperation(this::shareLocked, operation);
+	    CheckedFunction<CheckedSupplier<E, CmfStorageException>, E, CmfStorageException> f = this::shareLocked;
+		return runOperation(f, operation);
 	}
 
 	protected final void runConcurrently(CheckedConsumer<OPERATION, CmfStorageException> operation)
 		throws CmfStorageException {
-		runOperation(this::shareLocked, (op) -> {
-			operation.acceptChecked(op);
-			return null;
-		});
+        CheckedFunction<CheckedSupplier<Void, CmfStorageException>, Void, CmfStorageException> f = this::shareLocked;
+        CheckedFunction<OPERATION, Void, CmfStorageException> s = (op) -> {
+            operation.acceptChecked(op);
+            return null;
+        };
+		runOperation(f, s);
 	}
 
 	protected final <E> E runExclusively(CheckedFunction<OPERATION, E, CmfStorageException> operation)
 		throws CmfStorageException {
-		return runOperation(this::mutexLocked, operation);
+        CheckedFunction<CheckedSupplier<E, CmfStorageException>, E, CmfStorageException> f = this::mutexLocked;
+		return runOperation(f, operation);
 	}
 
 	protected final void runExclusively(CheckedConsumer<OPERATION, CmfStorageException> operation)
 		throws CmfStorageException {
-		runOperation(this::mutexLocked, (op) -> {
-			operation.acceptChecked(op);
-			return null;
-		});
+        CheckedFunction<CheckedSupplier<Void, CmfStorageException>, Void, CmfStorageException> f = this::mutexLocked;
+        CheckedFunction<OPERATION, Void, CmfStorageException> s = (op) -> {
+            operation.acceptChecked(op);
+            return null;
+        };
+		runOperation(f, s);
 	}
 
 	protected boolean doClose(boolean cleanupIfEmpty) {

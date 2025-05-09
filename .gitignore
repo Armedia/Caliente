@@ -2,3 +2,8 @@
 /tmp/
 **/.*.swp
 **/.swp
+**/bin
+
+**/.project
+**/.classpath
+**/.settings

@@ -147,7 +147,7 @@ public class Flat2Db extends BaseShareableLockable {
 				if (source == null) { return "SOURCE VALUE IS NULL"; }
 				if (candidate == null) { return "CANDIDATE VALUE IS NULL"; }
 				if (source.length() != candidate.length()) {
-					return String.format("LENGTHS ARE DIFFERENT (%d vs %d)", source.length(), candidate.length());
+					return String.format("LENGTHS ARE DIFFERENT (%,d vs %,d)", source.length(), candidate.length());
 				}
 				if (source.equals(candidate)) { return null; }
 				if (source.equalsIgnoreCase(candidate)) { return "VALUES DIFFER IN CASE"; }
@@ -209,7 +209,7 @@ public class Flat2Db extends BaseShareableLockable {
 					long s = TimeUnit.MILLISECONDS.toSeconds(diff);
 					diff -= TimeUnit.SECONDS.toMillis(s);
 					long l = TimeUnit.MILLISECONDS.toMillis(diff);
-					remarks = String.format("SRC - DST == %s%d:%02d:%02d.%03d", sign, h, m, s, l);
+					remarks = String.format("SRC - DST == %s%,d:%02d:%02d.%03d", sign, h, m, s, l);
 				}
 				return remarks;
 			}

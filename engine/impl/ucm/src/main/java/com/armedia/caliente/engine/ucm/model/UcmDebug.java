@@ -141,7 +141,7 @@ public class UcmDebug {
 		pw.printf("\t%s%n", StringUtils.repeat('-', 50));
 		int i = 0;
 		for (DataObject o : resultSet.getRows()) {
-			pw.printf("\t\tItem [%d]:%n", i++);
+			pw.printf("\t\tItem [%,d]:%n", i++);
 			pw.printf("\t\t%s%n", StringUtils.repeat('-', 40));
 			UcmDebug.dumpDataObject(3, o, pw);
 		}

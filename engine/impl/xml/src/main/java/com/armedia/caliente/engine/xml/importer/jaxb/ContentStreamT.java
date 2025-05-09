@@ -190,7 +190,7 @@ public class ContentStreamT {
 	@Override
 	public String toString() {
 		return String.format(
-			"ContentStreamT [renditionId=%s, renditionPage=%d, modifier=%s, size=%s, hash=%s, location=%s, fileName=%s, mimeType=%s, properties=%s]",
+			"ContentStreamT [renditionId=%s, renditionPage=%,d, modifier=%s, size=%s, hash=%s, location=%s, fileName=%s, mimeType=%s, properties=%s]",
 			this.renditionId, this.renditionPage, this.modifier, this.size, Arrays.toString(this.hash), this.location,
 			this.fileName, this.mimeType, this.props);
 	}

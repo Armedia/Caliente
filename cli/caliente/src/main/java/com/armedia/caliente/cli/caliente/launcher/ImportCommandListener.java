@@ -102,7 +102,7 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 				final Double itemPct = (current.doubleValue() / total.doubleValue()) * 100.0;
 				final Double itemRate = (count / AbstractCommandListener.PROGRESS_INTERVAL.doubleValue());
 
-				objectLine = String.format("%n\tProcessed %d/%d %s objects (%.2f%%, ~%.2f/s, %d since last report)",
+				objectLine = String.format("%n\tProcessed %,d/%,d %s objects (%.2f%%, ~%.2f/s, %,d since last report)",
 					current.longValue(), total.longValue(), objectType.name(), itemPct, itemRate, count);
 			}
 			this.console.info("PROGRESS REPORT{}{}\tProcessed {}/{} objects in total ({}%)", objectLine, Tools.NL,

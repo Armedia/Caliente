@@ -54,7 +54,7 @@ public final class CmisTransformerIterator<S, T> implements Iterator<T> {
 			this.current++;
 			return result;
 		} catch (Exception e) {
-			throw new RuntimeException(String.format("Failed to transform query result #%d", this.current), e);
+			throw new RuntimeException(String.format("Failed to transform query result #%,d", this.current), e);
 		}
 	}
 

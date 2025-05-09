@@ -156,13 +156,26 @@ public class MetadataSource extends BaseShareableLockable {
 		return this.settings;
 	}
 
+	protected String process(String value) {
+		if (value == null) return value;
+
+		// First, try envvars...
+		value = StringSubstitutor.replace(value, System.getenv());
+
+		// Then, try sysprops
+		value = StringSubstitutor.replaceSystemProperties(value);
+
+		// Return the final result
+		return value;
+	}
+
 	public Map<String, String> getSettingsMap() {
 		Map<String, String> ret = new TreeMap<>();
 		for (Setting s : getSettings()) {
 			String name = s.getName();
 			String value = s.getValue();
 			if ((name != null) && (value != null)) {
-				ret.put(String.format("jdbc.%s", name), StringSubstitutor.replaceSystemProperties(value));
+				ret.put(String.format("jdbc.%s", name), process(value));
 			}
 		}
 		return ret;
@@ -179,7 +192,7 @@ public class MetadataSource extends BaseShareableLockable {
 	private void setValue(String name, String value, Map<String, String> map) {
 		value = StringUtils.strip(value);
 		if (!StringUtils.isEmpty(value)) {
-			map.put(String.format("jdbc.%s", name), StringSubstitutor.replaceSystemProperties(value));
+			map.put(String.format("jdbc.%s", name), process(value));
 		}
 	}
 

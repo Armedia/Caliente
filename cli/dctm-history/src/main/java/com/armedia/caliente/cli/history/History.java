@@ -186,7 +186,7 @@ public class History {
 								PrintWriter pw = new PrintWriter(w);
 
 								pw.printf("HISTORY ID: [%s]%n", history.getChronicleId());
-								pw.printf("\tTOTAL VERSIONS: %d%n", history.size());
+								pw.printf("\tTOTAL VERSIONS: %,d%n", history.size());
 								pw.printf("\tROOT VERSION  : %s%n", formatVersion(history.getRootVersion()));
 								pw.printf("\tHEAD VERSION  : %s%n", formatVersion(history.getCurrentVersion()));
 								String fmt = String.format("\t\t%%s [%%0%dd]: %%s%n",

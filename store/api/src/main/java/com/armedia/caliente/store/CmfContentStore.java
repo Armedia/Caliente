@@ -598,7 +598,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			final boolean tx = ((op != null) && op.begin());
 			boolean ok = true;
 
-			private <V, T extends Throwable> V doWork(CheckedSupplier<V, T> r) throws T {
+			private <V, E extends Exception> V doWork(CheckedSupplier<V, E> r) throws E {
 				boolean o = false;
 				try {
 					V v = r.getChecked();
@@ -609,7 +609,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 				}
 			}
 
-			private <T extends Throwable> void doWork(CheckedRunnable<T> r) throws T {
+			private <E extends Exception> void doWork(CheckedRunnable<E> r) throws E {
 				boolean o = false;
 				try {
 					r.runChecked();
@@ -698,7 +698,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 					long written = out.transferFrom(in, 0, Long.MAX_VALUE);
 					if ((size >= 0) && (written != size)) {
 						throw new CmfStorageException(
-							String.format("Incorrect size written out - expected to write %d bytes, but wrote out %d",
+							String.format("Incorrect size written out - expected to write %,d bytes, but wrote out %,d",
 								size, written));
 					}
 					return written;
@@ -727,7 +727,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			long written = p.getValue();
 			if ((size >= 0) && (written != size)) {
 				throw new CmfStorageException(String.format(
-					"Incorrect size written out - expected to write %d bytes, but wrote out %d", size, written));
+					"Incorrect size written out - expected to write %,d bytes, but wrote out %,d", size, written));
 			}
 
 			// TODO: Update the handle's locator
@@ -939,7 +939,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 			final boolean tx = ((op != null) && op.begin());
 			boolean ok = true;
 
-			private <V, T extends Throwable> V doWork(CheckedSupplier<V, T> r) throws T {
+			private <V, E extends Exception> V doWork(CheckedSupplier<V, E> r) throws E {
 				boolean o = false;
 				try {
 					V v = r.getChecked();
@@ -950,7 +950,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 				}
 			}
 
-			private <T extends Throwable> void doWork(CheckedRunnable<T> r) throws T {
+			private <E extends Exception> void doWork(CheckedRunnable<E> r) throws E {
 				boolean o = false;
 				try {
 					r.runChecked();

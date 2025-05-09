@@ -62,7 +62,7 @@ public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExpor
 					i++;
 				} catch (ParseException e) {
 					throw new ExportException(
-						String.format("Failed to encode value #%d for %s (%s) property [%s] for %s with ID [%s]: [%s]",
+						String.format("Failed to encode value #%,d for %s (%s) property [%s] for %s with ID [%s]: [%s]",
 							i, att.getType(), prop.getType(), prop.getId(), object.getType(), object.getId(), v),
 						e);
 				}

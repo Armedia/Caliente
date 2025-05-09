@@ -54,7 +54,7 @@ public final class CmisPagingTransformerIterator<S, T> implements Iterator<T> {
 		try {
 			return this.transformer.applyChecked(this.it.next());
 		} catch (Exception e) {
-			throw new RuntimeException(String.format("Failed to transform query result #%d", this.it.getCount()), e);
+			throw new RuntimeException(String.format("Failed to transform query result #%,d", this.it.getCount()), e);
 		}
 	}
 

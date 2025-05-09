@@ -7,7 +7,7 @@
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
 	<artifactId>caliente</artifactId>
-	<version>4.0.4</version>
+	<version>${revision}</version>
 	<packaging>pom</packaging>
 	<inceptionYear>2013</inceptionYear>
 
@@ -48,11 +48,11 @@
 
 	<properties>
 		<!-- This is the main project version -->
-		<!-- <revision>4.0.4</revision> -->
+		<revision>4.0.4-SNAPSHOT</revision>
 
 		<maven.min-version>3.3.9</maven.min-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.build.target>1.8</project.build.target>
+		<project.build.target>11</project.build.target>
 
 		<bsh.version>2.0b6</bsh.version>
 		<commons-codec.version>1.15</commons-codec.version>
@@ -79,7 +79,7 @@
 		<stax-utils.version>20070216</stax-utils.version>
 		<tomcat.version>9.0.27</tomcat.version>
 		<unboundid-ldapsdk.version>5.1.0</unboundid-ldapsdk.version>
-		<utilities.version>1.3.8</utilities.version>
+		<utilities.version>1.3.12</utilities.version>
 		<woodstox.version>6.2.1</woodstox.version>
 		<jackson.version>2.12.6.1</jackson.version>
 		<jaxb-api.version>2.3.1</jaxb-api.version>
@@ -110,7 +110,7 @@
 		<repository>
 			<id>armedia-nexus</id>
 			<name>Armedia Nexus Repository</name>
-			<url>https://project.armedia.com/nexus/content/repositories/armedia.release/</url>
+			<url>https://nexus.armedia.com/content/repositories/armedia.release/</url>
 		</repository>
 	</distributionManagement>
 
@@ -118,7 +118,7 @@
 		<repository>
 			<id>Armedia Repository</id>
 			<name>Armedia Artifacts Repository</name>
-			<url>https://project.armedia.com/nexus/content/groups/armedia/</url>
+			<url>https://nexus.armedia.com/content/groups/armedia/</url>
 		</repository>
 		<repository>
 			<id>Alfresco Public Repository</id>
@@ -131,7 +131,7 @@
 		<pluginRepository>
 			<id>Armedia Repository</id>
 			<name>Armedia Artifacts Repository</name>
-			<url>https://project.armedia.com/nexus/content/groups/armedia/</url>
+			<url>https://nexus.armedia.com/content/groups/armedia/</url>
 		</pluginRepository>
 	</pluginRepositories>
 
@@ -409,10 +409,6 @@
 						<encoding>${project.build.sourceEncoding}</encoding>
 						<source>${project.build.target}</source>
 						<target>${project.build.target}</target>
-						<compilerId>eclipse</compilerId>
-						<compilerArguments>
-							<properties>${project.basedir}/.settings/org.eclipse.jdt.core.prefs</properties>
-						</compilerArguments>
 						<showWarnings>true</showWarnings>
 						<showDeprecation>true</showDeprecation>
 					</configuration>
@@ -454,7 +450,7 @@
 					<artifactId>maven-shade-plugin</artifactId>
 					<version>3.2.1</version>
 					<configuration>
-						<finalName>${executableName}-${project.version}${build.number}-exe</finalName>
+						<finalName>${executableName}-${project.version}-exe</finalName>
 						<createSourcesJar>true</createSourcesJar>
 						<createDependencyReducedPom>false</createDependencyReducedPom>
 						<shadedArtifactAttached>true</shadedArtifactAttached>
@@ -724,6 +720,9 @@
 		<profile>
 			<id>ridc</id>
 			<activation>
+				<property>
+					<name>ridc.jars.pom</name>
+				</property>
 				<file>
 					<exists>${ridc.jars.pom}</exists>
 				</file>
@@ -748,6 +747,9 @@
 		<profile>
 			<id>jshare</id>
 			<activation>
+				<property>
+					<name>jshare.jar</name>
+				</property>
 				<file>
 					<exists>${jshare.jar}</exists>
 				</file>
