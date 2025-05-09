@@ -92,7 +92,6 @@
 		<alfresco-opencmis-extension.version>1.0</alfresco-opencmis-extension.version>
 
 		<!-- DFC is for Documentum exp/imp support -->
-		<dfc.version>21.4</dfc.version>
 		<dfc.jar>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</dfc.jar>
 
 		<!-- JShare is for SharePoint exp support -->
@@ -102,8 +101,6 @@
 		<!-- RIDC is for WebCenter exp support -->
 		<ridc.version>11.1.1.0</ridc.version>
 		<ridc.jars.pom>${settings.localRepository}/com/oracle/ridc/oracle-ridc-jars/${ridc.version}/oracle-ridc-jars-${ridc.version}.pom</ridc.jars.pom>
-
-		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
 	</properties>
 
 	<distributionManagement>
@@ -642,41 +639,6 @@
 
 	<profiles>
 		<profile>
-			<id>release</id>
-			<properties>
-				<build.number></build.number>
-			</properties>
-		</profile>
-		<profile>
-			<id>beta</id>
-			<properties>
-				<build.number>-beta-${betaNumber}</build.number>
-			</properties>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-enforcer-plugin</artifactId>
-						<version>1.4.1</version>
-						<configuration>
-							<rules>
-								<requireMavenVersion>
-									<version>${maven.min-version}</version>
-								</requireMavenVersion>
-								<requireProperty>
-									<property>betaNumber</property>
-									<message>Must provide a valid betaNumber property (-DbetaNumber=...) for this build</message>
-									<regex>^[0-9]*[1-9]0?$</regex>
-									<regexMessage>The beta number [${betaNumber}] is not composed of all digits, or is not a valid number (it may not be all-zeros, but may have leading zeros)</regexMessage>
-								</requireProperty>
-							</rules>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-		<profile>
 			<id>dfc</id>
 			<activation>
 				<property>
@@ -688,7 +650,7 @@
 			</activation>
 			<properties>
 				<!-- DFC is for Documentum exp/imp support -->
-				<dfc.version>6.7-SP1</dfc.version>
+				<dfc.version>21.4</dfc.version>
 			</properties>
 			<dependencyManagement>
 				<dependencies>

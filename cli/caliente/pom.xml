@@ -85,20 +85,6 @@
 
 		<dependency>
 			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-engine-dfc</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-engine-sharepoint</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.caliente.engine</groupId>
 			<artifactId>caliente-engine-cmis</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
@@ -107,13 +93,6 @@
 		<dependency>
 			<groupId>com.armedia.caliente.engine</groupId>
 			<artifactId>caliente-engine-local</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-engine-ucm</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
@@ -146,12 +125,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.documentum.dfc</groupId>
-			<artifactId>dfc-jars</artifactId>
-			<scope>system</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>
@@ -180,4 +153,45 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>dfc</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.documentum.dfc</groupId>
+					<artifactId>dfc-jars</artifactId>
+					<scope>system</scope>
+				</dependency>
+				<dependency>
+					<groupId>com.armedia.caliente.engine</groupId>
+					<artifactId>caliente-engine-dfc</artifactId>
+					<version>${project.version}</version>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>ridc</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.armedia.caliente.engine</groupId>
+					<artifactId>caliente-engine-ucm</artifactId>
+					<version>${project.version}</version>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>jshare</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.armedia.caliente.engine</groupId>
+					<artifactId>caliente-engine-sharepoint</artifactId>
+					<version>${project.version}</version>
+					<scope>compile</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
 </project>
