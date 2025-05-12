@@ -17,7 +17,6 @@
 
 	<properties>
 		<aws.version>2.16.20</aws.version>
-		<stax-utils.version>20070216</stax-utils.version>
 		<stax2-api.version>4.2.1</stax2-api.version>
 	</properties>
 
