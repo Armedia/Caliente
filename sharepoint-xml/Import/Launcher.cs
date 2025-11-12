@@ -400,7 +400,7 @@ namespace Caliente.SharePoint.Import
                 }
                 if (errors.Count > 0) return errors;
 
-                this.data = ComputePath(this.data, () => $"${this.baseDir}/{DEFAULT_DATA_DIR}");
+                this.data = ComputePath(this.data, () => $"{this.baseDir}/{DEFAULT_DATA_DIR}");
                 if (!Directory.Exists(this.data))
                 {
                     errors.Add($"The data directory [{this.data}] does not exist");
