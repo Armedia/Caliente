@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.ServiceModel.Channels;
 using System.Threading;
 using System.Xml.Linq;
@@ -72,11 +73,14 @@ namespace Caliente.SharePoint.Common
         public readonly string ApplicationId;
         public readonly string CertificateKey;
         public readonly string CertificatePass;
+        public readonly StoreName StoreName;
+        public readonly StoreLocation StoreLocation;
+        public readonly string Thumbprint;
         public readonly bool UseQueryRetry;
         public readonly int RetryCount;
         public readonly bool UseRetryWrapper;
 
-        public SharePointSessionInfo(string url, string userName, SecureString password, string domain, string applicationId, string certificateKey, string certificatePass, string library, int maxBorrowCount, bool useQueryRetry, int retryCount, bool useRetryWrapper)
+        public SharePointSessionInfo(string url, string userName, SecureString password, string domain, string applicationId, string certificateKey, string certificatePass, StoreName storeName, StoreLocation storeLocation, string thumbprint, string library, int maxBorrowCount, bool useQueryRetry, int retryCount, bool useRetryWrapper)
         {
             this.Url = url.TrimEnd('/');
             this.UserName = userName;
@@ -85,6 +89,9 @@ namespace Caliente.SharePoint.Common
             this.ApplicationId = applicationId;
             this.CertificateKey = certificateKey;
             this.CertificatePass = certificatePass;
+            this.StoreName = storeName;
+            this.StoreLocation = storeLocation;
+            this.Thumbprint = thumbprint;
             this.Library = (!string.IsNullOrWhiteSpace(library) ? library : DEFAULT_LIBRARY_NAME);
             if (maxBorrowCount == 0) maxBorrowCount = 1;
             this.MaxBorrowCount = maxBorrowCount;
@@ -289,13 +296,19 @@ namespace Caliente.SharePoint.Common
                 // If we're using an application ID, we use that and forget everything else...
                 if (!string.IsNullOrWhiteSpace(this.Info.ApplicationId))
                 {
-                    // WAS:
-                    // authManager.GetAzureADAppOnlyAuthenticatedContext(info.Url, info.ApplicationId, info.Domain, info.CertificateKey, info.CertificatePass);
-                    // this.AuthManager = new PnP.Framework.AuthenticationManager(this.Info.ApplicationId, this.Info.CertificateKey, this.Info.CertificatePass, this.Info.Domain);
-                    this.Authenticator = () =>
-                        new PnP.Framework.AuthenticationManager(this.Info.ApplicationId, this.Info.CertificateKey, this.Info.CertificatePass, this.Info.Domain) //
-                           .GetContext(this.Info.Url) //
-                    ;
+                    PnP.Framework.AuthenticationManager authenticationManager = null;
+                    if (string.IsNullOrWhiteSpace(this.Info.Thumbprint))
+                    {
+                        // WAS:
+                        // authManager.GetAzureADAppOnlyAuthenticatedContext(info.Url, info.ApplicationId, info.Domain, info.CertificateKey, info.CertificatePass);
+                        // this.AuthManager = new PnP.Framework.AuthenticationManager(this.Info.ApplicationId, this.Info.CertificateKey, this.Info.CertificatePass, this.Info.Domain);
+                        authenticationManager = new PnP.Framework.AuthenticationManager(this.Info.ApplicationId, this.Info.CertificateKey, this.Info.CertificatePass, this.Info.Domain);
+                    }
+                    else
+                    {
+                        authenticationManager = new PnP.Framework.AuthenticationManager(this.Info.ApplicationId, this.Info.StoreName, this.Info.StoreLocation, this.Info.Thumbprint, this.Info.Domain);
+                    }
+                    this.Authenticator = () => authenticationManager.GetContext(this.Info.Url);
                 }
                 else
                 // If we were given written auth parameters, we use those. This will fail if MFA is needed

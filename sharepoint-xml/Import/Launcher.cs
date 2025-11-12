@@ -13,6 +13,7 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.Remoting.Messaging;
 using System.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Xml.Linq;
 
 namespace Caliente.SharePoint.Import
@@ -265,6 +266,9 @@ namespace Caliente.SharePoint.Import
             public string applicationSecret { get; private set; }
             public string certificateKey { get; private set; }
             public string certificatePass { get; private set; }
+            public StoreName storeName { get; private set; }
+            public StoreLocation storeLocation { get; private set; }
+            public string thumbprint { get; private set; }
             public string ldapSyncDomain { get; private set; }
             public string library { get; private set; }
             public string data { get; private set; }
@@ -618,7 +622,7 @@ namespace Caliente.SharePoint.Import
                     }
                 }
 
-                using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, userPassword, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.library, options.reuseCount, options.useQueryRetry, options.retries, options.useRetryWrapper)))
+                using (SharePointSessionFactory sessionFactory = new SharePointSessionFactory(new SharePointSessionInfo(options.siteUrl, options.user, userPassword, options.domain, options.applicationId, options.certificateKey, options.certificatePass, options.storeName, options.storeLocation, options.thumbprint, options.library, options.reuseCount, options.useQueryRetry, options.retries, options.useRetryWrapper)))
                 {
                     ImportContext importContext = new ImportContext(sessionFactory, options.streams, options.metadata, options.progress, options.caches);
                     using (ObjectPool<SharePointSession>.Ref sessionRef = sessionFactory.GetSession())
